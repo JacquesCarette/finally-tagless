@@ -6,9 +6,9 @@
 
 let test_simple_expression () =
     let ret x = x in
-  mdo { mret true }
+  mdo { ret true }
 
-let brt = brackets 0 ;;
+let brt = .< 0 >. ;;
 
 (*
 let test_brackets =
@@ -25,8 +25,8 @@ let test_state1 () =
   and fetch = fun state -> state, state in
     let multiplier factor =
       mdo { result <-- fetch ;
-	    _ <-- update (factor * result);
-	    mret result } in
+	    update (factor * result);
+	    ret result } in
         multiplier 2 3
 
 let test_state2 () =
@@ -38,8 +38,7 @@ let test_state2 () =
     let multiplier factor =
       mdo { result <-- fetch ;
 	    _ <-- update (factor * result);
-	    result <-- fetch;
-	    mret result } in
+	    fetch } in
         multiplier 2 3
 
 
@@ -48,7 +47,7 @@ let test_two_element_list () =
   and bind xs f = List.concat (List.map f xs) in
     mdo { a <-- [1; 2; 3] ;
           b <-- [3; 4; 5] ;
-          mret a-b } (* negation is not commutative, and more illustrative*)
+          ret (a-b) } (* negation is not commutative, and more illustrative*)
 
 (* State monad with a single-threaded updateable state *)
 class state_cl (iv:int) istate =
@@ -70,14 +69,14 @@ let test_state3 () =
   let multiplier factor =
       odo { result <-- fetch ;
 	    _ <-- (update (factor * result));
-	    mret (ret result) } in
+	    ret result } in
         (multiplier 2) # result
 
 
 let _ =
     let ret x = x and bind a f = f a in
   mdo { _ <-- 1+2 ; 
-        mret 2 }
+        ret 2 }
 
 (* main *)
 

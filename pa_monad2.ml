@@ -20,10 +20,24 @@
     - mdo { } surrounds/introduces a monadic sequence, which is 
     required to end with an mret. *)
 
-type monbind = Exec of MLast.expr 
-             | Last of MLast.expr
-             | Binding of MLast.patt * MLast.expr
+type monbind = LetB of (MLast.patt * MLast.expr) list
+             | Stmt of MLast.patt option * MLast.expr
 type bindtype = Global | Object
+
+(* based on pattern_eq_expression in 
+  /camlp4/etc/pa_fstream.ml *)
+
+let rec exp_to_patt loc e =
+  match e with
+    <:expr< $lid:b$ >> -> <:patt< $lid:b$ >>
+  | <:expr< $uid:b$ >> -> <:patt< $uid:b$ >>
+  | <:expr< $e1$ $e2$ >> -> 
+      let p1 = exp_to_patt loc e1 and p2 = exp_to_patt loc e2 in
+      <:patt< $p1$ $p2$ >>
+  | <:expr< ($list:el$) >> ->
+      let pl = List.map (exp_to_patt loc) el in
+      <:patt< ($list:pl$) >>
+  | _ -> failwith "This pattern isn't yet supported"
 
 let process loc bt b = 
     let globbind2 x p acc =
@@ -34,26 +48,32 @@ let process loc bt b =
         <:expr< $x$ # bind (fun $p$ -> $acc$) >>
     and objbind1 x acc =
         <:expr< $x$ # bind (fun _ -> $acc$) >> 
-    and globret n = <:expr< ret $n$ >>
-    and objret n = <:expr< $n$ >> in
+    and ret n = <:expr< $n$ >> in
     let choose_bind = function 
         | Global -> (globbind2, globbind1)
         | Object -> (objbind2, objbind1) in
-    let choose_ret = function 
-        | Global -> globret
-        | Object -> objret in
     let folder bt = let (a,b) = choose_bind bt in
         (fun accumulator y -> 
         match y with
-        | Binding(p,x) -> a x p accumulator
-        | Exec(x) -> b x accumulator
-        | Last(x) -> failwith "should not have an mret in the middle")
+        | Stmt(Some p,x) -> a x p accumulator
+        | Stmt(None,x) -> 
+	    (match x with
+	      <:expr< $e1$ $lid:op$  $e3$  >> when op = "<--" 
+	      -> a e3 (exp_to_patt loc e1) accumulator
+	    | _ -> b x accumulator)
+        | LetB(l) -> failwith "not implemented yet"
+        )
     in
     match List.rev b with 
     | [] -> failwith "somehow got an empty list from a LIST1!"
-    | (Last(n)::t) -> List.fold_left (folder bt) ((choose_ret bt) n) t  
-    | (Binding(_,_)::_) -> failwith "ends with a binding"
-    | (Exec(_)::_) -> failwith "does not end with an mret"
+    | (Stmt(None,n)::t) -> List.fold_left (folder bt) (ret n) t  
+    | _ -> failwith "Does not end with a statement"
+
+(*
+      [ "let"; o = OPT "rec"; l = LIST1 let_binding SEP "and"; "in";
+        x = expr LEVEL "top" ->
+          <:expr< let $opt:o2b o$ $list:l$ in $x$ >>
+*)
 
 (*
 let expand_code loc e =
@@ -61,7 +81,7 @@ let expand_code loc e =
 *)
 
 EXTEND
-    GLOBAL: Pcaml.expr;
+    GLOBAL: Pcaml.expr; 
 
     Pcaml.expr: LEVEL "expr1"
     [
@@ -76,12 +96,24 @@ EXTEND
       ] 
     ] ;
 
+    Pcaml.expr: BEFORE "apply"
+    [ NONA
+	[ e1 = SELF; "<--"; e2 = Pcaml.expr LEVEL "expr1" ->
+          <:expr< $e1$ $lid:"<--"$ $e2$ >>
+	] 
+    ] ;
+
     monadic_binding:
     [ 
-      [ p = Pcaml.patt; "<--"; x = Pcaml.expr LEVEL "expr1" ->
-          Binding(p,x) ]
-      | 
-      [ "mret"; x = Pcaml.expr -> Last(x) ]
+      [ "let"; l = LIST1 Pcaml.let_binding SEP "and" ->
+	LetB(l) ]
+    | 
+      [ x = Pcaml.expr LEVEL "expr1" ->
+        Stmt(None,x) ]
+    | 
+      [ p = Pcaml.patt LEVEL "simple"; "<--"; x = Pcaml.expr LEVEL "expr1" ->
+        Stmt(Some p,x) ]
     ] ;
+
 END;
 
