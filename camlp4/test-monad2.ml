@@ -122,7 +122,7 @@ let test_nondet () =
 		| InC a -> run n a
 		| Cons (a,b) -> (a::run (n-1) b)
   in
-  let rec numb () = Cons (0,mdo { n <-- numb; ret (n+1) }) in
+  let rec numb () = InC (mplus (ret 0) (mdo { n <-- numb; ret (n+1) })) in
   (* Don't try this in Prolog or in Haskell's MonadPlus! *)
   let tst = mdo {
                   i <-- numb;
