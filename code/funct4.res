@@ -60,10 +60,10 @@
     (t_3 := ((! t_3) + 1))
    done;
    t_5>.
-# val resFA11 :
+# val resFA2 :
   ('a,
-   Funct4.GenFA11.Ctr.contr ->
-   Funct4.OutJustMatrix(Funct4.FloatDomain)(Funct4.GenericArrayContainer)(Funct4.NoDet(Funct4.FloatDomain)).res)
+   Funct4.GenFA2.Ctr.contr ->
+   Funct4.OutDet(Funct4.FloatDomain)(Funct4.GenericArrayContainer)(Funct4.FDet).res)
   code =
   .<fun a_20 ->
    let t_21 = (ref 0) in
@@ -71,1078 +71,1307 @@
    let t_24 = (Array.map (fun x_23 -> (Array.copy x_23)) (Array.copy a_20)) in
    let t_25 = (Array.length a_20.(0)) in
    let t_26 = (Array.length a_20) in
+   let t_27 = (ref 1.) in
+   let t_28 = (ref 1) in
    while (((! t_22) < t_25) && ((! t_21) < t_26)) do
-    let t_27 = (! t_21) in
-    let t_28 = (! t_22) in
-    let t_29 = (ref (None)) in
-    let t_36 =
+    let t_29 = (! t_21) in
+    let t_30 = (! t_22) in
+    let t_31 = (ref (None)) in
+    let t_37 =
      begin
-      for j_32 = t_27 to (t_26 - 1) do
-       for j_33 = t_28 to (t_25 - 1) do
-        let t_34 = (t_24.(j_32)).(j_33) in
-        if (not (t_34 = 0.)) then
-         (match (! t_29) with
-          | Some (i_35) ->
-             if ((abs_float (snd i_35)) < (abs_float t_34)) then
-              (t_29 := (Some ((j_32, j_33), t_34)))
-             else ()
-          | None -> (t_29 := (Some ((j_32, j_33), t_34))))
-        else ()
-       done
-      done;
-      (match (! t_29) with
-       | Some (i_30) ->
-          if ((snd (fst i_30)) <> t_28) then begin
-           (failwith "swap_cols_stmt not yet implemeted"); ()
-          end else ();
-          if ((snd (fst i_30)) <> t_28) then begin
-           let t_31 = t_24.(t_27) in
-           t_24.(t_27) <- t_24.(fst (fst i_30));
-           t_24.(fst (fst i_30)) <- t_31;
-           ()
-          end else ();
-          (Some (snd i_30))
-       | None -> (None))
-     end in
-    (match t_36 with
-     | Some (i_37) ->
-        begin
-         for j_38 = (t_27 + 1) to (t_26 - 1) do
-          if (not ((t_24.(j_38)).(t_28) = 0.)) then begin
-           for j_39 = (t_28 + 1) to (t_25 - 1) do
-            (t_24.(j_38)).(j_39) <-
-             ((t_24.(j_38)).(j_39) -.
-               (((t_24.(j_38)).(t_28) /. (t_24.(t_27)).(t_28)) *.
-                 (t_24.(t_27)).(j_39)))
-           done;
-           (t_24.(j_38)).(t_28) <- 0.
-          end else ()
-         done;
-         ()
-        end;
-        (t_21 := ((! t_21) + 1))
-     | None -> ());
-    (t_22 := ((! t_22) + 1))
-   done;
-   t_24>.
-# val resFA2 :
-  ('a,
-   Funct4.GenFA2.Ctr.contr ->
-   Funct4.OutDet(Funct4.FloatDomain)(Funct4.GenericArrayContainer)(Funct4.FDet).res)
-  code =
-  .<fun a_40 ->
-   let t_41 = (ref 0) in
-   let t_42 = (ref 0) in
-   let t_44 = (Array.map (fun x_43 -> (Array.copy x_43)) (Array.copy a_40)) in
-   let t_45 = (Array.length a_40.(0)) in
-   let t_46 = (Array.length a_40) in
-   let t_47 = (ref 1.) in
-   let t_48 = (ref 1) in
-   while (((! t_42) < t_45) && ((! t_41) < t_46)) do
-    let t_49 = (! t_41) in
-    let t_50 = (! t_42) in
-    let t_51 = (ref (None)) in
-    let t_57 =
-     begin
-      for j_54 = t_49 to (t_46 - 1) do
-       let t_55 = (t_44.(j_54)).(t_50) in
-       if (not (t_55 = 0.)) then
-        (match (! t_51) with
-         | Some (i_56) ->
-            if ((abs_float (snd i_56)) < (abs_float t_55)) then
-             (t_51 := (Some (j_54, t_55)))
+      for j_34 = t_29 to (t_26 - 1) do
+       let t_35 = (t_24.(j_34)).(t_30) in
+       if (not (t_35 = 0.)) then
+        (match (! t_31) with
+         | Some (i_36) ->
+            if ((abs_float (snd i_36)) < (abs_float t_35)) then
+             (t_31 := (Some (j_34, t_35)))
             else ()
-         | None -> (t_51 := (Some (j_54, t_55))))
+         | None -> (t_31 := (Some (j_34, t_35))))
        else ()
       done;
-      (match (! t_51) with
-       | Some (i_52) ->
-          if ((fst i_52) <> t_49) then begin
-           let t_53 = t_44.(t_49) in
-           t_44.(t_49) <- t_44.(fst i_52);
-           t_44.(fst i_52) <- t_53;
-           (t_48 := (~- (! t_48)))
+      (match (! t_31) with
+       | Some (i_32) ->
+          if ((fst i_32) <> t_29) then begin
+           let t_33 = t_24.(t_29) in
+           t_24.(t_29) <- t_24.(fst i_32);
+           t_24.(fst i_32) <- t_33;
+           (t_28 := (~- (! t_28)))
           end else ();
-          (Some (snd i_52))
+          (Some (snd i_32))
        | None -> (None))
      end in
-    (match t_57 with
-     | Some (i_58) ->
+    (match t_37 with
+     | Some (i_38) ->
         begin
-         for j_59 = (t_49 + 1) to (t_46 - 1) do
-          if (not ((t_44.(j_59)).(t_50) = 0.)) then begin
-           for j_60 = (t_50 + 1) to (t_45 - 1) do
-            (t_44.(j_59)).(j_60) <-
-             ((t_44.(j_59)).(j_60) -.
-               (((t_44.(j_59)).(t_50) /. (t_44.(t_49)).(t_50)) *.
-                 (t_44.(t_49)).(j_60)))
+         for j_39 = (t_29 + 1) to (t_26 - 1) do
+          if (not ((t_24.(j_39)).(t_30) = 0.)) then begin
+           for j_40 = (t_30 + 1) to (t_25 - 1) do
+            (t_24.(j_39)).(j_40) <-
+             ((t_24.(j_39)).(j_40) -.
+               (((t_24.(j_39)).(t_30) /. (t_24.(t_29)).(t_30)) *.
+                 (t_24.(t_29)).(j_40)))
            done;
-           (t_44.(j_59)).(t_50) <- 0.
+           (t_24.(j_39)).(t_30) <- 0.
           end else ()
          done;
-         (t_47 := ((! t_47) *. i_58))
+         (t_27 := ((! t_27) *. i_38))
         end;
-        (t_41 := ((! t_41) + 1))
-     | None -> (t_48 := 0));
-    (t_42 := ((! t_42) + 1))
+        (t_21 := ((! t_21) + 1))
+     | None -> (t_28 := 0));
+    (t_22 := ((! t_22) + 1))
    done;
-   (t_44,
-    if ((! t_48) = 0) then 0.
-    else if ((! t_48) = 1) then (! t_47)
-    else (~-. (! t_47)))>.
+   (t_24,
+    if ((! t_28) = 0) then 0.
+    else if ((! t_28) = 1) then (! t_27)
+    else (~-. (! t_27)))>.
 # val resFA3 :
   ('a,
    Funct4.GenFA3.Ctr.contr ->
    Funct4.OutRank(Funct4.FloatDomain)(Funct4.GenericArrayContainer)(Funct4.Rank).res)
   code =
-  .<fun a_61 ->
-   let t_62 = (ref 0) in
-   let t_63 = (ref 0) in
-   let t_65 = (Array.map (fun x_64 -> (Array.copy x_64)) (Array.copy a_61)) in
-   let t_66 = (Array.length a_61.(0)) in
-   let t_67 = (Array.length a_61) in
-   while (((! t_63) < t_66) && ((! t_62) < t_67)) do
-    let t_68 = (! t_62) in
-    let t_69 = (! t_63) in
-    let t_70 = (ref (None)) in
-    let t_76 =
+  .<fun a_41 ->
+   let t_42 = (ref 0) in
+   let t_43 = (ref 0) in
+   let t_45 = (Array.map (fun x_44 -> (Array.copy x_44)) (Array.copy a_41)) in
+   let t_46 = (Array.length a_41.(0)) in
+   let t_47 = (Array.length a_41) in
+   while (((! t_43) < t_46) && ((! t_42) < t_47)) do
+    let t_48 = (! t_42) in
+    let t_49 = (! t_43) in
+    let t_50 = (ref (None)) in
+    let t_56 =
      begin
-      for j_73 = t_68 to (t_67 - 1) do
-       let t_74 = (t_65.(j_73)).(t_69) in
-       if (not (t_74 = 0.)) then
-        (match (! t_70) with
-         | Some (i_75) ->
-            if ((abs_float (snd i_75)) < (abs_float t_74)) then
-             (t_70 := (Some (j_73, t_74)))
+      for j_53 = t_48 to (t_47 - 1) do
+       let t_54 = (t_45.(j_53)).(t_49) in
+       if (not (t_54 = 0.)) then
+        (match (! t_50) with
+         | Some (i_55) ->
+            if ((abs_float (snd i_55)) < (abs_float t_54)) then
+             (t_50 := (Some (j_53, t_54)))
             else ()
-         | None -> (t_70 := (Some (j_73, t_74))))
+         | None -> (t_50 := (Some (j_53, t_54))))
        else ()
       done;
-      (match (! t_70) with
-       | Some (i_71) ->
-          if ((fst i_71) <> t_68) then begin
-           let t_72 = t_65.(t_68) in
-           t_65.(t_68) <- t_65.(fst i_71);
-           t_65.(fst i_71) <- t_72;
+      (match (! t_50) with
+       | Some (i_51) ->
+          if ((fst i_51) <> t_48) then begin
+           let t_52 = t_45.(t_48) in
+           t_45.(t_48) <- t_45.(fst i_51);
+           t_45.(fst i_51) <- t_52;
            ()
           end else ();
-          (Some (snd i_71))
+          (Some (snd i_51))
        | None -> (None))
      end in
-    (match t_76 with
-     | Some (i_77) ->
+    (match t_56 with
+     | Some (i_57) ->
         begin
-         for j_78 = (t_68 + 1) to (t_67 - 1) do
-          if (not ((t_65.(j_78)).(t_69) = 0.)) then begin
-           for j_79 = (t_69 + 1) to (t_66 - 1) do
-            (t_65.(j_78)).(j_79) <-
-             ((t_65.(j_78)).(j_79) -.
-               (((t_65.(j_78)).(t_69) /. (t_65.(t_68)).(t_69)) *.
-                 (t_65.(t_68)).(j_79)))
+         for j_58 = (t_48 + 1) to (t_47 - 1) do
+          if (not ((t_45.(j_58)).(t_49) = 0.)) then begin
+           for j_59 = (t_49 + 1) to (t_46 - 1) do
+            (t_45.(j_58)).(j_59) <-
+             ((t_45.(j_58)).(j_59) -.
+               (((t_45.(j_58)).(t_49) /. (t_45.(t_48)).(t_49)) *.
+                 (t_45.(t_48)).(j_59)))
            done;
-           (t_65.(j_78)).(t_69) <- 0.
+           (t_45.(j_58)).(t_49) <- 0.
           end else ()
          done;
          ()
         end;
-        (t_62 := ((! t_62) + 1))
+        (t_42 := ((! t_42) + 1))
      | None -> ());
-    (t_63 := ((! t_63) + 1))
+    (t_43 := ((! t_43) + 1))
    done;
-   (t_65, (! t_62))>.
+   (t_45, (! t_42))>.
 # val resFA4 :
   ('a,
    Funct4.GenFA4.Ctr.contr ->
    Funct4.OutDetRank(Funct4.FloatDomain)(Funct4.GenericArrayContainer)(Funct4.FDet)(Funct4.Rank).res)
   code =
-  .<fun a_80 ->
-   let t_81 = (ref 0) in
-   let t_82 = (ref 0) in
-   let t_84 = (Array.map (fun x_83 -> (Array.copy x_83)) (Array.copy a_80)) in
-   let t_85 = (Array.length a_80.(0)) in
-   let t_86 = (Array.length a_80) in
-   let t_87 = (ref 1.) in
-   let t_88 = (ref 1) in
-   while (((! t_82) < t_85) && ((! t_81) < t_86)) do
-    let t_89 = (! t_81) in
-    let t_90 = (! t_82) in
-    let t_91 = (ref (None)) in
-    let t_97 =
+  .<fun a_60 ->
+   let t_61 = (ref 0) in
+   let t_62 = (ref 0) in
+   let t_64 = (Array.map (fun x_63 -> (Array.copy x_63)) (Array.copy a_60)) in
+   let t_65 = (Array.length a_60.(0)) in
+   let t_66 = (Array.length a_60) in
+   let t_67 = (ref 1.) in
+   let t_68 = (ref 1) in
+   while (((! t_62) < t_65) && ((! t_61) < t_66)) do
+    let t_69 = (! t_61) in
+    let t_70 = (! t_62) in
+    let t_71 = (ref (None)) in
+    let t_77 =
      begin
-      for j_94 = t_89 to (t_86 - 1) do
-       let t_95 = (t_84.(j_94)).(t_90) in
-       if (not (t_95 = 0.)) then
-        (match (! t_91) with
-         | Some (i_96) ->
-            if ((abs_float (snd i_96)) < (abs_float t_95)) then
-             (t_91 := (Some (j_94, t_95)))
+      for j_74 = t_69 to (t_66 - 1) do
+       let t_75 = (t_64.(j_74)).(t_70) in
+       if (not (t_75 = 0.)) then
+        (match (! t_71) with
+         | Some (i_76) ->
+            if ((abs_float (snd i_76)) < (abs_float t_75)) then
+             (t_71 := (Some (j_74, t_75)))
             else ()
-         | None -> (t_91 := (Some (j_94, t_95))))
+         | None -> (t_71 := (Some (j_74, t_75))))
        else ()
       done;
-      (match (! t_91) with
-       | Some (i_92) ->
-          if ((fst i_92) <> t_89) then begin
-           let t_93 = t_84.(t_89) in
-           t_84.(t_89) <- t_84.(fst i_92);
-           t_84.(fst i_92) <- t_93;
-           (t_88 := (~- (! t_88)))
+      (match (! t_71) with
+       | Some (i_72) ->
+          if ((fst i_72) <> t_69) then begin
+           let t_73 = t_64.(t_69) in
+           t_64.(t_69) <- t_64.(fst i_72);
+           t_64.(fst i_72) <- t_73;
+           (t_68 := (~- (! t_68)))
           end else ();
-          (Some (snd i_92))
+          (Some (snd i_72))
        | None -> (None))
      end in
-    (match t_97 with
-     | Some (i_98) ->
+    (match t_77 with
+     | Some (i_78) ->
         begin
-         for j_99 = (t_89 + 1) to (t_86 - 1) do
-          if (not ((t_84.(j_99)).(t_90) = 0.)) then begin
-           for j_100 = (t_90 + 1) to (t_85 - 1) do
-            (t_84.(j_99)).(j_100) <-
-             ((t_84.(j_99)).(j_100) -.
-               (((t_84.(j_99)).(t_90) /. (t_84.(t_89)).(t_90)) *.
-                 (t_84.(t_89)).(j_100)))
+         for j_79 = (t_69 + 1) to (t_66 - 1) do
+          if (not ((t_64.(j_79)).(t_70) = 0.)) then begin
+           for j_80 = (t_70 + 1) to (t_65 - 1) do
+            (t_64.(j_79)).(j_80) <-
+             ((t_64.(j_79)).(j_80) -.
+               (((t_64.(j_79)).(t_70) /. (t_64.(t_69)).(t_70)) *.
+                 (t_64.(t_69)).(j_80)))
            done;
-           (t_84.(j_99)).(t_90) <- 0.
+           (t_64.(j_79)).(t_70) <- 0.
           end else ()
          done;
-         (t_87 := ((! t_87) *. i_98))
+         (t_67 := ((! t_67) *. i_78))
         end;
-        (t_81 := ((! t_81) + 1))
-     | None -> (t_88 := 0));
-    (t_82 := ((! t_82) + 1))
+        (t_61 := ((! t_61) + 1))
+     | None -> (t_68 := 0));
+    (t_62 := ((! t_62) + 1))
    done;
-   (t_84,
-    if ((! t_88) = 0) then 0.
-    else if ((! t_88) = 1) then (! t_87)
-    else (~-. (! t_87)), (! t_81))>.
+   (t_64,
+    if ((! t_68) = 0) then 0.
+    else if ((! t_68) = 1) then (! t_67)
+    else (~-. (! t_67)), (! t_61))>.
 # val resFV1 :
   ('a,
    Funct4.GenFV1.Ctr.contr ->
    Funct4.OutJustMatrix(Funct4.FloatDomain)(Funct4.GenericVectorContainer)(Funct4.FDet).res)
   code =
-  .<fun a_101 ->
-   let t_102 = (ref 0) in
-   let t_103 = (ref 0) in
-   let t_104 = {arr = (Array.copy a_101.arr)} (a_101) in
-   let t_105 = a_101.m in
-   let t_106 = a_101.n in
-   let t_107 = (ref 1.) in
-   let t_108 = (ref 1) in
-   while (((! t_103) < t_105) && ((! t_102) < t_106)) do
-    let t_109 = (! t_102) in
-    let t_110 = (! t_103) in
-    let t_111 = (ref (None)) in
-    let t_123 =
+  .<fun a_81 ->
+   let t_82 = (ref 0) in
+   let t_83 = (ref 0) in
+   let t_84 = {arr = (Array.copy a_81.arr)} (a_81) in
+   let t_85 = a_81.m in
+   let t_86 = a_81.n in
+   let t_87 = (ref 1.) in
+   let t_88 = (ref 1) in
+   while (((! t_83) < t_85) && ((! t_82) < t_86)) do
+    let t_89 = (! t_82) in
+    let t_90 = (! t_83) in
+    let t_91 = (ref (None)) in
+    let t_103 =
      begin
-      for j_120 = t_109 to (t_106 - 1) do
-       let t_121 = (t_104.arr).((j_120 * t_104.n) + t_110) in
-       if (not (t_121 = 0.)) then
-        (match (! t_111) with
-         | Some (i_122) ->
-            if ((abs_float (snd i_122)) < (abs_float t_121)) then
-             (t_111 := (Some (j_120, t_121)))
+      for j_100 = t_89 to (t_86 - 1) do
+       let t_101 = (t_84.arr).((j_100 * t_84.n) + t_90) in
+       if (not (t_101 = 0.)) then
+        (match (! t_91) with
+         | Some (i_102) ->
+            if ((abs_float (snd i_102)) < (abs_float t_101)) then
+             (t_91 := (Some (j_100, t_101)))
             else ()
-         | None -> (t_111 := (Some (j_120, t_121))))
+         | None -> (t_91 := (Some (j_100, t_101))))
        else ()
       done;
-      (match (! t_111) with
-       | Some (i_112) ->
-          if ((fst i_112) <> t_109) then begin
-           let a_113 = t_104.arr
-           and n_114 = t_104.n
-           and m_115 = t_104.m in
-           let i1_116 = (t_109 * n_114)
-           and i2_117 = ((fst i_112) * n_114) in
-           for i_118 = 0 to (m_115 - 1) do
-            let t_119 = a_113.(i1_116 + i_118) in
-            a_113.(i2_117 + i_118) <- a_113.(i1_116 + i_118);
-            a_113.(i1_116 + i_118) <- t_119
+      (match (! t_91) with
+       | Some (i_92) ->
+          if ((fst i_92) <> t_89) then begin
+           let a_93 = t_84.arr
+           and n_94 = t_84.n
+           and m_95 = t_84.m in
+           let i1_96 = (t_89 * n_94)
+           and i2_97 = ((fst i_92) * n_94) in
+           for i_98 = 0 to (m_95 - 1) do
+            let t_99 = a_93.(i1_96 + i_98) in
+            a_93.(i2_97 + i_98) <- a_93.(i1_96 + i_98);
+            a_93.(i1_96 + i_98) <- t_99
            done;
-           (t_108 := (~- (! t_108)))
+           (t_88 := (~- (! t_88)))
           end else ();
-          (Some (snd i_112))
+          (Some (snd i_92))
        | None -> (None))
      end in
-    (match t_123 with
-     | Some (i_124) ->
+    (match t_103 with
+     | Some (i_104) ->
         begin
-         for j_125 = (t_109 + 1) to (t_106 - 1) do
-          if (not ((t_104.arr).((j_125 * t_104.n) + t_110) = 0.)) then begin
-           for j_126 = (t_110 + 1) to (t_105 - 1) do
-            (t_104.arr).((j_125 * t_104.n) + j_126) <-
-             ((t_104.arr).((j_125 * t_104.n) + j_126) -.
-               (((t_104.arr).((j_125 * t_104.n) + t_110) /.
-                  (t_104.arr).((t_109 * t_104.n) + t_110)) *.
-                 (t_104.arr).((t_109 * t_104.n) + j_126)))
+         for j_105 = (t_89 + 1) to (t_86 - 1) do
+          if (not ((t_84.arr).((j_105 * t_84.n) + t_90) = 0.)) then begin
+           for j_106 = (t_90 + 1) to (t_85 - 1) do
+            (t_84.arr).((j_105 * t_84.n) + j_106) <-
+             ((t_84.arr).((j_105 * t_84.n) + j_106) -.
+               (((t_84.arr).((j_105 * t_84.n) + t_90) /.
+                  (t_84.arr).((t_89 * t_84.n) + t_90)) *.
+                 (t_84.arr).((t_89 * t_84.n) + j_106)))
            done;
-           (t_104.arr).((j_125 * t_104.n) + t_110) <- 0.
+           (t_84.arr).((j_105 * t_84.n) + t_90) <- 0.
           end else ()
          done;
-         (t_107 := ((! t_107) *. i_124))
+         (t_87 := ((! t_87) *. i_104))
         end;
-        (t_102 := ((! t_102) + 1))
-     | None -> (t_108 := 0));
-    (t_103 := ((! t_103) + 1))
+        (t_82 := ((! t_82) + 1))
+     | None -> (t_88 := 0));
+    (t_83 := ((! t_83) + 1))
    done;
-   t_104>.
+   t_84>.
 # val resFV2 :
   ('a,
    Funct4.GenFV2.Ctr.contr ->
    Funct4.OutDet(Funct4.FloatDomain)(Funct4.GenericVectorContainer)(Funct4.FDet).res)
   code =
-  .<fun a_127 ->
-   let t_128 = (ref 0) in
-   let t_129 = (ref 0) in
-   let t_130 = {arr = (Array.copy a_127.arr)} (a_127) in
-   let t_131 = a_127.m in
-   let t_132 = a_127.n in
-   let t_133 = (ref 1.) in
-   let t_134 = (ref 1) in
-   while (((! t_129) < t_131) && ((! t_128) < t_132)) do
-    let t_135 = (! t_128) in
-    let t_136 = (! t_129) in
-    let t_137 = (ref (None)) in
-    let t_149 =
+  .<fun a_107 ->
+   let t_108 = (ref 0) in
+   let t_109 = (ref 0) in
+   let t_110 = {arr = (Array.copy a_107.arr)} (a_107) in
+   let t_111 = a_107.m in
+   let t_112 = a_107.n in
+   let t_113 = (ref 1.) in
+   let t_114 = (ref 1) in
+   while (((! t_109) < t_111) && ((! t_108) < t_112)) do
+    let t_115 = (! t_108) in
+    let t_116 = (! t_109) in
+    let t_117 = (ref (None)) in
+    let t_129 =
      begin
-      for j_146 = t_135 to (t_132 - 1) do
-       let t_147 = (t_130.arr).((j_146 * t_130.n) + t_136) in
-       if (not (t_147 = 0.)) then
-        (match (! t_137) with
-         | Some (i_148) ->
-            if ((abs_float (snd i_148)) < (abs_float t_147)) then
-             (t_137 := (Some (j_146, t_147)))
+      for j_126 = t_115 to (t_112 - 1) do
+       let t_127 = (t_110.arr).((j_126 * t_110.n) + t_116) in
+       if (not (t_127 = 0.)) then
+        (match (! t_117) with
+         | Some (i_128) ->
+            if ((abs_float (snd i_128)) < (abs_float t_127)) then
+             (t_117 := (Some (j_126, t_127)))
             else ()
-         | None -> (t_137 := (Some (j_146, t_147))))
+         | None -> (t_117 := (Some (j_126, t_127))))
        else ()
       done;
-      (match (! t_137) with
-       | Some (i_138) ->
-          if ((fst i_138) <> t_135) then begin
-           let a_139 = t_130.arr
-           and n_140 = t_130.n
-           and m_141 = t_130.m in
-           let i1_142 = (t_135 * n_140)
-           and i2_143 = ((fst i_138) * n_140) in
-           for i_144 = 0 to (m_141 - 1) do
-            let t_145 = a_139.(i1_142 + i_144) in
-            a_139.(i2_143 + i_144) <- a_139.(i1_142 + i_144);
-            a_139.(i1_142 + i_144) <- t_145
+      (match (! t_117) with
+       | Some (i_118) ->
+          if ((fst i_118) <> t_115) then begin
+           let a_119 = t_110.arr
+           and n_120 = t_110.n
+           and m_121 = t_110.m in
+           let i1_122 = (t_115 * n_120)
+           and i2_123 = ((fst i_118) * n_120) in
+           for i_124 = 0 to (m_121 - 1) do
+            let t_125 = a_119.(i1_122 + i_124) in
+            a_119.(i2_123 + i_124) <- a_119.(i1_122 + i_124);
+            a_119.(i1_122 + i_124) <- t_125
            done;
-           (t_134 := (~- (! t_134)))
+           (t_114 := (~- (! t_114)))
           end else ();
-          (Some (snd i_138))
+          (Some (snd i_118))
        | None -> (None))
      end in
-    (match t_149 with
-     | Some (i_150) ->
+    (match t_129 with
+     | Some (i_130) ->
         begin
-         for j_151 = (t_135 + 1) to (t_132 - 1) do
-          if (not ((t_130.arr).((j_151 * t_130.n) + t_136) = 0.)) then begin
-           for j_152 = (t_136 + 1) to (t_131 - 1) do
-            (t_130.arr).((j_151 * t_130.n) + j_152) <-
-             ((t_130.arr).((j_151 * t_130.n) + j_152) -.
-               (((t_130.arr).((j_151 * t_130.n) + t_136) /.
-                  (t_130.arr).((t_135 * t_130.n) + t_136)) *.
-                 (t_130.arr).((t_135 * t_130.n) + j_152)))
+         for j_131 = (t_115 + 1) to (t_112 - 1) do
+          if (not ((t_110.arr).((j_131 * t_110.n) + t_116) = 0.)) then begin
+           for j_132 = (t_116 + 1) to (t_111 - 1) do
+            (t_110.arr).((j_131 * t_110.n) + j_132) <-
+             ((t_110.arr).((j_131 * t_110.n) + j_132) -.
+               (((t_110.arr).((j_131 * t_110.n) + t_116) /.
+                  (t_110.arr).((t_115 * t_110.n) + t_116)) *.
+                 (t_110.arr).((t_115 * t_110.n) + j_132)))
            done;
-           (t_130.arr).((j_151 * t_130.n) + t_136) <- 0.
+           (t_110.arr).((j_131 * t_110.n) + t_116) <- 0.
           end else ()
          done;
-         (t_133 := ((! t_133) *. i_150))
+         (t_113 := ((! t_113) *. i_130))
         end;
-        (t_128 := ((! t_128) + 1))
-     | None -> (t_134 := 0));
-    (t_129 := ((! t_129) + 1))
+        (t_108 := ((! t_108) + 1))
+     | None -> (t_114 := 0));
+    (t_109 := ((! t_109) + 1))
    done;
-   (t_130,
-    if ((! t_134) = 0) then 0.
-    else if ((! t_134) = 1) then (! t_133)
-    else (~-. (! t_133)))>.
+   (t_110,
+    if ((! t_114) = 0) then 0.
+    else if ((! t_114) = 1) then (! t_113)
+    else (~-. (! t_113)))>.
 # val resFV3 :
   ('a,
    Funct4.GenFV3.Ctr.contr ->
    Funct4.OutRank(Funct4.FloatDomain)(Funct4.GenericVectorContainer)(Funct4.Rank).res)
   code =
-  .<fun a_153 ->
-   let t_154 = (ref 0) in
-   let t_155 = (ref 0) in
-   let t_156 = {arr = (Array.copy a_153.arr)} (a_153) in
-   let t_157 = a_153.m in
-   let t_158 = a_153.n in
-   while (((! t_155) < t_157) && ((! t_154) < t_158)) do
-    let t_159 = (! t_154) in
-    let t_160 = (! t_155) in
-    let t_161 = (ref (None)) in
-    let t_173 =
+  .<fun a_133 ->
+   let t_134 = (ref 0) in
+   let t_135 = (ref 0) in
+   let t_136 = {arr = (Array.copy a_133.arr)} (a_133) in
+   let t_137 = a_133.m in
+   let t_138 = a_133.n in
+   while (((! t_135) < t_137) && ((! t_134) < t_138)) do
+    let t_139 = (! t_134) in
+    let t_140 = (! t_135) in
+    let t_141 = (ref (None)) in
+    let t_153 =
      begin
-      for j_170 = t_159 to (t_158 - 1) do
-       let t_171 = (t_156.arr).((j_170 * t_156.n) + t_160) in
-       if (not (t_171 = 0.)) then
-        (match (! t_161) with
-         | Some (i_172) ->
-            if ((abs_float (snd i_172)) < (abs_float t_171)) then
-             (t_161 := (Some (j_170, t_171)))
+      for j_150 = t_139 to (t_138 - 1) do
+       let t_151 = (t_136.arr).((j_150 * t_136.n) + t_140) in
+       if (not (t_151 = 0.)) then
+        (match (! t_141) with
+         | Some (i_152) ->
+            if ((abs_float (snd i_152)) < (abs_float t_151)) then
+             (t_141 := (Some (j_150, t_151)))
             else ()
-         | None -> (t_161 := (Some (j_170, t_171))))
+         | None -> (t_141 := (Some (j_150, t_151))))
        else ()
       done;
-      (match (! t_161) with
-       | Some (i_162) ->
-          if ((fst i_162) <> t_159) then begin
-           let a_163 = t_156.arr
-           and n_164 = t_156.n
-           and m_165 = t_156.m in
-           let i1_166 = (t_159 * n_164)
-           and i2_167 = ((fst i_162) * n_164) in
-           for i_168 = 0 to (m_165 - 1) do
-            let t_169 = a_163.(i1_166 + i_168) in
-            a_163.(i2_167 + i_168) <- a_163.(i1_166 + i_168);
-            a_163.(i1_166 + i_168) <- t_169
+      (match (! t_141) with
+       | Some (i_142) ->
+          if ((fst i_142) <> t_139) then begin
+           let a_143 = t_136.arr
+           and n_144 = t_136.n
+           and m_145 = t_136.m in
+           let i1_146 = (t_139 * n_144)
+           and i2_147 = ((fst i_142) * n_144) in
+           for i_148 = 0 to (m_145 - 1) do
+            let t_149 = a_143.(i1_146 + i_148) in
+            a_143.(i2_147 + i_148) <- a_143.(i1_146 + i_148);
+            a_143.(i1_146 + i_148) <- t_149
            done;
            ()
           end else ();
-          (Some (snd i_162))
+          (Some (snd i_142))
        | None -> (None))
      end in
-    (match t_173 with
-     | Some (i_174) ->
+    (match t_153 with
+     | Some (i_154) ->
         begin
-         for j_175 = (t_159 + 1) to (t_158 - 1) do
-          if (not ((t_156.arr).((j_175 * t_156.n) + t_160) = 0.)) then begin
-           for j_176 = (t_160 + 1) to (t_157 - 1) do
-            (t_156.arr).((j_175 * t_156.n) + j_176) <-
-             ((t_156.arr).((j_175 * t_156.n) + j_176) -.
-               (((t_156.arr).((j_175 * t_156.n) + t_160) /.
-                  (t_156.arr).((t_159 * t_156.n) + t_160)) *.
-                 (t_156.arr).((t_159 * t_156.n) + j_176)))
+         for j_155 = (t_139 + 1) to (t_138 - 1) do
+          if (not ((t_136.arr).((j_155 * t_136.n) + t_140) = 0.)) then begin
+           for j_156 = (t_140 + 1) to (t_137 - 1) do
+            (t_136.arr).((j_155 * t_136.n) + j_156) <-
+             ((t_136.arr).((j_155 * t_136.n) + j_156) -.
+               (((t_136.arr).((j_155 * t_136.n) + t_140) /.
+                  (t_136.arr).((t_139 * t_136.n) + t_140)) *.
+                 (t_136.arr).((t_139 * t_136.n) + j_156)))
            done;
-           (t_156.arr).((j_175 * t_156.n) + t_160) <- 0.
+           (t_136.arr).((j_155 * t_136.n) + t_140) <- 0.
           end else ()
          done;
          ()
         end;
-        (t_154 := ((! t_154) + 1))
+        (t_134 := ((! t_134) + 1))
      | None -> ());
-    (t_155 := ((! t_155) + 1))
+    (t_135 := ((! t_135) + 1))
    done;
-   (t_156, (! t_154))>.
+   (t_136, (! t_134))>.
 # val resFV4 :
   ('a,
    Funct4.GenFV4.Ctr.contr ->
    Funct4.OutDetRank(Funct4.FloatDomain)(Funct4.GenericVectorContainer)(Funct4.FDet)(Funct4.Rank).res)
   code =
-  .<fun a_177 ->
-   let t_178 = (ref 0) in
-   let t_179 = (ref 0) in
-   let t_180 = {arr = (Array.copy a_177.arr)} (a_177) in
-   let t_181 = a_177.m in
-   let t_182 = a_177.n in
-   let t_183 = (ref 1.) in
-   let t_184 = (ref 1) in
-   while (((! t_179) < t_181) && ((! t_178) < t_182)) do
-    let t_185 = (! t_178) in
-    let t_186 = (! t_179) in
-    let t_187 = (ref (None)) in
-    let t_199 =
+  .<fun a_157 ->
+   let t_158 = (ref 0) in
+   let t_159 = (ref 0) in
+   let t_160 = {arr = (Array.copy a_157.arr)} (a_157) in
+   let t_161 = a_157.m in
+   let t_162 = a_157.n in
+   let t_163 = (ref 1.) in
+   let t_164 = (ref 1) in
+   while (((! t_159) < t_161) && ((! t_158) < t_162)) do
+    let t_165 = (! t_158) in
+    let t_166 = (! t_159) in
+    let t_167 = (ref (None)) in
+    let t_179 =
      begin
-      for j_196 = t_185 to (t_182 - 1) do
-       let t_197 = (t_180.arr).((j_196 * t_180.n) + t_186) in
-       if (not (t_197 = 0.)) then
-        (match (! t_187) with
-         | Some (i_198) ->
-            if ((abs_float (snd i_198)) < (abs_float t_197)) then
-             (t_187 := (Some (j_196, t_197)))
+      for j_176 = t_165 to (t_162 - 1) do
+       let t_177 = (t_160.arr).((j_176 * t_160.n) + t_166) in
+       if (not (t_177 = 0.)) then
+        (match (! t_167) with
+         | Some (i_178) ->
+            if ((abs_float (snd i_178)) < (abs_float t_177)) then
+             (t_167 := (Some (j_176, t_177)))
             else ()
-         | None -> (t_187 := (Some (j_196, t_197))))
+         | None -> (t_167 := (Some (j_176, t_177))))
        else ()
       done;
-      (match (! t_187) with
-       | Some (i_188) ->
-          if ((fst i_188) <> t_185) then begin
-           let a_189 = t_180.arr
-           and n_190 = t_180.n
-           and m_191 = t_180.m in
-           let i1_192 = (t_185 * n_190)
-           and i2_193 = ((fst i_188) * n_190) in
-           for i_194 = 0 to (m_191 - 1) do
-            let t_195 = a_189.(i1_192 + i_194) in
-            a_189.(i2_193 + i_194) <- a_189.(i1_192 + i_194);
-            a_189.(i1_192 + i_194) <- t_195
+      (match (! t_167) with
+       | Some (i_168) ->
+          if ((fst i_168) <> t_165) then begin
+           let a_169 = t_160.arr
+           and n_170 = t_160.n
+           and m_171 = t_160.m in
+           let i1_172 = (t_165 * n_170)
+           and i2_173 = ((fst i_168) * n_170) in
+           for i_174 = 0 to (m_171 - 1) do
+            let t_175 = a_169.(i1_172 + i_174) in
+            a_169.(i2_173 + i_174) <- a_169.(i1_172 + i_174);
+            a_169.(i1_172 + i_174) <- t_175
            done;
-           (t_184 := (~- (! t_184)))
+           (t_164 := (~- (! t_164)))
           end else ();
-          (Some (snd i_188))
+          (Some (snd i_168))
        | None -> (None))
      end in
-    (match t_199 with
-     | Some (i_200) ->
+    (match t_179 with
+     | Some (i_180) ->
         begin
-         for j_201 = (t_185 + 1) to (t_182 - 1) do
-          if (not ((t_180.arr).((j_201 * t_180.n) + t_186) = 0.)) then begin
-           for j_202 = (t_186 + 1) to (t_181 - 1) do
-            (t_180.arr).((j_201 * t_180.n) + j_202) <-
-             ((t_180.arr).((j_201 * t_180.n) + j_202) -.
-               (((t_180.arr).((j_201 * t_180.n) + t_186) /.
-                  (t_180.arr).((t_185 * t_180.n) + t_186)) *.
-                 (t_180.arr).((t_185 * t_180.n) + j_202)))
+         for j_181 = (t_165 + 1) to (t_162 - 1) do
+          if (not ((t_160.arr).((j_181 * t_160.n) + t_166) = 0.)) then begin
+           for j_182 = (t_166 + 1) to (t_161 - 1) do
+            (t_160.arr).((j_181 * t_160.n) + j_182) <-
+             ((t_160.arr).((j_181 * t_160.n) + j_182) -.
+               (((t_160.arr).((j_181 * t_160.n) + t_166) /.
+                  (t_160.arr).((t_165 * t_160.n) + t_166)) *.
+                 (t_160.arr).((t_165 * t_160.n) + j_182)))
            done;
-           (t_180.arr).((j_201 * t_180.n) + t_186) <- 0.
+           (t_160.arr).((j_181 * t_160.n) + t_166) <- 0.
           end else ()
          done;
-         (t_183 := ((! t_183) *. i_200))
+         (t_163 := ((! t_163) *. i_180))
         end;
-        (t_178 := ((! t_178) + 1))
-     | None -> (t_184 := 0));
-    (t_179 := ((! t_179) + 1))
+        (t_158 := ((! t_158) + 1))
+     | None -> (t_164 := 0));
+    (t_159 := ((! t_159) + 1))
    done;
-   (t_180,
-    if ((! t_184) = 0) then 0.
-    else if ((! t_184) = 1) then (! t_183)
-    else (~-. (! t_183)), (! t_178))>.
+   (t_160,
+    if ((! t_164) = 0) then 0.
+    else if ((! t_164) = 1) then (! t_163)
+    else (~-. (! t_163)), (! t_158))>.
 # val resIA1 :
   ('a,
    Funct4.GenIA1.Ctr.contr ->
    Funct4.OutJustMatrix(Funct4.IntegerDomain)(Funct4.GenericArrayContainer)(Funct4.IDet).res)
   code =
-  .<fun a_203 ->
-   let t_204 = (ref 0) in
-   let t_205 = (ref 0) in
-   let t_207 =
-    (Array.map (fun x_206 -> (Array.copy x_206)) (Array.copy a_203)) in
-   let t_208 = (Array.length a_203.(0)) in
-   let t_209 = (Array.length a_203) in
-   let t_210 = (ref 1) in
-   let t_211 = (ref 1) in
-   while (((! t_205) < t_208) && ((! t_204) < t_209)) do
-    let t_212 = (! t_204) in
-    let t_213 = (! t_205) in
-    let t_214 = (ref (None)) in
-    let t_220 =
+  .<fun a_183 ->
+   let t_184 = (ref 0) in
+   let t_185 = (ref 0) in
+   let t_187 =
+    (Array.map (fun x_186 -> (Array.copy x_186)) (Array.copy a_183)) in
+   let t_188 = (Array.length a_183.(0)) in
+   let t_189 = (Array.length a_183) in
+   let t_190 = (ref 1) in
+   let t_191 = (ref 1) in
+   while (((! t_185) < t_188) && ((! t_184) < t_189)) do
+    let t_192 = (! t_184) in
+    let t_193 = (! t_185) in
+    let t_194 = (ref (None)) in
+    let t_200 =
      begin
-      for j_217 = t_212 to (t_209 - 1) do
-       let t_218 = (t_207.(j_217)).(t_213) in
-       if (not (t_218 = 0)) then
-        (match (! t_214) with
-         | Some (i_219) ->
-            if ((abs (snd i_219)) > (abs t_218)) then
-             (t_214 := (Some (j_217, t_218)))
+      for j_197 = t_192 to (t_189 - 1) do
+       let t_198 = (t_187.(j_197)).(t_193) in
+       if (not (t_198 = 0)) then
+        (match (! t_194) with
+         | Some (i_199) ->
+            if ((abs (snd i_199)) > (abs t_198)) then
+             (t_194 := (Some (j_197, t_198)))
             else ()
-         | None -> (t_214 := (Some (j_217, t_218))))
+         | None -> (t_194 := (Some (j_197, t_198))))
        else ()
       done;
-      (match (! t_214) with
-       | Some (i_215) ->
-          if ((fst i_215) <> t_212) then begin
-           let t_216 = t_207.(t_212) in
-           t_207.(t_212) <- t_207.(fst i_215);
-           t_207.(fst i_215) <- t_216;
-           (t_211 := (~- (! t_211)))
+      (match (! t_194) with
+       | Some (i_195) ->
+          if ((fst i_195) <> t_192) then begin
+           let t_196 = t_187.(t_192) in
+           t_187.(t_192) <- t_187.(fst i_195);
+           t_187.(fst i_195) <- t_196;
+           (t_191 := (~- (! t_191)))
           end else ();
-          (Some (snd i_215))
+          (Some (snd i_195))
        | None -> (None))
      end in
-    (match t_220 with
-     | Some (i_221) ->
+    (match t_200 with
+     | Some (i_201) ->
         begin
-         for j_222 = (t_212 + 1) to (t_209 - 1) do
-          if (not ((t_207.(j_222)).(t_213) = 0)) then begin
-           for j_223 = (t_213 + 1) to (t_208 - 1) do
-            (t_207.(j_222)).(j_223) <-
-             ((((t_207.(j_222)).(j_223) * (t_207.(t_212)).(t_213)) -
-                ((t_207.(t_212)).(j_223) * (t_207.(j_222)).(t_212))) /
-               (! t_210))
+         for j_202 = (t_192 + 1) to (t_189 - 1) do
+          if (not ((t_187.(j_202)).(t_193) = 0)) then begin
+           for j_203 = (t_193 + 1) to (t_188 - 1) do
+            (t_187.(j_202)).(j_203) <-
+             ((((t_187.(j_202)).(j_203) * (t_187.(t_192)).(t_193)) -
+                ((t_187.(t_192)).(j_203) * (t_187.(j_202)).(t_192))) /
+               (! t_190))
            done;
-           (t_207.(j_222)).(t_213) <- 0
+           (t_187.(j_202)).(t_193) <- 0
           end else ()
          done;
-         (t_210 := i_221)
+         (t_190 := i_201)
         end;
-        (t_204 := ((! t_204) + 1))
-     | None -> (t_211 := 0));
-    (t_205 := ((! t_205) + 1))
+        (t_184 := ((! t_184) + 1))
+     | None -> (t_191 := 0));
+    (t_185 := ((! t_185) + 1))
    done;
-   t_207>.
+   t_187>.
 # val resIA2 :
   ('a,
    Funct4.GenIA2.Ctr.contr ->
    Funct4.OutDet(Funct4.IntegerDomain)(Funct4.GenericArrayContainer)(Funct4.IDet).res)
   code =
-  .<fun a_224 ->
-   let t_225 = (ref 0) in
-   let t_226 = (ref 0) in
-   let t_228 =
-    (Array.map (fun x_227 -> (Array.copy x_227)) (Array.copy a_224)) in
-   let t_229 = (Array.length a_224.(0)) in
-   let t_230 = (Array.length a_224) in
-   let t_231 = (ref 1) in
-   let t_232 = (ref 1) in
-   while (((! t_226) < t_229) && ((! t_225) < t_230)) do
-    let t_233 = (! t_225) in
-    let t_234 = (! t_226) in
-    let t_235 = (ref (None)) in
-    let t_241 =
+  .<fun a_204 ->
+   let t_205 = (ref 0) in
+   let t_206 = (ref 0) in
+   let t_208 =
+    (Array.map (fun x_207 -> (Array.copy x_207)) (Array.copy a_204)) in
+   let t_209 = (Array.length a_204.(0)) in
+   let t_210 = (Array.length a_204) in
+   let t_211 = (ref 1) in
+   let t_212 = (ref 1) in
+   while (((! t_206) < t_209) && ((! t_205) < t_210)) do
+    let t_213 = (! t_205) in
+    let t_214 = (! t_206) in
+    let t_215 = (ref (None)) in
+    let t_221 =
      begin
-      for j_238 = t_233 to (t_230 - 1) do
-       let t_239 = (t_228.(j_238)).(t_234) in
-       if (not (t_239 = 0)) then
-        (match (! t_235) with
-         | Some (i_240) ->
-            if ((abs (snd i_240)) > (abs t_239)) then
-             (t_235 := (Some (j_238, t_239)))
+      for j_218 = t_213 to (t_210 - 1) do
+       let t_219 = (t_208.(j_218)).(t_214) in
+       if (not (t_219 = 0)) then
+        (match (! t_215) with
+         | Some (i_220) ->
+            if ((abs (snd i_220)) > (abs t_219)) then
+             (t_215 := (Some (j_218, t_219)))
             else ()
-         | None -> (t_235 := (Some (j_238, t_239))))
+         | None -> (t_215 := (Some (j_218, t_219))))
        else ()
       done;
-      (match (! t_235) with
-       | Some (i_236) ->
-          if ((fst i_236) <> t_233) then begin
-           let t_237 = t_228.(t_233) in
-           t_228.(t_233) <- t_228.(fst i_236);
-           t_228.(fst i_236) <- t_237;
-           (t_232 := (~- (! t_232)))
+      (match (! t_215) with
+       | Some (i_216) ->
+          if ((fst i_216) <> t_213) then begin
+           let t_217 = t_208.(t_213) in
+           t_208.(t_213) <- t_208.(fst i_216);
+           t_208.(fst i_216) <- t_217;
+           (t_212 := (~- (! t_212)))
           end else ();
-          (Some (snd i_236))
+          (Some (snd i_216))
        | None -> (None))
      end in
-    (match t_241 with
-     | Some (i_242) ->
+    (match t_221 with
+     | Some (i_222) ->
         begin
-         for j_243 = (t_233 + 1) to (t_230 - 1) do
-          if (not ((t_228.(j_243)).(t_234) = 0)) then begin
-           for j_244 = (t_234 + 1) to (t_229 - 1) do
-            (t_228.(j_243)).(j_244) <-
-             ((((t_228.(j_243)).(j_244) * (t_228.(t_233)).(t_234)) -
-                ((t_228.(t_233)).(j_244) * (t_228.(j_243)).(t_233))) /
-               (! t_231))
+         for j_223 = (t_213 + 1) to (t_210 - 1) do
+          if (not ((t_208.(j_223)).(t_214) = 0)) then begin
+           for j_224 = (t_214 + 1) to (t_209 - 1) do
+            (t_208.(j_223)).(j_224) <-
+             ((((t_208.(j_223)).(j_224) * (t_208.(t_213)).(t_214)) -
+                ((t_208.(t_213)).(j_224) * (t_208.(j_223)).(t_213))) /
+               (! t_211))
            done;
-           (t_228.(j_243)).(t_234) <- 0
+           (t_208.(j_223)).(t_214) <- 0
           end else ()
          done;
-         (t_231 := i_242)
+         (t_211 := i_222)
         end;
-        (t_225 := ((! t_225) + 1))
-     | None -> (t_232 := 0));
-    (t_226 := ((! t_226) + 1))
+        (t_205 := ((! t_205) + 1))
+     | None -> (t_212 := 0));
+    (t_206 := ((! t_206) + 1))
    done;
-   (t_228,
-    if ((! t_232) = 0) then 0
-    else if ((! t_232) = 1) then (! t_231)
-    else (~- (! t_231)))>.
+   (t_208,
+    if ((! t_212) = 0) then 0
+    else if ((! t_212) = 1) then (! t_211)
+    else (~- (! t_211)))>.
 # val resIA3 :
   ('a,
    Funct4.GenIA3.Ctr.contr ->
    Funct4.OutRank(Funct4.IntegerDomain)(Funct4.GenericArrayContainer)(Funct4.Rank).res)
   code =
-  .<fun a_245 ->
-   let t_246 = (ref 0) in
-   let t_247 = (ref 0) in
-   let t_249 =
-    (Array.map (fun x_248 -> (Array.copy x_248)) (Array.copy a_245)) in
-   let t_250 = (Array.length a_245.(0)) in
-   let t_251 = (Array.length a_245) in
-   let t_252 = (ref 1) in
-   let t_253 = (ref 1) in
-   while (((! t_247) < t_250) && ((! t_246) < t_251)) do
-    let t_254 = (! t_246) in
-    let t_255 = (! t_247) in
-    let t_256 = (ref (None)) in
-    let t_262 =
+  .<fun a_225 ->
+   let t_226 = (ref 0) in
+   let t_227 = (ref 0) in
+   let t_229 =
+    (Array.map (fun x_228 -> (Array.copy x_228)) (Array.copy a_225)) in
+   let t_230 = (Array.length a_225.(0)) in
+   let t_231 = (Array.length a_225) in
+   let t_232 = (ref 1) in
+   let t_233 = (ref 1) in
+   while (((! t_227) < t_230) && ((! t_226) < t_231)) do
+    let t_234 = (! t_226) in
+    let t_235 = (! t_227) in
+    let t_236 = (ref (None)) in
+    let t_242 =
      begin
-      for j_259 = t_254 to (t_251 - 1) do
-       let t_260 = (t_249.(j_259)).(t_255) in
-       if (not (t_260 = 0)) then
-        (match (! t_256) with
-         | Some (i_261) ->
-            if ((abs (snd i_261)) > (abs t_260)) then
-             (t_256 := (Some (j_259, t_260)))
+      for j_239 = t_234 to (t_231 - 1) do
+       let t_240 = (t_229.(j_239)).(t_235) in
+       if (not (t_240 = 0)) then
+        (match (! t_236) with
+         | Some (i_241) ->
+            if ((abs (snd i_241)) > (abs t_240)) then
+             (t_236 := (Some (j_239, t_240)))
             else ()
-         | None -> (t_256 := (Some (j_259, t_260))))
+         | None -> (t_236 := (Some (j_239, t_240))))
        else ()
       done;
-      (match (! t_256) with
-       | Some (i_257) ->
-          if ((fst i_257) <> t_254) then begin
-           let t_258 = t_249.(t_254) in
-           t_249.(t_254) <- t_249.(fst i_257);
-           t_249.(fst i_257) <- t_258;
+      (match (! t_236) with
+       | Some (i_237) ->
+          if ((fst i_237) <> t_234) then begin
+           let t_238 = t_229.(t_234) in
+           t_229.(t_234) <- t_229.(fst i_237);
+           t_229.(fst i_237) <- t_238;
            ()
           end else ();
-          (Some (snd i_257))
+          (Some (snd i_237))
        | None -> (None))
      end in
-    (match t_262 with
-     | Some (i_263) ->
+    (match t_242 with
+     | Some (i_243) ->
         begin
-         for j_264 = (t_254 + 1) to (t_251 - 1) do
-          if (not ((t_249.(j_264)).(t_255) = 0)) then begin
-           for j_265 = (t_255 + 1) to (t_250 - 1) do
-            (t_249.(j_264)).(j_265) <-
-             ((((t_249.(j_264)).(j_265) * (t_249.(t_254)).(t_255)) -
-                ((t_249.(t_254)).(j_265) * (t_249.(j_264)).(t_254))) /
-               (! t_252))
+         for j_244 = (t_234 + 1) to (t_231 - 1) do
+          if (not ((t_229.(j_244)).(t_235) = 0)) then begin
+           for j_245 = (t_235 + 1) to (t_230 - 1) do
+            (t_229.(j_244)).(j_245) <-
+             ((((t_229.(j_244)).(j_245) * (t_229.(t_234)).(t_235)) -
+                ((t_229.(t_234)).(j_245) * (t_229.(j_244)).(t_234))) /
+               (! t_232))
            done;
-           (t_249.(j_264)).(t_255) <- 0
+           (t_229.(j_244)).(t_235) <- 0
           end else ()
          done;
-         (t_252 := i_263)
+         (t_232 := i_243)
         end;
-        (t_246 := ((! t_246) + 1))
-     | None -> (t_253 := 0));
-    (t_247 := ((! t_247) + 1))
+        (t_226 := ((! t_226) + 1))
+     | None -> (t_233 := 0));
+    (t_227 := ((! t_227) + 1))
    done;
-   (t_249, (! t_246))>.
+   (t_229, (! t_226))>.
 # val resIA4 :
   ('a,
    Funct4.GenIA4.Ctr.contr ->
    Funct4.OutDetRank(Funct4.IntegerDomain)(Funct4.GenericArrayContainer)(Funct4.IDet)(Funct4.Rank).res)
   code =
-  .<fun a_266 ->
-   let t_267 = (ref 0) in
-   let t_268 = (ref 0) in
-   let t_270 =
-    (Array.map (fun x_269 -> (Array.copy x_269)) (Array.copy a_266)) in
-   let t_271 = (Array.length a_266.(0)) in
-   let t_272 = (Array.length a_266) in
-   let t_273 = (ref 1) in
-   let t_274 = (ref 1) in
-   while (((! t_268) < t_271) && ((! t_267) < t_272)) do
-    let t_275 = (! t_267) in
-    let t_276 = (! t_268) in
-    let t_277 = (ref (None)) in
-    let t_283 =
+  .<fun a_246 ->
+   let t_247 = (ref 0) in
+   let t_248 = (ref 0) in
+   let t_250 =
+    (Array.map (fun x_249 -> (Array.copy x_249)) (Array.copy a_246)) in
+   let t_251 = (Array.length a_246.(0)) in
+   let t_252 = (Array.length a_246) in
+   let t_253 = (ref 1) in
+   let t_254 = (ref 1) in
+   while (((! t_248) < t_251) && ((! t_247) < t_252)) do
+    let t_255 = (! t_247) in
+    let t_256 = (! t_248) in
+    let t_257 = (ref (None)) in
+    let t_263 =
      begin
-      for j_280 = t_275 to (t_272 - 1) do
-       let t_281 = (t_270.(j_280)).(t_276) in
-       if (not (t_281 = 0)) then
-        (match (! t_277) with
-         | Some (i_282) ->
-            if ((abs (snd i_282)) > (abs t_281)) then
-             (t_277 := (Some (j_280, t_281)))
+      for j_260 = t_255 to (t_252 - 1) do
+       let t_261 = (t_250.(j_260)).(t_256) in
+       if (not (t_261 = 0)) then
+        (match (! t_257) with
+         | Some (i_262) ->
+            if ((abs (snd i_262)) > (abs t_261)) then
+             (t_257 := (Some (j_260, t_261)))
             else ()
-         | None -> (t_277 := (Some (j_280, t_281))))
+         | None -> (t_257 := (Some (j_260, t_261))))
        else ()
       done;
-      (match (! t_277) with
-       | Some (i_278) ->
-          if ((fst i_278) <> t_275) then begin
-           let t_279 = t_270.(t_275) in
-           t_270.(t_275) <- t_270.(fst i_278);
-           t_270.(fst i_278) <- t_279;
-           (t_274 := (~- (! t_274)))
+      (match (! t_257) with
+       | Some (i_258) ->
+          if ((fst i_258) <> t_255) then begin
+           let t_259 = t_250.(t_255) in
+           t_250.(t_255) <- t_250.(fst i_258);
+           t_250.(fst i_258) <- t_259;
+           (t_254 := (~- (! t_254)))
           end else ();
-          (Some (snd i_278))
+          (Some (snd i_258))
        | None -> (None))
      end in
-    (match t_283 with
-     | Some (i_284) ->
+    (match t_263 with
+     | Some (i_264) ->
         begin
-         for j_285 = (t_275 + 1) to (t_272 - 1) do
-          if (not ((t_270.(j_285)).(t_276) = 0)) then begin
-           for j_286 = (t_276 + 1) to (t_271 - 1) do
-            (t_270.(j_285)).(j_286) <-
-             ((((t_270.(j_285)).(j_286) * (t_270.(t_275)).(t_276)) -
-                ((t_270.(t_275)).(j_286) * (t_270.(j_285)).(t_275))) /
-               (! t_273))
+         for j_265 = (t_255 + 1) to (t_252 - 1) do
+          if (not ((t_250.(j_265)).(t_256) = 0)) then begin
+           for j_266 = (t_256 + 1) to (t_251 - 1) do
+            (t_250.(j_265)).(j_266) <-
+             ((((t_250.(j_265)).(j_266) * (t_250.(t_255)).(t_256)) -
+                ((t_250.(t_255)).(j_266) * (t_250.(j_265)).(t_255))) /
+               (! t_253))
            done;
-           (t_270.(j_285)).(t_276) <- 0
+           (t_250.(j_265)).(t_256) <- 0
           end else ()
          done;
-         (t_273 := i_284)
+         (t_253 := i_264)
         end;
-        (t_267 := ((! t_267) + 1))
-     | None -> (t_274 := 0));
-    (t_268 := ((! t_268) + 1))
+        (t_247 := ((! t_247) + 1))
+     | None -> (t_254 := 0));
+    (t_248 := ((! t_248) + 1))
    done;
-   (t_270,
-    if ((! t_274) = 0) then 0
-    else if ((! t_274) = 1) then (! t_273)
-    else (~- (! t_273)), (! t_267))>.
+   (t_250,
+    if ((! t_254) = 0) then 0
+    else if ((! t_254) = 1) then (! t_253)
+    else (~- (! t_253)), (! t_247))>.
 # val resIV1 :
   ('a,
    Funct4.GenIV1.Ctr.contr ->
    Funct4.OutJustMatrix(Funct4.IntegerDomain)(Funct4.GenericVectorContainer)(Funct4.NoDet(Funct4.IntegerDomain)).res)
   code =
-  .<fun a_287 ->
-   let t_288 = (ref 0) in
-   let t_289 = (ref 0) in
-   let t_290 = {arr = (Array.copy a_287.arr)} (a_287) in
-   let t_291 = a_287.m in
-   let t_292 = a_287.n in
-   let t_293 = (ref 1) in
-   let t_294 = (ref 1) in
-   while (((! t_289) < t_291) && ((! t_288) < t_292)) do
-    let t_295 = (! t_288) in
-    let t_296 = (! t_289) in
-    let t_297 = (ref (None)) in
-    let t_309 =
+  .<fun a_267 ->
+   let t_268 = (ref 0) in
+   let t_269 = (ref 0) in
+   let t_270 = {arr = (Array.copy a_267.arr)} (a_267) in
+   let t_271 = a_267.m in
+   let t_272 = a_267.n in
+   let t_273 = (ref 1) in
+   let t_274 = (ref 1) in
+   while (((! t_269) < t_271) && ((! t_268) < t_272)) do
+    let t_275 = (! t_268) in
+    let t_276 = (! t_269) in
+    let t_277 = (ref (None)) in
+    let t_289 =
      begin
-      for j_306 = t_295 to (t_292 - 1) do
-       let t_307 = (t_290.arr).((j_306 * t_290.n) + t_296) in
-       if (not (t_307 = 0)) then
-        (match (! t_297) with
-         | Some (i_308) ->
-            if ((abs (snd i_308)) > (abs t_307)) then
-             (t_297 := (Some (j_306, t_307)))
+      for j_286 = t_275 to (t_272 - 1) do
+       let t_287 = (t_270.arr).((j_286 * t_270.n) + t_276) in
+       if (not (t_287 = 0)) then
+        (match (! t_277) with
+         | Some (i_288) ->
+            if ((abs (snd i_288)) > (abs t_287)) then
+             (t_277 := (Some (j_286, t_287)))
             else ()
-         | None -> (t_297 := (Some (j_306, t_307))))
+         | None -> (t_277 := (Some (j_286, t_287))))
        else ()
       done;
-      (match (! t_297) with
-       | Some (i_298) ->
-          if ((fst i_298) <> t_295) then begin
-           let a_299 = t_290.arr
-           and n_300 = t_290.n
-           and m_301 = t_290.m in
-           let i1_302 = (t_295 * n_300)
-           and i2_303 = ((fst i_298) * n_300) in
-           for i_304 = 0 to (m_301 - 1) do
-            let t_305 = a_299.(i1_302 + i_304) in
-            a_299.(i2_303 + i_304) <- a_299.(i1_302 + i_304);
-            a_299.(i1_302 + i_304) <- t_305
+      (match (! t_277) with
+       | Some (i_278) ->
+          if ((fst i_278) <> t_275) then begin
+           let a_279 = t_270.arr
+           and n_280 = t_270.n
+           and m_281 = t_270.m in
+           let i1_282 = (t_275 * n_280)
+           and i2_283 = ((fst i_278) * n_280) in
+           for i_284 = 0 to (m_281 - 1) do
+            let t_285 = a_279.(i1_282 + i_284) in
+            a_279.(i2_283 + i_284) <- a_279.(i1_282 + i_284);
+            a_279.(i1_282 + i_284) <- t_285
            done;
            ()
           end else ();
-          (Some (snd i_298))
+          (Some (snd i_278))
        | None -> (None))
      end in
-    (match t_309 with
-     | Some (i_310) ->
+    (match t_289 with
+     | Some (i_290) ->
         begin
-         for j_311 = (t_295 + 1) to (t_292 - 1) do
-          if (not ((t_290.arr).((j_311 * t_290.n) + t_296) = 0)) then begin
-           for j_312 = (t_296 + 1) to (t_291 - 1) do
-            (t_290.arr).((j_311 * t_290.n) + j_312) <-
-             ((((t_290.arr).((j_311 * t_290.n) + j_312) *
-                 (t_290.arr).((t_295 * t_290.n) + t_296)) -
-                ((t_290.arr).((t_295 * t_290.n) + j_312) *
-                  (t_290.arr).((j_311 * t_290.n) + t_295))) / (! t_293))
+         for j_291 = (t_275 + 1) to (t_272 - 1) do
+          if (not ((t_270.arr).((j_291 * t_270.n) + t_276) = 0)) then begin
+           for j_292 = (t_276 + 1) to (t_271 - 1) do
+            (t_270.arr).((j_291 * t_270.n) + j_292) <-
+             ((((t_270.arr).((j_291 * t_270.n) + j_292) *
+                 (t_270.arr).((t_275 * t_270.n) + t_276)) -
+                ((t_270.arr).((t_275 * t_270.n) + j_292) *
+                  (t_270.arr).((j_291 * t_270.n) + t_275))) / (! t_273))
            done;
-           (t_290.arr).((j_311 * t_290.n) + t_296) <- 0
+           (t_270.arr).((j_291 * t_270.n) + t_276) <- 0
           end else ()
          done;
-         (t_293 := i_310)
+         (t_273 := i_290)
         end;
-        (t_288 := ((! t_288) + 1))
-     | None -> (t_294 := 0));
-    (t_289 := ((! t_289) + 1))
+        (t_268 := ((! t_268) + 1))
+     | None -> (t_274 := 0));
+    (t_269 := ((! t_269) + 1))
    done;
-   t_290>.
+   t_270>.
 # val resIV2 :
   ('a,
    Funct4.GenIV2.Ctr.contr ->
    Funct4.OutDet(Funct4.IntegerDomain)(Funct4.GenericVectorContainer)(Funct4.IDet).res)
   code =
-  .<fun a_313 ->
-   let t_314 = (ref 0) in
-   let t_315 = (ref 0) in
-   let t_316 = {arr = (Array.copy a_313.arr)} (a_313) in
-   let t_317 = a_313.m in
-   let t_318 = a_313.n in
-   let t_319 = (ref 1) in
-   let t_320 = (ref 1) in
-   while (((! t_315) < t_317) && ((! t_314) < t_318)) do
-    let t_321 = (! t_314) in
-    let t_322 = (! t_315) in
-    let t_323 = (ref (None)) in
-    let t_335 =
+  .<fun a_293 ->
+   let t_294 = (ref 0) in
+   let t_295 = (ref 0) in
+   let t_296 = {arr = (Array.copy a_293.arr)} (a_293) in
+   let t_297 = a_293.m in
+   let t_298 = a_293.n in
+   let t_299 = (ref 1) in
+   let t_300 = (ref 1) in
+   while (((! t_295) < t_297) && ((! t_294) < t_298)) do
+    let t_301 = (! t_294) in
+    let t_302 = (! t_295) in
+    let t_303 = (ref (None)) in
+    let t_315 =
      begin
-      for j_332 = t_321 to (t_318 - 1) do
-       let t_333 = (t_316.arr).((j_332 * t_316.n) + t_322) in
-       if (not (t_333 = 0)) then
-        (match (! t_323) with
-         | Some (i_334) ->
-            if ((abs (snd i_334)) > (abs t_333)) then
-             (t_323 := (Some (j_332, t_333)))
+      for j_312 = t_301 to (t_298 - 1) do
+       let t_313 = (t_296.arr).((j_312 * t_296.n) + t_302) in
+       if (not (t_313 = 0)) then
+        (match (! t_303) with
+         | Some (i_314) ->
+            if ((abs (snd i_314)) > (abs t_313)) then
+             (t_303 := (Some (j_312, t_313)))
             else ()
-         | None -> (t_323 := (Some (j_332, t_333))))
+         | None -> (t_303 := (Some (j_312, t_313))))
        else ()
       done;
-      (match (! t_323) with
-       | Some (i_324) ->
-          if ((fst i_324) <> t_321) then begin
-           let a_325 = t_316.arr
-           and n_326 = t_316.n
-           and m_327 = t_316.m in
-           let i1_328 = (t_321 * n_326)
-           and i2_329 = ((fst i_324) * n_326) in
-           for i_330 = 0 to (m_327 - 1) do
-            let t_331 = a_325.(i1_328 + i_330) in
-            a_325.(i2_329 + i_330) <- a_325.(i1_328 + i_330);
-            a_325.(i1_328 + i_330) <- t_331
+      (match (! t_303) with
+       | Some (i_304) ->
+          if ((fst i_304) <> t_301) then begin
+           let a_305 = t_296.arr
+           and n_306 = t_296.n
+           and m_307 = t_296.m in
+           let i1_308 = (t_301 * n_306)
+           and i2_309 = ((fst i_304) * n_306) in
+           for i_310 = 0 to (m_307 - 1) do
+            let t_311 = a_305.(i1_308 + i_310) in
+            a_305.(i2_309 + i_310) <- a_305.(i1_308 + i_310);
+            a_305.(i1_308 + i_310) <- t_311
            done;
-           (t_320 := (~- (! t_320)))
+           (t_300 := (~- (! t_300)))
           end else ();
-          (Some (snd i_324))
+          (Some (snd i_304))
        | None -> (None))
      end in
-    (match t_335 with
-     | Some (i_336) ->
+    (match t_315 with
+     | Some (i_316) ->
         begin
-         for j_337 = (t_321 + 1) to (t_318 - 1) do
-          if (not ((t_316.arr).((j_337 * t_316.n) + t_322) = 0)) then begin
-           for j_338 = (t_322 + 1) to (t_317 - 1) do
-            (t_316.arr).((j_337 * t_316.n) + j_338) <-
-             ((((t_316.arr).((j_337 * t_316.n) + j_338) *
-                 (t_316.arr).((t_321 * t_316.n) + t_322)) -
-                ((t_316.arr).((t_321 * t_316.n) + j_338) *
-                  (t_316.arr).((j_337 * t_316.n) + t_321))) / (! t_319))
+         for j_317 = (t_301 + 1) to (t_298 - 1) do
+          if (not ((t_296.arr).((j_317 * t_296.n) + t_302) = 0)) then begin
+           for j_318 = (t_302 + 1) to (t_297 - 1) do
+            (t_296.arr).((j_317 * t_296.n) + j_318) <-
+             ((((t_296.arr).((j_317 * t_296.n) + j_318) *
+                 (t_296.arr).((t_301 * t_296.n) + t_302)) -
+                ((t_296.arr).((t_301 * t_296.n) + j_318) *
+                  (t_296.arr).((j_317 * t_296.n) + t_301))) / (! t_299))
            done;
-           (t_316.arr).((j_337 * t_316.n) + t_322) <- 0
+           (t_296.arr).((j_317 * t_296.n) + t_302) <- 0
           end else ()
          done;
-         (t_319 := i_336)
+         (t_299 := i_316)
         end;
-        (t_314 := ((! t_314) + 1))
-     | None -> (t_320 := 0));
-    (t_315 := ((! t_315) + 1))
+        (t_294 := ((! t_294) + 1))
+     | None -> (t_300 := 0));
+    (t_295 := ((! t_295) + 1))
    done;
-   (t_316,
-    if ((! t_320) = 0) then 0
-    else if ((! t_320) = 1) then (! t_319)
-    else (~- (! t_319)))>.
+   (t_296,
+    if ((! t_300) = 0) then 0
+    else if ((! t_300) = 1) then (! t_299)
+    else (~- (! t_299)))>.
 # val resIV3 :
   ('a,
    Funct4.GenIV3.Ctr.contr ->
    Funct4.OutRank(Funct4.IntegerDomain)(Funct4.GenericVectorContainer)(Funct4.Rank).res)
   code =
-  .<fun a_339 ->
-   let t_340 = (ref 0) in
-   let t_341 = (ref 0) in
-   let t_342 = {arr = (Array.copy a_339.arr)} (a_339) in
-   let t_343 = a_339.m in
-   let t_344 = a_339.n in
-   let t_345 = (ref 1) in
-   let t_346 = (ref 1) in
-   while (((! t_341) < t_343) && ((! t_340) < t_344)) do
-    let t_347 = (! t_340) in
-    let t_348 = (! t_341) in
-    let t_349 = (ref (None)) in
-    let t_361 =
+  .<fun a_319 ->
+   let t_320 = (ref 0) in
+   let t_321 = (ref 0) in
+   let t_322 = {arr = (Array.copy a_319.arr)} (a_319) in
+   let t_323 = a_319.m in
+   let t_324 = a_319.n in
+   let t_325 = (ref 1) in
+   let t_326 = (ref 1) in
+   while (((! t_321) < t_323) && ((! t_320) < t_324)) do
+    let t_327 = (! t_320) in
+    let t_328 = (! t_321) in
+    let t_329 = (ref (None)) in
+    let t_341 =
      begin
-      for j_358 = t_347 to (t_344 - 1) do
-       let t_359 = (t_342.arr).((j_358 * t_342.n) + t_348) in
-       if (not (t_359 = 0)) then
-        (match (! t_349) with
-         | Some (i_360) ->
-            if ((abs (snd i_360)) > (abs t_359)) then
-             (t_349 := (Some (j_358, t_359)))
+      for j_338 = t_327 to (t_324 - 1) do
+       let t_339 = (t_322.arr).((j_338 * t_322.n) + t_328) in
+       if (not (t_339 = 0)) then
+        (match (! t_329) with
+         | Some (i_340) ->
+            if ((abs (snd i_340)) > (abs t_339)) then
+             (t_329 := (Some (j_338, t_339)))
             else ()
-         | None -> (t_349 := (Some (j_358, t_359))))
+         | None -> (t_329 := (Some (j_338, t_339))))
        else ()
       done;
-      (match (! t_349) with
-       | Some (i_350) ->
-          if ((fst i_350) <> t_347) then begin
-           let a_351 = t_342.arr
-           and n_352 = t_342.n
-           and m_353 = t_342.m in
-           let i1_354 = (t_347 * n_352)
-           and i2_355 = ((fst i_350) * n_352) in
-           for i_356 = 0 to (m_353 - 1) do
-            let t_357 = a_351.(i1_354 + i_356) in
-            a_351.(i2_355 + i_356) <- a_351.(i1_354 + i_356);
-            a_351.(i1_354 + i_356) <- t_357
+      (match (! t_329) with
+       | Some (i_330) ->
+          if ((fst i_330) <> t_327) then begin
+           let a_331 = t_322.arr
+           and n_332 = t_322.n
+           and m_333 = t_322.m in
+           let i1_334 = (t_327 * n_332)
+           and i2_335 = ((fst i_330) * n_332) in
+           for i_336 = 0 to (m_333 - 1) do
+            let t_337 = a_331.(i1_334 + i_336) in
+            a_331.(i2_335 + i_336) <- a_331.(i1_334 + i_336);
+            a_331.(i1_334 + i_336) <- t_337
            done;
            ()
           end else ();
-          (Some (snd i_350))
+          (Some (snd i_330))
        | None -> (None))
      end in
-    (match t_361 with
-     | Some (i_362) ->
+    (match t_341 with
+     | Some (i_342) ->
         begin
-         for j_363 = (t_347 + 1) to (t_344 - 1) do
-          if (not ((t_342.arr).((j_363 * t_342.n) + t_348) = 0)) then begin
-           for j_364 = (t_348 + 1) to (t_343 - 1) do
-            (t_342.arr).((j_363 * t_342.n) + j_364) <-
-             ((((t_342.arr).((j_363 * t_342.n) + j_364) *
-                 (t_342.arr).((t_347 * t_342.n) + t_348)) -
-                ((t_342.arr).((t_347 * t_342.n) + j_364) *
-                  (t_342.arr).((j_363 * t_342.n) + t_347))) / (! t_345))
+         for j_343 = (t_327 + 1) to (t_324 - 1) do
+          if (not ((t_322.arr).((j_343 * t_322.n) + t_328) = 0)) then begin
+           for j_344 = (t_328 + 1) to (t_323 - 1) do
+            (t_322.arr).((j_343 * t_322.n) + j_344) <-
+             ((((t_322.arr).((j_343 * t_322.n) + j_344) *
+                 (t_322.arr).((t_327 * t_322.n) + t_328)) -
+                ((t_322.arr).((t_327 * t_322.n) + j_344) *
+                  (t_322.arr).((j_343 * t_322.n) + t_327))) / (! t_325))
            done;
-           (t_342.arr).((j_363 * t_342.n) + t_348) <- 0
+           (t_322.arr).((j_343 * t_322.n) + t_328) <- 0
           end else ()
          done;
-         (t_345 := i_362)
+         (t_325 := i_342)
         end;
-        (t_340 := ((! t_340) + 1))
-     | None -> (t_346 := 0));
-    (t_341 := ((! t_341) + 1))
+        (t_320 := ((! t_320) + 1))
+     | None -> (t_326 := 0));
+    (t_321 := ((! t_321) + 1))
    done;
-   (t_342, (! t_340))>.
+   (t_322, (! t_320))>.
 # val resIV4 :
   ('a,
    Funct4.GenIV4.Ctr.contr ->
    Funct4.OutDetRank(Funct4.IntegerDomain)(Funct4.GenericVectorContainer)(Funct4.IDet)(Funct4.Rank).res)
   code =
-  .<fun a_365 ->
-   let t_366 = (ref 0) in
-   let t_367 = (ref 0) in
-   let t_368 = {arr = (Array.copy a_365.arr)} (a_365) in
-   let t_369 = a_365.m in
-   let t_370 = a_365.n in
-   let t_371 = (ref 1) in
-   let t_372 = (ref 1) in
-   while (((! t_367) < t_369) && ((! t_366) < t_370)) do
-    let t_373 = (! t_366) in
-    let t_374 = (! t_367) in
-    let t_375 = (ref (None)) in
-    let t_387 =
+  .<fun a_345 ->
+   let t_346 = (ref 0) in
+   let t_347 = (ref 0) in
+   let t_348 = {arr = (Array.copy a_345.arr)} (a_345) in
+   let t_349 = a_345.m in
+   let t_350 = a_345.n in
+   let t_351 = (ref 1) in
+   let t_352 = (ref 1) in
+   while (((! t_347) < t_349) && ((! t_346) < t_350)) do
+    let t_353 = (! t_346) in
+    let t_354 = (! t_347) in
+    let t_355 = (ref (None)) in
+    let t_367 =
      begin
-      for j_384 = t_373 to (t_370 - 1) do
-       let t_385 = (t_368.arr).((j_384 * t_368.n) + t_374) in
-       if (not (t_385 = 0)) then
-        (match (! t_375) with
-         | Some (i_386) ->
-            if ((abs (snd i_386)) > (abs t_385)) then
-             (t_375 := (Some (j_384, t_385)))
+      for j_364 = t_353 to (t_350 - 1) do
+       let t_365 = (t_348.arr).((j_364 * t_348.n) + t_354) in
+       if (not (t_365 = 0)) then
+        (match (! t_355) with
+         | Some (i_366) ->
+            if ((abs (snd i_366)) > (abs t_365)) then
+             (t_355 := (Some (j_364, t_365)))
             else ()
-         | None -> (t_375 := (Some (j_384, t_385))))
+         | None -> (t_355 := (Some (j_364, t_365))))
        else ()
       done;
-      (match (! t_375) with
-       | Some (i_376) ->
-          if ((fst i_376) <> t_373) then begin
-           let a_377 = t_368.arr
-           and n_378 = t_368.n
-           and m_379 = t_368.m in
-           let i1_380 = (t_373 * n_378)
-           and i2_381 = ((fst i_376) * n_378) in
-           for i_382 = 0 to (m_379 - 1) do
-            let t_383 = a_377.(i1_380 + i_382) in
-            a_377.(i2_381 + i_382) <- a_377.(i1_380 + i_382);
-            a_377.(i1_380 + i_382) <- t_383
+      (match (! t_355) with
+       | Some (i_356) ->
+          if ((fst i_356) <> t_353) then begin
+           let a_357 = t_348.arr
+           and n_358 = t_348.n
+           and m_359 = t_348.m in
+           let i1_360 = (t_353 * n_358)
+           and i2_361 = ((fst i_356) * n_358) in
+           for i_362 = 0 to (m_359 - 1) do
+            let t_363 = a_357.(i1_360 + i_362) in
+            a_357.(i2_361 + i_362) <- a_357.(i1_360 + i_362);
+            a_357.(i1_360 + i_362) <- t_363
            done;
-           (t_372 := (~- (! t_372)))
+           (t_352 := (~- (! t_352)))
           end else ();
-          (Some (snd i_376))
+          (Some (snd i_356))
        | None -> (None))
      end in
-    (match t_387 with
-     | Some (i_388) ->
+    (match t_367 with
+     | Some (i_368) ->
         begin
-         for j_389 = (t_373 + 1) to (t_370 - 1) do
-          if (not ((t_368.arr).((j_389 * t_368.n) + t_374) = 0)) then begin
-           for j_390 = (t_374 + 1) to (t_369 - 1) do
-            (t_368.arr).((j_389 * t_368.n) + j_390) <-
-             ((((t_368.arr).((j_389 * t_368.n) + j_390) *
-                 (t_368.arr).((t_373 * t_368.n) + t_374)) -
-                ((t_368.arr).((t_373 * t_368.n) + j_390) *
-                  (t_368.arr).((j_389 * t_368.n) + t_373))) / (! t_371))
+         for j_369 = (t_353 + 1) to (t_350 - 1) do
+          if (not ((t_348.arr).((j_369 * t_348.n) + t_354) = 0)) then begin
+           for j_370 = (t_354 + 1) to (t_349 - 1) do
+            (t_348.arr).((j_369 * t_348.n) + j_370) <-
+             ((((t_348.arr).((j_369 * t_348.n) + j_370) *
+                 (t_348.arr).((t_353 * t_348.n) + t_354)) -
+                ((t_348.arr).((t_353 * t_348.n) + j_370) *
+                  (t_348.arr).((j_369 * t_348.n) + t_353))) / (! t_351))
            done;
-           (t_368.arr).((j_389 * t_368.n) + t_374) <- 0
+           (t_348.arr).((j_369 * t_348.n) + t_354) <- 0
           end else ()
          done;
-         (t_371 := i_388)
+         (t_351 := i_368)
         end;
-        (t_366 := ((! t_366) + 1))
-     | None -> (t_372 := 0));
-    (t_367 := ((! t_367) + 1))
+        (t_346 := ((! t_346) + 1))
+     | None -> (t_352 := 0));
+    (t_347 := ((! t_347) + 1))
    done;
-   (t_368,
-    if ((! t_372) = 0) then 0
-    else if ((! t_372) = 1) then (! t_371)
-    else (~- (! t_371)), (! t_366))>.
+   (t_348,
+    if ((! t_352) = 0) then 0
+    else if ((! t_352) = 1) then (! t_351)
+    else (~- (! t_351)), (! t_346))>.
+# val resFA11 :
+  ('a,
+   Funct4.GenFA11.Ctr.contr ->
+   Funct4.OutJustMatrix(Funct4.FloatDomain)(Funct4.GenericArrayContainer)(Funct4.NoDet(Funct4.FloatDomain)).res)
+  code =
+  .<fun a_371 ->
+   let t_372 = (ref 0) in
+   let t_373 = (ref 0) in
+   let t_375 =
+    (Array.map (fun x_374 -> (Array.copy x_374)) (Array.copy a_371)) in
+   let t_376 = (Array.length a_371.(0)) in
+   let t_377 = (Array.length a_371) in
+   while (((! t_373) < t_376) && ((! t_372) < t_377)) do
+    let t_378 = (! t_372) in
+    let t_379 = (! t_373) in
+    let t_380 = (ref (None)) in
+    let t_389 =
+     begin
+      for j_385 = t_378 to (t_377 - 1) do
+       for j_386 = t_379 to (t_376 - 1) do
+        let t_387 = (t_375.(j_385)).(j_386) in
+        if (not (t_387 = 0.)) then
+         (match (! t_380) with
+          | Some (i_388) ->
+             if ((abs_float (snd i_388)) < (abs_float t_387)) then
+              (t_380 := (Some ((j_385, j_386), t_387)))
+             else ()
+          | None -> (t_380 := (Some ((j_385, j_386), t_387))))
+        else ()
+       done
+      done;
+      (match (! t_380) with
+       | Some (i_381) ->
+          if ((snd (fst i_381)) <> t_379) then begin
+           for r_383 = 0 to ((Array.length t_375) - 1) do
+            let t_384 = (t_375.(r_383)).(t_379) in
+            (t_375.(r_383)).(t_379) <- (t_375.(r_383)).(snd (fst i_381));
+            (t_375.(r_383)).(snd (fst i_381)) <- t_384
+           done;
+           ()
+          end else ();
+          if ((fst (fst i_381)) <> t_378) then begin
+           let t_382 = t_375.(t_378) in
+           t_375.(t_378) <- t_375.(fst (fst i_381));
+           t_375.(fst (fst i_381)) <- t_382;
+           ()
+          end else ();
+          (Some (snd i_381))
+       | None -> (None))
+     end in
+    (match t_389 with
+     | Some (i_390) ->
+        begin
+         for j_391 = (t_378 + 1) to (t_377 - 1) do
+          if (not ((t_375.(j_391)).(t_379) = 0.)) then begin
+           for j_392 = (t_379 + 1) to (t_376 - 1) do
+            (t_375.(j_391)).(j_392) <-
+             ((t_375.(j_391)).(j_392) -.
+               (((t_375.(j_391)).(t_379) /. (t_375.(t_378)).(t_379)) *.
+                 (t_375.(t_378)).(j_392)))
+           done;
+           (t_375.(j_391)).(t_379) <- 0.
+          end else ()
+         done;
+         ()
+        end;
+        (t_372 := ((! t_372) + 1))
+     | None -> ());
+    (t_373 := ((! t_373) + 1))
+   done;
+   t_375>.
+# val resFA12 :
+  ('a,
+   Funct4.GenFA12.Ctr.contr ->
+   Funct4.OutDet(Funct4.FloatDomain)(Funct4.GenericArrayContainer)(Funct4.FDet).res)
+  code =
+  .<fun a_393 ->
+   let t_394 = (ref 0) in
+   let t_395 = (ref 0) in
+   let t_397 =
+    (Array.map (fun x_396 -> (Array.copy x_396)) (Array.copy a_393)) in
+   let t_398 = (Array.length a_393.(0)) in
+   let t_399 = (Array.length a_393) in
+   let t_400 = (ref 1.) in
+   let t_401 = (ref 1) in
+   while (((! t_395) < t_398) && ((! t_394) < t_399)) do
+    let t_402 = (! t_394) in
+    let t_403 = (! t_395) in
+    let t_404 = (ref (None)) in
+    let t_413 =
+     begin
+      for j_409 = t_402 to (t_399 - 1) do
+       for j_410 = t_403 to (t_398 - 1) do
+        let t_411 = (t_397.(j_409)).(j_410) in
+        if (not (t_411 = 0.)) then
+         (match (! t_404) with
+          | Some (i_412) ->
+             if ((abs_float (snd i_412)) < (abs_float t_411)) then
+              (t_404 := (Some ((j_409, j_410), t_411)))
+             else ()
+          | None -> (t_404 := (Some ((j_409, j_410), t_411))))
+        else ()
+       done
+      done;
+      (match (! t_404) with
+       | Some (i_405) ->
+          if ((snd (fst i_405)) <> t_403) then begin
+           for r_407 = 0 to ((Array.length t_397) - 1) do
+            let t_408 = (t_397.(r_407)).(t_403) in
+            (t_397.(r_407)).(t_403) <- (t_397.(r_407)).(snd (fst i_405));
+            (t_397.(r_407)).(snd (fst i_405)) <- t_408
+           done;
+           (t_401 := (~- (! t_401)))
+          end else ();
+          if ((fst (fst i_405)) <> t_402) then begin
+           let t_406 = t_397.(t_402) in
+           t_397.(t_402) <- t_397.(fst (fst i_405));
+           t_397.(fst (fst i_405)) <- t_406;
+           (t_401 := (~- (! t_401)))
+          end else ();
+          (Some (snd i_405))
+       | None -> (None))
+     end in
+    (match t_413 with
+     | Some (i_414) ->
+        begin
+         for j_415 = (t_402 + 1) to (t_399 - 1) do
+          if (not ((t_397.(j_415)).(t_403) = 0.)) then begin
+           for j_416 = (t_403 + 1) to (t_398 - 1) do
+            (t_397.(j_415)).(j_416) <-
+             ((t_397.(j_415)).(j_416) -.
+               (((t_397.(j_415)).(t_403) /. (t_397.(t_402)).(t_403)) *.
+                 (t_397.(t_402)).(j_416)))
+           done;
+           (t_397.(j_415)).(t_403) <- 0.
+          end else ()
+         done;
+         (t_400 := ((! t_400) *. i_414))
+        end;
+        (t_394 := ((! t_394) + 1))
+     | None -> (t_401 := 0));
+    (t_395 := ((! t_395) + 1))
+   done;
+   (t_397,
+    if ((! t_401) = 0) then 0.
+    else if ((! t_401) = 1) then (! t_400)
+    else (~-. (! t_400)))>.
+# val resFA13 :
+  ('a,
+   Funct4.GenFA13.Ctr.contr ->
+   Funct4.OutRank(Funct4.FloatDomain)(Funct4.GenericArrayContainer)(Funct4.Rank).res)
+  code =
+  .<fun a_417 ->
+   let t_418 = (ref 0) in
+   let t_419 = (ref 0) in
+   let t_421 =
+    (Array.map (fun x_420 -> (Array.copy x_420)) (Array.copy a_417)) in
+   let t_422 = (Array.length a_417.(0)) in
+   let t_423 = (Array.length a_417) in
+   while (((! t_419) < t_422) && ((! t_418) < t_423)) do
+    let t_424 = (! t_418) in
+    let t_425 = (! t_419) in
+    let t_426 = (ref (None)) in
+    let t_435 =
+     begin
+      for j_431 = t_424 to (t_423 - 1) do
+       for j_432 = t_425 to (t_422 - 1) do
+        let t_433 = (t_421.(j_431)).(j_432) in
+        if (not (t_433 = 0.)) then
+         (match (! t_426) with
+          | Some (i_434) ->
+             if ((abs_float (snd i_434)) < (abs_float t_433)) then
+              (t_426 := (Some ((j_431, j_432), t_433)))
+             else ()
+          | None -> (t_426 := (Some ((j_431, j_432), t_433))))
+        else ()
+       done
+      done;
+      (match (! t_426) with
+       | Some (i_427) ->
+          if ((snd (fst i_427)) <> t_425) then begin
+           for r_429 = 0 to ((Array.length t_421) - 1) do
+            let t_430 = (t_421.(r_429)).(t_425) in
+            (t_421.(r_429)).(t_425) <- (t_421.(r_429)).(snd (fst i_427));
+            (t_421.(r_429)).(snd (fst i_427)) <- t_430
+           done;
+           ()
+          end else ();
+          if ((fst (fst i_427)) <> t_424) then begin
+           let t_428 = t_421.(t_424) in
+           t_421.(t_424) <- t_421.(fst (fst i_427));
+           t_421.(fst (fst i_427)) <- t_428;
+           ()
+          end else ();
+          (Some (snd i_427))
+       | None -> (None))
+     end in
+    (match t_435 with
+     | Some (i_436) ->
+        begin
+         for j_437 = (t_424 + 1) to (t_423 - 1) do
+          if (not ((t_421.(j_437)).(t_425) = 0.)) then begin
+           for j_438 = (t_425 + 1) to (t_422 - 1) do
+            (t_421.(j_437)).(j_438) <-
+             ((t_421.(j_437)).(j_438) -.
+               (((t_421.(j_437)).(t_425) /. (t_421.(t_424)).(t_425)) *.
+                 (t_421.(t_424)).(j_438)))
+           done;
+           (t_421.(j_437)).(t_425) <- 0.
+          end else ()
+         done;
+         ()
+        end;
+        (t_418 := ((! t_418) + 1))
+     | None -> ());
+    (t_419 := ((! t_419) + 1))
+   done;
+   (t_421, (! t_418))>.
+# val resFA14 :
+  ('a,
+   Funct4.GenFA14.Ctr.contr ->
+   Funct4.OutDetRank(Funct4.FloatDomain)(Funct4.GenericArrayContainer)(Funct4.FDet)(Funct4.Rank).res)
+  code =
+  .<fun a_439 ->
+   let t_440 = (ref 0) in
+   let t_441 = (ref 0) in
+   let t_443 =
+    (Array.map (fun x_442 -> (Array.copy x_442)) (Array.copy a_439)) in
+   let t_444 = (Array.length a_439.(0)) in
+   let t_445 = (Array.length a_439) in
+   let t_446 = (ref 1.) in
+   let t_447 = (ref 1) in
+   while (((! t_441) < t_444) && ((! t_440) < t_445)) do
+    let t_448 = (! t_440) in
+    let t_449 = (! t_441) in
+    let t_450 = (ref (None)) in
+    let t_459 =
+     begin
+      for j_455 = t_448 to (t_445 - 1) do
+       for j_456 = t_449 to (t_444 - 1) do
+        let t_457 = (t_443.(j_455)).(j_456) in
+        if (not (t_457 = 0.)) then
+         (match (! t_450) with
+          | Some (i_458) ->
+             if ((abs_float (snd i_458)) < (abs_float t_457)) then
+              (t_450 := (Some ((j_455, j_456), t_457)))
+             else ()
+          | None -> (t_450 := (Some ((j_455, j_456), t_457))))
+        else ()
+       done
+      done;
+      (match (! t_450) with
+       | Some (i_451) ->
+          if ((snd (fst i_451)) <> t_449) then begin
+           for r_453 = 0 to ((Array.length t_443) - 1) do
+            let t_454 = (t_443.(r_453)).(t_449) in
+            (t_443.(r_453)).(t_449) <- (t_443.(r_453)).(snd (fst i_451));
+            (t_443.(r_453)).(snd (fst i_451)) <- t_454
+           done;
+           (t_447 := (~- (! t_447)))
+          end else ();
+          if ((fst (fst i_451)) <> t_448) then begin
+           let t_452 = t_443.(t_448) in
+           t_443.(t_448) <- t_443.(fst (fst i_451));
+           t_443.(fst (fst i_451)) <- t_452;
+           (t_447 := (~- (! t_447)))
+          end else ();
+          (Some (snd i_451))
+       | None -> (None))
+     end in
+    (match t_459 with
+     | Some (i_460) ->
+        begin
+         for j_461 = (t_448 + 1) to (t_445 - 1) do
+          if (not ((t_443.(j_461)).(t_449) = 0.)) then begin
+           for j_462 = (t_449 + 1) to (t_444 - 1) do
+            (t_443.(j_461)).(j_462) <-
+             ((t_443.(j_461)).(j_462) -.
+               (((t_443.(j_461)).(t_449) /. (t_443.(t_448)).(t_449)) *.
+                 (t_443.(t_448)).(j_462)))
+           done;
+           (t_443.(j_461)).(t_449) <- 0.
+          end else ()
+         done;
+         (t_446 := ((! t_446) *. i_460))
+        end;
+        (t_440 := ((! t_440) + 1))
+     | None -> (t_447 := 0));
+    (t_441 := ((! t_441) + 1))
+   done;
+   (t_443,
+    if ((! t_447) = 0) then 0.
+    else if ((! t_447) = 1) then (! t_446)
+    else (~-. (! t_446)), (! t_440))>.
 #   val rFA1 :
   Funct4.GenFA1.Ctr.contr ->
   Funct4.OutJustMatrix(Funct4.FloatDomain)(Funct4.GenericArrayContainer)(Funct4.NoDet(Funct4.FloatDomain)).res =
@@ -1206,6 +1435,22 @@
 # val rIV4 :
   Funct4.GenIV4.Ctr.contr ->
   Funct4.OutDetRank(Funct4.IntegerDomain)(Funct4.GenericVectorContainer)(Funct4.IDet)(Funct4.Rank).res =
+  <fun>
+# val rFA11 :
+  Funct4.GenFA11.Ctr.contr ->
+  Funct4.OutJustMatrix(Funct4.FloatDomain)(Funct4.GenericArrayContainer)(Funct4.NoDet(Funct4.FloatDomain)).res =
+  <fun>
+# val rFA12 :
+  Funct4.GenFA12.Ctr.contr ->
+  Funct4.OutDet(Funct4.FloatDomain)(Funct4.GenericArrayContainer)(Funct4.FDet).res =
+  <fun>
+# val rFA13 :
+  Funct4.GenFA13.Ctr.contr ->
+  Funct4.OutRank(Funct4.FloatDomain)(Funct4.GenericArrayContainer)(Funct4.Rank).res =
+  <fun>
+# val rFA14 :
+  Funct4.GenFA14.Ctr.contr ->
+  Funct4.OutDetRank(Funct4.FloatDomain)(Funct4.GenericArrayContainer)(Funct4.FDet)(Funct4.Rank).res =
   <fun>
 #                                                   val ia0 : Funct4.IntegerDomain.v array array = [|[|1|]|]
 val ia1 : Funct4.IntegerDomain.v array array =
@@ -1298,5 +1543,63 @@ val resF1 :
    ([|[|4.; 13.; 5.|]; [|0.; 6.25; 1.25|]; [|0.; 0.; 2.|]; [|0.; 0.; 0.|]|],
     50., 3);
    ([|[|0.; 13.; 5.|]; [|0.; 0.; 2.23076923076923084|]; [|0.; 0.; 0.|]|], 0.,
+    2)]
+#   val resF11 :
+  Funct4.OutJustMatrix(Funct4.FloatDomain)(Funct4.GenericArrayContainer)(Funct4.NoDet(Funct4.FloatDomain)).res
+  list =
+  [[|[|1.|]|];
+   [|[|13.; 5.; 4.|]; [|0.; 2.23076923076923084; 0.384615384615384581|];
+     [|0.; 0.; -1.72413793103448287|]|];
+   [|[|13.; 5.; 4.; 0.|];
+     [|0.; 2.23076923076923084; 0.384615384615384581; 0.|];
+     [|0.; 0.; -1.72413793103448287; 0.|]|];
+   [|[|13.; 5.; 4.|]; [|0.; 2.23076923076923084; 0.384615384615384581|];
+     [|0.; 0.; -1.72413793103448287|]; [|0.; 0.; 0.|]|];
+   [|[|13.; 5.; 0.|]; [|0.; 2.23076923076923084; 0.|]; [|0.; 0.; 0.|]|]]
+# val resF12 :
+  Funct4.OutDet(Funct4.FloatDomain)(Funct4.GenericArrayContainer)(Funct4.FDet).res
+  list =
+  [([|[|1.|]|], 1.);
+   ([|[|13.; 5.; 4.|]; [|0.; 2.23076923076923084; 0.384615384615384581|];
+      [|0.; 0.; -1.72413793103448287|]|],
+    50.);
+   ([|[|13.; 5.; 4.; 0.|];
+      [|0.; 2.23076923076923084; 0.384615384615384581; 0.|];
+      [|0.; 0.; -1.72413793103448287; 0.|]|],
+    50.);
+   ([|[|13.; 5.; 4.|]; [|0.; 2.23076923076923084; 0.384615384615384581|];
+      [|0.; 0.; -1.72413793103448287|]; [|0.; 0.; 0.|]|],
+    50.);
+   ([|[|13.; 5.; 0.|]; [|0.; 2.23076923076923084; 0.|]; [|0.; 0.; 0.|]|], 0.)]
+# val resF13 :
+  Funct4.OutRank(Funct4.FloatDomain)(Funct4.GenericArrayContainer)(Funct4.Rank).res
+  list =
+  [([|[|1.|]|], 1);
+   ([|[|13.; 5.; 4.|]; [|0.; 2.23076923076923084; 0.384615384615384581|];
+      [|0.; 0.; -1.72413793103448287|]|],
+    3);
+   ([|[|13.; 5.; 4.; 0.|];
+      [|0.; 2.23076923076923084; 0.384615384615384581; 0.|];
+      [|0.; 0.; -1.72413793103448287; 0.|]|],
+    3);
+   ([|[|13.; 5.; 4.|]; [|0.; 2.23076923076923084; 0.384615384615384581|];
+      [|0.; 0.; -1.72413793103448287|]; [|0.; 0.; 0.|]|],
+    3);
+   ([|[|13.; 5.; 0.|]; [|0.; 2.23076923076923084; 0.|]; [|0.; 0.; 0.|]|], 2)]
+# val resF14 :
+  Funct4.OutDetRank(Funct4.FloatDomain)(Funct4.GenericArrayContainer)(Funct4.FDet)(Funct4.Rank).res
+  list =
+  [([|[|1.|]|], 1., 1);
+   ([|[|13.; 5.; 4.|]; [|0.; 2.23076923076923084; 0.384615384615384581|];
+      [|0.; 0.; -1.72413793103448287|]|],
+    50., 3);
+   ([|[|13.; 5.; 4.; 0.|];
+      [|0.; 2.23076923076923084; 0.384615384615384581; 0.|];
+      [|0.; 0.; -1.72413793103448287; 0.|]|],
+    50., 3);
+   ([|[|13.; 5.; 4.|]; [|0.; 2.23076923076923084; 0.384615384615384581|];
+      [|0.; 0.; -1.72413793103448287|]; [|0.; 0.; 0.|]|],
+    50., 3);
+   ([|[|13.; 5.; 0.|]; [|0.; 2.23076923076923084; 0.|]; [|0.; 0.; 0.|]|], 0.,
     2)]
 # 

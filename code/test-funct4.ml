@@ -1,7 +1,6 @@
 open Funct4;;
 
 let resFA1 = GenFA1.gen ;;
-let resFA11 = GenFA11.gen ;;
 let resFA2 = GenFA2.gen ;;
 let resFA3 = GenFA3.gen ;;
 let resFA4 = GenFA4.gen ;;
@@ -17,6 +16,10 @@ let resIV1 = GenIV1.gen ;;
 let resIV2 = GenIV2.gen ;;
 let resIV3 = GenIV3.gen ;;
 let resIV4 = GenIV4.gen ;;
+let resFA11 = GenFA11.gen ;;
+let resFA12 = GenFA12.gen ;;
+let resFA13 = GenFA13.gen ;;
+let resFA14 = GenFA14.gen ;;
 
 let rFA1 = .! resFA1 ;;
 let rFA2 = .! resFA2 ;;
@@ -34,6 +37,10 @@ let rIV1 = .! resIV1 ;;
 let rIV2 = .! resIV2 ;;
 let rIV3 = .! resIV3 ;;
 let rIV4 = .! resIV4 ;;
+let rFA11 = .! resFA11 ;;
+let rFA12 = .! resFA12 ;;
+let rFA13 = .! resFA13 ;;
+let rFA14 = .! resFA14 ;;
 
 let ia0 = Array.make 1 (Array.make 1 1)
 let ia1 = Array.of_list [
@@ -92,3 +99,8 @@ let resF1 = List.map rFA1 fa5;;
 let resF2 = List.map rFA2 fa5;;
 let resF3 = List.map rFA3 fa5;;
 let resF4 = List.map rFA4 fa5;;
+
+let resF11 = List.map rFA11 fa5;;
+let resF12 = List.map rFA12 fa5;;
+let resF13 = List.map rFA13 fa5;;
+let resF14 = List.map rFA14 fa5;;

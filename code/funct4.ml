@@ -175,7 +175,14 @@ module GenericArrayContainer(Dom:DOMAIN) =
              (.~a).(.~r1) <- (.~a).(.~r2);
              (.~a).(.~r2) <- t
          end >.
-  let swap_cols_stmt a c1 c2 = .<failwith "swap_cols_stmt not yet implemeted">.
+  let swap_cols_stmt a c1 c2 = .< 
+      for r = 0 to .~(dim2 a)-1 do
+          let t = (.~a).(r).(.~c1) in
+          begin 
+              (.~a).(r).(.~c1) <- (.~a).(r).(.~c2);
+              (.~a).(r).(.~c2) <- t
+          end
+      done  >.
 end
 
 module GenericVectorContainer(Dom:DOMAIN) =
@@ -194,14 +201,25 @@ module GenericVectorContainer(Dom:DOMAIN) =
   let swap_rows_stmt b r1 r2 = .<
       let a = (.~b).arr and n = (.~b).n and m = (.~b).m in
       let i1 = .~r1*n and i2 = .~r2*n in
-      for i = 0 to m -1 do
+      for i = 0 to m-1 do
           let t = a.(i1 + i) in
           begin 
               a.(i2 + i) <- a.(i1 + i);
               a.(i1 + i) <- t
           end
       done  >.
-  let swap_cols_stmt a c1 c2 = .<failwith "swap_cols_stmt not yet implemeted">.
+  let swap_cols_stmt b c1 c2 = .<
+      let a = (.~b).arr and n = (.~b).n and m = (.~b).m in
+      let i1 = .~c1 and i2 = .~c2 in
+      let j = ref 0 in
+      for i = 0 to n-1 do
+          let t = a.(i1 + !j) in
+          begin 
+              a.(i2 + !j) <- a.(i1 + !j);
+              a.(i1 + !j) <- t;
+              j := !j + m
+          end
+      done  >.
 end
 
 (*
@@ -637,13 +655,26 @@ struct
                                    (ret (Ctr.swap_cols_stmt b c pc))
                                    (D.upd_sign ())))
                            (seqM
-                             (whenM (ret .< .~pc <> .~c >. )
+                             (whenM (ret .< .~pr <> .~r >. )
                                  (seqM
                                    (ret (Ctr.swap_rows_stmt b r pr))
                                    (D.upd_sign ())))
                               (ret .<Some .~brc>.))})
                 (ret .< None >.))
    }
+end
+
+module NoPivot
+   (Dom: DOMAIN) 
+   (C: CONTAINER2D)
+   (D: DETERMINANT with type indet = Dom.v) =
+struct
+   module Ctr = C(Dom)
+   (* In this case, we assume diagonal dominance, and so
+      just take the diagonal as ``pivot'' *)
+   let findpivot b r m c n = mdo { 
+       brc <-- Ctr.get b r c;
+       ret .< Some (.~brc) >. }
 end
 
 module Gen(Dom: DOMAIN)(C: CONTAINER2D)(PivotF: PIVOT)
@@ -693,11 +724,6 @@ module GenFA1 = Gen(FloatDomain)
                    (DivisionUpdate(FloatDomain)(GenericArrayContainer)(NoDet(FloatDomain)))
                    (OutJustMatrix(FloatDomain)(GenericArrayContainer)(NoDet(FloatDomain)))
 
-module GenFA11 = Gen(FloatDomain)
-                   (GenericArrayContainer)
-                   (FullPivot)
-                   (DivisionUpdate(FloatDomain)(GenericArrayContainer)(NoDet(FloatDomain)))
-                   (OutJustMatrix(FloatDomain)(GenericArrayContainer)(NoDet(FloatDomain)))
 module GenFA2 = Gen(FloatDomain)
                    (GenericArrayContainer)
                    (RowPivot)
@@ -781,3 +807,23 @@ module GenIV4 = Gen(IntegerDomain)
                    (RowPivot)
                    (FractionFreeUpdate(IntegerDomain)(GenericVectorContainer)(IDet))
                    (OutDetRank(IntegerDomain)(GenericVectorContainer)(IDet)(Rank));;
+module GenFA11 = Gen(FloatDomain)
+                   (GenericArrayContainer)
+                   (FullPivot)
+                   (DivisionUpdate(FloatDomain)(GenericArrayContainer)(NoDet(FloatDomain)))
+                   (OutJustMatrix(FloatDomain)(GenericArrayContainer)(NoDet(FloatDomain)))
+module GenFA12 = Gen(FloatDomain)
+                   (GenericArrayContainer)
+                   (FullPivot)
+                   (DivisionUpdate(FloatDomain)(GenericArrayContainer)(FDet))
+                   (OutDet(FloatDomain)(GenericArrayContainer)(FDet))
+module GenFA13 = Gen(FloatDomain)
+                   (GenericArrayContainer)
+                   (FullPivot)
+                   (DivisionUpdate(FloatDomain)(GenericArrayContainer)(NoDet(FloatDomain)))
+                   (OutRank(FloatDomain)(GenericArrayContainer)(Rank))
+module GenFA14 = Gen(FloatDomain)
+                   (GenericArrayContainer)
+                   (FullPivot)
+                   (DivisionUpdate(FloatDomain)(GenericArrayContainer)(FDet))
+                   (OutDetRank(FloatDomain)(GenericArrayContainer)(FDet)(Rank))
