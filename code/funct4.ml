@@ -222,93 +222,13 @@ module GenericVectorContainer(Dom:DOMAIN) =
       done  >.
 end
 
-(*
-Just started this
-module SparseRowContainer(Dom:DOMAIN) =
-  struct
-  type obj = Dom.v
-  type contr = ((int*obj) list) array * int
-  type 'a vc = ('a,contr) code
-  type 'a vo = ('a,obj) code
-  let gdefault x l = .< try 
-                            List.assoc .~x .~l 
-                        with Not_found -> .~Dom.zero >.
-  let sdefault loc x l = .< if not (l = .~Dom.zero) then
-                                loc <- (x,l) :: loc >.
-  let get x n m = ret .< let row = (.~x).(.~n) in .~(gdefault .<row>. m) >.
-  let set x n m y = 
-  let dim2 x = 
-  let dim1 x = 
-  let mapper g a = 
-  let swap_cols_stmt a c1 c2 = .<failwith "swap_cols_stmt not yet implemeted">.
-end
-*)
-
 (* set up some very general algebra that can be reused though not
-   so much in the current code (yet?) *)
+   so much in the current code (yet?) 
 type ('a,'b) abstract = Ground of 'b | Code of ('a, 'b) code
 let concretize = function
     | Ground x -> .<x>.
     | Code x   -> x
-
-module type MONOID = sig
-    type values
-    val uunit : values
-    val binop : values -> values -> values
-    val binopC : ('a,values) code -> ('a,values) code -> ('a,values) code
-end
-
-module type LIFTEDMONOID = sig
-    type t
-    type ('a,'b) liftedvalues
-    val lbinop : ('a,t) liftedvalues -> ('a,t) liftedvalues -> ('a,t) liftedvalues
-    val toconcrete : ('a,t) liftedvalues -> ('a,t) code
-end
-
-(* The lifted version is not commutative ! *)
-module LiftCommutativeMonoid(M:MONOID) = struct
-    type t = M.values 
-    type ('a,'b) liftedvalues = ('a, t) abstract
-    let generalize x = Ground x
-    let mixedop x y =
-        if x=M.uunit then y else Code (M.binopC .<x>. (concretize y))
-    let toconcrete (x: ('a,M.values) liftedvalues) = concretize x
-    let lbinop x y =
-        match (x,y) with
-        | (Ground a, Ground b) -> Ground (M.binop a b)
-        | (Ground a, b)        -> mixedop a b
-        | (a, Ground b)        -> mixedop b a
-        | (a, b) -> Code (M.binopC (concretize a) (concretize b))
-end
-
-module OrMonoid = struct
-    type values = bool
-    let uunit = false
-    let binop x y = ( x ||  y)
-    let binopC x y = .< .~x || .~y >.
-end
-module OrLMonoid = LiftCommutativeMonoid(OrMonoid)
-
-module AndMonoid = struct
-    type values = bool
-    let uunit = true
-    let binop x y = ( x &&  y)
-    let binopC x y = .< .~x && .~y >.
-end
-module AndLMonoid = LiftCommutativeMonoid(AndMonoid)
-
-module LogicGen(Or:LIFTEDMONOID)(And:LIFTEDMONOID) = 
-  struct
-    let mcode_or a b = mdo { 
-        x <-- a;
-        y <-- b;
-        ret (Or.toconcrete (Or.lbinop x y)) }
-    let mcode_and a b = mdo { 
-        x <-- a;
-        y <-- b;
-        ret (And.toconcrete (And.lbinop x y)) }
-end
-module Logic = LogicGen(OrLMonoid)(AndLMonoid)
+*)
 
 module type DETERMINANT = sig
   type indet
