@@ -401,7 +401,9 @@ module TrackDet(Dom: DOMAIN) =
   type indet = Dom.v
   type outdet = indet
   type tdet = outdet ref
-  type 'a lstate = ('a,tdet) code * ('a,tdet) code
+  (* the first part of the state is an integer: which is +1, 0, -1:
+     the sign of the determinant *)
+  type 'a lstate = ('a,int ref) code * ('a,tdet) code
         (* the purpose of this function is to make the union open.
            Alas, Camlp4 does not understand the :> coercion notation *)
   let coerce = function `TDet x -> `TDet x | x -> x
@@ -414,34 +416,34 @@ module TrackDet(Dom: DOMAIN) =
   let dstore v = store (`TDet v)
   let decl () = mdo {
       ddecl <-- retN (liftRef Dom.one);
-      dsdecl <-- retN (liftRef Dom.one);
+      dsdecl <-- retN (liftRef .<1>.);
       dstore (dsdecl,ddecl) }
   let upd_sign () = mdo {
       det <-- dfetch ();
-      det1 <-- retS (fst det);
-      r <-- Dom.times (liftGet det1) Dom.minusone;
-      ret .< .~det1 := .~r>. }
+      det1 <-- ret (fst det);
+      ret .< .~det1 := - (! .~det1)>. }
   let zero_sign () = mdo {
       det <-- dfetch ();
-      det1 <-- retS (fst det);
-      ret .<.~det1 := .~Dom.zero>. }
+      det1 <-- ret (fst det);
+      ret .<.~det1 := 0>. }
   let acc v = mdo {
       det <-- dfetch ();
-      det2 <-- retS (snd det);
+      det2 <-- ret (snd det);
       r <-- Dom.times (liftGet det2) v;
       ret .<.~det2 := .~r>. }
   let get () = mdo {
       det <-- dfetch ();
-      det1 <-- retS (snd det);
-      ret .<.~det1>. }
+      det2 <-- ret (snd det);
+      ret .<.~det2>. }
   let set v = mdo {
       det <-- dfetch ();
-      det2 <-- retS (snd det);
+      det2 <-- ret (snd det);
       ret .<.~det2 := .~v>.}
   let fin () = mdo {
-      det <-- dfetch ();
-      res <-- Dom.times (liftGet (fst det)) (liftGet (snd det));
-      ret res}
+      (det_sign,det) <-- dfetch ();
+      ifM (ret .<(! .~det_sign) = 0>.) (ret Dom.zero)
+	  (ifM (ret .<(! .~det_sign) = 1>.) (ret (liftGet det))
+	      (Dom.minus Dom.zero (liftGet det))) }
 end
 
 (* we need the domain anyways to get things to type properly *)
