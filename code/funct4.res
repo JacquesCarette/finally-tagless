@@ -26,8 +26,18 @@
       done;
       if ((! t_8) == (-1)) then (None) else (Some (! t_8))
      end in
-    (match t_10 with | Some (i_11) -> () | None -> ());
-    (t_2 := ((! t_2) + 1))
+    (match t_10 with
+     | Some (i_11) ->
+        if (i_11 <> (! t_2)) then
+         for j_12 = (! t_3) to (t_6 - 1) do
+          let t_13 = (t_5.(i_11)).(j_12) in
+          (t_5.(i_11)).(j_12) <- (t_5.(! t_2)).(j_12);
+          (t_5.(! t_2)).(j_12) <- t_13
+         done
+        else ();
+        (t_2 := ((! t_2) + 1))
+     | None -> ());
+    (t_3 := ((! t_3) + 1))
    done;
    t_5>.
 # val res2 :
@@ -58,8 +68,18 @@
       done;
       if ((! t_10) == (-1)) then (None) else (Some (! t_10))
      end in
-    (match t_12 with | Some (i_13) -> () | None -> ());
-    (t_2 := ((! t_2) + 1))
+    (match t_12 with
+     | Some (i_13) ->
+        if (i_13 <> (! t_2)) then
+         for j_14 = (! t_3) to (t_6 - 1) do
+          let t_15 = (t_5.(i_13)).(j_14) in
+          (t_5.(i_13)).(j_14) <- (t_5.(! t_2)).(j_14);
+          (t_5.(! t_2)).(j_14) <- t_15
+         done
+        else ();
+        (t_2 := ((! t_2) + 1))
+     | None -> (t_9 := 0.));
+    (t_3 := ((! t_3) + 1))
    done;
    (t_5, (! t_8))>.
 # val res3 :
@@ -87,8 +107,18 @@
       done;
       if ((! t_8) == (-1)) then (None) else (Some (! t_8))
      end in
-    (match t_10 with | Some (i_11) -> () | None -> ());
-    (t_2 := ((! t_2) + 1))
+    (match t_10 with
+     | Some (i_11) ->
+        if (i_11 <> (! t_2)) then
+         for j_12 = (! t_3) to (t_6 - 1) do
+          let t_13 = (t_5.(i_11)).(j_12) in
+          (t_5.(i_11)).(j_12) <- (t_5.(! t_2)).(j_12);
+          (t_5.(! t_2)).(j_12) <- t_13
+         done
+        else ();
+        (t_2 := ((! t_2) + 1))
+     | None -> ());
+    (t_3 := ((! t_3) + 1))
    done;
    (t_5, (! t_2))>.
 # val res4 :
@@ -118,8 +148,18 @@
       done;
       if ((! t_10) == (-1)) then (None) else (Some (! t_10))
      end in
-    (match t_12 with | Some (i_13) -> () | None -> ());
-    (t_2 := ((! t_2) + 1))
+    (match t_12 with
+     | Some (i_13) ->
+        if (i_13 <> (! t_2)) then
+         for j_14 = (! t_3) to (t_6 - 1) do
+          let t_15 = (t_5.(i_13)).(j_14) in
+          (t_5.(i_13)).(j_14) <- (t_5.(! t_2)).(j_14);
+          (t_5.(! t_2)).(j_14) <- t_15
+         done
+        else ();
+        (t_2 := ((! t_2) + 1))
+     | None -> (t_9 := 0));
+    (t_3 := ((! t_3) + 1))
    done;
    (t_5, (! t_8), (! t_2))>.
 #   val r1 :
