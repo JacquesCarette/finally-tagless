@@ -1,4 +1,4 @@
-\documentclass[11pt]{llncs}
+\documentclass{llncs}
 
 % Reduce display spacing
 \divide\abovedisplayskip 2
@@ -8,9 +8,10 @@
 
 \usepackage{hyphenat}
 \usepackage{comment}
-\usepackage{amsmath}
+\usepackage{amsmath,amssymb}
 \usepackage{amstext}
 \usepackage{url}
+
 
 \usepackage{ifpdf}
 \ifpdf
@@ -27,6 +28,8 @@
 \newlength{\mathindent}
 \setlength{\mathindent}{1em}
 
+% \usepackage[backref,colorlinks,bookmarks=true]{hyperref}
+
 % Reduce list spacing
 %% \makeatletter
 %% \renewcommand\@@listI{\leftmargin\leftmargini
@@ -39,6 +42,7 @@
 
 \newcommand{\omitnow}[1]{}
 \newcommand{\oleg}[1]{{\it [Oleg says: #1]}}
+\newcommand{\jacques}[1]{{\it [Jacques says: #1]}}
 
 \begin{document}
 \title{Functors, CPS and monads, or how to generate efficient
@@ -51,7 +55,6 @@ Oleg Kyselyov\inst{2}
 1280 Main St. West, Hamilton, Ontario Canada L8S 4K1
 \and
 Monterey, CA 93943}
-
 
 \maketitle
 
@@ -95,9 +98,9 @@ compiler because the tweaking often involves domain knowledge.
 
 Our goal was to implement a completely modular, textbook-style 
 modular design \cite{journals/cacm/parnas72a}, yet 
-have our code be very efficient.  Gaussian elimination, as it is 
-well-known, already contains many different aspects \cite{carette04},
-was chosen as a representative example.
+have our code be very efficient.  Gaussian elimination, as it is a  
+well-known algorithm, already contains many different aspects 
+\cite{carette04}, was chosen as a representative example.
 
 Whether one prefers to code in an imperative, object-oriented, functional, 
 or even in a mixed style, all abstraction mechanisms in current
@@ -119,15 +122,16 @@ does not scale well, it is a debugging nightmare, and usually suffers
 most from Software Aging \cite{parnas_aging}.  As with other tasks in
 programming, the answer is to turn to statically typed languages,
 which provide strong guarantees about the soundness of the resulting
-code.  MetaOCaml (cite website?) \cite{CTHL03} in particular stands
-out: not only it guarantees the absense of problems such as
-accidental variable capture -- so-called hygiene cite? \oleg{should we
-  also mention automatic well-formedness}, MetaOcaml also
+code.  MetaOCaml \cite{CTHL03,metaocaml-org} in particular stands
+out: not only it guarantees well-formedness and the absense of problems 
+such as accidental variable capture \cite{HygienicMacros}
+\jacques{is this the citation you meant?}
+MetaOcaml also
 statically ensures that both the code generator and the generated code
 are well-typed \cite{TahaSheard97,TahaThesis}.  While Template
 programming in C++ and Template Haskell do offer some amount of static
 typing \cite{conf/dagstuhl/CzarneckiOST03}, MetaOCaml\footnote{and
-  MetaML.}  offers stronger guarantees.  As well, since MetaOCaml is
+  MetaML.} offers stronger guarantees.  As well, since MetaOCaml is
 implemented on top of the very solid Ocaml language, one accrues
 additional benefits.
 
@@ -141,25 +145,43 @@ and error-prone, since the languages offer little support for catching
 errors early.
 
 In MetaOCaml, generated code cannot be examined and optimized at all. It must
-be generated just right.  
-
-- The FFT paper
-showed one way: abstract interpretation. But more problems remain
-(cite Padua et al paper at Haskell Workshop04): generating names in
-the presence of `if', 'while' etc. control operators (simple problem
-of generating names solved in the FFT paper); making CPS code clear
-(note that many authors are afraid of CPS code because it quickly
-becomes unreadable; we need CPS for name generation); compositionality
-of various (often interleaving: explain: determinant computation
-requires attention at several places) aspects and expressing
-dependencies among them; expressing more static guarantees about the
-generated code (e.g., not attempting full (fractional) division for
-the integer domain; generating full-pivoting code for the rational
-domain without |better_than| operation). In short: can we achieve all
-of the abstractions needed for the flexible Gaussian Elimination? Can
-we eliminate all of that abstraction's overhead in the generated code
-(without using intensional code analysis -- that is, maintaining the
-guarantees of MetaOCaml and using pure generative approach).
+be generated just right.  For simple code, this is relatively easy
+(see \cite{TahaThesis} for many examples).  For more complex examples,
+new techniques are necessary.  \cite{KiselyovTaha} introduces one
+such tool: abstract interpretation.  But more problems remain:
+\jacques{can't find this 'Padua' paper at the 2004 Haskell Workshop 
+you refer to}: 
+\begin{itemize}
+	\item Generating names in the presence of ``if'', ``while'', and other
+		control operators. \cite{KiselyovTaha} showed how to solve
+		this problem in simple cases.
+	\item Making continuation-passing style (CPS) code clear.  Many
+		authors understandably shy away from CPS code as it quickly
+		becomes unreadable.  But this is needed for proper name
+		generation.
+	\item Compositionality of various interleaving aspects, as well
+		as expressing dependencies among them.  For example, if we
+		choose to compute the determinant of a matrix while performing
+		Gaussian Elimination, this requires inserting code in 
+		several specific places in the algorithm.  The method to
+		compute this determinant crucially depends on whether 
+		a division-based or a fraction-free Gaussian Elimination is
+		used.
+	\item As mentionned above, there are dependencies between
+		certain algorithmic choices and properties of the
+		underlying domain, and we would like to statically guarantee
+		that inappropriate combinations cannot be chosen.  For instance,
+		one should not attempt to use full division when dealing
+		with matrices of exact integers, nor is it worthwhile to use
+		full pivoting on a matrix of rational integers ($\mathbb Q $).
+\end{itemize}
+The question we want to answer is:
+Can we achieve all of the abstractions needed for a flexible 
+Gaussian Elimination, and can
+we eliminate all of that abstraction's overhead in the generated code?
+Of course, we want to do this without using
+intensional code analysis -- that is, maintaining the
+guarantees of MetaOCaml and using a purely generative approach.
 
 [Note why it is important to maintain generativity: stronger
 equational theory: Walid's paper. Also, intensional code analysis
@@ -168,8 +190,14 @@ optimizing compiler into the code generating system. That is extremely
 complex, quite error-prone, and very difficult to ascertain the
 correctness.]
 
-\oleg{explictly enumerate our contributions, not foiregtting the mdo
-  notation. The subsubsection that outlines what the other sections
+This work makes the following contributions:
+\begin{itemize}
+	\item mdo notation
+	\item use of monads for meta-programming
+	\item use of generative functors
+	\item use of type constraints to ensure correctness
+\end{itemize}
+\oleg{The subsubsection that outlines what the other sections
   are for.}
 
 \section{CPS and the problem of generating names}
