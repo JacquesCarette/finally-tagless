@@ -80,6 +80,7 @@ module type DOMAIN = sig
   val plus : 'a vc -> 'a vc -> ('a vc, 's, 'w) monad
   val times : 'a vc -> 'a vc -> ('a vc, 's, 'w) monad
   val minus : 'a vc -> 'a vc -> ('a vc, 's, 'w) monad
+  val uminus : 'a vc -> ('a vc, 's, 'w) monad
   val div : 'a vc -> 'a vc -> ('a vc, 's, 'w) monad
   val better_than : 'a vc -> 'a vc -> (('a,bool) code, 's, 'w) monad 
   val normalizerf : (('a,v -> v) code ) option
@@ -96,6 +97,7 @@ module FloatDomain =
     let plus x y = ret .<.~x +. .~y>. 
     let times x y = ret .<.~x *. .~y>.
     let minus x y = ret .<.~x -. .~y>.
+    let uminus x = ret .<-. .~x>.
     let div x y = ret .<.~x /. .~y>. 
     let better_than x y = retS .<abs_float .~x < abs_float .~y >.
     let normalizerf = None 
@@ -112,6 +114,7 @@ module IntegerDomain =
     let plus x y = ret .<.~x + .~y>. 
     let times x y = ret .<.~x * .~y>.
     let minus x y = ret .<.~x - .~y>.
+    let uminus x = ret .< - .~x>.
     let div x y = ret .<.~x / .~y>. 
     let better_than x y = retS .<abs .~x > abs .~y >.
     let normalizerf = None 
@@ -128,6 +131,7 @@ module RationalDomain =
     let plus x y = ret .<.~x Num.add_num .~y >.
     let times x y = ret .<Num.mult_num .~x .~y>.
     let minus x y = ret .<Num.sub_num .~x .~y>.
+    let uminus x = ret .<Num.minus_num .~x>.
     let div x y = ret .<Num.div_num.~x .~y>. 
     let better_than x y = retS .< false >. (* no such thing here *)
     let normalizerf = None 
@@ -431,7 +435,7 @@ module TrackDet(Dom: DOMAIN) =
       (det_sign,det) <-- dfetch ();
       ifM (ret .<(! .~det_sign) = 0>.) (ret Dom.zero)
 	  (ifM (ret .<(! .~det_sign) = 1>.) (ret (liftGet det))
-	      (Dom.minus Dom.zero (liftGet det))) }
+	      (Dom.uminus (liftGet det))) }
 end
 
 (* we need the domain anyways to get things to type properly *)
@@ -467,7 +471,7 @@ module AbstractDet(Dom: DOMAIN) =
   let fin = TD.fin
 end
 
-module type GEUPDATE = sig
+module type UPDATE = sig
     type baseobj
     type ctr
     type 'a idx = ('a,int) code
@@ -654,17 +658,16 @@ struct
    }
 end
 
-module Gen(Dom: DOMAIN)
-          (C: CONTAINER2D)
+module Gen(Dom: DOMAIN)(C: CONTAINER2D)
           (PivotF: PIVOT)  (* Higher-order functor! *)
-          (Update: GEUPDATE with type baseobj = Dom.v and type ctr = C(Dom).contr)
+          (Update: UPDATE with type baseobj = Dom.v and type ctr = C(Dom).contr)
           (Out: OUTPUT with type contr = C(Dom).contr and type D.indet = Dom.v and type 'a D.lstate = 'a Update.D.lstate) =
    struct
     module Ctr = C(Dom)
     module Pivot = PivotF(Dom)(C)(Out.D)
     type v = Dom.v
     let gen =
-      let zerobelow b r c m n =
+      let zerobelow b r c m n brc =
         let innerbody i = mdo {
             bic <-- Ctr.get b i c;
             whenM (ret .< not (.~bic = .~Dom.zero) >. )
@@ -673,13 +676,7 @@ module Gen(Dom: DOMAIN)
                       (Ctr.set b i c Dom.zero)) } in 
         mdo {
               seqM (retLoopM .<.~r+1>. .<.~n-1>. innerbody) 
-                   (l1 Update.update_det (Ctr.get b r c)) } in
-      let somg b c m n = fun pv -> mdo {
-          r <-- Out.R.rfetch ();
-	  (* could save fetching b[r,c], which is pv here *)
-          seqM (zerobelow b (liftGet r) (liftGet c) m n)
-               (Out.R.succ ()) }
-      and non = Update.D.zero_sign () in
+                   (Update.update_det brc) } in
       let dogen a = mdo {
           r <-- Out.R.decl ();
           c <-- retN (liftRef .< 0 >.);
@@ -687,12 +684,17 @@ module Gen(Dom: DOMAIN)
           m <-- retN (Ctr.dim1 a);
           n <-- retN (Ctr.dim2 a);
           () <-- Update.D.decl ();
-          let body = mdo {
-              pivot <-- l1 retN(Pivot.findpivot b (liftGet r) m (liftGet c) n);
-              seqM (retMatchM pivot (somg b c m n) non)
-                   (ret .< .~c := (! .~c) + 1 >. ) } in ;
-          seqM (retWhileM .< !(.~c) < .~m && !(.~r) < .~n >. body)
-               (Out.make_result b) } 
+          seqM 
+            (retWhileM .< !(.~c) < .~m && !(.~r) < .~n >.  ( mdo {
+               rr <-- retN (liftGet r);
+               cc <-- retN (liftGet c);
+               pivot <-- l1 retN(Pivot.findpivot b rr m cc n);
+               seqM (retMatchM pivot (fun pv -> 
+                        seqM (zerobelow b rr cc m n pv)
+                             (Out.R.succ ()) )
+                        (Update.D.zero_sign () ))
+                    (ret .< .~c := (! .~c) + 1 >. ) } ))
+            (Out.make_result b) } 
     in
     .<fun a -> .~(dogen .<a>. [] k0) >.
 end

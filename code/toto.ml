@@ -1,15 +1,52 @@
-type ('v,'s,'w) monad = 's -> ('s -> 'v -> 'w) -> 'w
+module type Atype = sig
+  type v
+  val f : v -> v
+  val x : bool
+end 
 
-let retS a = fun s k -> k s a
-let retN a = fun s k -> .<let t = .~a in .~(k s .<t>.)>.
-let bind a f = fun s k -> a s (fun s' b -> f b s' k)
+module type Btype = sig
+  type w
+  val g : w -> w
+end 
 
-let codegen v cf = fun s k -> cf (k s v)
+module A1 = struct 
+    type v = float
+    let f = fun x -> x
+    let x = true
+end
 
-let gen = 
-    let dogen = mdo {
-         x <-- retS .< 5 >. ;
-         y <-- codegen () (fun z -> .<.~x + .~z>. ) ;
-         t <-- retS .< 6 >. ;
-         retS t}
-    in .< .~(dogen () (fun s k -> k)) >.
+module A2 = struct 
+    type v = int
+    let f = fun x -> x + 1
+    let x = true
+end
+
+module B1 = struct 
+    type w = int
+    let g = fun x -> x
+end
+
+module BB(TT:Btype) = struct
+    let h = TT.g
+end
+
+module CC(TT:Atype) = struct
+    let h = TT.f
+end
+
+module XX( A:Atype)(B:Btype with type w=A.v) = 
+  struct
+    let k = 
+      if A.x then
+        let module C = BB(B) in
+            C.h
+      else
+        let module C = CC(A) in
+            C.h
+  end
+
+(*  correctly does not work
+module YY = XX(A1)(B1) ;; *)
+(* but this does *)
+module YY = XX(A2)(B1) ;;
+YY.k(5) ;;
