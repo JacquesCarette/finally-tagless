@@ -12,7 +12,7 @@ Grammar informally:
                  mdo { exp }
                  mdo { exp1; exp2 }
                  mdo { x <-- exp; exp }
-                 mdo { let x = foo end; exp }
+                 mdo { let x = foo in; exp }
 which is almost literally the grammar of Haskell `do' notation,
 modulo `do'/`mdo' and `<-'/`<--'.
 
@@ -20,7 +20,7 @@ Grammar formally:
 
         mdo { <do-body> }
         <do-body> :: =
-                "let" var = EXP ("and" var = EXP)* "end" ";" <do-body>
+                "let" var = EXP ("and" var = EXP)* "in" ";" <do-body>
                 EXP
                 (pat <--)? EXP ";" <do-body>
 
@@ -29,7 +29,7 @@ Semantics (as re-writing into the core language)
         mdo { exp } ===> exp
         mdo { pat <-- exp; rest } ===> bind exp (fun pat -> mdo { rest })
         mdo { exp; rest } ===> bind exp (fun _ -> mdo { rest })
-        mdo { let pat = exp end; rest } ===> let pat = exp in mdo { rest }
+        mdo { let pat = exp in; rest } ===> let pat = exp in mdo { rest }
 
 `odo' is a variant of `mdo' where we use a bind `method' rather than a bind
 `value' (which is supposed to be in scope).
