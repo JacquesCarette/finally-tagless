@@ -20,11 +20,6 @@ let l3 f = fun x y z -> mdo { tx <-- x; ty <-- y; tz <-- z; f tx ty tz}
 let fetch s k = k s s
 let store v s k = k (v::s) ()
 
-
-let lll phi j phi_args j_args = 
-    ret (.<let rec lp j = .~(phi .<j>. phi_args) in 
-           lp .~j_args >. ) 
-
 (* Functions that end in M take monads as arguments and partially
    run them -- in a reset fashion *)
 
@@ -40,7 +35,7 @@ let seq a b = ret .< begin .~a ; .~b end >.
 let seqM a b = fun s k -> k s .< begin .~(a s k0) ; .~(b s k0) end >.
 
 (* conditional *)
-let lif test th el = ret .< if .~test then .~th else .~el >.
+let ifL test th el = ret .< if .~test then .~th else .~el >.
 
 (* Note the implicit `reset' *)
 let ifM test th el = fun s k ->
