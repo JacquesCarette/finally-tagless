@@ -35,7 +35,7 @@ let process loc bt b =
     and objbind1 x acc =
         <:expr< $x$ # bind (fun _ -> $acc$) >> 
     and globret n = <:expr< ret $n$ >>
-    and objret n = <:expr< $n$ # ret >> in
+    and objret n = <:expr< $n$ >> in
     let choose_bind = function 
         | Global -> (globbind2, globbind1)
         | Object -> (objbind2, objbind1) in
@@ -43,20 +43,17 @@ let process loc bt b =
         | Global -> globret
         | Object -> objret in
     let folder bt = let (a,b) = choose_bind bt in
-        (fun y accumulator -> 
+        (fun accumulator y -> 
         match y with
         | Binding(p,x) -> a x p accumulator
         | Exec(x) -> b x accumulator
         | Last(x) -> failwith "should not have an mret in the middle")
     in
-    match b with 
+    match List.rev b with 
     | [] -> failwith "somehow got an empty list from a LIST1!"
-    | l -> let v = List.rev l in
-        match (List.hd v) with
-        | Last(n) ->
-          List.fold_right (folder bt) (List.tl v) ((choose_ret bt) n) 
-        | Binding(_,_) -> failwith "ends with a binding"
-        | Exec(n) -> failwith "does not end with an mret"
+    | (Last(n)::t) -> List.fold_left (folder bt) ((choose_ret bt) n) t  
+    | (Binding(_,_)::_) -> failwith "ends with a binding"
+    | (Exec(_)::_) -> failwith "does not end with an mret"
 
 EXTEND
     GLOBAL: Pcaml.expr;
