@@ -113,18 +113,22 @@ The common solution is to turn to code generation.
 
 While many people still make do with string-based code generation,
 this is not much different than writing code in a dynamically typed
-interpreted scripting language.  It works, it is convenient, but
-it does not scale well, it is a debugging nightmare, and usually
-suffers most from Software Aging \cite{parnas_aging}.  As with
-other tasks in programming, the answer is to turn to statically
-typed languages, which provide strong guarantees about the soundness
-of the resulting code.  MetaOCaml in particular stands out: it
-guarantees that both the code generator and the generated
-code are well-typed.  While Template programming in C++ and 
-Template Haskell do offer some amount of static typing 
-\cite{conf/dagstuhl/CzarneckiOST03}, MetaOCaml\footnote{and MetaML.}
-offers stronger guarantees.  As well, since MetaOCaml is implemented
-on top of the very solid Ocaml language, one accrues additional benefits.
+interpreted scripting language.  It works, it is convenient, but it
+does not scale well, it is a debugging nightmare, and usually suffers
+most from Software Aging \cite{parnas_aging}.  As with other tasks in
+programming, the answer is to turn to statically typed languages,
+which provide strong guarantees about the soundness of the resulting
+code.  MetaOCaml (cite website?) \cite{CTHL03} in particular stands
+out: not only it guarantees the absense of problems such as
+accidental variable capture -- so-called hygiene cite? \oleg{should we
+  also mention automatic well-formedness}, MetaOcaml also
+statically ensures that both the code generator and the generated code
+are well-typed \cite{TahaSheard97,TahaThesis}.  While Template
+programming in C++ and Template Haskell do offer some amount of static
+typing \cite{conf/dagstuhl/CzarneckiOST03}, MetaOCaml\footnote{and
+  MetaML.}  offers stronger guarantees.  As well, since MetaOCaml is
+implemented on top of the very solid Ocaml language, one accrues
+additional benefits.
 
 While it is theoretically feasible in a strings-based
 generative system to re-parse the generative code to inspect it, such
@@ -335,13 +339,13 @@ code represents the pattern we will be following for the rest of the
 paper.
 
 And it \emph{almost} works. It is type correct.  When we look at the
-generated code for |top|, we notice the `(ref (0, arr_1.(0)))' is
+generated code for |top|, we notice the |(ref (0, arr_1.(0)))| is
 inlined wherever pivot was expected. For example, the swapping part of
-the code begins with |let i_3 = (fst (! (ref (0, arr_1.(0))))) in
-...|. That is certainly not what we want. We meant for pivot searching
+the code begins with |let i_3 = (fst (! (ref (0, arr_1.(0))))) in ...|. 
+That is certainly not what we want. We meant for pivot searching
 and swapping parts of the code to communicate via a shared mutable
 state, variable |pv|. In the generated code, each piece of code gets
-its own copy of |pv|. Rather then inline (ref (0, arr_1.(0)))
+its own copy of |pv|. Rather then inline |(ref (0, arr_1.(0)))|
 everywhere, we should have generated |let pv = ref (0,(.~arr).(0)) in ...|
 and inlined |pv|. Incidentally, even in a pure functional code we
 often wish to generate such a |let| statement so we can compute a
@@ -365,23 +369,27 @@ when the generated body is not yet known, we use CPS.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 And now, a better -- and shorter -- write-up.
 
-The essence of our approach is assembling the code of the program by combining
-instances of various aspects together. In the case of Gaussian
-Elimination, the aspects are pivot determination, swapping rows and
-columns, determinant tracking, etc. A primitive code generator yields a
-code expression 
-A combinator takes (complete and well-typed) code expressions combines
-them into a composite expression (which is too statically guaranteed
-to be well-formed and well-typed).
+The essence of our approach is assembling the code of the program by
+combining instances of various aspects together. In the case of
+Gaussian Elimination, the aspects are pivot determination, swapping of
+rows and columns, determinant tracking, etc. A primitive code
+generator yields a code expression.  A combinator takes (complete and
+well-typed) code expressions and combines them into a composite expression
+(which is too statically guaranteed to be well-formed and well-typed).
 
-For example, the following is probably the simplest code generators:
+We will be using MetaOcaml, which, as the instance of a multi-stage
+programming system \cite{TahaThesis}, provides exactly the needed
+features: to construct a code expression, to combine them, and to
+execute them 
+
+For example, the following is probably the simplest code generator:
 \begin{code}
 let one = .<1>.
 \end{code}
 
-(in the floating-poiint instance of that aspect, we would have
+(in the floating-point instance of that aspect, we would have
 |.<1.0>.| instead). We use MetaOCaml brackets |.<...>.| to generate
-code fragments (perhaps say one more sentence about the brackets).
+code expressions (perhaps say one more sentence about the brackets).
 The simplest combination is inlining:
 \begin{code}
 let plus x y = .<.~x + .~y>.
@@ -409,7 +417,7 @@ the code generation stage.
 The final MetaOCaml feature, |.!| (pronounced ``run'') can be used to
 execute the above code: |.! simplest_code| is a function of two
 integers, which we can apply: |(.! simplest_code) 1 2|. The original
-simplest_code is not the function on integers -- it's a code
+|simplest_code| is not the function on integers -- it's a code
 expression.
 
 To see the benefit of code generation, we notice that we can easily
@@ -460,7 +468,7 @@ let param_code1 plus one =
   .<fun x y -> .~(gen .<x>. .<y>.)>.
 \end{code}
 
-However, examinine the code for |param_code1 plus one|
+However, examinining the code for |param_code1 plus one|
 shows that |.<fun x_1 -> fun y_2 -> ((y_2 + 1) + (x_1 + (y_2 + 1)))>.|
 we might have saved the computation on the code generation
 stage. However, the generated code still exhibits the
