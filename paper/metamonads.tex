@@ -453,8 +453,8 @@ The operation |retN a| is the let-insertion operation, whose simpler
 version we called |letgen| earlier. It is the first computation with
 a control effect: indeed, the result of |retN a| is \emph{not} the
 result of invoking its continuation |k|. Rather, its result is a |let|
-code expression. \oleg{Mention similarity with reset?}
-\jacques{yes}
+code expression. Such a behavior is symptomatic of cntrol operators
+(in particular, |abort|).
 
 Finally, |runM| runs our monad, that is, performs the computation of
 the monad and gets the result, which in our case is the code
@@ -502,7 +502,7 @@ let ifM' test th el = mdo {
 \noindent We can define functions |l1|, |l2|, |l3| (analogues of |liftM|,
 |liftM2|, |liftM3| of Haskell) to make such a lifting generic.
 We soon notice the need for another |ifM| function, with the same
-interface (see ifM in Figure~\ref{ourmonad}). The difference between them is
+interface (see |ifM| in Figure~\ref{ourmonad}). The difference between them is
 apparent from the following:
 \begin{code}
 let gen a i = ifM' (ret .<(.~i) >= 0>.) (retN .<Some (.~a).(.~i)>.)
@@ -529,11 +529,7 @@ truly an effect and we have to be clear about the sequencing of
 effects, when generating control constructions such as conditionals.
 The form |ifM| handles the such effects correctly. In our code, we
 need similar operators for other Ocaml control forms: for generating
-case-matching statements and for- and while-loops. To make writing
-such code general and independent of the implementation of the monad,
-we define a function XXX. As the name implies, we do use control
-effect implemented via essentially delimited continuations (cite?).
-\jacques{yes!}
+case-matching statements and for- and while-loops.
 
 \section{Functors}\label{functors}
 
@@ -895,6 +891,11 @@ over related work in numerical software, code generation in general,
 aspect-oriented stuff?  We don't want this section to be too long, but
 not so short that we make it seem like we're inventing more than we
 really are}
+\oleg{Yes, let's gloss over ATLAS, SPIRAL, Axiom. I wonder what would
+  be the use of functors? Something by David McQueen or R. Harper.
+  In any way, mention that nobody before used functors to abstract
+  code generators -- or mix functors and multi-stage programming.}
+
 
 \section{Future work}\label{future}
 connections with delimited continuations: making notation
@@ -913,7 +914,6 @@ set of base modules for debugging, or a code-generation style set
 of base modules for generating optimized code.
 
 \section{Conclusion}\label{conclusion}
-
 Mention the mdo notation. Mention it into the introduction.
 
 Relation with aspect-oriented code: in AspectJ, aspects are (comparatively)
@@ -928,8 +928,41 @@ investigating statically typed aspect weaving.
 
 \section{Appendix A}
 The do notation for Ocaml.
-We use camlp4. Show the grammar. Explain the difficulty: although
-nice, the do notation cannot actually be expressed in a LR(n) grammar.
+To implement the |mdo| notation, we use the Ocaml pre-processor,
+camplp4 (cite?). Informally, our notation is
+\begin{code}
+mdo { exp }
+mdo { exp1; exp2 }
+mdo { x <-- exp; exp }
+mdo { let x = foo in; exp }
+\end{code}
+which matches closely the Haskell |do| notation, modulo |do|/|mdo| and 
+|<-|/|<--|.
+
+Grammar formally:
+\begin{code}
+mdo { <do-body> }
+<do-body> :: =
+    "let" var = EXP ("and" var = EXP)* "in" ";" <do-body>
+    | EXP
+    | (pat <--)? EXP ";" <do-body>
+\end{code}
+The semantics is given by the following rules re-writing the |mdo|
+form into the regular Ocaml code. We assume that the variable |bind|
+must be in scope.
+\begin{code}
+mdo { exp } ===> exp
+mdo { pat <-- exp; rest } ===> bind exp (fun pat -> mdo { rest })
+mdo { exp; rest } ===> bind exp (fun _ -> mdo { rest })
+mdo { let pat = exp in; rest } ===> let pat = exp in mdo { rest }
+\end{code}
+We also introduce |odo| form, which is equivalent to |mdo| but uses 
+a bind `method' rather than a bind `value'.
+
+The major difficulty with the |do| notation is that it cannot truly be
+parsed by an LR(n)-grammar for any finite |n| because many |pat| can also
+be parsed as an |exp|. 
+
 Perhaps give the command line how to load the camlp4 module into
 ocaml. Point to the code.
 \end{document}
