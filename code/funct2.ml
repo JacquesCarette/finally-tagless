@@ -1,7 +1,4 @@
-let retS a = fun s k -> k s a
-let retN a = fun s k -> .<let t = .~a in .~(k s .<t>.)>.
-let bind a f = fun s k -> a s (fun s' b -> f b s' k) ;;
-
+(* Edited to use camlp4 friendly syntax and to test the do notation *)
 module type DOMAIN = sig
   type v
   val zero : ('a,v) code
@@ -12,9 +9,9 @@ end;;
 
 module Domain = struct
   type v = int
-  let zero = .< 0 >.
-  let one = .< 1 >.
-  let plus x y s k = k s .<.~x + .~y>.
+  let zero = brackets 0
+  let one = brackets 1
+  let plus x y s k = k s (brackets ((escape x) + (escape y)))
 end;;
 
 type ('a,'v) state = ('a,'v) code list ;;
@@ -43,6 +40,10 @@ module NoDetOUTPUT(Dom: DOMAIN) =
    let fin_det result s k = k s result
 end;;
 
+let retS a = fun s k -> k s a
+let retN a = fun s k -> brackets let t = escape a in escape (k s (brackets t))
+let bind a f = fun s k -> a s (fun s' b -> f b s' k) ;;
+
 module Gen (Dom: DOMAIN)
 (Out: OUTPUT with type out = Dom.v) =
  struct
@@ -58,11 +59,10 @@ module Gen (Dom: DOMAIN)
     Out.fin_det res
     ))))))
 in
-.<fun a -> .~(dogen .<a>. s k)>.
+brackets fun a -> escape (dogen (brackets a) s k)
 end;;
 
 module Gen1 = Gen(Domain)(NoDetOUTPUT(Domain));;
-Gen1.gen [] (fun s v -> v);;
 
 module DetOUTPUT(Dom: DOMAIN) =
  struct
@@ -70,14 +70,13 @@ module DetOUTPUT(Dom: DOMAIN) =
    type tdet = Dom.v ref
    type res = out * Dom.v (* Now return a tuple; the second comp.
 is the determinant *)
-   let decl_det s k = .<let det = ref .~(Dom.one) in .~(k (.<det>.::s) ())>.
+   let decl_det s k = brackets let det = ref (escape Dom.one) in (escape (k ((brackets det)::s) ()))
    let acc_det v s k = let det = List.hd s in
-    bind (Dom.plus .<! .~det>. v) (fun r s k ->
-    .<begin .~det := .~r;
-    .~(k s ()) end>.) s k
+    bind (Dom.plus (brackets ! (escape det)) v) (fun r s k ->
+    brackets begin (escape det) := (escape r);
+    escape (k s ()) end) s k
        let fin_det result s k = let det = List.hd s in
-    k s .<(.~result,! .~det)>.
+    k s (brackets ((escape result),! (escape det)))
 end;;
 
 module Gen2 = Gen(Domain)(DetOUTPUT(Domain));;
-Gen2.gen [] (fun s v -> v);;

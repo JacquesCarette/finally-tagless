@@ -62,7 +62,7 @@ in
 end;;
 
 module Gen1 = Gen(Domain)(NoDetOUTPUT(Domain));;
-Gen1.gen [] (fun s v -> v);;
+(* Gen1.gen [] (fun s v -> v);; *)
 
 module DetOUTPUT(Dom: DOMAIN) =
  struct
@@ -80,4 +80,4 @@ is the determinant *)
 end;;
 
 module Gen2 = Gen(Domain)(DetOUTPUT(Domain));;
-Gen2.gen [] (fun s v -> v);;
+(* Gen2.gen [] (fun s v -> v);; *)
