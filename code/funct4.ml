@@ -8,6 +8,7 @@ let ret = retS
 let k0 s v = v  (* Initial continuation -- for `reset' and `run' *)
 let liftRef x = .< ref .~x >. 
 let liftGet x = .< ! .~x >. 
+let liftPair x = (.< fst .~x >., .< snd .~x >.)
 
 (* Monad lifting functions *)
 let l1 f = fun x -> mdo { t <-- x; f t}
@@ -29,7 +30,7 @@ let store v s k = k (v::s) ()
 (* Note: the difference between `seq' and `seqM' is quite akin
    to the difference between call-by-value and call-by-value.
    Also note that `seq' can be expressed in terms of `seqM',
-   but not teh other way around 
+   but not the other way around 
 *)
 
 let seq a b = ret .< begin .~a ; .~b end >.
@@ -421,8 +422,6 @@ module AbstractDet(Dom: DOMAIN) =
   type outdet = TD.outdet
   type tdet = TD.tdet
   type 'a lstate = 'a TD.lstate
-        (* the purpose of this function is to make the union open.
-           Alas, Camlp4 does not understand the :> coercion notation *)
   let decl = TD.decl
   let upd_sign = TD.upd_sign
   let zero_sign = TD.zero_sign
@@ -532,20 +531,20 @@ module Gen(Dom: DOMAIN)
     type v = Dom.v
     let gen =
       let findpivot b r m n c = mdo {
-          i <-- retN (liftRef .< -1 >. );
+          pivot <-- retN (liftRef .< None >. );
           seqM (retLoopM r .<.~n-1>. (fun j -> mdo {
-              bjc <-- Ctr.get b j c;
+              bjc <-- l1 retN (Ctr.get b j c);
               ifM (ret .< not ( .~bjc = .~Dom.zero) >.)
-                  (mdo { 
-                       iv <-- retS (liftGet i);
-                       ifM (Logic.mcode_or (ret (Code .< .~iv == -1 >.))
-                           (mdo { bic <-- Ctr.get b iv c;
-                                  res <-- Dom.smaller_than bjc bic;
-                                  ret (Code res)}))
-                           (ret .< .~i := .~j >.)
-                           (retUnit) })
-                 (retUnit) } ) )
-               (ret .< if (! .~i) == -1 then None else Some ! .~i >.)} 
+		  (retMatchM (liftGet pivot)
+		    (fun pv ->
+		      mdo {
+		      (i,bic) <-- ret (liftPair pv);
+		      ifM (Dom.smaller_than bic bjc)
+			  (ret .< .~pivot := Some (.~j,.~bjc) >.)
+			  (retUnit)})
+		     (ret .< .~pivot := Some (.~j,.~bjc) >.))
+	          (retUnit)}))
+             (ret (liftGet pivot)) }
       and zerobelow b r c m n =
         let innerbody i = mdo {
             bic <-- Ctr.get b i c;
@@ -557,7 +556,8 @@ module Gen(Dom: DOMAIN)
         mdo {
               seqM (retLoopM .<.~r+1>. .<.~n-1>. innerbody) 
                    (l1 Update.update_det (Ctr.get b r c)) } in
-      let somg b c m n = fun i -> mdo {
+      let somg b c m n = fun pvp -> mdo {
+          (i,pv) <-- ret (liftPair pvp);
           r <-- Out.R.rfetch ();
           seqM (ifM (ret .< .~i <> ! .~r >. )
                       (ret (Ctr.swap_rows_stmt b (liftGet r) i))
