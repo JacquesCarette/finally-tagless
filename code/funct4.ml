@@ -9,14 +9,9 @@ let ret = retS
 let liftRef x = .< ref .~x >. 
 let liftGet x = .< ! .~x >. 
 
-(* state monad morphisms -- not needed at all!!!!
-type ('a,'c,'d) state = {b:('a,'c) code; 
-  r:('a,int ref) code; c:('a,int ref) code; 
-  m:('a,int) code; n:('a,int) code;
-  detsign:('a,'d ref) code}
-*)
-
-type ('a,'v) state = ('a,'v) code list
+(* Simple state representation for now - upgrades later *)
+type ('a,'u, 'v) state = (('a,'u) code * ('a,'v) code) list
+(* and 2 morphisms *)
 let fetch s k = k s (List.hd s)
 let store v s k = k (v::s) ()
 
@@ -35,13 +30,16 @@ let retWhile cond (body:('a,'b) code) = fun s k ->
 let retWhileM cond body = fun s k -> 
     k s .< while .~cond do .~(body s (fun s v -> v)) done >.
 
+(* sequencing *)
 let seq a b = fun s k -> k s .< begin .~a ; .~b end >.
 
-(* various helper functions *)
-let mdapply1 mapper g c1 = match g with
-  | Some f -> .< .~(mapper f c1) >.
-  | None   -> c1 ;;
+(* match *)
+let retMatchM x som non = fun s k ->
+    k s .< match .~x with
+           | Some i -> .~(som s (fun s v -> v))
+           | None   -> .~(non s (fun s v -> v)) >.
 
+(* Define the actual module types and instances *)
 module type DOMAIN = sig
   type v
   type 'a vc = ('a,v) code
@@ -74,6 +72,22 @@ module FloatDomain =
     let normalizerg = None
 end
 
+module IntegerDomain = 
+  struct
+    type v = int
+    type 'a vc = ('a,int) code
+    let zero = .< 0 >.  
+    let one = .< 1 >. 
+    let minusone = .< -1 >. 
+    let plus x y = ret .<.~x + .~y>. 
+    let times x y = ret .<.~x * .~y>.
+    let minus x y = ret .<.~x - .~y>.
+    let div x y = ret .<.~x / .~y>. 
+    let smaller_than x y = retS .<abs .~x < abs .~y >.
+    let normalizerf = None 
+    let normalizerg = None
+end
+
 module type CONTAINER2D = sig
   type obj
   type contr
@@ -84,25 +98,29 @@ module type CONTAINER2D = sig
             (('a,unit) code, 's, 'w) monad
   val dim1 : 'a vc -> ('a,int) code
   val dim2 : 'a vc -> ('a,int) code
-  val mapper : ('a, obj->obj) code -> 'a vc -> 'a vc
+  val mapper : ('a, obj->obj) code option -> 'a vc -> 'a vc
   val copy : 'a vc -> 'a vc
 end
 
-module ArrayContainer =
+module GenericArrayContainer(Dom:DOMAIN) =
   struct
-  type obj = float
-  type contr = float array array
+  type obj = Dom.v
+  type contr = obj array array
   type 'a vc = ('a,contr) code
   type 'a vo = ('a,obj) code
   let get x n m = retS .< (.~x).(.~n).(.~m) >.
   let set x n m y = retS .< (.~x).(.~n).(.~m) <- .~y >.
   let dim2 x = .< Array.length .~x >.
   let dim1 x = .< Array.length (.~x).(0) >.
-  let mapper = (fun f a -> .< Array.map 
-      (fun x -> Array.map .~f x) .~a >.)
+  let mapper g a = match g with
+      | Some f -> .< Array.map (fun x -> Array.map .~f x) .~a >.
+      | None   -> a
   let copy = (fun a -> .<Array.map (fun x -> Array.copy x) 
                        (Array.copy .~a) >. )
 end
+
+module FArrayContainer = GenericArrayContainer(FloatDomain)
+module IArrayContainer = GenericArrayContainer(IntegerDomain)
 
 module Logic = 
     struct
@@ -116,8 +134,9 @@ module type OUTPUT = sig
   type res
   type idet
   type tdet = idet ref
-  type 'a lstate = ('a,tdet) state
+  type 'a lstate = ('a,tdet,tdet) state
   val decl_det : unit -> (unit, 'a lstate, ('a,'b) code) monad
+  val upd_sign : unit -> (unit, 'a lstate, ('a,'b) code) monad
   val acc_det : ('a,idet) code -> (unit, 'a lstate, ('a,'b) code) monad
   val fin_det : ('a,out) code -> 
                 (('a,res) code, 'a lstate, ('a,'b) code) monad
@@ -129,13 +148,15 @@ module AbstractNoDetOUTPUT(Dom: DOMAIN)(Ctr: CONTAINER2D with type obj = Dom.v) 
   type res = Ctr.contr
   type idet = Dom.v
   type tdet = Dom.v ref
-  type 'a lstate = ('a,tdet) state
-  let decl_det u = ret ()
+  type 'a lstate = ('a,tdet,tdet) state
+  let decl_det () = ret ()
+  let upd_sign () = ret ()
   let acc_det v = ret ()
   let fin_det result = mdo {ret result}
 end
 
-module NoDetOutput = AbstractNoDetOUTPUT(FloatDomain)(ArrayContainer)
+module NoFDetOutput = AbstractNoDetOUTPUT(FloatDomain)(FArrayContainer)
+module NoIDetOutput = AbstractNoDetOUTPUT(IntegerDomain)(IArrayContainer)
 
 module AbstractDetOUTPUT(Dom: DOMAIN)(Ctr: CONTAINER2D with type obj = Dom.v) =
   struct
@@ -143,20 +164,28 @@ module AbstractDetOUTPUT(Dom: DOMAIN)(Ctr: CONTAINER2D with type obj = Dom.v) =
   type res = out * Dom.v
   type idet = Dom.v
   type tdet = Dom.v ref
-  type 'a lstate = ('a,tdet) state
-  let decl_det u = mdo {
+  type 'a lstate = ('a,tdet,tdet) state
+  let decl_det () = mdo {
       ddecl <-- retN (liftRef Dom.one);
-      store ddecl }
+      dsdecl <-- retN (liftRef Dom.one);
+      store (dsdecl,ddecl) }
+  let upd_sign () = mdo {
+      det <-- fetch;
+      det1 <-- retS (fst det);
+      r <-- Dom.times (liftGet det1) Dom.minusone;
+      codegen () (fun x -> .<begin .~det1 := .~r; .~x end>. ) }
   let acc_det v = mdo {
       det <-- fetch;
-      r <-- Dom.plus (liftGet det) v;
-      codegen () (fun x -> .<begin .~det := .~r; .~x end>. ) }
+      det2 <-- retS (snd det);
+      r <-- Dom.times (liftGet det2) v;
+      codegen () (fun x -> .<begin .~det2 := .~r; .~x end>. ) }
   let fin_det result = mdo {
       det <-- fetch;
-      ret .< ( .~result, .~(liftGet det) ) >. }
+      ret .< ( .~result, .~(liftGet (snd det)) ) >. }
 end
 
-module DetOutput = AbstractDetOUTPUT(FloatDomain)(ArrayContainer)
+module FDetOutput = AbstractDetOUTPUT(FloatDomain)(FArrayContainer)
+module IDetOutput = AbstractDetOUTPUT(IntegerDomain)(IArrayContainer)
 
 module type RANK = sig
   val succ_rank : ('a,int ref) code -> (('a,unit) code,'s,('a,'w) code) monad
@@ -174,45 +203,60 @@ module Gen(Dom: DOMAIN)(Ctr: CONTAINER2D with type obj = Dom.v)(Rk:RANK)(Out: OU
     type v = Dom.v
     let gen ~fracfree:bool ~outputs:outchoice =
       let findpivot b r n c = mdo {
-		  i <-- retN (liftRef .< -1 >. );
-		  let bd j = mdo {
-			  bjc <-- Ctr.get b j c;
-			  iv <-- retS (liftGet i);
-			  bic <-- Ctr.get b iv c;
-			  cond2 <-- Dom.smaller_than bjc bic;
-			  cond3 <-- Logic.code_or .< .~iv == -1 >. cond2;
-			  res2 <-- retS .< if .~cond3 then .~i := .~j >.;
-			  res <-- retS .< if not ( .~bjc = .~Dom.zero) then .~res2 >. ;
-			  retS res} in;
+          i <-- retN (liftRef .< -1 >. );
+          let bd j = mdo {
+              bjc <-- Ctr.get b j c;
+              iv <-- retS (liftGet i);
+              bic <-- Ctr.get b iv c;
+              cond2 <-- Dom.smaller_than bjc bic;
+              cond3 <-- Logic.code_or .< .~iv == -1 >. cond2;
+              res2 <-- retS .< if .~cond3 then .~i := .~j >.;
+              res <-- retS .< if not ( .~bjc = .~Dom.zero) then .~res2 >. ;
+              retS res} in;
           loop <-- retLoopM r .<.~n-1>. bd;
           ending <-- retS .< if (! .~i) == -1 then None else Some ! .~i >. ;
           res <-- seq loop ending; 
-		  ret res } in
+          ret res } in
+      let swapvals track b r i j = mdo {
+          vt <-- Ctr.get b i j;
+          t <-- retN vt;
+          brj <-- Ctr.get b r j;
+          sbij <-- Ctr.set b i j brj;
+          sbrj <-- Ctr.set b r j t;
+          ret .<begin .~sbij; .~sbrj end>. } in
+      let som = mdo { ret .< () >. } in
+      let non = mdo { ret .< () >. } in
       let dogen a = mdo {
           r <-- retN (liftRef .< 0 >.);
           c <-- retN (liftRef .< 0 >.);
-          b <-- retN (mdapply1 Ctr.mapper Dom.normalizerf (Ctr.copy a));
+          b <-- retN (Ctr.mapper Dom.normalizerf (Ctr.copy a));
           m <-- retN (Ctr.dim1 a);
           n <-- retN (Ctr.dim2 a);
           () <-- Out.decl_det ();
-          cond <-- retS .< !(.~r) < .~m && !(.~r) < .~n >.;
           let body = mdo {
               pivot <-- findpivot b (liftGet r) n (liftGet c);
+              pivotn <-- retN pivot;
+              mtch <-- retMatchM pivotn som non ;
               incr_rk <-- Rk.succ_rank r;
-              res <-- seq pivot incr_rk;
-              ret res } in;
+              res <-- seq mtch incr_rk;
+              ret res } in ;
+          cond <-- retS .< !(.~r) < .~m && !(.~r) < .~n >.;
           code <-- retWhileM cond body;
           res <-- Out.fin_det b;
           res2 <-- seq code res;
           ret res2 } 
       and kk s v = v in
-      (* and state a = {b = a; r = .< ref 0 >.; c = .< ref 0 >.;
-        m = .<0>.; n = .<0>.; detsign = .< ref .~Dom.one >. }  *)
     .<fun a -> .~(dogen .<a>. [] kk) >.
 end
 
-module Gen1 = Gen(FloatDomain)(ArrayContainer)(Rank)(NoDetOutput);;
-module Gen2 = Gen(FloatDomain)(ArrayContainer)(Rank)(DetOutput);;
+(* ret (match track with
+            | TrackNothing -> swap
+            | TrackDet     -> t ) } in *)
+
+module Gen1 = Gen(FloatDomain)(FArrayContainer)(Rank)(NoFDetOutput);;
+module Gen2 = Gen(FloatDomain)(FArrayContainer)(Rank)(FDetOutput);;
+module Gen3 = Gen(IntegerDomain)(IArrayContainer)(Rank)(NoIDetOutput);;
+module Gen4 = Gen(IntegerDomain)(IArrayContainer)(Rank)(IDetOutput);;
 
 type outchoice = JustMatrix | Rank | Det | RankDet;;
 type dettrack = TrackNothing | TrackDet ;;
@@ -221,10 +265,6 @@ type ge_choices =
   {fracfree:bool; track:dettrack; outputs:outchoice} ;;
 
 (*
-let sapply2 g c1 c2 = match g with
-  | Some f -> Some (f c1 c2)
-  | None   -> None ;;
-
 let dapply1 g c1 = match g with
   | Some f -> f c1
   | None   -> c1 ;;
@@ -249,24 +289,6 @@ let ge_state_gen dom contr findpivot swap zerobelow choice =
     end;
     .~(s.c) := !(.~(s.c)) + 1;
   done >. in
-
-let swapr_gen dom contr track = fun i j -> 
-  mdo {
-     s <-- fetch;
-     swap <-- retS 
-      .< let b = .~(s.b) and r = !(.~(s.r)) and i= .~i 
-         and j= .~j in
-          let t = .~(contr.get .<b>. .<i>. .<j>. ) in  
-            seq
-                (contr.set .<b>. .<i>. .<j>. 
-                   (contr.get .<b>. .<r>. .<j>. ))
-                (contr.set .<b>. .<r>. .<j>. .<t>. )
-      >. ;
-    r <-- dom.times .<! .~(s.detsign)>. dom.minusone;
-    t <-- retS .<begin .~(s.detsign) := .~r; .~swap end>. ;
-    ret (match track with
-    | TrackNothing -> swap
-    | TrackDet     -> t ) } ;;
 
 
 let zerobelow_gen dom contr choice =
@@ -349,7 +371,6 @@ let specializer dom container ~fracfree ~outputs =
       res <-- ge_state_gen dom container fp (swap) (zb) choice;
       return res } in
   gen [] (fun s v -> v) ;;
-
 
 let ge_float3 = .! spec_ge_float ;;
 *)
