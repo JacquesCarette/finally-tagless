@@ -290,8 +290,8 @@
            and i2_97 = ((fst i_92) * n_94) in
            for i_98 = 0 to (m_95 - 1) do
             let t_99 = a_93.(i1_96 + i_98) in
-            a_93.(i2_97 + i_98) <- a_93.(i1_96 + i_98);
-            a_93.(i1_96 + i_98) <- t_99
+            a_93.(i1_96 + i_98) <- a_93.(i2_97 + i_98);
+            a_93.(i2_97 + i_98) <- t_99
            done;
            (t_88 := (~- (! t_88)))
           end else ();
@@ -360,8 +360,8 @@
            and i2_123 = ((fst i_118) * n_120) in
            for i_124 = 0 to (m_121 - 1) do
             let t_125 = a_119.(i1_122 + i_124) in
-            a_119.(i2_123 + i_124) <- a_119.(i1_122 + i_124);
-            a_119.(i1_122 + i_124) <- t_125
+            a_119.(i1_122 + i_124) <- a_119.(i2_123 + i_124);
+            a_119.(i2_123 + i_124) <- t_125
            done;
            (t_114 := (~- (! t_114)))
           end else ();
@@ -431,8 +431,8 @@
            and i2_147 = ((fst i_142) * n_144) in
            for i_148 = 0 to (m_145 - 1) do
             let t_149 = a_143.(i1_146 + i_148) in
-            a_143.(i2_147 + i_148) <- a_143.(i1_146 + i_148);
-            a_143.(i1_146 + i_148) <- t_149
+            a_143.(i1_146 + i_148) <- a_143.(i2_147 + i_148);
+            a_143.(i2_147 + i_148) <- t_149
            done;
            ()
           end else ();
@@ -501,8 +501,8 @@
            and i2_173 = ((fst i_168) * n_170) in
            for i_174 = 0 to (m_171 - 1) do
             let t_175 = a_169.(i1_172 + i_174) in
-            a_169.(i2_173 + i_174) <- a_169.(i1_172 + i_174);
-            a_169.(i1_172 + i_174) <- t_175
+            a_169.(i1_172 + i_174) <- a_169.(i2_173 + i_174);
+            a_169.(i2_173 + i_174) <- t_175
            done;
            (t_164 := (~- (! t_164)))
           end else ();
@@ -832,8 +832,8 @@
            and i2_283 = ((fst i_278) * n_280) in
            for i_284 = 0 to (m_281 - 1) do
             let t_285 = a_279.(i1_282 + i_284) in
-            a_279.(i2_283 + i_284) <- a_279.(i1_282 + i_284);
-            a_279.(i1_282 + i_284) <- t_285
+            a_279.(i1_282 + i_284) <- a_279.(i2_283 + i_284);
+            a_279.(i2_283 + i_284) <- t_285
            done;
            ()
           end else ();
@@ -902,8 +902,8 @@
            and i2_309 = ((fst i_304) * n_306) in
            for i_310 = 0 to (m_307 - 1) do
             let t_311 = a_305.(i1_308 + i_310) in
-            a_305.(i2_309 + i_310) <- a_305.(i1_308 + i_310);
-            a_305.(i1_308 + i_310) <- t_311
+            a_305.(i1_308 + i_310) <- a_305.(i2_309 + i_310);
+            a_305.(i2_309 + i_310) <- t_311
            done;
            (t_300 := (~- (! t_300)))
           end else ();
@@ -975,8 +975,8 @@
            and i2_335 = ((fst i_330) * n_332) in
            for i_336 = 0 to (m_333 - 1) do
             let t_337 = a_331.(i1_334 + i_336) in
-            a_331.(i2_335 + i_336) <- a_331.(i1_334 + i_336);
-            a_331.(i1_334 + i_336) <- t_337
+            a_331.(i1_334 + i_336) <- a_331.(i2_335 + i_336);
+            a_331.(i2_335 + i_336) <- t_337
            done;
            ()
           end else ();
@@ -1045,8 +1045,8 @@
            and i2_361 = ((fst i_356) * n_358) in
            for i_362 = 0 to (m_359 - 1) do
             let t_363 = a_357.(i1_360 + i_362) in
-            a_357.(i2_361 + i_362) <- a_357.(i1_360 + i_362);
-            a_357.(i1_360 + i_362) <- t_363
+            a_357.(i1_360 + i_362) <- a_357.(i2_361 + i_362);
+            a_357.(i2_361 + i_362) <- t_363
            done;
            (t_352 := (~- (! t_352)))
           end else ();
@@ -1390,14 +1390,21 @@
     let t_494 = (! t_486) in
     let t_495 = (! t_487) in
     let t_496 = (ref (None)) in
-    let t_501 =
+    let t_503 =
      begin
-      for j_499 = t_494 to (t_491 - 1) do
-       let t_500 = (t_489.(j_499)).(t_495) in
-       if (not (t_500 = (* cross-stage persistent value (as id: zero) *))) then
-        (t_496 := (Some (j_499, t_500)))
-       else ()
-      done;
+      let t_499 = (t_489.(t_494)).(t_495) in
+      if (not (t_499 = (* cross-stage persistent value (as id: zero) *))) then
+       (t_496 := (Some (t_494, t_499)))
+      else
+       let rec loop_500 =
+        fun j_501 ->
+         if (j_501 < t_491) then
+          let bjc_502 = (t_489.(j_501)).(t_495) in
+          if (bjc_502 = (* cross-stage persistent value (as id: zero) *)) then
+           (loop_500 (j_501 + 1))
+          else (t_496 := (Some (j_501, bjc_502)))
+         else () in
+       (loop_500 (t_494 + 1));
       (match (! t_496) with
        | Some (i_497) ->
           if ((fst i_497) <> t_494) then begin
@@ -1409,29 +1416,29 @@
           (Some (snd i_497))
        | None -> (None))
      end in
-    (match t_501 with
-     | Some (i_502) ->
+    (match t_503 with
+     | Some (i_504) ->
         begin
-         for j_503 = (t_494 + 1) to (t_491 - 1) do
+         for j_505 = (t_494 + 1) to (t_491 - 1) do
           if (not
-               ((t_489.(j_503)).(t_495) =
+               ((t_489.(j_505)).(t_495) =
                  (* cross-stage persistent value (as id: zero) *))) then begin
-           for j_504 = (t_495 + 1) to (t_490 - 1) do
-            (t_489.(j_503)).(j_504) <-
+           for j_506 = (t_495 + 1) to (t_490 - 1) do
+            (t_489.(j_505)).(j_506) <-
              (((* cross-stage persistent value (as id: Num.sub_num) *))
-               (t_489.(j_503)).(j_504)
+               (t_489.(j_505)).(j_506)
                (((* cross-stage persistent value (as id: Num.mult_num) *))
                  (((* cross-stage persistent value (as id: Num.div_num) *))
-                   (t_489.(j_503)).(t_495) (t_489.(t_494)).(t_495))
-                 (t_489.(t_494)).(j_504)))
+                   (t_489.(j_505)).(t_495) (t_489.(t_494)).(t_495))
+                 (t_489.(t_494)).(j_506)))
            done;
-           (t_489.(j_503)).(t_495) <-
+           (t_489.(j_505)).(t_495) <-
             (* cross-stage persistent value (as id: zero) *)
           end else ()
          done;
          (t_492 :=
            (((* cross-stage persistent value (as id: Num.mult_num) *))
-             (! t_492) i_502))
+             (! t_492) i_504))
         end;
         (t_486 := ((! t_486) + 1))
      | None -> (t_493 := 0));
@@ -1443,208 +1450,229 @@
    Funct4.GenRA2.Ctr.contr ->
    Funct4.OutDet(Funct4.RationalDomain)(Funct4.GenericArrayContainer)(Funct4.RDet).res)
   code =
-  .<fun a_505 ->
-   let t_506 = (ref 0) in
-   let t_507 = (ref 0) in
-   let t_509 =
-    (Array.map (fun x_508 -> (Array.copy x_508)) (Array.copy a_505)) in
-   let t_510 = (Array.length a_505.(0)) in
-   let t_511 = (Array.length a_505) in
-   let t_512 = (ref (* cross-stage persistent value (as id: one) *)) in
-   let t_513 = (ref 1) in
-   while (((! t_507) < t_510) && ((! t_506) < t_511)) do
-    let t_514 = (! t_506) in
-    let t_515 = (! t_507) in
-    let t_516 = (ref (None)) in
-    let t_521 =
+  .<fun a_507 ->
+   let t_508 = (ref 0) in
+   let t_509 = (ref 0) in
+   let t_511 =
+    (Array.map (fun x_510 -> (Array.copy x_510)) (Array.copy a_507)) in
+   let t_512 = (Array.length a_507.(0)) in
+   let t_513 = (Array.length a_507) in
+   let t_514 = (ref (* cross-stage persistent value (as id: one) *)) in
+   let t_515 = (ref 1) in
+   while (((! t_509) < t_512) && ((! t_508) < t_513)) do
+    let t_516 = (! t_508) in
+    let t_517 = (! t_509) in
+    let t_518 = (ref (None)) in
+    let t_525 =
      begin
-      for j_519 = t_514 to (t_511 - 1) do
-       let t_520 = (t_509.(j_519)).(t_515) in
-       if (not (t_520 = (* cross-stage persistent value (as id: zero) *))) then
-        (t_516 := (Some (j_519, t_520)))
-       else ()
-      done;
-      (match (! t_516) with
-       | Some (i_517) ->
-          if ((fst i_517) <> t_514) then begin
-           let t_518 = t_509.(t_514) in
-           t_509.(t_514) <- t_509.(fst i_517);
-           t_509.(fst i_517) <- t_518;
-           (t_513 := (~- (! t_513)))
+      let t_521 = (t_511.(t_516)).(t_517) in
+      if (not (t_521 = (* cross-stage persistent value (as id: zero) *))) then
+       (t_518 := (Some (t_516, t_521)))
+      else
+       let rec loop_522 =
+        fun j_523 ->
+         if (j_523 < t_513) then
+          let bjc_524 = (t_511.(j_523)).(t_517) in
+          if (bjc_524 = (* cross-stage persistent value (as id: zero) *)) then
+           (loop_522 (j_523 + 1))
+          else (t_518 := (Some (j_523, bjc_524)))
+         else () in
+       (loop_522 (t_516 + 1));
+      (match (! t_518) with
+       | Some (i_519) ->
+          if ((fst i_519) <> t_516) then begin
+           let t_520 = t_511.(t_516) in
+           t_511.(t_516) <- t_511.(fst i_519);
+           t_511.(fst i_519) <- t_520;
+           (t_515 := (~- (! t_515)))
           end else ();
-          (Some (snd i_517))
+          (Some (snd i_519))
        | None -> (None))
      end in
-    (match t_521 with
-     | Some (i_522) ->
+    (match t_525 with
+     | Some (i_526) ->
         begin
-         for j_523 = (t_514 + 1) to (t_511 - 1) do
+         for j_527 = (t_516 + 1) to (t_513 - 1) do
           if (not
-               ((t_509.(j_523)).(t_515) =
+               ((t_511.(j_527)).(t_517) =
                  (* cross-stage persistent value (as id: zero) *))) then begin
-           for j_524 = (t_515 + 1) to (t_510 - 1) do
-            (t_509.(j_523)).(j_524) <-
+           for j_528 = (t_517 + 1) to (t_512 - 1) do
+            (t_511.(j_527)).(j_528) <-
              (((* cross-stage persistent value (as id: Num.sub_num) *))
-               (t_509.(j_523)).(j_524)
+               (t_511.(j_527)).(j_528)
                (((* cross-stage persistent value (as id: Num.mult_num) *))
                  (((* cross-stage persistent value (as id: Num.div_num) *))
-                   (t_509.(j_523)).(t_515) (t_509.(t_514)).(t_515))
-                 (t_509.(t_514)).(j_524)))
+                   (t_511.(j_527)).(t_517) (t_511.(t_516)).(t_517))
+                 (t_511.(t_516)).(j_528)))
            done;
-           (t_509.(j_523)).(t_515) <-
+           (t_511.(j_527)).(t_517) <-
             (* cross-stage persistent value (as id: zero) *)
           end else ()
          done;
-         (t_512 :=
+         (t_514 :=
            (((* cross-stage persistent value (as id: Num.mult_num) *))
-             (! t_512) i_522))
+             (! t_514) i_526))
         end;
-        (t_506 := ((! t_506) + 1))
-     | None -> (t_513 := 0));
-    (t_507 := ((! t_507) + 1))
+        (t_508 := ((! t_508) + 1))
+     | None -> (t_515 := 0));
+    (t_509 := ((! t_509) + 1))
    done;
-   (t_509,
-    if ((! t_513) = 0) then (* cross-stage persistent value (as id: zero) *)
-    else if ((! t_513) = 1) then (! t_512)
+   (t_511,
+    if ((! t_515) = 0) then (* cross-stage persistent value (as id: zero) *)
+    else if ((! t_515) = 1) then (! t_514)
     else
-     (((* cross-stage persistent value (as id: Num.minus_num) *)) (! t_512)))>.
+     (((* cross-stage persistent value (as id: Num.minus_num) *)) (! t_514)))>.
 # val resRA3 :
   ('a,
    Funct4.GenRA3.Ctr.contr ->
    Funct4.OutRank(Funct4.RationalDomain)(Funct4.GenericArrayContainer)(Funct4.Rank).res)
   code =
-  .<fun a_525 ->
-   let t_526 = (ref 0) in
-   let t_527 = (ref 0) in
-   let t_529 =
-    (Array.map (fun x_528 -> (Array.copy x_528)) (Array.copy a_525)) in
-   let t_530 = (Array.length a_525.(0)) in
-   let t_531 = (Array.length a_525) in
-   let t_532 = (ref (* cross-stage persistent value (as id: one) *)) in
-   let t_533 = (ref 1) in
-   while (((! t_527) < t_530) && ((! t_526) < t_531)) do
-    let t_534 = (! t_526) in
-    let t_535 = (! t_527) in
-    let t_536 = (ref (None)) in
-    let t_541 =
+  .<fun a_529 ->
+   let t_530 = (ref 0) in
+   let t_531 = (ref 0) in
+   let t_533 =
+    (Array.map (fun x_532 -> (Array.copy x_532)) (Array.copy a_529)) in
+   let t_534 = (Array.length a_529.(0)) in
+   let t_535 = (Array.length a_529) in
+   let t_536 = (ref (* cross-stage persistent value (as id: one) *)) in
+   let t_537 = (ref 1) in
+   while (((! t_531) < t_534) && ((! t_530) < t_535)) do
+    let t_538 = (! t_530) in
+    let t_539 = (! t_531) in
+    let t_540 = (ref (None)) in
+    let t_547 =
      begin
-      for j_539 = t_534 to (t_531 - 1) do
-       let t_540 = (t_529.(j_539)).(t_535) in
-       if (not (t_540 = (* cross-stage persistent value (as id: zero) *))) then
-        (t_536 := (Some (j_539, t_540)))
-       else ()
-      done;
-      (match (! t_536) with
-       | Some (i_537) ->
-          if ((fst i_537) <> t_534) then begin
-           let t_538 = t_529.(t_534) in
-           t_529.(t_534) <- t_529.(fst i_537);
-           t_529.(fst i_537) <- t_538;
+      let t_543 = (t_533.(t_538)).(t_539) in
+      if (not (t_543 = (* cross-stage persistent value (as id: zero) *))) then
+       (t_540 := (Some (t_538, t_543)))
+      else
+       let rec loop_544 =
+        fun j_545 ->
+         if (j_545 < t_535) then
+          let bjc_546 = (t_533.(j_545)).(t_539) in
+          if (bjc_546 = (* cross-stage persistent value (as id: zero) *)) then
+           (loop_544 (j_545 + 1))
+          else (t_540 := (Some (j_545, bjc_546)))
+         else () in
+       (loop_544 (t_538 + 1));
+      (match (! t_540) with
+       | Some (i_541) ->
+          if ((fst i_541) <> t_538) then begin
+           let t_542 = t_533.(t_538) in
+           t_533.(t_538) <- t_533.(fst i_541);
+           t_533.(fst i_541) <- t_542;
            ()
           end else ();
-          (Some (snd i_537))
+          (Some (snd i_541))
        | None -> (None))
      end in
-    (match t_541 with
-     | Some (i_542) ->
+    (match t_547 with
+     | Some (i_548) ->
         begin
-         for j_543 = (t_534 + 1) to (t_531 - 1) do
+         for j_549 = (t_538 + 1) to (t_535 - 1) do
           if (not
-               ((t_529.(j_543)).(t_535) =
+               ((t_533.(j_549)).(t_539) =
                  (* cross-stage persistent value (as id: zero) *))) then begin
-           for j_544 = (t_535 + 1) to (t_530 - 1) do
-            (t_529.(j_543)).(j_544) <-
+           for j_550 = (t_539 + 1) to (t_534 - 1) do
+            (t_533.(j_549)).(j_550) <-
              (((* cross-stage persistent value (as id: Num.sub_num) *))
-               (t_529.(j_543)).(j_544)
+               (t_533.(j_549)).(j_550)
                (((* cross-stage persistent value (as id: Num.mult_num) *))
                  (((* cross-stage persistent value (as id: Num.div_num) *))
-                   (t_529.(j_543)).(t_535) (t_529.(t_534)).(t_535))
-                 (t_529.(t_534)).(j_544)))
+                   (t_533.(j_549)).(t_539) (t_533.(t_538)).(t_539))
+                 (t_533.(t_538)).(j_550)))
            done;
-           (t_529.(j_543)).(t_535) <-
+           (t_533.(j_549)).(t_539) <-
             (* cross-stage persistent value (as id: zero) *)
           end else ()
          done;
-         (t_532 :=
+         (t_536 :=
            (((* cross-stage persistent value (as id: Num.mult_num) *))
-             (! t_532) i_542))
+             (! t_536) i_548))
         end;
-        (t_526 := ((! t_526) + 1))
-     | None -> (t_533 := 0));
-    (t_527 := ((! t_527) + 1))
+        (t_530 := ((! t_530) + 1))
+     | None -> (t_537 := 0));
+    (t_531 := ((! t_531) + 1))
    done;
-   (t_529, (! t_526))>.
+   (t_533, (! t_530))>.
 # val resRA4 :
   ('a,
    Funct4.GenRA4.Ctr.contr ->
    Funct4.OutDetRank(Funct4.RationalDomain)(Funct4.GenericArrayContainer)(Funct4.RDet)(Funct4.Rank).res)
   code =
-  .<fun a_545 ->
-   let t_546 = (ref 0) in
-   let t_547 = (ref 0) in
-   let t_549 =
-    (Array.map (fun x_548 -> (Array.copy x_548)) (Array.copy a_545)) in
-   let t_550 = (Array.length a_545.(0)) in
-   let t_551 = (Array.length a_545) in
-   let t_552 = (ref (* cross-stage persistent value (as id: one) *)) in
-   let t_553 = (ref 1) in
-   while (((! t_547) < t_550) && ((! t_546) < t_551)) do
-    let t_554 = (! t_546) in
-    let t_555 = (! t_547) in
-    let t_556 = (ref (None)) in
-    let t_561 =
+  .<fun a_551 ->
+   let t_552 = (ref 0) in
+   let t_553 = (ref 0) in
+   let t_555 =
+    (Array.map (fun x_554 -> (Array.copy x_554)) (Array.copy a_551)) in
+   let t_556 = (Array.length a_551.(0)) in
+   let t_557 = (Array.length a_551) in
+   let t_558 = (ref (* cross-stage persistent value (as id: one) *)) in
+   let t_559 = (ref 1) in
+   while (((! t_553) < t_556) && ((! t_552) < t_557)) do
+    let t_560 = (! t_552) in
+    let t_561 = (! t_553) in
+    let t_562 = (ref (None)) in
+    let t_569 =
      begin
-      for j_559 = t_554 to (t_551 - 1) do
-       let t_560 = (t_549.(j_559)).(t_555) in
-       if (not (t_560 = (* cross-stage persistent value (as id: zero) *))) then
-        (t_556 := (Some (j_559, t_560)))
-       else ()
-      done;
-      (match (! t_556) with
-       | Some (i_557) ->
-          if ((fst i_557) <> t_554) then begin
-           let t_558 = t_549.(t_554) in
-           t_549.(t_554) <- t_549.(fst i_557);
-           t_549.(fst i_557) <- t_558;
-           (t_553 := (~- (! t_553)))
+      let t_565 = (t_555.(t_560)).(t_561) in
+      if (not (t_565 = (* cross-stage persistent value (as id: zero) *))) then
+       (t_562 := (Some (t_560, t_565)))
+      else
+       let rec loop_566 =
+        fun j_567 ->
+         if (j_567 < t_557) then
+          let bjc_568 = (t_555.(j_567)).(t_561) in
+          if (bjc_568 = (* cross-stage persistent value (as id: zero) *)) then
+           (loop_566 (j_567 + 1))
+          else (t_562 := (Some (j_567, bjc_568)))
+         else () in
+       (loop_566 (t_560 + 1));
+      (match (! t_562) with
+       | Some (i_563) ->
+          if ((fst i_563) <> t_560) then begin
+           let t_564 = t_555.(t_560) in
+           t_555.(t_560) <- t_555.(fst i_563);
+           t_555.(fst i_563) <- t_564;
+           (t_559 := (~- (! t_559)))
           end else ();
-          (Some (snd i_557))
+          (Some (snd i_563))
        | None -> (None))
      end in
-    (match t_561 with
-     | Some (i_562) ->
+    (match t_569 with
+     | Some (i_570) ->
         begin
-         for j_563 = (t_554 + 1) to (t_551 - 1) do
+         for j_571 = (t_560 + 1) to (t_557 - 1) do
           if (not
-               ((t_549.(j_563)).(t_555) =
+               ((t_555.(j_571)).(t_561) =
                  (* cross-stage persistent value (as id: zero) *))) then begin
-           for j_564 = (t_555 + 1) to (t_550 - 1) do
-            (t_549.(j_563)).(j_564) <-
+           for j_572 = (t_561 + 1) to (t_556 - 1) do
+            (t_555.(j_571)).(j_572) <-
              (((* cross-stage persistent value (as id: Num.sub_num) *))
-               (t_549.(j_563)).(j_564)
+               (t_555.(j_571)).(j_572)
                (((* cross-stage persistent value (as id: Num.mult_num) *))
                  (((* cross-stage persistent value (as id: Num.div_num) *))
-                   (t_549.(j_563)).(t_555) (t_549.(t_554)).(t_555))
-                 (t_549.(t_554)).(j_564)))
+                   (t_555.(j_571)).(t_561) (t_555.(t_560)).(t_561))
+                 (t_555.(t_560)).(j_572)))
            done;
-           (t_549.(j_563)).(t_555) <-
+           (t_555.(j_571)).(t_561) <-
             (* cross-stage persistent value (as id: zero) *)
           end else ()
          done;
-         (t_552 :=
+         (t_558 :=
            (((* cross-stage persistent value (as id: Num.mult_num) *))
-             (! t_552) i_562))
+             (! t_558) i_570))
         end;
-        (t_546 := ((! t_546) + 1))
-     | None -> (t_553 := 0));
-    (t_547 := ((! t_547) + 1))
+        (t_552 := ((! t_552) + 1))
+     | None -> (t_559 := 0));
+    (t_553 := ((! t_553) + 1))
    done;
-   (t_549,
-    if ((! t_553) = 0) then (* cross-stage persistent value (as id: zero) *)
-    else if ((! t_553) = 1) then (! t_552)
+   (t_555,
+    if ((! t_559) = 0) then (* cross-stage persistent value (as id: zero) *)
+    else if ((! t_559) = 1) then (! t_558)
     else
-     (((* cross-stage persistent value (as id: Num.minus_num) *)) (! t_552)),
-    (! t_546))>.
+     (((* cross-stage persistent value (as id: Num.minus_num) *)) (! t_558)),
+    (! t_552))>.
 #   val rFA1 :
   Funct4.GenFA1.Ctr.contr ->
   Funct4.OutJustMatrix(Funct4.FloatDomain)(Funct4.GenericArrayContainer)(Funct4.NoDet(Funct4.FloatDomain)).res =
@@ -1832,49 +1860,20 @@ val resI21 :
 #           val fa3 : float array array =
   [|[|1.; 2.; 3.|]; [|4.; 13.; 5.|]; [|-1.; 3.; 0.|]; [|0.; 0.; 0.|]|]
 #           val fa4 : float array array =
-  [|[|0.; 2.; 3.|]; [|0.; 13.; 5.|]; [|0.; 3.; 0.|]|]
-#   val fa5 : Funct4.FloatDomain.v array array list =
+  [|[|0.; 2.; 3.|]; [|0.; 10.; 5.|]; [|0.; 3.; 0.|]|]
+#                                     val fa5 : Funct4.FloatDomain.v array array list =
   [[|[|1.|]|]; [|[|1.; 2.; 3.|]; [|4.; 13.; 5.|]; [|-1.; 3.; 0.|]|];
    [|[|1.; 2.; 3.; 0.|]; [|4.; 13.; 5.; 0.|]; [|-1.; 3.; 0.; 0.|]|];
    [|[|1.; 2.; 3.|]; [|4.; 13.; 5.|]; [|-1.; 3.; 0.|]; [|0.; 0.; 0.|]|];
-   [|[|0.; 2.; 3.|]; [|0.; 13.; 5.|]; [|0.; 3.; 0.|]|]]
+   [|[|0.; 2.; 3.|]; [|0.; 10.; 5.|]; [|0.; 3.; 0.|]|]]
 val resF1 :
   Funct4.OutJustMatrix(Funct4.FloatDomain)(Funct4.GenericArrayContainer)(Funct4.NoDet(Funct4.FloatDomain)).res
   list =
   [[|[|1.|]|]; [|[|4.; 13.; 5.|]; [|0.; 6.25; 1.25|]; [|0.; 0.; 2.|]|];
    [|[|4.; 13.; 5.; 0.|]; [|0.; 6.25; 1.25; 0.|]; [|0.; 0.; 2.; 0.|]|];
    [|[|4.; 13.; 5.|]; [|0.; 6.25; 1.25|]; [|0.; 0.; 2.|]; [|0.; 0.; 0.|]|];
-   [|[|0.; 13.; 5.|]; [|0.; 0.; 2.23076923076923084|]; [|0.; 0.; 0.|]|]]
-# val resF2 :
-  Funct4.OutDet(Funct4.FloatDomain)(Funct4.GenericArrayContainer)(Funct4.FDet).res
-  list =
-  [([|[|1.|]|], 1.);
-   ([|[|4.; 13.; 5.|]; [|0.; 6.25; 1.25|]; [|0.; 0.; 2.|]|], 50.);
-   ([|[|4.; 13.; 5.; 0.|]; [|0.; 6.25; 1.25; 0.|]; [|0.; 0.; 2.; 0.|]|], 50.);
-   ([|[|4.; 13.; 5.|]; [|0.; 6.25; 1.25|]; [|0.; 0.; 2.|]; [|0.; 0.; 0.|]|],
-    50.);
-   ([|[|0.; 13.; 5.|]; [|0.; 0.; 2.23076923076923084|]; [|0.; 0.; 0.|]|], 0.)]
-# val resF3 :
-  Funct4.OutRank(Funct4.FloatDomain)(Funct4.GenericArrayContainer)(Funct4.Rank).res
-  list =
-  [([|[|1.|]|], 1);
-   ([|[|4.; 13.; 5.|]; [|0.; 6.25; 1.25|]; [|0.; 0.; 2.|]|], 3);
-   ([|[|4.; 13.; 5.; 0.|]; [|0.; 6.25; 1.25; 0.|]; [|0.; 0.; 2.; 0.|]|], 3);
-   ([|[|4.; 13.; 5.|]; [|0.; 6.25; 1.25|]; [|0.; 0.; 2.|]; [|0.; 0.; 0.|]|],
-    3);
-   ([|[|0.; 13.; 5.|]; [|0.; 0.; 2.23076923076923084|]; [|0.; 0.; 0.|]|], 2)]
-# val resF4 :
-  Funct4.OutDetRank(Funct4.FloatDomain)(Funct4.GenericArrayContainer)(Funct4.FDet)(Funct4.Rank).res
-  list =
-  [([|[|1.|]|], 1., 1);
-   ([|[|4.; 13.; 5.|]; [|0.; 6.25; 1.25|]; [|0.; 0.; 2.|]|], 50., 3);
-   ([|[|4.; 13.; 5.; 0.|]; [|0.; 6.25; 1.25; 0.|]; [|0.; 0.; 2.; 0.|]|], 50.,
-    3);
-   ([|[|4.; 13.; 5.|]; [|0.; 6.25; 1.25|]; [|0.; 0.; 2.|]; [|0.; 0.; 0.|]|],
-    50., 3);
-   ([|[|0.; 13.; 5.|]; [|0.; 0.; 2.23076923076923084|]; [|0.; 0.; 0.|]|], 0.,
-    2)]
-#   val resF11 :
+   [|[|0.; 10.; 5.|]; [|0.; 0.; 2.|]; [|0.; 0.; 0.|]|]]
+#                                                   val resF11 :
   Funct4.OutJustMatrix(Funct4.FloatDomain)(Funct4.GenericArrayContainer)(Funct4.NoDet(Funct4.FloatDomain)).res
   list =
   [[|[|1.|]|];
@@ -1885,7 +1884,7 @@ val resF1 :
      [|0.; 0.; -1.72413793103448287; 0.|]|];
    [|[|13.; 5.; 4.|]; [|0.; 2.23076923076923084; 0.384615384615384581|];
      [|0.; 0.; -1.72413793103448287|]; [|0.; 0.; 0.|]|];
-   [|[|13.; 5.; 0.|]; [|0.; 2.23076923076923084; 0.|]; [|0.; 0.; 0.|]|]]
+   [|[|10.; 5.; 0.|]; [|0.; 2.; 0.|]; [|0.; 0.; 0.|]|]]
 # val resF12 :
   Funct4.OutDet(Funct4.FloatDomain)(Funct4.GenericArrayContainer)(Funct4.FDet).res
   list =
@@ -1900,7 +1899,7 @@ val resF1 :
    ([|[|13.; 5.; 4.|]; [|0.; 2.23076923076923084; 0.384615384615384581|];
       [|0.; 0.; -1.72413793103448287|]; [|0.; 0.; 0.|]|],
     50.);
-   ([|[|13.; 5.; 0.|]; [|0.; 2.23076923076923084; 0.|]; [|0.; 0.; 0.|]|], 0.)]
+   ([|[|10.; 5.; 0.|]; [|0.; 2.; 0.|]; [|0.; 0.; 0.|]|], 0.)]
 # val resF13 :
   Funct4.OutRank(Funct4.FloatDomain)(Funct4.GenericArrayContainer)(Funct4.Rank).res
   list =
@@ -1915,7 +1914,7 @@ val resF1 :
    ([|[|13.; 5.; 4.|]; [|0.; 2.23076923076923084; 0.384615384615384581|];
       [|0.; 0.; -1.72413793103448287|]; [|0.; 0.; 0.|]|],
     3);
-   ([|[|13.; 5.; 0.|]; [|0.; 2.23076923076923084; 0.|]; [|0.; 0.; 0.|]|], 2)]
+   ([|[|10.; 5.; 0.|]; [|0.; 2.; 0.|]; [|0.; 0.; 0.|]|], 2)]
 # val resF14 :
   Funct4.OutDetRank(Funct4.FloatDomain)(Funct4.GenericArrayContainer)(Funct4.FDet)(Funct4.Rank).res
   list =
@@ -1930,8 +1929,7 @@ val resF1 :
    ([|[|13.; 5.; 4.|]; [|0.; 2.23076923076923084; 0.384615384615384581|];
       [|0.; 0.; -1.72413793103448287|]; [|0.; 0.; 0.|]|],
     50., 3);
-   ([|[|13.; 5.; 0.|]; [|0.; 2.23076923076923084; 0.|]; [|0.; 0.; 0.|]|], 0.,
-    2)]
+   ([|[|10.; 5.; 0.|]; [|0.; 2.; 0.|]; [|0.; 0.; 0.|]|], 0., 2)]
 #   val ra0 : Num.num array array = [|[|Num.Int 1|]|]
 #           val ra1 : Num.num array array =
   [|[|Num.Int 1; Num.Int 2; Num.Int 3|];
@@ -1969,80 +1967,80 @@ val resF1 :
   Funct4.OutJustMatrix(Funct4.RationalDomain)(Funct4.GenericArrayContainer)(Funct4.RDet).res
   list =
   [[|[|Num.Int 1|]|];
-   [|[|Num.Int (-1); Num.Int 3; Num.Int 0|];
-     [|Num.Int 0; Num.Int 5; Num.Int 3|];
-     [|Num.Int 0; Num.Int 0; Num.Int (-10)|]|];
-   [|[|Num.Int (-1); Num.Int 3; Num.Int 0; Num.Int 0|];
-     [|Num.Int 0; Num.Int 5; Num.Int 3; Num.Int 0|];
-     [|Num.Int 0; Num.Int 0; Num.Int (-10); Num.Int 0|]|];
-   [|[|Num.Int (-1); Num.Int 3; Num.Int 0|];
-     [|Num.Int 0; Num.Int 5; Num.Int 3|];
-     [|Num.Int 0; Num.Int 0; Num.Int (-10)|];
+   [|[|Num.Int 1; Num.Int 2; Num.Int 3|];
+     [|Num.Int 0; Num.Int 5; Num.Int (-7)|];
+     [|Num.Int 0; Num.Int 0; Num.Int 10|]|];
+   [|[|Num.Int 1; Num.Int 2; Num.Int 3; Num.Int 0|];
+     [|Num.Int 0; Num.Int 5; Num.Int (-7); Num.Int 0|];
+     [|Num.Int 0; Num.Int 0; Num.Int 10; Num.Int 0|]|];
+   [|[|Num.Int 1; Num.Int 2; Num.Int 3|];
+     [|Num.Int 0; Num.Int 5; Num.Int (-7)|];
+     [|Num.Int 0; Num.Int 0; Num.Int 10|];
      [|Num.Int 0; Num.Int 0; Num.Int 0|]|];
-   [|[|Num.Int 0; Num.Int 3; Num.Int 0|];
-     [|Num.Int 0; Num.Int 0; Num.Int 3|];
+   [|[|Num.Int 0; Num.Int 2; Num.Int 3|];
+     [|Num.Int 0; Num.Int 0; Num.Ratio <abstr>|];
      [|Num.Int 0; Num.Int 0; Num.Int 0|]|]]
 # val resR12 :
   Funct4.OutDet(Funct4.RationalDomain)(Funct4.GenericArrayContainer)(Funct4.RDet).res
   list =
   [([|[|Num.Int 1|]|], Num.Int 1);
-   ([|[|Num.Int (-1); Num.Int 3; Num.Int 0|];
-      [|Num.Int 0; Num.Int 5; Num.Int 3|];
-      [|Num.Int 0; Num.Int 0; Num.Int (-10)|]|],
+   ([|[|Num.Int 1; Num.Int 2; Num.Int 3|];
+      [|Num.Int 0; Num.Int 5; Num.Int (-7)|];
+      [|Num.Int 0; Num.Int 0; Num.Int 10|]|],
     Num.Int 50);
-   ([|[|Num.Int (-1); Num.Int 3; Num.Int 0; Num.Int 0|];
-      [|Num.Int 0; Num.Int 5; Num.Int 3; Num.Int 0|];
-      [|Num.Int 0; Num.Int 0; Num.Int (-10); Num.Int 0|]|],
+   ([|[|Num.Int 1; Num.Int 2; Num.Int 3; Num.Int 0|];
+      [|Num.Int 0; Num.Int 5; Num.Int (-7); Num.Int 0|];
+      [|Num.Int 0; Num.Int 0; Num.Int 10; Num.Int 0|]|],
     Num.Int 50);
-   ([|[|Num.Int (-1); Num.Int 3; Num.Int 0|];
-      [|Num.Int 0; Num.Int 5; Num.Int 3|];
-      [|Num.Int 0; Num.Int 0; Num.Int (-10)|];
+   ([|[|Num.Int 1; Num.Int 2; Num.Int 3|];
+      [|Num.Int 0; Num.Int 5; Num.Int (-7)|];
+      [|Num.Int 0; Num.Int 0; Num.Int 10|];
       [|Num.Int 0; Num.Int 0; Num.Int 0|]|],
     Num.Int 50);
-   ([|[|Num.Int 0; Num.Int 3; Num.Int 0|];
-      [|Num.Int 0; Num.Int 0; Num.Int 3|];
+   ([|[|Num.Int 0; Num.Int 2; Num.Int 3|];
+      [|Num.Int 0; Num.Int 0; Num.Ratio <abstr>|];
       [|Num.Int 0; Num.Int 0; Num.Int 0|]|],
     Num.Int 0)]
 # val resR13 :
   Funct4.OutRank(Funct4.RationalDomain)(Funct4.GenericArrayContainer)(Funct4.Rank).res
   list =
   [([|[|Num.Int 1|]|], 1);
-   ([|[|Num.Int (-1); Num.Int 3; Num.Int 0|];
-      [|Num.Int 0; Num.Int 5; Num.Int 3|];
-      [|Num.Int 0; Num.Int 0; Num.Int (-10)|]|],
+   ([|[|Num.Int 1; Num.Int 2; Num.Int 3|];
+      [|Num.Int 0; Num.Int 5; Num.Int (-7)|];
+      [|Num.Int 0; Num.Int 0; Num.Int 10|]|],
     3);
-   ([|[|Num.Int (-1); Num.Int 3; Num.Int 0; Num.Int 0|];
-      [|Num.Int 0; Num.Int 5; Num.Int 3; Num.Int 0|];
-      [|Num.Int 0; Num.Int 0; Num.Int (-10); Num.Int 0|]|],
+   ([|[|Num.Int 1; Num.Int 2; Num.Int 3; Num.Int 0|];
+      [|Num.Int 0; Num.Int 5; Num.Int (-7); Num.Int 0|];
+      [|Num.Int 0; Num.Int 0; Num.Int 10; Num.Int 0|]|],
     3);
-   ([|[|Num.Int (-1); Num.Int 3; Num.Int 0|];
-      [|Num.Int 0; Num.Int 5; Num.Int 3|];
-      [|Num.Int 0; Num.Int 0; Num.Int (-10)|];
+   ([|[|Num.Int 1; Num.Int 2; Num.Int 3|];
+      [|Num.Int 0; Num.Int 5; Num.Int (-7)|];
+      [|Num.Int 0; Num.Int 0; Num.Int 10|];
       [|Num.Int 0; Num.Int 0; Num.Int 0|]|],
     3);
-   ([|[|Num.Int 0; Num.Int 3; Num.Int 0|];
-      [|Num.Int 0; Num.Int 0; Num.Int 3|];
+   ([|[|Num.Int 0; Num.Int 2; Num.Int 3|];
+      [|Num.Int 0; Num.Int 0; Num.Ratio <abstr>|];
       [|Num.Int 0; Num.Int 0; Num.Int 0|]|],
     2)]
 # val resR14 :
   Funct4.OutDetRank(Funct4.RationalDomain)(Funct4.GenericArrayContainer)(Funct4.RDet)(Funct4.Rank).res
   list =
   [([|[|Num.Int 1|]|], Num.Int 1, 1);
-   ([|[|Num.Int (-1); Num.Int 3; Num.Int 0|];
-      [|Num.Int 0; Num.Int 5; Num.Int 3|];
-      [|Num.Int 0; Num.Int 0; Num.Int (-10)|]|],
+   ([|[|Num.Int 1; Num.Int 2; Num.Int 3|];
+      [|Num.Int 0; Num.Int 5; Num.Int (-7)|];
+      [|Num.Int 0; Num.Int 0; Num.Int 10|]|],
     Num.Int 50, 3);
-   ([|[|Num.Int (-1); Num.Int 3; Num.Int 0; Num.Int 0|];
-      [|Num.Int 0; Num.Int 5; Num.Int 3; Num.Int 0|];
-      [|Num.Int 0; Num.Int 0; Num.Int (-10); Num.Int 0|]|],
+   ([|[|Num.Int 1; Num.Int 2; Num.Int 3; Num.Int 0|];
+      [|Num.Int 0; Num.Int 5; Num.Int (-7); Num.Int 0|];
+      [|Num.Int 0; Num.Int 0; Num.Int 10; Num.Int 0|]|],
     Num.Int 50, 3);
-   ([|[|Num.Int (-1); Num.Int 3; Num.Int 0|];
-      [|Num.Int 0; Num.Int 5; Num.Int 3|];
-      [|Num.Int 0; Num.Int 0; Num.Int (-10)|];
+   ([|[|Num.Int 1; Num.Int 2; Num.Int 3|];
+      [|Num.Int 0; Num.Int 5; Num.Int (-7)|];
+      [|Num.Int 0; Num.Int 0; Num.Int 10|];
       [|Num.Int 0; Num.Int 0; Num.Int 0|]|],
     Num.Int 50, 3);
-   ([|[|Num.Int 0; Num.Int 3; Num.Int 0|];
-      [|Num.Int 0; Num.Int 0; Num.Int 3|];
+   ([|[|Num.Int 0; Num.Int 2; Num.Int 3|];
+      [|Num.Int 0; Num.Int 0; Num.Ratio <abstr>|];
       [|Num.Int 0; Num.Int 0; Num.Int 0|]|],
     Num.Int 0, 2)]
 # 

@@ -20,6 +20,11 @@ let l3 f = fun x y z -> mdo { tx <-- x; ty <-- y; tz <-- z; f tx ty tz}
 let fetch s k = k s s
 let store v s k = k (v::s) ()
 
+
+let lll phi j phi_args j_args = 
+    ret (.<let rec lp j = .~(phi .<j>. phi_args) in 
+           lp .~j_args >. ) 
+
 (* Functions that end in M take monads as arguments and partially
    run them -- in a reset fashion *)
 
@@ -144,8 +149,11 @@ module type CONTAINER2D = functor(Dom:DOMAIN) -> sig
   type 'a vc = ('a,contr) code
   type 'a vo = ('a,Dom.v) code
   val get : 'a vc -> ('a,int) code -> ('a,int) code -> ('a vo,'s,'w) monad
+  val get' : 'a vc -> ('a,int) code -> ('a,int) code -> 'a vo
   val set : 'a vc -> ('a,int) code -> ('a,int) code -> 'a vo -> 
             (('a,unit) code, 's, 'w) monad
+  val set' : 'a vc -> ('a,int) code -> ('a,int) code -> 'a vo -> 
+            ('a,unit) code
   val dim1 : 'a vc -> ('a,int) code
   val dim2 : 'a vc -> ('a,int) code
   val mapper : ('a, Dom.v->Dom.v) code option -> 'a vc -> 'a vc
@@ -161,8 +169,10 @@ module GenericArrayContainer(Dom:DOMAIN) =
   type contr = Dom.v array array (* Array of rows *)
   type 'a vc = ('a,contr) code
   type 'a vo = ('a,Dom.v) code
-  let get x n m = ret .< (.~x).(.~n).(.~m) >.
-  let set x n m y = ret .< (.~x).(.~n).(.~m) <- .~y >.
+  let get' x n m = .< (.~x).(.~n).(.~m) >.
+  let get x n m = ret (get' x n m)
+  let set' x n m y = .< (.~x).(.~n).(.~m) <- .~y >.
+  let set x n m y = ret (set' x n m y)
   let dim2 x = .< Array.length .~x >.       (* number of rows *)
   let dim1 x = .< Array.length (.~x).(0) >. (* number of cols *)
   let mapper g a = match g with
@@ -196,8 +206,10 @@ module GenericVectorContainer(Dom:DOMAIN) =
   type contr = Dom.v container2dfromvector
   type 'a vc = ('a,contr) code
   type 'a vo = ('a,Dom.v) code
-  let get x n m = ret .< ((.~x).arr).(.~n* (.~x).n + .~m) >.
-  let set x n m y = ret .< ((.~x).arr).(.~n* (.~x).n + .~m) <- .~y >.
+  let get' x n m = .< ((.~x).arr).(.~n* (.~x).n + .~m) >.
+  let get x n m = ret (get' x n m)
+  let set' x n m y = .< ((.~x).arr).(.~n* (.~x).n + .~m) <- .~y >.
+  let set x n m y = ret (set' x n m y)
   let dim2 x = .< (.~x).n >.
   let dim1 x = .< (.~x).m >.
   let mapper g a = match g with
@@ -624,7 +636,7 @@ struct
                   s <-- fetch;
                   ret .< let rec loop j =
                        if j < .~n then 
-                       let bjc = .~((Ctr.get b .<j>. c) s k0) in
+                       let bjc = .~(Ctr.get' b .<j>. c) in
                        if bjc = .~Dom.zero then loop (j+1)
                        else .~pivot := Some (j,bjc)
                       in loop (.~r+1) >.})}
