@@ -20,6 +20,10 @@ let resFA11 = GenFA11.gen ;;
 let resFA12 = GenFA12.gen ;;
 let resFA13 = GenFA13.gen ;;
 let resFA14 = GenFA14.gen ;;
+let resRA1 = GenRA1.gen ;;
+let resRA2 = GenRA2.gen ;;
+let resRA3 = GenRA3.gen ;;
+let resRA4 = GenRA4.gen ;;
 
 let rFA1 = .! resFA1 ;;
 let rFA2 = .! resFA2 ;;
@@ -41,6 +45,10 @@ let rFA11 = .! resFA11 ;;
 let rFA12 = .! resFA12 ;;
 let rFA13 = .! resFA13 ;;
 let rFA14 = .! resFA14 ;;
+let rRA1 = .! resRA1 ;;
+let rRA2 = .! resRA2 ;;
+let rRA3 = .! resRA3 ;;
+let rRA4 = .! resRA4 ;;
 
 let ia0 = Array.make 1 (Array.make 1 1)
 let ia1 = Array.of_list [
@@ -66,10 +74,22 @@ let ia4 = Array.of_list [
     ]
 let ia5 = [ia0; ia1; ia2; ia3; ia4]
 
-let resI1 = List.map rIA1 ia5;;
-let resI2 = List.map rIA2 ia5;;
-let resI3 = List.map rIA3 ia5;;
-let resI4 = List.map rIA4 ia5;;
+let resI11 = List.map rIA1 ia5;;
+let resI12 = List.map rIA2 ia5;;
+let resI13 = List.map rIA3 ia5;;
+let resI14 = List.map rIA4 ia5;;
+
+let iv0 = {arr=Array.make 1 1; n=1; m=1}
+let iv1 = {arr=Array.of_list [ 1; 2; 3; 4; 13; 5; (-1); 3; 0]; n=3; m=3}
+let iv2 = {arr=Array.of_list [ 1; 2; 3; 0; 4; 13; 5; 0; (-1); 3; 0; 0]; n=3; m=4}
+(* let iv3 = {arr=Array.of_list [ 1; 2; 3; 4; 13; 5; (-1); 3; 0; 0; 0; 0]; n=4; m=3} *)
+let iv4 = {arr=Array.of_list [ 0; 2; 3; 0; 13; 5; 0; 3; 0]; n=3; m=3}
+let iv5 = [iv0; iv1; iv2; iv4]
+
+let resI21 = List.map rIV1 iv5;;
+let resI22 = List.map rIV2 iv5;;
+let resI23 = List.map rIV3 iv5;;
+let resI24 = List.map rIV4 iv5;;
 
 let fa0 = Array.make 1 (Array.make 1 1.) ;;
 let fa1 = Array.of_list [
@@ -104,3 +124,36 @@ let resF11 = List.map rFA11 fa5;;
 let resF12 = List.map rFA12 fa5;;
 let resF13 = List.map rFA13 fa5;;
 let resF14 = List.map rFA14 fa5;;
+
+let ra0 = Array.make 1 (Array.make 1 (Num.num_of_int 1)) ;;
+let ra1 = Array.map (fun a -> Array.map Num.num_of_int a) (
+    Array.of_list [
+    Array.of_list [1 ; 2 ; 3 ] ;
+    Array.of_list [4 ; 13 ; 5 ] ;
+    Array.of_list [(-1) ; 3 ; 0 ]
+    ]) ;;
+let ra2 = Array.map (fun a -> Array.map Num.num_of_int a) (
+    Array.of_list [
+    Array.of_list [1 ; 2 ; 3 ; 0] ;
+    Array.of_list [4 ; 13 ; 5 ; 0] ;
+    Array.of_list [(-1) ; 3 ; 0 ; 0]
+    ]) ;;
+let ra3 = Array.map (fun a -> Array.map Num.num_of_int a) (
+    Array.of_list [
+    Array.of_list [1 ; 2 ; 3 ] ;
+    Array.of_list [4 ; 13 ; 5 ] ;
+    Array.of_list [(-1) ; 3 ; 0 ] ;
+    Array.of_list [0 ; 0 ; 0 ]
+    ]) ;;
+let ra4 = Array.map (fun a -> Array.map Num.num_of_int a) (
+    Array.of_list [
+    Array.of_list [0 ; 2 ; 3 ] ;
+    Array.of_list [0 ; 13 ; 5 ] ;
+    Array.of_list [0 ; 3 ; 0 ] ;
+    ]) ;;
+let ra5 = [ra0; ra1; ra2; ra3; ra4] ;;
+
+let resR11 = List.map rRA1 ra5;;
+let resR12 = List.map rRA2 ra5;;
+let resR13 = List.map rRA3 ra5;;
+let resR14 = List.map rRA4 ra5;;

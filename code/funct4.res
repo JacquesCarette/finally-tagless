@@ -1372,6 +1372,279 @@
     if ((! t_447) = 0) then 0.
     else if ((! t_447) = 1) then (! t_446)
     else (~-. (! t_446)), (! t_440))>.
+# val resRA1 :
+  ('a,
+   Funct4.GenRA1.Ctr.contr ->
+   Funct4.OutJustMatrix(Funct4.RationalDomain)(Funct4.GenericArrayContainer)(Funct4.RDet).res)
+  code =
+  .<fun a_485 ->
+   let t_486 = (ref 0) in
+   let t_487 = (ref 0) in
+   let t_489 =
+    (Array.map (fun x_488 -> (Array.copy x_488)) (Array.copy a_485)) in
+   let t_490 = (Array.length a_485.(0)) in
+   let t_491 = (Array.length a_485) in
+   let t_492 = (ref (* cross-stage persistent value (as id: one) *)) in
+   let t_493 = (ref 1) in
+   while (((! t_487) < t_490) && ((! t_486) < t_491)) do
+    let t_494 = (! t_486) in
+    let t_495 = (! t_487) in
+    let t_496 = (ref (None)) in
+    let t_501 =
+     begin
+      for j_499 = t_494 to (t_491 - 1) do
+       let t_500 = (t_489.(j_499)).(t_495) in
+       if (not (t_500 = (* cross-stage persistent value (as id: zero) *))) then
+        (t_496 := (Some (j_499, t_500)))
+       else ()
+      done;
+      (match (! t_496) with
+       | Some (i_497) ->
+          if ((fst i_497) <> t_494) then begin
+           let t_498 = t_489.(t_494) in
+           t_489.(t_494) <- t_489.(fst i_497);
+           t_489.(fst i_497) <- t_498;
+           (t_493 := (~- (! t_493)))
+          end else ();
+          (Some (snd i_497))
+       | None -> (None))
+     end in
+    (match t_501 with
+     | Some (i_502) ->
+        begin
+         for j_503 = (t_494 + 1) to (t_491 - 1) do
+          if (not
+               ((t_489.(j_503)).(t_495) =
+                 (* cross-stage persistent value (as id: zero) *))) then begin
+           for j_504 = (t_495 + 1) to (t_490 - 1) do
+            (t_489.(j_503)).(j_504) <-
+             (((* cross-stage persistent value (as id: Num.sub_num) *))
+               (t_489.(j_503)).(j_504)
+               (((* cross-stage persistent value (as id: Num.mult_num) *))
+                 (((* cross-stage persistent value (as id: Num.div_num) *))
+                   (t_489.(j_503)).(t_495) (t_489.(t_494)).(t_495))
+                 (t_489.(t_494)).(j_504)))
+           done;
+           (t_489.(j_503)).(t_495) <-
+            (* cross-stage persistent value (as id: zero) *)
+          end else ()
+         done;
+         (t_492 :=
+           (((* cross-stage persistent value (as id: Num.mult_num) *))
+             (! t_492) i_502))
+        end;
+        (t_486 := ((! t_486) + 1))
+     | None -> (t_493 := 0));
+    (t_487 := ((! t_487) + 1))
+   done;
+   t_489>.
+# val resRA2 :
+  ('a,
+   Funct4.GenRA2.Ctr.contr ->
+   Funct4.OutDet(Funct4.RationalDomain)(Funct4.GenericArrayContainer)(Funct4.RDet).res)
+  code =
+  .<fun a_505 ->
+   let t_506 = (ref 0) in
+   let t_507 = (ref 0) in
+   let t_509 =
+    (Array.map (fun x_508 -> (Array.copy x_508)) (Array.copy a_505)) in
+   let t_510 = (Array.length a_505.(0)) in
+   let t_511 = (Array.length a_505) in
+   let t_512 = (ref (* cross-stage persistent value (as id: one) *)) in
+   let t_513 = (ref 1) in
+   while (((! t_507) < t_510) && ((! t_506) < t_511)) do
+    let t_514 = (! t_506) in
+    let t_515 = (! t_507) in
+    let t_516 = (ref (None)) in
+    let t_521 =
+     begin
+      for j_519 = t_514 to (t_511 - 1) do
+       let t_520 = (t_509.(j_519)).(t_515) in
+       if (not (t_520 = (* cross-stage persistent value (as id: zero) *))) then
+        (t_516 := (Some (j_519, t_520)))
+       else ()
+      done;
+      (match (! t_516) with
+       | Some (i_517) ->
+          if ((fst i_517) <> t_514) then begin
+           let t_518 = t_509.(t_514) in
+           t_509.(t_514) <- t_509.(fst i_517);
+           t_509.(fst i_517) <- t_518;
+           (t_513 := (~- (! t_513)))
+          end else ();
+          (Some (snd i_517))
+       | None -> (None))
+     end in
+    (match t_521 with
+     | Some (i_522) ->
+        begin
+         for j_523 = (t_514 + 1) to (t_511 - 1) do
+          if (not
+               ((t_509.(j_523)).(t_515) =
+                 (* cross-stage persistent value (as id: zero) *))) then begin
+           for j_524 = (t_515 + 1) to (t_510 - 1) do
+            (t_509.(j_523)).(j_524) <-
+             (((* cross-stage persistent value (as id: Num.sub_num) *))
+               (t_509.(j_523)).(j_524)
+               (((* cross-stage persistent value (as id: Num.mult_num) *))
+                 (((* cross-stage persistent value (as id: Num.div_num) *))
+                   (t_509.(j_523)).(t_515) (t_509.(t_514)).(t_515))
+                 (t_509.(t_514)).(j_524)))
+           done;
+           (t_509.(j_523)).(t_515) <-
+            (* cross-stage persistent value (as id: zero) *)
+          end else ()
+         done;
+         (t_512 :=
+           (((* cross-stage persistent value (as id: Num.mult_num) *))
+             (! t_512) i_522))
+        end;
+        (t_506 := ((! t_506) + 1))
+     | None -> (t_513 := 0));
+    (t_507 := ((! t_507) + 1))
+   done;
+   (t_509,
+    if ((! t_513) = 0) then (* cross-stage persistent value (as id: zero) *)
+    else if ((! t_513) = 1) then (! t_512)
+    else
+     (((* cross-stage persistent value (as id: Num.minus_num) *)) (! t_512)))>.
+# val resRA3 :
+  ('a,
+   Funct4.GenRA3.Ctr.contr ->
+   Funct4.OutRank(Funct4.RationalDomain)(Funct4.GenericArrayContainer)(Funct4.Rank).res)
+  code =
+  .<fun a_525 ->
+   let t_526 = (ref 0) in
+   let t_527 = (ref 0) in
+   let t_529 =
+    (Array.map (fun x_528 -> (Array.copy x_528)) (Array.copy a_525)) in
+   let t_530 = (Array.length a_525.(0)) in
+   let t_531 = (Array.length a_525) in
+   let t_532 = (ref (* cross-stage persistent value (as id: one) *)) in
+   let t_533 = (ref 1) in
+   while (((! t_527) < t_530) && ((! t_526) < t_531)) do
+    let t_534 = (! t_526) in
+    let t_535 = (! t_527) in
+    let t_536 = (ref (None)) in
+    let t_541 =
+     begin
+      for j_539 = t_534 to (t_531 - 1) do
+       let t_540 = (t_529.(j_539)).(t_535) in
+       if (not (t_540 = (* cross-stage persistent value (as id: zero) *))) then
+        (t_536 := (Some (j_539, t_540)))
+       else ()
+      done;
+      (match (! t_536) with
+       | Some (i_537) ->
+          if ((fst i_537) <> t_534) then begin
+           let t_538 = t_529.(t_534) in
+           t_529.(t_534) <- t_529.(fst i_537);
+           t_529.(fst i_537) <- t_538;
+           ()
+          end else ();
+          (Some (snd i_537))
+       | None -> (None))
+     end in
+    (match t_541 with
+     | Some (i_542) ->
+        begin
+         for j_543 = (t_534 + 1) to (t_531 - 1) do
+          if (not
+               ((t_529.(j_543)).(t_535) =
+                 (* cross-stage persistent value (as id: zero) *))) then begin
+           for j_544 = (t_535 + 1) to (t_530 - 1) do
+            (t_529.(j_543)).(j_544) <-
+             (((* cross-stage persistent value (as id: Num.sub_num) *))
+               (t_529.(j_543)).(j_544)
+               (((* cross-stage persistent value (as id: Num.mult_num) *))
+                 (((* cross-stage persistent value (as id: Num.div_num) *))
+                   (t_529.(j_543)).(t_535) (t_529.(t_534)).(t_535))
+                 (t_529.(t_534)).(j_544)))
+           done;
+           (t_529.(j_543)).(t_535) <-
+            (* cross-stage persistent value (as id: zero) *)
+          end else ()
+         done;
+         (t_532 :=
+           (((* cross-stage persistent value (as id: Num.mult_num) *))
+             (! t_532) i_542))
+        end;
+        (t_526 := ((! t_526) + 1))
+     | None -> (t_533 := 0));
+    (t_527 := ((! t_527) + 1))
+   done;
+   (t_529, (! t_526))>.
+# val resRA4 :
+  ('a,
+   Funct4.GenRA4.Ctr.contr ->
+   Funct4.OutDetRank(Funct4.RationalDomain)(Funct4.GenericArrayContainer)(Funct4.RDet)(Funct4.Rank).res)
+  code =
+  .<fun a_545 ->
+   let t_546 = (ref 0) in
+   let t_547 = (ref 0) in
+   let t_549 =
+    (Array.map (fun x_548 -> (Array.copy x_548)) (Array.copy a_545)) in
+   let t_550 = (Array.length a_545.(0)) in
+   let t_551 = (Array.length a_545) in
+   let t_552 = (ref (* cross-stage persistent value (as id: one) *)) in
+   let t_553 = (ref 1) in
+   while (((! t_547) < t_550) && ((! t_546) < t_551)) do
+    let t_554 = (! t_546) in
+    let t_555 = (! t_547) in
+    let t_556 = (ref (None)) in
+    let t_561 =
+     begin
+      for j_559 = t_554 to (t_551 - 1) do
+       let t_560 = (t_549.(j_559)).(t_555) in
+       if (not (t_560 = (* cross-stage persistent value (as id: zero) *))) then
+        (t_556 := (Some (j_559, t_560)))
+       else ()
+      done;
+      (match (! t_556) with
+       | Some (i_557) ->
+          if ((fst i_557) <> t_554) then begin
+           let t_558 = t_549.(t_554) in
+           t_549.(t_554) <- t_549.(fst i_557);
+           t_549.(fst i_557) <- t_558;
+           (t_553 := (~- (! t_553)))
+          end else ();
+          (Some (snd i_557))
+       | None -> (None))
+     end in
+    (match t_561 with
+     | Some (i_562) ->
+        begin
+         for j_563 = (t_554 + 1) to (t_551 - 1) do
+          if (not
+               ((t_549.(j_563)).(t_555) =
+                 (* cross-stage persistent value (as id: zero) *))) then begin
+           for j_564 = (t_555 + 1) to (t_550 - 1) do
+            (t_549.(j_563)).(j_564) <-
+             (((* cross-stage persistent value (as id: Num.sub_num) *))
+               (t_549.(j_563)).(j_564)
+               (((* cross-stage persistent value (as id: Num.mult_num) *))
+                 (((* cross-stage persistent value (as id: Num.div_num) *))
+                   (t_549.(j_563)).(t_555) (t_549.(t_554)).(t_555))
+                 (t_549.(t_554)).(j_564)))
+           done;
+           (t_549.(j_563)).(t_555) <-
+            (* cross-stage persistent value (as id: zero) *)
+          end else ()
+         done;
+         (t_552 :=
+           (((* cross-stage persistent value (as id: Num.mult_num) *))
+             (! t_552) i_562))
+        end;
+        (t_546 := ((! t_546) + 1))
+     | None -> (t_553 := 0));
+    (t_547 := ((! t_547) + 1))
+   done;
+   (t_549,
+    if ((! t_553) = 0) then (* cross-stage persistent value (as id: zero) *)
+    else if ((! t_553) = 1) then (! t_552)
+    else
+     (((* cross-stage persistent value (as id: Num.minus_num) *)) (! t_552)),
+    (! t_546))>.
 #   val rFA1 :
   Funct4.GenFA1.Ctr.contr ->
   Funct4.OutJustMatrix(Funct4.FloatDomain)(Funct4.GenericArrayContainer)(Funct4.NoDet(Funct4.FloatDomain)).res =
@@ -1452,6 +1725,22 @@
   Funct4.GenFA14.Ctr.contr ->
   Funct4.OutDetRank(Funct4.FloatDomain)(Funct4.GenericArrayContainer)(Funct4.FDet)(Funct4.Rank).res =
   <fun>
+# val rRA1 :
+  Funct4.GenRA1.Ctr.contr ->
+  Funct4.OutJustMatrix(Funct4.RationalDomain)(Funct4.GenericArrayContainer)(Funct4.RDet).res =
+  <fun>
+# val rRA2 :
+  Funct4.GenRA2.Ctr.contr ->
+  Funct4.OutDet(Funct4.RationalDomain)(Funct4.GenericArrayContainer)(Funct4.RDet).res =
+  <fun>
+# val rRA3 :
+  Funct4.GenRA3.Ctr.contr ->
+  Funct4.OutRank(Funct4.RationalDomain)(Funct4.GenericArrayContainer)(Funct4.Rank).res =
+  <fun>
+# val rRA4 :
+  Funct4.GenRA4.Ctr.contr ->
+  Funct4.OutDetRank(Funct4.RationalDomain)(Funct4.GenericArrayContainer)(Funct4.RDet)(Funct4.Rank).res =
+  <fun>
 #                                                   val ia0 : Funct4.IntegerDomain.v array array = [|[|1|]|]
 val ia1 : Funct4.IntegerDomain.v array array =
   [|[|1; 2; 3|]; [|4; 13; 5|]; [|-1; 3; 0|]|]
@@ -1466,34 +1755,75 @@ val ia5 : Funct4.IntegerDomain.v array array list =
    [|[|1; 2; 3; 0|]; [|4; 13; 5; 0|]; [|-1; 3; 0; 0|]|];
    [|[|1; 2; 3|]; [|4; 13; 5|]; [|-1; 3; 0|]; [|0; 0; 0|]|];
    [|[|0; 2; 3|]; [|0; 13; 5|]; [|0; 3; 0|]|]]
-val resI1 :
+val resI11 :
   Funct4.OutJustMatrix(Funct4.IntegerDomain)(Funct4.GenericArrayContainer)(Funct4.IDet).res
   list =
   [[|[|1|]|]; [|[|1; 2; 3|]; [|0; 5; -7|]; [|0; 0; 50|]|];
    [|[|1; 2; 3; 0|]; [|0; 5; -7; 0|]; [|0; 0; 50; 0|]|];
    [|[|1; 2; 3|]; [|0; 5; -7|]; [|0; 0; 50|]; [|0; 0; 0|]|];
    [|[|0; 2; 3|]; [|0; 0; 10|]; [|0; 0; 0|]|]]
-# val resI2 :
+# val resI12 :
   Funct4.OutDet(Funct4.IntegerDomain)(Funct4.GenericArrayContainer)(Funct4.IDet).res
   list =
   [([|[|1|]|], 1); ([|[|1; 2; 3|]; [|0; 5; -7|]; [|0; 0; 50|]|], 50);
    ([|[|1; 2; 3; 0|]; [|0; 5; -7; 0|]; [|0; 0; 50; 0|]|], 50);
    ([|[|1; 2; 3|]; [|0; 5; -7|]; [|0; 0; 50|]; [|0; 0; 0|]|], 50);
    ([|[|0; 2; 3|]; [|0; 0; 10|]; [|0; 0; 0|]|], 0)]
-# val resI3 :
+# val resI13 :
   Funct4.OutRank(Funct4.IntegerDomain)(Funct4.GenericArrayContainer)(Funct4.Rank).res
   list =
   [([|[|1|]|], 1); ([|[|1; 2; 3|]; [|0; 5; -7|]; [|0; 0; 50|]|], 3);
    ([|[|1; 2; 3; 0|]; [|0; 5; -7; 0|]; [|0; 0; 50; 0|]|], 3);
    ([|[|1; 2; 3|]; [|0; 5; -7|]; [|0; 0; 50|]; [|0; 0; 0|]|], 3);
    ([|[|0; 2; 3|]; [|0; 0; 10|]; [|0; 0; 0|]|], 2)]
-# val resI4 :
+# val resI14 :
   Funct4.OutDetRank(Funct4.IntegerDomain)(Funct4.GenericArrayContainer)(Funct4.IDet)(Funct4.Rank).res
   list =
   [([|[|1|]|], 1, 1); ([|[|1; 2; 3|]; [|0; 5; -7|]; [|0; 0; 50|]|], 50, 3);
    ([|[|1; 2; 3; 0|]; [|0; 5; -7; 0|]; [|0; 0; 50; 0|]|], 50, 3);
    ([|[|1; 2; 3|]; [|0; 5; -7|]; [|0; 0; 50|]; [|0; 0; 0|]|], 50, 3);
    ([|[|0; 2; 3|]; [|0; 0; 10|]; [|0; 0; 0|]|], 0, 2)]
+#                 val iv0 : Funct4.IntegerDomain.v Funct4.container2dfromvector =
+  {arr = [|1|]; n = 1; m = 1}
+val iv1 : Funct4.IntegerDomain.v Funct4.container2dfromvector =
+  {arr = [|1; 2; 3; 4; 13; 5; -1; 3; 0|]; n = 3; m = 3}
+val iv2 : Funct4.IntegerDomain.v Funct4.container2dfromvector =
+  {arr = [|1; 2; 3; 0; 4; 13; 5; 0; -1; 3; 0; 0|]; n = 3; m = 4}
+val iv4 : Funct4.IntegerDomain.v Funct4.container2dfromvector =
+  {arr = [|0; 2; 3; 0; 13; 5; 0; 3; 0|]; n = 3; m = 3}
+val iv5 : Funct4.IntegerDomain.v Funct4.container2dfromvector list =
+  [{arr = [|1|]; n = 1; m = 1};
+   {arr = [|1; 2; 3; 4; 13; 5; -1; 3; 0|]; n = 3; m = 3};
+   {arr = [|1; 2; 3; 0; 4; 13; 5; 0; -1; 3; 0; 0|]; n = 3; m = 4};
+   {arr = [|0; 2; 3; 0; 13; 5; 0; 3; 0|]; n = 3; m = 3}]
+val resI21 :
+  Funct4.OutJustMatrix(Funct4.IntegerDomain)(Funct4.GenericVectorContainer)(Funct4.NoDet(Funct4.IntegerDomain)).res
+  list =
+  [{arr = [|1|]; n = 1; m = 1};
+   {arr = [|1; 2; 3; 0; 5; -7; 0; 0; 50|]; n = 3; m = 3};
+   {arr = [|1; 2; 3; 0; 4; 13; 0; 0; 66; 12; 0; 0|]; n = 3; m = 4};
+   {arr = [|0; 2; 3; 0; 0; 10; 0; 0; 0|]; n = 3; m = 3}]
+# val resI22 :
+  Funct4.OutDet(Funct4.IntegerDomain)(Funct4.GenericVectorContainer)(Funct4.IDet).res
+  list =
+  [({arr = [|1|]; n = 1; m = 1}, 1);
+   ({arr = [|1; 2; 3; 0; 5; -7; 0; 0; 50|]; n = 3; m = 3}, 50);
+   ({arr = [|1; 2; 3; 0; 4; 13; 0; 0; 66; 12; 0; 0|]; n = 3; m = 4}, 66);
+   ({arr = [|0; 2; 3; 0; 0; 10; 0; 0; 0|]; n = 3; m = 3}, 0)]
+# val resI23 :
+  Funct4.OutRank(Funct4.IntegerDomain)(Funct4.GenericVectorContainer)(Funct4.Rank).res
+  list =
+  [({arr = [|1|]; n = 1; m = 1}, 1);
+   ({arr = [|1; 2; 3; 0; 5; -7; 0; 0; 50|]; n = 3; m = 3}, 3);
+   ({arr = [|1; 2; 3; 0; 4; 13; 0; 0; 66; 12; 0; 0|]; n = 3; m = 4}, 3);
+   ({arr = [|0; 2; 3; 0; 0; 10; 0; 0; 0|]; n = 3; m = 3}, 2)]
+# val resI24 :
+  Funct4.OutDetRank(Funct4.IntegerDomain)(Funct4.GenericVectorContainer)(Funct4.IDet)(Funct4.Rank).res
+  list =
+  [({arr = [|1|]; n = 1; m = 1}, 1, 1);
+   ({arr = [|1; 2; 3; 0; 5; -7; 0; 0; 50|]; n = 3; m = 3}, 50, 3);
+   ({arr = [|1; 2; 3; 0; 4; 13; 0; 0; 66; 12; 0; 0|]; n = 3; m = 4}, 66, 3);
+   ({arr = [|0; 2; 3; 0; 0; 10; 0; 0; 0|]; n = 3; m = 3}, 0, 2)]
 #   val fa0 : float array array = [|[|1.|]|]
 #         val fa1 : float array array =
   [|[|1.; 2.; 3.|]; [|4.; 13.; 5.|]; [|-1.; 3.; 0.|]|]
@@ -1602,4 +1932,117 @@ val resF1 :
     50., 3);
    ([|[|13.; 5.; 0.|]; [|0.; 2.23076923076923084; 0.|]; [|0.; 0.; 0.|]|], 0.,
     2)]
+#   val ra0 : Num.num array array = [|[|Num.Int 1|]|]
+#           val ra1 : Num.num array array =
+  [|[|Num.Int 1; Num.Int 2; Num.Int 3|];
+    [|Num.Int 4; Num.Int 13; Num.Int 5|];
+    [|Num.Int (-1); Num.Int 3; Num.Int 0|]|]
+#           val ra2 : Num.num array array =
+  [|[|Num.Int 1; Num.Int 2; Num.Int 3; Num.Int 0|];
+    [|Num.Int 4; Num.Int 13; Num.Int 5; Num.Int 0|];
+    [|Num.Int (-1); Num.Int 3; Num.Int 0; Num.Int 0|]|]
+#             val ra3 : Num.num array array =
+  [|[|Num.Int 1; Num.Int 2; Num.Int 3|];
+    [|Num.Int 4; Num.Int 13; Num.Int 5|];
+    [|Num.Int (-1); Num.Int 3; Num.Int 0|];
+    [|Num.Int 0; Num.Int 0; Num.Int 0|]|]
+#           val ra4 : Num.num array array =
+  [|[|Num.Int 0; Num.Int 2; Num.Int 3|];
+    [|Num.Int 0; Num.Int 13; Num.Int 5|];
+    [|Num.Int 0; Num.Int 3; Num.Int 0|]|]
+# val ra5 : Num.num array array list =
+  [[|[|Num.Int 1|]|];
+   [|[|Num.Int 1; Num.Int 2; Num.Int 3|];
+     [|Num.Int 4; Num.Int 13; Num.Int 5|];
+     [|Num.Int (-1); Num.Int 3; Num.Int 0|]|];
+   [|[|Num.Int 1; Num.Int 2; Num.Int 3; Num.Int 0|];
+     [|Num.Int 4; Num.Int 13; Num.Int 5; Num.Int 0|];
+     [|Num.Int (-1); Num.Int 3; Num.Int 0; Num.Int 0|]|];
+   [|[|Num.Int 1; Num.Int 2; Num.Int 3|];
+     [|Num.Int 4; Num.Int 13; Num.Int 5|];
+     [|Num.Int (-1); Num.Int 3; Num.Int 0|];
+     [|Num.Int 0; Num.Int 0; Num.Int 0|]|];
+   [|[|Num.Int 0; Num.Int 2; Num.Int 3|];
+     [|Num.Int 0; Num.Int 13; Num.Int 5|];
+     [|Num.Int 0; Num.Int 3; Num.Int 0|]|]]
+#   val resR11 :
+  Funct4.OutJustMatrix(Funct4.RationalDomain)(Funct4.GenericArrayContainer)(Funct4.RDet).res
+  list =
+  [[|[|Num.Int 1|]|];
+   [|[|Num.Int (-1); Num.Int 3; Num.Int 0|];
+     [|Num.Int 0; Num.Int 5; Num.Int 3|];
+     [|Num.Int 0; Num.Int 0; Num.Int (-10)|]|];
+   [|[|Num.Int (-1); Num.Int 3; Num.Int 0; Num.Int 0|];
+     [|Num.Int 0; Num.Int 5; Num.Int 3; Num.Int 0|];
+     [|Num.Int 0; Num.Int 0; Num.Int (-10); Num.Int 0|]|];
+   [|[|Num.Int (-1); Num.Int 3; Num.Int 0|];
+     [|Num.Int 0; Num.Int 5; Num.Int 3|];
+     [|Num.Int 0; Num.Int 0; Num.Int (-10)|];
+     [|Num.Int 0; Num.Int 0; Num.Int 0|]|];
+   [|[|Num.Int 0; Num.Int 3; Num.Int 0|];
+     [|Num.Int 0; Num.Int 0; Num.Int 3|];
+     [|Num.Int 0; Num.Int 0; Num.Int 0|]|]]
+# val resR12 :
+  Funct4.OutDet(Funct4.RationalDomain)(Funct4.GenericArrayContainer)(Funct4.RDet).res
+  list =
+  [([|[|Num.Int 1|]|], Num.Int 1);
+   ([|[|Num.Int (-1); Num.Int 3; Num.Int 0|];
+      [|Num.Int 0; Num.Int 5; Num.Int 3|];
+      [|Num.Int 0; Num.Int 0; Num.Int (-10)|]|],
+    Num.Int 50);
+   ([|[|Num.Int (-1); Num.Int 3; Num.Int 0; Num.Int 0|];
+      [|Num.Int 0; Num.Int 5; Num.Int 3; Num.Int 0|];
+      [|Num.Int 0; Num.Int 0; Num.Int (-10); Num.Int 0|]|],
+    Num.Int 50);
+   ([|[|Num.Int (-1); Num.Int 3; Num.Int 0|];
+      [|Num.Int 0; Num.Int 5; Num.Int 3|];
+      [|Num.Int 0; Num.Int 0; Num.Int (-10)|];
+      [|Num.Int 0; Num.Int 0; Num.Int 0|]|],
+    Num.Int 50);
+   ([|[|Num.Int 0; Num.Int 3; Num.Int 0|];
+      [|Num.Int 0; Num.Int 0; Num.Int 3|];
+      [|Num.Int 0; Num.Int 0; Num.Int 0|]|],
+    Num.Int 0)]
+# val resR13 :
+  Funct4.OutRank(Funct4.RationalDomain)(Funct4.GenericArrayContainer)(Funct4.Rank).res
+  list =
+  [([|[|Num.Int 1|]|], 1);
+   ([|[|Num.Int (-1); Num.Int 3; Num.Int 0|];
+      [|Num.Int 0; Num.Int 5; Num.Int 3|];
+      [|Num.Int 0; Num.Int 0; Num.Int (-10)|]|],
+    3);
+   ([|[|Num.Int (-1); Num.Int 3; Num.Int 0; Num.Int 0|];
+      [|Num.Int 0; Num.Int 5; Num.Int 3; Num.Int 0|];
+      [|Num.Int 0; Num.Int 0; Num.Int (-10); Num.Int 0|]|],
+    3);
+   ([|[|Num.Int (-1); Num.Int 3; Num.Int 0|];
+      [|Num.Int 0; Num.Int 5; Num.Int 3|];
+      [|Num.Int 0; Num.Int 0; Num.Int (-10)|];
+      [|Num.Int 0; Num.Int 0; Num.Int 0|]|],
+    3);
+   ([|[|Num.Int 0; Num.Int 3; Num.Int 0|];
+      [|Num.Int 0; Num.Int 0; Num.Int 3|];
+      [|Num.Int 0; Num.Int 0; Num.Int 0|]|],
+    2)]
+# val resR14 :
+  Funct4.OutDetRank(Funct4.RationalDomain)(Funct4.GenericArrayContainer)(Funct4.RDet)(Funct4.Rank).res
+  list =
+  [([|[|Num.Int 1|]|], Num.Int 1, 1);
+   ([|[|Num.Int (-1); Num.Int 3; Num.Int 0|];
+      [|Num.Int 0; Num.Int 5; Num.Int 3|];
+      [|Num.Int 0; Num.Int 0; Num.Int (-10)|]|],
+    Num.Int 50, 3);
+   ([|[|Num.Int (-1); Num.Int 3; Num.Int 0; Num.Int 0|];
+      [|Num.Int 0; Num.Int 5; Num.Int 3; Num.Int 0|];
+      [|Num.Int 0; Num.Int 0; Num.Int (-10); Num.Int 0|]|],
+    Num.Int 50, 3);
+   ([|[|Num.Int (-1); Num.Int 3; Num.Int 0|];
+      [|Num.Int 0; Num.Int 5; Num.Int 3|];
+      [|Num.Int 0; Num.Int 0; Num.Int (-10)|];
+      [|Num.Int 0; Num.Int 0; Num.Int 0|]|],
+    Num.Int 50, 3);
+   ([|[|Num.Int 0; Num.Int 3; Num.Int 0|];
+      [|Num.Int 0; Num.Int 0; Num.Int 3|];
+      [|Num.Int 0; Num.Int 0; Num.Int 0|]|],
+    Num.Int 0, 2)]
 # 
