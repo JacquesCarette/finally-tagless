@@ -9,10 +9,15 @@ let ret = retS
 let liftRef x = .< ref .~x >. 
 let liftGet x = .< ! .~x >. 
 
+(* Monad lifting functions *)
+let l1 f = fun x -> mdo { t <-- x; f t}
+let l2 f = fun x y -> mdo { tx <-- x; ty <-- y; f tx ty}
+let l3 f = fun x y z -> mdo { tx <-- x; ty <-- y; tz <-- z; f tx ty tz}
+
 (* Simple state representation for now - upgrades later *)
 type ('a,'u, 'v) state = (('a,'u) code * ('a,'v) code) list
 (* and 2 morphisms *)
-let fetch s k = k s (List.hd s)
+let fetch s k = k s s
 let store v s k = k (v::s) ()
 
 (* another non-trivial morphism: generate a bit of code *)
@@ -31,7 +36,13 @@ let retWhileM cond body = fun s k ->
     k s .< while .~cond do .~(body s (fun s v -> v)) done >.
 
 (* sequencing *)
-let seq a b = fun s k -> k s .< begin .~a ; .~b end >.
+let seq a b = ret .< begin .~a ; .~b end >.
+
+(* conditional *)
+let lif test th el = ret .< if .~test then .~th else .~el >.
+
+let llor x y = ret .< .~x || .~y >.
+
 
 (* match *)
 let retMatchM x som non = fun s k ->
@@ -47,7 +58,6 @@ module type DOMAIN = sig
   val one : 'a vc
   val minusone : 'a vc
   val plus : 'a vc -> 'a vc -> ('a vc, 's, 'w) monad
-  val times : 'a vc -> 'a vc -> ('a vc, 's, 'w) monad
   val times : 'a vc -> 'a vc -> ('a vc, 's, 'w) monad
   val minus : 'a vc -> 'a vc -> ('a vc, 's, 'w) monad
   val div : 'a vc -> 'a vc -> ('a vc, 's, 'w) monad
@@ -122,108 +132,202 @@ end
 module FArrayContainer = GenericArrayContainer(FloatDomain)
 module IArrayContainer = GenericArrayContainer(IntegerDomain)
 
+(*
 module Logic = 
     struct
     let code_or a b = retS (if a = .< true >. then b
                       else if b = .< true >. then a
                       else .< .~a || .~b >. )
 end
+*)
 
-module type OUTPUT = sig
-  type out
-  type res
+
+module type DETERMINANT = sig
   type idet
   type tdet = idet ref
-  type 'a lstate = ('a,tdet,tdet) state
-  val decl_det : unit -> (unit, 'a lstate, ('a,'b) code) monad
-  val upd_sign : unit -> (unit, 'a lstate, ('a,'b) code) monad
-  val acc_det : ('a,idet) code -> (unit, 'a lstate, ('a,'b) code) monad
-  val fin_det : ('a,out) code -> 
-                (('a,res) code, 'a lstate, ('a,'b) code) monad
+  type 'a lstate
+  val decl_det : unit -> 
+    (unit, [> `TDet of 'a lstate ] list, ('a,'b) code) monad
+  val upd_sign : unit -> 
+    (unit, [> `TDet of 'a lstate ] list, ('a,'b) code) monad
+  val acc_det : ('a,idet) code -> 
+    (unit, [> `TDet of 'a lstate ] list, ('a,'b) code) monad
+  val fin_det : unit -> 
+    (('a,idet) code, [> `TDet of 'a lstate ] list, ('a,'b) code) monad
 end
 
-module AbstractNoDetOUTPUT(Dom: DOMAIN)(Ctr: CONTAINER2D with type obj = Dom.v) = 
+module type RANK = sig
+  type 'a lstate
+  val decl_rank : unit -> 
+    (unit,[> `TRan of 'a lstate ] list,('a,'w) code) monad
+  val succ_rank : unit -> 
+    (('a,unit) code,[> `TRan of 'a lstate ] list,('a,'w) code) monad
+  val fin_rank : unit ->  
+    (('a,int) code,[> `TRan of 'a lstate ] list,('a,'w) code) monad
+end;;
+
+
+
+module type OUTPUT = sig
+  type contr
+  type res
+  module D : DETERMINANT
+  module R : RANK
+  val make_result : ('a,contr) code -> 
+    (('a,res) code,[> `TDet of 'a D.lstate | `TRan of 'a R.lstate] list,
+     ('a,'w) code) monad
+end
+
+module NoDet = 
   struct
-  type out = Ctr.contr
-  type res = Ctr.contr
-  type idet = Dom.v
-  type tdet = Dom.v ref
-  type 'a lstate = ('a,tdet,tdet) state
+  type idet = unit
+  type tdet = unit ref
+  type 'a lstate
   let decl_det () = ret ()
   let upd_sign () = ret ()
   let acc_det v = ret ()
-  let fin_det result = mdo {ret result}
+  let fin_det () = ret .<()>.
 end
 
-module NoFDetOutput = AbstractNoDetOUTPUT(FloatDomain)(FArrayContainer)
-module NoIDetOutput = AbstractNoDetOUTPUT(IntegerDomain)(IArrayContainer)
+module NoRank = struct
+  type 'a lstate
+  let decl_rank () = ret ()
+  let succ_rank () = ret .<()>.
+  let fin_rank () = ret .< -1 >.
+end
 
-module AbstractDetOUTPUT(Dom: DOMAIN)(Ctr: CONTAINER2D with type obj = Dom.v) =
+(* What to return *)
+
+module OutJustMatrix(Ctr: CONTAINER2D) =
   struct
-  type out = Ctr.contr
-  type res = out * Dom.v
+  type contr = Ctr.contr
+  type res = contr
+  module D = NoDet
+  module R = NoRank
+  let make_result b = ret b
+end
+
+module OutDet(Ctr: CONTAINER2D)(Det : DETERMINANT with type idet = Ctr.obj) =
+  struct
+  type contr = Ctr.contr
+  type res = contr * Det.idet
+  module D = Det
+  module R = NoRank
+  let make_result b = mdo {
+    det <-- Det.fin_det ();
+    ret .< ( .~b, .~det ) >. }
+end
+
+module OutRank(Ctr: CONTAINER2D)(Rank : RANK) =
+  struct
+  type contr = Ctr.contr
+  type res = contr * int
+  module D = NoDet
+  module R = Rank
+  let make_result b = mdo {
+    rank <-- Rank.fin_rank ();
+    ret .< ( .~b, .~rank ) >. }
+end
+
+module OutDetRank(Ctr: CONTAINER2D)(Det : DETERMINANT with type idet = Ctr.obj)(Rank : RANK) =
+  struct
+  type contr = Ctr.contr
+  type res = contr * Det.idet * int
+  module D = Det
+  module R = Rank
+  let make_result b = mdo {
+    det  <-- Det.fin_det ();
+    rank <-- Rank.fin_rank ();
+    ret .< ( .~b, .~det, .~rank ) >. }
+end
+
+
+module AbstractDet(Dom: DOMAIN) =
+  struct
   type idet = Dom.v
   type tdet = Dom.v ref
-  type 'a lstate = ('a,tdet,tdet) state
+  type 'a lstate = ('a,tdet) code * ('a,tdet) code
+	(* the purpose of this function is to make the union open.
+	   Alas, Camlp4 does not understand teh :> coercion notation *)
+  let coerce = function `TDet x -> `TDet x | x -> x
+  let rec fetch_iter (s : [> `TDet of 'a lstate] list) =
+    match (coerce (List.hd s)) with
+      `TDet x -> x
+    |  _ -> fetch_iter (List.tl s)
+  let dfetch () = mdo { s <-- fetch; (* unit for monomorphism restriction *)
+		     ret (fetch_iter s) }
+  let dstore v = store (`TDet v)
   let decl_det () = mdo {
       ddecl <-- retN (liftRef Dom.one);
       dsdecl <-- retN (liftRef Dom.one);
-      store (dsdecl,ddecl) }
+      dstore (dsdecl,ddecl) }
   let upd_sign () = mdo {
-      det <-- fetch;
+      det <-- dfetch ();
       det1 <-- retS (fst det);
       r <-- Dom.times (liftGet det1) Dom.minusone;
       codegen () (fun x -> .<begin .~det1 := .~r; .~x end>. ) }
   let acc_det v = mdo {
-      det <-- fetch;
+      det <-- dfetch ();
       det2 <-- retS (snd det);
       r <-- Dom.times (liftGet det2) v;
       codegen () (fun x -> .<begin .~det2 := .~r; .~x end>. ) }
-  let fin_det result = mdo {
-      det <-- fetch;
-      ret .< ( .~result, .~(liftGet (snd det)) ) >. }
+  let fin_det () = mdo {
+      det <-- dfetch ();
+      ret (liftGet (snd det)) }
 end
 
-module FDetOutput = AbstractDetOUTPUT(FloatDomain)(FArrayContainer)
-module IDetOutput = AbstractDetOUTPUT(IntegerDomain)(IArrayContainer)
-
-module type RANK = sig
-  val succ_rank : ('a,int ref) code -> (('a,unit) code,'s,('a,'w) code) monad
-  val fin_rank : ('a, int ref) code -> (('a,int) code,'s,int) monad
-end;;
+module FDet = AbstractDet(FloatDomain)
+module IDet = AbstractDet(IntegerDomain)
 
 module Rank = 
   struct
-  let succ_rank r = retS .<.~r := (! .~r) + 1>.
-  let fin_rank r = retS .<! .~r >.
+  type 'a lstate = ('a, int ref) code
+	(* the purpose of this function is to make the union open.
+	   Alas, Camlp4 does not understand teh :> coercion notation *)
+  let coerce = function `TRan x -> `TRan x | x -> x
+  let rec fetch_iter (s : [> `TRan of 'a lstate] list) =
+    match (coerce (List.hd s)) with
+      `TRan x -> x
+    |  _ -> fetch_iter (List.tl s)
+  let rfetch () = mdo { s <-- fetch; (* unit for monomorphism restriction *)
+                        ret (fetch_iter s) }
+  let rstore v = store (`TRan v)
+  let decl_rank () = mdo {
+      rdecl <-- retN (liftRef .<1>.);
+      rstore rdecl }
+  let succ_rank () = mdo {
+   r <-- rfetch ();
+   ret .<.~r := (! .~r) + 1>. }
+  let fin_rank () = mdo {
+   r <-- rfetch ();
+   retS (liftGet r) }
 end
 
-module Gen(Dom: DOMAIN)(Ctr: CONTAINER2D with type obj = Dom.v)(Rk:RANK)(Out: OUTPUT with type out = Ctr.contr) = 
-  struct
+
+module Gen(Dom: DOMAIN)(Ctr: CONTAINER2D with type obj = Dom.v)(Out: OUTPUT with type contr = Ctr.contr) = 
+   struct
     type v = Dom.v
-    let gen ~fracfree:bool ~outputs:outchoice =
+    let gen ~fracfree:bool  =
       let findpivot b r n c = mdo {
           i <-- retN (liftRef .< -1 >. );
           let bd j = mdo {
               bjc <-- Ctr.get b j c;
-              iv <-- retS (liftGet i);
-              bic <-- Ctr.get b iv c;
-              cond2 <-- Dom.smaller_than bjc bic;
-              cond3 <-- Logic.code_or .< .~iv == -1 >. cond2;
-              res2 <-- retS .< if .~cond3 then .~i := .~j >.;
-              res <-- retS .< if not ( .~bjc = .~Dom.zero) then .~res2 >. ;
-              retS res} in;
-          loop <-- retLoopM r .<.~n-1>. bd;
-          ending <-- retS .< if (! .~i) == -1 then None else Some ! .~i >. ;
-          res <-- seq loop ending; 
-          ret res } in
+	      l2 (lif .< not ( .~bjc = .~Dom.zero) >.)
+                 (mdo { 
+	               iv <-- retS (liftGet i);
+		       l3 lif 
+                           (mdo { l2 llor (ret .< .~iv == -1 >.)
+				        (mdo { bic <-- Ctr.get b iv c;
+					      Dom.smaller_than bjc bic }) })
+                           (ret .< .~i := .~j >.)
+		           (ret .< () >.) })
+	         (ret .< () >.) } in;
+          l2 seq (retLoopM r .<.~n-1>. bd)
+                 (ret .< if (! .~i) == -1 then None else Some ! .~i >.)} in
       let swapvals track b r i j = mdo {
-          vt <-- Ctr.get b i j;
-          t <-- retN vt;
+          t <-- l1 retN (Ctr.get b i j);
           brj <-- Ctr.get b r j;
-          sbij <-- Ctr.set b i j brj;
-          sbrj <-- Ctr.set b r j t;
-          ret .<begin .~sbij; .~sbrj end>. } in
+	  l2 seq (Ctr.set b i j brj) (Ctr.set b r j t) } in
       let som = mdo { ret .< () >. } in
       let non = mdo { ret .< () >. } in
       let dogen a = mdo {
@@ -232,19 +336,15 @@ module Gen(Dom: DOMAIN)(Ctr: CONTAINER2D with type obj = Dom.v)(Rk:RANK)(Out: OU
           b <-- retN (Ctr.mapper Dom.normalizerf (Ctr.copy a));
           m <-- retN (Ctr.dim1 a);
           n <-- retN (Ctr.dim2 a);
-          () <-- Out.decl_det ();
+          () <-- Out.D.decl_det ();
+          () <-- Out.R.decl_rank ();
           let body = mdo {
-              pivot <-- findpivot b (liftGet r) n (liftGet c);
-              pivotn <-- retN pivot;
-              mtch <-- retMatchM pivotn som non ;
-              incr_rk <-- Rk.succ_rank r;
-              res <-- seq mtch incr_rk;
-              ret res } in ;
+              pivot <-- l1 retN (findpivot b (liftGet r) n (liftGet c));
+              l2 seq (retMatchM pivot som non)
+	             (Out.R.succ_rank ()) } in ;
           cond <-- retS .< !(.~r) < .~m && !(.~r) < .~n >.;
-          code <-- retWhileM cond body;
-          res <-- Out.fin_det b;
-          res2 <-- seq code res;
-          ret res2 } 
+          l2 seq (retWhileM cond body)
+	         (Out.make_result b) } 
       and kk s v = v in
     .<fun a -> .~(dogen .<a>. [] kk) >.
 end
@@ -253,10 +353,11 @@ end
             | TrackNothing -> swap
             | TrackDet     -> t ) } in *)
 
-module Gen1 = Gen(FloatDomain)(FArrayContainer)(Rank)(NoFDetOutput);;
-module Gen2 = Gen(FloatDomain)(FArrayContainer)(Rank)(FDetOutput);;
-module Gen3 = Gen(IntegerDomain)(IArrayContainer)(Rank)(NoIDetOutput);;
-module Gen4 = Gen(IntegerDomain)(IArrayContainer)(Rank)(IDetOutput);;
+module Gen1 = Gen(FloatDomain)(FArrayContainer)(OutJustMatrix(FArrayContainer))
+module Gen2 = Gen(FloatDomain)(FArrayContainer)(OutDet(FArrayContainer)(FDet))
+module Gen3 = Gen(IntegerDomain)(IArrayContainer)(OutRank(IArrayContainer)(Rank));;
+module Gen4 = Gen(IntegerDomain)(IArrayContainer)(OutDetRank(IArrayContainer)(IDet)(Rank));;
+
 
 type outchoice = JustMatrix | Rank | Det | RankDet;;
 type dettrack = TrackNothing | TrackDet ;;
