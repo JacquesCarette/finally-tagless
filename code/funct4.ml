@@ -1,11 +1,11 @@
 (* Base monad type, to be used throughout *)
 type ('v,'s,'w) monad = 's -> ('s -> 'v -> 'w) -> 'w
 
-let retS a = fun s k -> k s a
+let ret a = fun s k -> k s a
 let retN a = fun s k -> .<let t = .~a in .~(k s .<t>.)>.
 let bind a f = fun s k -> a s (fun s' b -> f b s' k)
-let ret = retS
 let k0 s v = v  (* Initial continuation -- for `reset' and `run' *)
+let runM m = m [] k0 (* running our monad *)
 let liftRef x = .< ref .~x >. 
 let liftGet x = .< ! .~x >. 
 let liftPair x = (.< fst .~x >., .< snd .~x >.)
@@ -25,7 +25,7 @@ let store v s k = k (v::s) ()
 
 (* sequencing *)
 (* Note: the difference between `seq' and `seqM' is quite akin
-   to the difference between call-by-value and call-by-value.
+   to the difference between call-by-value and call-by-name.
    Also note that `seq' can be expressed in terms of `seqM',
    but not the other way around 
 *)
@@ -41,8 +41,10 @@ let lif test th el = ret .< if .~test then .~th else .~el >.
 let ifM test th el = fun s k ->
   k s .< if .~(test s k0) then .~(th s k0) else .~(el s k0) >.
 
-let whenM test th  = fun s k ->
-  k s .< if .~(test s k0) then .~(th s k0) else () >.
+let rshiftM cf = fun s k -> k s (cf s)
+
+let whenM test th  = rshiftM (fun s -> 
+  .< if .~(test s k0) then .~(th s k0) else () >.)
 
 (* loops actually bind a value *)
 let retLoopM low high body = fun s k -> 
@@ -733,7 +735,7 @@ module Gen(Dom: DOMAIN)(C: CONTAINER2D)(PivotF: PIVOT)
                     (ret .< .~c := (! .~c) + 1 >. ) } ))
             (Out.make_result b) } 
     in
-    .<fun a -> .~(dogen .<a>. [] k0) >.
+    .<fun a -> .~(runM (dogen .<a>.)) >.
 end
 
 module GenFA1 = Gen(FloatDomain)
