@@ -453,7 +453,7 @@ module DivisionUpdate(Dom:DOMAIN)(Ctr:CONTAINER2D with type obj=Dom.v)
   let update b r c i k = mdo {
       t <-- l2 Dom.div (Ctr.get b i c) (Ctr.get b r c);
       l <-- l1 (Dom.times t) (Ctr.get b r k);
-      y <-- l1 (Dom.minus l) (Ctr.get b i k);
+      y <-- l2 Dom.minus (Ctr.get b i k) (ret l);
       Ctr.set b i k (Dom.normalizerg y) }
   let update_det v = Det.acc v
 end
@@ -535,15 +535,15 @@ module Gen(Dom: DOMAIN)
           seqM (retLoopM r .<.~n-1>. (fun j -> mdo {
               bjc <-- l1 retN (Ctr.get b j c);
               ifM (ret .< not ( .~bjc = .~Dom.zero) >.)
-		  (retMatchM (liftGet pivot)
-		    (fun pv ->
-		      mdo {
-		      (i,bic) <-- ret (liftPair pv);
-		      ifM (Dom.better_than bic bjc)
-			  (ret .< .~pivot := Some (.~j,.~bjc) >.)
-			  (retUnit)})
-		     (ret .< .~pivot := Some (.~j,.~bjc) >.))
-	          (retUnit)}))
+                  (retMatchM (liftGet pivot)
+                    (fun pv ->
+                      mdo {
+                      (i,bic) <-- ret (liftPair pv);
+                      ifM (Dom.better_than bic bjc)
+                          (ret .< .~pivot := Some (.~j,.~bjc) >.)
+                          (retUnit)})
+                     (ret .< .~pivot := Some (.~j,.~bjc) >.))
+                  (retUnit)}))
              (ret (liftGet pivot)) }
       and zerobelow b r c m n =
         let innerbody i = mdo {
