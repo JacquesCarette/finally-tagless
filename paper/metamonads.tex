@@ -295,25 +295,202 @@ function. Now when we look at the code for |upv|, we see
 |.<fun arr n -> let pv1 = let pv = ref (0,arr.(0)) in ...>.|
 So the fpca code got really inlined.
 
-The inlining is not perfect however. We would like that our code
-expression to look like
+The generator |fpca| shows one particular way of searching for pivot.
+In the domain of exact rational numbers, for example, we would be
+satisfied with the first non-zero element as a pivot, and so we would
+write a different pivot-searching generator. The body of |upv| moves
+the found pivot to the ``canonical'' location. Again, depending on the
+container (a dense matrix, a sparse matrix, etc), there are different
+ways of doing that. So, we would like to be able to ``compose'' pivot
+generating function with the swap generating function. We would like
+to write something like this
+
 \begin{code}
- fun arr n ->
-   let pv = ref (0,arr.(0)) in ... the rest of fpca ...
-   in let i = fst !pv in ...
+let fpca absf arr n pv = .<
+   for i = 1 to .~n-1 do
+     if absf (.~arr).(i) > snd ! (.~pv) then
+        (.~pv) := (i, absf (.~arr).(i))
+   done>.
+let swapper arr n pv = .<
+   let i = fst !(.~pv) in
+   if not (i = 0) then
+      let t = (.~arr).(0) in
+      begin (.~arr).(0) <- (.~arr).(i); (.~arr).(i) <- t end>.
+let seqv a b c = .<begin .~a; .~b; .~c end>.
+let pv_swap absf arr n =
+   let pv = .<ref (0,(.~arr).(0))>. in
+   seqv (fpca absf arr n pv)
+        (swapper arr n pv)
+        arr
+let top =  .<fun arr n -> .~(pv_swap abs_float .<arr>. .<n>.)>.
 \end{code}
 
-We would like that the inlining of |.~(fpca abs_float .<arr>. .<n>.)|
-generated us the |let pv = ref ... | statement. But this seems to
-quite a challenge. We wish the resulting code to look
-|let pv = ... in body| where |pv = ...| part come from |fpca| and
-|body| come from |upv|. At first blush, this seems impossible. A code
-expression may contain only complete expressions, such as
-|let v =... in ...|. A code expression cannot contain only the binding part of
-|let|, which is not an expression per se.
+The function |pv_swap| shows our ideal -- composing code gerenators
+|fpca| and |swapper|, using a higher-order combinator `seqv'
+(sequence of code fragments). We lifted the pivot declaration out of
+old version of |fpca| so that both |fpca| and |swapper| could be
+parameterized by the pivot (and |fpca| and similar function will deal
+only with pivot determination). |top| puts it all together. The above
+code represents the pattern we will be following for the rest of the
+paper.
 
-The solution: CPS. And here where I go to sleep.
+And it \emph{almost} works. It is type correct.  When we look at the
+generated code for |top|, we notice the `(ref (0, arr_1.(0)))' is
+inlined wherever pivot was expected. For example, the swapping part of
+the code begins with |let i_3 = (fst (! (ref (0, arr_1.(0))))) in
+...|. That is certainly not what we want. We meant for pivot searching
+and swapping parts of the code to communicate via a shared mutable
+state, variable |pv|. In the generated code, each piece of code gets
+its own copy of |pv|. Rather then inline (ref (0, arr_1.(0)))
+everywhere, we should have generated |let pv = ref (0,(.~arr).(0)) in ...|
+and inlined |pv|. Incidentally, even in a pure functional code we
+often wish to generate such a |let| statement so we can compute a
+complex expression only once and use it value in several other
+places. Again, we would rather not leave the job of detecting such
+common subexpressions to the compiler (because in the complex code the
+compiler may fail to detect the common subexpressions). The problem
+with generating such |let| expressions is that we wish our geenrator
+to return just |.<let pv = ref (0,(.~arr).(0)) in>.|, without the `body'
+of the |let|, which we would fill in later. In languages which
+generate code in the string form this is easy. We generate the string
+|''let pv = ref (0,(.~arr).(0)) in''| and then append to it the string
+representting the body, wcich would give us the complete |let|
+statement. In MetaOCaml, we can't generate incomplete expressions, for
+a good reason. 
 
+To solve the problem of writing a generator for a |let| expression 
+when the generated body is not yet known, we use CPS.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+And now, a better -- and shorter -- write-up.
+
+The essence of our approach is assembling the code of the program by combining
+instances of various aspects together. In the case of Gaussian
+Elimination, the aspects are pivot determination, swapping rows and
+columns, determinant tracking, etc. A primitive code generator yields a
+code expression 
+A combinator takes (complete and well-typed) code expressions combines
+them into a composite expression (which is too statically guaranteed
+to be well-formed and well-typed).
+
+For example, the following is probably the simplest code generators:
+\begin{code}
+let one = .<1>.
+\end{code}
+
+(in the floating-poiint instance of that aspect, we would have
+|.<1.0>.| instead). We use MetaOCaml brackets |.<...>.| to generate
+code fragments (perhaps say one more sentence about the brackets).
+The simplest combination is inlining:
+\begin{code}
+let plus x y = .<.~x + .~y>.
+\end{code}
+Here we see the second component of MetaOCaml -- escapes, which are
+...
+
+We can see the result in
+\begin{code}
+let simplest_code =
+  let gen x y = plus x (plus y one) in
+  .<fun x y -> .~(gen .<x>. .<y>.)>.
+\end{code}
+
+MetaOCaml helpfully prints out the result of the latter, as
+|.<fun x_1 -> fun y_2 -> (x_1 + (y_2 + 1))>.|
+
+We must point out that 'gen x y' looks like a combinator; the body of
+'gen x y' involves several apoplications of the function 'plus'. When
+we look at the generated code however, we see no traces of function
+'plus' and no such administrative applications. Instead, we see the
+fully inlined expression. These administative applications are done at
+the code generation stage. 
+
+The final MetaOCaml feature, |.!| (pronounced ``run'') can be used to
+execute the above code: |.! simplest_code| is a function of two
+integers, which we can apply: |(.! simplest_code) 1 2|. The original
+simplest_code is not the function on integers -- it's a code
+expression.
+
+To see the benefit of code generation, we notice that we can easily
+parameterize our code:
+
+\begin{code}
+let simplest_param_code plus one =
+  let gen x y = plus x (plus y one) in
+  .<fun x y -> .~(gen .<x>. .<y>.)>.
+\end{code}
+
+and use it to generate code that operates on integers, floating pint
+numbers or boolean -- in general, any domain that implements |plus|
+and |one|:
+\begin{code}
+let plus x y = .<.~x +. .~y>. and one = .<1.0>. in
+  simplest_param_code plus one
+let plus x y = .<.~x || .~y>. and one = .<true>. in
+  simplest_param_code plus one
+\end{code}
+Running the former expression yields the function on |float|s, whereas
+the latter expression is the code expression for a bollean function.
+
+We can see the separation of concerns, implementation of domain
+operations.
+
+Let us consider a more complex expression:
+\begin{code}
+let param_code1 plus one =
+  let gen x y = plus (plus y one) (plus x (plus y one)) in
+  .<fun x y -> .~(gen .<x>. .<y>.)>.
+\end{code}
+
+We see that expression `(plus y one)' appears twice. That may be quite
+a complex computation (depending on the implementation of `plus'), and
+so we would rather not do it twice. We may be tempted to rely on the
+compiler's built-in common-subexpression elimination algorithm, which
+is a typical part of the optimizer. We would rather not relied on the
+sufficiently smart compiler: when the generated code is very complex,
+the compiler may overlook common subexpressions (or the subexpression
+occur in such an imperative context that the compiler might not be
+able to decide if lifting the subexpression is sound. So, being
+conservative, the optimizer will leave the duplicates). We may attempt
+to do
+\begin{code}
+let param_code1 plus one =
+  let gen x y = let ce = (plus y one) in  plus ce (plus x ce) in
+  .<fun x y -> .~(gen .<x>. .<y>.)>.
+\end{code}
+
+However, examinine the code for |param_code1 plus one|
+shows that |.<fun x_1 -> fun y_2 -> ((y_2 + 1) + (x_1 + (y_2 + 1)))>.|
+we might have saved the computation on the code generation
+stage. However, the generated code still exhibits the
+duplication (which makes the code larger and may take longer to
+execute, if the optimizer fails to eliminate the duplication).
+So, we need a combinator that inserts the |let| expression in the
+generat\emph{ed} code. We need a combinator |letgen| so we could use
+that as |let ce = letgen (plus y one) in plus ce (plus x ce)| 
+and get the code that looks like .<... let t = y + 1 in t + (x + t)>.
+But that seems impossible because |letgen exp| needs to generate
+the let expression .<let t = exp in body>. but |letgen| doesn't have
+the body yet. The body needs that temporary identifier .<t>. that will
+be generated by |letgen| itself. Certainly |letgen| cannot generate
+only a part of a let-expression. All generated expressions in
+MetaOCaml are well-formed and complete.
+
+The key is to use CPS. It was first pointed out by XXX in the context
+of partial evaluation, and extensively used by (FFT) for code
+generation.
+
+\begin{code}
+let letgen exp k = .<let t = .~exp in .~(k .<t>.)>.
+let param_code2 plus one =
+  let gen x y k = letgen (plus y one) (fun ce -> k (plus ce (plus x ce)))
+  and k0 x = x
+  in .<fun x y -> .~(gen .<x>. .<y>. k0)>.
+\end{code}
+
+Now, |param_code2 plus one| gives us the desired code
+|.<fun x_1 -> fun y_2 -> let t_3 = (y_2 + 1) in (t_3 + (x_1 + t_3))>.|.
 
 
 \section{Monadic notation, making CPS code clear}
