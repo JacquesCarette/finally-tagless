@@ -14,9 +14,11 @@ type ('a,'c,'d) state = {b:('a,'c) code;
   r:('a,int ref) code; c:('a,int ref) code; 
   m:('a,int) code; n:('a,int) code;
   detsign:('a,'d ref) code}
-
-let fetch s k = k s s
 *)
+
+type ('a,'v) state = ('a,'v) code list
+let fetch s k = k s (List.hd s)
+let store v s k = k (v::s) ()
 
 (* another non-trivial morphism: generate a bit of code *)
 let codegen v cf = fun s k -> cf (k s v)
@@ -110,35 +112,48 @@ module Logic =
 end
 
 module type OUTPUT = sig
-  type res
   type out
-  type tdet
-  val decl_det : unit -> (tdet,'s,('a,'w) code) monad
-  val acc_det : ('a,out) code -> (unit,'s,('a,'w) code) monad
-  val fin_det : ('a,res) code -> (('a,res) code,'s,('a,'w) code) monad
+  type res
+  type idet
+  type tdet = idet ref
+  type 'a lstate = ('a,tdet) state
+  val decl_det : unit -> (unit, 'a lstate, ('a,'b) code) monad
+  val acc_det : ('a,idet) code -> (unit, 'a lstate, ('a,'b) code) monad
+  val fin_det : ('a,out) code -> 
+                (('a,res) code, 'a lstate, ('a,'b) code) monad
 end
 
-module AbstractNoDetOUTPUT(Dom: DOMAIN)(Ctr: CONTAINER2D with type obj = Dom.v) =
+module AbstractNoDetOUTPUT(Dom: DOMAIN)(Ctr: CONTAINER2D with type obj = Dom.v) = 
   struct
+  type out = Ctr.contr
   type res = Ctr.contr
-  type out = Dom.v
-  type tdet = unit
-  let decl_det d = ret ()
+  type idet = Dom.v
+  type tdet = Dom.v ref
+  type 'a lstate = ('a,tdet) state
+  let decl_det u = ret ()
   let acc_det v = ret ()
-  let fin_det res = mdo {ret res}
+  let fin_det result = mdo {ret result}
 end
 
 module NoDetOutput = AbstractNoDetOUTPUT(FloatDomain)(ArrayContainer)
 
-(* this code is wrong -- need state back in? *)
 module AbstractDetOUTPUT(Dom: DOMAIN)(Ctr: CONTAINER2D with type obj = Dom.v) =
   struct
-  type res = Ctr.contr
-  type out = Dom.v
-  type tdet = Dom.v
-  let decl_det d = retN d
-  let acc_det v = ret ()
-  let fin_det res = mdo {ret res}
+  type out = Ctr.contr
+  type res = out * Dom.v
+  type idet = Dom.v
+  type tdet = Dom.v ref
+  type 'a lstate = ('a,tdet) state
+  let decl_det u = mdo {
+      ddecl <-- retN (liftRef Dom.one);
+      store ddecl }
+  let acc_det v = mdo {
+      det <-- fetch;
+      r <-- Dom.plus (liftGet det) v;
+      codegen () (fun x -> .<begin .~det := .~r; .~x end>. ) }
+  let fin_det result = mdo {
+      det <-- fetch;
+      ret .< ( .~result, .~(liftGet det) ) >. }
 end
 
 module DetOutput = AbstractDetOUTPUT(FloatDomain)(ArrayContainer)
@@ -154,7 +169,7 @@ module Rank =
   let fin_rank r = retS .<! .~r >.
 end
 
-module Gen(Dom: DOMAIN)(Ctr: CONTAINER2D with type obj = Dom.v)(Rk:RANK)(Out: OUTPUT with type res = Ctr.contr and type out = Dom.v ) =
+module Gen(Dom: DOMAIN)(Ctr: CONTAINER2D with type obj = Dom.v)(Rk:RANK)(Out: OUTPUT with type out = Ctr.contr) = 
   struct
     type v = Dom.v
     let gen ~fracfree:bool ~outputs:outchoice =
@@ -179,7 +194,7 @@ module Gen(Dom: DOMAIN)(Ctr: CONTAINER2D with type obj = Dom.v)(Rk:RANK)(Out: OU
           b <-- retN (mdapply1 Ctr.mapper Dom.normalizerf (Ctr.copy a));
           m <-- retN (Ctr.dim1 a);
           n <-- retN (Ctr.dim2 a);
-          det <-- Out.decl_det ();
+          () <-- Out.decl_det ();
           cond <-- retS .< !(.~r) < .~m && !(.~r) < .~n >.;
           let body = mdo {
               pivot <-- findpivot b (liftGet r) n (liftGet c);
@@ -189,14 +204,15 @@ module Gen(Dom: DOMAIN)(Ctr: CONTAINER2D with type obj = Dom.v)(Rk:RANK)(Out: OU
           code <-- retWhileM cond body;
           res <-- Out.fin_det b;
           res2 <-- seq code res;
-          ret res2 }
+          ret res2 } 
+      and kk s v = v in
       (* and state a = {b = a; r = .< ref 0 >.; c = .< ref 0 >.;
         m = .<0>.; n = .<0>.; detsign = .< ref .~Dom.one >. }  *)
-      and k = (fun s v -> v) in
-    .<fun a -> .~(dogen .<a>. () k) >.
+    .<fun a -> .~(dogen .<a>. [] kk) >.
 end
 
 module Gen1 = Gen(FloatDomain)(ArrayContainer)(Rank)(NoDetOutput);;
+module Gen2 = Gen(FloatDomain)(ArrayContainer)(Rank)(DetOutput);;
 
 type outchoice = JustMatrix | Rank | Det | RankDet;;
 type dettrack = TrackNothing | TrackDet ;;
@@ -205,12 +221,6 @@ type ge_choices =
   {fracfree:bool; track:dettrack; outputs:outchoice} ;;
 
 (*
-let orcond_gen main_cond = function
-  | Some alt_cond -> .< .~main_cond || .~alt_cond >.
-  | None -> main_cond ;;
-
-let seq' a b  = .< begin .~a ; .~b end >. ;;
-
 let sapply2 g c1 c2 = match g with
   | Some f -> Some (f c1 c2)
   | None   -> None ;;
