@@ -1,0 +1,89 @@
+[Text version of outline as sent by email.  To serve as a reminder of
+our intensions.]
+
+	I guess the gist of the paper is using monads and Ocaml's
+advanced module system to:
+	- totally eliminate the overhead of abstraction
+	- provide static guarantees about the generated code
+	(e.g., it will be well-typed)
+	- make extensions (aspects) orthogonal and compositional
+	(even in the presence of generating temporary names and other
+	bindings, and `interleaving' of aspects)
+	- encode some domain-specific knowledge (so, some `clearly
+	wrong' compositions can be statically rejected by the
+compiler)
+
+Wer use Gaussian elimination as a characteristic example.
+
+So, the outline could be:
+
+	- problem of high-performance and numeric computing:
+performance _vs_ abstraction. Manual inlining and optimizations is
+error-prone and makes code unreadable. Furthermore, the current
+architectures demand more and more frequent tweaks (which, in general,
+cannot be done by the compiler because the tweaking often involves domain
+knowledge).
+
+	- Gaussian elimination as a representative example.
+
+	- Generating code. MetaOCaml. Static guarantees: the generated
+code is well-typed.
+
+	- Problems: generativity: generated code cannot be examined
+and optimized at all. It must be generated just right. The FFT paper
+showed one way: abstract interpretation. But more problems remain
+(cite Padua et al paper at Haskell Workshop04): generating names in
+the presence of `if', 'while' etc. control operators (simple problem
+of generating names solved in the FFT paper); making CPS code clear
+(note that many authors are afraid of CPS code because it quickly
+becomes unreadable; we need CPS for name generation); compositionality
+of various (often interleaving: explain: determinant computation
+requires attention at several places) aspects and expressing
+dependencies among them; expressing more static guarantees about the
+generated code (e.g., not attempting full (fractional) division for
+the integer domain; generating full-pivoting code for the rational
+domain without `better_than' operation). In short: can we achieve all
+of the abstractions needed for the flexible Gaussian Elimination? Can
+we eliminate all of that abstraction's overhead in the generated code
+(without using intensional code analysis -- that is, maintaining the
+guarantees of MetaOCaml and using pure generative approach).
+
+[Note why it is important to maintain generativity: stronger
+equational theory: Walid's paper. Also, intensional code analysis
+(e.g., SPIRAL project) essentially requires one to insert an
+optimizing compiler into the code generating system. That is extremely
+complex, quite error-prone, and very difficult to ascertain the
+correctness.]
+
+- Section: CPS and the problem of generating names.
+
+- Section: Monadic notation, making CPS code clear.
+
+What is our monad: what is the action and what is the value.
+ifM and ifL: show example. Mention 'ifM' and `reset'. Investigating
+the connection with the delimited continuations: for future work.
+
+What is state and why we need it: making aspects interleave: use det
+as an example.
+
+- Section: functors.
+
+ Simple parameterization: by the domain, by the container
+ 
+ Functors and the generated return type: the Out structure.
+
+ Making state modular and composable: several aspects can contribute
+to the state, without interference (show: Rank, Det, Permutation
+aspects).
+
+ Expressing domain constraints in functors (Div and integer domain).
+Show the type error that occurs in improper instantiation.
+
+Show several examples (e.g., code with NullPivot and nodet: no traces
+of either det nor pivoting). Then the code with RowPivoting, Det and
+float domain. 
+
+
+Future work: connections with delimited continuations: making notation
+more direct-style and potentially clearer.
+
