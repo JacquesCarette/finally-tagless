@@ -77,7 +77,7 @@ module type DOMAIN = sig
   val times : 'a vc -> 'a vc -> ('a vc, 's, 'w) monad
   val minus : 'a vc -> 'a vc -> ('a vc, 's, 'w) monad
   val div : 'a vc -> 'a vc -> ('a vc, 's, 'w) monad
-  val smaller_than : 'a vc -> 'a vc -> (('a,bool) code, 's, 'w) monad 
+  val better_than : 'a vc -> 'a vc -> (('a,bool) code, 's, 'w) monad 
   val normalizerf : (('a,v -> v) code ) option
   val normalizerg : 'a vc -> 'a vc
   (* for debugging - to be removed later *)
@@ -95,7 +95,7 @@ module FloatDomain =
     let times x y = ret .<.~x *. .~y>.
     let minus x y = ret .<.~x -. .~y>.
     let div x y = ret .<.~x /. .~y>. 
-    let smaller_than x y = retS .<abs_float .~x < abs_float .~y >.
+    let better_than x y = retS .<abs_float .~x < abs_float .~y >.
     let normalizerf = None 
     let normalizerg = fun x -> x
     let print x = .< Printf.printf "%g \n" .~x >.
@@ -112,7 +112,7 @@ module IntegerDomain =
     let times x y = ret .<.~x * .~y>.
     let minus x y = ret .<.~x - .~y>.
     let div x y = ret .<.~x / .~y>. 
-    let smaller_than x y = retS .<abs .~x < abs .~y >.
+    let better_than x y = retS .<abs .~x > abs .~y >.
     let normalizerf = None 
     let normalizerg = fun x -> x
     let print x = .< Printf.printf "%d \n" .~x >.
@@ -539,7 +539,7 @@ module Gen(Dom: DOMAIN)
 		    (fun pv ->
 		      mdo {
 		      (i,bic) <-- ret (liftPair pv);
-		      ifM (Dom.smaller_than bic bjc)
+		      ifM (Dom.better_than bic bjc)
 			  (ret .< .~pivot := Some (.~j,.~bjc) >.)
 			  (retUnit)})
 		     (ret .< .~pivot := Some (.~j,.~bjc) >.))
