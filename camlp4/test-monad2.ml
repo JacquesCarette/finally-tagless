@@ -1,6 +1,7 @@
 (* name:          test-monad.ml
  * synopsis:      simple tests for monadic syntax sugar
  * based on work of:        Lydia E. van Dijk
+ * $Id$
  * ocaml version: 3.08.0 *)
 
 
@@ -40,6 +41,19 @@ let test_state2 () =
         multiplier 2 3
 
 
+let test_state21 () =
+  let ret x = fun state -> (x,state)
+  and bind ma fmb = fun state -> let result, newstate = ma state in 
+                                 fmb result newstate
+  and update newval = fun state -> state, newval
+  and fetch = fun state -> state, state in
+    let multiplier factor =
+      mdo { result <-- fetch ;
+	    let updater f = update (f * result) end;
+	    _ <-- updater factor;
+	    fetch } in
+        multiplier 2 3
+
 let test_two_element_list () =
   let ret x = [x]
   and bind xs f = List.concat (List.map f xs) in
@@ -73,19 +87,27 @@ let test_state3 () =
 
 let simple_mdo () =
     let ret x = x and bind a f = f a in
-  mdo { _ <-- 1+2 ; 
+  mdo { _ <-- 1+2 ;
         ret 2 }
+
+let simple_let_mdo () =
+    let ret x = x and bind a f = f a in
+  mdo { let a = 1 and b = 2 end;
+        _ <-- a+b ;
+        ret b }
 
 (* main *)
 
 let all_tests () =
   .! (test_brackets ()) = 0 &&
   test_simple_expression () &&
-  test_state1 () = (3, 6) &&
-  test_state2 () = (6, 6) &&
-  test_state3 () = (3, 6) &&
+  test_state1 ()  = (3, 6) &&
+  test_state2 ()  = (6, 6) &&
+  test_state21 () = (6, 6) &&
+  test_state3 ()  = (3, 6) &&
   test_two_element_list () = [-2; -3; -4; -1; -2; -3; 0; -1; -2] &&
-  simple_mdo () = 2
+  simple_mdo () = 2 &&
+  simple_let_mdo () = 2
 
 
 (* *)
