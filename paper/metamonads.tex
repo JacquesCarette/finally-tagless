@@ -1,33 +1,73 @@
 \documentclass[11pt]{llncs}
 
-\title{Declarative Assembler}
+% Reduce display spacing
+\divide\abovedisplayskip 2
+\divide\belowdisplayskip 2
+\divide\abovedisplayshortskip 2
+\divide\belowdisplayshortskip 2
+
+\usepackage{hyphenat}
+\usepackage{comment}
+\usepackage{amsmath}
+\usepackage{amstext}
+\usepackage{url}
+
+\usepackage{ifpdf}
+\ifpdf
+    \pdfpageheight=11in
+    \pdfpagewidth=8.5in
+\fi
+
+%\usepackage{refrange}
+
+\usepackage{fancyvrb}
+\DefineShortVerb{\|}
+\DefineVerbatimEnvironment{code}{Verbatim}{xleftmargin=\mathindent}
+\setlength{\parskip}{0pt}
+\newlength{\mathindent}
+\setlength{\mathindent}{1em}
+
+% Reduce list spacing
+%% \makeatletter
+%% \renewcommand\@@listI{\leftmargin\leftmargini
+%% \parsep \z@@
+%% \topsep 3\p@@ \@@plus\p@@ \@@minus 2\p@@
+%% \itemsep 2\p@@ \@@plus\p@@ \@@minus\p@@}
+%% \let\@@listi\@@listI
+%% \@@listi
+%% \makeatother
+
+
+
+
+\newcommand{\oleg}[1]{{\it [Oleg says: #1]}}
+
+\begin{document}
+\title{What is our title?}
 \author{ Jacques Carette\inst{1}
  \and
  Oleg Kyselyov\inst{2}
-} 
+}
 \institute{McMaster University,
 1280 Main St. West, Hamilton, Ontario Canada L8S 4K1
 \and
 Monterey, CA 93943}
 
-\usepackage{amsmath}
-\usepackage{fancyvrb}
-\usepackage{comment}
 
-\begin{document}
 \maketitle
+
 
 \begin{abstract}
 We use monads and Ocaml's advanced module system to
-demonstrate that, in a generative context, it is 
+demonstrate that, in a generative context, it is
 possible to totally eliminate the overhead of abstraction.
 This lets one use extreme forms of \textit{information hiding}
-at no run-time cost.  Furthermore the typed nature of
-the generative context provide static guarantees about the 
-generated code.  The various extensions
+at no run-time cost. Furthermore the typed nature of
+the generative context provide static guarantees about the
+generated code. The various extensions
 (aspects) can be made completely orthogonal and compositional,
 even in the presence of name-generation for temporaries and
-other bindings and ``interleaving'' of aspects.  We also
+other bindings and ``interleaving'' of aspects. We also
 show how to encode some domain-specific knowledge so that
 ``clearly wrong'' compositions can be statically rejected by the
 compiler.
@@ -35,19 +75,19 @@ compiler.
 
 \section{Introduction}
 
-	- problem of high-performance and numeric computing:
+- problem of high-performance and numeric computing:
 performance versus abstraction. Manual inlining and optimizations is
 error-prone and makes code unreadable. Furthermore, the current
 architectures demand more and more frequent tweaks (which, in general,
 cannot be done by the compiler because the tweaking often involves domain
 knowledge).
 
-	- Gaussian elimination as a representative example.
+- Gaussian elimination as a representative example.
 
-	- Generating code. MetaOCaml. Static guarantees: the generated
+- Generating code. MetaOCaml. Static guarantees: the generated
 code is well-typed.
 
-	- Problems: generativity: generated code cannot be examined
+- Problems: generativity: generated code cannot be examined
 and optimized at all. It must be generated just right. The FFT paper
 showed one way: abstract interpretation. But more problems remain
 (cite Padua et al paper at Haskell Workshop04): generating names in
@@ -60,7 +100,7 @@ requires attention at several places) aspects and expressing
 dependencies among them; expressing more static guarantees about the
 generated code (e.g., not attempting full (fractional) division for
 the integer domain; generating full-pivoting code for the rational
-domain without `better\_than' operation). In short: can we achieve all
+domain without |better_than| operation). In short: can we achieve all
 of the abstractions needed for the flexible Gaussian Elimination? Can
 we eliminate all of that abstraction's overhead in the generated code
 (without using intensional code analysis -- that is, maintaining the
@@ -75,7 +115,156 @@ correctness.]
 
 \section{CPS and the problem of generating names}
 
-[Oleg to write.]
+In this paper, we are concerned with building and composing
+generators. We start with the code expressing the algorithm (in
+OCaml), and, adding MetaOCaml annotations, turn that code into a
+\emph{code expression} that will generate the code when runs. We then
+modify that code expression to add various parameters and aspects, to
+yield the complete generator.
+
+Here we illustrate the MetaOCaml constrcutions and code generators.
+
+Turning code into the code expression is relatively straightforward
+until we come to binding constructs such as |let|. For example, here
+is a piece of code that defines a function that searches a given array
+|arr| for the maximal (in absolute value) element, and the index of
+that element and the found absolute value. This code is representative
+of pivot determination. The code uses mutations and destructive
+updates -- partly for illustrative purposes and mainly because many
+linear algebra algorithms are expressed via an imperative code (so it
+is less error-prone to translate the ``canonical'' algorithms with
+minimal changes).
+
+\begin{code}
+let fp = fun arr n ->
+   let pv = ref (0,arr.(0)) in
+   for i = 1 to n-1 do
+     if abs_float arr.(i) > snd !pv then
+        pv := (i, abs_float arr.(i))
+   done;
+   !pv
+\end{code}
+
+This function has the type |float array -> int -> int * float|. By
+enclosing the code into MetaOCaml brackets, we obtain the simplest
+generator expression.
+
+\oleg{later on, we can write the following just let fpc = .<...>.}
+
+\begin{code}
+let fpc = .<fun arr n ->
+   let pv = ref (0,arr.(0)) in
+   for i = 1 to n-1 do
+     if abs_float arr.(i) > snd !pv then
+        pv := (i, abs_float arr.(i))
+   done;
+   !pv>.
+\end{code}
+
+This value has the type |('a, float array -> int -> int * float) code|.
+Here |'a| type parameter is needed (ask Walid for the reference).
+The main difference between |fp| and |fpc| is that |fp| is a function,
+which we can immediately use as \verb^fp [|1.0; -4.; 3.|] 3^. In
+contrast, |fpc| is not a function: it is a \emph{code} value that denotes
+that function. We would say that the code expression is the
+``second-stage'' value. The ability to manipulate code expressions as
+regular values is the distinguished fature of MetaOCaml.
+We can ``compile'' the code by using MetaOCaml |run| command, or |.!|:
+|.! fpc|. The result is equivalent is |fp|. Although |fpc| doesn't
+seem to do much, it is already useful as we can use offshoring (cite)
+to translate |fpc| into C or Fortran code (which we can dynamically
+link into the running MetaOCaml code -- or use separately).
+
+The code |fpc| obviously lacks generality: the name |abs_float|
+implies that that code deals with |float| arrays. We wish to handle
+arrays in various domains, integer, rationals, etc. We can make the
+code generic by parametrizing over the |abs| function:
+
+\begin{code}
+let fpca absf = .<fun arr n ->
+   let pv = ref (0,arr.(0)) in
+   for i = 1 to n-1 do
+     if absf arr.(i) > snd !pv then
+        pv := (i, absf arr.(i))
+   done;
+   !pv>.
+\end{code}
+
+and so |fpca abs_float| will manipulate |float array| and |fpca abs|
+will do for the integer arrays. Here we used the value from the first
+stage, |absf|, to incorporate into the code at the second stage:
+croos-stage persistent values.
+
+We should now consider the function |fpca| in a browder context: of a
+function that computes the pivot and then swaps the pivot withe 0-th
+element of the array:
+
+\begin{code}
+let upv = .<fun arr n ->
+   let pv = .~(fpca abs_float) arr n in
+   let i = fst pv in
+   (if not (i = 0) then
+      let t = arr.(0) in
+      begin arr.(0) <- arr.(i); arr.(i) <- t end);
+   arr>.
+\end{code}
+
+Here, we see the third MetaOCaml operator, escape |.~|. It does ...
+MetaOcaml can print out the code, which looks like
+|.<fun arr n -> let pv = (fun arr n -> fpcs code) arr n in ... >.|
+That is, the compiler inlined the code for fpca -- which is a
+functional expression. The |upv| code shows the functional
+application, |(fun arr n -> ...)| applied to arguments |arr n|. That
+application will be executed at run-time, unless a sufficiently smart
+compiler can inline it. As we stated, our aim is to not to rely on
+post-generation optimizations and sufficiently smart compiler. We
+strive to generate the efficient code ourselves. We can do that by
+modifying the definition of |fpca| as
+
+\begin{code}
+let fpca absf arr n = .<
+   let pv = ref (0,(.~arr).(0)) in
+   for i = 1 to .~n-1 do
+     if absf (.~arr).(i) > snd !pv then
+        pv := (i, absf (.~arr).(i))
+   done;
+   !pv>.
+\end{code}
+\begin{code}
+let upv = .<fun arr n ->
+   let pv = .~(fpca abs_float .<arr>. .<n>.) in
+   let i = fst pv in
+   (if not (i = 0) then
+      let t = arr.(0) in
+      begin arr.(0) <- arr.(i); arr.(i) <- t end);
+   arr>.
+\end{code}
+% (.! upv) [|1.0; -4.; 2.|] 3;;
+We see that we pass code fragment |.<arr>.| as arguments to the
+function. Now when we look at the code for |upv|, we see
+|.<fun arr n -> let pv1 = let pv = ref (0,arr.(0)) in ...>.|
+So the fpca code got really inlined.
+
+The inlining is not perfect however. We would like that our code
+expression to look like
+\begin{code}
+ fun arr n ->
+   let pv = ref (0,arr.(0)) in ... the rest of fpca ...
+   in let i = fst !pv in ...
+\end{code}
+
+We would like that the inlining of |.~(fpca abs_float .<arr>. .<n>.)|
+generated us the |let pv = ref ... | statement. But this seems to
+quite a challenge. We wish the resulting code to look
+|let pv = ... in body| where |pv = ...| part come from |fpca| and
+|body| come from |upv|. At first blush, this seems impossible. A code
+expression may contain only complete expressions, such as
+|let v =... in ...|. A code expression cannot contain only the binding part of
+|let|, which is not an expression per se.
+
+The solution: CPS. And here where I go to sleep.
+
+
 
 \section{Monadic notation, making CPS code clear}
 
@@ -101,7 +290,7 @@ Show the type error that occurs in improper instantiation.
 
 Show several examples (e.g., code with NullPivot and nodet: no traces
 of either det nor pivoting). Then the code with RowPivoting, Det and
-float domain. 
+float domain.
 
 \section{Related work}
 
@@ -109,13 +298,13 @@ float domain.
 connections with delimited continuations: making notation
 more direct-style and potentially clearer.
 
-More aspects that can be handled: Input variations (augmented 
-matrices).  Fit into the larger program family, where there are
+More aspects that can be handled: Input variations (augmented
+matrices). Fit into the larger program family, where there are
 more aspects still.
 
 \section{Conclusion}
 
-\bibliography{metamonads} 
+\bibliography{metamonads}
 \bibliographystyle{plain}
 
 \end{document}
