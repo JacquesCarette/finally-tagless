@@ -46,6 +46,11 @@ let retMatchM x som non = fun s k ->
 (* nothing *)
 let retUnit = fun s k -> k s .< () >.
 
+(* the following function should not exist ? *)
+let dapply1 g c1 = match g with
+  | Some f -> f c1
+  | None   -> c1 ;;
+
 (* Define the actual module types and instances *)
 module type DOMAIN = sig
   type v
@@ -233,8 +238,9 @@ end
 module Logic = LogicGen(OrLMonoid)(AndLMonoid)
 
 module type DETERMINANT = sig
-  type idet
-  type tdet = idet ref
+  type indet
+  type outdet
+  type tdet = indet ref
   type 'a lstate
   val decl_det : unit -> 
     (unit, [> `TDet of 'a lstate ] list, ('a,'b) code) monad
@@ -242,10 +248,12 @@ module type DETERMINANT = sig
     (('a,unit) code, [> `TDet of 'a lstate ] list, ('a,'b) code) monad
   val zero_sign : unit -> 
     (('a,unit) code, [> `TDet of 'a lstate ] list, ('a,'b) code) monad
-  val acc_det : ('a,idet) code -> 
-    (unit, [> `TDet of 'a lstate ] list, ('a,'b) code) monad
+  val acc_det : ('a,indet) code -> 
+    (('a,unit) code, [> `TDet of 'a lstate ] list, ('a,'b) code) monad
+  val set_det : ('a,indet) code -> 
+    (('a,unit) code, [> `TDet of 'a lstate ] list, ('a,'b) code) monad
   val fin_det : unit -> 
-    (('a,idet) code, [> `TDet of 'a lstate ] list, ('a,'b) code) monad
+    (('a,outdet) code, [> `TDet of 'a lstate ] list, ('a,'b) code) monad
 end
 
 module type RANK = sig
@@ -260,8 +268,6 @@ module type RANK = sig
     (('a,int) code,[> `TRan of 'a lstate ] list,('a,'w) code) monad
 end;;
 
-
-
 module type OUTPUT = sig
   type contr
   type res
@@ -272,15 +278,18 @@ module type OUTPUT = sig
      ('a,'w) code) monad
 end
 
-module NoDet:DETERMINANT = 
+(* we need the domain anyways to get things to type properly *)
+module NoDet(Dom:DOMAIN) =
   struct
-  type idet = unit
-  type tdet = unit ref
+  type indet = Dom.v
+  type outdet = unit
+  type tdet = indet ref
   type 'a lstate
   let decl_det () = ret ()
   let upd_sign () = retUnit
   let zero_sign () = retUnit
-  let acc_det v = ret ()
+  let acc_det v = retUnit
+  let set_det v = retUnit
   let fin_det () = retUnit
 end
 
@@ -310,19 +319,19 @@ end
 
 (* What to return *)
 
-module OutJustMatrix(Ctr: CONTAINER2D) =
+module OutJustMatrix(Ctr: CONTAINER2D)(Det : DETERMINANT with type indet = Ctr.obj) =
   struct
   type contr = Ctr.contr
   type res = contr
-  module D = NoDet
+  module D = Det
   module R = NoRank
   let make_result b = ret b
 end
 
-module OutDet(Ctr: CONTAINER2D)(Det : DETERMINANT with type idet = Ctr.obj) =
+module OutDet(Ctr: CONTAINER2D)(Det : DETERMINANT with type indet = Ctr.obj) =
   struct
   type contr = Ctr.contr
-  type res = contr * Det.idet
+  type res = contr * Det.outdet
   module D = Det
   module R = NoRank
   let make_result b = mdo {
@@ -330,21 +339,21 @@ module OutDet(Ctr: CONTAINER2D)(Det : DETERMINANT with type idet = Ctr.obj) =
     ret .< ( .~b, .~det ) >. }
 end
 
-module OutRank(Ctr: CONTAINER2D)(Rank : RANK) =
+module OutRank(Ctr: CONTAINER2D)(Rank : RANK)(Dom:DOMAIN) =
   struct
   type contr = Ctr.contr
   type res = contr * int
-  module D = NoDet
+  module D = NoDet(Dom)
   module R = Rank
   let make_result b = mdo {
     rank <-- Rank.fin_rank ();
     ret .< ( .~b, .~rank ) >. }
 end
 
-module OutDetRank(Ctr: CONTAINER2D)(Det : DETERMINANT with type idet = Ctr.obj)(Rank : RANK) =
+module OutDetRank(Ctr: CONTAINER2D)(Det : DETERMINANT with type indet = Ctr.obj)(Rank : RANK) =
   struct
   type contr = Ctr.contr
-  type res = contr * Det.idet * int
+  type res = contr * Det.outdet * int
   module D = Det
   module R = Rank
   let make_result b = mdo {
@@ -356,7 +365,8 @@ end
 
 module AbstractDet(Dom: DOMAIN) =
   struct
-  type idet = Dom.v
+  type indet = Dom.v
+  type outdet = indet
   type tdet = Dom.v ref
   type 'a lstate = ('a,tdet) code * ('a,tdet) code
         (* the purpose of this function is to make the union open.
@@ -386,7 +396,11 @@ module AbstractDet(Dom: DOMAIN) =
       det <-- dfetch ();
       det2 <-- retS (snd det);
       r <-- Dom.times (liftGet det2) v;
-      codegen () (fun x -> .<begin .~det2 := .~r; .~x end>. ) }
+      ret .<.~det2 := .~r>. }
+  let set_det v = mdo {
+      det <-- dfetch ();
+      det2 <-- retS (snd det);
+      ret .<.~det2 := .~v>.}
   let fin_det () = mdo {
       det <-- dfetch ();
       res <-- Dom.times (liftGet (fst det)) (liftGet (snd det));
@@ -421,11 +435,11 @@ module Rank =
    retS (liftGet r) }
 end
 
-module Gen(Dom: DOMAIN)(Ctr: CONTAINER2D with type obj = Dom.v)(Out: OUTPUT with type contr = Ctr.contr) = 
+module Gen(Dom: DOMAIN)(Ctr: CONTAINER2D with type obj = Dom.v)(Out: OUTPUT with type contr = Ctr.contr and type D.indet = Ctr.obj) = 
    struct
     type v = Dom.v
-    let gen ~fracfree:bool  =
-      let findpivot b r n c = mdo {
+    let gen ~fracfree =
+      let findpivot b r m n c = mdo {
           i <-- retN (liftRef .< -1 >. );
           let bd j = mdo {
               bjc <-- Ctr.get b j c;
@@ -434,22 +448,66 @@ module Gen(Dom: DOMAIN)(Ctr: CONTAINER2D with type obj = Dom.v)(Out: OUTPUT with
                        iv <-- retS (liftGet i);
                        l3 lif 
                            (Logic.mcode_or (ret (Code .< .~iv == -1 >.))
-								(mdo { bic <-- Ctr.get b iv c;
-									   res <-- Dom.smaller_than bjc bic;
-									   ret (Code res)}))
+                                (mdo { bic <-- Ctr.get b iv c;
+                                       res <-- Dom.smaller_than bjc bic;
+                                       ret (Code res)}))
                            (ret .< .~i := .~j >.)
                            (retUnit) })
                  (retUnit) } in;
           l2 seq (retLoopM r .<.~n-1>. bd)
-                 (ret .< if (! .~i) == -1 then None else Some ! .~i >.)} in
-      let somg b c m = fun i -> mdo {
+                 (ret .< if (! .~i) == -1 then None else Some ! .~i >.)} 
+      and zerobelow b r c m n =
+        let inner_loop i = 
+          let body k = 
+              (if not fracfree then 
+                mdo {
+                  bic <-- Ctr.get b i c;
+                  brc <-- Ctr.get b r c;
+                  brk <-- Ctr.get b r k;
+                  bik <-- Ctr.get b i k;
+                  t <-- Dom.div bic brc;
+                  l <-- Dom.times t brk;
+                  y <-- Dom.minus l bik;
+                  Ctr.set b i k (dapply1 Dom.normalizerg y) }
+              else 
+                mdo {
+                  bic <-- Ctr.get b i c;
+                  brc <-- Ctr.get b r c;
+                  brk <-- Ctr.get b r k;
+                  bik <-- Ctr.get b i k;
+                  x <-- Dom.times bik brc;
+                  y <-- Dom.times brk bic;
+                  z <-- Dom.minus x y;
+                  t <-- retS (dapply1 Dom.normalizerg z);
+                  ov <-- Dom.div t brk;
+                  Ctr.set b i k ov}) in
+              mdo { retLoopM .<.~c+1>. .<.~m-1>. body } in
+          let innerbody i = mdo {
+              bic <-- Ctr.get b i c;
+              il <-- inner_loop i;
+              l3 lif (ret .< not (.~bic = .~Dom.zero) >. )
+                     (l2 seq (ret il) (Ctr.set b i c Dom.zero)) 
+                     (retUnit) } in
+          mdo {
+              let ch = 
+              if fracfree then
+                  mdo { 
+                      brc <-- Ctr.get b r c;
+                      Out.D.set_det brc }
+              else
+                  mdo { 
+                      brc <-- Ctr.get b r c;
+                      Out.D.acc_det brc } in;
+              l2 seq (retLoopM .<.~r+1>. .<.~n-1>. innerbody) ch } in
+      let somg b c m n = fun i -> mdo {
           r <-- Out.R.rfetch ();
           l2 seq (mdo {
                   l3 lif (ret .< .~i <> ! .~r >. )
                          (ret (Ctr.swap_rows_stmt b (liftGet r) i))
                          (retUnit) } )
-                 (Out.R.succ_rank ()) } in
-      let non = Out.D.zero_sign () in
+                 (l2 seq (zerobelow b (liftGet r) (liftGet c) m n)
+                         (Out.R.succ_rank ())) }
+      and non = Out.D.zero_sign () in
       let dogen a = mdo {
           r <-- Out.R.decl_rank ();
           c <-- retN (liftRef .< 0 >.);
@@ -458,117 +516,29 @@ module Gen(Dom: DOMAIN)(Ctr: CONTAINER2D with type obj = Dom.v)(Out: OUTPUT with
           n <-- retN (Ctr.dim2 a);
           () <-- Out.D.decl_det ();
           let body = mdo {
-              pivot <-- l1 retN (findpivot b (liftGet r) n (liftGet c));
-              l2 seq (retMatchM pivot (somg b c m) non)
+              pivot <-- l1 retN (findpivot b (liftGet r) m n (liftGet c));
+              l2 seq (retMatchM pivot (somg b c m n) non)
                      (ret .< .~c := (! .~c) + 1 >. ) } in ;
           l2 seq (retWhileM .< !(.~r) < .~m && !(.~r) < .~n >.
-					body)
+                    body)
                  (Out.make_result b) } 
       and kk s v = v in
     .<fun a -> .~(dogen .<a>. [] kk) >.
 end
 
-module Gen1 = Gen(FloatDomain)(FArrayContainer)(OutJustMatrix(FArrayContainer))
-module Gen2 = Gen(FloatDomain)(FArrayContainer)(OutDet(FArrayContainer)(FDet))
-module Gen3 = Gen(IntegerDomain)(IArrayContainer)(OutRank(IArrayContainer)(Rank));;
-module Gen4 = Gen(IntegerDomain)(IArrayContainer)(OutDetRank(IArrayContainer)(IDet)(Rank));;
-module Gen5 = Gen(IntegerDomain)(IVectorContainer)(OutRank(IVectorContainer)(Rank));;
-module Gen6 = Gen(IntegerDomain)(IVectorContainer)(OutDetRank(IVectorContainer)(IDet)(Rank));;
-
-type ge_choices = {fracfree:bool}
-
-(*
-let dapply1 g c1 = match g with
-  | Some f -> f c1
-  | None   -> c1 ;;
-
-let ge_state_gen dom contr findpivot swap zerobelow choice =
-  let main_loop s = 
-  .< while !(.~(s.c)) < .~(s.m) && !(.~(s.r)) < .~(s.n) do
-    begin
-    match .~(findpivot s) with
-    Some i -> begin
-        if i <> !(.~(s.r)) then
-            for j = !(.~(s.c)) to .~(s.m)-1 do
-                .~(swap .<i>. .<j>. s);
-            done;
-        .~(zerobelow s) ;
-        (.~(s.r)) := !(.~(s.r)) + 1;
-        end;
-    | None -> .~(match choice.track with
-        | TrackNothing -> .< () >. ;
-        | TrackDet     -> .< .~(s.detsign) := .~(dom.zero) >.;
-        ) ;
-    end;
-    .~(s.c) := !(.~(s.c)) + 1;
-  done >. in
-
-
-let zerobelow_gen dom contr choice =
-  let inner_loop i = 
-  if not choice.fracfree then 
-    let body = fun ind -> mdo {
-      st <-- fetch;
-      t <-- dom.div
-          (contr.get .<.~st.b>. i .<!(.~st.c)>. )
-          (contr.get .<.~st.b>. .<!(.~st.r)>. .<!(.~st.c)>. );
-      l <-- dom.times t (contr.get .<.~st.b>. .<!(.~st.r)>. ind );
-      m <-- dom.minus (contr.get .<.~st.b>. i ind) l;
-      r <-- retN (contr.set .<.~st.b>. .<.~i>. ind 
-          (dapply1 dom.normalizerg m)) ;
-      ret (r:('a,unit) code) } in
-      mdo {
-          st <-- fetch;
-          loop <-- retLoop .<!(.~st.c)+1>. .< .~st.m-1>. body;
-          ret (loop:('a,unit) code) }
-  else 
-    let body ind = mdo {
-      st <-- fetch;
-      x <-- (dom.times 
-          (contr.get .<.~st.b>. .<.~i>. ind )
-          (contr.get .<.~st.b>. .<! .~st.r>. .<! .~st.c>. ));
-      y <-- (dom.times 
-          (contr.get .<.~st.b>. .<!(.~st.r)>. ind )
-          (contr.get .<.~st.b>. .<.~i>. .<! .~st.r>. ));
-      z <-- dom.minus x y;
-      t <-- retS (dapply1 dom.normalizerg z);
-      ov <-- dom.div t .<! .~st.det>. ;
-      x <-- retN (contr.set .<.~st.b>. .<.~i>. ind ov);
-      ret (x:('a,unit) code) } in
-      mdo {
-          st <-- fetch;
-          loop <-- retLoop .<!(.~st.c)+1>. .< .~st.m-1>. body;
-          ret loop }
-  in
-  let il1 i = mdo {
-    x <-- inner_loop i;
-    ret (x:('a,unit) code)} 
-  and ss j = mdo {
-    st <-- fetch;
-    x <-- retS (contr.set .<.~st.b>. j .<! .~st.c>. dom.zero);
-    ret (x:('a,unit) code) } in
-  let outer_loop' = mdo {
-    st <-- fetch;
-    r <-- (fun s k -> .< for ii = !(.~st.r)+1 to .~st.n-1 do
-    if not ( .~(contr.get .<.~st.b>. .<ii>. .<! .~st.c>. ) 
-             = .~dom.zero) then
-      begin .~(il1 .<ii>. st k); .~(ss .<ii>. st k) end;
-  done >. );
-    ret r } in
-  match choice.track with
-  | TrackNothing -> outer_loop'
-  | TrackDet     -> mdo {
-      st <-- fetch;
-      ol <-- outer_loop';
-      rest <-- (if choice.fracfree then
-          retS .< .~st.det := 
-            .~(contr.get .<.~st.b>. .<! .~st.r>. .<! .~st.c>. )>.
-        else
-          mdo {
-               xx <-- dom.times .<! .~st.det>.
-                  (contr.get .< .~st.b>.  .<! .~st.r>. .<! .~st.c>. ) ;
-               yy <-- retS .< .~st.det := .~xx >. ;
-               ret yy} );
-      r <-- seq ol rest;
-      ret r }
-*)
+module GenFA1 = Gen(FloatDomain)(FArrayContainer)(OutJustMatrix(FArrayContainer)(NoDet(FloatDomain)))
+module GenFA2 = Gen(FloatDomain)(FArrayContainer)(OutDet(FArrayContainer)(FDet))
+module GenFA3 = Gen(FloatDomain)(FArrayContainer)(OutRank(FArrayContainer)(Rank)(FloatDomain))
+module GenFA4 = Gen(FloatDomain)(FArrayContainer)(OutDetRank(FArrayContainer)(FDet)(Rank));;
+module GenFV1 = Gen(FloatDomain)(FVectorContainer)(OutJustMatrix(FVectorContainer)(NoDet(FloatDomain)))
+module GenFV2 = Gen(FloatDomain)(FVectorContainer)(OutDet(FVectorContainer)(FDet))
+module GenFV3 = Gen(FloatDomain)(FVectorContainer)(OutRank(FVectorContainer)(Rank)(FloatDomain))
+module GenFV4 = Gen(FloatDomain)(FVectorContainer)(OutDetRank(FVectorContainer)(FDet)(Rank));;
+module GenIA1 = Gen(IntegerDomain)(IArrayContainer)(OutJustMatrix(IArrayContainer)(NoDet(IntegerDomain)));;
+module GenIA2 = Gen(IntegerDomain)(IArrayContainer)(OutDet(IArrayContainer)(IDet));;
+module GenIA3 = Gen(IntegerDomain)(IArrayContainer)(OutRank(IArrayContainer)(Rank)(IntegerDomain));;
+module GenIA4 = Gen(IntegerDomain)(IArrayContainer)(OutDetRank(IArrayContainer)(IDet)(Rank));;
+module GenIV1 = Gen(IntegerDomain)(IVectorContainer)(OutJustMatrix(IVectorContainer)(NoDet(IntegerDomain)));;
+module GenIV2 = Gen(IntegerDomain)(IVectorContainer)(OutDet(IVectorContainer)(IDet));;
+module GenIV3 = Gen(IntegerDomain)(IVectorContainer)(OutRank(IVectorContainer)(Rank)(IntegerDomain));;
+module GenIV4 = Gen(IntegerDomain)(IVectorContainer)(OutDetRank(IVectorContainer)(IDet)(Rank));;
