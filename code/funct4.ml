@@ -238,13 +238,14 @@ module type MONOID = sig
     val binopC : ('a,values) code -> ('a,values) code -> ('a,values) code
 end
 
-module type LIFTEDCOMMUTATIVEMONOID = sig
+module type LIFTEDMONOID = sig
     type t
     type ('a,'b) liftedvalues
     val lbinop : ('a,t) liftedvalues -> ('a,t) liftedvalues -> ('a,t) liftedvalues
     val toconcrete : ('a,t) liftedvalues -> ('a,t) code
 end
 
+(* The lifted version is not commutative ! *)
 module LiftCommutativeMonoid(M:MONOID) = struct
     type t = M.values 
     type ('a,'b) liftedvalues = ('a, t) abstract
@@ -276,7 +277,7 @@ module AndMonoid = struct
 end
 module AndLMonoid = LiftCommutativeMonoid(AndMonoid)
 
-module LogicGen(Or:LIFTEDCOMMUTATIVEMONOID)(And:LIFTEDCOMMUTATIVEMONOID) = 
+module LogicGen(Or:LIFTEDMONOID)(And:LIFTEDMONOID) = 
   struct
     let mcode_or a b = mdo { 
         x <-- a;
@@ -666,11 +667,10 @@ module Gen(Dom: DOMAIN)
       let zerobelow b r c m n =
         let innerbody i = mdo {
             bic <-- Ctr.get b i c;
-            ifM (ret .< not (.~bic = .~Dom.zero) >. )
+            whenM (ret .< not (.~bic = .~Dom.zero) >. )
                 (seqM (retLoopM .<.~c+1>. .<.~m-1>. 
                           (fun k -> Update.update b r c i k) )
-                      (Ctr.set b i c Dom.zero)) 
-                (retUnit) } in
+                      (Ctr.set b i c Dom.zero)) } in 
         mdo {
               seqM (retLoopM .<.~r+1>. .<.~n-1>. innerbody) 
                    (l1 Update.update_det (Ctr.get b r c)) } in
