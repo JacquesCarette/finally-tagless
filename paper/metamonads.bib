@@ -22,6 +22,10 @@
 
 @String{j-HIGHER-ORDER-SYMB-COMPUT = "Higher-Order and Symbolic Computation"}
 @STRING( JFP = " Journal of Functional Programming" )
+@STRING{proc_popl_1		= "{POPL} '" }
+@STRING{proc_popl_2		= ": Conference Record of the Annual {ACM} Symposium on Principles of Programming Languages" }
+@STRING{pub_acm			= "{ACM} {P}ress" }
+@STRING{pub_acm_addr		= "{N}ew {Y}ork" }
 
 %
 % Other useful abbreviations
@@ -35,6 +39,40 @@
 
 %
 % actual references 
+
+@misc{Padua:MetaOcaml:04,
+	author = {Albert Cohen and Sebastien Donadio and 
+                 Mari'a Jesu's Garzara'n and 
+                 Cristoph Herrmann and David Padua},
+	title = {In Search for a Program Generator to Implement Generic
+Transformations for High-Performance Computing},
+	year = {2004},
+	note = {First MetaOCaml Workshop, October 2004},
+        url  = {http://polaris.cs.uiuc.edu/~garzaran/doc/ocaml04.pdf}
+}
+
+
+@InProceedings{HygienicMacros,
+  author    = {Eugene E. Kohlbecker and
+               Daniel P. Friedman and
+               Matthias Felleisen and
+               Bruce F. Duba},
+  title     = {Hygienic Macro Expansion.},
+  booktitle = {LISP and Functional Programming},
+  year      = {1986},
+  pages     = {151-161},
+  bibsource = {DBLP, http://dblp.uni-trier.de}
+}
+
+@inproceedings{Filinski:Representing,
+  author    = {Andrzej Filinski},
+  title     = {Representing Monads.},
+  booktitle = {POPL},
+  year      = {1994},
+  pages     = {446-457},
+  bibsource = {DBLP, http://dblp.uni-trier.de}
+}
+
 
 @InProceedings{Bondorf:92,
   author =       "Anders Bondorf",
@@ -52,6 +90,45 @@
                  continuations, frozen expressions, generating
                  extensions, dynamic choice of static values, Similix",
 }
+
+@InProceedings{	liang-interpreter,
+  author	= "Sheng Liang and Paul Hudak and Mark Jones",
+  title		= "Monad Transformers and Modular Interpreters",
+  pages		= "333--343",
+  crossref	= "popl1995",
+  abstract	= "We show how a set of {\it building blocks\/} can be used to construct programming language interpreters, and present implementations of such building blocks capable of supporting many commonly known features, including
+		  simple expressions, three different function call mechanisms (call-by-name, call-by-value and lazy evaluation), references and assignment, nondeterminism, first-class continuations, and program tracing. The underlying
+		  mechanism of our system is {\it monad transformers\/}, a simple form of abstraction for introducing a wide range of computational behaviors, such as state, I/O, continuations, and exceptions. Our work is significant in the
+		  following respects. First, we have succeeded in designing a fully modular interpreter based on monad transformers that incudes features missing from Steele's, Espinosa's, and Wadler's earlier efforts. Second, we have found
+		  new ways to lift monad operations through monad transformers, in particular difficult cases not achieved in Moggi's original work. Third, we have demonstrated that interactions between features are reflected in liftings
+		  and that semantics can be changed by reordering monad transformers. Finally, we have implemented our interpreter in Gofer, whose constructor classes provide just the added power over Haskell's type classes to allow precise
+		  and convenient expression of our ideas. This implementation includes a method for constructing extensible unions and a form of subtyping that is interesting in its own right.",
+  keywords	= "algorithms; design; languages",
+  subject	= "{\bf D.3.4} Software, PROGRAMMING LANGUAGES, Processors, Interpreters. {\bf F.3.2} Theory of Computation, LOGICS AND MEANINGS OF PROGRAMS, Semantics of Programming Languages, Denotational semantics. {\bf D.3.3} Software,
+		  PROGRAMMING LANGUAGES, Language Constructs and Features, Data types and structures."
+}
+
+@Proceedings{	popl1995,
+  key		= "{\relax POPL}",
+  title		= proc_popl_1 # "95"  # proc_popl_2,
+  booktitle	= proc_popl_1 # "95"  # proc_popl_2,
+  address	= pub_acm_addr,
+  publisher	= pub_acm,
+  year		= 1995,
+  location	= "San Francisco"
+}
+
+@Article{	moggi-notions,
+  author	= "Eugenio Moggi",
+  title		= "Notions of Computation and Monads",
+  journal	= "Information and Computation",
+  year		= 1991,
+  volume	= 93,
+  number	= 1,
+  pages		= "55--92",
+  url		= "http://www.disi.unige.it/person/MoggiE/ftp/ic91.ps.gz"
+}
+
 
 @book{JoGoSe93,
   author = "N.~Jones and C.K.~Gomard and P.~Sestoft",

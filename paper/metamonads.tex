@@ -108,7 +108,8 @@ languages have a non-zero run-time cost.  Whether it is procedure,
 method or function call, these have a cost; worse still, higher level
 and/or higher order abstractions (like Functors or AspectJ's aspects)
 frequently have a larger cost still.  Of course, if one is faced with
-writing 60 different implementations of the ``same'' algorithm, this
+writing 60 different implementations of the ``same'' algorithm
+\oleg{citation?}, this
 abstraction cost starts to look cheap!  Although bad programmers have
 been known to resort to cut\&paste programming, no self-respecting
 programmer would be caught doing that\footnote{Sadly, there are still
@@ -124,9 +125,7 @@ programming, the answer is to turn to statically typed languages,
 which provide strong guarantees about the soundness of the resulting
 code.  MetaOCaml \cite{CTHL03,metaocaml-org} in particular stands
 out: not only it guarantees well-formedness and the absense of problems 
-such as accidental variable capture \cite{HygienicMacros}
-\jacques{is this the citation you meant?}
-MetaOcaml also
+such as accidental variable capture \cite{HygienicMacros}. MetaOcaml also
 statically ensures that both the code generator and the generated code
 are well-typed \cite{TahaSheard97,TahaThesis}.  While Template
 programming in C++ and Template Haskell do offer some amount of static
@@ -137,7 +136,8 @@ additional benefits.
 
 While it is theoretically feasible in a strings-based
 generative system to re-parse the generative code to inspect it, such
-an approach rapidly degenerates into complete chaos.  In languages
+an approach rapidly degenerates into complete chaos \oleg{is there a
+  good citation?}.  In languages
 that natively offer reflection and reification (either at no cost, 
 such as in LISP and Scheme, or at a modest cost in languages like 
 Maple), this is actually feasible, even easy.  But this is fragile
@@ -148,9 +148,8 @@ In MetaOCaml, generated code cannot be examined and optimized at all. It must
 be generated just right.  For simple code, this is relatively easy
 (see \cite{TahaThesis} for many examples).  For more complex examples,
 new techniques are necessary.  \cite{KiselyovTaha} introduces one
-such tool: abstract interpretation.  But more problems remain:
-\jacques{can't find this 'Padua' paper at the 2004 Haskell Workshop 
-you refer to}: 
+such tool: abstract interpretation.  But more problems remain
+\cite{Padua:MetaOcaml:04}:
 \begin{itemize}
     \item Generating names in the presence of ``if'', ``while'', and other
         control operators. \cite{KiselyovTaha} showed how to solve
@@ -392,13 +391,12 @@ program in CPS. Clearly a better notation is needed.
 
 The |do|-notation of Haskell \cite{Haskell98Report} shows that it is possible
 to write essentially CPS code in conventional-looking style. The
-|do| notation is the notation for writing monadic code (cite Moggi?).
-The benefit of monadic notation is not that it can represent CPS (cite
-Filinski), but it helps in composability by offering to add different
+|do| notation is the notation for writing monadic code \cite{moggi-notions}.
+The benefit of monadic notation is not that it can represent CPS \cite{Filinski:Representing}, but it helps in composability by offering to add different
 layers of effects (state, exception, non-determinism, etc) to the
-basic monad (cite Hudak, Peyton-Jones) in a controlled way.
+basic monad \cite{liang-interpreter} in a controlled way.
 
-A monad (cite Moggi?) is an abstract datatype representing
+A monad \cite{moggi-notions} is an abstract datatype representing
 computations that yield a value and may have an \emph{effect}.
 The datatype must have at least two operations, |return| to build
 trivial effect-less computations and |bind| for combining
@@ -571,7 +569,8 @@ A careful study of Gaussian Elimination \cite{carette04} shows that
 		namely for elements of a field,
 		multivariate polynomials over a field, elements of a formal Ring
 		with possibly undecidable zero-equivalence, or elements of a 
-		Division Ring.  In the roughly 85 pieces of code surveyed,
+		Division Ring.  In the roughly 85 pieces of code
+		surveyed \oleg{citation?},
 		20 different domains were encountered.
 	\item \textbf{Container}: Whether the matrix
 		is represented as an array of arrays, a one-dimensional array,
@@ -612,7 +611,7 @@ concerns: in the case of the length measure, then a property of the domain
 will influence the method used to do pivoting \textbf{if} pivoting is to be
 performed.
 
-The simplest parametrization is to make the domain abstract.  As it 
+The simplest parametrization is to make the domain abstract. As it 
 turns out, we need the following to exist in our domains:  $0$, $1$,
 $+$, $*$, (unary and binary) $-$, some kind of division, normalization,
 and potentially a relative size measure.  We definitely need at least
@@ -620,7 +619,16 @@ and potentially a relative size measure.  We definitely need at least
 can be used as well.  Normalization is frequently trivial for domains
 where elements have unique representations, but in many applications
 we have domains (like polynomials in sum-of-product form) where this
-is not the case.  This leads us to defining a |DOMAIN| type as
+is not the case.  The simplest case of such an abstraction was given
+in Section XXX, |param_code1|. In the latter, code-generators such as
+|plus| and |one| were passed as arguments. We see however that we 
+need far more than two parameters, so we have to group them. Instead
+of the grouping offered by regular records, we use Ocaml
+\emph{structures} (i.e., modules) (cite Ocaml module system tutorial?)
+so we can take advantage extensions, type abstraction and constraints,
+and especially parameterized structures (i.e., \emph{functors}).
+We first define the type of the domain, the signature |DOMAIN| to which
+different domain must satisfy:
 \begin{small}
 \begin{code}
 module type DOMAIN = sig
@@ -644,11 +652,19 @@ end
 \noindent  The first item to notice is that the types above are
 generally lifted twice: once from the value domain |v| to the code
 domain |'a vc|, and once more from values to monadic computations
-|('a vc, 's, 'w) monad|.  Since there are times where we don't want
+|('a vc, 's, 'w) monad|.  Since there are times where we do not want
 to redundantly walk a whole matrix to apply normalization when 
 normalization is not necessary, |normalizerf| is optional.
 
-For example, when lifted to a |DOMAIN|, the type |int| becomes
+One particular instantiation of the domain (a particular structure of
+|DOMAIN| signature) is the |int| domain \oleg{should we put the following?}
+|IntegerDomain : DOMAIN| to say that the compiler will verify that our
+|IntegerDomain| is indeed a |DOMAIN|, that is, satisfies the required
+signature. The constraint |DOMAIN| may be omitted; in that case, 
+the compiler will verify the type when we try to use that structure as
+a |DOMAIN|. In any case, the errors such as missing ``methods'' or 
+methods of wrong types will be caught statically, even \emph{before} any code
+generation takes place.
 \begin{small}
 \begin{code}
 module IntegerDomain = struct
