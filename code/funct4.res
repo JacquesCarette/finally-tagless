@@ -29,11 +29,9 @@
     (match t_10 with
      | Some (i_11) ->
         if (i_11 <> (! t_2)) then
-         for j_12 = (! t_3) to (t_6 - 1) do
-          let t_13 = (t_5.(i_11)).(j_12) in
-          (t_5.(i_11)).(j_12) <- (t_5.(! t_2)).(j_12);
-          (t_5.(! t_2)).(j_12) <- t_13
-         done
+         let t_12 = t_5.(! t_2) in
+         t_5.(! t_2) <- t_5.(i_11);
+         t_5.(i_11) <- t_12
         else ();
         (t_2 := ((! t_2) + 1))
      | None -> ());
@@ -71,17 +69,15 @@
     (match t_12 with
      | Some (i_13) ->
         if (i_13 <> (! t_2)) then
-         for j_14 = (! t_3) to (t_6 - 1) do
-          let t_15 = (t_5.(i_13)).(j_14) in
-          (t_5.(i_13)).(j_14) <- (t_5.(! t_2)).(j_14);
-          (t_5.(! t_2)).(j_14) <- t_15
-         done
+         let t_14 = t_5.(! t_2) in
+         t_5.(! t_2) <- t_5.(i_13);
+         t_5.(i_13) <- t_14
         else ();
         (t_2 := ((! t_2) + 1))
      | None -> (t_9 := 0.));
     (t_3 := ((! t_3) + 1))
    done;
-   (t_5, (! t_8))>.
+   (t_5, ((! t_9) *. (! t_8)))>.
 # val res3 :
   ('a,
    Funct4.IArrayContainer.contr ->
@@ -110,11 +106,9 @@
     (match t_10 with
      | Some (i_11) ->
         if (i_11 <> (! t_2)) then
-         for j_12 = (! t_3) to (t_6 - 1) do
-          let t_13 = (t_5.(i_11)).(j_12) in
-          (t_5.(i_11)).(j_12) <- (t_5.(! t_2)).(j_12);
-          (t_5.(! t_2)).(j_12) <- t_13
-         done
+         let t_12 = t_5.(! t_2) in
+         t_5.(! t_2) <- t_5.(i_11);
+         t_5.(i_11) <- t_12
         else ();
         (t_2 := ((! t_2) + 1))
      | None -> ());
@@ -151,17 +145,15 @@
     (match t_12 with
      | Some (i_13) ->
         if (i_13 <> (! t_2)) then
-         for j_14 = (! t_3) to (t_6 - 1) do
-          let t_15 = (t_5.(i_13)).(j_14) in
-          (t_5.(i_13)).(j_14) <- (t_5.(! t_2)).(j_14);
-          (t_5.(! t_2)).(j_14) <- t_15
-         done
+         let t_14 = t_5.(! t_2) in
+         t_5.(! t_2) <- t_5.(i_13);
+         t_5.(i_13) <- t_14
         else ();
         (t_2 := ((! t_2) + 1))
      | None -> (t_9 := 0));
     (t_3 := ((! t_3) + 1))
    done;
-   (t_5, (! t_8), (! t_2))>.
+   (t_5, ((! t_9) * (! t_8)), (! t_2))>.
 # val res5 :
   ('a,
    Funct4.IVectorContainer.contr ->
@@ -191,11 +183,15 @@
     (match t_9 with
      | Some (i_10) ->
         if (i_10 <> (! t_2)) then
-         for j_11 = (! t_3) to (t_5 - 1) do
-          let t_12 = (t_4.arr).((i_10 * t_4.n) + j_11) in
-          (t_4.arr).((i_10 * t_4.n) + j_11) <-
-           (t_4.arr).(((! t_2) * t_4.n) + j_11);
-          (t_4.arr).(((! t_2) * t_4.n) + j_11) <- t_12
+         let a_11 = t_4.arr
+         and n_12 = t_4.n
+         and m_13 = t_4.m in
+         let i1_14 = ((! t_2) * n_12)
+         and i2_15 = (i_10 * n_12) in
+         for i_16 = 0 to (m_13 - 1) do
+          let t_17 = a_11.(i1_14 + i_16) in
+          a_11.(i2_15 + i_16) <- a_11.(i1_14 + i_16);
+          a_11.(i1_14 + i_16) <- t_17
          done
         else ();
         (t_2 := ((! t_2) + 1))
@@ -234,18 +230,22 @@
     (match t_11 with
      | Some (i_12) ->
         if (i_12 <> (! t_2)) then
-         for j_13 = (! t_3) to (t_5 - 1) do
-          let t_14 = (t_4.arr).((i_12 * t_4.n) + j_13) in
-          (t_4.arr).((i_12 * t_4.n) + j_13) <-
-           (t_4.arr).(((! t_2) * t_4.n) + j_13);
-          (t_4.arr).(((! t_2) * t_4.n) + j_13) <- t_14
+         let a_13 = t_4.arr
+         and n_14 = t_4.n
+         and m_15 = t_4.m in
+         let i1_16 = ((! t_2) * n_14)
+         and i2_17 = (i_12 * n_14) in
+         for i_18 = 0 to (m_15 - 1) do
+          let t_19 = a_13.(i1_16 + i_18) in
+          a_13.(i2_17 + i_18) <- a_13.(i1_16 + i_18);
+          a_13.(i1_16 + i_18) <- t_19
          done
         else ();
         (t_2 := ((! t_2) + 1))
      | None -> (t_8 := 0));
     (t_3 := ((! t_3) + 1))
    done;
-   (t_4, (! t_7), (! t_2))>.
+   (t_4, ((! t_8) * (! t_7)), (! t_2))>.
 #   val r1 :
   Funct4.FArrayContainer.contr ->
   Funct4.OutJustMatrix(Funct4.FArrayContainer).res = <fun>

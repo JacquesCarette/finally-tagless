@@ -24,14 +24,10 @@ let store v s k = k (v::s) ()
 let codegen v cf = fun s k -> cf (k s v)
 
 (* loops actually bind a value *)
-let retLoop low high (body:('a,'b) code -> ('a,'c) code)  = fun s k -> 
-    k s .< for j = .~low to .~high do .~(body .<j>.) done >.
 let retLoopM low high body = fun s k -> 
     k s .< for j = .~low to .~high do .~(body .<j>. s (fun s v -> v)) done >.
 
 (* while ``loops'' do not naturally bind a value *)
-let retWhile cond (body:('a,'b) code) = fun s k -> 
-    k s .< while .~cond do .~body done >.
 let retWhileM cond body = fun s k -> 
     k s .< while .~cond do .~(body s (fun s v -> v)) done >.
 
@@ -110,6 +106,9 @@ module type CONTAINER2D = sig
   val dim2 : 'a vc -> ('a,int) code
   val mapper : ('a, obj->obj) code option -> 'a vc -> 'a vc
   val copy : 'a vc -> 'a vc
+  val swap_rows_stmt : 'a vc -> ('a, int) code -> ('a, int) code -> 
+                       ('a,unit) code
+  (* val swap_cols : 'a vc -> ('a, int) code -> ('a, int) code -> 'a vc *)
 end
 
 module GenericArrayContainer(Dom:DOMAIN) =
@@ -127,6 +126,14 @@ module GenericArrayContainer(Dom:DOMAIN) =
       | None   -> a
   let copy = (fun a -> .<Array.map (fun x -> Array.copy x) 
                        (Array.copy .~a) >. )
+  (* this can be optimized with a swap_rows_from if it is known that
+     everything before that is already = *)
+  let swap_rows_stmt a r1 r2 =
+      .< let t = (.~a).(.~r1) in
+         begin 
+             (.~a).(.~r1) <- (.~a).(.~r2);
+             (.~a).(.~r2) <- t
+         end >.
 end
 
 module GenericVectorContainer(Dom:DOMAIN) =
@@ -143,6 +150,16 @@ module GenericVectorContainer(Dom:DOMAIN) =
       | Some f -> .< { (.~a) with arr = Array.map .~f (.~a).arr} >.
       | None   -> a
   let copy a = .< { (.~a) with arr = Array.copy (.~a).arr} >.
+  let swap_rows_stmt b r1 r2 = .<
+      let a = (.~b).arr and n = (.~b).n and m = (.~b).m in
+      let i1 = .~r1*n and i2 = .~r2*n in
+      for i = 0 to m -1 do
+          let t = a.(i1 + i) in
+          begin 
+              a.(i2 + i) <- a.(i1 + i);
+              a.(i1 + i) <- t
+          end
+      done  >.
 end
 
 module FArrayContainer = GenericArrayContainer(FloatDomain)
@@ -372,7 +389,8 @@ module AbstractDet(Dom: DOMAIN) =
       codegen () (fun x -> .<begin .~det2 := .~r; .~x end>. ) }
   let fin_det () = mdo {
       det <-- dfetch ();
-      ret (liftGet (snd det)) }
+      res <-- Dom.times (liftGet (fst det)) (liftGet (snd det));
+      ret res}
 end
 
 module FDet = AbstractDet(FloatDomain)
@@ -424,16 +442,11 @@ module Gen(Dom: DOMAIN)(Ctr: CONTAINER2D with type obj = Dom.v)(Out: OUTPUT with
                  (retUnit) } in;
           l2 seq (retLoopM r .<.~n-1>. bd)
                  (ret .< if (! .~i) == -1 then None else Some ! .~i >.)} in
-      let swapvals b r i j = mdo {
-          t <-- l1 retN (Ctr.get b i j);
-          brj <-- Ctr.get b r j;
-          l2 seq (Ctr.set b i j brj) (Ctr.set b r j t) } in
       let somg b c m = fun i -> mdo {
           r <-- Out.R.rfetch ();
           l2 seq (mdo {
-                  let bd j = swapvals b (liftGet r) i j in;
                   l3 lif (ret .< .~i <> ! .~r >. )
-                         (retLoopM (liftGet c) .<.~m -1>. bd)
+                         (ret (Ctr.swap_rows_stmt b (liftGet r) i))
                          (retUnit) } )
                  (Out.R.succ_rank ()) } in
       let non = Out.D.zero_sign () in
@@ -448,8 +461,8 @@ module Gen(Dom: DOMAIN)(Ctr: CONTAINER2D with type obj = Dom.v)(Out: OUTPUT with
               pivot <-- l1 retN (findpivot b (liftGet r) n (liftGet c));
               l2 seq (retMatchM pivot (somg b c m) non)
                      (ret .< .~c := (! .~c) + 1 >. ) } in ;
-          cond <-- retS .< !(.~r) < .~m && !(.~r) < .~n >.;
-          l2 seq (retWhileM cond body)
+          l2 seq (retWhileM .< !(.~r) < .~m && !(.~r) < .~n >.
+					body)
                  (Out.make_result b) } 
       and kk s v = v in
     .<fun a -> .~(dogen .<a>. [] kk) >.
