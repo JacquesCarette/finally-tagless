@@ -96,6 +96,50 @@ let simple_let_mdo () =
         _ <-- a+b ;
         ret b }
 
+(* test non-determinism monad, the simplest possible implementation *)
+type 'a stream = Nil | Cons of 'a * (unit -> 'a stream) 
+                     | InC of (unit -> 'a stream)
+let test_nondet () =
+  let mfail = fun () -> Nil in
+  let ret a = fun () -> Cons (a,mfail) in
+  (* actually, interleave: a fair disjunction with breadth-first search*)
+  let rec mplus a b = fun () -> match a () with
+                  | Nil -> InC b
+		  | InC a -> (match b () with
+		    | Nil -> InC a
+		    | InC b -> InC (mplus a b)
+		    | Cons (b1,b2) -> Cons (b1, (mplus a b2)))
+                  | Cons (a1,a2) -> Cons (a1,(mplus b a2)) in
+  (* a fair conjunction *)
+  let rec bind m f = fun () -> match m () with
+                  | Nil -> mfail ()
+		  | InC a -> InC (bind a f)
+                  | Cons (a,b) -> mplus (f a) (bind b f) () in
+  let guard be = if be then ret () else mfail in
+  let rec run n m = if n = 0 then [] else
+                match m () with
+		| Nil -> []
+		| InC a -> run n a
+		| Cons (a,b) -> (a::run (n-1) b)
+  in
+  let rec numb () = Cons (0,mdo { n <-- numb; ret (n+1) }) in
+  (* Don't try this in Prolog or in Haskell's MonadPlus! *)
+  let tst = mdo {
+                  i <-- numb;
+                  guard (i>0);
+                  j <-- numb;
+                  guard (j>0);
+                  k <-- numb;
+                  guard (k>0);
+                  guard (i*i = j*j + k*k);
+		  ret (i,j,k)
+                } 
+  in run 7 tst
+;;
+
+let _ = List.map (fun (i,j,k) -> Printf.printf "(%d %d %d) " i j k) (test_nondet ())
+;;
+		      
 (* main *)
 
 let all_tests () =
@@ -107,7 +151,9 @@ let all_tests () =
   test_state3 ()  = (3, 6) &&
   test_two_element_list () = [-2; -3; -4; -1; -2; -3; 0; -1; -2] &&
   simple_mdo () = 2 &&
-  simple_let_mdo () = 2
+  simple_let_mdo () = 2 &&
+  test_nondet () = [(5,4,3); (5,3,4); (10,8,6); 
+		    (10,6,8); (13,12,5); (13,5,12); (15,12,9)]
 
 
 (* *)
