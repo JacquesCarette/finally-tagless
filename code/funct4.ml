@@ -1,10 +1,19 @@
 (* Pure translation to mdo notation.  No use of modules or functors *)
+
+type ('v,'s,'w) monad = 's -> ('s -> 'v -> 'w) -> 'w
+
 let retS a = fun s k -> k s a
 let retN a = fun s k -> .<let t = .~a in .~(k s .<t>.)>.
 let bind a f = fun s k -> a s (fun s' b -> f b s' k) ;;
 let ret = retS
 
-(* state monad morphism: get the value *)
+(* state monad morphisms: 
+ * get the values of the state which is still a record *)
+type ('a,'c,'d) state = {b:('a,'c) code; 
+  r:('a,int ref) code; c:('a,int ref) code; 
+  m:('a,int) code; n:('a,int) code;
+  det:('a,'d ref) code; detsign:('a,'d ref) code}
+
 let fetch s k = k s s
 
 (* another non-trivial morphism: generate a bit of code *)
@@ -25,34 +34,93 @@ type ('a,'c,'d) container2d = {
   copy: ('a, 'c) code -> ('a,'c) code
 } ;;
 
-type ('a,'c,'d) state = {b:('a,'c) code; 
-  r:('a,int ref) code; c:('a,int ref) code; 
-  m:('a,int) code; n:('a,int) code;
-  i:('a,int) code; j:('a,int) code;
-  det:('a,'d ref) code; detsign:('a,'d ref) code};;
+type ('a,'b,'s,'w) binop = ('a,'b) code -> ('a,'b) code -> 
+      (('a,'b) code, 's,'w) monad
 
-type ('a,'b,'s,'w) cont = 's -> ('s -> ('a,'b) code -> 'w) -> 'w;;
-type ('a,'b,'s,'w) binop = ('a,'b) code -> ('a,'b) code -> 's ->
-             ('s -> ('a,'b) code -> 'w) -> 'w;;
-type ('a,'b,'s,'w) domain = {
-  zero:('a,'b) code; one:('a,'b) code;
-  minusone:('a,'b) code;
-  plus:('a,'b,'s,'w) binop;
-  times:('a,'b,'s,'w) binop;
-  times': ('a,'b) code -> ('a,'b) code -> ('a,'b) code;
-  minus:('a,'b,'s,'w) binop;
-  div:('a,'b,'s,'w) binop;
-  smaller_than:(('a,'b) code -> ('a,'b) code -> 
-                ('a,bool) code) option;
-  normalizerf:(('a,'b -> 'b) code ) option;
-  normalizerg:(('a,'b) code -> ('a,'b) code ) option;
-} ;;
+module type DOMAIN = sig
+  type v
+  type 'a vc = ('a,v) code
+  val zero : 'a vc
+  val one : 'a vc
+  val minusone : 'a vc
+  val plus : 'a vc -> 'a vc -> ('a vc, 's, 'w) monad
+  val times : 'a vc -> 'a vc -> ('a vc, 's, 'w) monad
+  val times : 'a vc -> 'a vc -> ('a vc, 's, 'w) monad
+  val minus : 'a vc -> 'a vc -> ('a vc, 's, 'w) monad
+  val div : 'a vc -> 'a vc -> ('a vc, 's, 'w) monad
+  val smaller_than : ('a vc -> 'a vc -> ('a,bool) code) option
+  val normalizerf : (('a,v -> v) code ) option
+  val normalizerg : ('a vc -> 'a vc ) option
+end 
 
-type ('b,'c) outputs = 
-    Matrix of 'b
-  | MatrixRank of 'b * int
-  | MatrixDet of 'b * 'c
-  | MatrixRankDet of 'b * int * 'c ;;
+module FloatDomain = 
+  struct
+    type v = float
+	type 'a vc = ('a,float) code
+    let zero = .< 0. >.  
+    let one = .< 1. >. 
+    let minusone = .< -1. >. 
+    let plus x y = ret .<.~x +. .~y>. 
+    let times x y = ret .<.~x *. .~y>.
+    let minus x y = ret .<.~x -. .~y>.
+    let div x y = ret .<.~x /. .~y>. 
+    let smaller_than = 
+       Some(fun x y -> .<abs_float .~x < abs_float .~y >.)
+    let normalizerf = None 
+    let normalizerg = None
+end
+
+module type OUTPUT = sig
+  type res
+  type out
+  type tdet
+  type ('a,'c) lstate = ('a,'c,tdet) state
+  val decl_det : unit -> (unit,('a,'c) lstate,('a,'w) code) monad
+  val acc_det : ('a,out) code -> (unit,('a,'c) lstate,('a,'w) code) monad
+  val fin_det : ('a,out) code -> (('a,res) code,('a,'c) lstate,'w) monad
+end;;
+
+module NoDetOUTPUT(Dom: DOMAIN) =
+  struct
+  type res = Dom.v
+  type out = Dom.v
+  type tdet = Dom.v
+  type ('a,'c) lstate = ('a,'c,tdet) state
+  let decl_det () = ret ()
+  let acc_det v = ret ()
+  let fin_det res = mdo {ret res}
+end
+
+module type RANK = sig
+  val succ_rank : unit -> (unit,('a,'c,'d) state,('a,int) code) monad
+  val fin_rank : unit -> (('a,int) code,('a,'c,'d) state,int) monad
+end;;
+
+module Rank = 
+  struct
+  let succ_rank () = mdo {
+      s <-- fetch;
+      res <-- retS .<(! .~s.r) + 1>. ;
+      codegen () (fun x -> .<begin .~(s.r) := .~res; .~x end>. ) }
+  let fin_rank () = mdo {
+      s <-- fetch;
+      codegen () (fun _ -> .< .~(s.r) >. ) }
+end
+
+module Gen(Dom: DOMAIN)(Out: OUTPUT with type out = Dom.v) =
+  struct
+    type v = Dom.v
+    let gen s k =
+	  let dogen a = mdo {
+	    () <-- Out.decl_det ();
+		res <-- retN Dom.minusone;
+		res <-- Out.fin_det res;
+		ret res } in
+	.<fun a -> .~(dogen .<a>. s k) >.
+end
+
+module Gen1 = Gen(FloatDomain)(NoDetOUTPUT(FloatDomain));;
+Gen1.gen () (fun s v -> v) ;;
 
 type outchoice = JustMatrix | Rank | Det | RankDet;;
 type dettrack = TrackNothing | TrackDet ;;
@@ -79,15 +147,8 @@ let mdapply1 mapper g c1 = match g with
   | Some f -> .< .~(mapper f c1) >.
   | None   -> c1 ;;
 
-let choose_output dom s = function
-  | JustMatrix -> .< Matrix (.~(s.b)) >.
-  | Rank       -> .< MatrixRank(.~( s.b), ! .~(s.r)) >.
-  | Det        -> .< MatrixDet( .~(s.b), 
-     dom.times' .<! .~(s.det)>. .<! .~(s.detsign)>. )>. 
-  | RankDet    -> .< MatrixRankDet( .~(s.b), (! .~(s.r)), dom.times' .<! .~(s.det)>. .<! .~(s.detsign)>. ) >.
-
-let ge_state_gen (dom:('a,'b,('a,'c,'b) state, ('a, unit) code) domain) 
-      contr findpivot swap zerobelow choice =
+(*
+let ge_state_gen dom contr findpivot swap zerobelow choice =
   let main_loop s = 
   .< while !(.~(s.c)) < .~(s.m) && !(.~(s.r)) < .~(s.n) do
     begin
@@ -119,8 +180,7 @@ let ge_state_gen (dom:('a,'b,('a,'c,'b) state, ('a, unit) code) domain)
           detsign <-- retS ref dom.one;
           i <-- retS .<0>.;
           j <-- retS .<0>.;
-          st <-- retS {b=b; r=r; c=c; m=m; n=n; det=det; 
-                       detsign=detsign; i=i; j=j};
+          st <-- retS {b=b; r=r; c=c; m=m; n=n; det=det; detsign=detsign};
           code <-- codegen st (fun st ->
             seq
               (main_loop st )
@@ -243,18 +303,6 @@ let specializer dom container ~fracfree ~outputs =
       return res } in
   gen [] (fun s v -> v) ;;
 
-let dom_float = { 
-   zero = .< 0. >. ; 
-   one = .< 1. >. ;
-   minusone = .< -1. >. ;
-   plus = (fun x y -> .<.~x +. .~y>.) ;
-   times = (fun x y -> .<.~x *. .~y>.) ;
-   minus = (fun x y -> .<.~x -. .~y>.) ;
-   div = (fun x y -> .<.~x /. .~y>.) ;
-   smaller_than = 
-       Some(fun x y -> .<abs_float .~x < abs_float .~y >.);
-   normalizerf = None ;
-   normalizerg = None };;
 
 let array_container = {
   get = (fun x n m -> .< (.~x).(.~n).(.~m) >. );
@@ -272,3 +320,4 @@ let spec_ge_float =
                 ~fracfree:false ~outputs:RankDet ;;
 
 let ge_float3 = .! spec_ge_float ;;
+*)
