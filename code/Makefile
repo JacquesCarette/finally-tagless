@@ -56,7 +56,7 @@ clean:
 ########################################################################
 
 %.cmo: %.ml
-	metaocamlc -pp '$(PP)' -c $<
+	metaocamlc -pp '$(PP)' -g -c $<
 
 %.out: test-%.ml %.cmo
 	metaocaml ./$*.cmo < $< > $@
