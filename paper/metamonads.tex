@@ -539,6 +539,78 @@ effect implemented via essentially delimited continuations (cite?).
 
 \section{Functors}\label{functors}
 
+Now that we know that we have the appropriate basic techniques for
+writing our code generators, we need to worry about modularizing them
+appropriately.  Here we can really take advantage of the fact that
+MetaOCaml is a staged language: it is not really relevant how much
+computation happens at staging time, as long as the generated code
+is correct and efficient.  In other words, we can use any abstraction
+mechanisms we want to structure our code generators, as long as none
+of those abstractions infiltrate the generated code.
+
+While the Object-Oriented Design community has acquired an extensive
+vocabulary for describing modularity ideas, the guiding principles for
+modular designs has not changed since they were first articulated by
+Parnas~\cite{journals/cacm/parnas72a} and Dijkstra~
+\cite{EWD:EWD447}: information hiding and separation of concerns.  To
+apply these principles to the study of Gaussian Elimination, we need
+to understand what changes between different implementations, and 
+what concerns need to be addressed.  We also need to study the degree
+to which these concerns are independent.
+
+A careful study of Gaussian Elimination \cite{carette04} shows that
+(at least) the following variations occur:
+\begin{enumerate}
+	\item \textbf{Domain}: In which (algebraic) domain do the matrix
+		elements belong to.  Some implementations were very specific
+		($\mathbb{Z}, \mathbb{Q}, \mathbb{Z_p}, 
+		\mathbb{Z}_p\left[\alpha_1,\ldots,\alpha_n\right], 
+		\mathbb{Z}\left[x\right]$, $\mathbb{Q}\left(x\right)$, 
+		$\mathbb{Q}\left[\alpha\right]$, and floating point numbers for 
+		example), while others were generic for elements of a field,
+		multivariate polynomials over a field, elements of a formal Ring
+		with possibly undecidable zero-equivalence, or elements of a 
+		Division Ring.  In the roughly 85 pieces of code surveyed,
+		20 different domains were encountered.
+	\item \textbf{Container}: Whether the matrix
+		was represented as an array of arrays, a one-dimensional array,
+		a hash table, a sparse matrix, etc., and
+		whether indexing was done in C or Fortran style.  Additionally,
+		if a particular representation had a special mechanism for efficient
+		row exchanges, this was sometimes used.  
+	\item \textbf{Output choices}:  Whether just the reduced matrix, or
+		additionally the rank, the determinant, and the
+		pivoting matrix were to be returned.
+		It is worthwhile noting that in the larger algorithm family,
+		routines like Maple's \texttt{LinearAlgebra:-LUDecomposition} have
+		up to $2^6 + 2^5 + 2^2 = 100$ possible outputs.
+	\item \textbf{Fraction-free}: Whether the Gaussian Elimination
+		algorithm is allowed to use unrestricted division, or only
+		exact (remainder-free) division.
+	\item \textbf{Pivoting}: Whether to use no pivoting at all, only
+		column-wise pivoting, or full pivoting.
+	\item \textbf{Augmented Matrices}: Whether we are doing GE on
+		a full matrix, or only a restricted number of columns, while
+		doing elimination on the full matrix.  Note that we currently
+		do not treat this aspect in our code.
+\end{enumerate}
+\noindent In addition to the above variations, there are two aspects that 
+recur frequently:
+\begin{enumerate}
+	\item \textbf{Length measure}:  For stability reasons
+		(whether numerical or coefficient growth), if a domain possesses
+		an appropriate length measure, this was sometimes used to choose
+		an ``optimal'' pivot for row exchanges.
+	\item \textbf{Normalization and zero-equivalence}: Whether the 
+		arithmetic operations of the domain at hand gives results in 
+		normalized form, and whether a specialized zero-equivalence 
+		routine needs to be used.
+\end{enumerate}
+\noindent These are separated out from the others are they are cross-cutting
+concerns: in the case of the length measure, then a property of the domain
+will influence the method used to do pivoting \textbf{if} pivoting is to be
+performed.
+
 Simple parameterization: by the domain, by the container
  
 Functors and the generated return type: the Out structure.
