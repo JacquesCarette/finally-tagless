@@ -11,8 +11,8 @@ SYNTAX_EXTENSION := ../camlp4/pa_monad2.cmo
 PP := camlp4o -I . $(SYNTAX_EXTENSION)
 
 OBJ  := funct1.cmo funct2.cmo funct3.cmo funct4.cmo
-TEST := funct1.out funct2.out funct3.out
-RES  := funct1.res funct2.res funct3.res
+TEST := funct1.out funct2.out funct3.out funct4.out
+RES  := funct1.res funct2.res funct3.res funct4.res
 #funct3.res 
 
 VERSION := 1.0
@@ -32,6 +32,7 @@ test: $(OBJ) $(RES) $(TEST)
 	diff funct1.out funct1.res
 	diff funct2.out funct2.res
 	diff funct3.out funct3.res
+	diff funct4.out funct4.res
 
 .PHONY: clean-test
 clean-test:

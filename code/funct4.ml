@@ -4,8 +4,9 @@ type ('v,'s,'w) monad = 's -> ('s -> 'v -> 'w) -> 'w
 
 let retS a = fun s k -> k s a
 let retN a = fun s k -> .<let t = .~a in .~(k s .<t>.)>.
-let bind a f = fun s k -> a s (fun s' b -> f b s' k) ;;
+let bind a f = fun s k -> a s (fun s' b -> f b s' k)
 let ret = retS
+let toRef x = .< ref .~x >. 
 
 (* state monad morphisms: 
  * get the values of the state which is still a record *)
@@ -15,12 +16,24 @@ type ('a,'c,'d) state = {b:('a,'c) code;
   det:('a,'d ref) code; detsign:('a,'d ref) code}
 
 let fetch s k = k s s
+let store st s k = k st ()
 
 (* another non-trivial morphism: generate a bit of code *)
 let codegen v cf = fun s k -> cf (k s v)
 
-let retLoop l h x = fun s k -> 
-    .< for j = .~l to .~h do .~(x .<j>. s k) done >.
+(* loops actually bind a value *)
+let retLoop low high body  = fun s k -> 
+    k s .< for j = .~low to .~high do .~(body .<j>. s k) done >.
+
+(* while ``loops'' do not naturally bind a value *)
+let retWhile cond body = fun s k -> k s .< while .~cond do .~body done >.
+
+(* various helper functions *)
+let mdapply1 mapper g c1 = match g with
+  | Some f -> .< .~(mapper f c1) >.
+  | None   -> c1 ;;
+
+let seq a b =  fun s k -> .< begin .~a ; .~b end >. ;;
 
 module type DOMAIN = sig
   type v
@@ -62,8 +75,8 @@ module type CONTAINER2D = sig
   type 'a vo = ('a,obj) code
   val get : 'a vc -> ('a,int) code -> ('a,int) code -> 'a vo
   val set : 'a vc -> ('a,int) code -> ('a,int) code -> 'a vo -> ('a,unit) code
-  val dim1 : 'a vc -> ('a,int) code
-  val dim2 : 'a vc -> ('a,int) code
+  val dim1 : 'a vc -> (('a,int) code, 's, 'w) monad
+  val dim2 : 'a vc -> (('a,int) code, 's, 'w) monad
   val mapper : ('a, obj->obj) code -> 'a vc -> 'a vc
   val copy : 'a vc -> 'a vc
 end
@@ -76,8 +89,8 @@ module ArrayContainer =
   type 'a vo = ('a,obj) code
   let get = (fun x n m -> .< (.~x).(.~n).(.~m) >. )
   let set = (fun x n m y -> .< (.~x).(.~n).(.~m) <- .~y >. )
-  let dim2 = (fun x -> .< Array.length .~x >.)
-  let dim1 = (fun x -> .< Array.length (.~x).(0) >. )
+  let dim2 x = retS .< Array.length .~x >.
+  let dim1 x = retS .< Array.length (.~x).(0) >.
   let mapper = (fun f a -> .< Array.map 
       (fun x -> Array.map .~f x) .~a >.)
   let copy = (fun a -> .<Array.map (fun x -> Array.copy x) 
@@ -124,14 +137,31 @@ end
 module Gen(Dom: DOMAIN)(Ctr: CONTAINER2D with type obj = Dom.v)(Out: OUTPUT with type res = Ctr.contr and type out = Dom.v and type tdet = Dom.v) =
   struct
     type v = Dom.v
-    let gen =
+    let gen ~fracfree:bool ~outputs:outchoice =
       let dogen a = mdo {
-        () <-- Out.decl_det ();
-        det <-- retN Dom.minusone;
-        res <-- Out.fin_det det a;
-        ret res }
+          r <-- retN (toRef .< 0 >.);
+          c <-- retN (toRef .< 0 >.);
+          b <-- retN (mdapply1 Ctr.mapper Dom.normalizerf (Ctr.copy a));
+          m <-- Ctr.dim1 a;
+          n <-- Ctr.dim2 a;
+          det <-- retN (toRef Dom.minusone);
+          detsign <-- retN (toRef Dom.one);
+          st <-- retS {b=b; r=r; c=c; m=m; n=n; 
+                       det=det; detsign=detsign};
+          _ <-- store st;
+          cond <-- retS .< !(.~r) < .~m && !(.~r) < .~n >.;
+          body <-- retS .< .~c := (! .~c) + 1>.;
+          code <-- retWhile cond body;
+            (* codegen () (fun _ -> );
+            seq
+              (main_loop st )
+              (choose_output dom st choice.outputs ) ); *)
+          () <-- Out.decl_det ();
+          res <-- Out.fin_det .<! .~det >. b;
+          res2 <-- seq code res;
+          ret res2 }
       and state a = {b = a; r = .< ref 0 >.; c = .< ref 0 >.;
-        m = .<0>.; n = .<0>.; det = .< ref .~Dom.one >.;
+        m = .<0>.; n = .<0>.; det = toRef Dom.one;
         detsign = .< ref .~Dom.one >. } 
       and k = (fun s v -> v) in
     .<fun a -> .~(dogen .<a>. (state .<a>.) k) >.
@@ -145,11 +175,11 @@ type dettrack = TrackNothing | TrackDet ;;
 type ge_choices = 
   {fracfree:bool; track:dettrack; outputs:outchoice} ;;
 
+(*
 let orcond_gen main_cond = function
   | Some alt_cond -> .< .~main_cond || .~alt_cond >.
   | None -> main_cond ;;
 
-let seq a b s k = k s .< begin .~a ; .~b end >. ;;
 let seq' a b  = .< begin .~a ; .~b end >. ;;
 
 let sapply2 g c1 c2 = match g with
@@ -160,11 +190,6 @@ let dapply1 g c1 = match g with
   | Some f -> f c1
   | None   -> c1 ;;
 
-let mdapply1 mapper g c1 = match g with
-  | Some f -> .< .~(mapper f c1) >.
-  | None   -> c1 ;;
-
-(*
 let ge_state_gen dom contr findpivot swap zerobelow choice =
   let main_loop s = 
   .< while !(.~(s.c)) < .~(s.m) && !(.~(s.r)) < .~(s.n) do
@@ -320,9 +345,6 @@ let specializer dom container ~fracfree ~outputs =
       return res } in
   gen [] (fun s v -> v) ;;
 
-
-let spec_ge_float = specializer dom_float array_container 
-                ~fracfree:false ~outputs:RankDet ;;
 
 let ge_float3 = .! spec_ge_float ;;
 *)
