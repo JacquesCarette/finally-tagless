@@ -63,12 +63,12 @@ We use monads and Ocaml's advanced module system to
 demonstrate that, in a generative context, it is
 possible to totally eliminate the overhead of abstraction.
 This lets one use extreme forms of \textit{information hiding}
-at no run-time cost. Furthermore the typed nature of
+at no run-time cost.  Furthermore the typed nature of
 the generative context provide static guarantees about the
-generated code. The various extensions
+generated code.  The various extensions
 (aspects) can be made completely orthogonal and compositional,
 even in the presence of name-generation for temporaries and
-other bindings and ``interleaving'' of aspects. We also
+other bindings and ``interleaving'' of aspects.  We also
 show how to encode some domain-specific knowledge so that
 ``clearly wrong'' compositions can be statically rejected by the
 compiler.
@@ -152,28 +152,28 @@ such tool: abstract interpretation.  But more problems remain:
 \jacques{can't find this 'Padua' paper at the 2004 Haskell Workshop 
 you refer to}: 
 \begin{itemize}
-	\item Generating names in the presence of ``if'', ``while'', and other
-		control operators. \cite{KiselyovTaha} showed how to solve
-		this problem in simple cases.
-	\item Making continuation-passing style (CPS) code clear.  Many
-		authors understandably shy away from CPS code as it quickly
-		becomes unreadable.  But this is needed for proper name
-		generation.
-	\item Compositionality of various interleaving aspects, as well
-		as expressing dependencies among them.  For example, if we
-		choose to compute the determinant of a matrix while performing
-		Gaussian Elimination, this requires inserting code in 
-		several specific places in the algorithm.  The method to
-		compute this determinant crucially depends on whether 
-		a division-based or a fraction-free Gaussian Elimination is
-		used.
-	\item As mentionned above, there are dependencies between
-		certain algorithmic choices and properties of the
-		underlying domain, and we would like to statically guarantee
-		that inappropriate combinations cannot be chosen.  For instance,
-		one should not attempt to use full division when dealing
-		with matrices of exact integers, nor is it worthwhile to use
-		full pivoting on a matrix of rational integers ($\mathbb Q $).
+    \item Generating names in the presence of ``if'', ``while'', and other
+        control operators. \cite{KiselyovTaha} showed how to solve
+        this problem in simple cases.
+    \item Making continuation-passing style (CPS) code clear.  Many
+        authors understandably shy away from CPS code as it quickly
+        becomes unreadable.  But this is needed for proper name
+        generation.
+    \item Compositionality of various interleaving aspects, as well
+        as expressing dependencies among them.  For example, if we
+        choose to compute the determinant of a matrix while performing
+        Gaussian Elimination, this requires inserting code in 
+        several specific places in the algorithm.  The method to
+        compute this determinant crucially depends on whether 
+        a division-based or a fraction-free Gaussian Elimination is
+        used.
+    \item As mentionned above, there are dependencies between
+        certain algorithmic choices and properties of the
+        underlying domain, and we would like to statically guarantee
+        that inappropriate combinations cannot be chosen.  For instance,
+        one should not attempt to use full division when dealing
+        with matrices of exact integers, nor is it worthwhile to use
+        full pivoting on a matrix of rational integers ($\mathbb Q $).
 \end{itemize}
 The question we want to answer is:
 Can we achieve all of the abstractions needed for a flexible 
@@ -198,11 +198,11 @@ resulting code.
 
 This work makes the following contributions:
 \begin{itemize}
-	\item orderly aspect weaving
-	\item mdo notation
-	\item use of monads for meta-programming
-	\item use of generative functors
-	\item use of type constraints to ensure correctness
+    \item orderly aspect weaving
+    \item mdo notation
+    \item use of monads for meta-programming
+    \item use of generative functors
+    \item use of type constraints to ensure correctness
 \end{itemize}
 
 The rest of this paper is structured as follows:
@@ -229,13 +229,14 @@ adapting camlp4 for use with MetaOCaml.
 
 The essence of our approach is assembling the code of the program by
 combining instances of various aspects together. In the case of
-Gaussian Elimination, the aspects are pivot determination, swapping of
+Gaussian Elimination, the algorithmic aspects are pivot determination, 
+swapping of
 rows and columns, determinant tracking, etc. A primitive code
 generator yields a code expression.  A combinator takes (complete and
 well-typed) code expressions and combines them into a composite expression
-(which is too statically guaranteed to be well-formed and well-typed).
+(which is also statically guaranteed to be well-formed and well-typed).
 
-We will be using MetaOcaml, which, as the instance of a multi-stage
+We will be using MetaOcaml which, as an instance of a multi-stage
 programming system \cite{TahaThesis}, provides exactly the needed
 features: to construct a code expression, to combine them, and to
 execute them.
@@ -245,8 +246,8 @@ For example, the following is probably the simplest code generator:
 let one = .<1>.
 \end{code}
 
-(in the floating-point instance of that aspect, we would have
-|.<1.0>.| instead). We use MetaOCaml brackets |.<...>.| to generate
+In the floating-point instance of that aspect, we would have
+|.<1.0>.| instead. We use MetaOCaml brackets |.<...>.| to generate
 code expressions -- in other words, to construct future-stage
 computations. The simplest combination is inlining:
 \begin{code}
@@ -270,7 +271,7 @@ Here, the immediate computation |gen .<x>. .<y>.| is less trivial --
 it includes the evaluation of the function |gen|, which in turn
 applies the function |plus|. The function receives code expressions
 |.<x>.| and |.<y>.| as arguments. At the generating stage, we can
-manipulate code expressions as values. The function |gen| returns a
+manipulate code expressions as (opaque) values. The function |gen| returns a
 code expression, which will be inlined in the place of the
 escape. MetaOCaml can print out code expressions, so we can see the
 final generated code:\\
@@ -278,7 +279,7 @@ final generated code:\\
 
 We must point out that |gen x y| looks like a combinator; its body 
 involves several applications of the function |plus|. When
-we look at the generated code however, we see no traces of function
+we look at the generated code however, we see no traces of the function
 |plus| and no such administrative applications. Instead, we see the
 fully inlined expression. These administative applications are done at
 the code generation stage. 
@@ -298,7 +299,7 @@ let simplest_param_code plus one =
   .<fun x y -> .~(gen .<x>. .<y>.)>.
 \end{code}
 
-and use it to generate code that operates on integers, floating point
+\noindent and use it to generate code that operates on integers, floating point
 numbers or booleans -- in general, any domain that implements |plus|
 and |one|:
 \begin{code}
@@ -308,9 +309,9 @@ let plus x y = .<.~x || .~y>. and one = .<true>. in
   simplest_param_code plus one
 \end{code}
 Running the former expression yields the function on |float|s, whereas
-the latter expression is the code expression for a bollean function.
+the latter expression is the code expression for a boolean function.
 
-We can see the separation of concerns, namely of that for domain
+This clearly shows the separation of concerns, namely of that for domain
 operations.
 
 Let us consider a more complex expression:
@@ -324,10 +325,10 @@ We notice two occurrences of |plus y one|. Depending on the
 implementation of |plus| that may be quite a complex computation, and
 so we would rather not do it twice. We may be tempted to rely on the
 compiler's common-subexpression elimination optimization. We would
-rather not relied on a ``sufficiently smart compiler'': when the
+rather not rely on a ``sufficiently smart compiler'': when the
 generated code is very complex, the compiler may overlook common
-subexpressions. The subexpressions may occur in such an imperative
-context that the compiler might not be able to determine if lifting
+subexpressions.  Or the subexpressions may occur in an imperative
+context where the compiler might not be able to determine if lifting
 them is sound. So, being conservative, the optimizer will leave the
 duplicates as they are. We may attempt to write
 
@@ -341,20 +342,20 @@ let param_code1 plus one =
 However, the result of |param_code1 plus one|, which prints as\\
 |.<fun x_1 -> fun y_2 -> ((y_2 + 1) + (x_1 + (y_2 + 1)))>.|,
 still exhibits duplicate sub-expressions. Our |let|-insertion
-optimization saved the computation on the generating stage. 
+optimization saved the computation at the generating stage. 
 We need a combinator that inserts the |let| expression in the
 generat\emph{ed} code. We need a combinator |letgen| to be used
 as\\|let ce = letgen (plus y one) in plus ce (plus x ce)| 
 yielding the code like |.<let t = y + 1 in t + (x + t)>.|
 But that seems impossible because |letgen exp| has to generate
-the expression\\|.<let t = exp in body>.| but |letgen| does not have
-the |body| yet. The body needs that temporary identifier |.<t>.| that
+the expression\\|.<let t = exp in body>.| although |letgen| does not have
+the |body| yet. The body needs a temporary identifier |.<t>.| that
 is supposed to be the result of |letgen| itself. 
-Certainly |letgen| cannot generate only a part of a let-expression,
-without the |body|.  All generated expressions in
+Certainly |letgen| cannot generate only part of a let-expression,
+without the |body|,  as all generated expressions in
 MetaOCaml are well-formed and complete.
 
-The key is to use continuation-passing style (CPS). It was first
+The key is to use continuation-passing style (CPS). Its benefits were first
 pointed out by \cite{Bondorf:92} in the context
 of partial evaluation, and extensively used by \cite{KiselyovTaha} for code
 generation.
@@ -370,7 +371,6 @@ let param_code2 plus one =
 Now, |param_code2 plus one| gives us the desired code\\
 |.<fun x_1 -> fun y_2 -> let t_3 = (y_2 + 1) in (t_3 + (x_1 + t_3))>.|.
 
-
 \section{Monadic notation, making CPS code clear}\label{monadicnotation}
 
 Comparing the code that did let-insertion at the generating stage\\
@@ -381,23 +381,22 @@ clearly shows the difference between the direct-style and CPS code.
 What was |let ce = init in ...| in direct style became
 |init' (fun ce -> ...)| in CPS. For one thing, |let| became
 inverted. For another, what used to be an expression that yields
-value, |init|, now became an expression that takes an extra argument,
+a value, |init|, now became an expression that takes an extra argument,
 the continuation, and invokes it. The differences look negligible in
 the above example. In larger expressions with many let-forms, the
-number of paranetheses around |fun| increases, the need to add and
-then invoke the |k|, continuation argument, become annoying. The
+number of parentheses around |fun| increases, the need to add and
+then invoke the |k| continuation argument become increasingly annoying. The
 inconvenience is great enough for some people to explicitly avoid CPS
 or claim that numerical programmers (our users) cannot or will not
 program in CPS. Clearly a better notation is needed.
 
-
-The |do|-notation of Haskell (cite report?) shows that it is possible
-to write essentially CPS code in the conventional-looking style. The
+The |do|-notation of Haskell \cite{Haskell98Report} shows that it is possible
+to write essentially CPS code in conventional-looking style. The
 |do| notation is the notation for writing monadic code (cite Moggi?).
 The benefit of monadic notation is not that it can represent CPS (cite
 Filinski), but it helps in composability by offering to add different
 layers of effects (state, exception, non-determinism, etc) to the
-basic monad (cite Hudak, Peyton-Jones).
+basic monad (cite Hudak, Peyton-Jones) in a controlled way.
 
 A monad (cite Moggi?) is an abstract datatype representing
 computations that yield a value and may have an \emph{effect}.
@@ -405,10 +404,10 @@ The datatype must have at least two operations, |return| to build
 trivial effect-less computations and |bind| for combining
 computations. These operations must satisfy \emph{monadic laws}:
 |return| being the left and the right unit of |bind| and |bind| being
-associative. Figure XXX defines the monad in the present paper
-and shows its implementation.
+associative. Figure~\ref{ourmonad} defines the monad used throughout
+the present paper and shows its implementation.
 
-\begin{figure*}
+\begin{figure*}\label{ourmonad}
 \begin{code}
 type ('v,'s,'w) monad = 's -> ('s -> 'v -> 'w) -> 'w
 let ret a = fun s k -> k s a
@@ -424,7 +423,7 @@ let l2 f = fun x y -> mdo { tx <-- x; ty <-- y; f tx ty}
 
 let retN a = fun s k -> .<let t = .~a in .~(k s .<t>.)>.
 
-let lif test th el = ret .< if .~test then .~th else .~el >.
+let ifL test th el = ret .< if .~test then .~th else .~el >.
 let ifM test th el = fun s k ->
   k s .< if .~(test s k0) then .~(th s k0) else .~(el s k0) >.
 \end{code}
@@ -438,28 +437,29 @@ in general, whenever a computation ends with something other than
 invoking its natural continuation in the tail position. In our case
 however the control effects manifest themselves as code generation.
 
-In Figure XXX, the monad is implemented as a function of two
+In Figure~\ref{ourmonad}, the monad is implemented as a function of two
 arguments: the state (of type |s|) and the continuation. The
 continuation receives the current state, the value (of the type |v|) and
 yields the answer of the type |w|.  The monad is polymorphic over all
-these three type parameters. Other implementations are
-possible. Except the code in Figure XXX, the rest of our code treats
-the monad as a truly abstract data type. The implementation of basic
+these three type parameters.  Other implementations are
+possible. Except for the code in Figure~\ref{ourmonad}, the rest of our code
+treats the monad as a truly abstract data type. The implementation of basic
 monadic operations |ret| and |bind| are conventional. It is easy to
-see that the monadic laws are satisfied. Other monadic operations
-construct computations that do have effects. Operations |fetch| and
+see that the monadic laws are satisfied.  Other monadic operations
+construct computations that do have effects.  Operations |fetch| and
 |store v| construct computations that read and write the state. In our
 case the state is a list (of polymorphic variants), which models an
 open discriminated union, as we shall see later.
 
-The operation |retN a| is the let-insertion operation (whose simpler
-version was called |letgen| before). It is the first computation with
+The operation |retN a| is the let-insertion operation, whose simpler
+version we called |letgen| earlier. It is the first computation with
 a control effect: indeed, the result of |retN a| is \emph{not} the
 result of invoking its continuation |k|. Rather, its result is a |let|
-code expression. Mention similarity with reset?
+code expression. \oleg{Mention similarity with reset?}
+\jacques{yes}
 
 Finally, |runM| runs our monad, that is, performs the computation of
-the monad and get the result, which in our case is the code
+the monad and gets the result, which in our case is the code
 expression. We run the monad by passing it the initial state and the
 initial continuation |k0|. We can now re-write our |param_code2|
 example of the previous section as
@@ -472,7 +472,7 @@ let param_code3 plus one =
 \end{code}
 % param_code3 plus one;;
 
-That does not seem like the improvement. But here we can introduce the
+That does not seem like much of an improvement. But here we can introduce the
 do notation (Appendix A), which is patterned after the do-notation of Haskell.
 
 \begin{code}
@@ -483,82 +483,59 @@ let param_code4 plus one =
 \end{code}
 
 The function |param_code4| is totally equivalent to |param_code3| --
-the |mdo|-notation is just the syntactic sugar. In fact, the camlp4
-preprocessor (with our extension) will transform the |param_code4|
-into |param_code3|. And yet, |param_code4| looks far more
+the |mdo|-notation is just syntactic sugar. In fact, the camlp4
+preprocessor (with our extension) will transform |param_code4|
+into exactly |param_code3|. And yet, |param_code4| looks far more
 conventional, as if it were indeed in direct style.
 
-\oleg{Should we rename lif into ifL?}
 We can write operations that generate code other than let-statements,
-e.g., conditionals: |lif| (Figure XXX). The function |lif|, albeit
-straightforward, is not as general as we wish: its argument are
+e.g., conditionals: see |ifL| in Figure~\ref{ourmonad}. The function |ifL|, 
+albeit straightforward, is not as general as we wish: its argument are
 already generated pieces of code rather than monadic values. So, we
-may want to ``lift it'', see |ifM'|:
-
+may want to ``lift it'':
 \begin{code}
 let ifM' test th el = mdo {
   testc <-- test;
   thc   <-- th;
   elc   <-- el;
-  lif testc thc elc}
+  ifL testc thc elc}
 \end{code}
 
-\omitnow{
-\begin{code}
-let ifM' test th el = bind test (fun testc ->
-                      bind th   (fun thc ->
-                      bind el   (fun elc ->
-		      lif testc thc elc)));;
-\end{code}
-}
-
-We can define functions |l1|, |l2|, |l3| (analogues of |liftM|,
+\noindent We can define functions |l1|, |l2|, |l3| (analogues of |liftM|,
 |liftM2|, |liftM3| of Haskell) to make such a lifting generic.
-We soon notice the need in another |ifM| function, with tha same
-interface (see ifM in Fig. XXX). The difference between them is
+We soon notice the need for another |ifM| function, with the same
+interface (see ifM in Figure~\ref{ourmonad}). The difference between them is
 apparent from the following:
-
 \begin{code}
 let gen a i = ifM' (ret .<(.~i) >= 0>.) (retN .<Some (.~a).(.~i)>.)
                            (ret .<None>.)
  in .<fun a i -> .~(runM (gen .<a>. .<i>.))>.
 ;;
-.<fun a_1 ->
-   fun i_2 ->
+.<fun a_1 -> fun i_2 ->
     let t_3 = (Some (a_1.(i_2))) in if (i_2 >= 0) then t_3 else (None)>.
 \end{code}
-
-whereas if we replace |ifM'| with |ifM|, the result will be
-
-\omitnow{
+\noindent whereas if we replace |ifM'| with |ifM|, the result will be
 \begin{code}
-let gen a i = ifM (ret .<(.~i) >= 0>.) (retN .<Some (.~a).(.~i)>.)
-                           (ret .<None>.)
- in .<fun a i -> .~(runM (gen .<a>. .<i>.))>.
-;;
-\end{code}
-}
-\begin{code}
-.<fun a_1 ->
-   fun i_2 ->
+.<fun a_1 -> fun i_2 ->
     if (i_2 >= 0) then let t_3 = (Some (a_1.(i_2))) in t_3 else (None)>.
 \end{code}
 
 The difference is apparent: in the code with |ifM'|, the let-insertion
 happend \emph{before} the if-expression, that is, before the test that
 the index |i| is positive. That is, if |i| turned out
-negative, |a.(i)| will generate the out-of-bound array access
+negative, |a.(i)| will generate an out-of-bound array access
 error. On the other hand, the code with |ifM| accesses the array only
 when we have verified that the index is non-negative. This example
 makes it clear that the code generation (such as the one in |retN|) is 
 truly an effect and we have to be clear about the sequencing of
-effects, when generating control constrcutions such as conditionals.
+effects, when generating control constructions such as conditionals.
 The form |ifM| handles the such effects correctly. In our code, we
 need similar operators for other Ocaml control forms: for generating
 case-matching statements and for- and while-loops. To make writing
 such code general and independent of the implementation of the monad,
 we define a function XXX. As the name implies, we do use control
 effect implemented via essentially delimited continuations (cite?).
+\jacques{yes!}
 
 \section{Functors}\label{functors}
 
