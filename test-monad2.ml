@@ -9,14 +9,29 @@ let test_simple_expression () =
   mdo { mret true }
 
 
-let test_one_element_list () =
-  let ret x = x
-  and bind ma fmb = fun state -> let result, newstate = ma state in fmb result newstate
+let test_state1 () =
+  let ret x = fun state -> (x,state)
+  and bind ma fmb = fun state -> let result, newstate = ma state in 
+                                 fmb result newstate
   and update newval = fun state -> state, newval
   and fetch = fun state -> state, state in
     let multiplier factor =
       mdo { result <-- fetch ;
-            mret (update (factor * result)) } in
+	    _ <-- update (factor * result);
+	    mret result } in
+        multiplier 2 3
+
+let test_state2 () =
+  let ret x = fun state -> (x,state)
+  and bind ma fmb = fun state -> let result, newstate = ma state in 
+                                 fmb result newstate
+  and update newval = fun state -> state, newval
+  and fetch = fun state -> state, state in
+    let multiplier factor =
+      mdo { result <-- fetch ;
+	    _ <-- update (factor * result);
+	    result <-- fetch;
+	    mret result } in
         multiplier 2 3
 
 
@@ -25,7 +40,30 @@ let test_two_element_list () =
   and bind xs f = List.concat (List.map f xs) in
     mdo { a <-- [1; 2; 3] ;
           b <-- [3; 4; 5] ;
-          mret a+b }
+          mret a-b } (* negation is not commutative, and more illustrative*)
+
+(* State monad with a single-threaded updateable state *)
+class state_cl (iv:int) istate =
+   object (s:'s)
+     val mutable v = iv
+     val mutable state = istate
+     method set_v newv = (v <- newv; s)
+     method mfetch = (v <- state; s)
+     method mupdate nv = (v <- state; state <- nv; s)
+     method bind (fn:int->'s) = fn v
+     method result = (v,state)
+   end
+
+let test_state3 () =
+  let the_state = new state_cl 0 3 in
+  let ret = the_state#set_v in
+  let fetch = the_state#mfetch in
+  let update = the_state#mupdate in
+  let multiplier factor =
+      odo { result <-- fetch ;
+	    _ <-- (update (factor * result));
+	    mret (ret result) } in
+        (multiplier 2) # result
 
 
 let _ =
@@ -37,10 +75,13 @@ let _ =
 
 let all_tests () =
   test_simple_expression () &&
-  test_one_element_list () = (3, 6) &&
-  test_two_element_list () = [4; 5; 6; 5; 6; 7; 6; 7; 8] 
+  test_state1 () = (3, 6) &&
+  test_state2 () = (6, 6) &&
+  test_state3 () = (3, 6) &&
+  test_two_element_list () = [-2; -3; -4; -1; -2; -3; 0; -1; -2]
 
 
+(* *)
 let (_: unit) =
   match all_tests () with
       true -> exit 0
