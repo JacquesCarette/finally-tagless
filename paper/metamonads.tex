@@ -886,6 +886,19 @@ In this paper we do not use monadic fixpoints (because the generator
 is not recursive) but we make extensive use of monadic operations for
 generating conditional and looping operations.
 
+Mention |Blitz++| and template meta-programming. Can do similar
+eliminating of abstraction. Can even encode some domain-specific
+knowledge in the form of concepts. But inlining critically depends on
+the compiler's fully inlining of all methods. Furthermore, all errors
+(such as type errors and concept violation errors, that is,
+composition errors) are detected only when compiling the generated
+code. It is immensely difficult to correlate errors (e.g., line numbers) 
+to the ones in the generator itself. Furthermore, I think templates
+can't be local, right? So, a lot of code generation is spread around
+file-level entities. 
+
+SPIRAL does the intentional code analysis. Probably ATLAS as well.
+
 \jacques{What do we consider \emph{related work} here?  Do we essentially gloss 
 over related work in numerical software, code generation in general,
 aspect-oriented stuff?  We don't want this section to be too long, but
