@@ -82,13 +82,14 @@ module type DOMAIN = sig
   val normalizerg : 'a vc -> 'a vc
 end 
 
-(* use this type if a DOMAIN is a field, anything else otherwise *)
-type domainkind = Field 
+(* The kind of the domain: a ring or a field *)
+type domain_is_field (* abstract *)
+type domain_is_ring  (* abstract *)
 
 module FloatDomain = 
   struct
     type v = float
-    type kind = domainkind
+    type kind = domain_is_field
     type 'a vc = ('a,v) code
     let zero = .< 0. >.  
     let one = .< 1. >. 
@@ -105,7 +106,7 @@ end
 module IntegerDomain = 
   struct
     type v = int
-    type kind = unit (* could use Ring instead *)
+    type kind = domain_is_ring
     type 'a vc = ('a,v) code
     let zero = .< 0 >.  
     let one = .< 1 >. 
@@ -122,7 +123,7 @@ end
 module RationalDomain = 
   struct
     type v = Num.num
-    type kind = domainkind
+    type kind = domain_is_field
     type 'a vc = ('a,v) code
     let zero = let zero = Num.num_of_int 0 in .< zero >.  
     let one = let one = Num.num_of_int 1 in .< one >. 
@@ -155,13 +156,13 @@ end
 
 module GenericArrayContainer(Dom:DOMAIN) =
   struct
-  type contr = Dom.v array array
+  type contr = Dom.v array array (* Array of rows *)
   type 'a vc = ('a,contr) code
   type 'a vo = ('a,Dom.v) code
   let get x n m = ret .< (.~x).(.~n).(.~m) >.
   let set x n m y = ret .< (.~x).(.~n).(.~m) <- .~y >.
-  let dim2 x = .< Array.length .~x >.
-  let dim1 x = .< Array.length (.~x).(0) >.
+  let dim2 x = .< Array.length .~x >.       (* number of rows *)
+  let dim1 x = .< Array.length (.~x).(0) >. (* number of cols *)
   let mapper g a = match g with
       | Some f -> .< Array.map (fun x -> Array.map .~f x) .~a >.
       | None   -> a
@@ -185,6 +186,7 @@ module GenericArrayContainer(Dom:DOMAIN) =
       done  >.
 end
 
+(* Matrix layed out row after row, in a C fashion *)
 type 'a container2dfromvector = {arr:('a array); n:int; m:int}
 
 module GenericVectorContainer(Dom:DOMAIN) =
@@ -206,22 +208,22 @@ module GenericVectorContainer(Dom:DOMAIN) =
       for i = 0 to m-1 do
           let t = a.(i1 + i) in
           begin 
-              a.(i2 + i) <- a.(i1 + i);
-              a.(i1 + i) <- t
+              a.(i1 + i) <- a.(i2 + i);
+              a.(i2 + i) <- t
           end
       done  >.
   let swap_cols_stmt b c1 c2 = .<
-      let a = (.~b).arr and n = (.~b).n and m = (.~b).m in
-      let i1 = .~c1 and i2 = .~c2 in
-      let j = ref 0 in
-      for i = 0 to n-1 do
-          let t = a.(i1 + !j) in
-          begin 
-              a.(i2 + !j) <- a.(i1 + !j);
-              a.(i1 + !j) <- t;
-              j := !j + m
-          end
-      done  >.
+      let a = (.~b).arr and nm = (.~b).n * (.~b).m and m = (.~b).m in
+      let rec loop i1 i2 =
+	if i2 < nm then
+	  let t = a.(i1) in
+	  begin
+	    a.(i1) <- a.(i2);
+	    a.(i2) <- t;
+	    loop (i1 + m) (i2 + m)
+	  end
+      in loop .~c1 .~c2
+     >.
 end
 
 (* set up some very general algebra that can be reused though not
@@ -396,7 +398,9 @@ module type UPDATE = sig
 end
 
 (* What is the update formula? *)
-module DivisionUpdate(Dom:DOMAIN with type kind = domainkind)(C:CONTAINER2D)
+module DivisionUpdate
+    (Dom:DOMAIN with type kind = domain_is_field)
+    (C:CONTAINER2D)
     (Det:DETERMINANT with type indet=Dom.v) = 
   struct
   module Ctr = C(Dom)
@@ -438,8 +442,10 @@ type perm = RowSwap of (int * int) | ColSwap of (int * int)
 module type TRACKPIVOT = sig
   type 'a lstate
   val decl : unit -> (unit,[> `TPivot of 'a lstate] list,('a,'w) code) monad
-  val add : ('a,perm) code -> (('a,unit) code,[> `TPivot of 'a lstate] list,('a,'w) code) monad
-  val fin : unit -> (('a,perm list) code ,[> `TPivot of 'a lstate] list,'w) monad
+  val add : ('a,perm) code -> 
+    (('a,unit) code,[> `TPivot of 'a lstate] list,('a,'w) code) monad
+  val fin : unit -> 
+    (('a,perm list) code ,[> `TPivot of 'a lstate] list,'w) monad
 end
 
 module TrackPivot = 
@@ -484,7 +490,9 @@ module type OUTPUT = sig
   module R : RANK
   module P : TRACKPIVOT
   val make_result : ('a,contr) code -> 
-    (('a,res) code,[> `TDet of 'a D.lstate | `TRan of 'a R.lstate | `TPivot of 'a P.lstate] list,
+    (('a,res) code,
+     [> `TDet of 'a D.lstate | `TRan of 'a R.lstate | `TPivot of 'a P.lstate]
+       list,
      ('a,'w) code) monad
 end
 
@@ -607,10 +615,10 @@ struct
                 (fun pv ->
                      mdo {
                          (i,bic) <-- ret (liftPair pv);
-                 seqM (whenM (ret .< .~i <> .~r >. )
+                         seqM (whenM (ret .< .~i <> .~r >. )
                                 (seqM 
                                    (ret (Ctr.swap_rows_stmt b r i))
-                   (D.upd_sign ())))
+                                   (D.upd_sign ())))
                               (ret .<Some .~bic>.)})
                 (ret .< None >.))
    }
