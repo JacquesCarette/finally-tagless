@@ -6,7 +6,8 @@ let retS a = fun s k -> k s a
 let retN a = fun s k -> .<let t = .~a in .~(k s .<t>.)>.
 let bind a f = fun s k -> a s (fun s' b -> f b s' k)
 let ret = retS
-let toRef x = .< ref .~x >. 
+let liftRef x = .< ref .~x >. 
+let liftGet x = .< ! .~x >. 
 
 (* state monad morphisms: 
  * get the values of the state which is still a record *)
@@ -16,24 +17,24 @@ type ('a,'c,'d) state = {b:('a,'c) code;
   detsign:('a,'d ref) code}
 
 let fetch s k = k s s
-let store st s k = k st ()
 
 (* another non-trivial morphism: generate a bit of code *)
 let codegen v cf = fun s k -> cf (k s v)
 
 (* loops actually bind a value *)
-let retLoop low high body  = fun s k -> 
-    k s .< for j = .~low to .~high do .~(body .<j>. s k) done >.
+let retLoop low high (body:('a,'b) code -> ('a,'c) code)  = fun s k -> 
+    k s .< for j = .~low to .~high do .~(body .<j>.) done >.
 
 (* while ``loops'' do not naturally bind a value *)
-let retWhile cond body = fun s k -> k s .< while .~cond do .~body done >.
+let retWhile cond (body:('a,'b) code) = fun s k -> 
+    k s .< while .~cond do .~body done >.
 
 (* various helper functions *)
 let mdapply1 mapper g c1 = match g with
   | Some f -> .< .~(mapper f c1) >.
   | None   -> c1 ;;
 
-let seq a b =  fun s k -> .< begin .~a ; .~b end >. ;;
+let seq a b = fun s k -> k s .< begin .~a ; .~b end >.
 
 module type DOMAIN = sig
   type v
@@ -46,7 +47,7 @@ module type DOMAIN = sig
   val times : 'a vc -> 'a vc -> ('a vc, 's, 'w) monad
   val minus : 'a vc -> 'a vc -> ('a vc, 's, 'w) monad
   val div : 'a vc -> 'a vc -> ('a vc, 's, 'w) monad
-  val smaller_than : ('a vc -> 'a vc -> ('a,bool) code) option
+  val smaller_than : 'a vc -> 'a vc -> (('a,bool) code, 's, 'w) monad 
   val normalizerf : (('a,v -> v) code ) option
   val normalizerg : ('a vc -> 'a vc ) option
 end 
@@ -62,8 +63,7 @@ module FloatDomain =
     let times x y = ret .<.~x *. .~y>.
     let minus x y = ret .<.~x -. .~y>.
     let div x y = ret .<.~x /. .~y>. 
-    let smaller_than = 
-       Some(fun x y -> .<abs_float .~x < abs_float .~y >.)
+    let smaller_than x y = retS .<abs_float .~x < abs_float .~y >.
     let normalizerf = None 
     let normalizerg = None
 end
@@ -75,8 +75,8 @@ module type CONTAINER2D = sig
   type 'a vo = ('a,obj) code
   val get : 'a vc -> ('a,int) code -> ('a,int) code -> 'a vo
   val set : 'a vc -> ('a,int) code -> ('a,int) code -> 'a vo -> ('a,unit) code
-  val dim1 : 'a vc -> (('a,int) code, 's, 'w) monad
-  val dim2 : 'a vc -> (('a,int) code, 's, 'w) monad
+  val dim1 : 'a vc -> ('a,int) code
+  val dim2 : 'a vc -> ('a,int) code
   val mapper : ('a, obj->obj) code -> 'a vc -> 'a vc
   val copy : 'a vc -> 'a vc
 end
@@ -87,14 +87,21 @@ module ArrayContainer =
   type contr = float array array
   type 'a vc = ('a,contr) code
   type 'a vo = ('a,obj) code
-  let get = (fun x n m -> .< (.~x).(.~n).(.~m) >. )
-  let set = (fun x n m y -> .< (.~x).(.~n).(.~m) <- .~y >. )
-  let dim2 x = retS .< Array.length .~x >.
-  let dim1 x = retS .< Array.length (.~x).(0) >.
+  let get x n m = .< (.~x).(.~n).(.~m) >.
+  let set x n m y = .< (.~x).(.~n).(.~m) <- .~y >.
+  let dim2 x = .< Array.length .~x >.
+  let dim1 x = .< Array.length (.~x).(0) >.
   let mapper = (fun f a -> .< Array.map 
       (fun x -> Array.map .~f x) .~a >.)
   let copy = (fun a -> .<Array.map (fun x -> Array.copy x) 
                        (Array.copy .~a) >. )
+end
+
+module Logic = 
+    struct
+    let code_or a b = if a = .< true >. then b
+                      else if b = .< true >. then a
+                      else .< .~a || .~b >.
 end
 
 module type OUTPUT = sig
@@ -105,7 +112,7 @@ module type OUTPUT = sig
   val decl_det : unit -> (unit,('a,'c) lstate,('a,'w) code) monad
   val acc_det : ('a,out) code -> (unit,('a,'c) lstate,('a,'w) code) monad
   val fin_det : ('a,res) code -> (('a,res) code,('a,'c) lstate,('a,'w) code) monad
-end;;
+end
 
 module AbstractNoDetOUTPUT(Dom: DOMAIN)(Ctr: CONTAINER2D with type obj = Dom.v) =
   struct
@@ -121,42 +128,50 @@ end
 module NoDetOutput = AbstractNoDetOUTPUT(FloatDomain)(ArrayContainer)
 
 module type RANK = sig
-  val succ_rank : unit -> (('a,unit) code,('a,'c,'d) state,('a,'w) code) monad
-  val fin_rank : unit -> (('a,int) code,('a,'c,'d) state,int) monad
+  val succ_rank : ('a,int ref) code -> (('a,unit) code,('a,'c,'d) state,('a,'w) code) monad
+  val fin_rank : ('a, int ref) code -> (('a,int) code,('a,'c,'d) state,int) monad
 end;;
 
 module Rank = 
   struct
-  let succ_rank () = mdo {
-      s <-- fetch;
-      retS .<.~s.r := (! .~s.r) + 1>. }
-  let fin_rank () = mdo {
-      s <-- fetch;
-      retS .<! .~(s.r) >. }
+  let succ_rank r = retS .<.~r := (! .~r) + 1>.
+  let fin_rank r = retS .<! .~r >.
 end
 
 module Gen(Dom: DOMAIN)(Ctr: CONTAINER2D with type obj = Dom.v)(Rk:RANK)(Out: OUTPUT with type res = Ctr.contr and type out = Dom.v and type tdet = Dom.v) =
   struct
     type v = Dom.v
     let gen ~fracfree:bool ~outputs:outchoice =
+      let findpivot_gen b r n c = mdo {
+          i <-- retN (liftRef .< -1 >. );
+		  let bd j = mdo {
+			  bjc <-- retS (Ctr.get b j c);
+			  iv <-- retS (liftGet i);
+			  bic <-- retS (Ctr.get b iv c);
+			  cond2 <-- Dom.smaller_than bjc bic;
+			  cond3 <-- retS (Logic.code_or .< .~iv == -1 >. cond2);
+			  res2 <-- retS .< if .~cond3 then .~i := .~j >.;
+			  res <-- retS .< if not ( .~bjc = .~Dom.zero) then .~res2 >. ;
+			  retS res} in;
+          let bd2 j = bd j () (fun s k -> k) in;
+          loop <-- retLoop r .<.~n-1>. bd2;
+          ending <-- retS .< if (! .~i) == -1 then None else Some ! .~i >. ;
+          res <-- seq loop ending; 
+		  ret res } in
       let dogen a = mdo {
-          r <-- retN (toRef .< 0 >.);
-          c <-- retN (toRef .< 0 >.);
+          r <-- retN (liftRef .< 0 >.);
+          c <-- retN (liftRef .< 0 >.);
           b <-- retN (mdapply1 Ctr.mapper Dom.normalizerf (Ctr.copy a));
-          m <-- Ctr.dim1 a;
-          n <-- Ctr.dim2 a;
+          m <-- retN (Ctr.dim1 a);
+          n <-- retN (Ctr.dim2 a);
           () <-- Out.decl_det ();
-          detsign <-- retN (toRef Dom.one);
-          st <-- retS {b=b; r=r; c=c; m=m; n=n; 
-                       detsign=detsign};
-          _ <-- store st;
           cond <-- retS .< !(.~r) < .~m && !(.~r) < .~n >.;
-          body <-- Rk.succ_rank ();
+          body <-- mdo {
+              pivot <-- findpivot_gen b (liftGet r) n (liftGet c);
+              incr_rk <-- Rk.succ_rank r;
+              res <-- seq pivot incr_rk;
+              ret res };
           code <-- retWhile cond body;
-            (* codegen () (fun _ -> );
-            seq
-              (main_loop st )
-              (choose_output dom st choice.outputs ) ); *)
           res <-- Out.fin_det b;
           res2 <-- seq code res;
           ret res2 }
@@ -248,20 +263,6 @@ let swapr_gen dom contr track = fun i j ->
     | TrackNothing -> swap
     | TrackDet     -> t ) } ;;
 
-let findpivot_gen dom contr orcond_gen = fun s k ->
-  .< let i = ref (-1) in begin 
-    for j = ! .~s.r to .~s.n-1 do
-      if not ( .~(contr.get .< .~s.b>. .<j>. 
-                 .<!( .~s.c)>. ) = .~(dom.zero)) then 
-        if (.~(orcond_gen .< !i = (-1) >.
-          (sapply2 dom.smaller_than 
-            .< .~(contr.get .< .~s.b>. .<j>. .<! .~s.c>. )>.
-            .< .~(contr.get .< .~s.b>. .<!i>. .<! .~s.c>. )>.
-            ))) then
-          i := j;
-      done;
-      if !i == -1 then None else Some !i;
-  end >. ;;
 
 let zerobelow_gen dom contr choice =
   let inner_loop i = 
