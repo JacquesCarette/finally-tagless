@@ -572,22 +572,24 @@ module IDet = AbstractDet(IntegerDomain)
 module type PIVOT = 
     functor (Dom: DOMAIN) -> 
       functor (Ctr: CONTAINER2D with type obj = Dom.v) -> 
+	functor (D: DETERMINANT with type indet = Dom.v) -> 
 sig
  (* Find the pivot within [r,m-1] rows and [c,(n-1)] columns
     of containrer b.
     If pivot is found, permute the matrix rows and columns so that the pivot
     becomes the element (r,c) of the matrix,
-    Return the value of the (parity,pivot) option. Or zero?
-    Here, parity is 1 if any swap was done.
+    Return the value of the pivot option. Or zero?
+    When we permute the rows of columns, we update the sign of the det.
  *)
  val findpivot : 'a Ctr.vc -> ('a,int) code -> ('a,int) code -> 
    ('a,int) code -> ('a,int) code ->
-   (('a,(int * Ctr.obj) option) code,'s,('a,'w) code) monad
+   (('a,Ctr.obj option) code,[> `TDet of 'a D.lstate] list,('a,'w) code) monad
 end
 
 module RowPivot
    (Dom: DOMAIN) 
-   (Ctr: CONTAINER2D with type obj = Dom.v) =
+   (Ctr: CONTAINER2D with type obj = Dom.v)
+   (D:   DETERMINANT with type indet = Dom.v) =
 struct
    let findpivot b r m c n = mdo {
        pivot <-- retN (liftRef .< None >. );
@@ -606,18 +608,19 @@ struct
                 (fun pv ->
                      mdo {
                          (i,bic) <-- ret (liftPair pv);
-                          ifM (ret .< .~i <> .~r >. )
-                              (seqM 
-                                (ret (Ctr.swap_rows_stmt b r i))
-                                (ret .<Some (1,.~bic)>.))
-                              (ret .<Some (0,.~bic)>.)})
+		         seqM (whenM (ret .< .~i <> .~r >. )
+                                (seqM 
+                                   (ret (Ctr.swap_rows_stmt b r i))
+				   (D.upd_sign ())))
+                              (ret .<Some .~bic>.)})
                 (ret .< None >.))
    }
 end
 
 module FullPivot
    (Dom: DOMAIN) 
-   (Ctr: CONTAINER2D with type obj = Dom.v) =
+   (Ctr: CONTAINER2D with type obj = Dom.v)
+   (D:   DETERMINANT with type indet = Dom.v) =
 struct
    let findpivot b r m c n = mdo {
        pivot <-- retN (liftRef .< None >. );
@@ -638,18 +641,17 @@ struct
                 (fun pv ->
                      mdo {
                          (pr,pc,brc) <-- ret (liftPPair pv);
-                         parity <-- retN (liftRef .< 0 >. );
                          seqM
                              (whenM (ret .< .~pc <> .~c >. )
                                  (seqM
                                    (ret (Ctr.swap_cols_stmt b c pc))
-                                   (ret .<.~parity := (! .~parity) + 1>.)))
+                                   (D.upd_sign ())))
                            (seqM
                              (whenM (ret .< .~pc <> .~c >. )
                                  (seqM
                                    (ret (Ctr.swap_rows_stmt b r pr))
-                                   (ret .<.~parity := (! .~parity) + 1>.)))
-                              (ret .<Some ((! .~parity),.~brc)>.))})
+                                   (D.upd_sign ())))
+                              (ret .<Some .~brc>.))})
                 (ret .< None >.))
    }
 end
@@ -660,7 +662,7 @@ module Gen(Dom: DOMAIN)
           (Update: GEUPDATE with type baseobj = Dom.v and type ctr = Ctr.contr)
           (Out: OUTPUT with type contr = Ctr.contr and type D.indet = Ctr.obj and type 'a D.lstate = 'a Update.D.lstate) =
    struct
-    module Pivot = PivotF(Dom)(Ctr)
+    module Pivot = PivotF(Dom)(Ctr)(Out.D)
     type v = Dom.v
     let gen =
       let zerobelow b r c m n =
@@ -674,15 +676,11 @@ module Gen(Dom: DOMAIN)
         mdo {
               seqM (retLoopM .<.~r+1>. .<.~n-1>. innerbody) 
                    (l1 Update.update_det (Ctr.get b r c)) } in
-      let somg b c m n = fun pvp -> mdo {
-          (parity,pv) <-- ret (liftPair pvp);
+      let somg b c m n = fun pv -> mdo {
           r <-- Out.R.rfetch ();
+	  (* could save fetching b[r,c], which is pv here *)
           seqM (zerobelow b (liftGet r) (liftGet c) m n)
-            (* Should upd_sign take the arg -- how much to update? *)
-            (* The loop should be run 0 times if parity =0 and 
-               once if parity=1 --> loop from 1 to parity *)
-            (seqM (retLoopM .<1>. parity (fun j -> Update.D.upd_sign()))
-                  (Out.R.succ ())) }
+               (Out.R.succ ()) }
       and non = Update.D.zero_sign () in
       let dogen a = mdo {
           r <-- Out.R.decl ();
@@ -706,6 +704,7 @@ module GenFA1 = Gen(FloatDomain)
                    (RowPivot)
                    (DivisionUpdate(FloatDomain)(FArrayContainer)(NoDet(FloatDomain)))
                    (OutJustMatrix(FArrayContainer)(NoDet(FloatDomain)))
+
 module GenFA11 = Gen(FloatDomain)
                    (FArrayContainer)
                    (FullPivot)
