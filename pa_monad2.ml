@@ -141,7 +141,7 @@ EXTEND
 
     monadic_binding:
     [ 
-      [ "let"; l = LIST1 Pcaml.let_binding SEP "and"; "end" ->
+      [ "let"; l = LIST1 Pcaml.let_binding SEP "and"; "in" ->
 	BindL(l) ]
     | 
       [ x = Pcaml.expr LEVEL "expr1" ->

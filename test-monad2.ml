@@ -49,8 +49,8 @@ let test_state21 () =
   and fetch = fun state -> state, state in
     let multiplier factor =
       mdo { result <-- fetch ;
-	    let updater f = update (f * result) end;
-	    _ <-- updater factor;
+	    let updater f = update (f * result) in ;
+	    x <-- updater factor;
 	    fetch } in
         multiplier 2 3
 
@@ -92,7 +92,7 @@ let simple_mdo () =
 
 let simple_let_mdo () =
     let ret x = x and bind a f = f a in
-  mdo { let a = 1 and b = 2 end;
+  mdo { let a = 1 and b = 2 in;
         _ <-- a+b ;
         ret b }
 
