@@ -129,7 +129,7 @@ module GenericArrayContainer(Dom:DOMAIN) =
                        (Array.copy .~a) >. )
 end
 
-module GenericVectorContainer(Dom:DOMAIN):CONTAINER2D =
+module GenericVectorContainer(Dom:DOMAIN) =
   struct
   type obj = Dom.v
   type contr = {arr:(obj array); n:int; m:int}
@@ -459,6 +459,8 @@ module Gen1 = Gen(FloatDomain)(FArrayContainer)(OutJustMatrix(FArrayContainer))
 module Gen2 = Gen(FloatDomain)(FArrayContainer)(OutDet(FArrayContainer)(FDet))
 module Gen3 = Gen(IntegerDomain)(IArrayContainer)(OutRank(IArrayContainer)(Rank));;
 module Gen4 = Gen(IntegerDomain)(IArrayContainer)(OutDetRank(IArrayContainer)(IDet)(Rank));;
+module Gen5 = Gen(IntegerDomain)(IVectorContainer)(OutRank(IVectorContainer)(Rank));;
+module Gen6 = Gen(IntegerDomain)(IVectorContainer)(OutDetRank(IVectorContainer)(IDet)(Rank));;
 
 type ge_choices = {fracfree:bool}
 
