@@ -10,12 +10,10 @@ let test_simple_expression () =
 
 let brt = .< 0 >. ;;
 
-(*
-let test_brackets =
-  let ret x = x in
+let test_brackets () =
+  let ret x = x and bind x f = x in
     mdo { y <-- .< 0 >. ;
-          mret y }
-*)
+          ret y }
 
 let test_state1 () =
   let ret x = fun state -> (x,state)
@@ -73,7 +71,7 @@ let test_state3 () =
         (multiplier 2) # result
 
 
-let _ =
+let simple_mdo () =
     let ret x = x and bind a f = f a in
   mdo { _ <-- 1+2 ; 
         ret 2 }
@@ -81,11 +79,13 @@ let _ =
 (* main *)
 
 let all_tests () =
+  .! (test_brackets ()) = 0 &&
   test_simple_expression () &&
   test_state1 () = (3, 6) &&
   test_state2 () = (6, 6) &&
   test_state3 () = (3, 6) &&
-  test_two_element_list () = [-2; -3; -4; -1; -2; -3; 0; -1; -2]
+  test_two_element_list () = [-2; -3; -4; -1; -2; -3; 0; -1; -2] &&
+  simple_mdo () = 2
 
 
 (* *)
