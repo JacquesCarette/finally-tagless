@@ -13,7 +13,7 @@ let toRef x = .< ref .~x >.
 type ('a,'c,'d) state = {b:('a,'c) code; 
   r:('a,int ref) code; c:('a,int ref) code; 
   m:('a,int) code; n:('a,int) code;
-  det:('a,'d ref) code; detsign:('a,'d ref) code}
+  detsign:('a,'d ref) code}
 
 let fetch s k = k s s
 let store st s k = k st ()
@@ -104,10 +104,10 @@ module type OUTPUT = sig
   type ('a,'c) lstate = ('a,'c,tdet) state
   val decl_det : unit -> (unit,('a,'c) lstate,('a,'w) code) monad
   val acc_det : ('a,out) code -> (unit,('a,'c) lstate,('a,'w) code) monad
-  val fin_det : ('a,out) code -> ('a,res) code -> (('a,res) code,('a,'c) lstate,'w) monad
+  val fin_det : ('a,res) code -> (('a,res) code,('a,'c) lstate,('a,'w) code) monad
 end;;
 
-module NoDetOUTPUT(Dom: DOMAIN)(Ctr: CONTAINER2D with type obj = Dom.v) =
+module AbstractNoDetOUTPUT(Dom: DOMAIN)(Ctr: CONTAINER2D with type obj = Dom.v) =
   struct
   type res = Ctr.contr
   type out = Dom.v
@@ -115,11 +115,13 @@ module NoDetOUTPUT(Dom: DOMAIN)(Ctr: CONTAINER2D with type obj = Dom.v) =
   type ('a,'c) lstate = ('a,'c,tdet) state
   let decl_det () = ret ()
   let acc_det v = ret ()
-  let fin_det det res = mdo {ret res}
+  let fin_det res = mdo {ret res}
 end
 
+module NoDetOutput = AbstractNoDetOUTPUT(FloatDomain)(ArrayContainer)
+
 module type RANK = sig
-  val succ_rank : unit -> (unit,('a,'c,'d) state,('a,int) code) monad
+  val succ_rank : unit -> (('a,unit) code,('a,'c,'d) state,('a,'w) code) monad
   val fin_rank : unit -> (('a,int) code,('a,'c,'d) state,int) monad
 end;;
 
@@ -127,14 +129,13 @@ module Rank =
   struct
   let succ_rank () = mdo {
       s <-- fetch;
-      res <-- retS .<(! .~s.r) + 1>. ;
-      codegen () (fun x -> .<begin .~(s.r) := .~res; .~x end>. ) }
+      retS .<.~s.r := (! .~s.r) + 1>. }
   let fin_rank () = mdo {
       s <-- fetch;
-      codegen () (fun _ -> .< .~(s.r) >. ) }
+      retS .<! .~(s.r) >. }
 end
 
-module Gen(Dom: DOMAIN)(Ctr: CONTAINER2D with type obj = Dom.v)(Out: OUTPUT with type res = Ctr.contr and type out = Dom.v and type tdet = Dom.v) =
+module Gen(Dom: DOMAIN)(Ctr: CONTAINER2D with type obj = Dom.v)(Rk:RANK)(Out: OUTPUT with type res = Ctr.contr and type out = Dom.v and type tdet = Dom.v) =
   struct
     type v = Dom.v
     let gen ~fracfree:bool ~outputs:outchoice =
@@ -144,30 +145,28 @@ module Gen(Dom: DOMAIN)(Ctr: CONTAINER2D with type obj = Dom.v)(Out: OUTPUT with
           b <-- retN (mdapply1 Ctr.mapper Dom.normalizerf (Ctr.copy a));
           m <-- Ctr.dim1 a;
           n <-- Ctr.dim2 a;
-          det <-- retN (toRef Dom.minusone);
+          () <-- Out.decl_det ();
           detsign <-- retN (toRef Dom.one);
           st <-- retS {b=b; r=r; c=c; m=m; n=n; 
-                       det=det; detsign=detsign};
+                       detsign=detsign};
           _ <-- store st;
           cond <-- retS .< !(.~r) < .~m && !(.~r) < .~n >.;
-          body <-- retS .< .~c := (! .~c) + 1>.;
+          body <-- Rk.succ_rank ();
           code <-- retWhile cond body;
             (* codegen () (fun _ -> );
             seq
               (main_loop st )
               (choose_output dom st choice.outputs ) ); *)
-          () <-- Out.decl_det ();
-          res <-- Out.fin_det .<! .~det >. b;
+          res <-- Out.fin_det b;
           res2 <-- seq code res;
           ret res2 }
       and state a = {b = a; r = .< ref 0 >.; c = .< ref 0 >.;
-        m = .<0>.; n = .<0>.; det = toRef Dom.one;
-        detsign = .< ref .~Dom.one >. } 
+        m = .<0>.; n = .<0>.; detsign = .< ref .~Dom.one >. } 
       and k = (fun s v -> v) in
     .<fun a -> .~(dogen .<a>. (state .<a>.) k) >.
 end
 
-module Gen1 = Gen(FloatDomain)(ArrayContainer)(NoDetOUTPUT(FloatDomain)(ArrayContainer));;
+module Gen1 = Gen(FloatDomain)(ArrayContainer)(Rank)(NoDetOutput);;
 
 type outchoice = JustMatrix | Rank | Det | RankDet;;
 type dettrack = TrackNothing | TrackDet ;;
