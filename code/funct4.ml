@@ -460,7 +460,7 @@ module type UPDATE = sig
 end
 
 (* What is the update formula? *)
-module DivisionUpdate(Dom:DOMAIN)(C:CONTAINER2D)
+module DivisionUpdate(Dom:DOMAIN with type v = float)(C:CONTAINER2D)
     (Det:DETERMINANT with type indet=Dom.v) = 
   struct
   module Ctr = C(Dom)
@@ -722,6 +722,14 @@ module GenFV4 = Gen(FloatDomain)
                    (RowPivot)
                    (DivisionUpdate(FloatDomain)(GenericVectorContainer)(FDet))
                    (OutDetRank(FloatDomain)(GenericVectorContainer)(FDet)(Rank));;
+
+(* But this is an error!
+module GenIA1 = Gen(IntegerDomain)
+                   (GenericArrayContainer)
+                   (RowPivot)
+                   (DivisionUpdate(IntegerDomain)(GenericArrayContainer)(IDet))
+                   (OutJustMatrix(IntegerDomain)(GenericArrayContainer)(IDet));;
+*)
 module GenIA1 = Gen(IntegerDomain)
                    (GenericArrayContainer)
                    (RowPivot)
