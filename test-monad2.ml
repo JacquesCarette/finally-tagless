@@ -131,7 +131,9 @@ let test_nondet () =
                   guard (j>0);
                   k <-- numb;
                   guard (k>0);
-                  guard (i*i = j*j + k*k);
+                  (* Just to illustrate the `let' form within mdo *)
+                  let test x = x*x = j*j + k*k in;
+                  guard (test i);
 		  ret (i,j,k)
                 } 
   in run 7 tst
