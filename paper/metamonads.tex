@@ -562,25 +562,26 @@ A careful study of Gaussian Elimination \cite{carette04} shows that
 (at least) the following variations occur:
 \begin{enumerate}
 	\item \textbf{Domain}: In which (algebraic) domain do the matrix
-		elements belong to.  Some implementations were very specific
-		($\mathbb{Z}, \mathbb{Q}, \mathbb{Z_p}, 
+		elements belong to.  Sometimes the domains are very specific
+		($\mathbb{Z}, \mathbb{Q}, \mathbb{Z}_p, 
 		\mathbb{Z}_p\left[\alpha_1,\ldots,\alpha_n\right], 
 		\mathbb{Z}\left[x\right]$, $\mathbb{Q}\left(x\right)$, 
 		$\mathbb{Q}\left[\alpha\right]$, and floating point numbers for 
-		example), while others were generic for elements of a field,
+		example), while in other cases the domains were left generic,
+		namely for elements of a field,
 		multivariate polynomials over a field, elements of a formal Ring
 		with possibly undecidable zero-equivalence, or elements of a 
 		Division Ring.  In the roughly 85 pieces of code surveyed,
 		20 different domains were encountered.
 	\item \textbf{Container}: Whether the matrix
-		was represented as an array of arrays, a one-dimensional array,
+		is represented as an array of arrays, a one-dimensional array,
 		a hash table, a sparse matrix, etc., and
-		whether indexing was done in C or Fortran style.  Additionally,
+		whether indexing is done in C or Fortran style.  Additionally,
 		if a particular representation had a special mechanism for efficient
-		row exchanges, this was sometimes used.  
+		row exchanges, this is sometimes used.  
 	\item \textbf{Output choices}:  Whether just the reduced matrix, or
 		additionally the rank, the determinant, and the
-		pivoting matrix were to be returned.
+		pivoting matrix are to be returned.
 		It is worthwhile noting that in the larger algorithm family,
 		routines like Maple's \texttt{LinearAlgebra:-LUDecomposition} have
 		up to $2^6 + 2^5 + 2^2 = 100$ possible outputs.
@@ -599,7 +600,7 @@ recur frequently:
 \begin{enumerate}
 	\item \textbf{Length measure}:  For stability reasons
 		(whether numerical or coefficient growth), if a domain possesses
-		an appropriate length measure, this was sometimes used to choose
+		an appropriate length measure, this is sometimes used to choose
 		an ``optimal'' pivot for row exchanges.
 	\item \textbf{Normalization and zero-equivalence}: Whether the 
 		arithmetic operations of the domain at hand gives results in 
@@ -611,8 +612,140 @@ concerns: in the case of the length measure, then a property of the domain
 will influence the method used to do pivoting \textbf{if} pivoting is to be
 performed.
 
-Simple parameterization: by the domain, by the container
- 
+The simplest parametrization is to make the domain abstract.  As it 
+turns out, we need the following to exist in our domains:  $0$, $1$,
+$+$, $*$, (unary and binary) $-$, some kind of division, normalization,
+and potentially a relative size measure.  We definitely need at least
+\emph{exact} division to exist, but if full division is available, than
+can be used as well.  Normalization is frequently trivial for domains
+where elements have unique representations, but in many applications
+we have domains (like polynomials in sum-of-product form) where this
+is not the case.  This leads us to defining a |DOMAIN| type as
+\begin{small}
+\begin{code}
+module type DOMAIN = sig
+  type v
+  type kind (* Field or Ring ? *)
+  type 'a vc = ('a,v) code
+  val zero : 'a vc
+  val one : 'a vc
+  val plus : 'a vc -> 'a vc -> ('a vc, 's, 'w) monad
+  val times : 'a vc -> 'a vc -> ('a vc, 's, 'w) monad
+  val minus : 'a vc -> 'a vc -> ('a vc, 's, 'w) monad
+  val uminus : 'a vc -> ('a vc, 's, 'w) monad
+  val div : 'a vc -> 'a vc -> ('a vc, 's, 'w) monad
+  val better_than : ('a vc -> 'a vc -> 
+      (('a,bool) code, 's, 'w) monad) option
+  val normalizerf : (('a,v -> v) code ) option
+  val normalizerg : 'a vc -> 'a vc
+end 
+\end{code}
+\end{small}
+\noindent  The first item to notice is that the types above are
+generally lifted twice: once from the value domain |v| to the code
+domain |'a vc|, and once more from values to monadic computations
+|('a vc, 's, 'w) monad|.  Since there are times where we don't want
+to redundantly walk a whole matrix to apply normalization when 
+normalization is not necessary, |normalizerf| is optional.
+
+For example, when lifted to a |DOMAIN|, the type |int| becomes
+\begin{small}
+\begin{code}
+module IntegerDomain = struct
+    type v = int
+    type kind = domain_is_ring
+    type 'a vc = ('a,v) code
+    let zero = .< 0 >.  
+    let one = .< 1 >. 
+    let plus x y = ret .<.~x + .~y>. 
+    let times x y = ret .<.~x * .~y>.
+    let minus x y = ret .<.~x - .~y>.
+    let uminus x = ret .< - .~x>.
+    let div x y = ret .<.~x / .~y>. 
+    let better_than = Some (fun x y -> ret .<abs .~x > abs .~y >. )
+    let normalizerf = None 
+    let normalizerg = fun x -> x
+end
+\end{code}
+\end{small}
+\noindent While the |DOMAIN| type may have looked daunting to some, 
+the implementation is quite straightforward.  It is equally simple to 
+make implementations for |float| and for |Num.num| (arbitrary precision
+exact rational numbers).  With scarcely more work (as these are not 
+built-in and the arithmetic must be implemented), $\mathbb{Z}_p$,
+$\mathbb{Z}\left[x\right]$, $\mathbb{Q}\left(x\right)$ and more
+complex domains can be done as well.
+
+Parametrizing by the kind of container used to represent a matrix is
+almost as straightforward.  We choose to make the container parametric
+over a |DOMAIN| by making containers functors from a |DOMAIN| module
+to the actual implementation of a container.  Our containers are
+explicitly 2-dimensional, and we provide functions |dim1| and |dim2|
+to extract each.  We also need |get| and |set| functions -- these come
+in both a monadic flavour as well as a direct code-generation version.
+For convenience and efficiency, several additional functions are also
+required: a way to |copy| a container, a method (|mapper|) to map an
+optional function over the elements of a container, as well as methods
+to swap rows and columns.  The inclusion of these functions in the 
+signature of all containers makes it simpler to optimize the relevant
+functions depending on the actual representation of the container
+while not burdening the users of containers with efficiency details.
+As an example, below is an implementation of a matrix as an
+array of rows (themselves arrays).  This implementation clearly shows
+how swapping rows is more efficient than swapping columns in this
+representation.  We have not (yet) implemented the further potential
+optimization wherein if it is known that part of two rows/columns are already
+known to be equal (in fact to |Dom.zero| in the case of GE) and
+row/column exchange needs to be performed element-wise, then certain
+swaps are unecessary.
+
+\begin{small}
+\begin{code}
+module GenericArrayContainer(Dom:DOMAIN) =
+  struct
+  type contr = Dom.v array array (* Array of rows *)
+  type 'a vc = ('a,contr) code
+  type 'a vo = ('a,Dom.v) code
+  let get' x n m = .< (.~x).(.~n).(.~m) >.
+  let get x n m = ret (get' x n m)
+  let set' x n m y = .< (.~x).(.~n).(.~m) <- .~y >.
+  let set x n m y = ret (set' x n m y)
+  let dim2 x = .< Array.length .~x >.       (* number of rows *)
+  let dim1 x = .< Array.length (.~x).(0) >. (* number of cols *)
+  let mapper g a = match g with
+      | Some f -> .< Array.map (fun x -> Array.map .~f x) .~a >.
+      | None   -> a
+  let copy = (fun a -> .<Array.map (fun x -> Array.copy x) 
+                       (Array.copy .~a) >. )
+  (* this can be optimized with a swap_rows_from if it is known that
+     everything before that is already = Dom.zero *)
+  let swap_rows_stmt a r1 r2 =
+      .< let t = (.~a).(.~r1) in
+         begin 
+             (.~a).(.~r1) <- (.~a).(.~r2);
+             (.~a).(.~r2) <- t
+         end >.
+  let swap_cols_stmt a c1 c2 = .< 
+      for r = 0 to .~(dim2 a)-1 do
+          let t = (.~a).(r).(.~c1) in
+          begin 
+              (.~a).(r).(.~c1) <- (.~a).(r).(.~c2);
+              (.~a).(r).(.~c2) <- t
+          end
+      done  >.
+end
+\end{code}
+\end{small}
+\noindent  Implementing other containers based on flattened vectors,
+Fortran-style access, |Bigarray| or |Bigarray.Array2| is also possible.
+Naturally, for proper use of |Bigarray| with specific types, it is 
+important that the |DOMAIN| type matches -- but luckily the compiler 
+will prevent us from making such a mistake.
+
+The use of a |functor| for making a container parametric is fairly 
+straightforward.  It gets more interesting when one turns to the aspect
+of what to return from the GE algorithm.
+
 Functors and the generated return type: the Out structure.
 
 Making state modular and composable: several aspects can contribute
