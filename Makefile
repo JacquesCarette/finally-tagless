@@ -16,7 +16,7 @@ SYNTAX_EXTENSION := pa_monad2.cmo
 
 PP := camlp4o -I . $(SYNTAX_EXTENSION)
 
-TEST := test-monad2
+TEST := test-monad2 tt
 
 DISTNAME := monad-function
 
@@ -35,7 +35,8 @@ all: $(TEST)
 
 .PHONY: test
 test: all
-	./$(TEST)
+	./test-monad2
+	./tt
 
 
 .PHONY: pretty-print
@@ -55,21 +56,25 @@ clean:
 
 ########################################################################
 #
-# Implicit Rules
+# Explicit and Implicit Rules
 #
 ########################################################################
 
-pa_%.cmo: pa_%.ml
+pa_monad2.cmo: pa_monad2.ml
 	ocamlc -c -pp 'camlp4o pa_extend.cmo q_MLast.cmo' -I +camlp4 $<
 
+
+test3.cmo: test3.ml pa_monad2.cmo
+	metaocamlc -c -pp 'camlp4o pa_extend.cmo q_MLast.cmo ./pa_monad2.cmo' -I +camlp4 $<
 
 %-pretty-print.ml: %.ml
 	$(PP) pr_o.cmo $< > $@
 
+tt: tt.ml test3.cmo
+	metaocamlc ./test3.cmo -o $@ $<
 
 %: %.ml
-	ocamlc -pp '$(PP)' -o $@ $<
-
+	metaocamlc -pp '$(PP)' -o $@ $<
 
 ########################################################################
 #

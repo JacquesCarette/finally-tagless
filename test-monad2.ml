@@ -8,6 +8,14 @@ let test_simple_expression () =
     let ret x = x in
   mdo { mret true }
 
+let brt = brackets 0 ;;
+
+(*
+let test_brackets =
+  let ret x = x in
+    mdo { y <-- .< 0 >. ;
+          mret y }
+*)
 
 let test_state1 () =
   let ret x = fun state -> (x,state)

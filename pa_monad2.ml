@@ -55,11 +55,17 @@ let process loc bt b =
     | (Binding(_,_)::_) -> failwith "ends with a binding"
     | (Exec(_)::_) -> failwith "does not end with an mret"
 
+(*
+let expand_code loc e =
+  MLast.ExCod (loc, e)
+*)
+
 EXTEND
     GLOBAL: Pcaml.expr;
 
-    Pcaml.expr: AFTER "expr1"
+    Pcaml.expr: LEVEL "expr1"
     [
+(*      [ ".<"; x = SELF; ">." -> expand_code loc x ] | *)
       [ "mdo"; "{";
         bindings = LIST1 monadic_binding SEP ";"; "}" ->
             process loc Global bindings
@@ -75,8 +81,7 @@ EXTEND
       [ p = Pcaml.patt; "<--"; x = Pcaml.expr LEVEL "expr1" ->
           Binding(p,x) ]
       | 
-      [ "mret"; x = Pcaml.expr LEVEL "expr1" -> Last(x) ]
-(*      | 
-      [ x = Pcaml.expr LEVEL "expr1" -> Exec(x) ] *)
+      [ "mret"; x = Pcaml.expr -> Last(x) ]
     ] ;
 END;
+
