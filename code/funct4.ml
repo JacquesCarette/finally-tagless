@@ -68,6 +68,7 @@ let retUnit = fun s k -> k s .< () >.
 (* Define the actual module types and instances *)
 module type DOMAIN = sig
   type v
+  type kind (* Field or Ring ? *)
   type 'a vc = ('a,v) code
   val zero : 'a vc
   val one : 'a vc
@@ -81,9 +82,13 @@ module type DOMAIN = sig
   val normalizerg : 'a vc -> 'a vc
 end 
 
+(* use this type if a DOMAIN is a field, anything else otherwise *)
+type domainkind = Field 
+
 module FloatDomain = 
   struct
     type v = float
+    type kind = domainkind
     type 'a vc = ('a,v) code
     let zero = .< 0. >.  
     let one = .< 1. >. 
@@ -100,6 +105,7 @@ end
 module IntegerDomain = 
   struct
     type v = int
+    type kind = unit (* could use Ring instead *)
     type 'a vc = ('a,v) code
     let zero = .< 0 >.  
     let one = .< 1 >. 
@@ -116,6 +122,7 @@ end
 module RationalDomain = 
   struct
     type v = Num.num
+    type kind = domainkind
     type 'a vc = ('a,v) code
     let zero = let zer = Num.num_of_int 0 in .< zer >.  
     let one = let one = Num.num_of_int 1 in .< one >. 
@@ -460,7 +467,7 @@ module type UPDATE = sig
 end
 
 (* What is the update formula? *)
-module DivisionUpdate(Dom:DOMAIN with type v = float)(C:CONTAINER2D)
+module DivisionUpdate(Dom:DOMAIN with type kind = domainkind)(C:CONTAINER2D)
     (Det:DETERMINANT with type indet=Dom.v) = 
   struct
   module Ctr = C(Dom)
@@ -546,6 +553,10 @@ end
 module FDet = AbstractDet(FloatDomain)
 module IDet = AbstractDet(IntegerDomain)
 
+(* This type is needed for the output, and is tracked during
+   pivoting. *)
+type perm = RowSwap of (int * int) | ColSwap of (int * int)
+ 
 module type PIVOT = 
     functor (Dom: DOMAIN) -> 
       functor (C: CONTAINER2D) ->
