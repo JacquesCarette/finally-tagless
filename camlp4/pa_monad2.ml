@@ -76,7 +76,7 @@ EXTEND
           Binding(p,x) ]
       | 
       [ "mret"; x = Pcaml.expr LEVEL "expr1" -> Last(x) ]
-      | 
-      [ x = Pcaml.expr LEVEL "expr1" -> Exec(x) ]
+(*      | 
+      [ x = Pcaml.expr LEVEL "expr1" -> Exec(x) ] *)
     ] ;
 END;
