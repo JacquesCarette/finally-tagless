@@ -11,6 +11,7 @@
 \usepackage{amsmath,amssymb}
 \usepackage{amstext}
 \usepackage{url}
+\usepackage[dvips]{color}
 
 
 \usepackage{ifpdf}
@@ -23,7 +24,8 @@
 
 \usepackage{fancyvrb}
 \DefineShortVerb{\|}
-\DefineVerbatimEnvironment{code}{Verbatim}{xleftmargin=\mathindent}
+\DefineVerbatimEnvironment{code}{Verbatim}{xleftmargin=\mathindent,commandchars=\\\{\}}
+\newcommand{\evalresult}[1]{\ensuremath{\Longrightarrow}\textcolor{red}{#1}}
 \setlength{\parskip}{0pt}
 \newlength{\mathindent}
 \setlength{\mathindent}{1em}
@@ -207,7 +209,7 @@ This work makes the following contributions:
 The rest of this paper is structured as follows:
 The next section introduces code generation in MetaOCaml, the problem
 of name generation, and how continuation-passing style is a general
-tool for solving that problem.  Section~\ref{monadicnotation} introduces
+tool for solving that problem.  We also introduce
 the monad that greatly simplifies the task of dealing with
 possibly effect-inducing CPS code combinators.  Section~\ref{functors}
 shows how one can use the advanced module system of OCaml, namely its
@@ -221,6 +223,896 @@ and MetaOCaml.
 
 The first author wishes to thank Cristiano Calgano for his help in
 adapting camlp4 for use with MetaOCaml.
+
+\section{The problem of generating names, CPS, and monad}\label{CPS}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% And now, a better -- and shorter -- write-up.
+
+The essence of our approach is assembling the code of the program by
+combining instances of various aspects together. In the case of
+Gaussian Elimination, the algorithmic aspects are pivot determination, 
+swapping of
+rows and columns, determinant tracking, etc. A primitive code
+generator yields a code expression.  A combinator takes (complete and
+well-typed) code expressions and combines them into a composite expression
+(which is also statically guaranteed to be well-formed and well-typed).
+
+We will be using MetaOcaml which, as an instance of a multi-stage
+programming system \cite{TahaThesis}, provides exactly the needed
+features: to construct a code expression, to combine them, and to
+execute them. The figure XXX shows the simplest code generator |one|,
+and more complex generators.
+
+\begin{figure*}
+\begin{code}
+let one = .<1>. and plus x y = .<.~x + .~y>.
+let simplest_code = let gen x y = plus x (plus y one) in
+  .<fun x y -> .~(gen .<x>. .<y>.)>.
+\evalresult{.<fun x_1 -> fun y_2 -> (x_1 + (y_2 + 1))>.}
+let simplest_param_code plus one = let gen x y = plus x (plus y one) in
+  .<fun x y -> .~(gen .<x>. .<y>.)>.
+let plus x y = .<.~x +. .~y>. and one = .<1.0>. in
+  simplest_param_code plus one
+let param_code1 plus one =
+  let gen x y = plus (plus y one) (plus x (plus y one)) in
+  .<fun x y -> .~(gen .<x>. .<y>.)>.
+let param_code1' plus one =
+  let gen x y = let ce = (plus y one) in  plus ce (plus x ce) in
+  .<fun x y -> .~(gen .<x>. .<y>.)>.
+param_code1' plus one
+\evalresult{.<fun x_1 -> fun y_2 -> ((y_2 + 1) + (x_1 + (y_2 + 1)))>.}
+\end{code}
+\caption{Code generation and combinators. $\Longrightarrow$ shows the
+  result of the evaluation of the preceeding expression}
+\end{figure*}
+
+We use MetaOCaml brackets |.<...>.| to generate code expressions -- in
+other words, to construct future-stage computations. We use escapes
+|.~| to perform an immediate code generating computation while we are
+building the future-stage computation (code expression). The immediate
+computation in |simplest_code| includes the evaluation of the function
+|gen|, which in turn applies the function |plus|. The function
+receives code expressions |.<x>.| and |.<y>.| as arguments. At the
+generating stage, we can manipulate code expressions as (opaque)
+values. The function |gen| returns a code expression, which will be
+inlined in the place of the escape. MetaOCaml can print out code
+expressions, so we can see the final generated code, It has
+no traces of the functions |gen| and |plus|: their applications are
+done at the code generation stage. 
+
+The final MetaOCaml feature, |.!| (pronounced ``run'') 
+executes the code expression: |.! simplest_code| is a function of two
+integers, which we can apply: |(.! simplest_code) 1 2|. The original
+|simplest_code| is not the function on integers -- it is a code
+expression.
+
+To see the benefit of code generation, we notice that we can easily
+parameterize our code, |simplest_param_code|, and use it to generate
+code that operates on integers, floating point numbers or booleans --
+in general, any domain that implements |plus| and |one|.
+
+A more complex expression |param_code1| has two occurrences of 
+|plus y one|. Depending on the implementation of |plus| that may be quite a
+complex computation, and so we would rather not do it twice. We may be
+tempted to rely on the compiler's common-subexpression elimination
+optimization. We would rather not rely on a ``sufficiently smart
+compiler'': when the generated code is very complex, the compiler may
+overlook common subexpressions.  Or the subexpressions may occur in an
+imperative context where the compiler might not be able to determine
+if lifting them is sound. So, being conservative, the optimizer will
+leave the duplicates as they are. We may attempt to eliminate
+subexpressions as in |param_code1'|. However, the result of
+|param_code1' plus one| still exhibits duplicate sub-expressions. 
+Our |let|-insertion
+optimization saved the computation at the generating stage. 
+We need a combinator that inserts the |let| expression in the
+generat\emph{ed} code. We need a combinator |letgen| to be used
+as\\|let ce = letgen (plus y one) in plus ce (plus x ce)| 
+yielding the code like |.<let t = y + 1 in t + (x + t)>.|
+But that seems impossible because |letgen exp| has to generate
+the expression\\|.<let t = exp in body>.| although |letgen| does not have
+the |body| yet. The body needs a temporary identifier |.<t>.| that
+is supposed to be the result of |letgen| itself. 
+Certainly |letgen| cannot generate only part of a let-expression,
+without the |body|,  as all generated expressions in
+MetaOCaml are well-formed and complete.
+
+The key is to use continuation-passing style (CPS). Its benefits were first
+pointed out by \cite{Bondorf:92} in the context
+of partial evaluation, and extensively used by \cite{KiselyovTaha} for code
+generation. Now, |param_code2 plus one| gives us the desired code. 
+
+\begin{small}
+\begin{code}
+let letgen exp k = .<let t = .~exp in .~(k .<t>.)>.
+let param_code2 plus one =
+  let gen x y k = letgen (plus y one) (fun ce -> k (plus ce (plus x ce)))
+  and k0 x = x
+  in .<fun x y -> .~(gen .<x>. .<y>. k0)>.
+param_code2 plus one
+\evalresult{.<fun x_1 -> fun y_2 -> let t_3 = (y_2 + 1) in (t_3 + (x_1 + t_3))>.}
+\end{code}
+\end{small}
+
+Comparing the code that did let-insertion at the generating stage\\
+|let ce = (plus y one) in  plus ce (plus x ce)|\\
+with the corresponding code inserting let at the generated code stage\\
+|letgen (plus y one) (fun ce -> k (plus ce (plus x ce)))|\\
+clearly shows the difference between the direct-style and CPS code.
+What was |let ce = init in ...| in direct style became
+|init' (fun ce -> ...)| in CPS. For one thing, |let| became
+inverted. For another, what used to be an expression that yields
+a value, |init|, now became an expression that takes an extra argument,
+the continuation, and invokes it. The differences look negligible in
+the above example. In larger expressions with many let-forms, the
+number of parentheses around |fun| increases, the need to add and
+then invoke the |k| continuation argument become increasingly annoying. The
+inconvenience is great enough for some people to explicitly avoid CPS
+or claim that numerical programmers (our users) cannot or will not
+program in CPS. Clearly a better notation is needed.
+
+The |do|-notation of Haskell \cite{Haskell98Report} shows that it is possible
+to write essentially CPS code in conventional-looking style. The
+|do| notation is the notation for writing monadic code \cite{moggi-notions}.
+The benefit of monadic notation is not that it can represent CPS \cite{Filinski:Representing}, but it helps in composability by offering to add different
+layers of effects (state, exception, non-determinism, etc) to the
+basic monad \cite{liang-interpreter} in a controlled way.
+
+A monad \cite{moggi-notions} is an abstract datatype representing
+computations that yield a value and may have an \emph{effect}.
+The datatype must have at least two operations, |return| to build
+trivial effect-less computations and |bind| for combining
+computations. These operations must satisfy \emph{monadic laws}:
+|return| being the left and the right unit of |bind| and |bind| being
+associative. Figure~\ref{ourmonad} defines the monad used throughout
+the present paper and shows its implementation.
+
+\begin{figure*}\label{ourmonad}
+\begin{code}
+type ('v,'s,'w) monad = 's -> ('s -> 'v -> 'w) -> 'w
+let ret a = fun s k -> k s a
+let bind a f = fun s k -> a s (fun s' b -> f b s' k)
+let fetch s k = k s s
+let store v s k = k (v::s) ()
+
+let k0 s v = v
+let runM m = m [] k0
+
+let l1 f = fun x -> mdo { t <-- x; f t}
+let l2 f = fun x y -> mdo { tx <-- x; ty <-- y; f tx ty}
+
+let retN a = fun s k -> .<let t = .~a in .~(k s .<t>.)>.
+
+let ifL test th el = ret .< if .~test then .~th else .~el >.
+let ifM test th el = fun s k ->
+  k s .< if .~(test s k0) then .~(th s k0) else .~(el s k0) >.
+\end{code}
+\caption{Our monad}
+\end{figure*}
+
+Our monad represents two kinds of computational effects: reading and
+writing a computation-wide state, and control effects. The latter are
+normally associated with exceptions, forking of computations, etc. --
+in general, whenever a computation ends with something other than
+invoking its natural continuation in the tail position. In our case
+however the control effects manifest themselves as code generation.
+
+In Figure~\ref{ourmonad}, the monad is implemented as a function of two
+arguments: the state (of type |s|) and the continuation. The
+continuation receives the current state, the value (of the type |v|) and
+yields the answer of the type |w|.  The monad is polymorphic over all
+these three type parameters.  Other implementations are
+possible. Except for the code in Figure~\ref{ourmonad}, the rest of our code
+treats the monad as a truly abstract data type. The implementation of basic
+monadic operations |ret| and |bind| are conventional. It is easy to
+see that the monadic laws are satisfied.  Other monadic operations
+construct computations that do have effects.  Operations |fetch| and
+|store v| construct computations that read and write the state. In our
+case the state is a list (of polymorphic variants), which models an
+open discriminated union, as we shall see later.
+
+The operation |retN a| is the let-insertion operation, whose simpler
+version we called |letgen| earlier. It is the first computation with
+a control effect: indeed, the result of |retN a| is \emph{not} the
+result of invoking its continuation |k|. Rather, its result is a |let|
+code expression. Such a behavior is symptomatic of cntrol operators
+(in particular, |abort|).
+
+Finally, |runM| runs our monad, that is, performs the computation of
+the monad and gets the result, which in our case is the code
+expression. We run the monad by passing it the initial state and the
+initial continuation |k0|. We can now re-write our |param_code2|
+example of the previous section as |param_code3|, see Fig. XXX.
+
+\begin{figure*}
+\begin{code}
+let param_code3 plus one =
+  let gen x y = bind (retN (plus y one)) (fun ce -> 
+                ret (plus ce (plus x ce)))
+  in .<fun x y -> .~(runM (gen .<x>. .<y>.))>.
+let param_code4 plus one =
+  let gen x y = mdo \{ ce <-- retN (plus y one);
+                      ret (plus ce (plus x ce)) \}
+  in .<fun x y -> .~(runM (gen .<x>. .<y>.))>.
+let ifM' test th el = mdo \{
+  testc <-- test; thc <-- th; elc <-- el;
+  ifL testc thc elc\}
+let gen a i = ifM' (ret .<(.~i) >= 0>.) (retN .<Some (.~a).(.~i)>.) (ret .<None>.)
+ in .<fun a i -> .~(runM (gen .<a>. .<i>.))>.
+\evalresult{.<fun a_1 -> fun i_2 -> 
+    let t_3 = (Some (a_1.(i_2))) in if (i_2 >= 0) then t_3 else (None)>.}
+let gen a i = ifM (ret .<(.~i) >= 0>.) (retN .<Some (.~a).(.~i)>.) (ret .<None>.)
+ in .<fun a i -> .~(runM (gen .<a>. .<i>.))>.
+\evalresult{.<fun a_1 -> fun i_2 ->
+    if (i_2 >= 0) then let t_3 = (Some (a_1.(i_2))) in t_3 else (None)>.}
+\end{code}
+\end{figure*}
+% param_code3 plus one;;
+
+That does not seem like much of an improvement. With the help of
+camplp4 pre-processor (cite), we introduce the do notation (give URL
+or cite the message on the MetaOCaml list), patterned after the
+do-notation of Haskell (cite). The function |param_code4|, written in
+the do-notation, is equivalent to |param_code3| -- in fact, the camlp4
+preprocessor will convert the former into the latter. And yet,
+|param_code4| looks far more conventional, as if it were indeed in
+direct style.
+
+We can write operations that generate code other than let-statements,
+e.g., conditionals: see |ifL| in Figure~\ref{ourmonad}. The function |ifL|, 
+albeit straightforward, is not as general as we wish: its argument are
+already generated pieces of code rather than monadic values. So, we
+may want to ``lift it'', see |ifM'|. We can define functions |l1|,
+|l2|, |l3| (analogues of |liftM|, |liftM2|, |liftM3| of Haskell) 
+to make such a lifting generic.
+We soon notice the need for another |ifM| function, with the same
+interface (see |ifM| in Figure~\ref{ourmonad}). The difference between them is
+apparent, see Fig. XXX: in the code with |ifM'|, the let-insertion
+happend \emph{before} the if-expression, that is, before the test that
+the index |i| is positive. That is, if |i| turned out
+negative, |a.(i)| will generate an out-of-bound array access
+error. On the other hand, the code with |ifM| accesses the array only
+when we have verified that the index is non-negative. This example
+makes it clear that the code generation (such as the one in |retN|) is 
+truly an effect and we have to be clear about the sequencing of
+effects, when generating control constructions such as conditionals.
+The form |ifM| handles the such effects correctly. In our code, we
+need similar operators for other Ocaml control forms: for generating
+case-matching statements and for- and while-loops.
+
+\section{Functors}\label{functors}
+
+Now that we know that we have the appropriate basic techniques for
+writing our code generators, we need to worry about modularizing them
+appropriately.  Here we can really take advantage of the fact that
+MetaOCaml is a staged language: it is not really relevant how much
+computation happens at staging time, as long as the generated code
+is correct and efficient.  In other words, we can use any abstraction
+mechanisms we want to structure our code generators, as long as none
+of those abstractions infiltrate the generated code.
+
+While the Object-Oriented Design community has acquired an extensive
+vocabulary for describing modularity ideas, the guiding principles for
+modular designs has not changed since they were first articulated by
+Parnas~\cite{journals/cacm/parnas72a} and Dijkstra~
+\cite{EWD:EWD447}: information hiding and separation of concerns.  To
+apply these principles to the study of Gaussian Elimination, we need
+to understand what changes between different implementations, and 
+what concerns need to be addressed.  We also need to study the degree
+to which these concerns are independent.
+
+A careful study of Gaussian Elimination \cite{carette04} shows that
+(at least) the following variations occur:
+\begin{enumerate}
+	\item \textbf{Domain}: In which (algebraic) domain do the matrix
+		elements belong to.  Sometimes the domains are very specific
+		($\mathbb{Z}, \mathbb{Q}, \mathbb{Z}_p, 
+		\mathbb{Z}_p\left[\alpha_1,\ldots,\alpha_n\right], 
+		\mathbb{Z}\left[x\right]$, $\mathbb{Q}\left(x\right)$, 
+		$\mathbb{Q}\left[\alpha\right]$, and floating point numbers for 
+		example), while in other cases the domains were left generic,
+		namely for elements of a field,
+		multivariate polynomials over a field, elements of a formal Ring
+		with possibly undecidable zero-equivalence, or elements of a 
+		Division Ring.  In the roughly 85 pieces of code
+		surveyed \oleg{citation?},
+		20 different domains were encountered.
+	\item \textbf{Container}: Whether the matrix
+		is represented as an array of arrays, a one-dimensional array,
+		a hash table, a sparse matrix, etc., and
+		whether indexing is done in C or Fortran style.  Additionally,
+		if a particular representation had a special mechanism for efficient
+		row exchanges, this is sometimes used.  
+	\item \textbf{Output choices}:  Whether just the reduced matrix, or
+		additionally the rank, the determinant, and the
+		pivoting matrix are to be returned.
+		It is worthwhile noting that in the larger algorithm family,
+		routines like Maple's \texttt{LinearAlgebra:-LUDecomposition} have
+		up to $2^6 + 2^5 + 2^2 = 100$ possible outputs.
+	\item \textbf{Fraction-free}: Whether the Gaussian Elimination
+		algorithm is allowed to use unrestricted division, or only
+		exact (remainder-free) division.
+	\item \textbf{Pivoting}: Whether to use no pivoting at all, only
+		column-wise pivoting, or full pivoting.
+	\item \textbf{Augmented Matrices}: Whether we are doing GE on
+		a full matrix, or only a restricted number of columns, while
+		doing elimination on the full matrix.  Note that we currently
+		do not treat this aspect in our code.
+\end{enumerate}
+\noindent In addition to the above variations, there are two aspects that 
+recur frequently:
+\begin{enumerate}
+	\item \textbf{Length measure}:  For stability reasons
+		(whether numerical or coefficient growth), if a domain possesses
+		an appropriate length measure, this is sometimes used to choose
+		an ``optimal'' pivot for row exchanges.
+	\item \textbf{Normalization and zero-equivalence}: Whether the 
+		arithmetic operations of the domain at hand gives results in 
+		normalized form, and whether a specialized zero-equivalence 
+		routine needs to be used.
+\end{enumerate}
+\noindent These are separated out from the others are they are cross-cutting
+concerns: in the case of the length measure, then a property of the domain
+will influence the method used to do pivoting \textbf{if} pivoting is to be
+performed.
+
+The simplest parametrization is to make the domain abstract. As it 
+turns out, we need the following to exist in our domains:  $0$, $1$,
+$+$, $*$, (unary and binary) $-$, some kind of division, normalization,
+and potentially a relative size measure.  We definitely need at least
+\emph{exact} division to exist, but if full division is available, than
+can be used as well.  Normalization is frequently trivial for domains
+where elements have unique representations, but in many applications
+we have domains (like polynomials in sum-of-product form) where this
+is not the case.  The simplest case of such an abstraction was given
+in Section XXX, |param_code1|. In the latter, code-generators such as
+|plus| and |one| were passed as arguments. We see however that we 
+need far more than two parameters, so we have to group them. Instead
+of the grouping offered by regular records, we use Ocaml
+\emph{structures} (i.e., modules) (cite Ocaml module system tutorial?)
+so we can take advantage extensions, type abstraction and constraints,
+and especially parameterized structures (i.e., \emph{functors}).
+We first define the type of the domain, the signature |DOMAIN| to which
+different domain must satisfy:
+\begin{small}
+\begin{code}
+module type DOMAIN = sig
+  type v
+  type kind (* Field or Ring ? *)
+  type 'a vc = ('a,v) code
+  val zero : 'a vc   val one : 'a vc
+  val plus : 'a vc -> 'a vc -> ('a vc, 's, 'w) monad
+  val times : 'a vc -> 'a vc -> ('a vc, 's, 'w) monad
+  val minus : 'a vc -> 'a vc -> ('a vc, 's, 'w) monad
+  val uminus : 'a vc -> ('a vc, 's, 'w) monad
+  val div : 'a vc -> 'a vc -> ('a vc, 's, 'w) monad
+  val better_than : ('a vc -> 'a vc -> 
+      (('a,bool) code, 's, 'w) monad) option
+  val normalizerf : (('a,v -> v) code ) option
+  val normalizerg : 'a vc -> 'a vc
+end 
+\end{code}
+\end{small}
+\noindent  The first item to notice is that the types above are
+generally lifted twice: once from the value domain |v| to the code
+domain |'a vc|, and once more from values to monadic computations
+|('a vc, 's, 'w) monad|.  Since there are times where we do not want
+to redundantly walk a whole matrix to apply normalization when 
+normalization is not necessary, |normalizerf| is optional.
+
+One particular instantiation of the domain (a particular structure of
+|DOMAIN| signature) is the |int| domain \oleg{should we put the following?}
+|IntegerDomain : DOMAIN| to say that the compiler will verify that our
+|IntegerDomain| is indeed a |DOMAIN|, that is, satisfies the required
+signature. The constraint |DOMAIN| may be omitted; in that case, 
+the compiler will verify the type when we try to use that structure as
+a |DOMAIN|. In any case, the errors such as missing ``methods'' or 
+methods of wrong types will be caught statically, even \emph{before} any code
+generation takes place.
+\begin{small}
+\begin{code}
+module IntegerDomain : DOMAIN = struct
+  type v = int  type kind = domain_is_ring
+  type 'a vc = ('a,v) code
+  let zero = .< 0 >.  and one = .< 1 >. 
+  let plus x y = ret .<.~x + .~y>. 
+  let better_than = Some (fun x y -> ret .<abs .~x > abs .~y >. )
+  let normalizerf = None
+  ...
+end
+\end{code}
+\end{small}
+\noindent Here |domain_is_ring| is an abstract data type to encode semantic constraint
+-- the kind of the domain.
+While the |DOMAIN| type may have looked daunting to some, 
+the implementation is quite straightforward.  It is equally simple to 
+make implementations for |float| and for |Num.num| (arbitrary precision
+exact rational numbers).  With scarcely more work (as these are not 
+built-in and the arithmetic must be implemented), $\mathbb{Z}_p$,
+$\mathbb{Z}\left[x\right]$, $\mathbb{Q}\left(x\right)$ and more
+complex domains can be done as well.
+
+Parametrizing by the kind of container used to represent a matrix is
+almost as straightforward.  We choose to make the container parametric
+over a |DOMAIN| by making containers functors from a |DOMAIN| module
+to the actual implementation of a container.  Our containers are
+explicitly 2-dimensional, and we provide functions |dim1| and |dim2|
+to extract each.  We also need |get| and |set| functions -- these come
+in both a monadic flavour as well as a direct code-generation version.
+For convenience and efficiency, several additional functions are also
+required: a way to |copy| a container, a method (|mapper|) to map an
+optional function over the elements of a container, as well as methods
+to swap rows and columns.  The inclusion of these functions in the 
+signature of all containers makes it simpler to optimize the relevant
+functions depending on the actual representation of the container
+while not burdening the users of containers with efficiency details.
+As an example, below is an implementation of a matrix as an
+array of rows (themselves arrays).  This implementation clearly shows
+how swapping rows is more efficient than swapping columns in this
+representation.  We have not (yet) implemented the further potential
+optimization wherein if it is known that part of two rows/columns are already
+known to be equal (in fact to |Dom.zero| in the case of GE) and
+row/column exchange needs to be performed element-wise, then certain
+swaps are unecessary.
+
+\begin{small}
+\begin{code}
+module GenericArrayContainer(Dom:DOMAIN) =
+  struct
+  type contr = Dom.v array array (* Array of rows *)
+  type 'a vc = ('a,contr) code
+  type 'a vo = ('a,Dom.v) code
+  let get' x n m = .< (.~x).(.~n).(.~m) >.
+  let get x n m = ret (get' x n m)
+  let set' x n m y = .< (.~x).(.~n).(.~m) <- .~y >.
+  let set x n m y = ret (set' x n m y)
+  let dim2 x = .< Array.length .~x >.       (* number of rows *)
+  let dim1 x = .< Array.length (.~x).(0) >. (* number of cols *)
+  let mapper g a = match g with
+      | Some f -> .< Array.map (fun x -> Array.map .~f x) .~a >.
+      | None   -> a
+  let copy = (fun a -> .<Array.map (fun x -> Array.copy x) 
+                       (Array.copy .~a) >. )
+  (* this can be optimized with a swap_rows_from if it is known that
+     everything before that is already = Dom.zero *)
+  let swap_rows_stmt a r1 r2 =
+      .< let t = (.~a).(.~r1) in
+         begin 
+             (.~a).(.~r1) <- (.~a).(.~r2);
+             (.~a).(.~r2) <- t
+         end >.
+  let swap_cols_stmt a c1 c2 = .< 
+      for r = 0 to .~(dim2 a)-1 do
+          let t = (.~a).(r).(.~c1) in
+          begin 
+              (.~a).(r).(.~c1) <- (.~a).(r).(.~c2);
+              (.~a).(r).(.~c2) <- t
+          end
+      done  >.
+end
+\end{code}
+\end{small}
+\noindent  Implementing other containers based on flattened vectors,
+Fortran-style access, |Bigarray| or |Bigarray.Array2| is also possible.
+Naturally, for proper use of |Bigarray| with specific types, it is 
+important that the |DOMAIN| type matches -- but luckily the compiler 
+will prevent us from making such a mistake.
+
+The use of a |functor| for making a container parametric is fairly 
+straightforward.  It gets more interesting when one turns to the aspect
+of what to return from the GE algorithm.  One could create an algebraic
+data type (as was done in \cite{carette04}) to encode the various
+choices; but this is wholly unsatisfying as we know that for any single
+use, only one of the choices is ever possible, yet any routine which
+calls the generated code must deal with these unreachable options.
+Instead we use a module type with an \emph{abstract} type |res| for the
+result type; the actual result type is then made by instantiating
+this module type with different modules that decide what will be 
+output: the matrix, the matrix and the rank, the matrix and the
+determinant, the matrix, rank and determinant, and so on.  More
+precisely, below we show this type and one instantiation.
+
+\begin{small}
+\begin{code}
+module type OUTPUT = sig
+  type contr  type res
+  module D : DETERMINANT
+  module R : RANK
+  module P : TRACKPIVOT
+  val make_result : ('a,contr) code -> 
+    (('a,res) code,
+     [> `TDet of 'a D.lstate | `TRan of 'a R.lstate | `TPivot of 'a P.lstate]
+       list,
+     ('a,'w) code) monad
+end
+
+module OutDetRank(Dom:DOMAIN)(C: CONTAINER2D)
+    (Det : DETERMINANT with type indet = Dom.v and type outdet = Dom.v)
+    (Rank : RANK) = struct
+  module Ctr = C(Dom)
+  type contr = Ctr.contr
+  type res = contr * Det.outdet * int
+  module D = Det
+  module R = Rank
+  module P = DiscardPivot
+  let make_result b = mdo {
+    det  <-- D.fin ();
+    rank <-- R.fin ();
+    ret .< ( .~b, .~det, .~rank ) >. }
+end
+\end{code}
+\end{small}
+\noindent It is worthwhile noting that while the |OUTPUT| type is
+relatively simple, instantiating it requires a rather complex functor
+with some additional type constraints.  While we will explain some of
+the details of the above code later, right now it suffices to notice
+that |res| above is a 3-tuple with type |contr * Det.outdet * int|,
+where in another instance this type is simply |contr|, and these are
+formally incomparable types.
+
+As is apparent from the output choices, several different quantities
+\emph{may} need to be tracked in a particular GE implementation.
+We therefore need to be able to conditionally generate code-variables,
+and weave in corresponding tracking code for each of these quantities.
+To be precise, we may need to keep track (independently) of the rank,
+the determinant and the permutation list.  These pieces of data then
+become part of the \emph{state} that is tracked by our monad.  To have
+all this choice when needed, and yet have our code be modular and
+composable as well as ensuring that the generated code does not 
+contain any abstraction artifacts, it is important to make this 
+state modular.  As this discussion is rather abstract, an example
+will likely illustrate our point more clearly: we will show the 
+code for tracking the determinant.
+
+\begin{small}
+\begin{code}
+module type DETERMINANT = sig
+  type indet  type outdet  type 'a lstate
+  type tdet = outdet ref   
+  val decl : unit -> 
+    (unit, [> `TDet of 'a lstate ] list, ('a,'b) code) monad
+  val upd_sign : unit -> 
+    (('a,unit) code, [> `TDet of 'a lstate ] list, ('a,'b) code) monad
+  ...
+end
+\end{code}
+\end{small}
+\noindent  Determinant tracking is quite complex: we need to 
+declare that we are tracking the determinant (|decl|), have some functions
+for tracking the sign of the determinant (|upd_sign|,|zero_sign|),
+|set|, |get|, accumulate (|acc|) unsigned values for the determinant, as 
+well as returning a final value (|fin|) for the determinant.  In some cases,
+like for float matrices where we do not return the determinant, all of
+the above should generate no code at all, while for integer matrices where
+we want the determinant as part of the output, each of these need to be
+implemented.
+
+\jacques{I am stopping my description of state here -- what I have
+written above is quite dull, and not making the point very well.
+I will need to revisit this}
+
+Making state modular and composable: several aspects can contribute
+to the state, without interference (show: Rank, Det, Permutation
+aspects).
+What is state and why we need it: making aspects interleave: use det
+as an example. State as an open record. List of polymorphic variants
+appeared to be the easiest way to implement such a union, in a pure
+functional way.
+
+Expressing domain constraints in functors (Div and integer domain).
+Show the type error that occurs in improper instantiation.
+
+Show several examples (e.g., code with NullPivot and nodet: no traces
+of either det nor pivoting). Then the code with RowPivoting, Det and
+float domain. \jacques{which would really be great if we had a lot 
+more space, but I think we're already long, so something is going to
+have to be cut.  Maybe not this, but something!}
+
+\section{Related work}\label{related}
+
+Note that the monad is similar to the one used in \cite{KiselyovTaha}.
+However, the latter work used only |retN| of all monadic operations,
+and used fixpoints (for performing iterations at the generation time).
+In this paper we do not use monadic fixpoints (because the generator
+is not recursive) but we make extensive use of monadic operations for
+generating conditional and looping operations.
+
+Mention |Blitz++| and template meta-programming. Can do similar
+eliminating of abstraction. Can even encode some domain-specific
+knowledge in the form of concepts. But inlining critically depends on
+the compiler's fully inlining of all methods. Furthermore, all errors
+(such as type errors and concept violation errors, that is,
+composition errors) are detected only when compiling the generated
+code. It is immensely difficult to correlate errors (e.g., line numbers) 
+to the ones in the generator itself. Furthermore, I think templates
+can't be local, right? So, a lot of code generation is spread around
+file-level entities. 
+
+SPIRAL does the intentional code analysis. Probably ATLAS as well.
+
+\jacques{What do we consider \emph{related work} here?  Do we essentially gloss 
+over related work in numerical software, code generation in general,
+aspect-oriented stuff?  We don't want this section to be too long, but
+not so short that we make it seem like we're inventing more than we
+really are}
+\oleg{Yes, let's gloss over ATLAS, SPIRAL, Axiom. I wonder what would
+  be the use of functors? Something by David McQueen or R. Harper.
+  In any way, mention that nobody before used functors to abstract
+  code generators -- or mix functors and multi-stage programming.}
+
+
+\section{Future work}\label{future}
+connections with delimited continuations: making notation
+more direct-style and potentially clearer.  More syntactic sugar
+would help a lot here.
+
+More aspects that can be handled: Input variations (augmented
+matrices). Fit into the larger program family, where there are
+more aspects still.
+
+Making all of the algorithmic code be completely independent of 
+MetaOCaml markup and isolate all the code generation to a select
+few 'base' modules and functors.  This should allow for simpler
+debugging, where one can choose to instantiate either a direct-style
+set of base modules for debugging, or a code-generation style set
+of base modules for generating optimized code.
+
+\section{Conclusion}\label{conclusion}
+Mention the mdo notation. Mention it into the introduction.
+
+Relation with aspect-oriented code: in AspectJ, aspects are (comparatively)
+lightly typed, and are post-facto extensions of an existing piece of
+code.  Here aspects are weaved together ``from scracth'' to make up a
+piece of code/functionality.  One can understand previous work to be
+more akin to dynamically typed aspect weaving, while we have started
+investigating statically typed aspect weaving.
+
+\bibliography{metamonads}
+\bibliographystyle{plain}
+\end{document}
+
+% It seems no appendices are allowed. Check with Walid?
+
+\section{Appendix A}
+The do notation for Ocaml.
+To implement the |mdo| notation, we use the Ocaml pre-processor,
+camplp4 (cite?). Informally, our notation is
+\begin{code}
+mdo { exp }
+mdo { exp1; exp2 }
+mdo { x <-- exp; exp }
+mdo { let x = foo in; exp }
+\end{code}
+which matches closely the Haskell |do| notation, modulo |do|/|mdo| and 
+|<-|/|<--|.
+
+Grammar formally:
+\begin{code}
+mdo { <do-body> }
+<do-body> :: =
+    "let" var = EXP ("and" var = EXP)* "in" ";" <do-body>
+    | EXP
+    | (pat <--)? EXP ";" <do-body>
+\end{code}
+The semantics is given by the following rules re-writing the |mdo|
+form into the regular Ocaml code. We assume that the variable |bind|
+must be in scope.
+\begin{code}
+mdo { exp } ===> exp
+mdo { pat <-- exp; rest } ===> bind exp (fun pat -> mdo { rest })
+mdo { exp; rest } ===> bind exp (fun _ -> mdo { rest })
+mdo { let pat = exp in; rest } ===> let pat = exp in mdo { rest }
+\end{code}
+We also introduce |odo| form, which is equivalent to |mdo| but uses 
+a bind `method' rather than a bind `value'.
+
+The major difficulty with the |do| notation is that it cannot truly be
+parsed by an LR(n)-grammar for any finite |n| because many |pat| can also
+be parsed as an |exp|. 
+
+Perhaps give the command line how to load the camlp4 module into
+ocaml. Point to the code.
+
+\omitnow{
+In this paper, we are concerned with building and composing
+generators. We start with the code expressing the algorithm (in
+OCaml), and, adding MetaOCaml annotations, turn that code into a
+\emph{code expression} that will generate the code when runs. We then
+modify that code expression to add various parameters and aspects, to
+yield the complete generator.
+
+Here we illustrate the MetaOCaml constrcutions and code generators.
+
+Turning code into the code expression is relatively straightforward
+until we come to binding constructs such as |let|. For example, here
+is a piece of code that defines a function that searches a given array
+|arr| for the maximal (in absolute value) element, and the index of
+that element and the found absolute value. This code is representative
+of pivot determination. The code uses mutations and destructive
+updates -- partly for illustrative purposes and mainly because many
+linear algebra algorithms are expressed via an imperative code (so it
+is less error-prone to translate the ``canonical'' algorithms with
+minimal changes).
+
+\begin{code}
+let fp = fun arr n ->
+   let pv = ref (0,arr.(0)) in
+   for i = 1 to n-1 do
+     if abs_float arr.(i) > snd !pv then
+        pv := (i, abs_float arr.(i))
+   done;
+   !pv
+\end{code}
+
+This function has the type |float array -> int -> int * float|. By
+enclosing the code into MetaOCaml brackets, we obtain the simplest
+generator expression.
+
+\oleg{later on, we can write the following just let fpc = .<...>.}
+
+\begin{code}
+let fpc = .<fun arr n ->
+   let pv = ref (0,arr.(0)) in
+   for i = 1 to n-1 do
+     if abs_float arr.(i) > snd !pv then
+        pv := (i, abs_float arr.(i))
+   done;
+   !pv>.
+\end{code}
+
+This value has the type |('a, float array -> int -> int * float) code|.
+Here |'a| type parameter is needed (ask Walid for the reference).
+The main difference between |fp| and |fpc| is that |fp| is a function,
+which we can immediately use as \verb^fp [|1.0; -4.; 3.|] 3^. In
+contrast, |fpc| is not a function: it is a \emph{code} value that denotes
+that function. We would say that the code expression is the
+``second-stage'' value. The ability to manipulate code expressions as
+regular values is the distinguished fature of MetaOCaml.
+We can ``compile'' the code by using MetaOCaml |run| command, or |.!|:
+|.! fpc|. The result is equivalent is |fp|. Although |fpc| doesn't
+seem to do much, it is already useful as we can use offshoring (cite)
+to translate |fpc| into C or Fortran code (which we can dynamically
+link into the running MetaOCaml code -- or use separately).
+
+The code |fpc| obviously lacks generality: the name |abs_float|
+implies that that code deals with |float| arrays. We wish to handle
+arrays in various domains, integer, rationals, etc. We can make the
+code generic by parametrizing over the |abs| function:
+
+\begin{code}
+let fpca absf = .<fun arr n ->
+   let pv = ref (0,arr.(0)) in
+   for i = 1 to n-1 do
+     if absf arr.(i) > snd !pv then
+        pv := (i, absf arr.(i))
+   done;
+   !pv>.
+\end{code}
+
+and so |fpca abs_float| will manipulate |float array| and |fpca abs|
+will do for the integer arrays. Here we used the value from the first
+stage, |absf|, to incorporate into the code at the second stage:
+croos-stage persistent values.
+
+We should now consider the function |fpca| in a browder context: of a
+function that computes the pivot and then swaps the pivot withe 0-th
+element of the array:
+
+\begin{code}
+let upv = .<fun arr n ->
+   let pv = .~(fpca abs_float) arr n in
+   let i = fst pv in
+   (if not (i = 0) then
+      let t = arr.(0) in
+      begin arr.(0) <- arr.(i); arr.(i) <- t end);
+   arr>.
+\end{code}
+
+Here, we see the third MetaOCaml operator, escape |.~|. It does ...
+MetaOcaml can print out the code, which looks like
+|.<fun arr n -> let pv = (fun arr n -> fpcs code) arr n in ... >.|
+That is, the compiler inlined the code for fpca -- which is a
+functional expression. The |upv| code shows the functional
+application, |(fun arr n -> ...)| applied to arguments |arr n|. That
+application will be executed at run-time, unless a sufficiently smart
+compiler can inline it. As we stated, our aim is to not to rely on
+post-generation optimizations and sufficiently smart compiler. We
+strive to generate the efficient code ourselves. We can do that by
+modifying the definition of |fpca| as
+
+\begin{code}
+let fpca absf arr n = .<
+   let pv = ref (0,(.~arr).(0)) in
+   for i = 1 to .~n-1 do
+     if absf (.~arr).(i) > snd !pv then
+        pv := (i, absf (.~arr).(i))
+   done;
+   !pv>.
+\end{code}
+\begin{code}
+let upv = .<fun arr n ->
+   let pv = .~(fpca abs_float .<arr>. .<n>.) in
+   let i = fst pv in
+   (if not (i = 0) then
+      let t = arr.(0) in
+      begin arr.(0) <- arr.(i); arr.(i) <- t end);
+   arr>.
+\end{code}
+% (.! upv) [|1.0; -4.; 2.|] 3;;
+We see that we pass code fragment |.<arr>.| as arguments to the
+function. Now when we look at the code for |upv|, we see
+|.<fun arr n -> let pv1 = let pv = ref (0,arr.(0)) in ...>.|
+So the fpca code got really inlined.
+
+The generator |fpca| shows one particular way of searching for pivot.
+In the domain of exact rational numbers, for example, we would be
+satisfied with the first non-zero element as a pivot, and so we would
+write a different pivot-searching generator. The body of |upv| moves
+the found pivot to the ``canonical'' location. Again, depending on the
+container (a dense matrix, a sparse matrix, etc), there are different
+ways of doing that. So, we would like to be able to ``compose'' pivot
+generating function with the swap generating function. We would like
+to write something like this
+
+\begin{code}
+let fpca absf arr n pv = .<
+   for i = 1 to .~n-1 do
+     if absf (.~arr).(i) > snd ! (.~pv) then
+        (.~pv) := (i, absf (.~arr).(i))
+   done>.
+let swapper arr n pv = .<
+   let i = fst !(.~pv) in
+   if not (i = 0) then
+      let t = (.~arr).(0) in
+      begin (.~arr).(0) <- (.~arr).(i); (.~arr).(i) <- t end>.
+let seqv a b c = .<begin .~a; .~b; .~c end>.
+let pv_swap absf arr n =
+   let pv = .<ref (0,(.~arr).(0))>. in
+   seqv (fpca absf arr n pv)
+        (swapper arr n pv)
+        arr
+let top =  .<fun arr n -> .~(pv_swap abs_float .<arr>. .<n>.)>.
+\end{code}
+
+The function |pv_swap| shows our ideal -- composing code gerenators
+|fpca| and |swapper|, using a higher-order combinator `seqv'
+(sequence of code fragments). We lifted the pivot declaration out of
+old version of |fpca| so that both |fpca| and |swapper| could be
+parameterized by the pivot (and |fpca| and similar function will deal
+only with pivot determination). |top| puts it all together. The above
+code represents the pattern we will be following for the rest of the
+paper.
+
+And it \emph{almost} works. It is type correct.  When we look at the
+generated code for |top|, we notice the |(ref (0, arr_1.(0)))| is
+inlined wherever pivot was expected. For example, the swapping part of
+the code begins with |let i_3 = (fst (! (ref (0, arr_1.(0))))) in ...|. 
+That is certainly not what we want. We meant for pivot searching
+and swapping parts of the code to communicate via a shared mutable
+state, variable |pv|. In the generated code, each piece of code gets
+its own copy of |pv|. Rather then inline |(ref (0, arr_1.(0)))|
+everywhere, we should have generated |let pv = ref (0,(.~arr).(0)) in ...|
+and inlined |pv|. Incidentally, even in a pure functional code we
+often wish to generate such a |let| statement so we can compute a
+complex expression only once and use it value in several other
+places. Again, we would rather not leave the job of detecting such
+common subexpressions to the compiler (because in the complex code the
+compiler may fail to detect the common subexpressions). The problem
+with generating such |let| expressions is that we wish our geenrator
+to return just |.<let pv = ref (0,(.~arr).(0)) in>.|, without the `body'
+of the |let|, which we would fill in later. In languages which
+generate code in the string form this is easy. We generate the string
+|''let pv = ref (0,(.~arr).(0)) in''| and then append to it the string
+representting the body, wcich would give us the complete |let|
+statement. In MetaOCaml, we can't generate incomplete expressions, for
+a good reason. 
+
+To solve the problem of writing a generator for a |let| expression 
+when the generated body is not yet known, we use CPS.
+}
+
+
+%%% Old, detailed version is here
 
 \section{CPS and the problem of generating names}\label{CPS}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -530,650 +1422,3 @@ effects, when generating control constructions such as conditionals.
 The form |ifM| handles the such effects correctly. In our code, we
 need similar operators for other Ocaml control forms: for generating
 case-matching statements and for- and while-loops.
-
-\section{Functors}\label{functors}
-
-Now that we know that we have the appropriate basic techniques for
-writing our code generators, we need to worry about modularizing them
-appropriately.  Here we can really take advantage of the fact that
-MetaOCaml is a staged language: it is not really relevant how much
-computation happens at staging time, as long as the generated code
-is correct and efficient.  In other words, we can use any abstraction
-mechanisms we want to structure our code generators, as long as none
-of those abstractions infiltrate the generated code.
-
-While the Object-Oriented Design community has acquired an extensive
-vocabulary for describing modularity ideas, the guiding principles for
-modular designs has not changed since they were first articulated by
-Parnas~\cite{journals/cacm/parnas72a} and Dijkstra~
-\cite{EWD:EWD447}: information hiding and separation of concerns.  To
-apply these principles to the study of Gaussian Elimination, we need
-to understand what changes between different implementations, and 
-what concerns need to be addressed.  We also need to study the degree
-to which these concerns are independent.
-
-A careful study of Gaussian Elimination \cite{carette04} shows that
-(at least) the following variations occur:
-\begin{enumerate}
-	\item \textbf{Domain}: In which (algebraic) domain do the matrix
-		elements belong to.  Sometimes the domains are very specific
-		($\mathbb{Z}, \mathbb{Q}, \mathbb{Z}_p, 
-		\mathbb{Z}_p\left[\alpha_1,\ldots,\alpha_n\right], 
-		\mathbb{Z}\left[x\right]$, $\mathbb{Q}\left(x\right)$, 
-		$\mathbb{Q}\left[\alpha\right]$, and floating point numbers for 
-		example), while in other cases the domains were left generic,
-		namely for elements of a field,
-		multivariate polynomials over a field, elements of a formal Ring
-		with possibly undecidable zero-equivalence, or elements of a 
-		Division Ring.  In the roughly 85 pieces of code
-		surveyed \oleg{citation?},
-		20 different domains were encountered.
-	\item \textbf{Container}: Whether the matrix
-		is represented as an array of arrays, a one-dimensional array,
-		a hash table, a sparse matrix, etc., and
-		whether indexing is done in C or Fortran style.  Additionally,
-		if a particular representation had a special mechanism for efficient
-		row exchanges, this is sometimes used.  
-	\item \textbf{Output choices}:  Whether just the reduced matrix, or
-		additionally the rank, the determinant, and the
-		pivoting matrix are to be returned.
-		It is worthwhile noting that in the larger algorithm family,
-		routines like Maple's \texttt{LinearAlgebra:-LUDecomposition} have
-		up to $2^6 + 2^5 + 2^2 = 100$ possible outputs.
-	\item \textbf{Fraction-free}: Whether the Gaussian Elimination
-		algorithm is allowed to use unrestricted division, or only
-		exact (remainder-free) division.
-	\item \textbf{Pivoting}: Whether to use no pivoting at all, only
-		column-wise pivoting, or full pivoting.
-	\item \textbf{Augmented Matrices}: Whether we are doing GE on
-		a full matrix, or only a restricted number of columns, while
-		doing elimination on the full matrix.  Note that we currently
-		do not treat this aspect in our code.
-\end{enumerate}
-\noindent In addition to the above variations, there are two aspects that 
-recur frequently:
-\begin{enumerate}
-	\item \textbf{Length measure}:  For stability reasons
-		(whether numerical or coefficient growth), if a domain possesses
-		an appropriate length measure, this is sometimes used to choose
-		an ``optimal'' pivot for row exchanges.
-	\item \textbf{Normalization and zero-equivalence}: Whether the 
-		arithmetic operations of the domain at hand gives results in 
-		normalized form, and whether a specialized zero-equivalence 
-		routine needs to be used.
-\end{enumerate}
-\noindent These are separated out from the others are they are cross-cutting
-concerns: in the case of the length measure, then a property of the domain
-will influence the method used to do pivoting \textbf{if} pivoting is to be
-performed.
-
-The simplest parametrization is to make the domain abstract. As it 
-turns out, we need the following to exist in our domains:  $0$, $1$,
-$+$, $*$, (unary and binary) $-$, some kind of division, normalization,
-and potentially a relative size measure.  We definitely need at least
-\emph{exact} division to exist, but if full division is available, than
-can be used as well.  Normalization is frequently trivial for domains
-where elements have unique representations, but in many applications
-we have domains (like polynomials in sum-of-product form) where this
-is not the case.  The simplest case of such an abstraction was given
-in Section XXX, |param_code1|. In the latter, code-generators such as
-|plus| and |one| were passed as arguments. We see however that we 
-need far more than two parameters, so we have to group them. Instead
-of the grouping offered by regular records, we use Ocaml
-\emph{structures} (i.e., modules) (cite Ocaml module system tutorial?)
-so we can take advantage extensions, type abstraction and constraints,
-and especially parameterized structures (i.e., \emph{functors}).
-We first define the type of the domain, the signature |DOMAIN| to which
-different domain must satisfy:
-\begin{small}
-\begin{code}
-module type DOMAIN = sig
-  type v
-  type kind (* Field or Ring ? *)
-  type 'a vc = ('a,v) code
-  val zero : 'a vc
-  val one : 'a vc
-  val plus : 'a vc -> 'a vc -> ('a vc, 's, 'w) monad
-  val times : 'a vc -> 'a vc -> ('a vc, 's, 'w) monad
-  val minus : 'a vc -> 'a vc -> ('a vc, 's, 'w) monad
-  val uminus : 'a vc -> ('a vc, 's, 'w) monad
-  val div : 'a vc -> 'a vc -> ('a vc, 's, 'w) monad
-  val better_than : ('a vc -> 'a vc -> 
-      (('a,bool) code, 's, 'w) monad) option
-  val normalizerf : (('a,v -> v) code ) option
-  val normalizerg : 'a vc -> 'a vc
-end 
-\end{code}
-\end{small}
-\noindent  The first item to notice is that the types above are
-generally lifted twice: once from the value domain |v| to the code
-domain |'a vc|, and once more from values to monadic computations
-|('a vc, 's, 'w) monad|.  Since there are times where we do not want
-to redundantly walk a whole matrix to apply normalization when 
-normalization is not necessary, |normalizerf| is optional.
-
-One particular instantiation of the domain (a particular structure of
-|DOMAIN| signature) is the |int| domain \oleg{should we put the following?}
-|IntegerDomain : DOMAIN| to say that the compiler will verify that our
-|IntegerDomain| is indeed a |DOMAIN|, that is, satisfies the required
-signature. The constraint |DOMAIN| may be omitted; in that case, 
-the compiler will verify the type when we try to use that structure as
-a |DOMAIN|. In any case, the errors such as missing ``methods'' or 
-methods of wrong types will be caught statically, even \emph{before} any code
-generation takes place.
-\begin{small}
-\begin{code}
-module IntegerDomain = struct
-    type v = int
-    type kind = domain_is_ring
-    type 'a vc = ('a,v) code
-    let zero = .< 0 >.  
-    let one = .< 1 >. 
-    let plus x y = ret .<.~x + .~y>. 
-    let times x y = ret .<.~x * .~y>.
-    let minus x y = ret .<.~x - .~y>.
-    let uminus x = ret .< - .~x>.
-    let div x y = ret .<.~x / .~y>. 
-    let better_than = Some (fun x y -> ret .<abs .~x > abs .~y >. )
-    let normalizerf = None 
-    let normalizerg = fun x -> x
-end
-\end{code}
-\end{small}
-\noindent While the |DOMAIN| type may have looked daunting to some, 
-the implementation is quite straightforward.  It is equally simple to 
-make implementations for |float| and for |Num.num| (arbitrary precision
-exact rational numbers).  With scarcely more work (as these are not 
-built-in and the arithmetic must be implemented), $\mathbb{Z}_p$,
-$\mathbb{Z}\left[x\right]$, $\mathbb{Q}\left(x\right)$ and more
-complex domains can be done as well.
-
-Parametrizing by the kind of container used to represent a matrix is
-almost as straightforward.  We choose to make the container parametric
-over a |DOMAIN| by making containers functors from a |DOMAIN| module
-to the actual implementation of a container.  Our containers are
-explicitly 2-dimensional, and we provide functions |dim1| and |dim2|
-to extract each.  We also need |get| and |set| functions -- these come
-in both a monadic flavour as well as a direct code-generation version.
-For convenience and efficiency, several additional functions are also
-required: a way to |copy| a container, a method (|mapper|) to map an
-optional function over the elements of a container, as well as methods
-to swap rows and columns.  The inclusion of these functions in the 
-signature of all containers makes it simpler to optimize the relevant
-functions depending on the actual representation of the container
-while not burdening the users of containers with efficiency details.
-As an example, below is an implementation of a matrix as an
-array of rows (themselves arrays).  This implementation clearly shows
-how swapping rows is more efficient than swapping columns in this
-representation.  We have not (yet) implemented the further potential
-optimization wherein if it is known that part of two rows/columns are already
-known to be equal (in fact to |Dom.zero| in the case of GE) and
-row/column exchange needs to be performed element-wise, then certain
-swaps are unecessary.
-
-\begin{small}
-\begin{code}
-module GenericArrayContainer(Dom:DOMAIN) =
-  struct
-  type contr = Dom.v array array (* Array of rows *)
-  type 'a vc = ('a,contr) code
-  type 'a vo = ('a,Dom.v) code
-  let get' x n m = .< (.~x).(.~n).(.~m) >.
-  let get x n m = ret (get' x n m)
-  let set' x n m y = .< (.~x).(.~n).(.~m) <- .~y >.
-  let set x n m y = ret (set' x n m y)
-  let dim2 x = .< Array.length .~x >.       (* number of rows *)
-  let dim1 x = .< Array.length (.~x).(0) >. (* number of cols *)
-  let mapper g a = match g with
-      | Some f -> .< Array.map (fun x -> Array.map .~f x) .~a >.
-      | None   -> a
-  let copy = (fun a -> .<Array.map (fun x -> Array.copy x) 
-                       (Array.copy .~a) >. )
-  (* this can be optimized with a swap_rows_from if it is known that
-     everything before that is already = Dom.zero *)
-  let swap_rows_stmt a r1 r2 =
-      .< let t = (.~a).(.~r1) in
-         begin 
-             (.~a).(.~r1) <- (.~a).(.~r2);
-             (.~a).(.~r2) <- t
-         end >.
-  let swap_cols_stmt a c1 c2 = .< 
-      for r = 0 to .~(dim2 a)-1 do
-          let t = (.~a).(r).(.~c1) in
-          begin 
-              (.~a).(r).(.~c1) <- (.~a).(r).(.~c2);
-              (.~a).(r).(.~c2) <- t
-          end
-      done  >.
-end
-\end{code}
-\end{small}
-\noindent  Implementing other containers based on flattened vectors,
-Fortran-style access, |Bigarray| or |Bigarray.Array2| is also possible.
-Naturally, for proper use of |Bigarray| with specific types, it is 
-important that the |DOMAIN| type matches -- but luckily the compiler 
-will prevent us from making such a mistake.
-
-The use of a |functor| for making a container parametric is fairly 
-straightforward.  It gets more interesting when one turns to the aspect
-of what to return from the GE algorithm.  One could create an algebraic
-data type (as was done in \cite{carette04}) to encode the various
-choices; but this is wholly unsatisfying as we know that for any single
-use, only one of the choices is ever possible, yet any routine which
-calls the generated code must deal with these unreachable options.
-Instead we use a module type with an \emph{abstract} type |res| for the
-result type; the actual result type is then made by instantiating
-this module type with different modules that decide what will be 
-output: the matrix, the matrix and the rank, the matrix and the
-determinant, the matrix, rank and determinant, and so on.  More
-precisely, below we show this type and one instantiation.
-
-\begin{small}
-\begin{code}
-module type OUTPUT = sig
-  type contr
-  type res
-  module D : DETERMINANT
-  module R : RANK
-  module P : TRACKPIVOT
-  val make_result : ('a,contr) code -> 
-    (('a,res) code,
-     [> `TDet of 'a D.lstate | `TRan of 'a R.lstate | `TPivot of 'a P.lstate]
-       list,
-     ('a,'w) code) monad
-end
-
-module OutDetRank(Dom:DOMAIN)(C: CONTAINER2D)
-    (Det : DETERMINANT with type indet = Dom.v and type outdet = Dom.v)
-    (Rank : RANK) =
-  struct
-  module Ctr = C(Dom)
-  type contr = Ctr.contr
-  type res = contr * Det.outdet * int
-  module D = Det
-  module R = Rank
-  module P = DiscardPivot
-  let make_result b = mdo {
-    det  <-- D.fin ();
-    rank <-- R.fin ();
-    ret .< ( .~b, .~det, .~rank ) >. }
-end
-\end{code}
-\end{small}
-\noindent It is worthwhile noting that while the |OUTPUT| type is
-relatively simple, instantiating it requires a rather complex functor
-with some additional type constraints.  While we will explain some of
-the details of the above code later, right now it suffices to notice
-that |res| above is a 3-tuple with type |contr * Det.outdet * int|,
-where in another instance this type is simply |contr|, and these are
-formally incomparable types.
-
-As is apparent from the output choices, several different quantities
-\emph{may} need to be tracked in a particular GE implementation.
-We therefore need to be able to conditionally generate code-variables,
-and weave in corresponding tracking code for each of these quantities.
-To be precise, we may need to keep track (independently) of the rank,
-the determinant and the permutation list.  These pieces of data then
-become part of the \emph{state} that is tracked by our monad.  To have
-all this choice when needed, and yet have our code be modular and
-composable as well as ensuring that the generated code does not 
-contain any abstraction artifacts, it is important to make this 
-state modular.  As this discussion is rather abstract, an example
-will likely illustrate our point more clearly: we will show the 
-code for tracking the determinant.
-
-\begin{small}
-\begin{code}
-module type DETERMINANT = sig
-  type indet
-  type outdet
-  type tdet = outdet ref
-  type 'a lstate
-  val decl : unit -> 
-    (unit, [> `TDet of 'a lstate ] list, ('a,'b) code) monad
-  val upd_sign : unit -> 
-    (('a,unit) code, [> `TDet of 'a lstate ] list, ('a,'b) code) monad
-  val zero_sign : unit -> 
-    (('a,unit) code, [> `TDet of 'a lstate ] list, ('a,'b) code) monad
-  val acc : ('a,indet) code -> 
-    (('a,unit) code, [> `TDet of 'a lstate ] list, ('a,'b) code) monad
-  val get : unit ->
-    (('a,tdet) code, [> `TDet of 'a lstate ] list, ('a,'b) code) monad
-  val set : ('a,indet) code -> 
-    (('a,unit) code, [> `TDet of 'a lstate ] list, ('a,'b) code) monad
-  val fin : unit -> 
-    (('a,outdet) code, [> `TDet of 'a lstate ] list, ('a,'b) code) monad
-end
-\end{code}
-\end{small}
-\noindent  Determinant tracking is quite complex: we need to 
-declare that we are tracking the determinant (|decl|), have some functions
-for tracking the sign of the determinant (|upd_sign|,|zero_sign|),
-|set|, |get|, accumulate (|acc|) unsigned values for the determinant, as 
-well as returning a final value (|fin|) for the determinant.  In some cases,
-like for float matrices where we do not return the determinant, all of
-the above should generate no code at all, while for integer matrices where
-we want the determinant as part of the output, each of these need to be
-implemented.
-
-\jacques{I am stopping my description of state here -- what I have
-written above is quite dull, and not making the point very well.
-I will need to revisit this}
-
-Making state modular and composable: several aspects can contribute
-to the state, without interference (show: Rank, Det, Permutation
-aspects).
-What is state and why we need it: making aspects interleave: use det
-as an example. State as an open record. List of polymorphic variants
-appeared to be the easiest way to implement such a union, in a pure
-functional way.
-
-Expressing domain constraints in functors (Div and integer domain).
-Show the type error that occurs in improper instantiation.
-
-Show several examples (e.g., code with NullPivot and nodet: no traces
-of either det nor pivoting). Then the code with RowPivoting, Det and
-float domain. \jacques{which would really be great if we had a lot 
-more space, but I think we're already long, so something is going to
-have to be cut.  Maybe not this, but something!}
-
-\section{Related work}\label{related}
-
-Note that the monad is similar to the one used in \cite{KiselyovTaha}.
-However, the latter work used only |retN| of all monadic operations,
-and used fixpoints (for performing iterations at the generation time).
-In this paper we do not use monadic fixpoints (because the generator
-is not recursive) but we make extensive use of monadic operations for
-generating conditional and looping operations.
-
-Mention |Blitz++| and template meta-programming. Can do similar
-eliminating of abstraction. Can even encode some domain-specific
-knowledge in the form of concepts. But inlining critically depends on
-the compiler's fully inlining of all methods. Furthermore, all errors
-(such as type errors and concept violation errors, that is,
-composition errors) are detected only when compiling the generated
-code. It is immensely difficult to correlate errors (e.g., line numbers) 
-to the ones in the generator itself. Furthermore, I think templates
-can't be local, right? So, a lot of code generation is spread around
-file-level entities. 
-
-SPIRAL does the intentional code analysis. Probably ATLAS as well.
-
-\jacques{What do we consider \emph{related work} here?  Do we essentially gloss 
-over related work in numerical software, code generation in general,
-aspect-oriented stuff?  We don't want this section to be too long, but
-not so short that we make it seem like we're inventing more than we
-really are}
-\oleg{Yes, let's gloss over ATLAS, SPIRAL, Axiom. I wonder what would
-  be the use of functors? Something by David McQueen or R. Harper.
-  In any way, mention that nobody before used functors to abstract
-  code generators -- or mix functors and multi-stage programming.}
-
-
-\section{Future work}\label{future}
-connections with delimited continuations: making notation
-more direct-style and potentially clearer.  More syntactic sugar
-would help a lot here.
-
-More aspects that can be handled: Input variations (augmented
-matrices). Fit into the larger program family, where there are
-more aspects still.
-
-Making all of the algorithmic code be completely independent of 
-MetaOCaml markup and isolate all the code generation to a select
-few 'base' modules and functors.  This should allow for simpler
-debugging, where one can choose to instantiate either a direct-style
-set of base modules for debugging, or a code-generation style set
-of base modules for generating optimized code.
-
-\section{Conclusion}\label{conclusion}
-Mention the mdo notation. Mention it into the introduction.
-
-Relation with aspect-oriented code: in AspectJ, aspects are (comparatively)
-lightly typed, and are post-facto extensions of an existing piece of
-code.  Here aspects are weaved together ``from scracth'' to make up a
-piece of code/functionality.  One can understand previous work to be
-more akin to dynamically typed aspect weaving, while we have started
-investigating statically typed aspect weaving.
-
-\bibliography{metamonads}
-\bibliographystyle{plain}
-
-\section{Appendix A}
-The do notation for Ocaml.
-To implement the |mdo| notation, we use the Ocaml pre-processor,
-camplp4 (cite?). Informally, our notation is
-\begin{code}
-mdo { exp }
-mdo { exp1; exp2 }
-mdo { x <-- exp; exp }
-mdo { let x = foo in; exp }
-\end{code}
-which matches closely the Haskell |do| notation, modulo |do|/|mdo| and 
-|<-|/|<--|.
-
-Grammar formally:
-\begin{code}
-mdo { <do-body> }
-<do-body> :: =
-    "let" var = EXP ("and" var = EXP)* "in" ";" <do-body>
-    | EXP
-    | (pat <--)? EXP ";" <do-body>
-\end{code}
-The semantics is given by the following rules re-writing the |mdo|
-form into the regular Ocaml code. We assume that the variable |bind|
-must be in scope.
-\begin{code}
-mdo { exp } ===> exp
-mdo { pat <-- exp; rest } ===> bind exp (fun pat -> mdo { rest })
-mdo { exp; rest } ===> bind exp (fun _ -> mdo { rest })
-mdo { let pat = exp in; rest } ===> let pat = exp in mdo { rest }
-\end{code}
-We also introduce |odo| form, which is equivalent to |mdo| but uses 
-a bind `method' rather than a bind `value'.
-
-The major difficulty with the |do| notation is that it cannot truly be
-parsed by an LR(n)-grammar for any finite |n| because many |pat| can also
-be parsed as an |exp|. 
-
-Perhaps give the command line how to load the camlp4 module into
-ocaml. Point to the code.
-\end{document}
-
-\omitnow{
-In this paper, we are concerned with building and composing
-generators. We start with the code expressing the algorithm (in
-OCaml), and, adding MetaOCaml annotations, turn that code into a
-\emph{code expression} that will generate the code when runs. We then
-modify that code expression to add various parameters and aspects, to
-yield the complete generator.
-
-Here we illustrate the MetaOCaml constrcutions and code generators.
-
-Turning code into the code expression is relatively straightforward
-until we come to binding constructs such as |let|. For example, here
-is a piece of code that defines a function that searches a given array
-|arr| for the maximal (in absolute value) element, and the index of
-that element and the found absolute value. This code is representative
-of pivot determination. The code uses mutations and destructive
-updates -- partly for illustrative purposes and mainly because many
-linear algebra algorithms are expressed via an imperative code (so it
-is less error-prone to translate the ``canonical'' algorithms with
-minimal changes).
-
-\begin{code}
-let fp = fun arr n ->
-   let pv = ref (0,arr.(0)) in
-   for i = 1 to n-1 do
-     if abs_float arr.(i) > snd !pv then
-        pv := (i, abs_float arr.(i))
-   done;
-   !pv
-\end{code}
-
-This function has the type |float array -> int -> int * float|. By
-enclosing the code into MetaOCaml brackets, we obtain the simplest
-generator expression.
-
-\oleg{later on, we can write the following just let fpc = .<...>.}
-
-\begin{code}
-let fpc = .<fun arr n ->
-   let pv = ref (0,arr.(0)) in
-   for i = 1 to n-1 do
-     if abs_float arr.(i) > snd !pv then
-        pv := (i, abs_float arr.(i))
-   done;
-   !pv>.
-\end{code}
-
-This value has the type |('a, float array -> int -> int * float) code|.
-Here |'a| type parameter is needed (ask Walid for the reference).
-The main difference between |fp| and |fpc| is that |fp| is a function,
-which we can immediately use as \verb^fp [|1.0; -4.; 3.|] 3^. In
-contrast, |fpc| is not a function: it is a \emph{code} value that denotes
-that function. We would say that the code expression is the
-``second-stage'' value. The ability to manipulate code expressions as
-regular values is the distinguished fature of MetaOCaml.
-We can ``compile'' the code by using MetaOCaml |run| command, or |.!|:
-|.! fpc|. The result is equivalent is |fp|. Although |fpc| doesn't
-seem to do much, it is already useful as we can use offshoring (cite)
-to translate |fpc| into C or Fortran code (which we can dynamically
-link into the running MetaOCaml code -- or use separately).
-
-The code |fpc| obviously lacks generality: the name |abs_float|
-implies that that code deals with |float| arrays. We wish to handle
-arrays in various domains, integer, rationals, etc. We can make the
-code generic by parametrizing over the |abs| function:
-
-\begin{code}
-let fpca absf = .<fun arr n ->
-   let pv = ref (0,arr.(0)) in
-   for i = 1 to n-1 do
-     if absf arr.(i) > snd !pv then
-        pv := (i, absf arr.(i))
-   done;
-   !pv>.
-\end{code}
-
-and so |fpca abs_float| will manipulate |float array| and |fpca abs|
-will do for the integer arrays. Here we used the value from the first
-stage, |absf|, to incorporate into the code at the second stage:
-croos-stage persistent values.
-
-We should now consider the function |fpca| in a browder context: of a
-function that computes the pivot and then swaps the pivot withe 0-th
-element of the array:
-
-\begin{code}
-let upv = .<fun arr n ->
-   let pv = .~(fpca abs_float) arr n in
-   let i = fst pv in
-   (if not (i = 0) then
-      let t = arr.(0) in
-      begin arr.(0) <- arr.(i); arr.(i) <- t end);
-   arr>.
-\end{code}
-
-Here, we see the third MetaOCaml operator, escape |.~|. It does ...
-MetaOcaml can print out the code, which looks like
-|.<fun arr n -> let pv = (fun arr n -> fpcs code) arr n in ... >.|
-That is, the compiler inlined the code for fpca -- which is a
-functional expression. The |upv| code shows the functional
-application, |(fun arr n -> ...)| applied to arguments |arr n|. That
-application will be executed at run-time, unless a sufficiently smart
-compiler can inline it. As we stated, our aim is to not to rely on
-post-generation optimizations and sufficiently smart compiler. We
-strive to generate the efficient code ourselves. We can do that by
-modifying the definition of |fpca| as
-
-\begin{code}
-let fpca absf arr n = .<
-   let pv = ref (0,(.~arr).(0)) in
-   for i = 1 to .~n-1 do
-     if absf (.~arr).(i) > snd !pv then
-        pv := (i, absf (.~arr).(i))
-   done;
-   !pv>.
-\end{code}
-\begin{code}
-let upv = .<fun arr n ->
-   let pv = .~(fpca abs_float .<arr>. .<n>.) in
-   let i = fst pv in
-   (if not (i = 0) then
-      let t = arr.(0) in
-      begin arr.(0) <- arr.(i); arr.(i) <- t end);
-   arr>.
-\end{code}
-% (.! upv) [|1.0; -4.; 2.|] 3;;
-We see that we pass code fragment |.<arr>.| as arguments to the
-function. Now when we look at the code for |upv|, we see
-|.<fun arr n -> let pv1 = let pv = ref (0,arr.(0)) in ...>.|
-So the fpca code got really inlined.
-
-The generator |fpca| shows one particular way of searching for pivot.
-In the domain of exact rational numbers, for example, we would be
-satisfied with the first non-zero element as a pivot, and so we would
-write a different pivot-searching generator. The body of |upv| moves
-the found pivot to the ``canonical'' location. Again, depending on the
-container (a dense matrix, a sparse matrix, etc), there are different
-ways of doing that. So, we would like to be able to ``compose'' pivot
-generating function with the swap generating function. We would like
-to write something like this
-
-\begin{code}
-let fpca absf arr n pv = .<
-   for i = 1 to .~n-1 do
-     if absf (.~arr).(i) > snd ! (.~pv) then
-        (.~pv) := (i, absf (.~arr).(i))
-   done>.
-let swapper arr n pv = .<
-   let i = fst !(.~pv) in
-   if not (i = 0) then
-      let t = (.~arr).(0) in
-      begin (.~arr).(0) <- (.~arr).(i); (.~arr).(i) <- t end>.
-let seqv a b c = .<begin .~a; .~b; .~c end>.
-let pv_swap absf arr n =
-   let pv = .<ref (0,(.~arr).(0))>. in
-   seqv (fpca absf arr n pv)
-        (swapper arr n pv)
-        arr
-let top =  .<fun arr n -> .~(pv_swap abs_float .<arr>. .<n>.)>.
-\end{code}
-
-The function |pv_swap| shows our ideal -- composing code gerenators
-|fpca| and |swapper|, using a higher-order combinator `seqv'
-(sequence of code fragments). We lifted the pivot declaration out of
-old version of |fpca| so that both |fpca| and |swapper| could be
-parameterized by the pivot (and |fpca| and similar function will deal
-only with pivot determination). |top| puts it all together. The above
-code represents the pattern we will be following for the rest of the
-paper.
-
-And it \emph{almost} works. It is type correct.  When we look at the
-generated code for |top|, we notice the |(ref (0, arr_1.(0)))| is
-inlined wherever pivot was expected. For example, the swapping part of
-the code begins with |let i_3 = (fst (! (ref (0, arr_1.(0))))) in ...|. 
-That is certainly not what we want. We meant for pivot searching
-and swapping parts of the code to communicate via a shared mutable
-state, variable |pv|. In the generated code, each piece of code gets
-its own copy of |pv|. Rather then inline |(ref (0, arr_1.(0)))|
-everywhere, we should have generated |let pv = ref (0,(.~arr).(0)) in ...|
-and inlined |pv|. Incidentally, even in a pure functional code we
-often wish to generate such a |let| statement so we can compute a
-complex expression only once and use it value in several other
-places. Again, we would rather not leave the job of detecting such
-common subexpressions to the compiler (because in the complex code the
-compiler may fail to detect the common subexpressions). The problem
-with generating such |let| expressions is that we wish our geenrator
-to return just |.<let pv = ref (0,(.~arr).(0)) in>.|, without the `body'
-of the |let|, which we would fill in later. In languages which
-generate code in the string form this is easy. We generate the string
-|''let pv = ref (0,(.~arr).(0)) in''| and then append to it the string
-representting the body, wcich would give us the complete |let|
-statement. In MetaOCaml, we can't generate incomplete expressions, for
-a good reason. 
-
-To solve the problem of writing a generator for a |let| expression 
-when the generated body is not yet known, we use CPS.
-}
