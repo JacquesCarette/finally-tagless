@@ -566,7 +566,14 @@ let store v s k = k (v::s) ()
 let k0 s v = v
 let runM m = m [] k0
 
+let l1 f = fun x -> mdo { t <-- x; f t}
+let l2 f = fun x y -> mdo { tx <-- x; ty <-- y; f tx ty}
+
 let retN a = fun s k -> .<let t = .~a in .~(k s .<t>.)>.
+
+let lif test th el = ret .< if .~test then .~th else .~el >.
+let ifM test th el = fun s k ->
+  k s .< if .~(test s k0) then .~(th s k0) else .~(el s k0) >.
 \end{code}
 \caption{Our monad}
 \end{figure*}
@@ -628,20 +635,80 @@ preprocessor (with our extension) will transform the |param_code4|
 into |param_code3|. And yet, |param_code4| looks far more
 conventional, as if it were indeed in direct style.
 
-
-
 \oleg{Should we rename lif into ifL?}
-Now we can build more complex monadic operations.
+We can write operations that generate code other than let-statements,
+e.g., conditionals: |lif| (Figure XXX). The function |lif|, albeit
+straightforward, is not as general as we wish: its argument are
+already generated pieces of code rather than monadic values. So, we
+may want to ``lift it'', see |ifM'|:
+
 \begin{code}
-let lif test th el = ret .< if .~test then .~th else .~el >.
+let ifM' test th el = mdo {
+  testc <-- test;
+  thc   <-- th;
+  elc   <-- el;
+  lif testc thc elc}
 \end{code}
 
+\omitnow{
+\begin{code}
+let ifM' test th el = bind test (fun testc ->
+                      bind th   (fun thc ->
+                      bind el   (fun elc ->
+		      lif testc thc elc)));;
+\end{code}
+}
 
-ifM and ifL: show example. Mention 'ifM' and `reset'. Investigating
-the connection with the delimited continuations: for future work.
+We can define functions |l1|, |l2|, |l3| (analogues of |liftM|,
+|liftM2|, |liftM3| of Haskell) to make such a lifting generic.
+We soon notice the need in another |ifM| function, with tha same
+interface (see ifM in Fig. XXX). The difference between them is
+apparent from the following:
 
-What is state and why we need it: making aspects interleave: use det
-as an example.
+\begin{code}
+let gen a i = ifM' (ret .<(.~i) >= 0>.) (retN .<Some (.~a).(.~i)>.)
+                           (ret .<None>.)
+ in .<fun a i -> .~(runM (gen .<a>. .<i>.))>.
+;;
+.<fun a_1 ->
+   fun i_2 ->
+    let t_3 = (Some (a_1.(i_2))) in if (i_2 >= 0) then t_3 else (None)>.
+\end{code}
+
+whereas if we replace |ifM'| with |ifM|, the result will be
+
+\omitnow{
+\begin{code}
+let gen a i = ifM (ret .<(.~i) >= 0>.) (retN .<Some (.~a).(.~i)>.)
+                           (ret .<None>.)
+ in .<fun a i -> .~(runM (gen .<a>. .<i>.))>.
+;;
+\end{code}
+}
+\begin{code}
+.<fun a_1 ->
+   fun i_2 ->
+    if (i_2 >= 0) then let t_3 = (Some (a_1.(i_2))) in t_3 else (None)>.
+\end{code}
+
+The difference is apparent: in the code with |ifM'|, the let-insertion
+happend \emph{before} the if-expression, that is, before the test that
+the index |i| is positive. That is, if |i| turned out
+negative, |a.(i)| will generate the out-of-bound array access
+error. On the other hand, the code with |ifM| accesses the array only
+when we have verified that the index is non-negative. This example
+makes it clear that the code generation (such as the one in |retN|) is 
+truly an effect and we have to be clear about the sequencing of
+effects, when generating control constrcutions such as conditionals.
+The form |ifM| handles the such effects correctly. In our code, we
+need similar operators for other Ocaml control forms: for generating
+case-matching statements and for- and while-loops. To make writing
+such code general and independent of the implementation of the monad,
+we define a function XXX. As the name implies, we do use control
+effect implemented via essentially delimited continuations (cite?).
+
+
+
 
 \section{Functors}
 
@@ -652,6 +719,10 @@ Functors and the generated return type: the Out structure.
 Making state modular and composable: several aspects can contribute
 to the state, without interference (show: Rank, Det, Permutation
 aspects).
+What is state and why we need it: making aspects interleave: use det
+as an example. State as an open record. List of polymorphic variants
+appeared to be the easiest way to implement such a union, in a pure
+functional way.
 
 Expressing domain constraints in functors (Div and integer domain).
 Show the type error that occurs in improper instantiation.
