@@ -19,23 +19,8 @@ let fetch s k = k s s
 (* another non-trivial morphism: generate a bit of code *)
 let codegen v cf = fun s k -> cf (k s v)
 
-let loop_gen l h x = fun s k -> 
-    k s .< for j = .~l to .~h do .~(x .<j>. s k) done >.
-
-type ('a,'c,'d) container2d = {
-  get: ('a,'c) code -> ('a,int) code -> 
-       ('a,int) code -> ('a,'d) code ;
-  set: ('a,'c) code -> ('a,int) code -> 
-       ('a,int) code -> ('a,'d) code -> ('a,unit) code;
-  dim1: ('a,'c) code -> ('a,int) code;
-  dim2: ('a,'c) code -> ('a,int) code;
-  mapper: ('a, 'd->'d) code -> ('a,'c) code -> 
-          ('a,'c) code;
-  copy: ('a, 'c) code -> ('a,'c) code
-} ;;
-
-type ('a,'b,'s,'w) binop = ('a,'b) code -> ('a,'b) code -> 
-      (('a,'b) code, 's,'w) monad
+let retLoop l h x = fun s k -> 
+    .< for j = .~l to .~h do .~(x .<j>. s k) done >.
 
 module type DOMAIN = sig
   type v
@@ -56,7 +41,7 @@ end
 module FloatDomain = 
   struct
     type v = float
-	type 'a vc = ('a,float) code
+    type 'a vc = ('a,float) code
     let zero = .< 0. >.  
     let one = .< 1. >. 
     let minusone = .< -1. >. 
@@ -70,6 +55,35 @@ module FloatDomain =
     let normalizerg = None
 end
 
+module type CONTAINER2D = sig
+  type obj
+  type contr
+  type 'a vc = ('a,contr) code
+  type 'a vo = ('a,obj) code
+  val get : 'a vc -> ('a,int) code -> ('a,int) code -> 'a vo
+  val set : 'a vc -> ('a,int) code -> ('a,int) code -> 'a vo -> ('a,unit) code
+  val dim1 : 'a vc -> ('a,int) code
+  val dim2 : 'a vc -> ('a,int) code
+  val mapper : ('a, obj->obj) code -> 'a vc -> 'a vc
+  val copy : 'a vc -> 'a vc
+end
+
+module ArrayContainer =
+  struct
+  type obj = float
+  type contr = float array array
+  type 'a vc = ('a,contr) code
+  type 'a vo = ('a,obj) code
+  let get = (fun x n m -> .< (.~x).(.~n).(.~m) >. )
+  let set = (fun x n m y -> .< (.~x).(.~n).(.~m) <- .~y >. )
+  let dim2 = (fun x -> .< Array.length .~x >.)
+  let dim1 = (fun x -> .< Array.length (.~x).(0) >. )
+  let mapper = (fun f a -> .< Array.map 
+      (fun x -> Array.map .~f x) .~a >.)
+  let copy = (fun a -> .<Array.map (fun x -> Array.copy x) 
+                       (Array.copy .~a) >. )
+end
+
 module type OUTPUT = sig
   type res
   type out
@@ -77,18 +91,18 @@ module type OUTPUT = sig
   type ('a,'c) lstate = ('a,'c,tdet) state
   val decl_det : unit -> (unit,('a,'c) lstate,('a,'w) code) monad
   val acc_det : ('a,out) code -> (unit,('a,'c) lstate,('a,'w) code) monad
-  val fin_det : ('a,out) code -> (('a,res) code,('a,'c) lstate,'w) monad
+  val fin_det : ('a,out) code -> ('a,res) code -> (('a,res) code,('a,'c) lstate,'w) monad
 end;;
 
-module NoDetOUTPUT(Dom: DOMAIN) =
+module NoDetOUTPUT(Dom: DOMAIN)(Ctr: CONTAINER2D with type obj = Dom.v) =
   struct
-  type res = Dom.v
+  type res = Ctr.contr
   type out = Dom.v
   type tdet = Dom.v
   type ('a,'c) lstate = ('a,'c,tdet) state
   let decl_det () = ret ()
   let acc_det v = ret ()
-  let fin_det res = mdo {ret res}
+  let fin_det det res = mdo {ret res}
 end
 
 module type RANK = sig
@@ -107,20 +121,23 @@ module Rank =
       codegen () (fun _ -> .< .~(s.r) >. ) }
 end
 
-module Gen(Dom: DOMAIN)(Out: OUTPUT with type out = Dom.v) =
+module Gen(Dom: DOMAIN)(Ctr: CONTAINER2D with type obj = Dom.v)(Out: OUTPUT with type res = Ctr.contr and type out = Dom.v and type tdet = Dom.v) =
   struct
     type v = Dom.v
-    let gen s k =
-	  let dogen a = mdo {
-	    () <-- Out.decl_det ();
-		res <-- retN Dom.minusone;
-		res <-- Out.fin_det res;
-		ret res } in
-	.<fun a -> .~(dogen .<a>. s k) >.
+    let gen =
+      let dogen a = mdo {
+        () <-- Out.decl_det ();
+        det <-- retN Dom.minusone;
+        res <-- Out.fin_det det a;
+        ret res }
+      and state a = {b = a; r = .< ref 0 >.; c = .< ref 0 >.;
+        m = .<0>.; n = .<0>.; det = .< ref .~Dom.one >.;
+        detsign = .< ref .~Dom.one >. } 
+      and k = (fun s v -> v) in
+    .<fun a -> .~(dogen .<a>. (state .<a>.) k) >.
 end
 
-module Gen1 = Gen(FloatDomain)(NoDetOUTPUT(FloatDomain));;
-Gen1.gen () (fun s v -> v) ;;
+module Gen1 = Gen(FloatDomain)(ArrayContainer)(NoDetOUTPUT(FloatDomain)(ArrayContainer));;
 
 type outchoice = JustMatrix | Rank | Det | RankDet;;
 type dettrack = TrackNothing | TrackDet ;;
@@ -237,7 +254,7 @@ let zerobelow_gen dom contr choice =
       ret (r:('a,unit) code) } in
       mdo {
           st <-- fetch;
-          loop <-- loop_gen .<!(.~st.c)+1>. .< .~st.m-1>. body;
+          loop <-- retLoop .<!(.~st.c)+1>. .< .~st.m-1>. body;
           ret (loop:('a,unit) code) }
   else 
     let body ind = mdo {
@@ -255,7 +272,7 @@ let zerobelow_gen dom contr choice =
       ret (x:('a,unit) code) } in
       mdo {
           st <-- fetch;
-          loop <-- loop_gen .<!(.~st.c)+1>. .< .~st.m-1>. body;
+          loop <-- retLoop .<!(.~st.c)+1>. .< .~st.m-1>. body;
           ret loop }
   in
   let il1 i = mdo {
@@ -304,19 +321,7 @@ let specializer dom container ~fracfree ~outputs =
   gen [] (fun s v -> v) ;;
 
 
-let array_container = {
-  get = (fun x n m -> .< (.~x).(.~n).(.~m) >. );
-  set = (fun x n m y -> .< (.~x).(.~n).(.~m) <- .~y >. );
-  dim2 = (fun x -> .< Array.length .~x >.) ;
-  dim1 = (fun x -> .< Array.length (.~x).(0) >. ) ;
-  mapper = (fun f a -> .< Array.map 
-      (fun x -> Array.map .~f x) .~a >.);
-  copy = (fun a -> .<Array.map (fun x -> Array.copy x) 
-                       (Array.copy .~a) >. )
-};;
-
-let spec_ge_float = 
-    specializer dom_float array_container 
+let spec_ge_float = specializer dom_float array_container 
                 ~fracfree:false ~outputs:RankDet ;;
 
 let ge_float3 = .! spec_ge_float ;;
