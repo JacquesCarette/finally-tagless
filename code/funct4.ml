@@ -47,8 +47,6 @@ let ifM test th el = fun s k ->
 (* another non-trivial morphism: generate a bit of code *)
 (* let codegen v cf = fun s k -> cf (k s v) *)
 
-
-
 (* loops actually bind a value *)
 let retLoopM low high body = fun s k -> 
     k s .< for j = .~low to .~high do .~(body .<j>. s k0) done >.
@@ -58,7 +56,6 @@ let retWhileM cond body = fun s k ->
     k s .< while .~cond do .~(body s k0) done >.
 
 (* match for Some/None *)
-
 let retMatchM x som non = fun s k ->
     k s .< match .~x with
            | Some i -> .~(som .<i>. s k0)
@@ -67,13 +64,6 @@ let retMatchM x som non = fun s k ->
 (* nothing *)
 (* Need to use `fun' explictly to avoid monomorphising *)
 let retUnit = fun s k -> k s .< () >.
-
-
-
-
-
-
-
 
 (* Define the actual module types and instances *)
 module type DOMAIN = sig
@@ -309,30 +299,11 @@ module type OUTPUT = sig
      ('a,'w) code) monad
 end
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 (* Even if no rank is output, it needs to be tracked, as the rank
    is also the outer loop index! *)
 
 module TrackRank = 
   struct
-
-
-
-
   type 'a lstate = ('a, int ref) code
         (* the purpose of this function is to make the union open.
            Alas, Camlp4 does not understand the :> coercion notation *)
@@ -354,29 +325,6 @@ module TrackRank =
 end
 
 module Rank = 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
   struct
   type 'a lstate = 'a TrackRank.lstate
   (* open TrackRank *)
@@ -395,36 +343,14 @@ module NoRank = struct
   let succ = TrackRank.succ
   let rfetch = TrackRank.rfetch
   let fin () = ret .< -1 >.
-
-
 end
 
 (* We need to do the same thing for Determinant as for Rank.
    In the case of a non-fraction-free algorithm with no Det
    output, it is possible to not track the determinant, but
    in all other cases it is needed. *)
-
-
-
-
-
-
-
 module TrackDet(Dom: DOMAIN) = 
   struct
-
-
-
-
-
-
-
-
-
-
-
-
-
   type indet = Dom.v
   type outdet = indet
   type tdet = outdet ref
@@ -541,20 +467,11 @@ module FractionFreeUpdate(Dom:DOMAIN)(Ctr:CONTAINER2D with type obj=Dom.v)
   type 'a idx = ('a,int) code
   module D = Det
   let update b r c i k = mdo {
-      bik <-- Ctr.get b i k;
-      brc <-- Ctr.get b r c;
-      brk <-- Ctr.get b r k;
-      bir <-- Ctr.get b i r;
-      x <-- Dom.times bik brc;
-      y <-- Dom.times brk bir;
+      x <-- l2 Dom.times (Ctr.get b i k) (Ctr.get b r c);
+      y <-- l2 Dom.times (Ctr.get b r k) (Ctr.get b i r);
       z <-- Dom.minus x y;
       t <-- retS (Dom.normalizerg z);
       d <-- Det.get ();
-      (* debugging code - not quite right either because it works
-         by value instead of by name
-      p1 <-- ret ( Dom.print t );
-      p2 <-- ret ( Dom.print (liftGet d) );
-      p3 <-- seq p1 p2; *)
       ov <-- Dom.div t (liftGet d);
       Ctr.set b i k ov }
   let update_det v = Det.set v
@@ -616,63 +533,37 @@ module Gen(Dom: DOMAIN)
     let gen =
       let findpivot b r m n c = mdo {
           i <-- retN (liftRef .< -1 >. );
-          let bd j = mdo {
+          seqM (retLoopM r .<.~n-1>. (fun j -> mdo {
               bjc <-- Ctr.get b j c;
               ifM (ret .< not ( .~bjc = .~Dom.zero) >.)
                   (mdo { 
                        iv <-- retS (liftGet i);
-                       ifM
-                           (Logic.mcode_or (ret (Code .< .~iv == -1 >.))
-                                (mdo { bic <-- Ctr.get b iv c;
-                                       res <-- Dom.smaller_than bjc bic;
-                                       ret (Code res)}))
+                       ifM (Logic.mcode_or (ret (Code .< .~iv == -1 >.))
+                           (mdo { bic <-- Ctr.get b iv c;
+                                  res <-- Dom.smaller_than bjc bic;
+                                  ret (Code res)}))
                            (ret .< .~i := .~j >.)
                            (retUnit) })
-                 (retUnit) } in;
-          seqM (retLoopM r .<.~n-1>. bd)
+                 (retUnit) } ) )
                (ret .< if (! .~i) == -1 then None else Some ! .~i >.)} 
       and zerobelow b r c m n =
-        let inner_loop i = 
-          let body k = Update.update b r c i k in
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-              mdo { retLoopM .<.~c+1>. .<.~m-1>. body } in
-          let innerbody i = mdo {
-              bic <-- Ctr.get b i c;
-              ifM (ret .< not (.~bic = .~Dom.zero) >. )
-                  (seqM (inner_loop i) (Ctr.set b i c Dom.zero)) 
-                  (retUnit) } in
-          mdo {
-              v <-- Ctr.get b r c;
-              let ch = l1 Update.update_det (Ctr.get b r c) in;
-              seqM (retLoopM .<.~r+1>. .<.~n-1>. innerbody) ch } in
-
-
-
+        let innerbody i = mdo {
+            bic <-- Ctr.get b i c;
+            ifM (ret .< not (.~bic = .~Dom.zero) >. )
+                (seqM (retLoopM .<.~c+1>. .<.~m-1>. 
+                          (fun k -> Update.update b r c i k) )
+                      (Ctr.set b i c Dom.zero)) 
+                (retUnit) } in
+        mdo {
+              seqM (retLoopM .<.~r+1>. .<.~n-1>. innerbody) 
+                   (l1 Update.update_det (Ctr.get b r c)) } in
       let somg b c m n = fun i -> mdo {
           r <-- Out.R.rfetch ();
-          seqM (mdo {
-                  ifM (ret .< .~i <> ! .~r >. )
+          seqM (ifM (ret .< .~i <> ! .~r >. )
                       (ret (Ctr.swap_rows_stmt b (liftGet r) i))
-                      (retUnit) } )
-          (seqM (zerobelow b (liftGet r) (liftGet c) m n)
-             (Out.R.succ ())) }
+                      (retUnit) )
+               (seqM (zerobelow b (liftGet r) (liftGet c) m n)
+                     (Out.R.succ ())) }
       and non = Update.D.zero_sign () in
       let dogen a = mdo {
           r <-- Out.R.decl ();
