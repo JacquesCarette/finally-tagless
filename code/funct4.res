@@ -1,6 +1,10 @@
         MetaOCaml version 3.08.0 alpha 015
 
-# #   val res1 : ('a, Funct4.FArrayContainer.contr -> Funct4.NoFDetOutput.res) code =
+# #   val res1 :
+  ('a,
+   Funct4.FArrayContainer.contr ->
+   Funct4.OutJustMatrix(Funct4.FArrayContainer).res)
+  code =
   .<fun a_1 ->
    let t_2 = (ref 0) in
    let t_3 = (ref 0) in
@@ -26,7 +30,11 @@
     (t_2 := ((! t_2) + 1))
    done;
    t_5>.
-# val res2 : ('a, Funct4.FArrayContainer.contr -> Funct4.FDetOutput.res) code =
+# val res2 :
+  ('a,
+   Funct4.FArrayContainer.contr ->
+   Funct4.OutDet(Funct4.FArrayContainer)(Funct4.FDet).res)
+  code =
   .<fun a_1 ->
    let t_2 = (ref 0) in
    let t_3 = (ref 0) in
@@ -54,9 +62,13 @@
     (t_2 := ((! t_2) + 1))
    done;
    (t_5, (! t_8))>.
-# val res3 : ('a, Funct4.IArrayContainer.contr -> Funct4.NoIDetOutput.res) code =
+# val res3 :
+  ('a,
+   Funct4.IArrayContainer.contr ->
+   Funct4.OutRank(Funct4.IArrayContainer)(Funct4.Rank).res)
+  code =
   .<fun a_1 ->
-   let t_2 = (ref 0) in
+   let t_2 = (ref 1) in
    let t_3 = (ref 0) in
    let t_5 = (Array.map (fun x_4 -> (Array.copy x_4)) (Array.copy a_1)) in
    let t_6 = (Array.length a_1.(0)) in
@@ -78,10 +90,14 @@
     (match t_10 with | Some (i_11) -> () | None -> ());
     (t_2 := ((! t_2) + 1))
    done;
-   t_5>.
-# val res4 : ('a, Funct4.IArrayContainer.contr -> Funct4.IDetOutput.res) code =
+   (t_5, (! t_2))>.
+# val res4 :
+  ('a,
+   Funct4.IArrayContainer.contr ->
+   Funct4.OutDetRank(Funct4.IArrayContainer)(Funct4.IDet)(Funct4.Rank).res)
+  code =
   .<fun a_1 ->
-   let t_2 = (ref 0) in
+   let t_2 = (ref 1) in
    let t_3 = (ref 0) in
    let t_5 = (Array.map (fun x_4 -> (Array.copy x_4)) (Array.copy a_1)) in
    let t_6 = (Array.length a_1.(0)) in
@@ -105,9 +121,18 @@
     (match t_12 with | Some (i_13) -> () | None -> ());
     (t_2 := ((! t_2) + 1))
    done;
-   (t_5, (! t_8))>.
-#   val r1 : Funct4.FArrayContainer.contr -> Funct4.NoFDetOutput.res = <fun>
-# val r2 : Funct4.FArrayContainer.contr -> Funct4.FDetOutput.res = <fun>
-# val r3 : Funct4.IArrayContainer.contr -> Funct4.NoIDetOutput.res = <fun>
-# val r4 : Funct4.IArrayContainer.contr -> Funct4.IDetOutput.res = <fun>
+   (t_5, (! t_8), (! t_2))>.
+#   val r1 :
+  Funct4.FArrayContainer.contr ->
+  Funct4.OutJustMatrix(Funct4.FArrayContainer).res = <fun>
+# val r2 :
+  Funct4.FArrayContainer.contr ->
+  Funct4.OutDet(Funct4.FArrayContainer)(Funct4.FDet).res = <fun>
+# val r3 :
+  Funct4.IArrayContainer.contr ->
+  Funct4.OutRank(Funct4.IArrayContainer)(Funct4.Rank).res = <fun>
+# val r4 :
+  Funct4.IArrayContainer.contr ->
+  Funct4.OutDetRank(Funct4.IArrayContainer)(Funct4.IDet)(Funct4.Rank).res =
+  <fun>
 # 
