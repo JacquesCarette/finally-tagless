@@ -90,6 +90,7 @@ is the determinant *)
      det <-- fetch;
      r   <-- Dom.plus .<! .~det>. v;
      codegen () (fun x -> .<begin .~det := .~r; .~x end>. ) }
+
    let fin_det result = mdo {
      det <-- fetch;
      ret .< (.~result,! .~det)>. }
