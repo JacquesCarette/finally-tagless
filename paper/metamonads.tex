@@ -744,9 +744,109 @@ will prevent us from making such a mistake.
 
 The use of a |functor| for making a container parametric is fairly 
 straightforward.  It gets more interesting when one turns to the aspect
-of what to return from the GE algorithm.
+of what to return from the GE algorithm.  One could create an algebraic
+data type (as was done in \cite{carette04}) to encode the various
+choices; but this is wholly unsatisfying as we know that for any single
+use, only one of the choices is ever possible, yet any routine which
+calls the generated code must deal with these unreachable options.
+Instead we use a module type with an \emph{abstract} type |res| for the
+result type; the actual result type is then made by instantiating
+this module type with different modules that decide what will be 
+output: the matrix, the matrix and the rank, the matrix and the
+determinant, the matrix, rank and determinant, and so on.  More
+precisely, below we show this type and one instantiation.
 
-Functors and the generated return type: the Out structure.
+\begin{small}
+\begin{code}
+module type OUTPUT = sig
+  type contr
+  type res
+  module D : DETERMINANT
+  module R : RANK
+  module P : TRACKPIVOT
+  val make_result : ('a,contr) code -> 
+    (('a,res) code,
+     [> `TDet of 'a D.lstate | `TRan of 'a R.lstate | `TPivot of 'a P.lstate]
+       list,
+     ('a,'w) code) monad
+end
+
+module OutDetRank(Dom:DOMAIN)(C: CONTAINER2D)
+    (Det : DETERMINANT with type indet = Dom.v and type outdet = Dom.v)
+    (Rank : RANK) =
+  struct
+  module Ctr = C(Dom)
+  type contr = Ctr.contr
+  type res = contr * Det.outdet * int
+  module D = Det
+  module R = Rank
+  module P = DiscardPivot
+  let make_result b = mdo {
+    det  <-- D.fin ();
+    rank <-- R.fin ();
+    ret .< ( .~b, .~det, .~rank ) >. }
+end
+\end{code}
+\end{small}
+\noindent It is worthwhile noting that while the |OUTPUT| type is
+relatively simple, instantiating it requires a rather complex functor
+with some additional type constraints.  While we will explain some of
+the details of the above code later, right now it suffices to notice
+that |res| above is a 3-tuple with type |contr * Det.outdet * int|,
+where in another instance this type is simply |contr|, and these are
+formally incomparable types.
+
+As is apparent from the output choices, several different quantities
+\emph{may} need to be tracked in a particular GE implementation.
+We therefore need to be able to conditionally generate code-variables,
+and weave in corresponding tracking code for each of these quantities.
+To be precise, we may need to keep track (independently) of the rank,
+the determinant and the permutation list.  These pieces of data then
+become part of the \emph{state} that is tracked by our monad.  To have
+all this choice when needed, and yet have our code be modular and
+composable as well as ensuring that the generated code does not 
+contain any abstraction artifacts, it is important to make this 
+state modular.  As this discussion is rather abstract, an example
+will likely illustrate our point more clearly: we will show the 
+code for tracking the determinant.
+
+\begin{small}
+\begin{code}
+module type DETERMINANT = sig
+  type indet
+  type outdet
+  type tdet = outdet ref
+  type 'a lstate
+  val decl : unit -> 
+    (unit, [> `TDet of 'a lstate ] list, ('a,'b) code) monad
+  val upd_sign : unit -> 
+    (('a,unit) code, [> `TDet of 'a lstate ] list, ('a,'b) code) monad
+  val zero_sign : unit -> 
+    (('a,unit) code, [> `TDet of 'a lstate ] list, ('a,'b) code) monad
+  val acc : ('a,indet) code -> 
+    (('a,unit) code, [> `TDet of 'a lstate ] list, ('a,'b) code) monad
+  val get : unit ->
+    (('a,tdet) code, [> `TDet of 'a lstate ] list, ('a,'b) code) monad
+  val set : ('a,indet) code -> 
+    (('a,unit) code, [> `TDet of 'a lstate ] list, ('a,'b) code) monad
+  val fin : unit -> 
+    (('a,outdet) code, [> `TDet of 'a lstate ] list, ('a,'b) code) monad
+end
+\end{code}
+\end{small}
+\noindent  Determinant tracking is quite complex: we need to 
+declare that we are tracking the determinant (|decl|), have some functions
+for tracking the sign of the determinant (|upd_sign|,|zero_sign|),
+|set|, |get|, accumulate (|acc|) unsigned values for the determinant, as 
+well as returning a final value (|fin|) for the determinant.  In some cases,
+like for float matrices where we do not return the determinant, all of
+the above should generate no code at all, while for integer matrices where
+we want the determinant as part of the output, each of these need to be
+implemented.
+
+\jacques{I am stopping my description of state here -- what I have
+written above is quite dull, and not making the point very well.
+I will need to revisit this}
 
 Making state modular and composable: several aspects can contribute
 to the state, without interference (show: Rank, Det, Permutation
@@ -761,7 +861,9 @@ Show the type error that occurs in improper instantiation.
 
 Show several examples (e.g., code with NullPivot and nodet: no traces
 of either det nor pivoting). Then the code with RowPivoting, Det and
-float domain.
+float domain. \jacques{which would really be great if we had a lot 
+more space, but I think we're already long, so something is going to
+have to be cut.  Maybe not this, but something!}
 
 \section{Related work}\label{related}
 
@@ -772,17 +874,38 @@ In this paper we do not use monadic fixpoints (because the generator
 is not recursive) but we make extensive use of monadic operations for
 generating conditional and looping operations.
 
+\jacques{What do we consider \emph{related work} here?  Do we essentially gloss 
+over related work in numerical software, code generation in general,
+aspect-oriented stuff?  We don't want this section to be too long, but
+not so short that we make it seem like we're inventing more than we
+really are}
+
 \section{Future work}\label{future}
 connections with delimited continuations: making notation
-more direct-style and potentially clearer.
+more direct-style and potentially clearer.  More syntactic sugar
+would help a lot here.
 
 More aspects that can be handled: Input variations (augmented
 matrices). Fit into the larger program family, where there are
 more aspects still.
 
+Making all of the algorithmic code be completely independent of 
+MetaOCaml markup and isolate all the code generation to a select
+few 'base' modules and functors.  This should allow for simpler
+debugging, where one can choose to instantiate either a direct-style
+set of base modules for debugging, or a code-generation style set
+of base modules for generating optimized code.
+
 \section{Conclusion}\label{conclusion}
 
 Mention the mdo notation. Mention it into the introduction.
+
+Relation with aspect-oriented code: in AspectJ, aspects are (comparatively)
+lightly typed, and are post-facto extensions of an existing piece of
+code.  Here aspects are weaved together ``from scracth'' to make up a
+piece of code/functionality.  One can understand previous work to be
+more akin to dynamically typed aspect weaving, while we have started
+investigating statically typed aspect weaving.
 
 \bibliography{metamonads}
 \bibliographystyle{plain}
