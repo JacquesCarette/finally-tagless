@@ -38,9 +38,8 @@ test: $(OBJ) $(RES) $(TEST)
 clean-test:
 	rm -f *.out
 
-.PHONY: top-level
-top-level: $(SYNTAX_EXTENSION)
-	ocaml camlp4o.cma pa_extend.cmo $(SYNTAX_EXTENSION)
+mytop: 
+	ocamlmktop -o mytop nums.cma
 
 .PHONY: clean
 clean:
@@ -56,10 +55,10 @@ clean:
 ########################################################################
 
 %.cmo: %.ml
-	metaocamlc -pp '$(PP)' -g -c $<
+	metaocamlc -pp '$(PP)' -c $<
 
-%.out: test-%.ml %.cmo
-	metaocaml ./$*.cmo < $< > $@
+%.out: test-%.ml %.cmo mytop
+	./mytop ./$*.cmo < $< > $@
 
 ########################################################################
 #
