@@ -5,10 +5,13 @@ let bind a f = fun s k -> a s (fun s' b -> f b s' k) ;;
 let ret = retS
 
 (* state monad morphism: get the value *)
-(* let fetch s k = k s (List.hd s) *)
+let fetch s k = k s s
 
 (* another non-trivial morphism: generate a bit of code *)
 let codegen v cf = fun s k -> cf (k s v)
+
+let loop_gen l h x = fun s k -> 
+    k s .< for j = .~l to .~h do .~(x .<j>. s k) done >.
 
 type ('a,'c,'d) container2d = {
   get: ('a,'c) code -> ('a,int) code -> 
@@ -25,6 +28,7 @@ type ('a,'c,'d) container2d = {
 type ('a,'c,'d) state = {b:('a,'c) code; 
   r:('a,int ref) code; c:('a,int ref) code; 
   m:('a,int) code; n:('a,int) code;
+  i:('a,int) code; j:('a,int) code;
   det:('a,'d ref) code; detsign:('a,'d ref) code};;
 
 type ('a,'b,'s,'w) cont = 's -> ('s -> ('a,'b) code -> 'w) -> 'w;;
@@ -83,7 +87,7 @@ let choose_output dom s = function
   | RankDet    -> .< MatrixRankDet( .~(s.b), (! .~(s.r)), dom.times' .<! .~(s.det)>. .<! .~(s.detsign)>. ) >.
 
 let ge_state_gen (dom:('a,'b,('a,'c,'b) state, ('a, unit) code) domain) 
-      contr findpivot swap zerobelow choice k s = 
+      contr findpivot swap zerobelow choice =
   let main_loop s = 
   .< while !(.~(s.c)) < .~(s.m) && !(.~(s.r)) < .~(s.n) do
     begin
@@ -91,7 +95,7 @@ let ge_state_gen (dom:('a,'b,('a,'c,'b) state, ('a, unit) code) domain)
     Some i -> begin
         if i <> !(.~(s.r)) then
             for j = !(.~(s.c)) to .~(s.m)-1 do
-                .~(swap s .<i>. .<j>.);
+                .~(swap .<i>. .<j>. s);
             done;
         .~(zerobelow s) ;
         (.~(s.r)) := !(.~(s.r)) + 1;
@@ -104,41 +108,46 @@ let ge_state_gen (dom:('a,'b,('a,'c,'b) state, ('a, unit) code) domain)
     .~(s.c) := !(.~(s.c)) + 1;
   done >. in
 
-  let dogen a = mdo {
-      r <-- retS ref 0;
-      c <-- retS ref 0;
-      b <-- retS (mdapply1 contr.mapper dom.normalizerf (contr.copy a));
-      m <-- retS (contr.dim1 a);
-      n <-- retS (contr.dim2 a);
-      det <-- retS ref dom.one;
-      detsign <-- retS ref dom.one;
-      code <-- codegen () (fun st ->
-        seq
-          (main_loop st )
-          (choose_output dom st choice.outputs ) );
-       ret code } in
-    .<fun a -> .~(dogen .<a>. s k) >.
-   ;;
+  let gen st k = 
+      let dogen a = mdo {
+          r <-- retS ref 0;
+          c <-- retS ref 0;
+          b <-- retS (mdapply1 contr.mapper dom.normalizerf (contr.copy a));
+          m <-- retS (contr.dim1 a);
+          n <-- retS (contr.dim2 a);
+          det <-- retS ref dom.one;
+          detsign <-- retS ref dom.one;
+          i <-- retS .<0>.;
+          j <-- retS .<0>.;
+          st <-- retS {b=b; r=r; c=c; m=m; n=n; det=det; 
+                       detsign=detsign; i=i; j=j};
+          code <-- codegen st (fun st ->
+            seq
+              (main_loop st )
+              (choose_output dom st choice.outputs ) );
+           ret code } in
+        .<fun a -> .~(dogen .<a>. st k) >.
+   in gen ;;
 
-let swapr_gen dom contr track k (s:('a,'c,'d) state) (i:('a,int) code) j : ('a,unit) code =
-  let swap = 
-  .< let b = .~(s.b) and r = !(.~(s.r)) and i= .~i 
-     and j= .~j in
-      let t = .~(contr.get .<b>. .<i>. .<j>. ) in  
-        seq
-            (contr.set .<b>. .<i>. .<j>. 
-               (contr.get .<b>. .<r>. .<j>. ))
-            (contr.set .<b>. .<r>. .<j>. .<t>. )
-  >. in
-  let res = mdo {
+let swapr_gen dom contr track = fun i j -> 
+  mdo {
+     s <-- fetch;
+     swap <-- retS 
+      .< let b = .~(s.b) and r = !(.~(s.r)) and i= .~i 
+         and j= .~j in
+          let t = .~(contr.get .<b>. .<i>. .<j>. ) in  
+            seq
+                (contr.set .<b>. .<i>. .<j>. 
+                   (contr.get .<b>. .<r>. .<j>. ))
+                (contr.set .<b>. .<r>. .<j>. .<t>. )
+      >. ;
     r <-- dom.times .<! .~(s.detsign)>. dom.minusone;
     t <-- retS .<begin .~(s.detsign) := .~r; .~swap end>. ;
     ret (match track with
     | TrackNothing -> swap
-    | TrackDet     -> t ) } in
-    (res s k);;
+    | TrackDet     -> t ) } ;;
 
-let findpivot_gen dom contr orcond_gen = fun s ->
+let findpivot_gen dom contr orcond_gen = fun s k ->
   .< let i = ref (-1) in begin 
     for j = ! .~s.r to .~s.n-1 do
       if not ( .~(contr.get .< .~s.b>. .<j>. 
@@ -153,75 +162,86 @@ let findpivot_gen dom contr orcond_gen = fun s ->
       if !i == -1 then None else Some !i;
   end >. ;;
 
-let zerobelow_gen dom contr choice k st =
-  let loop_gen l h x = mdo {
-    r <-- retS .< for j = .~l to .~h do .~(x .<j>. st k) done >. ;
-    ret r } in
-  let inner_loop i s = 
+let zerobelow_gen dom contr choice =
+  let inner_loop i = 
   if not choice.fracfree then 
-    let body ind = mdo {
+    let body = fun ind -> mdo {
+      st <-- fetch;
       t <-- dom.div
-          (contr.get .<.~s.b>. i .<!(.~s.c)>. )
-          (contr.get .<.~s.b>. .<!(.~s.r)>. .<!(.~s.c)>. );
-      l <-- dom.times t (contr.get .<.~s.b>. .<!(.~s.r)>. ind );
-      m <-- dom.minus (contr.get .<.~s.b>. i ind) l;
-      r <-- retN (contr.set .<.~s.b>. .<.~i>. ind 
+          (contr.get .<.~st.b>. i .<!(.~st.c)>. )
+          (contr.get .<.~st.b>. .<!(.~st.r)>. .<!(.~st.c)>. );
+      l <-- dom.times t (contr.get .<.~st.b>. .<!(.~st.r)>. ind );
+      m <-- dom.minus (contr.get .<.~st.b>. i ind) l;
+      r <-- retN (contr.set .<.~st.b>. .<.~i>. ind 
           (dapply1 dom.normalizerg m)) ;
-      ret r } in
-      loop_gen .<!(.~s.c)+1>. .< .~s.m-1>. (body)
+      ret (r:('a,unit) code) } in
+      mdo {
+          st <-- fetch;
+          loop <-- loop_gen .<!(.~st.c)+1>. .< .~st.m-1>. body;
+          ret (loop:('a,unit) code) }
   else 
     let body ind = mdo {
+      st <-- fetch;
       x <-- (dom.times 
-          (contr.get .<.~s.b>. .<.~i>. ind )
-          (contr.get .<.~s.b>. .<! .~s.r>. .<! .~s.c>. ));
+          (contr.get .<.~st.b>. .<.~i>. ind )
+          (contr.get .<.~st.b>. .<! .~st.r>. .<! .~st.c>. ));
       y <-- (dom.times 
-          (contr.get .<.~s.b>. .<!(.~s.r)>. ind )
-          (contr.get .<.~s.b>. .<.~i>. .<! .~s.r>. ));
+          (contr.get .<.~st.b>. .<!(.~st.r)>. ind )
+          (contr.get .<.~st.b>. .<.~i>. .<! .~st.r>. ));
       z <-- dom.minus x y;
       t <-- retS (dapply1 dom.normalizerg z);
-      ov <-- dom.div t .<! .~s.det>. ;
-      x <-- retN (contr.set .<.~s.b>. .<.~i>. ind ov);
-      ret x} in
-      loop_gen .<!(.~s.c)+1>. .< .~s.m-1>. body;
+      ov <-- dom.div t .<! .~st.det>. ;
+      x <-- retN (contr.set .<.~st.b>. .<.~i>. ind ov);
+      ret (x:('a,unit) code) } in
+      mdo {
+          st <-- fetch;
+          loop <-- loop_gen .<!(.~st.c)+1>. .< .~st.m-1>. body;
+          ret loop }
   in
-  let outer_loop x y =
-  .< for i = !(.~st.r)+1 to .~st.n-1 do
-    if not ( .~(contr.get .<.~st.b>. .<i>. .<! .~st.c>. ) 
+  let il1 i = mdo {
+    x <-- inner_loop i;
+    ret (x:('a,unit) code)} 
+  and ss j = mdo {
+    st <-- fetch;
+    x <-- retS (contr.set .<.~st.b>. j .<! .~st.c>. dom.zero);
+    ret (x:('a,unit) code) } in
+  let outer_loop' = mdo {
+    st <-- fetch;
+    r <-- (fun s k -> .< for ii = !(.~st.r)+1 to .~st.n-1 do
+    if not ( .~(contr.get .<.~st.b>. .<ii>. .<! .~st.c>. ) 
              = .~dom.zero) then
-      begin .~(x .<i>. st k ); .~(y .<i>. st k) end;
-  done >. in
-  let il1 ind = mdo {
-    x <-- inner_loop ind st;
-    ret x} and
-      ss ind = mdo {
-    x <-- retS (contr.set .<.~st.b>. ind .<! .~st.c>. dom.zero);
-    ret x } in
-  let outer_loop' = outer_loop (il1) (ss) in
+      begin .~(il1 .<ii>. st k); .~(ss .<ii>. st k) end;
+  done >. );
+    ret r } in
   match choice.track with
   | TrackNothing -> outer_loop'
-  | TrackDet     -> seq' outer_loop'
-    (if choice.fracfree then
-      .< .~st.det := 
-        .~(contr.get .<.~st.b>. .<! .~st.r>. .<! .~st.c>. )>.
-    else
-      let mm = mdo {
-           xx <-- dom.times .<! .~st.det>.
-              (contr.get .< .~st.b>.  .<! .~st.r>. .<! .~st.c>. ) ;
-           yy <-- retS .< .~st.det := .~xx >. ;
-           ret yy} in
-      mm st k) ;;
+  | TrackDet     -> mdo {
+      st <-- fetch;
+      ol <-- outer_loop';
+      rest <-- (if choice.fracfree then
+          retS .< .~st.det := 
+            .~(contr.get .<.~st.b>. .<! .~st.r>. .<! .~st.c>. )>.
+        else
+          mdo {
+               xx <-- dom.times .<! .~st.det>.
+                  (contr.get .< .~st.b>.  .<! .~st.r>. .<! .~st.c>. ) ;
+               yy <-- retS .< .~st.det := .~xx >. ;
+               ret yy} );
+      r <-- seq ol rest;
+      ret r }
 
 let specializer dom container ~fracfree ~outputs =
   let t = (if fracfree || outputs == Det 
                        || outputs == RankDet then 
       TrackDet else TrackNothing ) in
-  let k = (fun s v -> v) in
-  let choice = 
-      {fracfree=fracfree; track=t; outputs=outputs} in
-  let fp = findpivot_gen dom container orcond_gen in
-  let swap = swapr_gen dom container choice.track k in
-  let zb = zerobelow_gen dom container choice k in
-  ge_state_gen dom container fp (swap) (zb) choice k;;
+  let choice = {fracfree=fracfree; track=t; outputs=outputs} in
+  let gen = mdo {
+      fp <-- findpivot_gen dom container orcond_gen;
+      swap <-- swapr_gen dom container choice.track;
+      zb <-- zerobelow_gen dom container choice;
+      res <-- ge_state_gen dom container fp (swap) (zb) choice;
+      return res } in
+  gen [] (fun s v -> v) ;;
 
 let dom_float = { 
    zero = .< 0. >. ; 
