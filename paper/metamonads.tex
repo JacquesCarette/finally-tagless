@@ -543,7 +543,8 @@ A careful study of Gaussian Elimination \cite{carette04} shows that
 recur frequently:
 \begin{enumerate}
 	\item \textbf{Length measure}:  For stability reasons
-		(whether numerical or coefficient growth), if a domain possesses
+		(whether numerical or coefficient growth), if a domain
+	  possesses
 		an appropriate length measure, this is sometimes used to choose
 		an ``optimal'' pivot for row exchanges.
 	\item \textbf{Normalization and zero-equivalence}: Whether the 
@@ -574,43 +575,18 @@ so we can take advantage extensions, type abstraction and constraints,
 and especially parameterized structures (i.e., \emph{functors}).
 We first define the type of the domain, the signature |DOMAIN| to which
 different domain must satisfy:
-\begin{small}
+\begin{figure*}
 \begin{code}
 module type DOMAIN = sig
-  type v
+  type v    type 'a vc = ('a,v) code
   type kind (* Field or Ring ? *)
-  type 'a vc = ('a,v) code
   val zero : 'a vc   val one : 'a vc
   val plus : 'a vc -> 'a vc -> ('a vc, 's, 'w) monad
-  val times : 'a vc -> 'a vc -> ('a vc, 's, 'w) monad
-  val minus : 'a vc -> 'a vc -> ('a vc, 's, 'w) monad
-  val uminus : 'a vc -> ('a vc, 's, 'w) monad
-  val div : 'a vc -> 'a vc -> ('a vc, 's, 'w) monad
+  (* times, minus, uminus, div elided for brevity *)
   val better_than : ('a vc -> 'a vc -> 
       (('a,bool) code, 's, 'w) monad) option
   val normalizerf : (('a,v -> v) code ) option
-  val normalizerg : 'a vc -> 'a vc
 end 
-\end{code}
-\end{small}
-\noindent  The first item to notice is that the types above are
-generally lifted twice: once from the value domain |v| to the code
-domain |'a vc|, and once more from values to monadic computations
-|('a vc, 's, 'w) monad|.  Since there are times where we do not want
-to redundantly walk a whole matrix to apply normalization when 
-normalization is not necessary, |normalizerf| is optional.
-
-One particular instantiation of the domain (a particular structure of
-|DOMAIN| signature) is the |int| domain \oleg{should we put the following?}
-|IntegerDomain : DOMAIN| to say that the compiler will verify that our
-|IntegerDomain| is indeed a |DOMAIN|, that is, satisfies the required
-signature. The constraint |DOMAIN| may be omitted; in that case, 
-the compiler will verify the type when we try to use that structure as
-a |DOMAIN|. In any case, the errors such as missing ``methods'' or 
-methods of wrong types will be caught statically, even \emph{before} any code
-generation takes place.
-\begin{small}
-\begin{code}
 module IntegerDomain : DOMAIN = struct
   type v = int  type kind = domain_is_ring
   type 'a vc = ('a,v) code
@@ -621,39 +597,54 @@ module IntegerDomain : DOMAIN = struct
   ...
 end
 \end{code}
-\end{small}
-\noindent Here |domain_is_ring| is an abstract data type to encode semantic constraint
--- the kind of the domain.
-While the |DOMAIN| type may have looked daunting to some, 
-the implementation is quite straightforward.  It is equally simple to 
-make implementations for |float| and for |Num.num| (arbitrary precision
-exact rational numbers).  With scarcely more work (as these are not 
-built-in and the arithmetic must be implemented), $\mathbb{Z}_p$,
-$\mathbb{Z}\left[x\right]$, $\mathbb{Q}\left(x\right)$ and more
-complex domains can be done as well.
+\end{figure*}
+\noindent  The first item to notice is that the types above are
+generally lifted twice: once from the value domain |v| to the code
+domain |'a vc|, and once more from values to monadic computations
+|('a vc, 's, 'w) monad|.  Since there are times where we do not want
+to redundantly walk a whole matrix to apply normalization when 
+normalization is not necessary, |normalizerf| is optional.
+
+One particular instantiation of the domain (a particular structure of
+|DOMAIN| signature) is the |int| domain. The notattion
+|module IntegerDomain : DOMAIN| makes the compiler
+verify that our |IntegerDomain| is indeed a |DOMAIN|, that is,
+satisfies the required signature. The constraint |DOMAIN| may be
+omitted; in that case, the compiler will verify the type when we try
+to use that structure as a |DOMAIN|. In any case, the errors such as
+missing ``methods'' or methods of wrong types will be caught
+statically, even \emph{before} any code generation takes place. The
+abstract type |domain_is_ring| encodes a semantic constraint that the
+full division is not available. While the |DOMAIN| type may have
+looked daunting to some, the implementation is quite straightforward.
+It is equally simple to make implementations for |float| and for
+|Num.num| (arbitrary precision exact rational numbers).  With scarcely
+more work (as these are not built-in and the arithmetic must be
+implemented), $\mathbb{Z}_p$, $\mathbb{Z}\left[x\right]$,
+$\mathbb{Q}\left(x\right)$ and more complex domains can be done as
+well.
 
 Parametrizing by the kind of container used to represent a matrix is
 almost as straightforward.  We choose to make the container parametric
 over a |DOMAIN| by making containers functors from a |DOMAIN| module
-to the actual implementation of a container.  Our containers are
-explicitly 2-dimensional, and we provide functions |dim1| and |dim2|
-to extract each.  We also need |get| and |set| functions -- these come
-in both a monadic flavour as well as a direct code-generation version.
-For convenience and efficiency, several additional functions are also
-required: a way to |copy| a container, a method (|mapper|) to map an
-optional function over the elements of a container, as well as methods
-to swap rows and columns.  The inclusion of these functions in the 
-signature of all containers makes it simpler to optimize the relevant
-functions depending on the actual representation of the container
-while not burdening the users of containers with efficiency details.
-As an example, below is an implementation of a matrix as an
-array of rows (themselves arrays).  This implementation clearly shows
-how swapping rows is more efficient than swapping columns in this
-representation.  We have not (yet) implemented the further potential
-optimization wherein if it is known that part of two rows/columns are already
-known to be equal (in fact to |Dom.zero| in the case of GE) and
-row/column exchange needs to be performed element-wise, then certain
-swaps are unecessary.
+to the actual implementation of a container. The functor signature
+|CONTAINER2D| specifies that a container must provide functions |dim1|
+and |dim2| to extract the dimensions, functions |get| and |set| to
+generate container getter and setters, the cloning generator |copy|
+and functions that generate code for row and column swapping. The
+inclusion of these functions in the signature of all containers makes
+it simpler to optimize the relevant functions depending on the actual
+representation of the container while not burdening the users of
+containers with efficiency details. 
+\omitnow{ As an example, below is
+  an implementation of a matrix as an array of rows (themselves
+  arrays).  This implementation clearly shows how swapping rows is
+  more efficient than swapping columns in this representation.  We
+  have not (yet) implemented the further potential optimization
+  wherein if it is known that part of two rows/columns are already
+  known to be equal (in fact to |Dom.zero| in the case of GE) and
+  row/column exchange needs to be performed element-wise, then certain
+  swaps are unecessary.
 
 \begin{small}
 \begin{code}
@@ -696,7 +687,7 @@ end
 Fortran-style access, |Bigarray| or |Bigarray.Array2| is also possible.
 Naturally, for proper use of |Bigarray| with specific types, it is 
 important that the |DOMAIN| type matches -- but luckily the compiler 
-will prevent us from making such a mistake.
+will prevent us from making such a mistake.}
 
 The use of a |functor| for making a container parametric is fairly 
 straightforward.  It gets more interesting when one turns to the aspect
@@ -710,45 +701,34 @@ result type; the actual result type is then made by instantiating
 this module type with different modules that decide what will be 
 output: the matrix, the matrix and the rank, the matrix and the
 determinant, the matrix, rank and determinant, and so on.  More
-precisely, below we show this type and one instantiation.
+precisely, below we show this module type and one instantiation,
+which specifies the output of a  GE algorithm as a 3-tuple
+|contr * Det.outdet * int| of the U-factor, the determinant and the rank.
 
 \begin{small}
 \begin{code}
 module type OUTPUT = sig
   type contr  type res
-  module D : DETERMINANT
-  module R : RANK
+  module D : DETERMINANT   module R : RANK
   module P : TRACKPIVOT
   val make_result : ('a,contr) code -> 
     (('a,res) code,
      [> `TDet of 'a D.lstate | `TRan of 'a R.lstate | `TPivot of 'a P.lstate]
-       list,
-     ('a,'w) code) monad
+       list, ('a,'w) code) monad
 end
-
 module OutDetRank(Dom:DOMAIN)(C: CONTAINER2D)
     (Det : DETERMINANT with type indet = Dom.v and type outdet = Dom.v)
     (Rank : RANK) = struct
   module Ctr = C(Dom)
   type contr = Ctr.contr
   type res = contr * Det.outdet * int
-  module D = Det
-  module R = Rank
+  module D = Det   module R = Rank
   module P = DiscardPivot
-  let make_result b = mdo {
-    det  <-- D.fin ();
-    rank <-- R.fin ();
-    ret .< ( .~b, .~det, .~rank ) >. }
+  let make_result b = mdo \{ det  <-- D.fin ();  rank <-- R.fin ();
+    ret .< ( .~b, .~det, .~rank ) >. \}
 end
 \end{code}
 \end{small}
-\noindent It is worthwhile noting that while the |OUTPUT| type is
-relatively simple, instantiating it requires a rather complex functor
-with some additional type constraints.  While we will explain some of
-the details of the above code later, right now it suffices to notice
-that |res| above is a 3-tuple with type |contr * Det.outdet * int|,
-where in another instance this type is simply |contr|, and these are
-formally incomparable types.
 
 As is apparent from the output choices, several different quantities
 \emph{may} need to be tracked in a particular GE implementation.
@@ -777,36 +757,38 @@ module type DETERMINANT = sig
 end
 \end{code}
 \end{small}
-\noindent  Determinant tracking is quite complex: we need to 
-declare that we are tracking the determinant (|decl|), have some functions
-for tracking the sign of the determinant (|upd_sign|,|zero_sign|),
-|set|, |get|, accumulate (|acc|) unsigned values for the determinant, as 
-well as returning a final value (|fin|) for the determinant.  In some cases,
-like for float matrices where we do not return the determinant, all of
-the above should generate no code at all, while for integer matrices where
-we want the determinant as part of the output, each of these need to be
-implemented.
-
-\jacques{I am stopping my description of state here -- what I have
-written above is quite dull, and not making the point very well.
-I will need to revisit this}
-
-Making state modular and composable: several aspects can contribute
-to the state, without interference (show: Rank, Det, Permutation
-aspects).
-What is state and why we need it: making aspects interleave: use det
-as an example. State as an open record. List of polymorphic variants
+\noindent  Determinant tracking aspects involves being able to
+generate code that defines variables used for tracking (|decl|),
+generate code that updates the sign or the absolute
+value of the determinant, and finally, converting the tracking state
+to the final determinant value of the type |outdet|. GE of a
+floating-point matrix with no determinant tracking uses the
+instantiation of |DETERMINANT| where |outdet| is |unit| and all the
+functions of that module generate no code. For integer matrices, we
+have to track some aspects of the determinant even if we don't output
+it. The determinant tracking aspect is complex becasue tracking
+variables, if any, are to be declared at the beginning of GE; the sign
+of the determinant has to be updated on each row or column
+permutation; the value of the determinant should be updated per each
+pivoting. We use |lstate| to pass the tracking state, which may be, for
+example, a piece of code for the value of the type |float ref| among
+various determinant-tracking functions. The |lstate| is a part of the
+overall monadic state. Other aspects, e.g., rank tracking, may use the
+monadic state for passing of rank tracking variables. To be able to
+compose determinant and rank tracking functors -- each of which may
+(or may not) use the monadic state for passing its own data -- we make
+an extensive use of open records (list of polymorphic variants
 appeared to be the easiest way to implement such a union, in a pure
-functional way.
+functional way). This lets us freely compose determinant-tracking,
+rank-tracking, and other aspects.
+
 
 Expressing domain constraints in functors (Div and integer domain).
 Show the type error that occurs in improper instantiation.
 
 Show several examples (e.g., code with NullPivot and nodet: no traces
 of either det nor pivoting). Then the code with RowPivoting, Det and
-float domain. \jacques{which would really be great if we had a lot 
-more space, but I think we're already long, so something is going to
-have to be cut.  Maybe not this, but something!}
+float domain. 
 
 \section{Related work}\label{related}
 
