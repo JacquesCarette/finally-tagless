@@ -16,11 +16,7 @@ let l1 f = fun x -> mdo { t <-- x; f t}
 let l2 f = fun x y -> mdo { tx <-- x; ty <-- y; f tx ty}
 let l3 f = fun x y z -> mdo { tx <-- x; ty <-- y; tz <-- z; f tx ty tz}
 
-(* Simple state representation for now - upgrades later *)
-(* Defined incrementally by functors
-   type ('a,'u, 'v) state = (('a,'u) code * ('a,'v) code) list
-*)
-(* and 2 morphisms *)
+(* 2 state morphisms *)
 let fetch s k = k s s
 let store v s k = k (v::s) ()
 
@@ -48,10 +44,6 @@ let ifM test th el = fun s k ->
 let whenM test th  = fun s k ->
   k s .< if .~(test s k0) then .~(th s k0) else () >.
 
-
-(* another non-trivial morphism: generate a bit of code *)
-(* let codegen v cf = fun s k -> cf (k s v) *)
-
 (* loops actually bind a value *)
 let retLoopM low high body = fun s k -> 
     k s .< for j = .~low to .~high do .~(body .<j>. s k0) done >.
@@ -70,13 +62,15 @@ let retMatchM x som non = fun s k ->
 (* Need to use `fun' explictly to avoid monomorphising *)
 let retUnit = fun s k -> k s .< () >.
 
+(* another non-trivial morphism: generate a bit of code *)
+(* let codegen v cf = fun s k -> cf (k s v) *)
+
 (* Define the actual module types and instances *)
 module type DOMAIN = sig
   type v
   type 'a vc = ('a,v) code
   val zero : 'a vc
   val one : 'a vc
-  val minusone : 'a vc
   val plus : 'a vc -> 'a vc -> ('a vc, 's, 'w) monad
   val times : 'a vc -> 'a vc -> ('a vc, 's, 'w) monad
   val minus : 'a vc -> 'a vc -> ('a vc, 's, 'w) monad
@@ -93,13 +87,12 @@ module FloatDomain =
     type 'a vc = ('a,v) code
     let zero = .< 0. >.  
     let one = .< 1. >. 
-    let minusone = .< -1. >. 
     let plus x y = ret .<.~x +. .~y>. 
     let times x y = ret .<.~x *. .~y>.
     let minus x y = ret .<.~x -. .~y>.
     let uminus x = ret .<-. .~x>.
     let div x y = ret .<.~x /. .~y>. 
-    let better_than x y = retS .<abs_float .~x < abs_float .~y >.
+    let better_than x y = ret .<abs_float .~x < abs_float .~y >.
     let normalizerf = None 
     let normalizerg = fun x -> x
 end
@@ -110,13 +103,12 @@ module IntegerDomain =
     type 'a vc = ('a,v) code
     let zero = .< 0 >.  
     let one = .< 1 >. 
-    let minusone = .< -1 >. 
     let plus x y = ret .<.~x + .~y>. 
     let times x y = ret .<.~x * .~y>.
     let minus x y = ret .<.~x - .~y>.
     let uminus x = ret .< - .~x>.
     let div x y = ret .<.~x / .~y>. 
-    let better_than x y = retS .<abs .~x > abs .~y >.
+    let better_than x y = ret .<abs .~x > abs .~y >.
     let normalizerf = None 
     let normalizerg = fun x -> x
 end
@@ -127,13 +119,12 @@ module RationalDomain =
     type 'a vc = ('a,v) code
     let zero = let zer = Num.num_of_int 0 in .< zer >.  
     let one = let one = Num.num_of_int 1 in .< one >. 
-    let minusone = let mo = Num.num_of_int in .< mo >.
     let plus x y = ret .<.~x Num.add_num .~y >.
     let times x y = ret .<Num.mult_num .~x .~y>.
     let minus x y = ret .<Num.sub_num .~x .~y>.
     let uminus x = ret .<Num.minus_num .~x>.
     let div x y = ret .<Num.div_num.~x .~y>. 
-    let better_than x y = retS .< false >. (* no such thing here *)
+    let better_than x y = ret .< false >. (* no such thing here *)
     let normalizerf = None 
     let normalizerg = fun x -> x
 end
@@ -160,8 +151,8 @@ module GenericArrayContainer(Dom:DOMAIN) =
   type contr = Dom.v array array
   type 'a vc = ('a,contr) code
   type 'a vo = ('a,Dom.v) code
-  let get x n m = retS .< (.~x).(.~n).(.~m) >.
-  let set x n m y = retS .< (.~x).(.~n).(.~m) <- .~y >.
+  let get x n m = ret .< (.~x).(.~n).(.~m) >.
+  let set x n m y = ret .< (.~x).(.~n).(.~m) <- .~y >.
   let dim2 x = .< Array.length .~x >.
   let dim1 x = .< Array.length (.~x).(0) >.
   let mapper g a = match g with
@@ -185,8 +176,8 @@ module GenericVectorContainer(Dom:DOMAIN) =
   type contr = {arr:(Dom.v array); n:int; m:int}
   type 'a vc = ('a,contr) code
   type 'a vo = ('a,Dom.v) code
-  let get x n m = retS .< ((.~x).arr).(.~n* (.~x).n + .~m) >.
-  let set x n m y = retS .< ((.~x).arr).(.~n* (.~x).n + .~m) <- .~y >.
+  let get x n m = ret .< ((.~x).arr).(.~n* (.~x).n + .~m) >.
+  let set x n m y = ret .< ((.~x).arr).(.~n* (.~x).n + .~m) <- .~y >.
   let dim2 x = .< (.~x).n >.
   let dim1 x = .< (.~x).m >.
   let mapper g a = match g with
@@ -219,7 +210,7 @@ module SparseRowContainer(Dom:DOMAIN) =
                         with Not_found -> .~Dom.zero >.
   let sdefault loc x l = .< if not (l = .~Dom.zero) then
                                 loc <- (x,l) :: loc >.
-  let get x n m = retS .< let row = (.~x).(.~n) in .~(gdefault .<row>. m) >.
+  let get x n m = ret .< let row = (.~x).(.~n) in .~(gdefault .<row>. m) >.
   let set x n m y = 
   let dim2 x = 
   let dim1 x = 
@@ -363,32 +354,25 @@ module TrackRank =
    ret .<.~r := (! .~r) + 1>. }
 end
 
-module Rank = 
-  struct
-  type 'a lstate = 'a TrackRank.lstate
-  (* open TrackRank *)
-  let decl = TrackRank.decl
-  let succ = TrackRank.succ
-  let rfetch = TrackRank.rfetch
+module Rank:RANK = struct
+  include TrackRank
   let fin () = mdo {
-   r <-- rfetch ();
-   retS (liftGet r) }
+      r <-- rfetch ();
+       ret (liftGet r) }
 end
 
-module NoRank = struct
-  type 'a lstate = 'a TrackRank.lstate
-  (* open TrackRank *)
-  let decl = TrackRank.decl
-  let succ = TrackRank.succ
-  let rfetch = TrackRank.rfetch
+module NoRank:RANK = struct
+  include TrackRank
   let fin () = ret .< -1 >.
 end
 
-(* We need to do the same thing for Determinant as for Rank.
-   In the case of a non-fraction-free algorithm with no Det
+(* In the case of a non-fraction-free algorithm with no Det
    output, it is possible to not track the determinant, but
-   in all other cases it is needed. *)
-module TrackDet(Dom: DOMAIN) = 
+   in all other cases it is needed.
+
+   This module is just for deep type sharing.  The actual 
+   implementations are completely different.  *)
+module DetTypes(Dom: DOMAIN) = 
   struct
   type indet = Dom.v
   type outdet = indet
@@ -396,6 +380,32 @@ module TrackDet(Dom: DOMAIN) =
   (* the first part of the state is an integer: which is +1, 0, -1:
      the sign of the determinant *)
   type 'a lstate = ('a,int ref) code * ('a,tdet) code
+end
+
+(* we need the domain anyways to get things to type properly *)
+module NoDet(Dom:DOMAIN) =
+  struct
+  module TD = DetTypes(Dom)
+  type indet = Dom.v
+  type outdet = unit
+  type tdet = outdet ref
+  type 'a lstate = 'a TD.lstate
+  let decl () = ret ()
+  let upd_sign () = retUnit
+  let zero_sign () = retUnit
+  let acc v = retUnit
+  let get () = ret (liftRef .< () >. )
+  let set v = retUnit
+  let fin () = retUnit
+end
+
+module AbstractDet(Dom: DOMAIN) =
+  struct
+  module TD = DetTypes(Dom)
+  type indet = TD.indet
+  type outdet = TD.outdet
+  type tdet = TD.tdet
+  type 'a lstate = 'a TD.lstate
         (* the purpose of this function is to make the union open.
            Alas, Camlp4 does not understand the :> coercion notation *)
   let coerce = function `TDet x -> `TDet x | x -> x
@@ -434,41 +444,8 @@ module TrackDet(Dom: DOMAIN) =
   let fin () = mdo {
       (det_sign,det) <-- dfetch ();
       ifM (ret .<(! .~det_sign) = 0>.) (ret Dom.zero)
-	  (ifM (ret .<(! .~det_sign) = 1>.) (ret (liftGet det))
-	      (Dom.uminus (liftGet det))) }
-end
-
-(* we need the domain anyways to get things to type properly *)
-module NoDet(Dom:DOMAIN) =
-  struct
-  module TD = TrackDet(Dom)
-  type indet = TD.indet
-  type outdet = unit
-  type tdet = outdet ref
-  type 'a lstate = 'a TD.lstate
-  let decl () = ret ()
-  let upd_sign () = retUnit
-  let zero_sign () = retUnit
-  let acc v = retUnit
-  let get () = ret (liftRef .< () >. )
-  let set v = retUnit
-  let fin () = retUnit
-end
-
-module AbstractDet(Dom: DOMAIN) =
-  struct
-  module TD = TrackDet(Dom)
-  type indet = TD.indet
-  type outdet = TD.outdet
-  type tdet = TD.tdet
-  type 'a lstate = 'a TD.lstate
-  let decl = TD.decl
-  let upd_sign = TD.upd_sign
-  let zero_sign = TD.zero_sign
-  let acc v = TD.acc v
-  let get = TD.get
-  let set v = TD.set v
-  let fin = TD.fin
+      (ifM (ret .<(! .~det_sign) = 1>.) (ret (liftGet det))
+          (Dom.uminus (liftGet det))) }
 end
 
 module type UPDATE = sig
@@ -511,7 +488,7 @@ module FractionFreeUpdate(Dom:DOMAIN)(C:CONTAINER2D)
       x <-- l2 Dom.times (Ctr.get b i k) (Ctr.get b r c);
       y <-- l2 Dom.times (Ctr.get b r k) (Ctr.get b i r);
       z <-- Dom.minus x y;
-      t <-- retS (Dom.normalizerg z);
+      t <-- ret (Dom.normalizerg z);
       d <-- Det.get ();
       ov <-- Dom.div t (liftGet d);
       Ctr.set b i k ov }
@@ -572,7 +549,7 @@ module IDet = AbstractDet(IntegerDomain)
 module type PIVOT = 
     functor (Dom: DOMAIN) -> 
       functor (C: CONTAINER2D) ->
-	    functor (D: DETERMINANT with type indet = Dom.v) -> 
+        functor (D: DETERMINANT with type indet = Dom.v) -> 
 sig
  (* Find the pivot within [r,m-1] rows and [c,(n-1)] columns
     of containrer b.
@@ -597,22 +574,22 @@ struct
        seqM (retLoopM r .<.~n-1>. (fun j -> mdo {
               bjc <-- l1 retN (Ctr.get b j c);
               whenM (ret .< not ( .~bjc = .~Dom.zero) >.)
-		  (retMatchM (liftGet pivot)
-		    (fun pv ->
-		      mdo {
-		      (i,bic) <-- ret (liftPair pv);
-		      whenM (Dom.better_than bic bjc)
-			    (ret .< .~pivot := Some (.~j,.~bjc) >.)})
-		     (ret .< .~pivot := Some (.~j,.~bjc) >.))}))
+          (retMatchM (liftGet pivot)
+            (fun pv ->
+              mdo {
+              (i,bic) <-- ret (liftPair pv);
+              whenM (Dom.better_than bic bjc)
+                (ret .< .~pivot := Some (.~j,.~bjc) >.)})
+             (ret .< .~pivot := Some (.~j,.~bjc) >.))}))
              (* finished the loop *)
              (retMatchM (liftGet pivot)
                 (fun pv ->
                      mdo {
                          (i,bic) <-- ret (liftPair pv);
-		         seqM (whenM (ret .< .~i <> .~r >. )
+                 seqM (whenM (ret .< .~i <> .~r >. )
                                 (seqM 
                                    (ret (Ctr.swap_rows_stmt b r i))
-				   (D.upd_sign ())))
+                   (D.upd_sign ())))
                               (ret .<Some .~bic>.)})
                 (ret .< None >.))
    }
@@ -631,13 +608,13 @@ struct
            mdo {
               bjk <-- l1 retN (Ctr.get b j k);
               whenM (ret .< not ( .~bjk = .~Dom.zero) >.)
-		  (retMatchM (liftGet pivot)
-		    (fun pv ->
-		      mdo {
-		      (pr,pc,brc) <-- ret (liftPPair pv);
-		      whenM (Dom.better_than brc bjk)
-			    (ret .< .~pivot := Some ((.~j,.~k),.~bjk) >.)})
-		     (ret .< .~pivot := Some ((.~j,.~k),.~bjk) >.))})))
+              (retMatchM (liftGet pivot)
+                (fun pv ->
+                  mdo {
+                  (pr,pc,brc) <-- ret (liftPPair pv);
+                  whenM (Dom.better_than brc bjk)
+                    (ret .< .~pivot := Some ((.~j,.~k),.~bjk) >.)})
+                 (ret .< .~pivot := Some ((.~j,.~k),.~bjk) >.))})))
              (* finished the loop *)
              (retMatchM (liftGet pivot)
                 (fun pv ->
@@ -658,10 +635,10 @@ struct
    }
 end
 
-module Gen(Dom: DOMAIN)(C: CONTAINER2D)
-          (PivotF: PIVOT)  (* Higher-order functor! *)
+module Gen(Dom: DOMAIN)(C: CONTAINER2D)(PivotF: PIVOT)
           (Update: UPDATE with type baseobj = Dom.v and type ctr = C(Dom).contr)
-          (Out: OUTPUT with type contr = C(Dom).contr and type D.indet = Dom.v and type 'a D.lstate = 'a Update.D.lstate) =
+          (Out: OUTPUT with type contr = C(Dom).contr and type D.indet = Dom.v 
+                        and type 'a D.lstate = 'a Update.D.lstate) =
    struct
     module Ctr = C(Dom)
     module Pivot = PivotF(Dom)(C)(Out.D)
@@ -688,7 +665,7 @@ module Gen(Dom: DOMAIN)(C: CONTAINER2D)
             (retWhileM .< !(.~c) < .~m && !(.~r) < .~n >.  ( mdo {
                rr <-- retN (liftGet r);
                cc <-- retN (liftGet c);
-               pivot <-- l1 retN(Pivot.findpivot b rr m cc n);
+               pivot <-- l1 retN (Pivot.findpivot b rr m cc n);
                seqM (retMatchM pivot (fun pv -> 
                         seqM (zerobelow b rr cc m n pv)
                              (Out.R.succ ()) )
