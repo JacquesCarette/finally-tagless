@@ -9,9 +9,9 @@ end;;
 
 module Domain = struct
   type v = int
-  let zero = brackets 0
-  let one = brackets 1
-  let plus x y s k = k s (brackets ((escape x) + (escape y)))
+  let zero = .< 0 >.
+  let one = .< 1 >.
+  let plus x y s k = k s .< .~x + .~y >.
 end;;
 
 type ('a,'v) state = ('a,'v) code list ;;
@@ -41,7 +41,7 @@ module NoDetOUTPUT(Dom: DOMAIN) =
 end;;
 
 let retS a = fun s k -> k s a
-let retN a = fun s k -> brackets let t = escape a in escape (k s (brackets t))
+let retN a = fun s k -> .< let t = .~a in .~(k s .< t>.) >.
 let bind a f = fun s k -> a s (fun s' b -> f b s' k) ;;
 
 module Gen (Dom: DOMAIN)
@@ -59,7 +59,7 @@ module Gen (Dom: DOMAIN)
     Out.fin_det res
     ))))))
 in
-brackets fun a -> escape (dogen (brackets a) s k)
+.<fun a -> .~(dogen .<a>. s k) >.
 end;;
 
 module Gen1 = Gen(Domain)(NoDetOUTPUT(Domain));;
@@ -68,15 +68,14 @@ module DetOUTPUT(Dom: DOMAIN) =
  struct
    type out = Dom.v
    type tdet = Dom.v ref
-   type res = out * Dom.v (* Now return a tuple; the second comp.
-is the determinant *)
-   let decl_det s k = brackets let det = ref (escape Dom.one) in (escape (k ((brackets det)::s) ()))
+   (* Now return a tuple; the second comp. is the determinant *)
+   type res = out * Dom.v 
+   let decl_det s k = .<let det = ref (.~ Dom.one) in .~(k ((.<det>.)::s) ())>.
    let acc_det v s k = let det = List.hd s in
-    bind (Dom.plus (brackets ! (escape det)) v) (fun r s k ->
-    brackets begin (escape det) := (escape r);
-    escape (k s ()) end) s k
+    bind (Dom.plus (.< ! .~det>.) v) (fun r s k ->
+    .<begin .~det := .~r; .~(k s ()) end>. ) s k
        let fin_det result s k = let det = List.hd s in
-    k s (brackets ((escape result),! (escape det)))
+    k s .< .~result,! .~det>.
 end;;
 
 module Gen2 = Gen(Domain)(DetOUTPUT(Domain));;

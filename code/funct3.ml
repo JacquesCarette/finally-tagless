@@ -3,7 +3,7 @@
 type ('a,'v) state = ('a,'v) code list ;;
 
 let retS a = fun s k -> k s a
-let retN a = fun s k -> brackets let t = escape a in escape (k s (brackets t))
+let retN a = fun s k -> .<let t = .~a in .~(k s .<t>.)>.
 let bind a f = fun s k -> a s (fun s' b -> f b s' k) ;;
 let ret = retS
 
@@ -12,9 +12,6 @@ let fetch s k = k s (List.hd s)
 
 (* another non-trivial morphism: generate a bit of code *)
 let codegen v cf = fun s k -> cf (k s v)
-
-
-
 
 module type DOMAIN = sig
   type v
@@ -26,11 +23,10 @@ end;;
 
 module Domain = struct
   type v = int
-  let zero = brackets 0
-  let one = brackets 1 
-  let plus x y s k = k s (brackets (escape x) + (escape y))
+  let zero = .< 0 >.
+  let one = .< 1 >.
+  let plus x y s k = k s .< .~x + .~y>.
 end;;
-
 
 module type OUTPUT = sig
   type res
@@ -53,7 +49,7 @@ module NoDetOUTPUT(Dom: DOMAIN) =
    type res = Dom.v
    let decl_det s k = k s () (* Monomorphic restriction! *)
    let acc_det v = retS ()
-   let fin_det result = mdo {mret result}
+   let fin_det result = mdo {ret result}
 end;;
 
 module Gen (Dom: DOMAIN)
@@ -69,9 +65,8 @@ module Gen (Dom: DOMAIN)
       xy  <-- Dom.plus x y;
       res <-- Dom.plus xy a;
       res <-- Out.fin_det res;
-      mret res }
-in
-brackets fun a -> escape (dogen (brackets a) s k)
+      ret res } in
+   .<fun a -> .~(dogen .<a>. s k)>.
 end;;
 
 module Gen1 = Gen(Domain)(NoDetOUTPUT(Domain));;
@@ -83,18 +78,16 @@ module DetOUTPUT(Dom: DOMAIN) =
    type tdet = Dom.v ref
    type res = out * Dom.v (* Now return a tuple; the second comp.
 is the determinant *)
-   let decl_det s k = brackets let det = ref (escape (Dom.one))
-                               in escape (k ((brackets det)::s) ())
+   let decl_det s k = .<let det = ref ( .~(Dom.one))
+                        in .~(k ((.<det>.)::s) ())>.
    let acc_det v = mdo {
      det <-- fetch;
-     r   <-- Dom.plus (brackets (! (escape det))) v;
-     r   <-- codegen () 
-	 (fun x -> brackets begin (escape det) := (escape r);
-	   escape x end);
-     mret r}
+     r   <-- Dom.plus .<! .~det>. v;
+     r   <-- codegen () (fun x -> .<begin .~det := .~r; .~x end>. );
+     ret r}
    let fin_det result = mdo {
      det <-- fetch;
-     mret (brackets ((escape result),! (escape det))) }
+     ret .< (.~result,! .~det)>. }
 end;;
 
 module Gen2 = Gen(Domain)(DetOUTPUT(Domain));;
