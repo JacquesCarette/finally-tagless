@@ -595,11 +595,15 @@ struct
    module Ctr = C(Dom)
    let findpivot b r m c n = mdo {
        pivot <-- retN (liftRef .< None >. );
-       seqM (retLoopM r .<.~n-1>. (fun j -> mdo {
+       (* If no better_than procedure defined, we just search for
+	  non-zero element. Any non-zero element is a good pivot.
+	  If better_than is defined, we search then for the best element *)
+       seqM
+        (match (Dom.better_than) with
+         Some sel -> 
+              retLoopM r .<.~n-1>. (fun j -> mdo {
               bjc <-- l1 retN (Ctr.get b j c);
               whenM (ret .< not ( .~bjc = .~Dom.zero) >.)
-              (match (Dom.better_than) with
-              | Some sel ->
                   (retMatchM (liftGet pivot)
                     (fun pv ->
                       mdo {
@@ -607,11 +611,23 @@ struct
                       whenM (sel bic bjc)
                         (ret .< .~pivot := Some (.~j,.~bjc) >.)})
                      (ret .< .~pivot := Some (.~j,.~bjc) >.))
-              | None ->
-                  (ret .< .~pivot := Some (.~j,.~bjc) >.)
-             )}))
-             (* finished the loop *)
-             (retMatchM (liftGet pivot)
+              })
+         | None ->
+           mdo {
+            brc <-- l1 retN (Ctr.get b r c);
+            ifM (ret .< not (.~brc = .~Dom.zero) >.)
+              (* the current element is good enough *)
+              (ret .< .~pivot := Some (.~r,.~brc) >.)
+              (mdo {
+                  s <-- fetch;
+                  ret .< let rec loop j =
+                       if j < .~n then 
+                       let bjc = .~((Ctr.get b .<j>. c) s k0) in
+                       if bjc = .~Dom.zero then loop (j+1)
+                       else .~pivot := Some (j,bjc)
+                      in loop (.~r+1) >.})}
+         )
+         (retMatchM (liftGet pivot)
                 (fun pv ->
                      mdo {
                          (i,bic) <-- ret (liftPair pv);
