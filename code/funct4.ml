@@ -52,7 +52,7 @@ let retLoopM low high body = fun s k ->
 
 (* while ``loops'' do not naturally bind a value *)
 let retWhileM cond body = fun s k -> 
-    k s .< while .~cond do .~(body s k0) done >.
+    k s .< while .~(cond s k0) do .~(body s k0) done >.
 
 (* match for Some/None *)
 let retMatchM x som non = fun s k ->
@@ -176,7 +176,7 @@ module GenericArrayContainer(Dom:DOMAIN) =
   let copy = (fun a -> .<Array.map (fun x -> Array.copy x) 
                        (Array.copy .~a) >. )
   (* this can be optimized with a swap_rows_from if it is known that
-     everything before that is already = *)
+     everything before that is already = Dom.zero *)
   let swap_rows_stmt a r1 r2 =
       .< let t = (.~a).(.~r1) in
          begin 
@@ -243,6 +243,26 @@ let concretize = function
     | Code x   -> x
 *)
 
+(* monadic logic code combinators *)
+module LogicCode = struct
+  let not a = ret .< not .~a >.
+  let equal a b = ret .< .~a = .~ b >.
+  let and_ a b = ret .< .~a && .~b >. 
+end
+
+(* operations on code indices *)
+module Idx = struct
+  let zero = .< 0 >.
+  let succ a = .< .~a + 1 >.
+  let pred a = .< .~a - 1 >.
+  let less a b = .< .~a < .~b >.
+end
+
+(* code generators *)
+module Code = struct
+  let update a f = let b = f (liftGet a) in ret .< .~a := .~b >.
+end
+
 module type DETERMINANT = sig
   type indet
   type outdet
@@ -293,7 +313,7 @@ module TrackRank =
                         ret (fetch_iter s) }
   let rstore v = store (`TRan v)
   let decl () = mdo {
-      rdecl <-- retN (liftRef .<0>.);
+      rdecl <-- retN (liftRef Idx.zero);
       rstore rdecl;
       ret rdecl }
   let succ () = mdo {
@@ -610,9 +630,9 @@ struct
        seqM
         (match (Dom.better_than) with
          Some sel -> 
-              retLoopM r .<.~n-1>. (fun j -> mdo {
+              retLoopM r (Idx.pred n) (fun j -> mdo {
               bjc <-- l1 retN (Ctr.get b j c);
-              whenM (ret .< not ( .~bjc = .~Dom.zero) >.)
+              whenM (l1 LogicCode.not (LogicCode.equal bjc Dom.zero ))
                   (retMatchM (liftGet pivot)
                     (fun pv ->
                       mdo {
@@ -715,23 +735,25 @@ module Gen(Dom: DOMAIN)(C: CONTAINER2D)(PivotF: PIVOT)
       let zerobelow b r c m n brc =
         let innerbody i = mdo {
             bic <-- Ctr.get b i c;
-            whenM (ret .< not (.~bic = .~Dom.zero) >. )
-                (seqM (retLoopM .<.~c+1>. .<.~m-1>. 
+            whenM (l1 LogicCode.not (LogicCode.equal bic Dom.zero ))
+                (seqM (retLoopM (Idx.succ c) (Idx.pred m)
                           (fun k -> Update.update b r c i k) )
                       (Ctr.set b i c Dom.zero)) } in 
         mdo {
-              seqM (retLoopM .<.~r+1>. .<.~n-1>. innerbody) 
+              seqM (retLoopM (Idx.succ r) (Idx.pred n) innerbody) 
                    (Update.update_det brc) } in
       let dogen a = mdo {
           r <-- Out.R.decl ();
-          c <-- retN (liftRef .< 0 >.);
+          c <-- retN (liftRef Idx.zero);
           b <-- retN (Ctr.mapper Dom.normalizerf (Ctr.copy a));
           m <-- retN (Ctr.dim1 a);
           n <-- retN (Ctr.dim2 a);
           () <-- Update.D.decl ();
           () <-- Out.P.decl ();
           seqM 
-            (retWhileM .< !(.~c) < .~m && !(.~r) < .~n >.  ( mdo {
+            (retWhileM (LogicCode.and_ (Idx.less (liftGet c) m)
+                                       (Idx.less (liftGet r) n) )
+               ( mdo {
                rr <-- retN (liftGet r);
                cc <-- retN (liftGet c);
                pivot <-- l1 retN (Pivot.findpivot b rr m cc n);
@@ -739,7 +761,7 @@ module Gen(Dom: DOMAIN)(C: CONTAINER2D)(PivotF: PIVOT)
                         seqM (zerobelow b rr cc m n pv)
                              (Out.R.succ ()) )
                         (Update.D.zero_sign () ))
-                    (ret .< .~c := (! .~c) + 1 >. ) } ))
+                    (Code.update c Idx.succ) } ))
             (Out.make_result b) } 
     in
     .<fun a -> .~(runM (dogen .<a>.)) >.
