@@ -264,19 +264,8 @@ module type RANK = sig
     (('a,int) code,[> `TRan of 'a lstate ] list,('a,'w) code) monad
 end;;
 
-module type OUTPUT = sig
-  type contr
-  type res
-  module D : DETERMINANT
-  module R : RANK
-  val make_result : ('a,contr) code -> 
-    (('a,res) code,[> `TDet of 'a D.lstate | `TRan of 'a R.lstate] list,
-     ('a,'w) code) monad
-end
-
 (* Even if no rank is output, it needs to be tracked, as the rank
    is also the outer loop index! *)
-
 module TrackRank = 
   struct
   type 'a lstate = ('a, int ref) code
@@ -440,6 +429,63 @@ module FractionFreeUpdate(Dom:DOMAIN)(C:CONTAINER2D)
   let update_det v = Det.set v
 end
 
+(* This type is needed for the output, and is tracked during
+   pivoting. *)
+type perm = RowSwap of (int * int) | ColSwap of (int * int)
+ 
+module type TRACKPIVOT = sig
+  type 'a lstate
+  val decl : unit -> (unit,[> `TPivot of 'a lstate] list,('a,'w) code) monad
+  val add : ('a,perm) code -> (('a,unit) code,[> `TPivot of 'a lstate] list,('a,'w) code) monad
+  val fin : unit -> (('a,perm list) code ,[> `TPivot of 'a lstate] list,'w) monad
+end
+
+module TrackPivot = 
+  struct
+  type 'a lstate = ('a, perm list ref) code
+        (* the purpose of this function is to make the union open.
+           Alas, Camlp4 does not understand the :> coercion notation *)
+  let coerce = function `TPivot x -> `TPivot x | x -> x
+  let rec fetch_iter (s : [> `TPivot of 'a lstate] list) =
+    match (coerce (List.hd s)) with
+      `TPivot x -> x
+    |  _ -> fetch_iter (List.tl s)
+  let pfetch () = mdo { s <-- fetch; (* unit for monomorphism restriction *)
+                        ret (fetch_iter s) }
+  let pstore v = store (`TPivot v)
+  let decl () = mdo {
+      pdecl <-- retN (liftRef .< [] >.);
+      pstore pdecl }
+  let add v = mdo {
+   p <-- pfetch ();
+   ret .<.~p := .~v::(! .~p) >. }
+end
+
+module KeepPivot:TRACKPIVOT = struct
+  include TrackPivot
+  let fin () = mdo {
+      p <-- pfetch ();
+      ret (liftGet p) }
+end
+
+module DiscardPivot:TRACKPIVOT = struct
+  type 'a lstate = ('a, perm list ref) code
+  let decl () = ret ()
+  let add v = retUnit
+  let fin () = ret .< [] >.
+end
+
+module type OUTPUT = sig
+  type contr
+  type res
+  module D : DETERMINANT
+  module R : RANK
+  module P : TRACKPIVOT
+  val make_result : ('a,contr) code -> 
+    (('a,res) code,[> `TDet of 'a D.lstate | `TRan of 'a R.lstate | `TPivot of 'a P.lstate] list,
+     ('a,'w) code) monad
+end
+
 (* What to return *)
 module OutJustMatrix(Dom:DOMAIN)(C: CONTAINER2D)(Det : DETERMINANT) =
   struct
@@ -448,6 +494,7 @@ module OutJustMatrix(Dom:DOMAIN)(C: CONTAINER2D)(Det : DETERMINANT) =
   type res = contr
   module D = Det
   module R = NoRank
+  module P = DiscardPivot
   let make_result b = ret b
 end
 
@@ -458,6 +505,7 @@ module OutDet(Dom:DOMAIN)(C: CONTAINER2D)(Det : DETERMINANT with type indet = Do
   type res = contr * Det.outdet
   module D = Det
   module R = NoRank
+  module P = DiscardPivot
   let make_result b = mdo {
     det <-- D.fin ();
     ret .< ( .~b, .~det ) >. }
@@ -470,6 +518,7 @@ module OutRank(Dom:DOMAIN)(C: CONTAINER2D)(Rank : RANK) =
   type res = contr * int
   module D = NoDet(Dom)
   module R = Rank
+  module P = DiscardPivot
   let make_result b = mdo {
     rank <-- R.fin ();
     ret .< ( .~b, .~rank ) >. }
@@ -482,19 +531,31 @@ module OutDetRank(Dom:DOMAIN)(C: CONTAINER2D)(Det : DETERMINANT with type indet 
   type res = contr * Det.outdet * int
   module D = Det
   module R = Rank
+  module P = DiscardPivot
   let make_result b = mdo {
     det  <-- D.fin ();
     rank <-- R.fin ();
     ret .< ( .~b, .~det, .~rank ) >. }
 end
 
+module OutDetRankPivot(Dom:DOMAIN)(C: CONTAINER2D)(Det : DETERMINANT with type indet = Dom.v and type outdet = Dom.v)(Rank : RANK) =
+  struct
+  module Ctr = C(Dom)
+  type contr = Ctr.contr
+  type res = contr * Det.outdet * int * perm list
+  module D = Det
+  module R = Rank
+  module P = KeepPivot
+  let make_result b = mdo {
+    det  <-- D.fin ();
+    rank <-- R.fin ();
+    pivmat <-- P.fin ();
+    ret .< ( .~b, .~det, .~rank, .~pivmat ) >. }
+end
+
 module FDet = AbstractDet(FloatDomain)
 module IDet = AbstractDet(IntegerDomain)
 
-(* This type is needed for the output, and is tracked during
-   pivoting. *)
-type perm = RowSwap of (int * int) | ColSwap of (int * int)
- 
 module type PIVOT = 
     functor (Dom: DOMAIN) -> 
       functor (C: CONTAINER2D) ->
@@ -515,7 +576,7 @@ end
 module RowPivot
    (Dom: DOMAIN) 
    (C: CONTAINER2D)
-   (D:   DETERMINANT with type indet = Dom.v) =
+   (D: DETERMINANT with type indet = Dom.v) =
 struct
    module Ctr = C(Dom)
    let findpivot b r m c n = mdo {
@@ -623,6 +684,7 @@ module Gen(Dom: DOMAIN)(C: CONTAINER2D)(PivotF: PIVOT)
           m <-- retN (Ctr.dim1 a);
           n <-- retN (Ctr.dim2 a);
           () <-- Update.D.decl ();
+          () <-- Out.P.decl ();
           seqM 
             (retWhileM .< !(.~c) < .~m && !(.~r) < .~n >.  ( mdo {
                rr <-- retN (liftGet r);
@@ -747,3 +809,9 @@ module GenFA14 = Gen(FloatDomain)
                    (FullPivot)
                    (DivisionUpdate(FloatDomain)(GenericArrayContainer)(FDet))
                    (OutDetRank(FloatDomain)(GenericArrayContainer)(FDet)(Rank))
+
+module GenFA24 = Gen(FloatDomain)
+                    (GenericArrayContainer)
+                    (RowPivot)
+                    (DivisionUpdate(FloatDomain)(GenericArrayContainer)(FDet))
+                    (OutDetRankPivot(FloatDomain)(GenericArrayContainer)(FDet)(Rank))
