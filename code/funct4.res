@@ -54,7 +54,7 @@
     (t_2 := ((! t_2) + 1))
    done;
    (t_5, (! t_8))>.
-# val res2 : ('a, Funct4.IArrayContainer.contr -> Funct4.NoIDetOutput.res) code =
+# val res3 : ('a, Funct4.IArrayContainer.contr -> Funct4.NoIDetOutput.res) code =
   .<fun a_1 ->
    let t_2 = (ref 0) in
    let t_3 = (ref 0) in
@@ -79,7 +79,7 @@
     (t_2 := ((! t_2) + 1))
    done;
    t_5>.
-# val res2 : ('a, Funct4.IArrayContainer.contr -> Funct4.IDetOutput.res) code =
+# val res4 : ('a, Funct4.IArrayContainer.contr -> Funct4.IDetOutput.res) code =
   .<fun a_1 ->
    let t_2 = (ref 0) in
    let t_3 = (ref 0) in
@@ -107,7 +107,7 @@
    done;
    (t_5, (! t_8))>.
 #   val r1 : Funct4.FArrayContainer.contr -> Funct4.NoFDetOutput.res = <fun>
-# val r2 : Funct4.FArrayContainer.contr -> Funct4.NoFDetOutput.res = <fun>
-# val r3 : Funct4.FArrayContainer.contr -> Funct4.NoFDetOutput.res = <fun>
-# val r4 : Funct4.FArrayContainer.contr -> Funct4.NoFDetOutput.res = <fun>
+# val r2 : Funct4.FArrayContainer.contr -> Funct4.FDetOutput.res = <fun>
+# val r3 : Funct4.IArrayContainer.contr -> Funct4.NoIDetOutput.res = <fun>
+# val r4 : Funct4.IArrayContainer.contr -> Funct4.IDetOutput.res = <fun>
 # 
