@@ -9,6 +9,7 @@ let k0 s v = v  (* Initial continuation -- for `reset' and `run' *)
 let liftRef x = .< ref .~x >. 
 let liftGet x = .< ! .~x >. 
 let liftPair x = (.< fst .~x >., .< snd .~x >.)
+let liftPPair x = (.< fst (fst .~x) >., .< snd (fst .~x) >., .< snd .~x >.)
 
 (* Monad lifting functions *)
 let l1 f = fun x -> mdo { t <-- x; f t}
@@ -44,6 +45,10 @@ let lif test th el = ret .< if .~test then .~th else .~el >.
 (* Note the implicit `reset' *)
 let ifM test th el = fun s k ->
   k s .< if .~(test s k0) then .~(th s k0) else .~(el s k0) >.
+
+let whenM test th  = fun s k ->
+  k s .< if .~(test s k0) then .~(th s k0) else () >.
+
 
 (* another non-trivial morphism: generate a bit of code *)
 (* let codegen v cf = fun s k -> cf (k s v) *)
@@ -132,7 +137,8 @@ module type CONTAINER2D = sig
   val copy : 'a vc -> 'a vc
   val swap_rows_stmt : 'a vc -> ('a, int) code -> ('a, int) code -> 
                        ('a,unit) code
-  (* val swap_cols : 'a vc -> ('a, int) code -> ('a, int) code -> 'a vc *)
+  val swap_cols_stmt : 'a vc -> ('a, int) code -> ('a, int) code -> 
+                       ('a,unit) code
 end
 
 module GenericArrayContainer(Dom:DOMAIN) =
@@ -158,6 +164,7 @@ module GenericArrayContainer(Dom:DOMAIN) =
              (.~a).(.~r1) <- (.~a).(.~r2);
              (.~a).(.~r2) <- t
          end >.
+  let swap_cols_stmt a c1 c2 = .<failwith "swap_cols_stmt not yet implemeted">.
 end
 
 module GenericVectorContainer(Dom:DOMAIN) =
@@ -184,6 +191,7 @@ module GenericVectorContainer(Dom:DOMAIN) =
               a.(i1 + i) <- t
           end
       done  >.
+  let swap_cols_stmt a c1 c2 = .<failwith "swap_cols_stmt not yet implemeted">.
 end
 
 module FArrayContainer = GenericArrayContainer(FloatDomain)
@@ -523,29 +531,103 @@ end
 module FDet = AbstractDet(FloatDomain)
 module IDet = AbstractDet(IntegerDomain)
 
+module type PIVOT = 
+    functor (Dom: DOMAIN) -> 
+      functor (Ctr: CONTAINER2D with type obj = Dom.v) -> 
+sig
+ (* Find the pivot within [r,m-1] rows and [c,(n-1)] columns
+    of containrer b.
+    If pivot is found, permute the matrix rows and columns so that the pivot
+    becomes the element (r,c) of the matrix,
+    Return the value of the (parity,pivot) option. Or zero?
+    Here, parity is 1 if any swap was done.
+ *)
+ val findpivot : 'a Ctr.vc -> ('a,int) code -> ('a,int) code -> 
+   ('a,int) code -> ('a,int) code ->
+   (('a,(int * Ctr.obj) option) code,'s,('a,'w) code) monad
+end
+
+module RowPivot
+   (Dom: DOMAIN) 
+   (Ctr: CONTAINER2D with type obj = Dom.v) =
+struct
+   let findpivot b r m c n = mdo {
+       pivot <-- retN (liftRef .< None >. );
+       seqM (retLoopM r .<.~n-1>. (fun j -> mdo {
+              bjc <-- l1 retN (Ctr.get b j c);
+              whenM (ret .< not ( .~bjc = .~Dom.zero) >.)
+		  (retMatchM (liftGet pivot)
+		    (fun pv ->
+		      mdo {
+		      (i,bic) <-- ret (liftPair pv);
+		      whenM (Dom.better_than bic bjc)
+			    (ret .< .~pivot := Some (.~j,.~bjc) >.)})
+		     (ret .< .~pivot := Some (.~j,.~bjc) >.))}))
+             (* finished the loop *)
+             (retMatchM (liftGet pivot)
+                (fun pv ->
+                     mdo {
+                         (i,bic) <-- ret (liftPair pv);
+                          ifM (ret .< .~i <> .~r >. )
+                              (seqM 
+                                (ret (Ctr.swap_rows_stmt b r i))
+                                (ret .<Some (1,.~bic)>.))
+                              (ret .<Some (0,.~bic)>.)})
+                (ret .< None >.))
+   }
+end
+
+module FullPivot
+   (Dom: DOMAIN) 
+   (Ctr: CONTAINER2D with type obj = Dom.v) =
+struct
+   let findpivot b r m c n = mdo {
+       pivot <-- retN (liftRef .< None >. );
+       seqM (retLoopM r .<.~n-1>. (fun j -> 
+              retLoopM c .<.~m-1>. (fun k ->
+           mdo {
+              bjk <-- l1 retN (Ctr.get b j k);
+              whenM (ret .< not ( .~bjk = .~Dom.zero) >.)
+		  (retMatchM (liftGet pivot)
+		    (fun pv ->
+		      mdo {
+		      (pr,pc,brc) <-- ret (liftPPair pv);
+		      whenM (Dom.better_than brc bjk)
+			    (ret .< .~pivot := Some ((.~j,.~k),.~bjk) >.)})
+		     (ret .< .~pivot := Some ((.~j,.~k),.~bjk) >.))})))
+             (* finished the loop *)
+             (retMatchM (liftGet pivot)
+                (fun pv ->
+                     mdo {
+                         (pr,pc,brc) <-- ret (liftPPair pv);
+                         parity <-- retN (liftRef .< 0 >. );
+                         seqM
+                             (whenM (ret .< .~pc <> .~c >. )
+                                 (seqM
+                                   (ret (Ctr.swap_cols_stmt b c pc))
+                                   (ret .<.~parity := (! .~parity) + 1>.)))
+                           (seqM
+                             (whenM (ret .< .~pc <> .~c >. )
+                                 (seqM
+                                   (ret (Ctr.swap_rows_stmt b r pr))
+                                   (ret .<.~parity := (! .~parity) + 1>.)))
+                              (ret .<Some ((! .~parity),.~brc)>.))})
+                (ret .< None >.))
+   }
+end
+
+
+
 module Gen(Dom: DOMAIN)
           (Ctr: CONTAINER2D with type obj = Dom.v)
+          (PivotF: PIVOT)  (* Higher-order functor! *)
           (Update: GEUPDATE with type baseobj = Dom.v and type ctr = Ctr.contr)
           (Out: OUTPUT with type contr = Ctr.contr and type D.indet = Ctr.obj and type 'a D.lstate = 'a Update.D.lstate) =
    struct
+    module Pivot = PivotF(Dom)(Ctr)
     type v = Dom.v
     let gen =
-      let findpivot b r m n c = mdo {
-          pivot <-- retN (liftRef .< None >. );
-          seqM (retLoopM r .<.~n-1>. (fun j -> mdo {
-              bjc <-- l1 retN (Ctr.get b j c);
-              ifM (ret .< not ( .~bjc = .~Dom.zero) >.)
-                  (retMatchM (liftGet pivot)
-                    (fun pv ->
-                      mdo {
-                      (i,bic) <-- ret (liftPair pv);
-                      ifM (Dom.better_than bic bjc)
-                          (ret .< .~pivot := Some (.~j,.~bjc) >.)
-                          (retUnit)})
-                     (ret .< .~pivot := Some (.~j,.~bjc) >.))
-                  (retUnit)}))
-             (ret (liftGet pivot)) }
-      and zerobelow b r c m n =
+      let zerobelow b r c m n =
         let innerbody i = mdo {
             bic <-- Ctr.get b i c;
             ifM (ret .< not (.~bic = .~Dom.zero) >. )
@@ -557,13 +639,12 @@ module Gen(Dom: DOMAIN)
               seqM (retLoopM .<.~r+1>. .<.~n-1>. innerbody) 
                    (l1 Update.update_det (Ctr.get b r c)) } in
       let somg b c m n = fun pvp -> mdo {
-          (i,pv) <-- ret (liftPair pvp);
+          (parity,pv) <-- ret (liftPair pvp);
           r <-- Out.R.rfetch ();
-          seqM (ifM (ret .< .~i <> ! .~r >. )
-                      (ret (Ctr.swap_rows_stmt b (liftGet r) i))
-                      (retUnit) )
-               (seqM (zerobelow b (liftGet r) (liftGet c) m n)
-                     (Out.R.succ ())) }
+          seqM (zerobelow b (liftGet r) (liftGet c) m n)
+            (* Should upd_sign take the arg -- how much to update? *)
+            (seqM (retLoopM .<0>. parity (fun j -> Update.D.upd_sign()))
+                  (Out.R.succ ())) }
       and non = Update.D.zero_sign () in
       let dogen a = mdo {
           r <-- Out.R.decl ();
@@ -573,7 +654,7 @@ module Gen(Dom: DOMAIN)
           n <-- retN (Ctr.dim2 a);
           () <-- Update.D.decl ();
           let body = mdo {
-              pivot <-- l1 retN (findpivot b (liftGet r) m n (liftGet c));
+              pivot <-- l1 retN(Pivot.findpivot b (liftGet r) m (liftGet c) n);
               seqM (retMatchM pivot (somg b c m n) non)
                    (ret .< .~c := (! .~c) + 1 >. ) } in ;
           seqM (retWhileM .< !(.~c) < .~m && !(.~r) < .~n >. body)
@@ -584,8 +665,15 @@ end
 
 module GenFA1 = Gen(FloatDomain)
                    (FArrayContainer)
+                   (RowPivot)
                    (DivisionUpdate(FloatDomain)(FArrayContainer)(NoDet(FloatDomain)))
                    (OutJustMatrix(FArrayContainer)(NoDet(FloatDomain)))
+module GenFA11 = Gen(FloatDomain)
+                   (FArrayContainer)
+                   (FullPivot)
+                   (DivisionUpdate(FloatDomain)(FArrayContainer)(NoDet(FloatDomain)))
+                   (OutJustMatrix(FArrayContainer)(NoDet(FloatDomain)))
+(*
 module GenFA2 = Gen(FloatDomain)
                    (FArrayContainer)
                    (DivisionUpdate(FloatDomain)(FArrayContainer)(FDet))
@@ -646,3 +734,4 @@ module GenIV4 = Gen(IntegerDomain)
                    (IVectorContainer)
                    (FractionFreeUpdate(IntegerDomain)(IVectorContainer)(IDet))
                    (OutDetRank(IVectorContainer)(IDet)(Rank));;
+*)

@@ -1,6 +1,7 @@
 open Funct4;;
 
 let resFA1 = GenFA1.gen ;;
+let resFA11 = GenFA11.gen ;;
 let resFA2 = GenFA2.gen ;;
 let resFA3 = GenFA3.gen ;;
 let resFA4 = GenFA4.gen ;;
