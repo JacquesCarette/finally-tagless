@@ -10,18 +10,11 @@ let test_simple_expression () =
 
 let brt : ('a, int) code = brackets 0 ;;
 
-(*
 let test_brackets =
-  let ret x = x in
-    mdo { y <-- .< 0 >. ;
+  let ret x = x and bind x f = f x in
+    mdo { y <-- brackets 0 ;
           mret y }
-*)
 
-(* main *)
-
-(* 
-let (_: unit) =
-  match all_tests () with
-      true -> exit 0
-    | false -> exit 1
-*)
+let test_escape =
+  let x = brackets 1 in
+    brackets (escape x)
