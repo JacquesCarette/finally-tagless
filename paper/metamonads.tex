@@ -37,16 +37,14 @@
 %% \@@listi
 %% \makeatother
 
-
-
-
 \newcommand{\oleg}[1]{{\it [Oleg says: #1]}}
 
 \begin{document}
-\title{What is our title?}
-\author{ Jacques Carette\inst{1}
+\title{Functors, CPS and monads, or how to generate efficient
+code from abstract designs}
+\author{Jacques Carette\inst{1}
  \and
- Oleg Kyselyov\inst{2}
+Oleg Kyselyov\inst{2}
 }
 \institute{McMaster University,
 1280 Main St. West, Hamilton, Ontario Canada L8S 4K1
@@ -55,7 +53,6 @@ Monterey, CA 93943}
 
 
 \maketitle
-
 
 \begin{abstract}
 We use monads and Ocaml's advanced module system to
@@ -75,20 +72,73 @@ compiler.
 
 \section{Introduction}
 
-- problem of high-performance and numeric computing:
-performance versus abstraction. Manual inlining and optimizations is
-error-prone and makes code unreadable. Furthermore, the current
-architectures demand more and more frequent tweaks (which, in general,
-cannot be done by the compiler because the tweaking often involves domain
-knowledge).
+In high-performance and numeric computing, there is a well-known
+issue of balancing between maximal performance and the level of
+abstraction at which code is written.  Furthermore, already in
+linear algebra, there is a wealth of different concerns that 
+\emph{may} need to be addressed.  While it is possible to manually
+inline and simplify such code, this is labour-intensive and 
+error-prone.  Furthermore the resulting code is frequently unreadable,
+and thus unmaintainable.
 
-- Gaussian elimination as a representative example.
+There are a number of projects that have attempted to address these issues
+\cite{Czarnecki,Veldhuizen:1998:ISCOPE,Veldhuizen:1998:OO98,musser94algorithmoriented,BOOST,POOMA,ATLAS}, 
+and they have generally succeeded in generating
+efficient code, but the cost was frequently the loss of modularity
+of the design.  In other words, to allow the various aspects to
+weave with each other \emph{efficiently}, information which should
+have been kept hidden leaked from module to module.  This seriously
+affects maintainability and scalability.  Furthermore, current architectures
+demand more and more frequent tweaks which, in general, cannot be done by the
+compiler because the tweaking often involves domain knowledge.  
 
-- Generating code. MetaOCaml. Static guarantees: the generated
-code is well-typed.
+Our goal was to implement a completely modular, textbook-style 
+modular design \cite{journals/cacm/parnas72a}, yet 
+have our code be very efficient.  Gaussian elimination, as it is 
+well-known, already contains many different aspects \cite{carette04},
+was chosen as a representative example.
 
-- Problems: generativity: generated code cannot be examined
-and optimized at all. It must be generated just right. The FFT paper
+Whether one prefers to code in an imperative, object-oriented, functional, 
+or even in a mixed style, all abstraction mechanisms in current
+languages have a non-zero run-time cost.  Whether it is procedure,
+method or function call, these have a cost; worse still, higher level
+and/or higher order abstractions (like Functors or AspectJ's aspects)
+frequently have a larger cost still.  Of course, if one is faced with
+writing 60 different implementations of the ``same'' algorithm, this
+abstraction cost starts to look cheap!  Although bad programmers have
+been known to resort to cut\&paste programming, no self-respecting
+programmer would be caught doing that\footnote{Sadly, there are still
+many programmers who do not see the harm of cut\&paste programming}.
+The common solution is to turn to code generation.
+
+While many people still make do with string-based code generation,
+this is not much different than writing code in a dynamically typed
+interpreted scripting language.  It works, it is convenient, but
+it does not scale well, it is a debugging nightmare, and usually
+suffers most from Software Aging \cite{parnas_aging}.  As with
+other tasks in programming, the answer is to turn to statically
+typed languages, which provide strong guarantees about the soundness
+of the resulting code.  MetaOCaml in particular stands out: it
+guarantees that both the code generator and the generated
+code are well-typed.  While Template programming in C++ and 
+Template Haskell do offer some amount of static typing 
+\cite{conf/dagstuhl/CzarneckiOST03}, MetaOCaml\footnote{and MetaML.}
+offers stronger guarantees.  As well, since MetaOCaml is implemented
+on top of the very solid Ocaml language, one accrues additional benefits.
+
+While it is theoretically feasible in a strings-based
+generative system to re-parse the generative code to inspect it, such
+an approach rapidly degenerates into complete chaos.  In languages
+that natively offer reflection and reification (either at no cost, 
+such as in LISP and Scheme, or at a modest cost in languages like 
+Maple), this is actually feasible, even easy.  But this is fragile
+and error-prone, since the languages offer little support for catching
+errors early.
+
+In MetaOCaml, generated code cannot be examined and optimized at all. It must
+be generated just right.  
+
+- The FFT paper
 showed one way: abstract interpretation. But more problems remain
 (cite Padua et al paper at Haskell Workshop04): generating names in
 the presence of `if', 'while' etc. control operators (simple problem
