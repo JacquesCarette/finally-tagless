@@ -61,6 +61,24 @@ Monterey, CA 93943}
 \maketitle
 
 \begin{abstract}
+With Gaussian Elimination as a representative family of numerical
+algorithms, we use multi-stage programming, monads and Ocaml's
+advanced module system to demonstrate the complete elimination of the
+abstraction overhead while avoiding any inspection of the generated
+code.  We parameterize our Gaussian Elimination code to great extent
+(over domain, matrix representations, determinant tracking and
+pivoting policies, result types, etc) at no run-time cost.  Because
+the resulting code is generated just right and not changed afterwards,
+we enjoy MetaOCaml guarantees that the generated code is well-typed.
+We further demonstrate that various abstraction parameters (aspects)
+can be made orthogonal and compositional, even in the presence of
+name-generation for temporaries and other bindings and
+``interleaving'' of aspects.  We also show how to encode some
+domain-specific knowledge so that ``clearly wrong'' compositions can
+be statically rejected by the compiler when processing the generator
+rather than the generated code.
+
+
 We use monads and Ocaml's advanced module system to
 demonstrate that, in a generative context, it is
 possible to totally eliminate the overhead of abstraction.
