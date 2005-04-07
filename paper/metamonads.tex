@@ -24,7 +24,7 @@
 
 \usepackage{fancyvrb}
 \DefineShortVerb{\|}
-\DefineVerbatimEnvironment{code}{Verbatim}{xleftmargin=\mathindent,commandchars=\\\{\}}
+\DefineVerbatimEnvironment{code}{Verbatim}{xleftmargin=\mathindent,commandchars=\\\{\},fontsize=\small}
 \newcommand{\evalresult}[1]{\ensuremath{\Longrightarrow}\textcolor{red}{#1}}
 \setlength{\parskip}{0pt}
 \newlength{\mathindent}
@@ -322,7 +322,6 @@ pointed out by \cite{Bondorf:92} in the context
 of partial evaluation, and extensively used by \cite{KiselyovTaha} for code
 generation. Now, |param_code2 plus one| gives us the desired code. 
 
-\begin{small}
 \begin{code}
 let letgen exp k = .<let t = .~exp in .~(k .<t>.)>.
 let param_code2 plus one =
@@ -332,7 +331,6 @@ let param_code2 plus one =
 param_code2 plus one
 \evalresult{.<fun x_1 -> fun y_2 -> let t_3 = (y_2 + 1) in (t_3 + (x_1 + t_3))>.}
 \end{code}
-\end{small}
 
 Comparing the code that did let-insertion at the generating stage\\
 |let ce = (plus y one) in  plus ce (plus x ce)|\\
@@ -646,7 +644,6 @@ containers with efficiency details.
   row/column exchange needs to be performed element-wise, then certain
   swaps are unecessary.
 
-\begin{small}
 \begin{code}
 module GenericArrayContainer(Dom:DOMAIN) =
   struct
@@ -682,7 +679,6 @@ module GenericArrayContainer(Dom:DOMAIN) =
       done  >.
 end
 \end{code}
-\end{small}
 \noindent  Implementing other containers based on flattened vectors,
 Fortran-style access, |Bigarray| or |Bigarray.Array2| is also possible.
 Naturally, for proper use of |Bigarray| with specific types, it is 
@@ -705,7 +701,6 @@ precisely, below we show this module type and one instantiation,
 which specifies the output of a  GE algorithm as a 3-tuple
 |contr * Det.outdet * int| of the U-factor, the determinant and the rank.
 
-\begin{small}
 \begin{code}
 module type OUTPUT = sig
   type contr  type res
@@ -728,7 +723,6 @@ module OutDetRank(Dom:DOMAIN)(C: CONTAINER2D)
     ret .< ( .~b, .~det, .~rank ) >. \}
 end
 \end{code}
-\end{small}
 
 As is apparent from the output choices, several different quantities
 \emph{may} need to be tracked in a particular GE implementation.
@@ -744,7 +738,6 @@ state modular.  As this discussion is rather abstract, an example
 will likely illustrate our point more clearly: we will show the 
 code for tracking the determinant.
 
-\begin{small}
 \begin{code}
 module type DETERMINANT = sig
   type indet  type outdet  type 'a lstate
@@ -756,7 +749,6 @@ module type DETERMINANT = sig
   ...
 end
 \end{code}
-\end{small}
 \noindent  Determinant tracking aspects involves being able to
 generate code that defines variables used for tracking (|decl|),
 generate code that updates the sign or the absolute
@@ -782,13 +774,120 @@ appeared to be the easiest way to implement such a union, in a pure
 functional way). This lets us freely compose determinant-tracking,
 rank-tracking, and other aspects.
 
+The GE generator functor is as follows. It is
+parameterized by the domain, container, pivoting policy (full, row,
+nonzero, nopivoting), update policy (that use either ``fraction-less'
+or full division), and by what to yield as the result. Some of the
+argument modules such as |PIVOT| are functors themselves (parameterized
+by the domain, the container, and the determinant functor). The sharing
+constraints express obvious constraints on the instantiation of |Gen|,
+for example, pivoting, determinant etc. components all use the same
+domain. It must be stressed that all structures (i.e., module
+instances) are stateless, and so we never have to worry that different
+aspect functors (such as |CONTAINER2D| and |PIVOT|) are instantiated
+with different but type-compatible instances of |DOMAIN|. That is, we
+are not concerened at all about the value sharing. Aspects such as
+determinant tracking may be stateful so that the determinant update
+code have access to the determinant tracking variables declared
+previsouly. But that state is handled via the monadic state. As we
+have shown, open unions makes the overall monadic state compositional
+with respect to the state of various aspects.
 
-Expressing domain constraints in functors (Div and integer domain).
-Show the type error that occurs in improper instantiation.
 
-Show several examples (e.g., code with NullPivot and nodet: no traces
-of either det nor pivoting). Then the code with RowPivoting, Det and
-float domain. 
+\begin{figure*}
+\begin{code}
+module Gen(Dom: DOMAIN)(C: CONTAINER2D)(PivotF: PIVOT)
+          (Update: UPDATE with type baseobj = Dom.v and type ctr = C(Dom).contr)
+          (Out: OUTPUT with type contr = C(Dom).contr and type D.indet = Dom.v 
+                        and type 'a D.lstate = 'a Update.D.lstate) =
+   struct
+    module Ctr = C(Dom)
+    module Pivot = PivotF(Dom)(C)(Out.D)
+    type v = Dom.v
+    let gen =
+      let zerobelow b r c m n brc =
+        let innerbody i = mdo \{
+            bic <-- Ctr.get b i c;
+            whenM (l1 LogicCode.not (LogicCode.equal bic Dom.zero ))
+                (seqM (retLoopM (Idx.succ c) (Idx.pred m)
+                          (fun k -> Update.update b r c i k) )
+                      (Ctr.set b i c Dom.zero)) \} in 
+        mdo \{
+              seqM (retLoopM (Idx.succ r) (Idx.pred n) innerbody) 
+                   (Update.update_det brc) \} in
+      let dogen a = mdo \{
+          r <-- Out.R.decl ();
+          c <-- retN (liftRef Idx.zero);
+          b <-- retN (Ctr.mapper Dom.normalizerf (Ctr.copy a));
+          m <-- retN (Ctr.dim1 a);
+          n <-- retN (Ctr.dim2 a);
+          () <-- Update.D.decl ();
+          () <-- Out.P.decl ();
+          seqM 
+            (retWhileM (LogicCode.and_ (Idx.less (liftGet c) m)
+                                       (Idx.less (liftGet r) n) )
+               ( mdo \{
+               rr <-- retN (liftGet r);
+               cc <-- retN (liftGet c);
+               pivot <-- l1 retN (Pivot.findpivot b rr m cc n);
+               seqM (retMatchM pivot (fun pv -> 
+                        seqM (zerobelow b rr cc m n pv)
+                             (Out.R.succ ()) )
+                        (Update.D.zero_sign () ))
+                    (Code.update c Idx.succ) \} ))
+            (Out.make_result b) \} 
+    in
+    .<fun a -> .~(runM (dogen .<a>.)) >.
+end
+\end{code}
+\end{figure*}
+
+In addition to the ``regular'' type sharing constraints shown in the
+|Gen| functor, there are also ``semantic'' sharing constraints, shown
+in the following structure of the |UPDATE| signature:
+
+\begin{code}
+module DivisionUpdate
+  (Dom:DOMAIN with type kind = domain_is_field)
+  (C:CONTAINER2D)
+  (Det:DETERMINANT with type indet=Dom.v) = struct ... end
+\end{code}
+
+The structure implements update policy that can use |Dom.div| operation without
+restrictions. That is possible only if the domain has such an
+operation. A domain such as integer domain may still provide |Dom.div|
+of the same type, but that operation can only be used when we are sure
+that the division is exact. Using the integer domain with
+|DivisionUpdate| will lead to the compile-time error, when compiling
+the \emph{generator} code. Thus, in some cases we can use module types
+to express ``semantic'' constraints that cannot normally be expressed
+via the types of module members.
+
+\begin{code}
+module GenFV4 = Gen(FloatDomain)
+   (GenericVectorContainer)(FullPivot)
+   (DivisionUpdate(FloatDomain)(GenericVectorContainer)(FDet))
+   (OutDetRank(FloatDomain)(GenericVectorContainer)(FDet)(Rank))
+module GenIA1 = Gen(IntegerDomain)
+   (GenericArrayContainer)(RowPivot)
+   (FractionFreeUpdate(IntegerDomain)(GenericArrayContainer)(IDet))
+   (OutJustMatrix(IntegerDomain)(GenericArrayContainer)(IDet))
+\end{code}
+
+We can instantiate the |Gen| functor as shown above and inspect the
+generated code, e.g., by printing |GenIA1.gen|. The code can then be
+``compiled'' as |!. GenIA1.gen| or with off-shiring (cite). The code
+for |GenFV4| shows full pivoting, determinant and rank tracking. The
+code for all these aspects is fully inlined; no extra functions are
+invoked and no tests other than those needed by the GE algorithm
+itself are performed. The GE function returns a triple 
+|float array array * float * int| of the U-factor, determinant and 
+the rank. The
+code generated by |GenIA1| shows absolutely no traces of determinant
+tracking: no declaratrion of spurious variables, no extra tests,
+etc. The code appears as if determinant tracking aspect did not exist
+at all. The generated code for the above and other instantiations of
+|Gen| can be examined at (cite).
 
 \section{Related work}\label{related}
 
@@ -841,6 +940,16 @@ of base modules for generating optimized code.
 
 \section{Conclusion}\label{conclusion}
 Mention the mdo notation. Mention it into the introduction.
+
+Combination of stateless modules (functors and structures) with
+the monad with the compositional state greatly makes the aspects
+freely composable without having to worry about presence or absense of
+value aliasing. The only constraints to compositionality are the
+typing constraints plus the constraints we specifically impose,
+including semantic constraints (e.g., rings do not have the full
+division).
+
+
 
 Relation with aspect-oriented code: in AspectJ, aspects are (comparatively)
 lightly typed, and are post-facto extensions of an existing piece of
