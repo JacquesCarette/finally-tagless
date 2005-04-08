@@ -22,7 +22,7 @@
 
 %\usepackage{refrange}
 
-\usepackage[medium,compact]{titlesec}
+%\usepackage[medium,compact]{titlesec}
 
 \usepackage{fancyvrb}
 \DefineShortVerb{\|}
@@ -97,171 +97,127 @@ be statically rejected by the compiler when processing the generator
 rather than the generated code.
 \end{abstract}
 
+% previous introduction is saved at the end
 \section{Introduction}
 
-In high-performance, symbolic, and numeric computing, there is a well-known
-issue of balancing between maximal performance and the level of
-abstraction at which code is written.  Furthermore, already in
-linear algebra, there is a wealth of different concerns that 
-\emph{may} need to be addressed.  While it is possible to manually
-inline and simplify such code, this is labour-intensive and 
-error-prone.  The resulting code is frequently unreadable,
-and thus unmaintainable.
-
-There are a number of projects that have attempted to address these issues
-\cite{Czarnecki,Veldhuizen:1998:ISCOPE,musser94algorithmoriented,BOOST,POOMA,ATLAS}, 
-and they have generally succeeded in generating
-efficient code, but the cost was frequently the loss of modularity
-of the design.  In other words, to allow the various aspects to
-weave with each other \emph{efficiently}, information which should
-have been kept hidden leaked from module to module.  This seriously
-affects maintainability and scalability.  Furthermore, current architectures
+In high-performance, symbolic, and numeric computing, there is a
+well-known issue of balancing between maximal performance and the
+level of abstraction at which code is written.  Furthermore, already
+in linear algebra, there is a wealth of different aspects that
+\emph{may} need to be addressed. For example, implementations of the
+widely used Gaussian Elimination (GE) algorithm --- the running
+example of our paper --- may need to account for the representation of
+the matrix, whether to compute and return the detrminant or rank, how
+and whether search for pivot, etc. Furthermore, current architectures
 demand more and more frequent tweaks which, in general, cannot be done by the
-compiler because the tweaking often involves domain knowledge.  
+compiler because the tweaking often involves domain knowledge. 
+The survey \cite{carette04} of
+Gaussian elimination implementation in an industrial package Maple
+found XXX various aspects and XXX different implementations of the
+algorithm.  We can manually write each of these implementations
+optimizing for particular aspects and using cut-and-paste to ``share''
+similar pieces of code. \oleg{I don't think we need to say much here
+-- the shear number of various implementations should be enough of a
+clue.} We can write a very generic GE procedure that accounts for
+all the aspects with appropriate abstractions (cite axiom?). The
+abstraction mechanisms however -- be they procedure, method or a
+function call -- have a significant cost, especially for
+high-performance numerical computing (cite? At least carette04). 
 
-Our goal was to implement a textbook-style modular design 
-\cite{journals/cacm/parnas72a}, yet 
-have our code be very efficient.  Gaussian elimination, as a  
-well-known algorithm with many different aspects 
-\cite{carette04}, was chosen as a representative example.
+A more appealing (acceptable? indispensable? need a better word)
+approach is generative programming
+\cite{Czarnecki,Veldhuizen:1998:ISCOPE,musser94algorithmoriented,BOOST,POOMA,ATLAS}.
+The approach is not without problems, e.g., making sure that the
+generated code is well-formed. This is a challenge in string-based
+generation systems, which generally do not offer such guarantees and
+therefore make it very difficult to determine which part of the
+generator is at fault when the generated code cannot be parsed. Other
+problems is preventing accidental variable capture (so-called hygiene
+\cite{HygienicMacros}) and ensuring the generated code is
+well-typed. Lisp-style macros, Scheme hygienic macros, camlp4
+preprocessor (cite XXX), C++ template meta-programming, Template
+Haskell \cite{conf/dagstuhl/CzarneckiOST03} solve some of the above
+problems. Of the widely available maintainable languages, only
+MetaOCaml \cite{CTHL03,metaocaml-org}  solves all the above problems
+including the well-typing of the generated code \cite{TahaSheard97,TahaThesis}.
 
-Whether one prefers to code in an imperative, object-oriented, functional, 
-or even in a mixed style, all abstraction mechanisms in current
-languages have a non-zero run-time cost.  Whether it is procedure,
-method or function call, these have a cost; worse still, higher level
-and/or higher order abstractions (like Functors or AspectJ's aspects)
-frequently have a larger cost still.  Of course, if one is faced with
-writing 35 different implementations of the ``same'' algorithm
-\cite{carette04}, this
-abstraction cost starts to look cheap!  Although bad programmers have
-been known to resort to cut\&paste programming, no self-respecting
-programmer would be caught doing that.
-The common solution is to turn to code generation.
+But more difficult problems remain. Is the generated code optimal? Do
+we still need post-processing to eliminate common subexpressions and
+fold constants, remove redundant bindings? Is the generator readable,
+resembling the original algorithm, and extensible? Are the aspects
+truly modular? Can we add another aspect to it or another instance of
+the existing aspect without affecting the existing ones? Finally, can
+we express domain-specific knowledge, e.g., one should not attempt to
+use full division when dealing with matrices of exact integers, nor is
+it worthwhile to use full pivoting on a matrix of rational integers
+($\mathbb Q $).
 
-While many people still make do with string-based code generation,
-this is not much different than writing code in a dynamically typed
-interpreted scripting language.  It works, it is convenient, but it
-does not scale well, it is a debugging nightmare, and usually suffers
-most from Software Aging \cite{parnas_aging}.  As with other tasks in
-programming, the answer is to turn to statically typed languages,
-which provide strong guarantees about the soundness of the resulting
-code.  MetaOCaml \cite{CTHL03,metaocaml-org} in particular stands
-out: not only it guarantees well-formedness and the absense of problems 
-such as accidental variable capture \cite{HygienicMacros}. MetaOcaml also
-statically ensures that both the code generator and the generated code
-are well-typed \cite{TahaSheard97,TahaThesis}.  While Template
-programming in C++ and Template Haskell do offer some amount of static
-typing \cite{conf/dagstuhl/CzarneckiOST03}, MetaOCaml
-offers stronger guarantees.  As well, since MetaOCaml is
-implemented on top of the very solid Ocaml language, one accrues
-additional benefits.
-
-While it is theoretically feasible in a strings-based
-generative system to re-parse the generative code to inspect it, such
-an approach rapidly degenerates into complete chaos.
-% \oleg{is there a good citation?}
-% \jacquesP{none that I am aware of}
-In languages
-that natively offer reflection and reification (either at no cost, 
-such as in LISP and Scheme, or at a modest cost in languages like 
-Maple), inspection is actually feasible, even easy.  But this is fragile
-and error-prone, since the languages offer little support for catching
-errors early.
-
-In MetaOCaml, generated code cannot be examined and optimized at all. It must
-be generated just right.  For simple code, this is relatively easy
-(see \cite{TahaThesis} for many examples).  For more complex examples,
-new techniques are necessary.  \cite{KiselyovTaha} introduces one
-such tool: abstract interpretation.  But more problems remain
-\cite{Padua:MetaOcaml:04}:
-\begin{itemize}
-    \item Generating names in the presence of ``if'', ``while'', and other
-        control operators. \cite{KiselyovTaha} showed how to solve
-        this problem in simple cases.
-    \item Making continuation-passing style (CPS) code clear.  Many
-        authors understandably shy away from CPS code as it quickly
-        becomes unreadable.  But this is needed for proper name
-        generation.
-    \item Compositionality of various interleaving aspects, as well
-        as expressing dependencies among them.  For example, if we
-        choose to compute the determinant of a matrix while performing
-        Gaussian Elimination, this requires inserting code in 
-        several specific places in the algorithm.  The method to
-        compute this determinant crucially depends on whether 
-        a division-based or a fraction-free Gaussian Elimination is
-        used.
-    \item As mentionned above, there are dependencies between
-        certain algorithmic choices and properties of the
-        underlying domain, and we would like to statically guarantee
-        that inappropriate combinations cannot be chosen.  For instance,
-        one should not attempt to use full division when dealing
-        with matrices of exact integers, nor is it worthwhile to use
-        full pivoting on a matrix of rational integers ($\mathbb Q $).
-\end{itemize}
-The questions we want to answer is:
-Can we achieve all of the abstractions needed for a flexible 
-Gaussian Elimination, and can
-we eliminate all of that abstraction's overhead in the generated code?
-Of course, we want to do this without using
-intensional code analysis -- that is, maintaining the
-guarantees of MetaOCaml and using a purely generative approach.
-
-Maintaining generativity is not just an interesting exercise:
-one gets a stronger equational theory \cite{Taha2000}, and avoids
-the danger of creating unsoundness \cite{TahaThesis}.  It should
-also be remarked that in general, intensional code analysis
-essentially requires one to insert both an optimizing compiler and 
-an automated theorem proving system into the code generating system
+MetaOCaml is \emph{generative}: generated code can only be treated as
+a black box: it cannot be inspected and it cannot be post-processed
+(i.e., no intensional analysis). This approach gives a stronger
+equational theory \cite{Taha2000}, and avoids the danger of creating
+unsoundness \cite{TahaThesis}. Furthermore, intensional code analysis
+essentially requires one to insert both an optimizing compiler and an
+automated theorem proving system into the code generating system
 \cite{Pueschel:05,Kennedy01Telescoping,dongarra7,Veldhuizen:2004}.
-While this is
-potentially extremely powerful and an exciting area of research,
-it is also extremely complex, which means that it is currently more
-error-prone and difficult to ascertain the correctness of the 
-resulting code.
+While this is potentially extremely powerful and an exciting area of
+research, it is also extremely complex, which means that it is
+currently more error-prone and difficult to ascertain the correctness
+of the resulting code.
 
-This work makes the following contributions:
+Therefore, in MetaOCaml, code must be generated just right (see
+\cite{TahaThesis} for many simple examples).  For more complex
+examples, new techniques are necessary, e.g., abstract interpretation
+\cite{KiselyovTaha}.  But more problems remain
+\cite{Padua:MetaOcaml:04}: generating binding statements (``names''),
+especially when generating loop bodies or conditional branches; making
+continuation-passing style (CPS) code clear.  Many authors
+understandably shy away from CPS code as it quickly becomes
+unreadable.  But this is needed for proper name generation.
+The problems of compositionality of code generators, expressing
+dependencies among them and domain-specific knowledge remain.
+
+In this paper we report on progress of solving these problems using GE
+as our running example. Specifically, our contributions:
 \vspace*{-6pt}
 \begin{itemize}
-    \item use of generative functors for meta-programming
-    \item orderly aspect weaving
-    \item mdo notation for greater monadic code clarity
-    \item use of monads for meta-programming
-    \item use of type constraints to encode domain knowledge and 
-		ensure correctness
+    \item Extending monad of \cite{KiselyovTaha} for generating
+      binding statements when generating control structures such as
+      loops and conditionals. We argue that code generation is an
+      effect and so requires something like a monad for proper
+      serialization.
+    \item Implementation of the |mdo|-notation (patterned after
+      |do|-notation of Haskell) to make monadic code readable
+    \item Use of functors (including higher-order functors) to
+      modularize the generator, express aspects (including results of
+      various types) and \emph{assure composability of aspects} even
+      for aspects that use state and have to be accounted in many
+      places in the generated code
+    \item use functor type sharing constraints to encode domain-specific
+      knowledge
 \end{itemize}
 
-The rest of this paper is structured as follows:
-The next section introduces code generation in MetaOCaml, the problem
-of name generation, and how continuation-passing style is a general
-tool for solving that problem.  We also introduce
-the monad that greatly simplifies the task of dealing with
-possibly effect-inducing CPS code combinators.  Section~\ref{functors}
-shows how one can use the advanced module system of OCaml, namely its
-parametrized modules, to encode all of the aspects of the Gaussian
-Elimination algorithm family in completely separate, independent modules.
-We then briefly discuss related work in section~\ref{related} and outline
-some work still to do, and finally draw some 
-conclusions in section~\ref{conclusion}.  As an appendix, we show
-the details of the syntax extension for monadic programming in Ocaml
-and MetaOCaml.
+The rest of this paper is structured as follows: The next section
+introduces code generation in MetaOCaml, the problem of name
+generation, and continuation-passing style (CPS) as a general
+solution.  We also introduce the monad and the issues of generating
+control statements. Section~\ref{functors} describes the use of
+parametrized modules of OCaml to encode all of the aspects of the
+Gaussian Elimination algorithm family in completely separate,
+independent modules.  We briefly discuss related work in
+section~\ref{related}. We then outline the future work and conclude.
+Appendices give samples of the generated code (which is availablke in
+full at XXX).
 
-The first author wishes to thank Cristiano Calgano for his help in
-adapting camlp4 for use with MetaOCaml.
+We wish to thank Cristiano Calgano for his help in adapting camlp4 for
+use with MetaOCaml.
 
-\section{The problem of generating names, CPS, and monad}\label{CPS}
+
+\section{Generating binding statements, CPS, and monad}\label{CPS}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% And now, a better -- and shorter -- write-up.
 
-The essence of our approach is assembling the code of the program by
-combining instances of various aspects together. In the case of
-Gaussian Elimination, the algorithmic aspects are pivot determination, 
-swapping of
-rows and columns, determinant tracking, etc. A primitive code
-generator yields a code expression.  A combinator takes (complete and
-well-typed) code expressions and combines them into a composite expression
-(which is also statically guaranteed to be well-formed and well-typed).
-
-We will be using MetaOcaml which, as an instance of a multi-stage
+We build code generators out of primitive ones using code generation 
+combinators. MetaOcaml, as an instance of a multi-stage
 programming system \cite{TahaThesis}, provides exactly the needed
 features: to construct a code expression, to combine them, and to
 execute them. Figure~\ref{easycode} shows the simplest code generator |one|,
@@ -993,6 +949,7 @@ investigating statically typed aspect weaving.
 \bibliographystyle{plain}
 \end{document}
 
+
 % It seems no appendices are allowed. Check with Walid?
 
 \section{Appendix A}
@@ -1542,3 +1499,155 @@ effects, when generating control constructions such as conditionals.
 The form |ifM| handles the such effects correctly. In our code, we
 need similar operators for other Ocaml control forms: for generating
 case-matching statements and for- and while-loops.
+
+% old intro
+\section{Introduction}
+
+In high-performance, symbolic, and numeric computing, there is a well-known
+issue of balancing between maximal performance and the level of
+abstraction at which code is written.  Furthermore, already in
+linear algebra, there is a wealth of different concerns that 
+\emph{may} need to be addressed.  While it is possible to manually
+inline and simplify such code, this is labour-intensive and 
+error-prone.  The resulting code is frequently unreadable,
+and thus unmaintainable.
+
+There are a number of projects that have attempted to address these issues
+\cite{Czarnecki,Veldhuizen:1998:ISCOPE,musser94algorithmoriented,BOOST,POOMA,ATLAS}, 
+and they have generally succeeded in generating
+efficient code, but the cost was frequently the loss of modularity
+of the design.  In other words, to allow the various aspects to
+weave with each other \emph{efficiently}, information which should
+have been kept hidden leaked from module to module.  This seriously
+affects maintainability and scalability.  Furthermore, current architectures
+demand more and more frequent tweaks which, in general, cannot be done by the
+compiler because the tweaking often involves domain knowledge.  
+
+Our goal was to implement a textbook-style modular design 
+\cite{journals/cacm/parnas72a}, yet 
+have our code be very efficient.  Gaussian elimination, as a  
+well-known algorithm with many different aspects 
+\cite{carette04}, was chosen as a representative example.
+
+Whether one prefers to code in an imperative, object-oriented, functional, 
+or even in a mixed style, all abstraction mechanisms in current
+languages have a non-zero run-time cost.  Whether it is procedure,
+method or function call, these have a cost; worse still, higher level
+and/or higher order abstractions (like Functors or AspectJ's aspects)
+frequently have a larger cost still.  Of course, if one is faced with
+writing 35 different implementations of the ``same'' algorithm
+\cite{carette04}, this
+abstraction cost starts to look cheap!  Although bad programmers have
+been known to resort to cut\&paste programming, no self-respecting
+programmer would be caught doing that.
+The common solution is to turn to code generation.
+
+While many people still make do with string-based code generation,
+this is not much different than writing code in a dynamically typed
+interpreted scripting language.  It works, it is convenient, but it
+does not scale well, it is a debugging nightmare, and usually suffers
+most from Software Aging \cite{parnas_aging}.  As with other tasks in
+programming, the answer is to turn to statically typed languages,
+which provide strong guarantees about the soundness of the resulting
+code.  MetaOCaml \cite{CTHL03,metaocaml-org} in particular stands
+out: not only it guarantees well-formedness and the absense of problems 
+such as accidental variable capture \cite{HygienicMacros}. MetaOcaml also
+statically ensures that both the code generator and the generated code
+are well-typed \cite{TahaSheard97,TahaThesis}.  While Template
+programming in C++ and Template Haskell do offer some amount of static
+typing \cite{conf/dagstuhl/CzarneckiOST03}, MetaOCaml
+offers stronger guarantees.  As well, since MetaOCaml is
+implemented on top of the very solid Ocaml language, one accrues
+additional benefits.
+
+While it is theoretically feasible in a strings-based
+generative system to re-parse the generative code to inspect it, such
+an approach rapidly degenerates into complete chaos.
+% \oleg{is there a good citation?}
+% \jacquesP{none that I am aware of}
+In languages
+that natively offer reflection and reification (either at no cost, 
+such as in LISP and Scheme, or at a modest cost in languages like 
+Maple), inspection is actually feasible, even easy.  But this is fragile
+and error-prone, since the languages offer little support for catching
+errors early.
+
+In MetaOCaml, generated code cannot be examined and optimized at all. It must
+be generated just right.  For simple code, this is relatively easy
+(see \cite{TahaThesis} for many examples).  For more complex examples,
+new techniques are necessary.  \cite{KiselyovTaha} introduces one
+such tool: abstract interpretation.  But more problems remain
+\cite{Padua:MetaOcaml:04}:
+\begin{itemize}
+    \item Generating names in the presence of ``if'', ``while'', and other
+        control operators. \cite{KiselyovTaha} showed how to solve
+        this problem in simple cases.
+    \item Making continuation-passing style (CPS) code clear.  Many
+        authors understandably shy away from CPS code as it quickly
+        becomes unreadable.  But this is needed for proper name
+        generation.
+    \item Compositionality of various interleaving aspects, as well
+        as expressing dependencies among them.  For example, if we
+        choose to compute the determinant of a matrix while performing
+        Gaussian Elimination, this requires inserting code in 
+        several specific places in the algorithm.  The method to
+        compute this determinant crucially depends on whether 
+        a division-based or a fraction-free Gaussian Elimination is
+        used.
+    \item As mentionned above, there are dependencies between
+        certain algorithmic choices and properties of the
+        underlying domain, and we would like to statically guarantee
+        that inappropriate combinations cannot be chosen.  For instance,
+        one should not attempt to use full division when dealing
+        with matrices of exact integers, nor is it worthwhile to use
+        full pivoting on a matrix of rational integers ($\mathbb Q $).
+\end{itemize}
+The questions we want to answer is:
+Can we achieve all of the abstractions needed for a flexible 
+Gaussian Elimination, and can
+we eliminate all of that abstraction's overhead in the generated code?
+Of course, we want to do this without using
+intensional code analysis -- that is, maintaining the
+guarantees of MetaOCaml and using a purely generative approach.
+
+Maintaining generativity is not just an interesting exercise:
+one gets a stronger equational theory \cite{Taha2000}, and avoids
+the danger of creating unsoundness \cite{TahaThesis}.  It should
+also be remarked that in general, intensional code analysis
+essentially requires one to insert both an optimizing compiler and 
+an automated theorem proving system into the code generating system
+\cite{Pueschel:05,Kennedy01Telescoping,dongarra7,Veldhuizen:2004}.
+While this is
+potentially extremely powerful and an exciting area of research,
+it is also extremely complex, which means that it is currently more
+error-prone and difficult to ascertain the correctness of the 
+resulting code.
+
+This work makes the following contributions:
+\vspace*{-6pt}
+\begin{itemize}
+    \item use of generative functors for meta-programming
+    \item orderly aspect weaving
+    \item mdo notation for greater monadic code clarity
+    \item use of monads for meta-programming
+    \item use of type constraints to encode domain knowledge and 
+		ensure correctness
+\end{itemize}
+
+The rest of this paper is structured as follows:
+The next section introduces code generation in MetaOCaml, the problem
+of name generation, and how continuation-passing style is a general
+tool for solving that problem.  We also introduce
+the monad that greatly simplifies the task of dealing with
+possibly effect-inducing CPS code combinators.  Section~\ref{functors}
+shows how one can use the advanced module system of OCaml, namely its
+parametrized modules, to encode all of the aspects of the Gaussian
+Elimination algorithm family in completely separate, independent modules.
+We then briefly discuss related work in section~\ref{related} and outline
+some work still to do, and finally draw some 
+conclusions in section~\ref{conclusion}.  As an appendix, we show
+the details of the syntax extension for monadic programming in Ocaml
+and MetaOCaml.
+
+The first author wishes to thank Cristiano Calgano for his help in
+adapting camlp4 for use with MetaOCaml.
