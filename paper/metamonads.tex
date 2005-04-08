@@ -22,6 +22,8 @@
 
 %\usepackage{refrange}
 
+\usepackage[medium,compact]{titlesec}
+
 \usepackage{fancyvrb}
 \DefineShortVerb{\|}
 \DefineVerbatimEnvironment{code}{Verbatim}{xleftmargin=\mathindent,commandchars=\\\{\},fontsize=\small}
@@ -41,6 +43,20 @@
 %% \let\@@listi\@@listI
 %% \@@listi
 %% \makeatother
+
+\parskip 0pt plus 1pt minus 2pt
+\textfloatsep 4pt plus 2pt minus 4pt % Less space around figures
+\abovecaptionskip 0pt plus 0pt minus 2pt
+\belowcaptionskip 0pt plus 0pt minus 2pt
+
+\renewcommand\floatpagefraction{.9}
+\renewcommand\topfraction{.9}
+\renewcommand\bottomfraction{.9}
+\renewcommand\textfraction{.1}   
+\setcounter{totalnumber}{50}
+\setcounter{topnumber}{50}
+\setcounter{bottomnumber}{50}
+
 
 \newcommand{\omitnow}[1]{}
 \newcommand{\oleg}[1]{{\it [Oleg says: #1]}}
@@ -62,14 +78,15 @@ Monterey, CA 93943}
 
 \begin{abstract}
 With Gaussian Elimination as a representative family of numerical
+and symbolic
 algorithms, we use multi-stage programming, monads and Ocaml's
 advanced module system to demonstrate the complete elimination of the
 abstraction overhead while avoiding any inspection of the generated
-code.  We parameterize our Gaussian Elimination code to great extent
-(over domain, matrix representations, determinant tracking and
+code.  We parameterize our Gaussian Elimination code to a great extent
+(over domain, matrix representations, determinant tracking, 
 pivoting policies, result types, etc) at no run-time cost.  Because
 the resulting code is generated just right and not changed afterwards,
-we enjoy MetaOCaml guarantees that the generated code is well-typed.
+we enjoy MetaOCaml's guaranty that the generated code is well-typed.
 We further demonstrate that various abstraction parameters (aspects)
 can be made orthogonal and compositional, even in the presence of
 name-generation for temporaries and other bindings and
@@ -77,26 +94,11 @@ name-generation for temporaries and other bindings and
 domain-specific knowledge so that ``clearly wrong'' compositions can
 be statically rejected by the compiler when processing the generator
 rather than the generated code.
-
-
-We use monads and Ocaml's advanced module system to
-demonstrate that, in a generative context, it is
-possible to totally eliminate the overhead of abstraction.
-This lets one use extreme forms of \textit{information hiding}
-at no run-time cost.  Furthermore the typed nature of
-the generative context provide static guarantees about the
-generated code.  The various extensions
-(aspects) can be made completely orthogonal and compositional,
-even in the presence of name-generation for temporaries and
-other bindings and ``interleaving'' of aspects.  We also
-show how to encode some domain-specific knowledge so that
-``clearly wrong'' compositions can be statically rejected by the
-compiler.
 \end{abstract}
 
 \section{Introduction}
 
-In high-performance and numeric computing, there is a well-known
+In high-performance, symbolic, and numeric computing, there is a well-known
 issue of balancing between maximal performance and the level of
 abstraction at which code is written.  Furthermore, already in
 linear algebra, there is a wealth of different concerns that 
@@ -132,8 +134,7 @@ writing 60 different implementations of the ``same'' algorithm
 \oleg{citation?}, this
 abstraction cost starts to look cheap!  Although bad programmers have
 been known to resort to cut\&paste programming, no self-respecting
-programmer would be caught doing that\footnote{Sadly, there are still
-many programmers who do not see the harm of cut\&paste programming}.
+programmer would be caught doing that.
 The common solution is to turn to code generation.
 
 While many people still make do with string-based code generation,
@@ -149,8 +150,8 @@ such as accidental variable capture \cite{HygienicMacros}. MetaOcaml also
 statically ensures that both the code generator and the generated code
 are well-typed \cite{TahaSheard97,TahaThesis}.  While Template
 programming in C++ and Template Haskell do offer some amount of static
-typing \cite{conf/dagstuhl/CzarneckiOST03}, MetaOCaml\footnote{and
-  MetaML.} offers stronger guarantees.  As well, since MetaOCaml is
+typing \cite{conf/dagstuhl/CzarneckiOST03}, MetaOCaml
+offers stronger guarantees.  As well, since MetaOCaml is
 implemented on top of the very solid Ocaml language, one accrues
 additional benefits.
 
@@ -811,17 +812,14 @@ previsouly. But that state is handled via the monadic state. As we
 have shown, open unions makes the overall monadic state compositional
 with respect to the state of various aspects.
 
-
 \begin{figure*}
 \begin{code}
 module Gen(Dom: DOMAIN)(C: CONTAINER2D)(PivotF: PIVOT)
           (Update: UPDATE with type baseobj = Dom.v and type ctr = C(Dom).contr)
           (Out: OUTPUT with type contr = C(Dom).contr and type D.indet = Dom.v 
-                        and type 'a D.lstate = 'a Update.D.lstate) =
-   struct
+                        and type 'a D.lstate = 'a Update.D.lstate) = struct
     module Ctr = C(Dom)
     module Pivot = PivotF(Dom)(C)(Out.D)
-    type v = Dom.v
     let gen =
       let zerobelow b r c m n brc =
         let innerbody i = mdo \{
@@ -853,8 +851,7 @@ module Gen(Dom: DOMAIN)(C: CONTAINER2D)(PivotF: PIVOT)
                              (Out.R.succ ()) )
                         (Update.D.zero_sign () ))
                     (Code.update c Idx.succ) \} ))
-            (Out.make_result b) \} 
-    in
+            (Out.make_result b) \} in
     .<fun a -> .~(runM (dogen .<a>.)) >.
 end
 \end{code}
@@ -1056,8 +1053,6 @@ let fp = fun arr n ->
 This function has the type |float array -> int -> int * float|. By
 enclosing the code into MetaOCaml brackets, we obtain the simplest
 generator expression.
-
-\oleg{later on, we can write the following just let fpc = .<...>.}
 
 \begin{code}
 let fpc = .<fun arr n ->
