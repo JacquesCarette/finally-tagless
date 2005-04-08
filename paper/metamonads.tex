@@ -220,7 +220,7 @@ error-prone and difficult to ascertain the correctness of the
 resulting code.
 
 This work makes the following contributions:
-\vspace*{-2pt}
+\vspace*{-6pt}
 \begin{itemize}
     \item use of generative functors for meta-programming
     \item orderly aspect weaving
@@ -239,8 +239,8 @@ possibly effect-inducing CPS code combinators.  Section~\ref{functors}
 shows how one can use the advanced module system of OCaml, namely its
 parametrized modules, to encode all of the aspects of the Gaussian
 Elimination algorithm family in completely separate, independent modules.
-We then briefly discuss related work in section~\ref{related}, outline
-some work still to do in section~\ref{future}, and finally draw some 
+We then briefly discuss related work in section~\ref{related} and outline
+some work still to do, and finally draw some 
 conclusions in section~\ref{conclusion}.  As an appendix, we show
 the details of the syntax extension for monadic programming in Ocaml
 and MetaOCaml.
@@ -506,10 +506,10 @@ case-matching statements and for- and while-loops.
 
 \section{Functors}\label{functors}
 
-Now that we know that we have the appropriate basic techniques for
-writing our code generators, we need to worry about modularizing them
-appropriately.  Here we can really take advantage of the fact that
-MetaOCaml is a staged language: it is not really relevant how much
+Now that we have the appropriate basic techniques for
+writing our code generators, we need to worry about modularization.
+Here we can really take advantage of the fact that
+MetaOCaml is a staged language: it is not particularly relevant how much
 computation happens at staging time, as long as the generated code
 is correct and efficient.  In other words, we can use any abstraction
 mechanisms we want to structure our code generators, as long as none
@@ -521,13 +521,13 @@ modular designs has not changed since they were first articulated by
 Parnas~\cite{journals/cacm/parnas72a} and Dijkstra~
 \cite{EWD:EWD447}: information hiding and separation of concerns.  To
 apply these principles to the study of Gaussian Elimination, we need
-to understand what changes between different implementations, and 
+to understand what are the changes between different implementations, and 
 what concerns need to be addressed.  We also need to study the degree
 to which these concerns are independent.
-
-A careful study of Gaussian Elimination \cite{carette04} shows that
-(at least) the following variations occur:
+A study of Gaussian Elimination \cite{carette04} shows that
+the following variations occur:
 \begin{enumerate}
+\vspace*{-6pt}
 	\item \textbf{Domain}: In which (algebraic) domain do the matrix
 		elements belong to.  Sometimes the domains are very specific
 		($\mathbb{Z}, \mathbb{Q}, \mathbb{Z}_p, 
@@ -539,8 +539,9 @@ A careful study of Gaussian Elimination \cite{carette04} shows that
 		multivariate polynomials over a field, elements of a formal Ring
 		with possibly undecidable zero-equivalence, or elements of a 
 		Division Ring.  In the roughly 85 pieces of code
-		surveyed \oleg{citation?},
-		20 different domains were encountered.
+		surveyed 20 different domains were encountered.
+		% \oleg{citation?} \jacques no citation needed, carette04 is
+		% already cited above.
 	\item \textbf{Container}: Whether the matrix
 		is represented as an array of arrays, a one-dimensional array,
 		a hash table, a sparse matrix, etc., and
@@ -552,11 +553,11 @@ A careful study of Gaussian Elimination \cite{carette04} shows that
 		pivoting matrix are to be returned.
 		It is worthwhile noting that in the larger algorithm family,
 		routines like Maple's \texttt{LinearAlgebra:-LUDecomposition} have
-		up to $2^6 + 2^5 + 2^2 = 100$ possible outputs.
+		up to $2^6 + 2^5 + 2^2 = 100$ outputs.
 	\item \textbf{Fraction-free}: Whether the Gaussian Elimination
 		algorithm is allowed to use unrestricted division, or only
 		exact (remainder-free) division.
-	\item \textbf{Pivoting}: Whether to use no pivoting at all, only
+	\item \textbf{Pivoting}: Whether to use no pivoting, 
 		column-wise pivoting, or full pivoting.
 	\item \textbf{Augmented Matrices}: Whether we are doing GE on
 		a full matrix, or only a restricted number of columns, while
@@ -565,6 +566,7 @@ A careful study of Gaussian Elimination \cite{carette04} shows that
 \end{enumerate}
 \noindent In addition to the above variations, there are two aspects that 
 recur frequently:
+\vspace*{-6pt}
 \begin{enumerate}
 	\item \textbf{Length measure}:  For stability reasons
 		(whether numerical or coefficient growth), if a domain
@@ -584,22 +586,24 @@ performed.
 The simplest parametrization is to make the domain abstract. As it 
 turns out, we need the following to exist in our domains:  $0$, $1$,
 $+$, $*$, (unary and binary) $-$, some kind of division, normalization,
-and potentially a relative size measure.  We definitely need at least
-\emph{exact} division to exist, but if full division is available, than
+and potentially a relative size measure.  We need at least
+\emph{exact} division to exist, but if full division is available, that
 can be used as well.  Normalization is frequently trivial for domains
-where elements have unique representations, but in many applications
-we have domains (like polynomials in sum-of-product form) where this
+where elements have unique representations, but for some
+domains (like polynomials in sum-of-product form) this
 is not the case.  The simplest case of such an abstraction was given
-in Section XXX, |param_code1|. In the latter, code-generators such as
+in Fig.~\ref{easycode}, |param_code1|. In the latter, code-generators such as
 |plus| and |one| were passed as arguments. We see however that we 
 need far more than two parameters, so we have to group them. Instead
 of the grouping offered by regular records, we use Ocaml
-\emph{structures} (i.e., modules) (cite Ocaml module system tutorial?)
-so we can take advantage extensions, type abstraction and constraints,
-and especially parameterized structures (i.e., \emph{functors}).
-We first define the type of the domain, the signature |DOMAIN| to which
-different domain must satisfy:
-\begin{figure}
+\emph{structures} (i.e., modules) 
+% (cite Ocaml module system tutorial?)
+% normally yes, but our references are what's making this long right now!
+so we can take advantage of extensions, type abstraction and constraints,
+and especially parameterized structures (\emph{functors}).
+We first define the type of the domain, the signature |DOMAIN| which
+different domains must satisfy:
+\begin{figure}[h]
 \begin{code}
 module type DOMAIN = sig
   type v    type 'a vc = ('a,v) code
@@ -622,6 +626,7 @@ module IntegerDomain : DOMAIN = struct
 end
 \end{code}
 \end{figure}
+
 \noindent  The first item to notice is that the types above are
 generally lifted twice: once from the value domain |v| to the code
 domain |'a vc|, and once more from values to monadic computations
@@ -630,23 +635,21 @@ to redundantly walk a whole matrix to apply normalization when
 normalization is not necessary, |normalizerf| is optional.
 
 One particular instantiation of the domain (a particular structure of
-|DOMAIN| signature) is the |int| domain. The notattion
+|DOMAIN| signature) is the |int| domain. The notation
 |module IntegerDomain : DOMAIN| makes the compiler
 verify that our |IntegerDomain| is indeed a |DOMAIN|, that is,
 satisfies the required signature. The constraint |DOMAIN| may be
 omitted; in that case, the compiler will verify the type when we try
 to use that structure as a |DOMAIN|. In any case, the errors such as
-missing ``methods'' or methods of wrong types will be caught
+missing ``methods'' or methods with incorrect types will be caught
 statically, even \emph{before} any code generation takes place. The
 abstract type |domain_is_ring| encodes a semantic constraint that the
 full division is not available. While the |DOMAIN| type may have
 looked daunting to some, the implementation is quite straightforward.
-It is equally simple to make implementations for |float| and for
-|Num.num| (arbitrary precision exact rational numbers).  With scarcely
-more work (as these are not built-in and the arithmetic must be
-implemented), $\mathbb{Z}_p$, $\mathbb{Z}\left[x\right]$,
-$\mathbb{Q}\left(x\right)$ and more complex domains can be done as
-well.
+|float| and |Num.num| (arbitrary precision exact rational numbers)
+are equally simple, and with scarcely
+more work, $\mathbb{Z}_p$, $\mathbb{Z}\left[x\right]$,
+$\mathbb{Q}\left(x\right)$ as well more complex domains can be implemented.
 
 Parametrizing by the kind of container used to represent a matrix is
 almost as straightforward.  We choose to make the container parametric
@@ -730,8 +733,7 @@ which specifies the output of a  GE algorithm as a 3-tuple
 \begin{code}
 module type OUTPUT = sig
   type contr  type res
-  module D : DETERMINANT   module R : RANK
-  module P : TRACKPIVOT
+  module D : DETERMINANT   module R : RANK   module P : TRACKPIVOT
   val make_result : ('a,contr) code -> 
     (('a,res) code,
      [> `TDet of 'a D.lstate | `TRan of 'a R.lstate | `TPivot of 'a P.lstate]
@@ -743,8 +745,7 @@ module OutDetRank(Dom:DOMAIN)(C: CONTAINER2D)
   module Ctr = C(Dom)
   type contr = Ctr.contr
   type res = contr * Det.outdet * int
-  module D = Det   module R = Rank
-  module P = DiscardPivot
+  module D = Det   module R = Rank   module P = DiscardPivot
   let make_result b = mdo \{ det  <-- D.fin ();  rank <-- R.fin ();
     ret .< ( .~b, .~det, .~rank ) >. \}
 end
@@ -783,41 +784,22 @@ to the final determinant value of the type |outdet|. GE of a
 floating-point matrix with no determinant tracking uses the
 instantiation of |DETERMINANT| where |outdet| is |unit| and all the
 functions of that module generate no code. For integer matrices, we
-have to track some aspects of the determinant even if we don't output
-it. The determinant tracking aspect is complex becasue tracking
+have to track some aspects of the determinant, even if we don't output
+it. The determinant tracking aspect is complex because tracking
 variables, if any, are to be declared at the beginning of GE; the sign
 of the determinant has to be updated on each row or column
 permutation; the value of the determinant should be updated per each
 pivoting. We use |lstate| to pass the tracking state, which may be, for
-example, a piece of code for the value of the type |float ref| among
+example, a piece of code for the value of the type |Dom.v ref| among
 various determinant-tracking functions. The |lstate| is a part of the
 overall monadic state. Other aspects, e.g., rank tracking, may use the
 monadic state for passing of rank tracking variables. To be able to
 compose determinant and rank tracking functors -- each of which may
 (or may not) use the monadic state for passing its own data -- we make
-an extensive use of open records (list of polymorphic variants
-appeared to be the easiest way to implement such a union, in a pure
+extensive use of open records (a list of polymorphic variants
+appeared to be the easiest way to implement such a union, in a purely
 functional way). This lets us freely compose determinant-tracking,
 rank-tracking, and other aspects.
-
-The GE generator functor is as follows. It is
-parameterized by the domain, container, pivoting policy (full, row,
-nonzero, nopivoting), update policy (that use either ``fraction-less'
-or full division), and by what to yield as the result. Some of the
-argument modules such as |PIVOT| are functors themselves (parameterized
-by the domain, the container, and the determinant functor). The sharing
-constraints express obvious constraints on the instantiation of |Gen|,
-for example, pivoting, determinant etc. components all use the same
-domain. It must be stressed that all structures (i.e., module
-instances) are stateless, and so we never have to worry that different
-aspect functors (such as |CONTAINER2D| and |PIVOT|) are instantiated
-with different but type-compatible instances of |DOMAIN|. That is, we
-are not concerened at all about the value sharing. Aspects such as
-determinant tracking may be stateful so that the determinant update
-code have access to the determinant tracking variables declared
-previsouly. But that state is handled via the monadic state. As we
-have shown, open unions makes the overall monadic state compositional
-with respect to the state of various aspects.
 
 \begin{figure}
 \begin{code}
@@ -864,27 +846,46 @@ end
 \end{code}
 \end{figure}
 
+The GE generator functor itself is 
+parameterized by the domain, container, pivoting policy (full, row,
+nonzero, nopivoting), update policy (that use either ``fraction-less'
+or full division), and by what to yield as the result. Some of the
+argument modules such as |PIVOT| are functors themselves (parameterized
+by the domain, the container, and the determinant functor). The sharing
+constraints express obvious constraints on the instantiation of |Gen|,
+for example, pivoting, determinant etc. components all use the same
+domain. It must be stressed that all structures (i.e., module
+instances) are stateless, and so we never have to worry that different
+aspect functors (such as |CONTAINER2D| and |PIVOT|) are instantiated
+with different but type-compatible instances of |DOMAIN|. That is, we
+are not concerened at all about the value sharing. Aspects such as
+determinant tracking may be stateful so that the determinant update
+code have access to the determinant tracking variables declared
+previously. But that state is handled via the monadic state. As we
+have shown, open unions makes the overall monadic state compositional
+with respect to the state of various aspects.
+
 In addition to the ``regular'' type sharing constraints shown in the
 |Gen| functor, there are also ``semantic'' sharing constraints, shown
 in the following structure of the |UPDATE| signature:
-
-\begin{code}
+\vspace*{-5pt}\begin{code}
 module DivisionUpdate
   (Dom:DOMAIN with type kind = domain_is_field)
   (C:CONTAINER2D)
   (Det:DETERMINANT with type indet=Dom.v) = struct ... end
 \end{code}
-
-The structure implements update policy that can use |Dom.div| operation without
-restrictions. That is possible only if the domain has such an
-operation. A domain such as integer domain may still provide |Dom.div|
+\vspace*{-4pt}
+This structure implements an update policy that can use the 
+|Dom.div| operation without
+restrictions -- which is possible only if the domain has such an
+operation. A domain such as the integer domain may still provide |Dom.div|
 of the same type, but that operation can only be used when we are sure
-that the division is exact. Using the integer domain with
-|DivisionUpdate| will lead to the compile-time error, when compiling
+that the division is exact. But using it with
+|DivisionUpdate| will lead to a compile-time error, when compiling
 the \emph{generator} code. Thus, in some cases we can use module types
 to express ``semantic'' constraints that cannot normally be expressed
 via the types of module members.
-
+\vspace*{-5pt}
 \begin{code}
 module GenFV4 = Gen(FloatDomain)
    (GenericVectorContainer)(FullPivot)
@@ -895,10 +896,11 @@ module GenIA1 = Gen(IntegerDomain)
    (FractionFreeUpdate(IntegerDomain)(GenericArrayContainer)(IDet))
    (OutJustMatrix(IntegerDomain)(GenericArrayContainer)(IDet))
 \end{code}
-
+\vspace*{-5pt}
 We can instantiate the |Gen| functor as shown above and inspect the
 generated code, e.g., by printing |GenIA1.gen|. The code can then be
-``compiled'' as |!. GenIA1.gen| or with off-shiring (cite). The code
+``compiled'' as |!. GenIA1.gen| or with off-shoring. The code
+% (cite).  No space!
 for |GenFV4| shows full pivoting, determinant and rank tracking. The
 code for all these aspects is fully inlined; no extra functions are
 invoked and no tests other than those needed by the GE algorithm
@@ -907,44 +909,53 @@ itself are performed. The GE function returns a triple
 the rank. The
 code generated by |GenIA1| shows absolutely no traces of determinant
 tracking: no declaratrion of spurious variables, no extra tests,
-etc. The code appears as if determinant tracking aspect did not exist
+etc. The code appears as if the determinant tracking aspect did not exist
 at all. The generated code for the above and other instantiations of
-|Gen| can be examined at (cite).
+|Gen| can be examined at \cite{metamonadsURL}.
 
-\section{Related work}\label{related}
+\section{Related and future work}\label{related}
 
 Note that the monad is similar to the one used in \cite{KiselyovTaha}.
 However, the latter work used only |retN| of all monadic operations,
-and used fixpoints (for performing iterations at the generation time).
+and used fixpoints (for performing iterations at generation time).
 In this paper we do not use monadic fixpoints (because the generator
 is not recursive) but we make extensive use of monadic operations for
 generating conditional and looping operations.
 
-Mention |Blitz++| and template meta-programming. Can do similar
-eliminating of abstraction. Can even encode some domain-specific
-knowledge in the form of concepts. But inlining critically depends on
-the compiler's fully inlining of all methods. Furthermore, all errors
+|Blitz++| \cite{Veldhuizen:1998:ISCOPE} and in general template 
+meta-programming in C++ achieve similar results of eliminating levels
+of abstraction.  Using traits and concepts, some domain-specific
+knowledge can also be encoded.  However inlining critically depends on
+the compiler's fully inlining of all methods, and as has been reported
+in the literature, this can be challenging to insure. Furthermore, all errors
 (such as type errors and concept violation errors, that is,
 composition errors) are detected only when compiling the generated
 code. It is immensely difficult to correlate errors (e.g., line numbers) 
-to the ones in the generator itself. Furthermore, I think templates
-can't be local, right? So, a lot of code generation is spread around
-file-level entities. 
+to the ones in the generator itself. Furthermore, as templates
+cannot be local, a lot of code generation is scattered around instead
+of being modularized.
 
-SPIRAL does the intentional code analysis. Probably ATLAS as well.
+ATLAS \cite{ATLAS} is another successful project in this area.  However
+they use much simpler weaving technology, which leads them to note
+that \emph{generator complexity tends to go up along with flexibility, 
+so that these routines become almost insurmountable barriers to 
+outside contribution}.  Our results show how to surmount this barrier,
+by building modular, composable generators.
+SPIRAL \cite{Pueschel:05} is another such even more ambitious project.
+But SPIRAL does intentional code analysis, relying on a set of code
+transformation ``rules'' which make sense, but which are not proved 
+to be either complete or confluent.  The strength of both of these
+project relies on their platform-specific optimizations performed
+via search techniques, something we have not attempted here.
 
-\jacques{What do we consider \emph{related work} here?  Do we essentially gloss 
-over related work in numerical software, code generation in general,
-aspect-oriented stuff?  We don't want this section to be too long, but
-not so short that we make it seem like we're inventing more than we
-really are}
-\oleg{Yes, let's gloss over ATLAS, SPIRAL, Axiom. I wonder what would
-  be the use of functors? Something by David McQueen or R. Harper.
-  In any way, mention that nobody before used functors to abstract
-  code generators -- or mix functors and multi-stage programming.}
+To the best of our knowledge, nobody has yet used functors to
+abstract code generators, or even mixed functors and 
+multi-stage programming.
+% \oleg{Yes, let's gloss over ATLAS, SPIRAL, Axiom. I wonder what would
+%   be the use of functors? Something by David McQueen or R. Harper.
+%   Mention that nobody before used functors to abstract
+%   code generators -- or mix functors and multi-stage programming.}
 
-
-\section{Future work}\label{future}
 connections with delimited continuations: making notation
 more direct-style and potentially clearer.  More syntactic sugar
 would help a lot here.
@@ -970,8 +981,6 @@ value aliasing. The only constraints to compositionality are the
 typing constraints plus the constraints we specifically impose,
 including semantic constraints (e.g., rings do not have the full
 division).
-
-
 
 Relation with aspect-oriented code: in AspectJ, aspects are (comparatively)
 lightly typed, and are post-facto extensions of an existing piece of
