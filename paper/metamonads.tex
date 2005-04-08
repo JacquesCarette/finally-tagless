@@ -231,8 +231,6 @@ let simplest_code = let gen x y = plus x (plus y one) in
 \evalresult{.<fun x_1 -> fun y_2 -> (x_1 + (y_2 + 1))>.}
 let simplest_param_code plus one = let gen x y = plus x (plus y one) in
   .<fun x y -> .~(gen .<x>. .<y>.)>.
-let plus x y = .<.~x +. .~y>. and one = .<1.0>. in
-  simplest_param_code plus one
 let param_code1 plus one =
   let gen x y = plus (plus y one) (plus x (plus y one)) in
   .<fun x y -> .~(gen .<x>. .<y>.)>.
@@ -242,28 +240,27 @@ let param_code1' plus one =
 param_code1' plus one
 \evalresult{.<fun x_1 -> fun y_2 -> ((y_2 + 1) + (x_1 + (y_2 + 1)))>.}
 \end{code}
-\caption{Code generation and combinators. $\Longrightarrow$ shows the
-  result of evaluating the preceeding expression}
+\caption{Code generation and combinators. $\Longrightarrow$ under an
+  expression shows the result of its evaluation}
 \end{figure}
 
-We use MetaOCaml brackets |.<...>.| to generate code expressions -- in
-other words, to construct future-stage computations. We use escapes
-|.~| to perform an immediate code generating computation while we are
-building the future-stage computation (code expression). The immediate
-computation in |simplest_code| includes the evaluation of the function
-|gen|, which in turn applies the function |plus|. The function
-receives code expressions |.<x>.| and |.<y>.| as arguments. At the
-generating stage, we can manipulate code expressions as (opaque)
-values. The function |gen| returns a code expression, which will be
-inlined in the place of the escape. MetaOCaml can print out code
-expressions, so we can see the final generated code, It has
-no traces of the functions |gen| and |plus|: their applications are
-done at the code generation stage. 
+We use MetaOCaml brackets |.<...>.| to generate code expressions,
+i.e., to construct future-stage computations. We use escapes |.~| to
+perform an immediate code generating computation \emph{while} we are
+building the future-stage computation. The immediate computation in
+|simplest_code| is the evaluation of the function |gen|, which in turn
+applies |plus|. The function |gen| receives code expressions |.<x>.|
+and |.<y>.| as arguments. At the generating stage, we can manipulate
+code expressions as (opaque) values. The function |gen| returns a code
+expression, which is inlined in the place of the escape. MetaOCaml can
+print out code expressions, so we can see the final generated code. It
+has no traces of |gen| and |plus|: their applications are done at the
+generation stage.
 
 The final MetaOCaml feature, |.!| (pronounced ``run'') 
 executes the code expression: |.! simplest_code| is a function of two
 integers, which we can apply: |(.! simplest_code) 1 2|. The original
-|simplest_code| is not the function on integers -- it is a code
+|simplest_code| is not a function on integers -- it is a code
 expression.
 
 To see the benefit of code generation, we notice that we can easily
@@ -271,31 +268,29 @@ parameterize our code, |simplest_param_code|, and use it to generate
 code that operates on integers, floating point numbers or booleans --
 in general, any domain that implements |plus| and |one|.
 
-A more complex expression |param_code1| has two occurrences of 
-|plus y one|. Depending on the implementation of |plus|, this may be quite a
-complex computation, and so we would rather not do it twice. We may be
-tempted to rely on the compiler's common-subexpression elimination
-optimization. We would rather not rely on a ``sufficiently smart
-compiler'': when the generated code is very complex, the compiler may
-overlook common subexpressions.  Or the subexpressions may occur in an
-imperative context where the compiler might not be able to determine
-if lifting them is sound. So, being conservative, the optimizer will
-leave the duplicates as they are. We may attempt to eliminate
-subexpressions as in |param_code1'|. However, the result of
-|param_code1' plus one| still exhibits duplicate sub-expressions. 
-Our |let|-insertion
-optimization saved the computation at the generating stage. 
-We need a combinator that inserts the |let| expression in the
-generat\emph{ed} code. We need a combinator |letgen| to be used
-as\\|let ce = letgen (plus y one) in plus ce (plus x ce)| 
-yielding the code like |.<let t = y + 1 in t + (x + t)>.|
+A more generator |param_code1| has two occurrences of |plus y one|,
+which may be quite a complex computation and so we would rather not do
+it twice. We may be tempted to rely on the compiler's
+common-subexpression elimination optimization. When the generated code is
+very complex, however, the compiler may overlook common subexpressions.  Or the
+subexpressions may occur in such an imperative context where the compiler
+might not be able to determine if lifting them is sound. So, being
+conservative, the optimizer will leave the duplicates as they are. We
+may attempt to eliminate subexpressions as in |param_code1'|. However,
+the result of |param_code1' plus one| still exhibits duplicate
+sub-expressions.  Our |let|-insertion optimization saved the
+computation at the generating stage.  We need a combinator that
+inserts the |let| expression in the generat\emph{ed} code. We need a
+combinator |letgen| to be used as\\
+|let ce = letgen (plus y one) in plus ce (plus x ce)|
+yielding the code like |.<let t = y + 1 in t + (x + t)>.| 
 But that seems impossible because |letgen exp| has to generate
-the expression |.<let t = exp in body>.| although |letgen| does not have
-the |body| yet. The body needs a temporary identifier |.<t>.| that
-is supposed to be the result of |letgen| itself. 
-Certainly |letgen| cannot generate only part of a let-expression,
-without the |body|,  as all generated expressions in
-MetaOCaml are well-formed and complete.
+the expression |.<let t = exp in body>.| but |letgen| does not
+have the |body| yet. The body needs a temporary identifier |.<t>.|
+that is supposed to be the result of |letgen| itself.  Certainly
+|letgen| cannot generate only part of a let-expression, without the
+|body|, as all generated expressions in MetaOCaml are well-formed and
+complete.
 
 The key is to use continuation-passing style (CPS). Its benefits were first
 pointed out by \cite{Bondorf:92} in the context
@@ -312,15 +307,15 @@ param_code2 plus one
 \evalresult{.<fun x_1 -> fun y_2 -> let t_3 = (y_2 + 1) in (t_3 + (x_1 + t_3))>.}
 \end{code}
 
-\noindent Comparing the code that did let-insertion at the generating stage\\
+\noindent Comparison of the code that did let-insertion at the generating stage\\
 |let ce = (plus y one) in  plus ce (plus x ce)|\\
 with the corresponding code inserting let at the generated code stage\\
 |letgen (plus y one) (fun ce -> k (plus ce (plus x ce)))|\\
-clearly shows the difference between the direct-style and CPS code.
+clearly shows the difference between  direct-style and CPS code.
 What was |let ce = init in ...| in direct style became
 |init' (fun ce -> ...)| in CPS. For one thing, |let| became
-inverted. For another, what used to be an expression that yields
-a value, |init|, now became an expression that takes an extra argument,
+``inverted''. For another, what used to be an expression that yields
+a value, |init|, became an expression that takes an extra argument,
 the continuation, and invokes it. The differences look negligible in
 the above example. In larger expressions with many let-forms, the
 number of parentheses around |fun| increases, the need to add and
@@ -330,9 +325,10 @@ or claim that numerical programmers (our users) cannot or will not
 program in CPS. Clearly a better notation is needed.
 
 The |do|-notation of Haskell \cite{Haskell98Report} shows that it is possible
-to write CPS code in conventional-looking style. The
-|do| notation is the notation for writing monadic code \cite{moggi-notions}.
-The benefit of monadic notation is not that it can represent CPS \cite{Filinski:Representing}, but it helps in composability by offering to add different
+to write CPS code in a conventional-looking style. The
+|do|-notation is the notation for monadic code \cite{moggi-notions}.
+Not only can monadic code represent CPS \cite{Filinski:Representing},
+it also helps in composability by offering to add different
 layers of effects (state, exception, non-determinism, etc) to the
 basic monad \cite{liang-interpreter} in a controlled way.
 
@@ -350,14 +346,13 @@ the present paper and shows its implementation.
 type ('v,'s,'w) monad = 's -> ('s -> 'v -> 'w) -> 'w
 let ret a = fun s k -> k s a
 let bind a f = fun s k -> a s (fun s' b -> f b s' k)
-let fetch s k = k s s
-let store v s k = k (v::s) ()
+let fetch s k = k s s  and  store v s k = k (v::s) ()
 
 let k0 s v = v
 let runM m = m [] k0
 
-let l1 f = fun x -> mdo { t <-- x; f t}
-let l2 f = fun x y -> mdo { tx <-- x; ty <-- y; f tx ty}
+let l1 f = fun x -> mdo \{ t <-- x; f t\}
+let l2 f = fun x y -> mdo \{ tx <-- x; ty <-- y; f tx ty\}
 
 let retN a = fun s k -> .<let t = .~a in .~(k s .<t>.)>.
 
@@ -378,13 +373,14 @@ the control effects manifest themselves as code generation.
 In Figure~\ref{ourmonad}, the monad is implemented as a function of two
 arguments: the state (of type |s|) and the continuation. The
 continuation receives the current state, the value (of the type |v|) and
-yields the answer of the type |w|.  The monad is polymorphic over all
-these three type parameters.  Other implementations are
+yields the answer of the type |w|.  The monad is polymorphic over the
+three type parameters.  Other implementations are
 possible. Except for the code in Figure~\ref{ourmonad}, the rest of our code
-treats the monad as a truly abstract data type. The implementation of basic
+treats the monad as a truly abstract data type. The implementation of
+the basic
 monadic operations |ret| and |bind| are conventional. It is easy to
 see that the monadic laws are satisfied.  Other monadic operations
-construct computations that do have effects.  Operations |fetch| and
+construct computations that do have specific effects.  Operations |fetch| and
 |store v| construct computations that read and write the state. In our
 case the state is a list (of polymorphic variants), which models an
 open discriminated union, as we shall see later.
@@ -397,7 +393,7 @@ code expression. Such a behavior is symptomatic of control operators
 (in particular, |abort|).
 
 Finally, |runM| runs our monad, that is, performs the computation of
-the monad and gets the result, which in our case is the code
+the monad and returns its result, which in our case is the code
 expression. We run the monad by passing it the initial state and the
 initial continuation |k0|. We can now re-write our |param_code2|
 example of the previous section as |param_code3|.
@@ -430,22 +426,21 @@ if (i_2 >= 0) then let t_3 = (Some (a_1.(i_2))) in t_3 else (None)>.}
 % param_code3 plus one;;
 
 That does not seem like much of an improvement. With the help of
-camplp4 pre-processor, we introduce the do notation (see
-Appendix A), patterned after the
-do-notation of Haskell. The function |param_code4|, written in
-the do-notation, is equivalent to |param_code3| -- in fact, the camlp4
-preprocessor will convert the former into the latter. And yet,
-|param_code4| looks far more conventional, as if it were indeed in
-direct style.
+camlp4 pre-processor, we introduce the |mdo|-notation (cite XXX),
+patterned after the |do|-notation of Haskell. The function
+|param_code4|, written in the |mdo|-notation, is equivalent to
+|param_code3| -- in fact, the camlp4 preprocessor will convert the
+former into the latter. And yet, |param_code4| looks far more
+conventional, as if it were indeed in direct style.
 
 We can write operations that generate code other than let-statements,
 e.g., conditionals: see |ifL| in Figure~\ref{ourmonad}. The function |ifL|, 
-albeit straightforward, is not as general as we wish: its argument are
-already generated pieces of code rather than monadic values. So, we
-may want to ``lift it'', see |ifM'|. We can define functions |l1|,
+albeit straightforward, is not as general as we wish: its arguments are
+already generated pieces of code rather than monadic values. We
+``lift it'', see |ifM'|. We define functions |l1|,
 |l2|, |l3| (analogues of |liftM|, |liftM2|, |liftM3| of Haskell) 
-to make such a lifting generic.
-We soon notice the need for another |ifM| function, with the same
+to make such a lifting generic. However we also need
+another |ifM| function, with the same
 interface (see Figure~\ref{ourmonad}). The difference between them is
 apparent: in the code above with |ifM'|, the let-insertion
 happened \emph{before} the if-expression, that is, before the test that
@@ -458,16 +453,12 @@ truly an effect and we have to be clear about the sequencing of
 effects when generating control constructions such as conditionals.
 The form |ifM| handles such effects correctly. We
 need similar operators for other Ocaml control forms: for generating
-case-matching statements and for- and while-loops.
+case-matching statements and |for|- and |while|-loops.
 
-\section{Functors}\label{functors}
+\section{Aspects and Functors}\label{functors}
 
-Now that we have the appropriate basic techniques for
-writing our code generators, we need to worry about modularization.
-Here we can really take advantage of the fact that
-MetaOCaml is a staged language: it is not particularly relevant how much
-computation happens at staging time, as long as the generated code
-is correct and efficient.  In other words, we can use any abstraction
+The monad represents finer-scale code generation. We need tools for
+larger-scale modularization; we can use any abstraction
 mechanisms we want to structure our code generators, as long as none
 of those abstractions infiltrate the generated code.
 
@@ -484,32 +475,24 @@ A study of Gaussian Elimination \cite{carette04} shows that
 the following variations occur:
 \begin{enumerate}
 \vspace*{-6pt}
-	\item \textbf{Domain}: In which (algebraic) domain do the matrix
-		elements belong to.  Sometimes the domains are very specific
-		($\mathbb{Z}, \mathbb{Q}, \mathbb{Z}_p, 
-		\mathbb{Z}_p\left[\alpha_1,\ldots,\alpha_n\right], 
-		\mathbb{Z}\left[x\right]$, $\mathbb{Q}\left(x\right)$, 
-		$\mathbb{Q}\left[\alpha\right]$, and floating point numbers for 
-		example), while in other cases the domains were left generic,
-		namely for elements of a field,
-		multivariate polynomials over a field, elements of a formal Ring
-		with possibly undecidable zero-equivalence, or elements of a 
-		Division Ring.  In the roughly 85 pieces of code
-		surveyed 20 different domains were encountered.
-		% \oleg{citation?} \jacques no citation needed, carette04 is
-		% already cited above.
-	\item \textbf{Container}: Whether the matrix
-		is represented as an array of arrays, a one-dimensional array,
-		a hash table, a sparse matrix, etc., and
-		whether indexing is done in C or Fortran style.  Additionally,
-		if a particular representation had a special mechanism for efficient
-		row exchanges, this is sometimes used.  
-	\item \textbf{Output choices}:  Whether just the reduced matrix, or
-		additionally the rank, the determinant, and the
-		pivoting matrix are to be returned.
-		It is worthwhile noting that in the larger algorithm family,
-		routines like Maple's \texttt{LinearAlgebra:-LUDecomposition} have
-		up to $2^6 + 2^5 + 2^2 = 100$ outputs.
+	\item \textbf{Domain}: In which (algebraic) domain do the
+	  matrix elements belong to.  Sometimes the domains are very
+	  specific (e.g., $\mathbb{Z}, \mathbb{Q}, \mathbb{Z}_p$ and
+	  floating point numbers), while in other cases the domains
+	  were left generic, e.g., multivariate polynomials over a
+	  field.  In the roughly 85 pieces of code surveyed
+	  \cite{carette04} 20 different domains were encountered.
+	\item \textbf{Container}: Whether the matrix is represented as
+	  an array of arrays, a one-dimensional array, a hash table, a
+	  sparse matrix, etc., and whether indexing is done in C or
+	  Fortran style.  Additionally, if a particular representation
+	  had a special mechanism for efficient row exchanges.
+	\item \textbf{Output choices}: Whether just the reduced
+	  matrix, or additionally the rank, the determinant, and the
+	  pivoting matrix are to be returned. In the larger algorithm
+	  family, routines like Maple's
+	  \texttt{LinearAlgebra:-LUDecomposition} have up to $2^6 +
+	  2^5 + 2^2 = 100$ outputs.
 	\item \textbf{Fraction-free}: Whether the Gaussian Elimination
 		algorithm is allowed to use unrestricted division, or only
 		exact (remainder-free) division.
@@ -517,7 +500,7 @@ the following variations occur:
 		column-wise pivoting, or full pivoting.
 	\item \textbf{Augmented Matrices}: Whether we are doing GE on
 		a full matrix, or only a restricted number of columns, while
-		doing elimination on the full matrix.  Note that we currently
+		doing elimination on the full matrix.  We currently
 		do not treat this aspect in our code.
 \end{enumerate}
 \noindent In addition to the above variations, there are two aspects that 
@@ -525,39 +508,35 @@ recur frequently:
 \vspace*{-6pt}
 \begin{enumerate}
 	\item \textbf{Length measure}:  For stability reasons
-		(whether numerical or coefficient growth), if a domain
+		(numerical or coefficient growth), if a domain
 	  possesses
 		an appropriate length measure, this is sometimes used to choose
-		an ``optimal'' pivot for row exchanges.
+		an ``optimal'' pivot.
 	\item \textbf{Normalization and zero-equivalence}: Whether the 
 		arithmetic operations of the domain at hand gives results in 
 		normalized form, and whether a specialized zero-equivalence 
 		routine needs to be used.
 \end{enumerate}
 \noindent These are separated out from the others are they are cross-cutting
-concerns: in the case of the length measure, then a property of the domain
-will influence the method used to do pivoting \textbf{if} pivoting is to be
+concerns: in the case of the length measure, a property of the domain
+will influence the method used to do pivoting \emph{if} pivoting is to be
 performed.
 
-The simplest parametrization is to make the domain abstract. As it 
-turns out, we need the following to exist in our domains:  $0$, $1$,
-$+$, $*$, (unary and binary) $-$, some kind of division, normalization,
-and potentially a relative size measure.  We need at least
-\emph{exact} division to exist, but if full division is available, that
-can be used as well.  Normalization is frequently trivial for domains
-where elements have unique representations, but for some
-domains (like polynomials in sum-of-product form) this
-is not the case.  The simplest case of such an abstraction was given
-in Fig.~\ref{easycode}, |param_code1|. In the latter, code-generators such as
-|plus| and |one| were passed as arguments. We see however that we 
-need far more than two parameters, so we have to group them. Instead
-of the grouping offered by regular records, we use Ocaml
-\emph{structures} (i.e., modules) 
+The simplest parametrization is to make the domain abstract. As it
+turns out, we need the following to exist in our domains: $0$, $1$,
+$+$, $*$, (unary and binary) $-$, at least \emph{exact} division,
+normalization, and potentially a relative size measure. The simplest
+case of such domain abstraction is |param_code1| in
+Fig.~\ref{easycode}. There, code-generators such as |plus| and |one|
+were passed as arguments. We need far more than
+two parameters, so we have to group them. Instead of the grouping
+offered by regular records, we use Ocaml \emph{structures} (i.e.,
+modules)
 % (cite Ocaml module system tutorial?)
 % normally yes, but our references are what's making this long right now!
-so we can take advantage of extensions, type abstraction and constraints,
+so we can take advantage of extensibility, type abstraction and constraints,
 and especially parameterized structures (\emph{functors}).
-We first define the type of the domain, the signature |DOMAIN| which
+We define the type of the domain, the signature |DOMAIN| which
 different domains must satisfy:
 \begin{figure}[h]
 \begin{code}
@@ -583,33 +562,28 @@ end
 \end{code}
 \end{figure}
 
-\noindent  The first item to notice is that the types above are
+\noindent  The types above are
 generally lifted twice: once from the value domain |v| to the code
 domain |'a vc|, and once more from values to monadic computations
-|('a vc, 's, 'w) monad|.  Since there are times where we do not want
-to redundantly walk a whole matrix to apply normalization when 
-normalization is not necessary, |normalizerf| is optional.
+|('a vc, 's, 'w) monad|. 
 
-One particular instantiation of the domain (a particular structure of
-|DOMAIN| signature) is the |int| domain. The notation
-|module IntegerDomain : DOMAIN| makes the compiler
-verify that our |IntegerDomain| is indeed a |DOMAIN|, that is,
-satisfies the required signature. The constraint |DOMAIN| may be
-omitted; in that case, the compiler will verify the type when we try
-to use that structure as a |DOMAIN|. In any case, the errors such as
-missing ``methods'' or methods with incorrect types will be caught
-statically, even \emph{before} any code generation takes place. The
-abstract type |domain_is_ring| encodes a semantic constraint that the
-full division is not available. While the |DOMAIN| type may have
-looked daunting to some, the implementation is quite straightforward.
-|float| and |Num.num| (arbitrary precision exact rational numbers)
-are equally simple, and with scarcely
-more work, $\mathbb{Z}_p$, $\mathbb{Z}\left[x\right]$,
-$\mathbb{Q}\left(x\right)$ as well more complex domains can be implemented.
+One particular domain instance is |IntegerDomain|. The notation
+|module IntegerDomain : DOMAIN| makes the compiler verify that our
+|IntegerDomain| is indeed a |DOMAIN|, that is, satisfies the required
+signature. The constraint |DOMAIN| may be omitted; in that case, the
+compiler will verify the type when we try to use that structure as a
+|DOMAIN|. In any case, the errors such as missing ``methods'' or
+methods with incorrect types will be caught statically, even
+\emph{before} any code generation takes place. The abstract type
+|domain_is_ring| encodes a semantic constraint that the full division
+is not available. While the |DOMAIN| type may have looked daunting to
+some, the implementation is quite straightforward.  Other domains such
+as |float| and arbitrary precision exact rational numbers |Num.num|
+are equally simple.
 
-Parametrizing by the kind of container used to represent a matrix is
-almost as straightforward.  We choose to make the container parametric
-over a |DOMAIN| by making containers functors from a |DOMAIN| module
+Parametrizing by the kind of container representing a matrix is
+almost as straightforward.  Our containers are  parametric
+over a |DOMAIN|, i.e., functors from a |DOMAIN| module
 to the actual implementation of a container. The functor signature
 |CONTAINER2D| specifies that a container must provide functions |dim1|
 and |dim2| to extract the dimensions, functions |get| and |set| to
@@ -670,21 +644,20 @@ Naturally, for proper use of |Bigarray| with specific types, it is
 important that the |DOMAIN| type matches -- but luckily the compiler 
 will prevent us from making such a mistake.}
 
-The use of a |functor| for making a container parametric is fairly 
-straightforward.  It gets more interesting when one turns to the aspect
-of what to return from the GE algorithm.  One could create an algebraic
-data type (as was done in \cite{carette04}) to encode the various
-choices; but this is wholly unsatisfying as we know that for any single
-use, only one of the choices is ever possible, yet any routine which
-calls the generated code must deal with these unreachable options.
-Instead we use a module type with an \emph{abstract} type |res| for the
-result type; the actual result type is then made by instantiating
-this module type with different modules that decide what will be 
-output: the matrix, the matrix and the rank, the matrix and the
-determinant, the matrix, rank and determinant, and so on.  More
-precisely, below we show this module type and one instantiation,
-which specifies the output of a  GE algorithm as a 3-tuple
-|contr * Det.outdet * int| of the U-factor, the determinant and the rank.
+The use of a |functor| for making a container parametric is fairly
+straightforward.  More interesting is the aspect of what to return
+from the GE algorithm.  One could create an algebraic data type (as
+was done in \cite{carette04}) to encode the various choices: the
+matrix, the matrix and the rank, the matrix and the determinant, the
+matrix, rank and determinant, and so on. This is wholly unsatisfying
+as we know that for any single use, only one of the choices is ever
+possible, yet any routine which calls the generated code must deal
+with these unreachable options.  Instead we use a module type with an
+\emph{abstract} type |res| for the result type; different instances of
+the signature set the result type differently. Given below is this
+module type and one instantiation, which specifies the output of a GE
+algorithm as a 3-tuple |contr * Det.outdet * int| of the U-factor, the
+determinant and the rank.
 
 \begin{code}
 module type OUTPUT = sig
@@ -708,19 +681,16 @@ end
 \end{code}
 
 As is apparent from the output choices, several different quantities
-\emph{may} need to be tracked in a particular GE implementation.
-We therefore need to be able to conditionally generate code-variables,
-and weave in corresponding tracking code for each of these quantities.
-To be precise, we may need to keep track (independently) of the rank,
-the determinant and the permutation list.  These pieces of data then
-become part of the \emph{state} that is tracked by our monad.  To have
-all this choice when needed, and yet have our code be modular and
-composable as well as ensuring that the generated code does not 
-contain any abstraction artifacts, it is important to make this 
-state modular.  As this discussion is rather abstract, an example
-will likely illustrate our point more clearly: we will show the 
-code for tracking the determinant.
-
+\emph{may} need to be tracked in a particular GE implementation.  We
+therefore need to be able to conditionally generate variables
+representing the tracking state, and weave in corresponding tracking
+code. We may need to (independently) keep track of the rank, the
+determinant and the permutation list.  The tracking state variables
+then become part of the \emph{state} that is tracked by our monad.  To
+have all this choice when needed, and yet have our code be modular and
+composable as well as ensuring that the generated code does not
+contain any abstraction artifacts, it is important to make this state
+modular.  For example,
 \begin{code}
 module type DETERMINANT = sig
   type indet  type outdet  type 'a lstate
@@ -732,7 +702,7 @@ module type DETERMINANT = sig
   ...
 end
 \end{code}
-\noindent  Determinant tracking aspects involves being able to
+\noindent  determinant tracking aspects involves being able to
 generate code that defines variables used for tracking (|decl|),
 generate code that updates the sign or the absolute
 value of the determinant, and finally, converting the tracking state
@@ -745,8 +715,8 @@ it. The determinant tracking aspect is complex because tracking
 variables, if any, are to be declared at the beginning of GE; the sign
 of the determinant has to be updated on each row or column
 permutation; the value of the determinant should be updated per each
-pivoting. We use |lstate| to pass the tracking state, which may be, for
-example, a piece of code for the value of the type |Dom.v ref| among
+pivoting. We use |lstate| to pass the tracking state, e.g., a piece of
+code for the value of the type |Dom.v ref|, among
 various determinant-tracking functions. The |lstate| is a part of the
 overall monadic state. Other aspects, e.g., rank tracking, may use the
 monadic state for passing of rank tracking variables. To be able to
@@ -830,17 +800,17 @@ module DivisionUpdate
   (C:CONTAINER2D)
   (Det:DETERMINANT with type indet=Dom.v) = struct ... end
 \end{code}
-\vspace*{-4pt}
-This structure implements an update policy that can use the 
-|Dom.div| operation without
-restrictions -- which is possible only if the domain has such an
-operation. A domain such as the integer domain may still provide |Dom.div|
-of the same type, but that operation can only be used when we are sure
-that the division is exact. But using it with
-|DivisionUpdate| will lead to a compile-time error, when compiling
-the \emph{generator} code. Thus, in some cases we can use module types
-to express ``semantic'' constraints that cannot normally be expressed
-via the types of module members.
+\vspace*{-4pt} 
+This structure implements an update policy of using
+|Dom.div| operation without restrictions -- which is possible only if
+the domain has such unrestricted operation. A domain such as the integer domain
+may still provide |Dom.div| of the same type, but that operation may
+only be used when we are sure that the division is exact. Our type
+sharing constraint expresses such domain-specific knowledge:
+instantiating |DivisionUpdate| with |integerDomain| leads to a
+compile-time error, when compiling the \emph{generator} code. Thus, in
+some cases we can use module types for ``semantic'' constraints
+that cannot normally be expressed via the types of module members.
 \vspace*{-5pt}
 \begin{code}
 module GenFV4 = Gen(FloatDomain)
