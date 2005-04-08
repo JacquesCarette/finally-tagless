@@ -28,7 +28,7 @@
 \DefineShortVerb{\|}
 \DefineVerbatimEnvironment{code}{Verbatim}{xleftmargin=\mathindent,commandchars=\\\{\},fontsize=\small}
 \newcommand{\evalresult}[1]{\ensuremath{\Longrightarrow}\textcolor{red}{#1}}
-\setlength{\parskip}{0pt}
+% \setlength{\parskip}{0pt}
 \newlength{\mathindent}
 \setlength{\mathindent}{1em}
 
@@ -45,9 +45,11 @@
 %% \makeatother
 
 \parskip 0pt plus 1pt minus 2pt
-\textfloatsep 4pt plus 2pt minus 4pt % Less space around figures
+\textfloatsep 4pt plus 2pt minus 3pt % Less space around figures
 \abovecaptionskip 0pt plus 0pt minus 2pt
 \belowcaptionskip 0pt plus 0pt minus 2pt
+
+\intextsep 2pt plus 0pt minus 1pt
 
 \renewcommand\floatpagefraction{.9}
 \renewcommand\topfraction{.9}
@@ -56,7 +58,6 @@
 \setcounter{totalnumber}{50}
 \setcounter{topnumber}{50}
 \setcounter{bottomnumber}{50}
-
 
 \newcommand{\omitnow}[1]{}
 \newcommand{\oleg}[1]{{\it [Oleg says: #1]}}
@@ -104,7 +105,7 @@ abstraction at which code is written.  Furthermore, already in
 linear algebra, there is a wealth of different concerns that 
 \emph{may} need to be addressed.  While it is possible to manually
 inline and simplify such code, this is labour-intensive and 
-error-prone.  Furthermore the resulting code is frequently unreadable,
+error-prone.  The resulting code is frequently unreadable,
 and thus unmaintainable.
 
 There are a number of projects that have attempted to address these issues
@@ -118,10 +119,10 @@ affects maintainability and scalability.  Furthermore, current architectures
 demand more and more frequent tweaks which, in general, cannot be done by the
 compiler because the tweaking often involves domain knowledge.  
 
-Our goal was to implement a completely modular, textbook-style 
-modular design \cite{journals/cacm/parnas72a}, yet 
-have our code be very efficient.  Gaussian elimination, as it is a  
-well-known algorithm, already contains many different aspects 
+Our goal was to implement a textbook-style modular design 
+\cite{journals/cacm/parnas72a}, yet 
+have our code be very efficient.  Gaussian elimination, as a  
+well-known algorithm with many different aspects 
 \cite{carette04}, was chosen as a representative example.
 
 Whether one prefers to code in an imperative, object-oriented, functional, 
@@ -130,8 +131,8 @@ languages have a non-zero run-time cost.  Whether it is procedure,
 method or function call, these have a cost; worse still, higher level
 and/or higher order abstractions (like Functors or AspectJ's aspects)
 frequently have a larger cost still.  Of course, if one is faced with
-writing 60 different implementations of the ``same'' algorithm
-\oleg{citation?}, this
+writing 35 different implementations of the ``same'' algorithm
+\cite{carette04}, this
 abstraction cost starts to look cheap!  Although bad programmers have
 been known to resort to cut\&paste programming, no self-respecting
 programmer would be caught doing that.
@@ -157,11 +158,13 @@ additional benefits.
 
 While it is theoretically feasible in a strings-based
 generative system to re-parse the generative code to inspect it, such
-an approach rapidly degenerates into complete chaos \oleg{is there a
-  good citation?}.  In languages
+an approach rapidly degenerates into complete chaos.
+% \oleg{is there a good citation?}
+% \jacquesP{none that I am aware of}
+In languages
 that natively offer reflection and reification (either at no cost, 
 such as in LISP and Scheme, or at a modest cost in languages like 
-Maple), this is actually feasible, even easy.  But this is fragile
+Maple), inspection is actually feasible, even easy.  But this is fragile
 and error-prone, since the languages offer little support for catching
 errors early.
 
@@ -195,7 +198,7 @@ such tool: abstract interpretation.  But more problems remain
         with matrices of exact integers, nor is it worthwhile to use
         full pivoting on a matrix of rational integers ($\mathbb Q $).
 \end{itemize}
-The question we want to answer is:
+The questions we want to answer is:
 Can we achieve all of the abstractions needed for a flexible 
 Gaussian Elimination, and can
 we eliminate all of that abstraction's overhead in the generated code?
@@ -207,22 +210,24 @@ Maintaining generativity is not just an interesting exercise:
 one gets a stronger equational theory \cite{Taha2000}, and avoids
 the danger of creating unsoundness \cite{TahaThesis}.  It should
 also be remarked that in general, intensional code analysis
-\cite{Pueschel:05,Kennedy01Telescoping,dongarra7,Veldhuizen:2004} 
-essentially requires
-one to insert both an optimizing compiler and an automated theorem
-proving system into the code generating system.  While this is
+essentially requires one to insert both an optimizing compiler and 
+an automated theorem proving system into the code generating system
+\cite{Pueschel:05,Kennedy01Telescoping,dongarra7,Veldhuizen:2004}.
+While this is
 potentially extremely powerful and an exciting area of research,
 it is also extremely complex, which means that it is currently more
 error-prone and difficult to ascertain the correctness of the 
 resulting code.
 
 This work makes the following contributions:
+\vspace*{-2pt}
 \begin{itemize}
+    \item use of generative functors for meta-programming
     \item orderly aspect weaving
-    \item mdo notation
+    \item mdo notation for greater monadic code clarity
     \item use of monads for meta-programming
-    \item use of generative functors
-    \item use of type constraints to ensure correctness
+    \item use of type constraints to encode domain knowledge and 
+		ensure correctness
 \end{itemize}
 
 The rest of this paper is structured as follows:
@@ -259,10 +264,10 @@ well-typed) code expressions and combines them into a composite expression
 We will be using MetaOcaml which, as an instance of a multi-stage
 programming system \cite{TahaThesis}, provides exactly the needed
 features: to construct a code expression, to combine them, and to
-execute them. The figure XXX shows the simplest code generator |one|,
-and more complex generators.
+execute them. Figure~\ref{easycode} shows the simplest code generator |one|,
+as well as more complex generators.
 
-\begin{figure*}
+\begin{figure}\label{easycode}
 \begin{code}
 let one = .<1>. and plus x y = .<.~x + .~y>.
 let simplest_code = let gen x y = plus x (plus y one) in
@@ -282,8 +287,8 @@ param_code1' plus one
 \evalresult{.<fun x_1 -> fun y_2 -> ((y_2 + 1) + (x_1 + (y_2 + 1)))>.}
 \end{code}
 \caption{Code generation and combinators. $\Longrightarrow$ shows the
-  result of the evaluation of the preceeding expression}
-\end{figure*}
+  result of evaluating the preceeding expression}
+\end{figure}
 
 We use MetaOCaml brackets |.<...>.| to generate code expressions -- in
 other words, to construct future-stage computations. We use escapes
@@ -311,7 +316,7 @@ code that operates on integers, floating point numbers or booleans --
 in general, any domain that implements |plus| and |one|.
 
 A more complex expression |param_code1| has two occurrences of 
-|plus y one|. Depending on the implementation of |plus| that may be quite a
+|plus y one|. Depending on the implementation of |plus|, this may be quite a
 complex computation, and so we would rather not do it twice. We may be
 tempted to rely on the compiler's common-subexpression elimination
 optimization. We would rather not rely on a ``sufficiently smart
@@ -329,7 +334,7 @@ generat\emph{ed} code. We need a combinator |letgen| to be used
 as\\|let ce = letgen (plus y one) in plus ce (plus x ce)| 
 yielding the code like |.<let t = y + 1 in t + (x + t)>.|
 But that seems impossible because |letgen exp| has to generate
-the expression\\|.<let t = exp in body>.| although |letgen| does not have
+the expression |.<let t = exp in body>.| although |letgen| does not have
 the |body| yet. The body needs a temporary identifier |.<t>.| that
 is supposed to be the result of |letgen| itself. 
 Certainly |letgen| cannot generate only part of a let-expression,
@@ -351,7 +356,7 @@ param_code2 plus one
 \evalresult{.<fun x_1 -> fun y_2 -> let t_3 = (y_2 + 1) in (t_3 + (x_1 + t_3))>.}
 \end{code}
 
-Comparing the code that did let-insertion at the generating stage\\
+\noindent Comparing the code that did let-insertion at the generating stage\\
 |let ce = (plus y one) in  plus ce (plus x ce)|\\
 with the corresponding code inserting let at the generated code stage\\
 |letgen (plus y one) (fun ce -> k (plus ce (plus x ce)))|\\
@@ -369,7 +374,7 @@ or claim that numerical programmers (our users) cannot or will not
 program in CPS. Clearly a better notation is needed.
 
 The |do|-notation of Haskell \cite{Haskell98Report} shows that it is possible
-to write essentially CPS code in conventional-looking style. The
+to write CPS code in conventional-looking style. The
 |do| notation is the notation for writing monadic code \cite{moggi-notions}.
 The benefit of monadic notation is not that it can represent CPS \cite{Filinski:Representing}, but it helps in composability by offering to add different
 layers of effects (state, exception, non-determinism, etc) to the
@@ -384,7 +389,7 @@ computations. These operations must satisfy \emph{monadic laws}:
 associative. Figure~\ref{ourmonad} defines the monad used throughout
 the present paper and shows its implementation.
 
-\begin{figure*}\label{ourmonad}
+\begin{figure}\label{ourmonad}
 \begin{code}
 type ('v,'s,'w) monad = 's -> ('s -> 'v -> 'w) -> 'w
 let ret a = fun s k -> k s a
@@ -405,14 +410,14 @@ let ifM test th el = fun s k ->
   k s .< if .~(test s k0) then .~(th s k0) else .~(el s k0) >.
 \end{code}
 \caption{Our monad}
-\end{figure*}
+\end{figure}
 
 Our monad represents two kinds of computational effects: reading and
 writing a computation-wide state, and control effects. The latter are
 normally associated with exceptions, forking of computations, etc. --
 in general, whenever a computation ends with something other than
 invoking its natural continuation in the tail position. In our case
-however the control effects manifest themselves as code generation.
+the control effects manifest themselves as code generation.
 
 In Figure~\ref{ourmonad}, the monad is implemented as a function of two
 arguments: the state (of type |s|) and the continuation. The
@@ -432,16 +437,16 @@ The operation |retN a| is the let-insertion operation, whose simpler
 version we called |letgen| earlier. It is the first computation with
 a control effect: indeed, the result of |retN a| is \emph{not} the
 result of invoking its continuation |k|. Rather, its result is a |let|
-code expression. Such a behavior is symptomatic of cntrol operators
+code expression. Such a behavior is symptomatic of control operators
 (in particular, |abort|).
 
 Finally, |runM| runs our monad, that is, performs the computation of
 the monad and gets the result, which in our case is the code
 expression. We run the monad by passing it the initial state and the
 initial continuation |k0|. We can now re-write our |param_code2|
-example of the previous section as |param_code3|, see Fig. XXX.
+example of the previous section as |param_code3|.
 
-\begin{figure*}
+\begin{figure}
 \begin{code}
 let param_code3 plus one =
   let gen x y = bind (retN (plus y one)) (fun ce -> 
@@ -454,22 +459,24 @@ let param_code4 plus one =
 let ifM' test th el = mdo \{
   testc <-- test; thc <-- th; elc <-- el;
   ifL testc thc elc\}
-let gen a i = ifM' (ret .<(.~i) >= 0>.) (retN .<Some (.~a).(.~i)>.) (ret .<None>.)
+let gen a i = ifM' (ret .<(.~i) >= 0>.) 
+                   (retN .<Some (.~a).(.~i)>.) (ret .<None>.)
  in .<fun a i -> .~(runM (gen .<a>. .<i>.))>.
-\evalresult{.<fun a_1 -> fun i_2 -> 
-    let t_3 = (Some (a_1.(i_2))) in if (i_2 >= 0) then t_3 else (None)>.}
-let gen a i = ifM (ret .<(.~i) >= 0>.) (retN .<Some (.~a).(.~i)>.) (ret .<None>.)
+\evalresult{.<fun a_1 i_2 ->  
+let t_3 = (Some (a_1.(i_2))) in if (i_2 >= 0) then t_3 else (None)>.}
+let gen a i = ifM (ret .<(.~i) >= 0>.) 
+                  (retN .<Some (.~a).(.~i)>.) (ret .<None>.)
  in .<fun a i -> .~(runM (gen .<a>. .<i>.))>.
-\evalresult{.<fun a_1 -> fun i_2 ->
-    if (i_2 >= 0) then let t_3 = (Some (a_1.(i_2))) in t_3 else (None)>.}
+\evalresult{.<fun a_1 i_2 -> 
+if (i_2 >= 0) then let t_3 = (Some (a_1.(i_2))) in t_3 else (None)>.}
 \end{code}
-\end{figure*}
+\end{figure}
 % param_code3 plus one;;
 
 That does not seem like much of an improvement. With the help of
-camplp4 pre-processor (cite), we introduce the do notation (give URL
-or cite the message on the MetaOCaml list), patterned after the
-do-notation of Haskell (cite). The function |param_code4|, written in
+camplp4 pre-processor, we introduce the do notation (see
+Appendix A), patterned after the
+do-notation of Haskell. The function |param_code4|, written in
 the do-notation, is equivalent to |param_code3| -- in fact, the camlp4
 preprocessor will convert the former into the latter. And yet,
 |param_code4| looks far more conventional, as if it were indeed in
@@ -483,17 +490,17 @@ may want to ``lift it'', see |ifM'|. We can define functions |l1|,
 |l2|, |l3| (analogues of |liftM|, |liftM2|, |liftM3| of Haskell) 
 to make such a lifting generic.
 We soon notice the need for another |ifM| function, with the same
-interface (see |ifM| in Figure~\ref{ourmonad}). The difference between them is
-apparent, see Fig. XXX: in the code with |ifM'|, the let-insertion
-happend \emph{before} the if-expression, that is, before the test that
-the index |i| is positive. That is, if |i| turned out
-negative, |a.(i)| will generate an out-of-bound array access
+interface (see Figure~\ref{ourmonad}). The difference between them is
+apparent: in the code above with |ifM'|, the let-insertion
+happened \emph{before} the if-expression, that is, before the test that
+the index |i| is positive. If |i| turned out
+negative, |a.(i)| would generate an out-of-bound array access
 error. On the other hand, the code with |ifM| accesses the array only
 when we have verified that the index is non-negative. This example
 makes it clear that the code generation (such as the one in |retN|) is 
 truly an effect and we have to be clear about the sequencing of
-effects, when generating control constructions such as conditionals.
-The form |ifM| handles the such effects correctly. In our code, we
+effects when generating control constructions such as conditionals.
+The form |ifM| handles such effects correctly. We
 need similar operators for other Ocaml control forms: for generating
 case-matching statements and for- and while-loops.
 
@@ -592,7 +599,7 @@ so we can take advantage extensions, type abstraction and constraints,
 and especially parameterized structures (i.e., \emph{functors}).
 We first define the type of the domain, the signature |DOMAIN| to which
 different domain must satisfy:
-\begin{figure*}
+\begin{figure}
 \begin{code}
 module type DOMAIN = sig
   type v    type 'a vc = ('a,v) code
@@ -614,7 +621,7 @@ module IntegerDomain : DOMAIN = struct
   ...
 end
 \end{code}
-\end{figure*}
+\end{figure}
 \noindent  The first item to notice is that the types above are
 generally lifted twice: once from the value domain |v| to the code
 domain |'a vc|, and once more from values to monadic computations
@@ -812,7 +819,7 @@ previsouly. But that state is handled via the monadic state. As we
 have shown, open unions makes the overall monadic state compositional
 with respect to the state of various aspects.
 
-\begin{figure*}
+\begin{figure}
 \begin{code}
 module Gen(Dom: DOMAIN)(C: CONTAINER2D)(PivotF: PIVOT)
           (Update: UPDATE with type baseobj = Dom.v and type ctr = C(Dom).contr)
@@ -855,7 +862,7 @@ module Gen(Dom: DOMAIN)(C: CONTAINER2D)(PivotF: PIVOT)
     .<fun a -> .~(runM (dogen .<a>.)) >.
 end
 \end{code}
-\end{figure*}
+\end{figure}
 
 In addition to the ``regular'' type sharing constraints shown in the
 |Gen| functor, there are also ``semantic'' sharing constraints, shown
@@ -1401,7 +1408,7 @@ computations. These operations must satisfy \emph{monadic laws}:
 associative. Figure~\ref{ourmonad} defines the monad used throughout
 the present paper and shows its implementation.
 
-\begin{figure*}\label{ourmonad}
+\begin{figure}\label{ourmonad}
 \begin{code}
 type ('v,'s,'w) monad = 's -> ('s -> 'v -> 'w) -> 'w
 let ret a = fun s k -> k s a
@@ -1422,7 +1429,7 @@ let ifM test th el = fun s k ->
   k s .< if .~(test s k0) then .~(th s k0) else .~(el s k0) >.
 \end{code}
 \caption{Our monad}
-\end{figure*}
+\end{figure}
 
 Our monad represents two kinds of computational effects: reading and
 writing a computation-wide state, and control effects. The latter are
