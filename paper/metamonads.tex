@@ -64,8 +64,10 @@
 \newcommand{\jacques}[1]{{\it [Jacques says: #1]}}
 
 \begin{document}
-\title{Functors, CPS and monads, or how to generate efficient
-code from abstract designs}
+%\title{Functors, CPS and monads, or how to generate efficient
+%code from abstract designs}
+\title{Multi-stage programming with functors and monads:
+eliminating abstraction overhead from generic code}
 \author{Jacques Carette\inst{1}
  \and
 Oleg Kiselyov\inst{2}
@@ -111,21 +113,20 @@ the matrix, whether to compute and return the detrminant or rank, how
 and whether search for pivot, etc. Furthermore, current architectures
 demand more and more frequent tweaks which, in general, cannot be done by the
 compiler because the tweaking often involves domain knowledge. 
-The survey \cite{carette04} of
-Gaussian elimination implementation in an industrial package Maple
-found XXX various aspects and XXX different implementations of the
-algorithm.  We can manually write each of these implementations
+A survey \cite{carette04} of
+Gaussian elimination implementations in an industrial package Maple
+found 6 different aspects and 35 different implementations of the
+algorithm, as well as 45 implementations of directly related
+algorithms.  We can manually write each of these implementations
 optimizing for particular aspects and using cut-and-paste to ``share''
-similar pieces of code. \oleg{I don't think we need to say much here
--- the shear number of various implementations should be enough of a
-clue.} We can write a very generic GE procedure that accounts for
-all the aspects with appropriate abstractions (cite axiom?). The
+similar pieces of code.
+We can write a very generic GE procedure that accounts for
+all the aspects with appropriate abstractions \cite{Axiom}. The
 abstraction mechanisms however -- be they procedure, method or a
 function call -- have a significant cost, especially for
 high-performance numerical computing (cite? At least carette04). 
 
-A more appealing (acceptable? indispensable? need a better word)
-approach is generative programming
+A more appealing approach is generative programming
 \cite{Czarnecki,Veldhuizen:1998:ISCOPE,musser94algorithmoriented,BOOST,POOMA,ATLAS}.
 The approach is not without problems, e.g., making sure that the
 generated code is well-formed. This is a challenge in string-based
@@ -179,7 +180,7 @@ dependencies among them and domain-specific knowledge remain.
 
 In this paper we report on progress of solving these problems using GE
 as our running example. Specifically, our contributions:
-\vspace*{-6pt}
+\vspace*{-2pt}
 \begin{itemize}
     \item Extending monad of \cite{KiselyovTaha} for generating
       binding statements when generating control structures such as
@@ -268,7 +269,7 @@ parameterize our code, |simplest_param_code|, and use it to generate
 code that operates on integers, floating point numbers or booleans --
 in general, any domain that implements |plus| and |one|.
 
-A more generator |param_code1| has two occurrences of |plus y one|,
+The generator |param_code1| has two occurrences of |plus y one|,
 which may be quite a complex computation and so we would rather not do
 it twice. We may be tempted to rely on the compiler's
 common-subexpression elimination optimization. When the generated code is
