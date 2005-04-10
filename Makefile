@@ -60,12 +60,12 @@ clean:
 #
 ########################################################################
 
-pa_monad2.cmo: pa_monad2.ml
+pa_%.cmo: pa_%.ml
 	ocamlc -c -pp 'camlp4o pa_extend.cmo q_MLast.cmo' -I +camlp4 $<
 
 
-test3.cmo: test3.ml pa_monad2.cmo
-	metaocamlc -c -pp 'camlp4o pa_extend.cmo q_MLast.cmo ./pa_monad2.cmo' -I +camlp4 $<
+test3.cmo: test3.ml pa_monad.cmo
+	metaocamlc -c -pp 'camlp4o pa_extend.cmo q_MLast.cmo ./pa_monad.cmo' -I +camlp4 $<
 
 %-pretty-print.ml: %.ml
 	$(PP) pr_o.cmo $< > $@
