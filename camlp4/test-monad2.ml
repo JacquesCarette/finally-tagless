@@ -84,7 +84,6 @@ let test_state3 () =
 	    ret result } in
         (multiplier 2) # result
 
-
 let simple_mdo () =
     let ret x = x and bind a f = f a in
   mdo { _ <-- 1+2 ;

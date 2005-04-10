@@ -1,8 +1,8 @@
-(* name:          pa_monad2.ml
+(* name:          pa_monad.ml
  * synopsis:      Haskell-like "do" for monads
- * author:        Jacques Carette, based in part of work of Lydia E. Van Dijk
- * $Id$
- * last revision: Mon Feb  7 2005
+ * authors:       Jacques Carette and Oleg Kiselyov, 
+ *                based in part of work of Lydia E. Van Dijk
+ * last revision: Sun Mar 27 2005
  * ocaml version: 3.08.0 *)
 
 
@@ -31,9 +31,6 @@ Semantics (as re-writing into the core language)
         mdo { exp; rest } ===> bind exp (fun _ -> mdo { rest })
         mdo { let pat = exp in; rest } ===> let pat = exp in mdo { rest }
 
-`odo' is a variant of `mdo' where we use a bind `method' rather than a bind
-`value' (which is supposed to be in scope).
-
 Actually, in `let pat = exp' one can use anything that is allowed
 in a `let' expression, e.g., `let pat1 = exp1 and pat2 = exp2 ...'.
 The reason we can't terminate the `let' expression with just a semi-colon
@@ -59,8 +56,6 @@ e.g. (`_ <-- exp'), that cannot be parsed as an expression.
 type monbind = BindL of (MLast.patt * MLast.expr) list
              | BindM of MLast.patt * MLast.expr
              | ExpM  of MLast.expr
-type bindtype = Global | Object
-
 (* Convert MLast.expr into MLast.patt, if we `accidentally'
    parsed a pattern as an expression.
   The code is based on pattern_eq_expression in 
@@ -79,20 +74,13 @@ let rec exp_to_patt loc e =
   | _ -> failwith "This pattern isn't yet supported"
 
 (* The main semantic function *)
-let process loc bt b = 
+let process loc b = 
     let globbind2 x p acc =
         <:expr< bind $x$ (fun $p$ -> $acc$) >>
     and globbind1 x acc =
         <:expr< bind $x$ (fun _ -> $acc$) >>
-    and objbind2 x p acc =
-        <:expr< $x$ # bind (fun $p$ -> $acc$) >>
-    and objbind1 x acc =
-        <:expr< $x$ # bind (fun _ -> $acc$) >> 
     and ret n = <:expr< $n$ >> in
-    let choose_bind = function 
-        | Global -> (globbind2, globbind1)
-        | Object -> (objbind2, objbind1) in
-    let folder bt = let (a,b) = choose_bind bt in
+    let folder = let (a,b) = (globbind2, globbind1) in
         (fun accumulator y -> 
         match y with
         | BindM(p,x) -> a x p accumulator
@@ -102,14 +90,8 @@ let process loc bt b =
     in
     match List.rev b with 
     | [] -> failwith "somehow got an empty list from a LIST1!"
-    | (ExpM(n)::t) -> List.fold_left (folder bt) (ret n) t  
+    | (ExpM(n)::t) -> List.fold_left folder (ret n) t  
     | _ -> failwith "Does not end with an expression"
-
-(*
-      [ "let"; o = OPT "rec"; l = LIST1 let_binding SEP "and"; "in";
-        x = expr LEVEL "top" ->
-          <:expr< let $opt:o2b o$ $list:l$ in $x$ >>
-*)
 
 EXTEND
     GLOBAL: Pcaml.expr; 
@@ -118,25 +100,21 @@ EXTEND
     [
       [ "mdo"; "{";
         bindings = LIST1 monadic_binding SEP ";"; "}" ->
-            process loc Global bindings
-      ]  |
-      [ "odo"; "{";
-        bindings = LIST1 monadic_binding SEP ";"; "}" ->
-            process loc Object bindings
+            process loc bindings
       ] 
     ] ;
 
     Pcaml.expr: BEFORE "apply"
     [ NONA
-	[ e1 = SELF; "<--"; e2 = Pcaml.expr LEVEL "expr1" ->
+	  [ e1 = SELF; "<--"; e2 = Pcaml.expr LEVEL "expr1" ->
           <:expr< $e1$ $lid:"<--"$ $e2$ >>
-	] 
+	  ] 
     ] ;
 
     monadic_binding:
     [ 
       [ "let"; l = LIST1 Pcaml.let_binding SEP "and"; "in" ->
-	BindL(l) ]
+	      BindL(l) ]
     | 
       [ x = Pcaml.expr LEVEL "expr1" ->
 	(* For some patterns, "patt <-- exp" can parse
@@ -149,6 +127,4 @@ EXTEND
       [ p = Pcaml.patt LEVEL "simple"; "<--"; x = Pcaml.expr LEVEL "expr1" ->
         BindM(p,x) ]
     ] ;
-
 END;
-
