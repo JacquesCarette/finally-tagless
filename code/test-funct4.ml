@@ -8,6 +8,7 @@ let resFV1 = GenFV1.gen ;;
 let resFV2 = GenFV2.gen ;;
 let resFV3 = GenFV3.gen ;;
 let resFV4 = GenFV4.gen ;;
+let resFV5 = GenFV5.gen ;;
 let resIA1 = GenIA1.gen ;;
 let resIA2 = GenIA2.gen ;;
 let resIA3 = GenIA3.gen ;;
@@ -16,6 +17,7 @@ let resIV1 = GenIV1.gen ;;
 let resIV2 = GenIV2.gen ;;
 let resIV3 = GenIV3.gen ;;
 let resIV4 = GenIV4.gen ;;
+let resIV5 = GenIV5.gen ;;
 let resFA11 = GenFA11.gen ;;
 let resFA12 = GenFA12.gen ;;
 let resFA13 = GenFA13.gen ;;
@@ -33,6 +35,7 @@ let rFV1 = .! resFV1 ;;
 let rFV2 = .! resFV2 ;;
 let rFV3 = .! resFV3 ;;
 let rFV4 = .! resFV4 ;;
+let rFV5 = .! resFV5 ;;
 let rIA1 = .! resIA1 ;;
 let rIA2 = .! resIA2 ;;
 let rIA3 = .! resIA3 ;;
@@ -41,6 +44,7 @@ let rIV1 = .! resIV1 ;;
 let rIV2 = .! resIV2 ;;
 let rIV3 = .! resIV3 ;;
 let rIV4 = .! resIV4 ;;
+let rIV5 = .! resIV5 ;;
 let rFA11 = .! resFA11 ;;
 let rFA12 = .! resFA12 ;;
 let rFA13 = .! resFA13 ;;
@@ -90,6 +94,7 @@ let resI21 = List.map rIV1 iv5;;
 let resI22 = List.map rIV2 iv5;;
 let resI23 = List.map rIV3 iv5;;
 let resI24 = List.map rIV4 iv5;;
+let resI25 = List.map rIV5 iv5;;
 
 let fa0 = Array.make 1 (Array.make 1 1.) ;;
 let fa1 = Array.of_list [
@@ -156,6 +161,29 @@ let _ = assert (List.map rFA4 fa5 =
    ([|[|4.; 13.; 5.|]; [|0.; 6.25; 1.25|]; [|0.; 0.; 2.|]; [|0.; 0.; 0.|]|],
     50., 3);
    ([|[|0.; 10.; 5.|]; [|0.; 0.; 2.|]; [|0.; 0.; 0.|]|], 0., 2)])
+
+
+let a2v arr =
+  let n = Array.length arr
+  and m = Array.length arr.(0)
+  and r = Array.concat (Array.to_list arr)
+  in {arr = r; n = n; m = m}
+
+let xxx = List.map a2v fa5
+
+let _ = assert (List.map (fun arr -> rFV4 (a2v arr)) fa5 =
+ [({arr = [|1.|]; n = 1; m = 1}, 1., 1);
+   ({arr = [|4.; 13.; 5.; 0.; 6.25; 1.25; 0.; 0.; 2.|]; n = 3; m = 3}, 50.,
+    3);
+   ({arr = [|4.; 13.; 5.; 0.; 0.; 6.25; 1.25; 0.; 0.; 0.; 2.; 0.|]; n = 3;
+     m = 4},
+    50., 3);
+   ({arr = [|4.; 13.; 5.; 0.; 6.25; 1.25; 0.; 0.; 2.; 0.; 0.; 0.|]; n = 4;
+     m = 3},
+    50., 3);
+   ({arr = [|0.; 10.; 5.; 0.; 0.; 2.; 0.; 0.; 0.|]; n = 3; m = 3}, 0., 2)])
+
+let resFV5 = List.map (fun arr -> rFV5 (a2v arr)) fa5
 
 
 let resF11 = List.map rFA11 fa5;;

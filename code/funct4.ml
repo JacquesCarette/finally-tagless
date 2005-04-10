@@ -201,9 +201,9 @@ module GenericVectorContainer(Dom:DOMAIN) =
   type contr = Dom.v container2dfromvector
   type 'a vc = ('a,contr) code
   type 'a vo = ('a,Dom.v) code
-  let get' x n m = .< ((.~x).arr).(.~n* (.~x).n + .~m) >.
+  let get' x n m = .< ((.~x).arr).(.~n* (.~x).m + .~m) >.
   let get x n m = ret (get' x n m)
-  let set' x n m y = .< ((.~x).arr).(.~n* (.~x).n + .~m) <- .~y >.
+  let set' x n m y = .< ((.~x).arr).(.~n* (.~x).m + .~m) <- .~y >.
   let set x n m y = ret (set' x n m y)
   let dim2 x = .< (.~x).n >.
   let dim1 x = .< (.~x).m >.
@@ -213,7 +213,7 @@ module GenericVectorContainer(Dom:DOMAIN) =
   let copy a = .< { (.~a) with arr = Array.copy (.~a).arr} >.
   let swap_rows_stmt b r1 r2 = .<
       let a = (.~b).arr and n = (.~b).n and m = (.~b).m in
-      let i1 = .~r1*n and i2 = .~r2*n in
+      let i1 = .~r1*m and i2 = .~r2*m in
       for i = 0 to m-1 do
           let t = a.(i1 + i) in
           begin 
@@ -808,6 +808,11 @@ module GenFV4 = Gen(FloatDomain)
                    (RowPivot)
                    (DivisionUpdate(FloatDomain)(GenericVectorContainer)(FDet))
                    (OutDetRank(FloatDomain)(GenericVectorContainer)(FDet)(Rank))
+module GenFV5 = Gen(FloatDomain)
+                   (GenericVectorContainer)
+                   (FullPivot)
+                   (DivisionUpdate(FloatDomain)(GenericVectorContainer)(FDet))
+                   (OutDetRank(FloatDomain)(GenericVectorContainer)(FDet)(Rank))
 
 (* But this is an error!
 module GenIA1 = Gen(IntegerDomain)
@@ -854,6 +859,11 @@ module GenIV3 = Gen(IntegerDomain)
 module GenIV4 = Gen(IntegerDomain)
                    (GenericVectorContainer)
                    (RowPivot)
+                   (FractionFreeUpdate(IntegerDomain)(GenericVectorContainer)(IDet))
+                   (OutDetRank(IntegerDomain)(GenericVectorContainer)(IDet)(Rank))
+module GenIV5 = Gen(IntegerDomain)
+                   (GenericVectorContainer)
+                   (FullPivot)
                    (FractionFreeUpdate(IntegerDomain)(GenericVectorContainer)(IDet))
                    (OutDetRank(IntegerDomain)(GenericVectorContainer)(IDet)(Rank))
 module GenFA11 = Gen(FloatDomain)
