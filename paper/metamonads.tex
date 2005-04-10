@@ -109,7 +109,7 @@ in linear algebra, there is a wealth of different aspects that
 \emph{may} need to be addressed. For example, implementations of the
 widely used Gaussian Elimination (GE) algorithm --- the running
 example of our paper --- may need to account for the representation of
-the matrix, whether to compute and return the detrminant or rank, how
+the matrix, whether to compute and return the determinant or rank, how
 and whether search for pivot, etc. Furthermore, current architectures
 demand more and more frequent tweaks which, in general, cannot be done by the
 compiler because the tweaking often involves domain knowledge. 
@@ -217,7 +217,7 @@ use with MetaOCaml.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 We build code generators out of primitive ones using code generation 
-combinators. MetaOcaml, as an instance of a multi-stage
+combinators. MetaOCaml, as an instance of a multi-stage
 programming system \cite{TahaThesis}, provides exactly the needed
 features: to construct a code expression, to combine them, and to
 execute them. Figure~\ref{easycode} shows the simplest code generator |one|,
@@ -332,9 +332,9 @@ it also helps in composability by offering to add different
 layers of effects (state, exception, non-determinism, etc) to the
 basic monad \cite{liang-interpreter} in a controlled way.
 
-A monad \cite{moggi-notions} is an abstract datatype representing
+A monad \cite{moggi-notions} is an abstract data type representing
 computations that yield a value and may have an \emph{effect}.
-The datatype must have at least two operations, |return| to build
+The data type must have at least two operations, |return| to build
 trivial effect-less computations and |bind| for combining
 computations. These operations must satisfy \emph{monadic laws}:
 |return| being the left and the right unit of |bind| and |bind| being
@@ -579,7 +579,7 @@ some, the implementation is quite straightforward.  Other domains such
 as |float| and arbitrary precision exact rational numbers |Num.num|
 are equally simple.
 
-Parametrizing by the kind of container representing a matrix is
+Parameterizing by the kind of container representing a matrix is
 almost as straightforward.  Our containers are  parametric
 over a |DOMAIN|, i.e., functors from a |DOMAIN| module
 to the actual implementation of a container. The functor signature
@@ -722,7 +722,7 @@ end
 
 The GE generator functor itself is 
 parameterized by the domain, container, pivoting policy (full, row,
-nonzero, nopivoting), update policy (that use either ``fraction-less'
+nonzero, no pivoting), update policy (that use either ``fraction-less'
 or full division), and by what to yield as the result. Some of the
 argument modules such as |PIVOT| are functors themselves (parameterized
 by the domain, the container, and the determinant functor). The sharing
@@ -732,7 +732,7 @@ domain. It must be stressed that all structures (i.e., module
 instances) are stateless, and so we never have to worry that different
 aspect functors (such as |CONTAINER2D| and |PIVOT|) are instantiated
 with different but type-compatible instances of |DOMAIN|. That is, we
-are not concerened at all about the value sharing. Aspects such as
+are not concerned at all about the value sharing. Aspects such as
 determinant tracking may be stateful so that the determinant update
 code have access to the determinant tracking variables declared
 previously. But that state is handled via the monadic state. As we
@@ -755,7 +755,7 @@ the domain has such unrestricted operation. A domain such as the integer domain
 may still provide |Dom.div| of the same type, but that operation may
 only be used when we are sure that the division is exact. Our type
 sharing constraint expresses such domain-specific knowledge:
-instantiating |DivisionUpdate| with |integerDomain| leads to a
+instantiating |DivisionUpdate| with |IntegerDomain| leads to a
 compile-time error, when compiling the \emph{generator} code. Thus, in
 some cases we can use module types for ``semantic'' constraints
 that cannot normally be expressed via the types of module members.
@@ -853,7 +853,7 @@ types should make this straightforward.
 \section{Conclusion}\label{conclusion}
 The combination of stateless modules (functors and structures), and our
 monad with the compositional state makes aspects
-freely composable without having to worry about the presence or absense of
+freely composable without having to worry about the presence or absence of
 value aliasing. The only constraints to compositionality are the
 typing constraints plus the constraints we specifically impose,
 including semantic constraints (e.g., rings do not have full
@@ -862,7 +862,7 @@ division).
 There is an interesting relation with aspect-oriented code
 \cite{kiczales97aspectoriented}: in AspectJ, 
 aspects are (comparatively) lightly typed, and are post-facto extensions of an
-existing piece of code.  Here aspects are weaved together ``from scracth'' to
+existing piece of code.  Here aspects are weaved together ``from scratch'' to
 make up a piece of code/functionality.  One can understand previous work to be
 more akin to dynamically typed aspect weaving, while we have started
 investigating statically typed aspect weaving.
