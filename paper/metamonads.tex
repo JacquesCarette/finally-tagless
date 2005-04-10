@@ -426,7 +426,7 @@ if (i_2 >= 0) then let t_3 = (Some a_1.(i_2)) in t_3 else None>.}
 % param_code3 plus one;;
 
 That does not seem like much of an improvement. With the help of
-camlp4 pre-processor, we introduce the |mdo|-notation (cite XXX),
+camlp4 pre-processor, we introduce the |mdo|-notation \cite{metamonadsURL},
 patterned after the |do|-notation of Haskell. The function
 |param_code4|, written in the |mdo|-notation, is equivalent to
 |param_code3| -- in fact, the camlp4 preprocessor will convert the
@@ -786,7 +786,7 @@ at all. The generated code for the above and other instantiations of
 
 \section{Related and future work}\label{related}
 
-Note that the monad is similar to the one used in \cite{KiselyovTaha}.
+The monad in this paper is similar to the one used in \cite{KiselyovTaha}.
 However, the latter work used only |retN| of all monadic operations,
 and used fixpoints (for performing iterations at generation time).
 In this paper we do not use monadic fixpoints (because the generator
