@@ -788,23 +788,21 @@ at all. The generated code for the above and other instantiations of
 
 The monad in this paper is similar to the one used in \cite{KiselyovTaha}.
 However, the latter work used only |retN| of all monadic operations,
-and used fixpoints (for performing iterations at generation time).
-In this paper we do not use monadic fixpoints (because the generator
-is not recursive) but we make extensive use of monadic operations for
+and fixpoints (for performing iterations at generation time).
+This paper does not involve monadic fixpoints (because the generator
+is not recursive) makes extensive use of monadic operations for
 generating conditional and looping operations.
 
-|Blitz++| \cite{Veldhuizen:1998:ISCOPE} and in general template 
+|Blitz++| \cite{Veldhuizen:1998:ISCOPE} and in general template
 meta-programming in C++ achieve similar results of eliminating levels
 of abstraction.  Using traits and concepts, some domain-specific
-knowledge can also be encoded.  However inlining critically depends on
-the compiler's fully inlining of all methods, and as has been reported
-in the literature, this can be challenging to insure. Furthermore, all errors
-(such as type errors and concept violation errors, that is,
+knowledge can also be encoded.  However overhead elimination
+critically depends on the compiler's fully inlining of all methods,
+which has been reported to be challenging to insure. Furthermore, all
+errors (such as type errors and concept violation errors, i.e.,
 composition errors) are detected only when compiling the generated
-code. It is immensely difficult to correlate errors (e.g., line numbers) 
-to the ones in the generator itself. Furthermore, as templates
-cannot be local, a lot of code generation is scattered around instead
-of being modularized.
+code. It is immensely difficult to correlate errors (e.g., line
+numbers) to the ones in the generator itself.
 
 ATLAS \cite{ATLAS} is another successful project in this area.  However
 they use much simpler weaving technology, which leads them to note
@@ -836,7 +834,7 @@ continuations and our implementations of code generators like
 (for |ifM|, |whileM|, etc.), the available notation should be
 even more direct-style, and potentially clearer.
 
-There are many more aspects which can also be handled
+There are many more aspects which can also be handled:
 Input variations (augmented
 matrices), error reporting (i.e. asking for the determinant of a 
 non-square matrix), memory hierarchy issues, loop-unrolling
@@ -851,12 +849,13 @@ in MetaOCaml - for ease of debugging.  The current use of abstract
 types should make this straightforward.
 
 \section{Conclusion}\label{conclusion}
-The combination of stateless modules (functors and structures), and our
-monad with the compositional state makes aspects
-freely composable without having to worry about the presence or absence of
-value aliasing. The only constraints to compositionality are the
-typing constraints plus the constraints we specifically impose,
-including semantic constraints (e.g., rings do not have full
+In this paper we demonstrate numerical code extensively parameterized
+by complex aspects at no run-time overhead.  The combination of
+stateless functors and structures, and our monad with the
+compositional state makes aspects freely composable without having to
+worry about value aliasing. The only constraints to compositionality
+are the typing constraints plus the constraints we specifically
+impose, including semantic constraints (e.g., rings do not have full
 division).
 
 There is an interesting relation with aspect-oriented code
