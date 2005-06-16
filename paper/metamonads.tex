@@ -13,7 +13,6 @@
 \usepackage{url}
 \usepackage[dvips]{color}
 
-
 \usepackage{ifpdf}
 \ifpdf
     \pdfpageheight=11in
@@ -27,6 +26,7 @@
 \usepackage{fancyvrb}
 \DefineShortVerb{\|}
 \DefineVerbatimEnvironment{code}{Verbatim}{xleftmargin=\mathindent,commandchars=\\\{\},fontsize=\small}
+\DefineVerbatimEnvironment{code2}{Verbatim}{xleftmargin=\mathindent,commandchars=\\\{\},fontsize=\footnotesize}
 \newcommand{\evalresult}[1]{\ensuremath{\Longrightarrow}\textcolor{red}{#1}}
 % \setlength{\parskip}{0pt}
 \newlength{\mathindent}
@@ -223,7 +223,7 @@ features: to construct a code expression, to combine them, and to
 execute them. Figure~\ref{easycode} shows the simplest code generator |one|,
 as well as more complex generators.
 
-\begin{figure}\label{easycode}
+\begin{figure}
 \begin{code}
 let one = .<1>. and plus x y = .<.~x + .~y>.
 let simplest_code = let gen x y = plus x (plus y one) in
@@ -241,7 +241,7 @@ param_code1' plus one
 \evalresult{.<fun x_1 -> fun y_2 -> ((y_2 + 1) + (x_1 + (y_2 + 1)))>.}
 \end{code}
 \caption{Code generation and combinators. $\Longrightarrow$ under an
-  expression shows the result of its evaluation}
+  expression shows the result of its evaluation}\label{easycode}
 \end{figure}
 
 We use MetaOCaml brackets |.<...>.| to generate code expressions,
@@ -341,7 +341,7 @@ computations. These operations must satisfy \emph{monadic laws}:
 associative. Figure~\ref{ourmonad} defines the monad used throughout
 the present paper and shows its implementation.
 
-\begin{figure}\label{ourmonad}
+\begin{figure}
 \begin{code}
 type ('v,'s,'w) monad = 's -> ('s -> 'v -> 'w) -> 'w
 let ret a = fun s k -> k s a
@@ -360,7 +360,7 @@ let ifL test th el = ret .< if .~test then .~th else .~el >.
 let ifM test th el = fun s k ->
   k s .< if .~(test s k0) then .~(th s k0) else .~(el s k0) >.
 \end{code}
-\caption{Our monad}
+\caption{Our monad}\label{ourmonad}
 \end{figure}
 
 Our monad represents two kinds of computational effects: reading and
@@ -475,49 +475,49 @@ A study of Gaussian Elimination \cite{carette04} shows that
 the following variations occur:
 \begin{enumerate}
 \vspace*{-6pt}
-	\item \textbf{Domain}: In which (algebraic) domain do the
-	  matrix elements belong to.  Sometimes the domains are very
-	  specific (e.g., $\mathbb{Z}, \mathbb{Q}, \mathbb{Z}_p$ and
-	  floating point numbers), while in other cases the domains
-	  were left generic, e.g., multivariate polynomials over a
-	  field.  In the roughly 85 pieces of code surveyed
-	  \cite{carette04} 20 different domains were encountered.
-	\item \textbf{Container}: Whether the matrix is represented as
-	  an array of arrays, a one-dimensional array, a hash table, a
-	  sparse matrix, etc., and whether indexing is done in C or
-	  Fortran style.  Additionally, if a particular representation
-	  had a special mechanism for efficient row exchanges.
-	\item \textbf{Output choices}: Whether just the reduced
-	  matrix, or additionally the rank, the determinant, and the
-	  pivoting matrix are to be returned. In the larger algorithm
-	  family, routines like Maple's
-	  \texttt{LinearAlgebra:-LUDecomposition} have up to $2^6 +
-	  2^5 + 2^2 = 100$ outputs.
-	\item \textbf{Fraction-free}: Whether the Gaussian Elimination
-		algorithm is allowed to use unrestricted division, or only
-		exact (remainder-free) division.
-	\item \textbf{Pivoting}: Whether to use no pivoting, 
-		column-wise pivoting, or full pivoting.
-	\item \textbf{Augmented Matrices}: Whether we are doing GE on
-		a full matrix, or only a restricted number of columns, while
-		doing elimination on the full matrix.  We currently
-		do not treat this aspect in our code.
+    \item \textbf{Domain}: In which (algebraic) domain do the
+      matrix elements belong to.  Sometimes the domains are very
+      specific (e.g., $\mathbb{Z}, \mathbb{Q}, \mathbb{Z}_p$ and
+      floating point numbers), while in other cases the domains
+      were left generic, e.g., multivariate polynomials over a
+      field.  In the roughly 85 pieces of code surveyed
+      \cite{carette04} 20 different domains were encountered.
+    \item \textbf{Container}: Whether the matrix is represented as
+      an array of arrays, a one-dimensional array, a hash table, a
+      sparse matrix, etc., and whether indexing is done in C or
+      Fortran style.  Additionally, if a particular representation
+      had a special mechanism for efficient row exchanges.
+    \item \textbf{Output choices}: Whether just the reduced
+      matrix, or additionally the rank, the determinant, and the
+      pivoting matrix are to be returned. In the larger algorithm
+      family, routines like Maple's
+      \texttt{LinearAlgebra:-LUDecomposition} have up to $2^6 +
+      2^5 + 2^2 = 100$ outputs.
+    \item \textbf{Fraction-free}: Whether the Gaussian Elimination
+        algorithm is allowed to use unrestricted division, or only
+        exact (remainder-free) division.
+    \item \textbf{Pivoting}: Whether to use no pivoting, 
+        column-wise pivoting, or full pivoting.
+    \item \textbf{Augmented Matrices}: Whether we are doing GE on
+        a full matrix, or only a restricted number of columns, while
+        doing elimination on the full matrix.  We currently
+        do not treat this aspect in our code.
 \end{enumerate}
 \noindent In addition to the above variations, there are two aspects that 
 recur frequently:
 \vspace*{-6pt}
 \begin{enumerate}
-	\item \textbf{Length measure}:  For stability reasons
-		(numerical or coefficient growth), if a domain
-	  possesses
-		an appropriate length measure, this is sometimes used to choose
-		an ``optimal'' pivot.
-	\item \textbf{Normalization and zero-equivalence}: Whether the 
-		arithmetic operations of the domain at hand gives results in 
-		normalized form, and whether a specialized zero-equivalence 
-		routine needs to be used.
+    \item \textbf{Length measure}:  For stability reasons
+        (numerical or coefficient growth), if a domain
+      possesses
+        an appropriate length measure, this is sometimes used to choose
+        an ``optimal'' pivot.
+    \item \textbf{Normalization and zero-equivalence}: Whether the 
+        arithmetic operations of the domain at hand gives results in 
+        normalized form, and whether a specialized zero-equivalence 
+        routine needs to be used.
 \end{enumerate}
-\noindent These are separated out from the others are they are cross-cutting
+\noindent These are separated out from the others as they are cross-cutting
 concerns: in the case of the length measure, a property of the domain
 will influence the method used to do pivoting \emph{if} pivoting is to be
 performed.
@@ -607,7 +607,7 @@ module type and one instantiation, which specifies the output of a GE
 algorithm as a 3-tuple |contr * Det.outdet * int| of the U-factor, the
 determinant and the rank.
 
-\begin{code}
+\begin{code2}
 module type OUTPUT = sig
   type contr  type res
   module D : DETERMINANT   module R : RANK   module P : TRACKPIVOT
@@ -626,7 +626,7 @@ module OutDetRank(Dom:DOMAIN)(C: CONTAINER2D)
   let make_result b = mdo \{ det  <-- D.fin ();  rank <-- R.fin ();
     ret .< ( .~b, .~det, .~rank ) >. \}
 end
-\end{code}
+\end{code2}
 
 As is apparent from the output choices, several different quantities
 \emph{may} need to be tracked in a particular GE implementation.  We
@@ -638,7 +638,7 @@ then become part of the \emph{state} that is tracked by our monad.  To
 have all this choice when needed, and yet have our code be modular and
 composable as well as ensuring that the generated code does not
 contain any abstraction artifacts, it is important to make this state
-modular.  For example,
+modular.  For example, in
 \begin{code}
 module type DETERMINANT = sig
   type indet  type outdet  type 'a lstate
@@ -676,7 +676,7 @@ functional way). This lets us freely compose determinant-tracking,
 rank-tracking, and other aspects.
 
 \begin{figure}
-\begin{code}
+\begin{code2}
 module Gen(Dom: DOMAIN)(C: CONTAINER2D)(PivotF: PIVOT)
           (Update: UPDATE with type baseobj = Dom.v and type ctr = C(Dom).contr)
           (Out: OUTPUT with type contr = C(Dom).contr and type D.indet = Dom.v 
@@ -717,7 +717,7 @@ module Gen(Dom: DOMAIN)(C: CONTAINER2D)(PivotF: PIVOT)
             (Out.make_result b) \} in
     .<fun a -> .~(runM (dogen .<a>.)) >.
 end
-\end{code}
+\end{code2}
 \end{figure}
 
 The GE generator functor itself is 
@@ -732,7 +732,7 @@ domain. It must be stressed that all structures (i.e., module
 instances) are stateless, and so we never have to worry that different
 aspect functors (such as |CONTAINER2D| and |PIVOT|) are instantiated
 with different but type-compatible instances of |DOMAIN|. That is, we
-are not concerned at all about the value sharing. Aspects such as
+are not concerned at all about value sharing. Aspects such as
 determinant tracking may be stateful so that the determinant update
 code have access to the determinant tracking variables declared
 previously. But that state is handled via the monadic state. As we
@@ -751,8 +751,8 @@ module DivisionUpdate
 \vspace*{-4pt} 
 This structure implements an update policy of using
 |Dom.div| operation without restrictions -- which is possible only if
-the domain has such unrestricted operation. A domain such as the integer domain
-may still provide |Dom.div| of the same type, but that operation may
+the domain has such an unrestricted operation. A domain such as the integer
+domain may still provide |Dom.div| of the same type, but that operation may
 only be used when we are sure that the division is exact. Our type
 sharing constraint expresses such domain-specific knowledge:
 instantiating |DivisionUpdate| with |IntegerDomain| leads to a
@@ -790,7 +790,7 @@ The monad in this paper is similar to the one used in \cite{KiselyovTaha}.
 However, the latter work used only |retN| of all monadic operations,
 and fixpoints (for performing iterations at generation time).
 This paper does not involve monadic fixpoints (because the generator
-is not recursive) makes extensive use of monadic operations for
+is not recursive) but makes extensive use of monadic operations for
 generating conditional and looping operations.
 
 |Blitz++| \cite{Veldhuizen:1998:ISCOPE} and in general template
@@ -872,7 +872,7 @@ investigating statically typed aspect weaving.
 The code generated for |GenIV5|, fraction-free GE of the integer matrix
 represented by a flat vector, full pivoting, returning the |U|-factor,
 the determinant and the rank.
-\begin{code}
+\begin{code2}
 # val resIV5 :
   ('a,
    Funct4.GenIV5.Ctr.contr ->
@@ -965,11 +965,11 @@ the determinant and the rank.
     if ((! t_412) = 0) then 0
     else if ((! t_412) = 1) then (! t_411)
     else (~- (! t_411)), (! t_406))>.
-\end{code}
+\end{code2}
 \section{Appendix B}
 The code generated for |GenFA1|, GE of the floating point matrix
 represented by a 2D array, row pivoting, returning just the |U|-factor.
-\begin{code}
+\begin{code2}
 #   val resFA1 :
   ('a,
    Funct4.GenFA1.Ctr.contr ->
@@ -1031,7 +1031,7 @@ represented by a 2D array, row pivoting, returning just the |U|-factor.
     (t_3 := ((! t_3) + 1))
    done;
    t_5>.
-\end{code}
+\end{code2}
 \end{document}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
