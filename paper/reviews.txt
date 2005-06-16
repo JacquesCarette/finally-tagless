@@ -161,7 +161,7 @@ References following Figure point elsewhere:
 
 Small typos in References:
   [17]  pages are missing -- FIXED
-  [24]  the font of "http://haskell.org/" ???
+  [24]  the font of "http://haskell.org/" -- FIXED
 
   [27]  probably brace brackets are missing for "cbn", "or" and "metaml" 
         (in LaTeX source code) -- FIXED
@@ -180,7 +180,7 @@ is also MetaScheme, a target language for automatic or manual staging.
 [1] Gluck, Nakashige, Zochling. Binding-time analysis applied to mathematical 
 algorithms. In Dolezal, Fidler. System Modelling and Optimization, 1995.
 
-Note: the algoritnms do not include matrix operations.
+Note: the algorithms do not include matrix operations.
 We should mention that our specialzied codes may have different types
 (that is not the case above). They try do discover opportunities
 for specialization in a very general program with lots of
@@ -198,3 +198,44 @@ Cite the manuscript:
 	http://www.cs.rice.edu/~taha/publications/preprints/2004-02-16.pdf
 
 as \cite{MSP:PADL04}
+
+
+
+========================================================================
+	To fix
+
+
+Rev1: ``I have the impression that it ought to be possible to use a
+more intuitive notation based on annotations on the original source
+code. For example, it is conceivable, although not straightforward,
+that annotations on let expressions would allow to automatically
+generate the appropriate monadic code for binding.''
+To future work: we're working on this
+
+Rev1: ``section 3: the initial discussion about aspects, functors, and
+parameterization is very clear, but the details about the implementation
+are somehow blurred and difficult to understand.''
+We're out of space!
+
+
+Rev2: ''it would be better to break down some large code pieces, so
+that the explanation and the code can stay together.''
+
+Rev2: ``In Figure 2, the monad has type signature "('v,'s,'w) monad". It will
+trick the reader to think it is a monad of type ('v,'s,'w) while in
+fact it is a monad of type 'v according to the "ret" and "bind"
+definition. It can be made more clear by adding type signatures to
+"ret" and "bind" functions and explaining in the text.''
+
+Performance comparison. Do we have space for that?
+Perhaps only mention in the presentation, and refer to the web site?
+
+The name ``mdo''...
+
+
+``I only have vague understanding of the codes in Appendices.  Of
+course, users of this library do not need to read these codes, since
+any post-processing is neither allowed nor necessary.  But, I would
+like to have intentional guide for quick check to have feeling that it
+certainly works.''
+

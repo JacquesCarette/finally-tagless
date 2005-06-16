@@ -181,11 +181,11 @@ In this paper we report on progress of solving these problems using GE
 as our running example. Specifically, our contributions:
 \vspace*{-2pt}
 \begin{itemize}
-    \item Extending monad of \cite{KiselyovTaha} for generating
-      binding statements when generating control structures such as
-      loops and conditionals. We argue that code generation is an
-      effect and so requires something like a monad for proper
-      serialization.
+    \item Extending a let-insertion monad of
+      \cite{MSP:PADL04,KiselyovTaha} for generating control structures
+      such as loops and conditionals. The extension is non-trivial: e.g.,\\
+      |let x = exp in ...| has a different \emph{effect} within a
+      conditional branch.
     \item Implementation of the |mdo|-notation (patterned after
       |do|-notation of Haskell) to make monadic code readable.
     \item Use of functors (including higher-order functors) to
@@ -208,9 +208,6 @@ independent modules.  We briefly discuss related work in
 section~\ref{related}. We then outline the future work and conclude.
 Appendices give samples of the generated code (which is available in
 full at \cite{metamonadsURL}).
-
-We wish to thank Cristiano Calgano for his help in adapting camlp4 for
-use with MetaOCaml.
 
 
 \section{Generating binding statements, CPS, and monad}\label{CPS}
@@ -292,10 +289,11 @@ that is supposed to be the result of |letgen| itself.  Certainly
 |body|, as all generated expressions in MetaOCaml are well-formed and
 complete.
 
-The key is to use continuation-passing style (CPS). Its benefits were first
-pointed out by \cite{Bondorf:92} in the context
-of partial evaluation, and extensively used by \cite{KiselyovTaha} for code
-generation. Now, |param_code2 plus one| gives us the desired code. 
+The key is to use continuation-passing style (CPS). Its benefits were
+first pointed out by \cite{Bondorf:92} in the context of partial
+evaluation, and extensively used by \cite{MSP:PADL04,KiselyovTaha} for
+code generation. Now, |param_code2 plus one| gives us the desired
+code.
 
 \begin{code}
 let letgen exp k = .<let t = .~exp in .~(k .<t>.)>.
@@ -786,12 +784,13 @@ at all. The generated code for the above and other instantiations of
 
 \section{Related and future work}\label{related}
 
-The monad in this paper is similar to the one used in \cite{KiselyovTaha}.
-However, the latter work used only |retN| of all monadic operations,
-and fixpoints (for performing iterations at generation time).
-This paper does not involve monadic fixpoints (because the generator
-is not recursive) but makes extensive use of monadic operations for
-generating conditional and looping operations.
+The monad in this paper is similar to the one used in
+\cite{MSP:PADL04,KiselyovTaha}.  However, the latter works used only
+|retN| of all monadic operations, and fixpoints (for performing
+iterations at generation time).  This paper does not involve monadic
+fixpoints (because the generator is not recursive) but makes extensive
+use of monadic operations for generating conditional and looping
+operations.
 
 |Blitz++| \cite{Veldhuizen:1998:ISCOPE} and in general template
 meta-programming in C++ achieve similar results of eliminating levels
@@ -824,6 +823,19 @@ compiler frequently can optimize away a lot of abstraction overhead,
 it does not provide any guarantees that it will do so, unlike our
 approach.
 
+We should also mention early work \cite{Gluck95} on automatic
+specialization of mathematical algorithms. Although it can eliminate
+some overhead from a very generic implementation (e.g., by inlining
+aspects implemented as higher-order functions), specialization cannot
+change the type of the function and cannot efficiently handle aspects
+that communicate via a private shared state.
+
+The paper \cite{GluckJ98} describes early simple experiments in
+\emph{automatic} and manual staging, and the multi-level language
+based on an annotated subset of Scheme (which is untyped and has no
+imperative features). The generated code requires post-processing to
+attain efficiency.
+
 To the best of our knowledge, nobody has yet used functors to
 abstract code generators, or even mixed functors and 
 multi-stage programming.
@@ -833,6 +845,8 @@ continuations and our implementations of code generators like
 |ifM|.  As well, by using some additional syntactic sugar
 (for |ifM|, |whileM|, etc.), the available notation should be
 even more direct-style, and potentially clearer.
+We also would like to extend our monad to a monad transformer.
+
 
 There are many more aspects which can also be handled:
 Input variations (augmented
@@ -865,6 +879,12 @@ existing piece of code.  Here aspects are weaved together ``from scratch'' to
 make up a piece of code/functionality.  One can understand previous work to be
 more akin to dynamically typed aspect weaving, while we have started
 investigating statically typed aspect weaving.
+
+\subsection*{Acknowledgments}
+We wish to thank Cristiano Calgano for his help in adapting camlp4 for
+use with MetaOCaml. We are grateful to anonymous reviewers for many
+helpful suggestions.
+
 
 \bibliography{metamonads}
 \bibliographystyle{plain}
