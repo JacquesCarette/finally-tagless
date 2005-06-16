@@ -6,11 +6,11 @@
 #
 ########################################################################
 
-SYNTAX_EXTENSION := ../camlp4/pa_monad2.cmo
+SYNTAX_EXTENSION := ../camlp4/pa_monad.cmo
 
 PP := camlp4o -I . $(SYNTAX_EXTENSION)
 
-OBJ  := funct1.cmo funct2.cmo funct3.cmo funct4.cmo
+OBJ  := funct1.cmo funct2.cmo funct3.cmo funct4.cmo direct.cmo
 TEST := funct1.out funct2.out funct3.out funct4.out
 RES  := funct1.res funct2.res funct3.res funct4.res
 #funct3.res 
