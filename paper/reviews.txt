@@ -205,13 +205,6 @@ as \cite{MSP:PADL04}
 	To fix
 
 
-Rev1: ``I have the impression that it ought to be possible to use a
-more intuitive notation based on annotations on the original source
-code. For example, it is conceivable, although not straightforward,
-that annotations on let expressions would allow to automatically
-generate the appropriate monadic code for binding.''
-To future work: we're working on this
-
 Rev1: ``section 3: the initial discussion about aspects, functors, and
 parameterization is very clear, but the details about the implementation
 are somehow blurred and difficult to understand.''
@@ -220,22 +213,11 @@ We're out of space!
 
 Rev2: ''it would be better to break down some large code pieces, so
 that the explanation and the code can stay together.''
+But we did that deliberately: space-saving trick.
 
-Rev2: ``In Figure 2, the monad has type signature "('v,'s,'w) monad". It will
-trick the reader to think it is a monad of type ('v,'s,'w) while in
-fact it is a monad of type 'v according to the "ret" and "bind"
-definition. It can be made more clear by adding type signatures to
-"ret" and "bind" functions and explaining in the text.''
-
-Performance comparison. Do we have space for that?
+Performance comparison. Do we have space for that? Perhaps refer to
+the web site for that?
 Perhaps only mention in the presentation, and refer to the web site?
 
 The name ``mdo''...
-
-
-``I only have vague understanding of the codes in Appendices.  Of
-course, users of this library do not need to read these codes, since
-any post-processing is neither allowed nor necessary.  But, I would
-like to have intentional guide for quick check to have feeling that it
-certainly works.''
 

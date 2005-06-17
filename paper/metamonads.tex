@@ -181,11 +181,16 @@ In this paper we report on progress of solving these problems using GE
 as our running example. Specifically, our contributions:
 \vspace*{-2pt}
 \begin{itemize}
-    \item Extending a let-insertion monad of
+    \item Extending a let-insertion, memoizing monad of
       \cite{MSP:PADL04,KiselyovTaha} for generating control structures
-      such as loops and conditionals. The extension is non-trivial: e.g.,\\
+      such as loops and conditionals. The extension is non-trivial
+      because of control dependencies and because
+      let-insertion, as we argue, is a control effect on its own.
+\begin{comment}
+      : e.g.,\\
       |let x = exp in ...| has a different \emph{effect} within a
       conditional branch.
+\end{comment}
     \item Implementation of the |mdo|-notation (patterned after
       |do|-notation of Haskell) to make monadic code readable.
     \item Use of functors (including higher-order functors) to
@@ -342,7 +347,7 @@ the present paper and shows its implementation.
 \begin{figure}
 \begin{code}
 type ('v,'s,'w) monad = 's -> ('s -> 'v -> 'w) -> 'w
-let ret a = fun s k -> k s a
+let ret (a :'v) : ('v,'s,'w) monad = fun s k -> k s a
 let bind a f = fun s k -> a s (fun s' b -> f b s' k)
 let fetch s k = k s s  and  store v s k = k (v::s) ()
 
@@ -368,16 +373,17 @@ in general, whenever a computation ends with something other than
 invoking its natural continuation in the tail position. In our case
 the control effects manifest themselves as code generation.
 
-In Figure~\ref{ourmonad}, the monad is implemented as a function of two
+In Figure~\ref{ourmonad}, the monad (yielding values of the type |v|)
+is implemented as a function of two
 arguments: the state (of type |s|) and the continuation. The
-continuation receives the current state, the value (of the type |v|) and
+continuation receives the current state and the value, and
 yields the answer of the type |w|.  The monad is polymorphic over the
 three type parameters.  Other implementations are
 possible. Except for the code in Figure~\ref{ourmonad}, the rest of our code
 treats the monad as a truly abstract data type. The implementation of
 the basic
-monadic operations |ret| and |bind| are conventional. It is easy to
-see that the monadic laws are satisfied.  Other monadic operations
+monadic operations |ret| and |bind| is conventional and clearly
+satisfies the monadic laws. Other monadic operations
 construct computations that do have specific effects.  Operations |fetch| and
 |store v| construct computations that read and write the state. In our
 case the state is a list (of polymorphic variants), which models an
@@ -412,7 +418,7 @@ let ifM' test th el = mdo \{
 let gen a i = ifM' (ret .<(.~i) >= 0>.) 
                    (retN .<Some (.~a).(.~i)>.) (ret .<None>.)
  in .<fun a i -> .~(runM (gen .<a>. .<i>.))>.
-\evalresult{.<fun a_1 i_2 ->  
+\evalresult{.<fun a_1 i_2 -> \protect\newline
 let t_3 = (Some a_1.(i_2)) in if (i_2 >= 0) then t_3 else None>.}
 let gen a i = ifM (ret .<(.~i) >= 0>.) 
                   (retN .<Some (.~a).(.~i)>.) (ret .<None>.)
@@ -494,12 +500,11 @@ the following variations occur:
     \item \textbf{Fraction-free}: Whether the Gaussian Elimination
         algorithm is allowed to use unrestricted division, or only
         exact (remainder-free) division.
-    \item \textbf{Pivoting}: Whether to use no pivoting, 
-        column-wise pivoting, or full pivoting.
-    \item \textbf{Augmented Matrices}: Whether we are doing GE on
-        a full matrix, or only a restricted number of columns, while
-        doing elimination on the full matrix.  We currently
-        do not treat this aspect in our code.
+    \item \textbf{Pivoting}: Whether to use no, 
+        column-wise, or full pivoting.
+    \item \textbf{Augmented Matrices}: Whether all or only some
+      columns of the matrix participate in elimination. We currently
+        do not implement this aspect.
 \end{enumerate}
 \noindent In addition to the above variations, there are two aspects that 
 recur frequently:
@@ -510,14 +515,13 @@ recur frequently:
       possesses
         an appropriate length measure, this is sometimes used to choose
         an ``optimal'' pivot.
-    \item \textbf{Normalization and zero-equivalence}: Whether the 
-        arithmetic operations of the domain at hand gives results in 
-        normalized form, and whether a specialized zero-equivalence 
-        routine needs to be used.
+    \item \textbf{Normalization and zero-equivalence}: Whether the
+      arithmetic operations of the domain give normalized results, and
+      whether a specialized zero-equivalence routine is to be used.
 \end{enumerate}
 \noindent These are separated out from the others as they are cross-cutting
 concerns: in the case of the length measure, a property of the domain
-will influence the method used to do pivoting \emph{if} pivoting is to be
+will influence the pivoting method \emph{if} pivoting is to be
 performed.
 
 The simplest parametrization is to make the domain abstract. As it
@@ -532,7 +536,7 @@ offered by regular records, we use Ocaml \emph{structures} (i.e.,
 modules)
 so we can take advantage of extensibility, type abstraction and constraints,
 and especially parameterized structures (\emph{functors}).
-We define the type of the domain, the signature |DOMAIN| which
+We define the type of the domain, the signature |DOMAIN|, which
 different domains must satisfy:
 \begin{figure}[h]
 \begin{code}
@@ -636,7 +640,7 @@ then become part of the \emph{state} that is tracked by our monad.  To
 have all this choice when needed, and yet have our code be modular and
 composable as well as ensuring that the generated code does not
 contain any abstraction artifacts, it is important to make this state
-modular.  For example, in
+modular.  For example,
 \begin{code}
 module type DETERMINANT = sig
   type indet  type outdet  type 'a lstate
@@ -648,10 +652,10 @@ module type DETERMINANT = sig
   ...
 end
 \end{code}
-\noindent  determinant tracking aspects involves being able to
-generate code that defines variables used for tracking (|decl|),
-generate code that updates the sign or the absolute
-value of the determinant, and finally, converting the tracking state
+\noindent  to track determinant we should be able to generate code
+for: defining variables used for tracking (|decl|),
+updating the sign or the absolute
+value of the determinant, converting the tracking state
 to the final determinant value of the type |outdet|. GE of a
 floating-point matrix with no determinant tracking uses the
 instantiation of |DETERMINANT| where |outdet| is |unit| and all the
@@ -720,8 +724,8 @@ end
 
 The GE generator functor itself is 
 parameterized by the domain, container, pivoting policy (full, row,
-nonzero, no pivoting), update policy (that use either ``fraction-less'
-or full division), and by what to yield as the result. Some of the
+nonzero, no pivoting), update policy (with either `fraction-less'
+or full division), and the result specification. Some of the
 argument modules such as |PIVOT| are functors themselves (parameterized
 by the domain, the container, and the determinant functor). The sharing
 constraints express obvious constraints on the instantiation of |Gen|,
@@ -734,7 +738,7 @@ are not concerned at all about value sharing. Aspects such as
 determinant tracking may be stateful so that the determinant update
 code have access to the determinant tracking variables declared
 previously. But that state is handled via the monadic state. As we
-have shown, open unions makes the overall monadic state compositional
+have shown, open unions make the overall monadic state compositional
 with respect to the state of various aspects.
 
 In addition to the ``regular'' type sharing constraints shown in the
@@ -784,17 +788,16 @@ at all. The generated code for the above and other instantiations of
 
 \section{Related and future work}\label{related}
 
-The monad in this paper is similar to the one used in
-\cite{MSP:PADL04,KiselyovTaha}.  However, the latter works used only
-|retN| of all monadic operations, and fixpoints (for performing
-iterations at generation time).  This paper does not involve monadic
-fixpoints (because the generator is not recursive) but makes extensive
-use of monadic operations for generating conditional and looping
-operations.
+The monad in this paper is similar to the one described in
+\cite{MSP:PADL04,KiselyovTaha}.  However the latter papers used only
+|retN| and fixpoints (for generation-time iterations).  This paper
+does not involve monadic fixpoints because the generator is not
+recursive, but heavily relies on monadic operations for generating
+conditionals and loops.
 
-|Blitz++| \cite{Veldhuizen:1998:ISCOPE} and in general template
-meta-programming in C++ achieve similar results of eliminating levels
-of abstraction.  Using traits and concepts, some domain-specific
+|Blitz++| \cite{Veldhuizen:1998:ISCOPE} and {C++} template
+meta-programming in general similarly eliminate levels
+of abstraction.  With traits and concepts, some domain-specific
 knowledge can also be encoded.  However overhead elimination
 critically depends on the compiler's fully inlining of all methods,
 which has been reported to be challenging to insure. Furthermore, all
@@ -834,7 +837,8 @@ The paper \cite{GluckJ98} describes early simple experiments in
 \emph{automatic} and manual staging, and the multi-level language
 based on an annotated subset of Scheme (which is untyped and has no
 imperative features). The generated code requires post-processing to
-attain efficiency.
+attain efficiency. Obtaining a generating extension from annotated
+code is an exciting area of our future research.
 
 To the best of our knowledge, nobody has yet used functors to
 abstract code generators, or even mixed functors and 
@@ -859,16 +863,16 @@ family of LU decompositions contains more aspects still.
 
 Finally, we would like to be able to make the |Gen| functor applicable
 to runnable functors in Ocaml, as well as to code generation functors
-in MetaOCaml - for ease of debugging.  The current use of abstract
+in MetaOCaml --- for ease of debugging.  The current use of abstract
 types should make this straightforward.
 
 \section{Conclusion}\label{conclusion}
-In this paper we demonstrate numerical code extensively parameterized
+In this paper we have demonstrated numerical code extensively parameterized
 by complex aspects at no run-time overhead.  The combination of
 stateless functors and structures, and our monad with the
 compositional state makes aspects freely composable without having to
 worry about value aliasing. The only constraints to compositionality
-are the typing constraints plus the constraints we specifically
+are the typing ones plus the constraints we specifically
 impose, including semantic constraints (e.g., rings do not have full
 division).
 
@@ -878,7 +882,7 @@ aspects are (comparatively) lightly typed, and are post-facto extensions of an
 existing piece of code.  Here aspects are weaved together ``from scratch'' to
 make up a piece of code/functionality.  One can understand previous work to be
 more akin to dynamically typed aspect weaving, while we have started
-investigating statically typed aspect weaving.
+investigating statically typed one.
 
 \subsection*{Acknowledgments}
 We wish to thank Cristiano Calgano for his help in adapting camlp4 for
@@ -900,19 +904,15 @@ the determinant and the rank.
                     (Funct4.IDet)(Funct4.Rank).res)
   code =
   .<fun a_405 ->
-   let t_406 = (ref 0) in
-   let t_407 = (ref 0) in
+   let t_406 = (ref 0) in let t_407 = (ref 0) in
    let t_408 = {arr = (Array.copy a_405.arr)} (a_405) in
-   let t_409 = a_405.m in
-   let t_410 = a_405.n in
-   let t_411 = (ref 1) in
-   let t_412 = (ref 1) in
+   let t_409 = a_405.m in let t_410 = a_405.n in
+   let t_411 = (ref 1) in let t_412 = (ref 1) in
    while (((! t_407) < t_409) && ((! t_406) < t_410)) do
-    let t_413 = (! t_406) in
-    let t_414 = (! t_407) in
+    let t_413 = (! t_406) in let t_414 = (! t_407) in
     let t_415 = (ref (None)) in
     let t_435 =
-     begin
+     begin  (* full pivoting *)
       for j_431 = t_413 to (t_410 - 1) do
        for j_432 = t_414 to (t_409 - 1) do
         let t_433 = (t_408.arr).((j_431 * t_408.m) + j_432) in
@@ -920,14 +920,13 @@ the determinant and the rank.
          (match (! t_415) with
           | Some (i_434) ->
              if ((abs (snd i_434)) > (abs t_433)) then
-              (t_415 := (Some ((j_431, j_432), t_433)))
-             else ()
+              (t_415 := (Some ((j_431, j_432), t_433))) else ()
           | None -> (t_415 := (Some ((j_431, j_432), t_433))))
         else ()
        done
       done;
       (match (! t_415) with
-       | Some (i_416) ->
+       | Some (i_416) ->  (* swapping of columns *)
           if ((snd (fst i_416)) <> t_414) then begin
            let a_424 = t_408.arr
            and nm_425 = (t_408.n * t_408.m)
@@ -942,47 +941,30 @@ the determinant and the rank.
                (loop_427 (i1_428 + m_426) (i2_429 + m_426))
               else () in
            (loop_427 t_414 (snd (fst i_416)));
-           (t_412 := (~- (! t_412)))
-          end else ();
-          if ((fst (fst i_416)) <> t_413) then begin
-           let a_417 = t_408.arr
-           and n_418 = t_408.n
-           and m_419 = t_408.m in
-           let i1_420 = (t_413 * m_419)
-           and i2_421 = ((fst (fst i_416)) * m_419) in
-           for i_422 = 0 to (m_419 - 1) do
-            let t_423 = a_417.(i1_420 + i_422) in
-            a_417.(i1_420 + i_422) <- a_417.(i2_421 + i_422);
-            a_417.(i2_421 + i_422) <- t_423
-           done;
-           (t_412 := (~- (! t_412)))
-          end else ();
+           (t_412 := (~- (! t_412))) (* adjust the sign of det *)
+          end else (); (* swapping of rows elided *)
           (Some (snd i_416))
        | None -> (None))
      end in
     (match t_435 with
      | Some (i_436) ->
-        begin
+        begin (* elimination loop *)
          for j_437 = (t_413 + 1) to (t_410 - 1) do
           if (not ((t_408.arr).((j_437 * t_408.m) + t_414) = 0)) then begin
            for j_438 = (t_414 + 1) to (t_409 - 1) do
             (t_408.arr).((j_437 * t_408.m) + j_438) <-
-             ((((t_408.arr).((j_437 * t_408.m) + j_438) *
-                 (t_408.arr).((t_413 * t_408.m) + t_414)) -
-                ((t_408.arr).((t_413 * t_408.m) + j_438) *
-                  (t_408.arr).((j_437 * t_408.m) + t_413))) / (! t_411))
+             ((((t_408.arr).((j_437 * t_408.m) + j_438) * (* elided *)
            done;
            (t_408.arr).((j_437 * t_408.m) + t_414) <- 0
           end else ()
-         done;
-         (t_411 := i_436)
+         done; (t_411 := i_436)
         end;
-        (t_406 := ((! t_406) + 1))
+        (t_406 := ((! t_406) + 1)) (* advance the rank *)
      | None -> (t_412 := 0));
     (t_407 := ((! t_407) + 1))
    done;
-   (t_408,
-    if ((! t_412) = 0) then 0
+   (t_408, 
+    if ((! t_412) = 0) then 0 (* adjust the sign of the determinant *)
     else if ((! t_412) = 1) then (! t_411)
     else (~- (! t_411)), (! t_406))>.
 \end{code2}
@@ -997,17 +979,15 @@ represented by a 2D array, row pivoting, returning just the |U|-factor.
                        (Funct4.NoDet(Funct4.FloatDomain)).res)
   code =
   .<fun a_1 ->
-   let t_2 = (ref 0) in
-   let t_3 = (ref 0) in
+   let t_2 = (ref 0) in let t_3 = (ref 0) in
    let t_5 = (Array.map (fun x_4 -> (Array.copy x_4)) (Array.copy a_1)) in
    let t_6 = (Array.length a_1.(0)) in
    let t_7 = (Array.length a_1) in
    while (((! t_3) < t_6) && ((! t_2) < t_7)) do
-    let t_8 = (! t_2) in
-    let t_9 = (! t_3) in
+    let t_8 = (! t_2) in let t_9 = (! t_3) in
     let t_10 = (ref (None)) in
     let t_16 =
-     begin
+     begin  (* row pivoting *)
       for j_13 = t_8 to (t_7 - 1) do
        let t_14 = (t_5.(j_13)).(t_9) in
        if (not (t_14 = 0.)) then
@@ -1020,32 +1000,17 @@ represented by a 2D array, row pivoting, returning just the |U|-factor.
        else ()
       done;
       (match (! t_10) with
-       | Some (i_11) ->
+       | Some (i_11) -> (* swapping of rows *)
           if ((fst i_11) <> t_8) then begin
            let t_12 = t_5.(t_8) in
            t_5.(t_8) <- t_5.(fst i_11);
-           t_5.(fst i_11) <- t_12;
-           ()
-          end else ();
+           t_5.(fst i_11) <- t_12; () end else ();
           (Some (snd i_11))
        | None -> (None))
      end in
     (match t_16 with
      | Some (i_17) ->
-        begin
-         for j_18 = (t_8 + 1) to (t_7 - 1) do
-          if (not ((t_5.(j_18)).(t_9) = 0.)) then begin
-           for j_19 = (t_9 + 1) to (t_6 - 1) do
-            (t_5.(j_18)).(j_19) <-
-             ((t_5.(j_18)).(j_19) -.
-               (((t_5.(j_18)).(t_9) /. (t_5.(t_8)).(t_9)) *.
-                 (t_5.(t_8)).(j_19)))
-           done;
-           (t_5.(j_18)).(t_9) <- 0.
-          end else ()
-         done;
-         ()
-        end;
+        begin (* elimintation loop, elided *) end;
         (t_2 := ((! t_2) + 1))
      | None -> ());
     (t_3 := ((! t_3) + 1))
