@@ -622,7 +622,7 @@ module RowPivot(Dom: DOMAIN)(C: CONTAINER2D)
    (D: DETERMINANT with type indet = Dom.v) =
 struct
    module Ctr = C(Dom)
-   let findpivot b r m c n = mdo {
+   let findpivot b r n c m = mdo {
        pivot <-- retN (liftRef .< None >. );
        (* If no better_than procedure defined, we just search for
 	  non-zero element. Any non-zero element is a good pivot.
@@ -673,7 +673,7 @@ module FullPivot(Dom: DOMAIN)(C: CONTAINER2D)
    (D: DETERMINANT with type indet = Dom.v) =
 struct
    module Ctr = C(Dom)
-   let findpivot b r m c n = mdo {
+   let findpivot b r n c m = mdo {
        pivot <-- retN (liftRef .< None >. );
        seqM (retLoopM r .<.~n-1>. (fun j -> 
               retLoopM c .<.~m-1>. (fun k ->
@@ -718,7 +718,7 @@ struct
    module Ctr = C(Dom)
    (* In this case, we assume diagonal dominance, and so
       just take the diagonal as ``pivot'' *)
-   let findpivot b r m c n = mdo { 
+   let findpivot b r n c m = mdo { 
        brc <-- Ctr.get b r c;
        ret .< Some (.~brc) >. }
 end
@@ -756,7 +756,7 @@ module Gen(Dom: DOMAIN)(C: CONTAINER2D)(PivotF: PIVOT)
                ( mdo {
                rr <-- retN (liftGet r);
                cc <-- retN (liftGet c);
-               pivot <-- l1 retN (Pivot.findpivot b rr m cc n);
+               pivot <-- l1 retN (Pivot.findpivot b rr n cc m);
                seqM (retMatchM pivot (fun pv -> 
                         seqM (zerobelow b rr cc m n pv)
                              (Out.R.succ ()) )
