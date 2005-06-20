@@ -51,10 +51,10 @@
 
 \intextsep 2pt plus 0pt minus 1pt
 
-\renewcommand\floatpagefraction{.9}
-\renewcommand\topfraction{.9}
-\renewcommand\bottomfraction{.9}
-\renewcommand\textfraction{.1}   
+\renewcommand\floatpagefraction{.95}
+\renewcommand\topfraction{.95}
+\renewcommand\bottomfraction{.95}
+\renewcommand\textfraction{.05}   
 \setcounter{totalnumber}{50}
 \setcounter{topnumber}{50}
 \setcounter{bottomnumber}{50}
@@ -897,12 +897,10 @@ The code generated for |GenIV5|, fraction-free GE of the integer matrix
 represented by a flat vector, full pivoting, returning the |U|-factor,
 the determinant and the rank.
 \begin{code2}
-# val resIV5 :
-  ('a,
+# val resIV5 : ('a,
    Funct4.GenIV5.Ctr.contr ->
    Funct4.OutDetRank(Funct4.IntegerDomain)(Funct4.GenericVectorContainer)
-                    (Funct4.IDet)(Funct4.Rank).res)
-  code =
+                    (Funct4.IDet)(Funct4.Rank).res) code =
   .<fun a_405 ->
    let t_406 = (ref 0) in let t_407 = (ref 0) in
    let t_408 = {arr = (Array.copy a_405.arr)} (a_405) in
@@ -928,12 +926,10 @@ the determinant and the rank.
       (match (! t_415) with
        | Some (i_416) ->  (* swapping of columns *)
           if ((snd (fst i_416)) <> t_414) then begin
-           let a_424 = t_408.arr
-           and nm_425 = (t_408.n * t_408.m)
+           let a_424 = t_408.arr and nm_425 = (t_408.n * t_408.m)
            and m_426 = t_408.m in
            let rec loop_427 =
-            fun i1_428 ->
-             fun i2_429 ->
+            fun i1_428 -> fun i2_429 ->
               if (i2_429 < nm_425) then
                let t_430 = a_424.(i1_428) in
                a_424.(i1_428) <- a_424.(i2_429);
@@ -972,12 +968,10 @@ the determinant and the rank.
 The code generated for |GenFA1|, GE of the floating point matrix
 represented by a 2D array, row pivoting, returning just the |U|-factor.
 \begin{code2}
-#   val resFA1 :
-  ('a,
+# val resFA1 : ('a,
    Funct4.GenFA1.Ctr.contr ->
    Funct4.OutJustMatrix(Funct4.FloatDomain)(Funct4.GenericArrayContainer)
-                       (Funct4.NoDet(Funct4.FloatDomain)).res)
-  code =
+                       (Funct4.NoDet(Funct4.FloatDomain)).res) code =
   .<fun a_1 ->
    let t_2 = (ref 0) in let t_3 = (ref 0) in
    let t_5 = (Array.map (fun x_4 -> (Array.copy x_4)) (Array.copy a_1)) in
