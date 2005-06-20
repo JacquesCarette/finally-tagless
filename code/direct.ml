@@ -87,7 +87,7 @@ type domain_is_ring  (* abstract *)
 
 module FloatDomain =
   struct
-    type v = float
+    type v = float 
     type kind = domain_is_field
     type 'a vc = v
     let zero = 0.
@@ -119,6 +119,7 @@ module IntegerDomain =
     let normalizerg = fun x -> x
 end
 
+(*
 module RationalDomain =
   struct
     type v = Num.num
@@ -135,6 +136,7 @@ module RationalDomain =
     let normalizerf = None 
     let normalizerg = fun x -> x
 end
+*)
 
 module type CONTAINER2D = functor(Dom:DOMAIN) -> sig
   type contr
@@ -590,7 +592,9 @@ end
 
 module FDet = AbstractDet(FloatDomain)
 module IDet = AbstractDet(IntegerDomain)
+(*
 module RDet = AbstractDet(RationalDomain)
+*)
 
 module type PIVOT = 
     functor (Dom: DOMAIN) -> 
@@ -612,7 +616,7 @@ module RowPivot(Dom: DOMAIN)(C: CONTAINER2D)
    (D: DETERMINANT with type indet = Dom.v) =
 struct
    module Ctr = C(Dom)
-   let findpivot b r m c n = mdo {
+   let findpivot b r n c m = mdo {
        pivot <-- retN (liftRef None);
        (* If no better_than procedure defined, we just search for
 	  non-zero element. Any non-zero element is a good pivot.
@@ -663,7 +667,7 @@ module FullPivot(Dom: DOMAIN)(C: CONTAINER2D)
    (D: DETERMINANT with type indet = Dom.v) =
 struct
    module Ctr = C(Dom)
-   let findpivot b r m c n = mdo {
+   let findpivot b r n c m = mdo {
        pivot <-- retN (liftRef None );
        seqM (retLoopM r (n-1) (fun j -> 
               retLoopM c (m-1) (fun k ->
@@ -708,7 +712,7 @@ struct
    module Ctr = C(Dom)
    (* In this case, we assume diagonal dominance, and so
       just take the diagonal as ``pivot'' *)
-   let findpivot b r m c n = mdo { 
+   let findpivot b r n c m = mdo { 
        brc <-- Ctr.get b r c;
        ret (Some brc) }
 end
@@ -746,7 +750,7 @@ module Gen(Dom: DOMAIN)(C: CONTAINER2D)(PivotF: PIVOT)
                ( mdo {
                rr <-- retN (liftGet r);
                cc <-- retN (liftGet c);
-               pivot <-- l1 retN (Pivot.findpivot b rr m cc n);
+               pivot <-- l1 retN (Pivot.findpivot b rr n cc m);
                seqM (retMatchM pivot (fun pv -> 
                         seqM (zerobelow b rr cc m n pv)
                              (Out.R.succ ()) )
@@ -754,7 +758,7 @@ module Gen(Dom: DOMAIN)(C: CONTAINER2D)(PivotF: PIVOT)
                     (Code.update c Idx.succ) } ))
             (Out.make_result b) } 
     in
-    .<fun a -> (runM (dogen a)) >.
+    fun a -> (runM (dogen a))
 end
 
 module GenFA1 = Gen(FloatDomain)
@@ -882,6 +886,7 @@ module GenFA24 = Gen(FloatDomain)
                     (RowPivot)
                     (DivisionUpdate(FloatDomain)(GenericArrayContainer)(FDet))
                     (OutDetRankPivot(FloatDomain)(GenericArrayContainer)(FDet)(Rank))
+(*
 module GenRA1 = Gen(RationalDomain)
                    (GenericArrayContainer)
                    (RowPivot)
@@ -902,3 +907,4 @@ module GenRA4 = Gen(RationalDomain)
                    (RowPivot)
                    (DivisionUpdate(RationalDomain)(GenericArrayContainer)(RDet))
                    (OutDetRank(RationalDomain)(GenericArrayContainer)(RDet)(Rank))
+*)

@@ -11,8 +11,8 @@ SYNTAX_EXTENSION := ../camlp4/pa_monad.cmo
 PP := camlp4o -I . $(SYNTAX_EXTENSION)
 
 OBJ  := funct1.cmo funct2.cmo funct3.cmo funct4.cmo direct.cmo
-TEST := funct1.out funct2.out funct3.out funct4.out
-RES  := funct1.res funct2.res funct3.res funct4.res
+TEST := funct1.out funct2.out funct3.out funct4.out direct.out
+RES  := funct1.res funct2.res funct3.res funct4.res direct.res
 #funct3.res 
 
 VERSION := 1.0
@@ -55,7 +55,7 @@ clean:
 ########################################################################
 
 %.cmo: %.ml
-	metaocamlc -pp '$(PP)' -c $<
+	metaocamlc -pp '$(PP)' -g -c $<
 
 %.out: test-%.ml %.cmo mytop
 	./mytop ./$*.cmo < $< > $@
@@ -72,5 +72,7 @@ funct1.cmo: funct1.ml
 funct3.cmo: funct3.ml $(SYNTAX_EXTENSION)
 	metaocamlc -c -pp "camlp4o pa_extend.cmo q_MLast.cmo $(SYNTAX_EXTENSION)" -I +camlp4 $<
 
-../camlp4/pa_monad2.cmo:
+direct.out: test-direct.ml direct.cmo
+	metaocaml ./direct.cmo < test-direct.ml > direct.out
+../camlp4/pa_monad.cmo:
 	(chdir ../camlp4; make all)
