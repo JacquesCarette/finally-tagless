@@ -2,14 +2,14 @@
 type ('v,'s,'w) monad = 's -> ('s -> 'v -> 'w) -> 'w
 
 let ret a = fun s k -> k s a
-let retN a = fun s k -> .<let t = .~a in .~(k s .<t>.)>.
+let retN a = fun s k -> fun () -> let t = a () in k s (fun () -> t) ()
 let bind a f = fun s k -> a s (fun s' b -> f b s' k)
 let k0 s v = v  (* Initial continuation -- for `reset' and `run' *)
 let runM m = m [] k0 (* running our monad *)
-let liftRef x = .< ref .~x >. 
-let liftGet x = .< ! .~x >. 
-let liftPair x = (.< fst .~x >., .< snd .~x >.)
-let liftPPair x = (.< fst (fst .~x) >., .< snd (fst .~x) >., .< snd .~x >.)
+let liftRef x = fun () ->  ref (x ())  
+let liftGet x = fun () ->  ! (x ())
+let liftPair x = ((fun () ->  fst (x ())) , fun () ->  snd (x ()) )
+let liftPPair x = ((fun () ->  fst (fst (x ()))) , (fun () ->  snd (fst (x ()))) , fun () ->  snd (x ()) )
 
 (* Monad lifting functions *)
 let l1 f = fun x -> mdo { t <-- x; f t}
@@ -30,48 +30,45 @@ let store v s k = k (v::s) ()
    but not the other way around 
 *)
 
-let seq a b = ret .< begin .~a ; .~b end >.
+let seq a b = ret (fun () ->  begin a () ; b () end )
 
-let seqM a b = fun s k -> k s .< begin .~(a s k0) ; .~(b s k0) end >.
+let seqM a b = fun s k -> k s (fun () ->  begin a s k0 () ; b s k0 () end )
 
 (* conditional *)
-let ifL test th el = ret .< if .~test then .~th else .~el >.
+let ifL test th el = ret (fun () ->  if test () then th () else el ())
 
 (* Note the implicit `reset' *)
 let ifM test th el = fun s k ->
-  k s .< if .~(test s k0) then .~(th s k0) else .~(el s k0) >.
+  k s (fun () ->  if test s k0 () then th s k0 () else el s k0 () )
 
 let rshiftM cf = fun s k -> k s (cf s)
 
 let whenM test th  = rshiftM (fun s -> 
-  .< if .~(test s k0) then .~(th s k0) else () >.)
+  fun () ->  if test s k0 () then th s k0 () else () )
 
 (* loops actually bind a value *)
 let retLoopM low high body = fun s k -> 
-    k s .< for j = .~low to .~high do .~(body .<j>. s k0) done >.
+    k s (fun () ->  for j = low () to high () do body (fun () -> j) s k0 () done )
 
 (* while ``loops'' do not naturally bind a value *)
 let retWhileM cond body = fun s k -> 
-    k s .< while .~(cond s k0) do .~(body s k0) done >.
+    k s (fun () ->  while cond s k0 () do body s k0 () done )
 
 (* match for Some/None *)
 let retMatchM x som non = fun s k ->
-    k s .< match .~x with
-           | Some i -> .~(som .<i>. s k0)
-           | None   -> .~(non s k0) >.
+    k s (fun () ->  match x () with
+           | Some i -> som (fun () -> i) s k0 ()
+           | None   -> non s k0 () )
 
 (* nothing *)
 (* Need to use `fun' explictly to avoid monomorphising *)
-let retUnit = fun s k -> k s .< () >.
-
-(* another non-trivial morphism: generate a bit of code *)
-(* let codegen v cf = fun s k -> cf (k s v) *)
+let retUnit = fun s k -> k s (fun () ->  () )
 
 (* Define the actual module types and instances *)
 module type DOMAIN = sig
   type v
   type kind (* Field or Ring ? *)
-  type 'a vc = ('a,v) code
+  type 'a vc = unit -> v
   val zero : 'a vc
   val one : 'a vc
   val plus : 'a vc -> 'a vc -> ('a vc, 's, 'w) monad
@@ -79,8 +76,8 @@ module type DOMAIN = sig
   val minus : 'a vc -> 'a vc -> ('a vc, 's, 'w) monad
   val uminus : 'a vc -> ('a vc, 's, 'w) monad
   val div : 'a vc -> 'a vc -> ('a vc, 's, 'w) monad
-  val better_than : ('a vc -> 'a vc -> (('a,bool) code, 's, 'w) monad) option
-  val normalizerf : (('a,v -> v) code ) option
+  val better_than : ('a vc -> 'a vc -> (unit ->bool, 's, 'w) monad) option
+  val normalizerf : (unit -> v -> v ) option
   val normalizerg : 'a vc -> 'a vc
 end 
 
@@ -92,15 +89,15 @@ module FloatDomain =
   struct
     type v = float
     type kind = domain_is_field
-    type 'a vc = ('a,v) code
-    let zero = .< 0. >.  
-    let one = .< 1. >. 
-    let plus x y = ret .<.~x +. .~y>. 
-    let times x y = ret .<.~x *. .~y>.
-    let minus x y = ret .<.~x -. .~y>.
-    let uminus x = ret .<-. .~x>.
-    let div x y = ret .<.~x /. .~y>. 
-    let better_than = Some (fun x y -> ret .<abs_float .~x < abs_float .~y >. )
+    type 'a vc = unit -> v
+    let zero = fun () ->  0.   
+    let one = fun () ->  1.  
+    let plus x y = ret (fun () -> x () +. y ()) 
+    let times x y = ret (fun () -> x () *. y ())
+    let minus x y = ret (fun () -> x () -. y ())
+    let uminus x = ret (fun () -> -. x ())
+    let div x y = ret (fun () -> x () /. y ()) 
+    let better_than = Some (fun x y -> ret (fun () -> abs_float (x ()) < abs_float (y ()) ) )
     let normalizerf = None 
     let normalizerg = fun x -> x
 end
@@ -109,15 +106,15 @@ module IntegerDomain =
   struct
     type v = int
     type kind = domain_is_ring
-    type 'a vc = ('a,v) code
-    let zero = .< 0 >.  
-    let one = .< 1 >. 
-    let plus x y = ret .<.~x + .~y>. 
-    let times x y = ret .<.~x * .~y>.
-    let minus x y = ret .<.~x - .~y>.
-    let uminus x = ret .< - .~x>.
-    let div x y = ret .<.~x / .~y>. 
-    let better_than = Some (fun x y -> ret .<abs .~x > abs .~y >. )
+    type 'a vc = unit -> v
+    let zero = fun () ->  0   
+    let one = fun () ->  1  
+    let plus x y = ret (fun () -> x () + y ()) 
+    let times x y = ret (fun () -> x () * y ())
+    let minus x y = ret (fun () -> x () - y ())
+    let uminus x = ret (fun () ->  - x ())
+    let div x y = ret (fun () -> x () / y ()) 
+    let better_than = Some (fun x y -> ret (fun () -> abs (x ()) > abs (y ()) ) )
     let normalizerf = None 
     let normalizerg = fun x -> x
 end
@@ -126,14 +123,14 @@ module RationalDomain =
   struct
     type v = Num.num
     type kind = domain_is_field
-    type 'a vc = ('a,v) code
-    let zero = let zero = Num.num_of_int 0 in .< zero >.  
-    let one = let one = Num.num_of_int 1 in .< one >. 
-    let plus x y = ret .<Num.add_num .~x .~y >.
-    let times x y = ret .<Num.mult_num .~x .~y>.
-    let minus x y = ret .<Num.sub_num .~x .~y>.
-    let uminus x = ret .<Num.minus_num .~x>.
-    let div x y = ret .<Num.div_num .~x .~y>. 
+    type 'a vc = unit -> v
+    let zero = let zero = Num.num_of_int 0 in fun () ->  zero   
+    let one = let one = Num.num_of_int 1 in fun () ->  one  
+    let plus x y = ret (fun () -> Num.add_num (x ()) (y ()) )
+    let times x y = ret (fun () -> Num.mult_num (x ()) (y ()))
+    let minus x y = ret (fun () -> Num.sub_num (x ()) (y ()))
+    let uminus x = ret (fun () -> Num.minus_num (x ()))
+    let div x y = ret (fun () -> Num.div_num (x ()) (y ())) 
     let better_than = None (* no such thing here *)
     let normalizerf = None 
     let normalizerg = fun x -> x
@@ -141,56 +138,56 @@ end
 
 module type CONTAINER2D = functor(Dom:DOMAIN) -> sig
   type contr
-  type 'a vc = ('a,contr) code
-  type 'a vo = ('a,Dom.v) code
-  val get : 'a vc -> ('a,int) code -> ('a,int) code -> ('a vo,'s,'w) monad
-  val get' : 'a vc -> ('a,int) code -> ('a,int) code -> 'a vo
-  val set : 'a vc -> ('a,int) code -> ('a,int) code -> 'a vo -> 
-            (('a,unit) code, 's, 'w) monad
-  val set' : 'a vc -> ('a,int) code -> ('a,int) code -> 'a vo -> 
-            ('a,unit) code
-  val dim1 : 'a vc -> ('a,int) code
-  val dim2 : 'a vc -> ('a,int) code
-  val mapper : ('a, Dom.v->Dom.v) code option -> 'a vc -> 'a vc
+  type 'a vc = unit -> contr
+  type 'a vo = unit -> Dom.v
+  val get : 'a vc -> (unit -> int) -> (unit -> int) -> ('a vo,'s,'w) monad
+  val get' : 'a vc -> (unit -> int) -> (unit -> int) -> 'a vo
+  val set : 'a vc -> (unit -> int) -> (unit -> int) -> 'a vo -> 
+            ((unit -> unit), 's, 'w) monad
+  val set' : 'a vc -> (unit -> int) -> (unit -> int) -> 'a vo -> 
+            (unit -> unit)
+  val dim1 : 'a vc -> (unit -> int)
+  val dim2 : 'a vc -> (unit -> int)
+  val mapper : (unit ->  Dom.v->Dom.v) option -> 'a vc -> 'a vc
   val copy : 'a vc -> 'a vc
-  val swap_rows_stmt : 'a vc -> ('a, int) code -> ('a, int) code -> 
-                       ('a,unit) code
-  val swap_cols_stmt : 'a vc -> ('a, int) code -> ('a, int) code -> 
-                       ('a,unit) code
+  val swap_rows_stmt : 'a vc -> (unit ->  int) -> (unit ->  int) -> 
+                       (unit -> unit)
+  val swap_cols_stmt : 'a vc -> (unit ->  int) -> (unit ->  int) -> 
+                       (unit -> unit)
 end
 
 module GenericArrayContainer(Dom:DOMAIN) =
   struct
   type contr = Dom.v array array (* Array of rows *)
-  type 'a vc = ('a,contr) code
-  type 'a vo = ('a,Dom.v) code
-  let get' x n m = .< (.~x).(.~n).(.~m) >.
+  type 'a vc = (unit -> contr)
+  type 'a vo = (unit -> Dom.v)
+  let get' x n m = fun () ->  (x ()).(n ()).(m ()) 
   let get x n m = ret (get' x n m)
-  let set' x n m y = .< (.~x).(.~n).(.~m) <- .~y >.
+  let set' x n m y = fun () ->  (x ()).(n ()).(m ()) <- y ()
   let set x n m y = ret (set' x n m y)
-  let dim2 x = .< Array.length .~x >.       (* number of rows *)
-  let dim1 x = .< Array.length (.~x).(0) >. (* number of cols *)
+  let dim2 x = fun () ->  Array.length (x ())        (* number of rows *)
+  let dim1 x = fun () ->  Array.length (x ()).(0)  (* number of cols *)
   let mapper g a = match g with
-      | Some f -> .< Array.map (fun x -> Array.map .~f x) .~a >.
+      | Some f -> (fun () ->  Array.map (fun x -> Array.map (f ()) x) (a ()) )
       | None   -> a
-  let copy = (fun a -> .<Array.map (fun x -> Array.copy x) 
-                       (Array.copy .~a) >. )
+  let copy = (fun a -> fun () -> Array.map (fun x -> Array.copy x) 
+                       (Array.copy (a ()))  )
   (* this can be optimized with a swap_rows_from if it is known that
      everything before that is already = Dom.zero *)
   let swap_rows_stmt a r1 r2 =
-      .< let t = (.~a).(.~r1) in
+      fun () ->  let t = (a ()).(r1 ()) in
          begin 
-             (.~a).(.~r1) <- (.~a).(.~r2);
-             (.~a).(.~r2) <- t
-         end >.
-  let swap_cols_stmt a c1 c2 = .< 
-      for r = 0 to .~(dim2 a)-1 do
-          let t = (.~a).(r).(.~c1) in
+             (a ()).(r1 ()) <- (a ()).(r2 ());
+             (a ()).(r2 ()) <- t
+         end 
+  let swap_cols_stmt a c1 c2 = fun () ->  
+      for r = 0 to ((dim2 a) ())-1 do
+          let t = (a ()).(r).(c1 ()) in
           begin 
-              (.~a).(r).(.~c1) <- (.~a).(r).(.~c2);
-              (.~a).(r).(.~c2) <- t
+              (a ()).(r).(c1 ()) <- (a ()).(r).(c2 ());
+              (a ()).(r).(c2 ()) <- t
           end
-      done  >.
+      done  
 end
 
 (* Matrix layed out row after row, in a C fashion *)
@@ -199,30 +196,30 @@ type 'a container2dfromvector = {arr:('a array); n:int; m:int}
 module GenericVectorContainer(Dom:DOMAIN) =
   struct
   type contr = Dom.v container2dfromvector
-  type 'a vc = ('a,contr) code
-  type 'a vo = ('a,Dom.v) code
-  let get' x n m = .< ((.~x).arr).(.~n* (.~x).m + .~m) >.
+  type 'a vc = (unit -> contr)
+  type 'a vo = (unit -> Dom.v)
+  let get' x n m = fun () ->  ((x ()).arr).((n ())* (x ()).m + (m ())) 
   let get x n m = ret (get' x n m)
-  let set' x n m y = .< ((.~x).arr).(.~n* (.~x).m + .~m) <- .~y >.
+  let set' x n m y = fun () ->  ((x ()).arr).((n ())* (x ()).m + (m ())) <- y ()
   let set x n m y = ret (set' x n m y)
-  let dim2 x = .< (.~x).n >.
-  let dim1 x = .< (.~x).m >.
+  let dim2 x = fun () ->  (x ()).n 
+  let dim1 x = fun () ->  (x ()).m 
   let mapper g a = match g with
-      | Some f -> .< { (.~a) with arr = Array.map .~f (.~a).arr} >.
+      | Some f -> (fun () ->  { (a ()) with arr = Array.map (f ()) (a ()).arr} )
       | None   -> a
-  let copy a = .< { (.~a) with arr = Array.copy (.~a).arr} >.
-  let swap_rows_stmt b r1 r2 = .<
-      let a = (.~b).arr and n = (.~b).n and m = (.~b).m in
-      let i1 = .~r1*m and i2 = .~r2*m in
+  let copy a = fun () ->  { (a ()) with arr = Array.copy (a ()).arr} 
+  let swap_rows_stmt b r1 r2 = fun () -> 
+      let a = (b ()).arr and n = (b ()).n and m = (b ()).m in
+      let i1 = (r1 ())*m and i2 = (r2 ())*m in
       for i = 0 to m-1 do
           let t = a.(i1 + i) in
           begin 
               a.(i1 + i) <- a.(i2 + i);
               a.(i2 + i) <- t
           end
-      done  >.
-  let swap_cols_stmt b c1 c2 = .<
-      let a = (.~b).arr and nm = (.~b).n * (.~b).m and m = (.~b).m in
+      done  
+  let swap_cols_stmt b c1 c2 = fun () -> 
+      let a = (b ()).arr and nm = (b ()).n * (b ()).m and m = (b ()).m in
       let rec loop i1 i2 =
 	if i2 < nm then
 	  let t = a.(i1) in
@@ -231,8 +228,8 @@ module GenericVectorContainer(Dom:DOMAIN) =
 	    a.(i2) <- t;
 	    loop (i1 + m) (i2 + m)
 	  end
-      in loop .~c1 .~c2
-     >.
+      in loop (c1 ()) (c2 ())
+     
 end
 
 (* set up some very general algebra that can be reused though not
@@ -245,22 +242,22 @@ let concretize = function
 
 (* monadic logic code combinators *)
 module LogicCode = struct
-  let not a = ret .< not .~a >.
-  let equal a b = ret .< .~a = .~ b >.
-  let and_ a b = ret .< .~a && .~b >. 
+  let not a = ret (fun () ->  not (a ()) )
+  let equal a b = ret (fun () ->  (a ()) = (b ()) )
+  let and_ a b = ret (fun () ->  (a ()) && (b ()) )
 end
 
 (* operations on code indices *)
 module Idx = struct
-  let zero = .< 0 >.
-  let succ a = .< .~a + 1 >.
-  let pred a = .< .~a - 1 >.
-  let less a b = .< .~a < .~b >.
+  let zero = fun () ->  0 
+  let succ a = fun () ->  (a ()) + 1 
+  let pred a = fun () ->  (a ()) - 1 
+  let less a b = fun () ->  (a ()) < (b ()) 
 end
 
 (* code generators *)
 module Code = struct
-  let update a f = let b = f (liftGet a) in ret .< .~a := .~b >.
+  let update a f = let b = f (liftGet a) in ret (fun () ->  (a ()) := (b ()) )
 end
 
 module type DETERMINANT = sig
@@ -269,39 +266,39 @@ module type DETERMINANT = sig
   type tdet = outdet ref
   type 'a lstate
   val decl : unit -> 
-    (unit, [> `TDet of 'a lstate ] list, ('a,'b) code) monad
+    (unit, [> `TDet of 'a lstate ] list, (unit -> 'b)) monad
   val upd_sign : unit -> 
-    (('a,unit) code, [> `TDet of 'a lstate ] list, ('a,'b) code) monad
+    ((unit -> unit), [> `TDet of 'a lstate ] list, (unit -> 'b)) monad
   val zero_sign : unit -> 
-    (('a,unit) code, [> `TDet of 'a lstate ] list, ('a,'b) code) monad
-  val acc : ('a,indet) code -> 
-    (('a,unit) code, [> `TDet of 'a lstate ] list, ('a,'b) code) monad
+    ((unit -> unit), [> `TDet of 'a lstate ] list, (unit -> 'b)) monad
+  val acc : (unit -> indet) -> 
+    ((unit -> unit), [> `TDet of 'a lstate ] list, (unit -> 'b)) monad
   val get : unit ->
-    (('a,tdet) code, [> `TDet of 'a lstate ] list, ('a,'b) code) monad
-  val set : ('a,indet) code -> 
-    (('a,unit) code, [> `TDet of 'a lstate ] list, ('a,'b) code) monad
+    ((unit -> tdet), [> `TDet of 'a lstate ] list, (unit -> 'b)) monad
+  val set : (unit -> indet) -> 
+    ((unit -> unit), [> `TDet of 'a lstate ] list, (unit -> 'b)) monad
   val fin : unit -> 
-    (('a,outdet) code, [> `TDet of 'a lstate ] list, ('a,'b) code) monad
+    ((unit -> outdet), [> `TDet of 'a lstate ] list, (unit -> 'b)) monad
 end
 
 (* no need to make the type abstract here - just leads to other problems *)
 module type RANK = sig
-  type 'a lstate = ('a, int ref) code
+  type 'a lstate = (unit ->  int ref)
   val rfetch : unit -> 
-    (('a,int ref) code,[> `TRan of 'a lstate ] list,('a,'w) code) monad
+    ((unit -> int ref),[> `TRan of 'a lstate ] list,(unit -> 'w)) monad
   val decl : unit -> 
-    (('a,int ref) code,[> `TRan of 'a lstate ] list,('a,'w) code) monad
+    ((unit -> int ref),[> `TRan of 'a lstate ] list,(unit -> 'w)) monad
   val succ : unit -> 
-    (('a,unit) code,[> `TRan of 'a lstate ] list,('a,'w) code) monad
+    ((unit -> unit),[> `TRan of 'a lstate ] list,(unit -> 'w)) monad
   val fin : unit ->  
-    (('a,int) code,[> `TRan of 'a lstate ] list,('a,'w) code) monad
+    ((unit -> int),[> `TRan of 'a lstate ] list,(unit -> 'w)) monad
 end
 
 (* Even if no rank is output, it needs to be tracked, as the rank
    is also the outer loop index! *)
 module TrackRank = 
   struct
-  type 'a lstate = ('a, int ref) code
+  type 'a lstate = (unit ->  int ref)
         (* the purpose of this function is to make the union open.
            Alas, Camlp4 does not understand the :> coercion notation *)
   let coerce = function `TRan x -> `TRan x | x -> x
@@ -318,7 +315,7 @@ module TrackRank =
       ret rdecl }
   let succ () = mdo {
    r <-- rfetch ();
-   ret .<.~r := (! .~r) + 1>. }
+   ret (fun () -> (r ()) := (! (r ())) + 1) }
 end
 
 module Rank:RANK = struct
@@ -330,7 +327,7 @@ end
 
 module NoRank:RANK = struct
   include TrackRank
-  let fin () = ret .< -1 >.
+  let fin () = ret (fun () ->  -1 )
 end
 
 (* In the case of a non-fraction-free algorithm with no Det
@@ -346,7 +343,7 @@ module DetTypes(Dom: DOMAIN) =
   type tdet = outdet ref
   (* the first part of the state is an integer: which is +1, 0, -1:
      the sign of the determinant *)
-  type 'a lstate = ('a,int ref) code * ('a,tdet) code
+  type 'a lstate = (unit -> int ref) * (unit -> tdet)
 end
 
 (* we need the domain anyways to get things to type properly *)
@@ -361,7 +358,7 @@ module NoDet(Dom:DOMAIN) =
   let upd_sign () = retUnit
   let zero_sign () = retUnit
   let acc v = retUnit
-  let get () = ret (liftRef .< () >. )
+  let get () = ret (liftRef (fun () ->  () ) )
   let set v = retUnit
   let fin () = retUnit
 end
@@ -385,45 +382,45 @@ module AbstractDet(Dom: DOMAIN) =
   let dstore v = store (`TDet v)
   let decl () = mdo {
       ddecl <-- retN (liftRef Dom.one);
-      dsdecl <-- retN (liftRef .<1>.);
+      dsdecl <-- retN (liftRef (fun () -> 1));
       dstore (dsdecl,ddecl) }
   let upd_sign () = mdo {
       det <-- dfetch ();
       det1 <-- ret (fst det);
-      ret .< .~det1 := - (! .~det1)>. }
+      ret (fun () ->  (det1 ()) := - (! (det1 ()))) }
   let zero_sign () = mdo {
       det <-- dfetch ();
       det1 <-- ret (fst det);
-      ret .<.~det1 := 0>. }
+      ret (fun () -> (det1 ()) := 0) }
   let acc v = mdo {
       det <-- dfetch ();
       det2 <-- ret (snd det);
       r <-- Dom.times (liftGet det2) v;
-      ret .<.~det2 := .~r>. }
+      ret (fun () -> (det2 ()) := (r ())) }
   let get () = mdo {
       det <-- dfetch ();
       det2 <-- ret (snd det);
-      ret .<.~det2>. }
+      ret (fun () -> (det2 ())) }
   let set v = mdo {
       det <-- dfetch ();
       det2 <-- ret (snd det);
-      ret .<.~det2 := .~v>.}
+      ret (fun () -> (det2 ()) := (v ()))}
   let fin () = mdo {
       (det_sign,det) <-- dfetch ();
-      ifM (ret .<(! .~det_sign) = 0>.) (ret Dom.zero)
-      (ifM (ret .<(! .~det_sign) = 1>.) (ret (liftGet det))
+      ifM (ret (fun () -> (! (det_sign ())) = 0)) (ret Dom.zero)
+      (ifM (ret (fun () -> (! (det_sign ())) = 1)) (ret (liftGet det))
           (Dom.uminus (liftGet det))) }
 end
 
 module type UPDATE = sig
     type baseobj
     type ctr
-    type 'a idx = ('a,int) code
+    type 'a idx = (unit -> int)
     module D : DETERMINANT
-    val update : ('a, ctr) code -> 'a idx -> 'a idx -> 'a idx -> 'a idx ->
-        (('a,unit) code, [> `TDet of 'a D.lstate] list, ('a,'b) code) monad
-    val update_det : ('a, baseobj) code -> 
-        (('a,unit) code, [> `TDet of 'a D.lstate] list, ('a,'b) code) monad
+    val update : (unit ->  ctr) -> 'a idx -> 'a idx -> 'a idx -> 'a idx ->
+        ((unit -> unit), [> `TDet of 'a D.lstate] list, (unit -> 'b)) monad
+    val update_det : (unit ->  baseobj) -> 
+        ((unit -> unit), [> `TDet of 'a D.lstate] list, (unit -> 'b)) monad
 end
 
 (* What is the update formula? *)
@@ -435,7 +432,7 @@ module DivisionUpdate
   module Ctr = C(Dom)
   type baseobj = Det.indet
   type ctr = Ctr.contr
-  type 'a idx = ('a,int) code
+  type 'a idx = (unit -> int)
   module D = Det
   let update b r c i k = mdo {
       t <-- l2 Dom.div (Ctr.get b i c) (Ctr.get b r c);
@@ -451,7 +448,7 @@ module FractionFreeUpdate(Dom:DOMAIN)(C:CONTAINER2D)
   module Ctr = C(Dom)
   type baseobj = Dom.v
   type ctr = Ctr.contr
-  type 'a idx = ('a,int) code
+  type 'a idx = (unit -> int)
   module D = Det
   let update b r c i k = mdo {
       x <-- l2 Dom.times (Ctr.get b i k) (Ctr.get b r c);
@@ -470,16 +467,16 @@ type perm = RowSwap of (int * int) | ColSwap of (int * int)
  
 module type TRACKPIVOT = sig
   type 'a lstate
-  val decl : unit -> (unit,[> `TPivot of 'a lstate] list,('a,'w) code) monad
-  val add : ('a,perm) code -> 
-    (('a,unit) code,[> `TPivot of 'a lstate] list,('a,'w) code) monad
+  val decl : unit -> (unit,[> `TPivot of 'a lstate] list,(unit -> 'w)) monad
+  val add : (unit -> perm) -> 
+    ((unit -> unit),[> `TPivot of 'a lstate] list,(unit -> 'w)) monad
   val fin : unit -> 
-    (('a,perm list) code ,[> `TPivot of 'a lstate] list,'w) monad
+    ((unit -> perm list) ,[> `TPivot of 'a lstate] list,'w) monad
 end
 
 module TrackPivot = 
   struct
-  type 'a lstate = ('a, perm list ref) code
+  type 'a lstate = (unit ->  perm list ref)
         (* the purpose of this function is to make the union open.
            Alas, Camlp4 does not understand the :> coercion notation *)
   let coerce = function `TPivot x -> `TPivot x | x -> x
@@ -491,11 +488,11 @@ module TrackPivot =
                         ret (fetch_iter s) }
   let pstore v = store (`TPivot v)
   let decl () = mdo {
-      pdecl <-- retN (liftRef .< [] >.);
+      pdecl <-- retN (liftRef (fun () ->  [] ));
       pstore pdecl }
   let add v = mdo {
    p <-- pfetch ();
-   ret .<.~p := .~v::(! .~p) >. }
+   ret (fun () -> (p ()) := (v ())::(! (p ())) ) }
 end
 
 module KeepPivot:TRACKPIVOT = struct
@@ -506,10 +503,10 @@ module KeepPivot:TRACKPIVOT = struct
 end
 
 module DiscardPivot:TRACKPIVOT = struct
-  type 'a lstate = ('a, perm list ref) code
+  type 'a lstate = (unit ->  perm list ref)
   let decl () = ret ()
   let add v = retUnit
-  let fin () = ret .< [] >.
+  let fin () = ret (fun () ->  [] )
 end
 
 module type OUTPUT = sig
@@ -518,11 +515,11 @@ module type OUTPUT = sig
   module D : DETERMINANT
   module R : RANK
   module P : TRACKPIVOT
-  val make_result : ('a,contr) code -> 
-    (('a,res) code,
+  val make_result : (unit -> contr) -> 
+    ((unit -> res),
      [> `TDet of 'a D.lstate | `TRan of 'a R.lstate | `TPivot of 'a P.lstate]
        list,
-     ('a,'w) code) monad
+     (unit -> 'w)) monad
 end
 
 (* What to return *)
@@ -548,7 +545,7 @@ module OutDet(Dom:DOMAIN)(C: CONTAINER2D)
   module P = DiscardPivot
   let make_result b = mdo {
     det <-- D.fin ();
-    ret .< ( .~b, .~det ) >. }
+    ret (fun () ->  ( b (), det () ) ) }
 end
 
 module OutRank(Dom:DOMAIN)(C: CONTAINER2D)(Rank : RANK) =
@@ -561,7 +558,7 @@ module OutRank(Dom:DOMAIN)(C: CONTAINER2D)(Rank : RANK) =
   module P = DiscardPivot
   let make_result b = mdo {
     rank <-- R.fin ();
-    ret .< ( .~b, .~rank ) >. }
+    ret (fun () ->  ( b (), rank ()) ) }
 end
 
 module OutDetRank(Dom:DOMAIN)(C: CONTAINER2D)
@@ -577,7 +574,7 @@ module OutDetRank(Dom:DOMAIN)(C: CONTAINER2D)
   let make_result b = mdo {
     det  <-- D.fin ();
     rank <-- R.fin ();
-    ret .< ( .~b, .~det, .~rank ) >. }
+    ret (fun () ->  ( b (), det (), rank ()) ) }
 end
 
 module OutDetRankPivot(Dom:DOMAIN)(C: CONTAINER2D)
@@ -594,7 +591,7 @@ module OutDetRankPivot(Dom:DOMAIN)(C: CONTAINER2D)
     det  <-- D.fin ();
     rank <-- R.fin ();
     pivmat <-- P.fin ();
-    ret .< ( .~b, .~det, .~rank, .~pivmat ) >. }
+    ret (fun () ->  ( b (), det (), rank (), pivmat () ) ) }
 end
 
 module FDet = AbstractDet(FloatDomain)
@@ -613,9 +610,9 @@ sig
     Return the value of the pivot option. Or zero?
     When we permute the rows of columns, we update the sign of the det.
  *)
- val findpivot : 'a C(Dom).vc -> ('a,int) code -> ('a,int) code -> 
-   ('a,int) code -> ('a,int) code ->
-   (('a,Dom.v option) code,[> `TDet of 'a D.lstate] list,('a,'w) code) monad
+ val findpivot : 'a C(Dom).vc -> (unit -> int) -> (unit -> int) -> 
+   (unit -> int) -> (unit -> int) ->
+   ((unit -> Dom.v option),[> `TDet of 'a D.lstate] list,(unit -> 'w)) monad
 end
 
 module RowPivot(Dom: DOMAIN)(C: CONTAINER2D)
@@ -623,7 +620,7 @@ module RowPivot(Dom: DOMAIN)(C: CONTAINER2D)
 struct
    module Ctr = C(Dom)
    let findpivot b r n c m = mdo {
-       pivot <-- retN (liftRef .< None >. );
+       pivot <-- retN (liftRef (fun () ->  None ) );
        (* If no better_than procedure defined, we just search for
 	  non-zero element. Any non-zero element is a good pivot.
 	  If better_than is defined, we search then for the best element *)
@@ -638,34 +635,34 @@ struct
                       mdo {
                       (i,bic) <-- ret (liftPair pv);
                       whenM (sel bic bjc)
-                        (ret .< .~pivot := Some (.~j,.~bjc) >.)})
-                     (ret .< .~pivot := Some (.~j,.~bjc) >.))
+                        (ret (fun () ->  (pivot ()) := Some (j (),bjc ()) ))})
+                     (ret (fun () ->  (pivot ()) := Some (j (),bjc ()) )))
               })
          | None ->
            mdo {
             brc <-- l1 retN (Ctr.get b r c);
-            ifM (ret .< not (.~brc = .~Dom.zero) >.)
+            ifM (ret (fun () ->  not ((brc ()) = (Dom.zero ())) ))
               (* the current element is good enough *)
-              (ret .< .~pivot := Some (.~r,.~brc) >.)
+              (ret (fun () ->  (pivot ()) := Some (r (),brc ()) ))
               (mdo {
                   s <-- fetch;
-                  ret .< let rec loop j =
-                       if j < .~n then 
-                       let bjc = .~(Ctr.get' b .<j>. c) in
-                       if bjc = .~Dom.zero then loop (j+1)
-                       else .~pivot := Some (j,bjc)
-                      in loop (.~r+1) >.})}
+                  ret (fun () ->  let rec loop j =
+                       if j < n () then 
+                       let bjc = Ctr.get' b (fun () -> j) c () in
+                       if bjc = Dom.zero () then loop (j+1)
+                       else (pivot ()) := Some (j,bjc)
+                      in loop (r () +1) )})}
          )
          (retMatchM (liftGet pivot)
                 (fun pv ->
                      mdo {
                          (i,bic) <-- ret (liftPair pv);
-                         seqM (whenM (ret .< .~i <> .~r >. )
+                         seqM (whenM (ret (fun () ->  i () <> r () ) )
                                 (seqM 
                                    (ret (Ctr.swap_rows_stmt b r i))
                                    (D.upd_sign ())))
-                              (ret .<Some .~bic>.)})
-                (ret .< None >.))
+                              (ret (fun () -> Some (bic ())))})
+                (ret (fun () ->  None )))
    }
 end
 
@@ -674,12 +671,12 @@ module FullPivot(Dom: DOMAIN)(C: CONTAINER2D)
 struct
    module Ctr = C(Dom)
    let findpivot b r n c m = mdo {
-       pivot <-- retN (liftRef .< None >. );
-       seqM (retLoopM r .<.~n-1>. (fun j -> 
-              retLoopM c .<.~m-1>. (fun k ->
+       pivot <-- retN (liftRef (fun () ->  None ) );
+       seqM (retLoopM r (fun () -> n () -1) (fun j -> 
+              retLoopM c (fun () -> m () -1) (fun k ->
            mdo {
               bjk <-- l1 retN (Ctr.get b j k);
-              whenM (ret .< not ( .~bjk = .~Dom.zero) >.)
+              whenM (ret (fun () ->  not ( (bjk ()) = Dom.zero ()) ))
               (match (Dom.better_than) with
               | Some sel ->
                   (retMatchM (liftGet pivot)
@@ -687,10 +684,10 @@ struct
                       mdo {
                       (pr,pc,brc) <-- ret (liftPPair pv);
                       whenM (sel brc bjk)
-                        (ret .< .~pivot := Some ((.~j,.~k),.~bjk) >.)})
-                     (ret .< .~pivot := Some ((.~j,.~k),.~bjk) >.))
+                        (ret (fun () ->  (pivot ()) := Some ((j (),k ()),bjk ()) ))})
+                     (ret (fun () ->  (pivot ()) := Some ((j (),k ()),bjk ()) )))
               | None ->
-                  (ret .< .~pivot := Some ((.~j,.~k),.~bjk) >.)
+                  (ret (fun () ->  (pivot ()) := Some ((j (),k ()),bjk ()) ))
               )})))
               (* finished the loop *)
               (retMatchM (liftGet pivot)
@@ -698,17 +695,17 @@ struct
                      mdo {
                          (pr,pc,brc) <-- ret (liftPPair pv);
                          seqM
-                             (whenM (ret .< .~pc <> .~c >. )
+                             (whenM (ret (fun () ->  pc () <> c ()) )
                                  (seqM
                                    (ret (Ctr.swap_cols_stmt b c pc))
                                    (D.upd_sign ())))
                            (seqM
-                             (whenM (ret .< .~pr <> .~r >. )
+                             (whenM (ret (fun () ->  pr () <> r ()) )
                                  (seqM
                                    (ret (Ctr.swap_rows_stmt b r pr))
                                    (D.upd_sign ())))
-                              (ret .<Some .~brc>.))})
-                  (ret .< None >.))
+                              (ret (fun () -> Some (brc ()))))})
+                  (ret (fun () ->  None )))
    }
 end
 
@@ -720,7 +717,7 @@ struct
       just take the diagonal as ``pivot'' *)
    let findpivot b r n c m = mdo { 
        brc <-- Ctr.get b r c;
-       ret .< Some (.~brc) >. }
+       ret (fun () ->  Some (brc ()) ) }
 end
 
 module Gen(Dom: DOMAIN)(C: CONTAINER2D)(PivotF: PIVOT)
@@ -764,7 +761,7 @@ module Gen(Dom: DOMAIN)(C: CONTAINER2D)(PivotF: PIVOT)
                     (Code.update c Idx.succ) } ))
             (Out.make_result b) } 
     in
-    .<fun a -> .~(runM (dogen .<a>.)) >.
+    fun a -> runM (dogen (fun () -> a)) ()
 end
 
 module GenFA1 = Gen(FloatDomain)

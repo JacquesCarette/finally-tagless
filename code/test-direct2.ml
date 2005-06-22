@@ -1,7 +1,6 @@
-open Direct;;
+open Direct2;;
 
 let resFA1 = GenFA1.gen ;;
-(*
 let resFA2 = GenFA2.gen ;;
 let resFA3 = GenFA3.gen ;;
 let resFA4 = GenFA4.gen ;;
@@ -27,36 +26,33 @@ let resRA1 = GenRA1.gen ;;
 let resRA2 = GenRA2.gen ;;
 let resRA3 = GenRA3.gen ;;
 let resRA4 = GenRA4.gen ;;
-*)
 
 let rFA1 = resFA1 ;;
-(*
-let rFA2 = .! resFA2 ;;
-let rFA3 = .! resFA3 ;;
-let rFA4 = .! resFA4 ;;
-let rFV1 = .! resFV1 ;;
-let rFV2 = .! resFV2 ;;
-let rFV3 = .! resFV3 ;;
-let rFV4 = .! resFV4 ;;
-let rFV5 = .! resFV5 ;;
-let rIA1 = .! resIA1 ;;
-let rIA2 = .! resIA2 ;;
-let rIA3 = .! resIA3 ;;
-let rIA4 = .! resIA4 ;;
-let rIV1 = .! resIV1 ;;
-let rIV2 = .! resIV2 ;;
-let rIV3 = .! resIV3 ;;
-let rIV4 = .! resIV4 ;;
-let rIV5 = .! resIV5 ;;
-let rFA11 = .! resFA11 ;;
-let rFA12 = .! resFA12 ;;
-let rFA13 = .! resFA13 ;;
-let rFA14 = .! resFA14 ;;
-let rRA1 = .! resRA1 ;;
-let rRA2 = .! resRA2 ;;
-let rRA3 = .! resRA3 ;;
-let rRA4 = .! resRA4 ;;
-*)
+let rFA2 =  resFA2 ;;
+let rFA3 =  resFA3 ;;
+let rFA4 =  resFA4 ;;
+let rFV1 =  resFV1 ;;
+let rFV2 =  resFV2 ;;
+let rFV3 =  resFV3 ;;
+let rFV4 =  resFV4 ;;
+let rFV5 =  resFV5 ;;
+let rIA1 =  resIA1 ;;
+let rIA2 =  resIA2 ;;
+let rIA3 =  resIA3 ;;
+let rIA4 =  resIA4 ;;
+let rIV1 =  resIV1 ;;
+let rIV2 =  resIV2 ;;
+let rIV3 =  resIV3 ;;
+let rIV4 =  resIV4 ;;
+let rIV5 =  resIV5 ;;
+let rFA11 =  resFA11 ;;
+let rFA12 =  resFA12 ;;
+let rFA13 =  resFA13 ;;
+let rFA14 =  resFA14 ;;
+let rRA1 =  resRA1 ;;
+let rRA2 =  resRA2 ;;
+let rRA3 =  resRA3 ;;
+let rRA4 =  resRA4 ;;
 
 
 let ia0 = Array.make 1 (Array.make 1 1)
@@ -83,7 +79,6 @@ let ia4 = Array.of_list [
     ]
 let ia5 = [ia0; ia1; ia2; ia3; ia4]
 
-(*
 let resI11 = List.map rIA1 ia5;;
 let resI12 = List.map rIA2 ia5;;
 let resI13 = List.map rIA3 ia5;;
@@ -101,10 +96,8 @@ let resI22 = List.map rIV2 iv5;;
 let resI23 = List.map rIV3 iv5;;
 let resI24 = List.map rIV4 iv5;;
 let resI25 = List.map rIV5 iv5;;
-*)
 
 let fa0 = Array.make 1 (Array.make 1 1.) ;;
-(*
 let fa1 = Array.of_list [
     Array.of_list [1. ; 2. ; 3. ] ;
     Array.of_list [4. ; 13. ; 5. ] ;
@@ -128,10 +121,8 @@ let fa4 = Array.of_list [
     Array.of_list [0. ; 3. ; 0. ] ;
     ] ;;
 let fa5 = [fa0; fa1; fa2; fa3; fa4] ;;
-*)
 
 let _ = assert (rFA1 fa0 = [|[|1.0|]|]) ;;
-(*
 (* permutation: 1<->2, 2<->3. Det is 50 *)
 let _ = assert (rFA1 fa1 =
 	[|[|4.; 13.; 5.|]; [|0.; 6.25; 1.25|]; [|0.; 0.; 2.|]|]
@@ -148,8 +139,6 @@ let _ = assert (rFA1 fa4 =
 		  )
 
 let resF1 = List.map rFA1 fa5;;
-*)
-(*
 let _ = assert (List.map rFA2 fa5 =
   [([|[|1.|]|], 1.);
    ([|[|4.; 13.; 5.|]; [|0.; 6.25; 1.25|]; [|0.; 0.; 2.|]|], 50.);
@@ -235,4 +224,3 @@ let resR11 = List.map rRA1 ra5;;
 let resR12 = List.map rRA2 ra5;;
 let resR13 = List.map rRA3 ra5;;
 let resR14 = List.map rRA4 ra5;;
-*)
