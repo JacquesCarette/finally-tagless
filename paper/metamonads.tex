@@ -191,7 +191,7 @@ as our running example. Specifically, our contributions:
       |let x = exp in ...| has a different \emph{effect} within a
       conditional branch.
 \end{comment}
-    \item Implementation of the |mdo|-notation (patterned after
+    \item Implementation of the |doM|-notation (patterned after
       |do|-notation of Haskell) to make monadic code readable.
     \item Use of functors (including higher-order functors) to
       modularize the generator, express aspects (including results of
@@ -354,8 +354,8 @@ let fetch s k = k s s  and  store v s k = k (v::s) ()
 let k0 s v = v
 let runM m = m [] k0
 
-let l1 f = fun x -> mdo \{ t <-- x; f t\}
-let l2 f = fun x y -> mdo \{ tx <-- x; ty <-- y; f tx ty\}
+let l1 f = fun x -> doM \{ t <-- x; f t\}
+let l2 f = fun x y -> doM \{ tx <-- x; ty <-- y; f tx ty\}
 
 let retN a = fun s k -> .<let t = .~a in .~(k s .<t>.)>.
 
@@ -409,10 +409,10 @@ let param_code3 plus one =
                 ret (plus ce (plus x ce)))
   in .<fun x y -> .~(runM (gen .<x>. .<y>.))>.
 let param_code4 plus one =
-  let gen x y = mdo \{ ce <-- retN (plus y one);
+  let gen x y = doM \{ ce <-- retN (plus y one);
                       ret (plus ce (plus x ce)) \}
   in .<fun x y -> .~(runM (gen .<x>. .<y>.))>.
-let ifM' test th el = mdo \{
+let ifM' test th el = doM \{
   testc <-- test; thc <-- th; elc <-- el;
   ifL testc thc elc\}
 let gen a i = ifM' (ret .<(.~i) >= 0>.) 
@@ -430,9 +430,9 @@ if (i_2 >= 0) then let t_3 = (Some a_1.(i_2)) in t_3 else None>.}
 % param_code3 plus one;;
 
 That does not seem like much of an improvement. With the help of
-camlp4 pre-processor, we introduce the |mdo|-notation \cite{metamonadsURL},
+camlp4 pre-processor, we introduce the |doM|-notation \cite{metamonadsURL},
 patterned after the |do|-notation of Haskell. The function
-|param_code4|, written in the |mdo|-notation, is equivalent to
+|param_code4|, written in the |doM|-notation, is equivalent to
 |param_code3| -- in fact, the camlp4 preprocessor will convert the
 former into the latter. And yet, |param_code4| looks far more
 conventional, as if it were indeed in direct style.
@@ -625,7 +625,7 @@ module OutDetRank(Dom:DOMAIN)(C: CONTAINER2D)
   type contr = Ctr.contr
   type res = contr * Det.outdet * int
   module D = Det   module R = Rank   module P = DiscardPivot
-  let make_result b = mdo \{ det  <-- D.fin ();  rank <-- R.fin ();
+  let make_result b = doM \{ det  <-- D.fin ();  rank <-- R.fin ();
     ret .< ( .~b, .~det, .~rank ) >. \}
 end
 \end{code2}
@@ -687,16 +687,16 @@ module Gen(Dom: DOMAIN)(C: CONTAINER2D)(PivotF: PIVOT)
     module Pivot = PivotF(Dom)(C)(Out.D)
     let gen =
       let zerobelow b r c m n brc =
-        let innerbody i = mdo \{
+        let innerbody i = doM \{
             bic <-- Ctr.get b i c;
             whenM (l1 LogicCode.not (LogicCode.equal bic Dom.zero ))
                 (seqM (retLoopM (Idx.succ c) (Idx.pred m)
                           (fun k -> Update.update b r c i k) )
                       (Ctr.set b i c Dom.zero)) \} in 
-        mdo \{
+        doM \{
               seqM (retLoopM (Idx.succ r) (Idx.pred n) innerbody) 
                    (Update.update_det brc) \} in
-      let dogen a = mdo \{
+      let dogen a = doM \{
           r <-- Out.R.decl ();
           c <-- retN (liftRef Idx.zero);
           b <-- retN (Ctr.mapper Dom.normalizerf (Ctr.copy a));
@@ -707,7 +707,7 @@ module Gen(Dom: DOMAIN)(C: CONTAINER2D)(PivotF: PIVOT)
           seqM 
             (retWhileM (LogicCode.and_ (Idx.less (liftGet c) m)
                                        (Idx.less (liftGet r) n) )
-               ( mdo \{
+               ( doM \{
                rr <-- retN (liftGet r);
                cc <-- retN (liftGet c);
                pivot <-- l1 retN (Pivot.findpivot b rr m cc n);
