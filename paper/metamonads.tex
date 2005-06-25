@@ -456,7 +456,7 @@ makes it clear that the code generation (such as the one in |retN|) is
 truly an effect and we have to be clear about the sequencing of
 effects when generating control constructions such as conditionals.
 The form |ifM| handles such effects correctly. We
-need similar operators for other Ocaml control forms: for generating
+need similar operators for other OCaml control forms: for generating
 case-matching statements and |for|- and |while|-loops.
 
 \section{Aspects and Functors}\label{functors}
@@ -532,7 +532,7 @@ case of such domain abstraction is |param_code1| in
 Fig.~\ref{easycode}. There, code-generators such as |plus| and |one|
 were passed as arguments. We need far more than
 two parameters, so we have to group them. Instead of the grouping
-offered by regular records, we use Ocaml \emph{structures} (i.e.,
+offered by regular records, we use OCaml \emph{structures} (i.e.,
 modules)
 so we can take advantage of extensibility, type abstraction and constraints,
 and especially parameterized structures (\emph{functors}).
@@ -1009,7 +1009,7 @@ represented by a 2D array, row pivoting, returning just the |U|-factor.
      end in
     (match t_16 with
      | Some (i_17) ->
-        begin (* elimintation loop, elided *) end;
+        begin (* elimination loop, elided *) end;
         (t_2 := ((! t_2) + 1))
      | None -> ());
     (t_3 := ((! t_3) + 1))
