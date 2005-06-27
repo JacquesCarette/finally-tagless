@@ -801,7 +801,7 @@ conditionals and loops.
 meta-programming in general similarly eliminate levels
 of abstraction.  With traits and concepts, some domain-specific
 knowledge can also be encoded.  However overhead elimination
-critically depends on the compiler's fully inlining of all methods,
+critically depends on full inlining of all methods by the compiler,
 which has been reported to be challenging to insure. Furthermore, all
 errors (such as type errors and concept violation errors, i.e.,
 composition errors) are detected only when compiling the generated
@@ -839,11 +839,13 @@ The paper \cite{GluckJ97} describes early simple experiments in
 \emph{automatic} and manual staging, and the multi-level language
 based on an annotated subset of Scheme (which is untyped and has no
 imperative features). The generated code requires post-processing to
-attain efficiency.  We are looking into encapsulating staging
-annotations in few functors, so that the rest of the code (in
+attain efficiency.  
+
+We are looking into encapsulating staging
+annotations into just a few functors, so that the rest of the code (in
 particular, the |Gen| functor that puts it all together) should be
-annotation-free and so can be used as it is in one-stage environment
-(pure OCaml) as well as multi-stage environment (generating
+annotation-free and thus can be used as is in a one-stage environment
+(pure OCaml) as well as in a multi-stage environment (generating
 extensions). The one-stage code is a good baseline for benchmarks and
 regression tests. Obtaining a generating extension from properly
 modularized OCaml code (along the lines of our |Gen|) is an exciting
@@ -859,7 +861,6 @@ continuations and our implementations of code generators like
 (for |ifM|, |whileM|, etc.), the available notation should be
 even more direct-style, and potentially clearer.
 We also would like to extend our monad to a monad transformer.
-
 
 There are many more aspects which can also be handled:
 Input variations (augmented
