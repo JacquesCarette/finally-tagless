@@ -258,6 +258,12 @@ module Idx = struct
   let less a b = .< .~a < .~b >.
 end
 
+(* Maybe code generator *)
+module MaybeCode = struct
+  let just x = .< Some .~x >.
+  let none   = .< None >.
+end
+
 (* code generators *)
 module Code = struct
   let update a f = let b = f (liftGet a) in ret .< .~a := .~b >.
