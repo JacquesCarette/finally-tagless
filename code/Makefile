@@ -34,6 +34,7 @@ test: $(OBJ) $(RES) $(TEST)
 	#diff funct3.out funct3.res
 	diff funct4.out funct4.res
 	diff direct2.out direct2.res
+	diff ge.out ge.res
 
 .PHONY: clean-test
 clean-test:

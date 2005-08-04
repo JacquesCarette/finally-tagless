@@ -247,15 +247,19 @@ let concretize = function
 module LogicCode = struct
   let not a = ret .< not .~a >.
   let equal a b = ret .< .~a = .~ b >.
+  let notequal a b = ret .< .~a <> .~ b >.
   let and_ a b = ret .< .~a && .~b >. 
 end
 
 (* operations on code indices *)
 module Idx = struct
   let zero = .< 0 >.
+  let one = .< 1 >.
+  let minusone = .< -1 >.
   let succ a = .< .~a + 1 >.
   let pred a = .< .~a - 1 >.
   let less a b = .< .~a < .~b >.
+  let uminus a = .< - .~a >.
 end
 
 (* Maybe code generator *)
@@ -264,7 +268,22 @@ module MaybeCode = struct
   let none   = .< None >.
 end
 
+(* monadic tuples *)
+module TupleCode = struct
+  let tup2 a b = .< ( .~a, .~b ) >.
+  let tup3 a b c = .< ( .~a, .~b, .~c ) >.
+  let tup4 a b c d = .< ( .~a, .~b, .~c, .~d ) >.
+end
+
+(* List ops *)
+module ListCode = struct
+  let nil = .< [] >.
+  let append a b = .< .~a :: .~b >.
+end
+
 (* code generators *)
 module Code = struct
+  let cunit = .< () >.
   let update a f = let b = f (liftGet a) in ret .< .~a := .~b >.
+  let assign a b = ret .< .~a := .~b >.
 end

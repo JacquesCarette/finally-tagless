@@ -55,7 +55,7 @@ module TrackRank =
       ret rdecl }
   let succ () = mdo {
    r <-- rfetch ();
-   ret .<.~r := (! .~r) + 1>. }
+   Code.assign r (Idx.succ (liftGet r)) }
 end
 
 module Rank:RANK = struct
@@ -67,7 +67,7 @@ end
 
 module NoRank:RANK = struct
   include TrackRank
-  let fin () = ret .< -1 >.
+  let fin () = ret Idx.minusone
 end
 
 (* In the case of a non-fraction-free algorithm with no Det
@@ -98,7 +98,7 @@ module NoDet(Dom:DOMAIN) =
   let upd_sign () = retUnit
   let zero_sign () = retUnit
   let acc v = retUnit
-  let get () = ret (liftRef .< () >. )
+  let get () = ret (liftRef Code.cunit)
   let set v = retUnit
   let fin () = retUnit
 end
@@ -122,33 +122,32 @@ module AbstractDet(Dom: DOMAIN) =
   let dstore v = store (`TDet v)
   let decl () = mdo {
       ddecl <-- retN (liftRef Dom.one);
-      dsdecl <-- retN (liftRef .<1>.);
+      dsdecl <-- retN (liftRef Idx.one);
       dstore (dsdecl,ddecl) }
   let upd_sign () = mdo {
       det <-- dfetch ();
       det1 <-- ret (fst det);
-      ret .< .~det1 := - (! .~det1)>. }
+      Code.assign det1 (Idx.uminus (liftGet det1)) }
   let zero_sign () = mdo {
       det <-- dfetch ();
       det1 <-- ret (fst det);
-      ret .<.~det1 := 0>. }
+      Code.assign det1 Idx.zero }
   let acc v = mdo {
       det <-- dfetch ();
       det2 <-- ret (snd det);
       r <-- Dom.times (liftGet det2) v;
-      ret .<.~det2 := .~r>. }
+      Code.assign det2 r }
   let get () = mdo {
       det <-- dfetch ();
-      det2 <-- ret (snd det);
-      ret .<.~det2>. }
+      ret (snd det) }
   let set v = mdo {
       det <-- dfetch ();
       det2 <-- ret (snd det);
-      ret .<.~det2 := .~v>.}
+      Code.assign det2 v }
   let fin () = mdo {
       (det_sign,det) <-- dfetch ();
-      ifM (ret .<(! .~det_sign) = 0>.) (ret Dom.zero)
-      (ifM (ret .<(! .~det_sign) = 1>.) (ret (liftGet det))
+      ifM (LogicCode.equal (liftGet det_sign) Idx.zero) (ret Dom.zero)
+      (ifM (LogicCode.equal (liftGet det_sign) Idx.one) (ret (liftGet det))
           (Dom.uminus (liftGet det))) }
 end
 
@@ -228,11 +227,11 @@ module TrackPivot =
                         ret (fetch_iter s) }
   let pstore v = store (`TPivot v)
   let decl () = mdo {
-      pdecl <-- retN (liftRef .< [] >.);
+      pdecl <-- retN (liftRef ListCode.nil);
       pstore pdecl }
   let add v = mdo {
    p <-- pfetch ();
-   ret .<.~p := .~v::(! .~p) >. }
+   Code.assign p (ListCode.append v (liftGet p)) }
 end
 
 module KeepPivot:TRACKPIVOT = struct
@@ -246,7 +245,7 @@ module DiscardPivot:TRACKPIVOT = struct
   type 'a lstate = ('a, perm list ref) code
   let decl () = ret ()
   let add v = retUnit
-  let fin () = ret .< [] >.
+  let fin () = ret ListCode.nil
 end
 
 module type OUTPUT = sig
@@ -285,7 +284,7 @@ module OutDet(Dom:DOMAIN)(C: CONTAINER2D)
   module P = DiscardPivot
   let make_result b = mdo {
     det <-- D.fin ();
-    ret .< ( .~b, .~det ) >. }
+    ret (TupleCode.tup2 b det) }
 end
 
 module OutRank(Dom:DOMAIN)(C: CONTAINER2D)(Rank : RANK) =
@@ -298,7 +297,7 @@ module OutRank(Dom:DOMAIN)(C: CONTAINER2D)(Rank : RANK) =
   module P = DiscardPivot
   let make_result b = mdo {
     rank <-- R.fin ();
-    ret .< ( .~b, .~rank ) >. }
+    ret (TupleCode.tup2 b rank) }
 end
 
 module OutDetRank(Dom:DOMAIN)(C: CONTAINER2D)
@@ -314,7 +313,7 @@ module OutDetRank(Dom:DOMAIN)(C: CONTAINER2D)
   let make_result b = mdo {
     det  <-- D.fin ();
     rank <-- R.fin ();
-    ret .< ( .~b, .~det, .~rank ) >. }
+    ret (TupleCode.tup3 b det rank) }
 end
 
 module OutDetRankPivot(Dom:DOMAIN)(C: CONTAINER2D)
@@ -331,7 +330,7 @@ module OutDetRankPivot(Dom:DOMAIN)(C: CONTAINER2D)
     det  <-- D.fin ();
     rank <-- R.fin ();
     pivmat <-- P.fin ();
-    ret .< ( .~b, .~det, .~rank, .~pivmat ) >. }
+    ret (TupleCode.tup4 b det rank pivmat) }
 end
 
 module FDet = AbstractDet(FloatDomain)
@@ -360,7 +359,7 @@ module RowPivot(Dom: DOMAIN)(C: CONTAINER2D)
 struct
    module Ctr = C(Dom)
    let findpivot b r n c m = mdo {
-       pivot <-- retN (liftRef .< None >. );
+       pivot <-- retN (liftRef MaybeCode.none );
        (* If no better_than procedure defined, we just search for
 	  non-zero element. Any non-zero element is a good pivot.
 	  If better_than is defined, we search then for the best element *)
@@ -375,15 +374,17 @@ struct
                       mdo {
                       (i,bic) <-- ret (liftPair pv);
                       whenM (sel bic bjc)
-                        (ret .< .~pivot := Some (.~j,.~bjc) >.)})
-                     (ret .< .~pivot := Some (.~j,.~bjc) >.))
+                        (Code.assign pivot (MaybeCode.just 
+                                     (TupleCode.tup2 j bjc))) })
+                     (Code.assign pivot (MaybeCode.just 
+                                  (TupleCode.tup2 j bjc))))
               })
          | None ->
            mdo {
             brc <-- l1 retN (Ctr.get b r c);
-            ifM (ret .< not (.~brc = .~Dom.zero) >.)
+            ifM (l1 LogicCode.not (LogicCode.equal brc Dom.zero))
               (* the current element is good enough *)
-              (ret .< .~pivot := Some (.~r,.~brc) >.)
+              (Code.assign pivot (MaybeCode.just (TupleCode.tup2 r brc)))
               (mdo {
                   s <-- fetch;
                   ret .< let rec loop j =
@@ -397,12 +398,12 @@ struct
                 (fun pv ->
                      mdo {
                          (i,bic) <-- ret (liftPair pv);
-                         seqM (whenM (ret .< .~i <> .~r >. )
+                         seqM (whenM (LogicCode.notequal i r)
                                 (seqM 
                                    (ret (Ctr.swap_rows_stmt b r i))
                                    (D.upd_sign ())))
-                              (ret .<Some .~bic>.)})
-                (ret .< None >.))
+                              (ret (MaybeCode.just bic))})
+                (ret MaybeCode.none))
    }
 end
 
@@ -411,12 +412,12 @@ module FullPivot(Dom: DOMAIN)(C: CONTAINER2D)
 struct
    module Ctr = C(Dom)
    let findpivot b r n c m = mdo {
-       pivot <-- retN (liftRef .< None >. );
-       seqM (retLoopM r .<.~n-1>. (fun j -> 
-              retLoopM c .<.~m-1>. (fun k ->
+       pivot <-- retN (liftRef MaybeCode.none );
+       seqM (retLoopM r (Idx.pred n) (fun j -> 
+              retLoopM c (Idx.pred m) (fun k ->
            mdo {
               bjk <-- l1 retN (Ctr.get b j k);
-              whenM (ret .< not ( .~bjk = .~Dom.zero) >.)
+              whenM (l1 LogicCode.not ( LogicCode.equal bjk Dom.zero) )
               (match (Dom.better_than) with
               | Some sel ->
                   (retMatchM (liftGet pivot)
@@ -424,7 +425,8 @@ struct
                       mdo {
                       (pr,pc,brc) <-- ret (liftPPair pv);
                       whenM (sel brc bjk)
-                        (ret .< .~pivot := Some ((.~j,.~k),.~bjk) >.)})
+                        (Code.assign pivot (MaybeCode.just
+                            (TupleCode.tup2 (TupleCode.tup2 j k) bjk))) })
                      (ret .< .~pivot := Some ((.~j,.~k),.~bjk) >.))
               | None ->
                   (ret .< .~pivot := Some ((.~j,.~k),.~bjk) >.)
