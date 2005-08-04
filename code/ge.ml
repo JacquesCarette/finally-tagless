@@ -258,6 +258,12 @@ module Idx = struct
   let less a b = .< .~a < .~b >.
 end
 
+(* Maybe code combinators *)
+module MaybeCode = struct
+  let just x = .< Some .~x >.
+  let none = .< None >.
+end
+
 (* code generators *)
 module Code = struct
   let update a f = let b = f (liftGet a) in ret .< .~a := .~b >.
@@ -708,7 +714,7 @@ struct
                                    (ret (Ctr.swap_rows_stmt b r pr))
                                    (D.upd_sign ())))
                               (ret .<Some .~brc>.))})
-                  (ret .< None >.))
+                  (ret MaybeCode.none))
    }
 end
 
@@ -720,7 +726,7 @@ struct
       just take the diagonal as ``pivot'' *)
    let findpivot b r n c m = mdo { 
        brc <-- Ctr.get b r c;
-       ret .< Some (.~brc) >. }
+       ret (MaybeCode.just brc)}
 end
 
 module Gen(Dom: DOMAIN)(C: CONTAINER2D)(PivotF: PIVOT)
