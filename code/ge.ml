@@ -62,7 +62,7 @@ module Rank:RANK = struct
   include TrackRank
   let fin () = mdo {
       r <-- rfetch ();
-       ret (liftGet r) }
+      ret (liftGet r) }
 end
 
 module NoRank:RANK = struct
@@ -231,7 +231,7 @@ module TrackPivot =
       pstore pdecl }
   let add v = mdo {
    p <-- pfetch ();
-   Code.assign p (ListCode.append v (liftGet p)) }
+   Code.assign p (ListCode.cons v (liftGet p)) }
 end
 
 module KeepPivot:TRACKPIVOT = struct
@@ -361,8 +361,8 @@ struct
    let findpivot b r n c m = mdo {
        pivot <-- retN (liftRef MaybeCode.none );
        (* If no better_than procedure defined, we just search for
-	  non-zero element. Any non-zero element is a good pivot.
-	  If better_than is defined, we search then for the best element *)
+      non-zero element. Any non-zero element is a good pivot.
+      If better_than is defined, we search then for the best element *)
        seqM
         (match (Dom.better_than) with
          Some sel -> 
@@ -427,9 +427,11 @@ struct
                       whenM (sel brc bjk)
                         (Code.assign pivot (MaybeCode.just
                             (TupleCode.tup2 (TupleCode.tup2 j k) bjk))) })
-                     (ret .< .~pivot := Some ((.~j,.~k),.~bjk) >.))
+                     (Code.assign pivot (MaybeCode.just
+                            (TupleCode.tup2 (TupleCode.tup2 j k) bjk))))
               | None ->
-                  (ret .< .~pivot := Some ((.~j,.~k),.~bjk) >.)
+                  (Code.assign pivot (MaybeCode.just (
+                      TupleCode.tup2 (TupleCode.tup2 j k) bjk)))
               )})))
               (* finished the loop *)
               (retMatchM (liftGet pivot)
@@ -437,16 +439,16 @@ struct
                      mdo {
                          (pr,pc,brc) <-- ret (liftPPair pv);
                          seqM
-                             (whenM (ret .< .~pc <> .~c >. )
+                             (whenM (LogicCode.notequal pc c)
                                  (seqM
                                    (ret (Ctr.swap_cols_stmt b c pc))
                                    (D.upd_sign ())))
                            (seqM
-                             (whenM (ret .< .~pr <> .~r >. )
+                             (whenM (LogicCode.notequal pr c)
                                  (seqM
                                    (ret (Ctr.swap_rows_stmt b r pr))
                                    (D.upd_sign ())))
-                              (ret .<Some .~brc>.))})
+                              (ret (MaybeCode.just brc)))})
                   (ret MaybeCode.none))
    }
 end

@@ -278,7 +278,7 @@ end
 (* List ops *)
 module ListCode = struct
   let nil = .< [] >.
-  let append a b = .< .~a :: .~b >.
+  let cons a b = .< .~a :: .~b >.
 end
 
 (* code generators *)
