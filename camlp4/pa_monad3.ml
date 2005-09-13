@@ -112,7 +112,7 @@ EXTEND
 
     Pcaml.expr: LEVEL "expr1"
     [
-      [ "doM"; bind_mod = a_UIDENT; "in";
+      [ "doM"; bind_mod = UIDENT; "in";
         bindings = LIST1 monadic_binding SEP ";" ->
           process loc bindings (<:expr< $uid:bind_mod$.bind >>) ]
     |

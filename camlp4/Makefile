@@ -12,11 +12,11 @@
 #
 ########################################################################
 
-SYNTAX_EXTENSION := pa_monad2.cmo
+SYNTAX_EXTENSION := pa_monad3.cmo
 
 PP := camlp4o -I . $(SYNTAX_EXTENSION)
 
-TEST := test-monad2 tt
+TEST := test-monad3 tt
 
 DISTNAME := monad-function
 
@@ -35,7 +35,7 @@ all: $(TEST)
 
 .PHONY: test
 test: all
-	./test-monad2
+	./test-monad3
 	./tt
 
 
