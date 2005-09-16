@@ -25,12 +25,13 @@ different function, use the extended form of [doM]:
         doM Mod in x <-- exp; exp
         doM Mod in let x = foo in; exp
 ]}
+Mod is then required to be a Module which exports a bind function.
 
 {3 Grammar formally}
 {[
-        "doM" [EXP "in"] <do-body>
+        "doM" [UID "in"] <do-body>
         <do-body> ::=
-                "let" var "=" EXP ("and" var "=" EXP)* "in" ";" <do-body>
+                "let" patt "=" EXP ("and" patt "=" EXP)* "in" ";" <do-body>
                 EXP
                 (pat "<--")? EXP ";" <do-body>
 ]}
