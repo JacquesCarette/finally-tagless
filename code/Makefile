@@ -36,6 +36,11 @@ test: $(OBJ) $(RES) $(TEST)
 	diff direct2.out direct2.res
 	diff ge.out ge.res
 
+.PHONY: timings
+timings: $(OBJ)
+	./mytop ./funct4.cmo ./direct2.cmo exper.ml
+	./mytop ./funct4.cmo ./direct2.cmo exper2.ml
+
 .PHONY: clean-test
 clean-test:
 	rm -f *.out
@@ -78,4 +83,4 @@ ge.out: test-ge.ml ge.cmo infra.cmo mytop
 	./mytop ./infra.cmo ./ge.cmo < test-ge.ml > ge.out 
 
 ../camlp4/pa_monad.cmo:
-	(chdir ../camlp4; make all)
+	(cd ../camlp4; make all)
