@@ -14,6 +14,7 @@ let doit aa =
     Funct4.GenFA1.gen) in
     let horder = Trx.timenew "higher-order"
         (fun () -> (direct_IA4 aa)) in
+    let _ = assert (generated = horder) in
         (generated, gen_time, horder) ;;
 
 let res = List.map doit xx ;;
