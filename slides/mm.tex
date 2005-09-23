@@ -39,12 +39,13 @@
 \vpagecolor[blue1]{blue2}
 
 \begin{slide}
-\title{Functors, CPS and Monads,\\
-or how to generate efficient algebraic code from abstract designs}
+\title{Multi-stage programming with functors and monads:
+eliminating abstraction overhead from generic code}
 \author{Jacques Carette\\
 McMaster University\\
 and\\
-Oleg Kiselyov}
+Oleg Kiselyov\\
+FNMOC}
 \date{June 6, 2005}
 \maketitle
 \end{slide}
@@ -53,9 +54,8 @@ Oleg Kiselyov}
 \slideheading{Overview}
 \begin{enumerate}
     \item Problem
-    \item MetaOCaml
     \item Design Points
-    \item Functors, CPS, Monads, Extensible Grammar
+    \item Tools: Functors, CPS, Monads, Extensible Grammar
     \item Solution \& results
 \end{enumerate}
 
@@ -74,7 +74,7 @@ Oleg Kiselyov}
 \begin{slide}
     \slideheading{Problem (Origins)}
     \begin{itemize}
-        \item 35+ implementations of GE in Maple
+        \item 35+ implementations of Gaussian Elimination in Maple
         \item Efficiency:
             \begin{itemize}
                 \item[+] specialized versions 
@@ -99,71 +99,6 @@ Oleg Kiselyov}
 \end{slide}
 
 \begin{slide}
-    \slideheading{www.metaocaml.org}
-    Version of \textbf{Ocaml} with typed metaprogramming facilities\\
-    \begin{tabular}{lll}\hline
-        \verb=.< x + y >.= & \emph{code} of $x+y$ & code expression\\
-        \verb=.~z= & \emph{code-value} of (code) $z$ & splice \\
-        \verb=.!z= & \emph{value} of (code) $z$ & run \\
-    \end{tabular}\\
-    Essentially: a form of \emph{typed} symbolic computation!\\
-    Except: \textit{closed} code cannot be manipulated other than being
-    spliced into other code.
-\end{slide}
-
-\begin{slide}
-    \slideheading{MetaOCaml example}
-    The classic: powering!
-\begin{verbatim}
-let square x = .< .~x * .~x >. ;;
-
-let rec power n x =
-  if n=0 then .< 1 >.
-  else .< .~x * .~(power (n-1) x ) >. ;;
-
-let p1 = .< fun y -> .~(power 5 .<y>.) >. ;;
-# val p1 : ('a, int->int) code = 
-  .< fun y1 -> (y1*(y1*(y1*(y1*(y1*1))))) >.
-\end{verbatim}
-\end{slide}
-
-\begin{slide}
-    \slideheading{MetaOCaml example (cont)}
-\begin{verbatim}
-let even n = (n mod 2) == 0;;
-let square x = .< .~x * .~x >. ;;
-
-let rec power n x =
-      if n=0 then .< 1 >.
-      else if n=1 then x
-      else if even n then square(power (n/2) x )
-      else .< .~x * .~(power (n-1) x ) >. ;;
-
-let p1 = .< fun y -> .~(power 5 .<y>.) >. ;;
-# val p1 : ('a, int->int) code = 
-  .< fun y1 -> (y1*(y1*y1)*(y1*y1)) >.
-\end{verbatim}
-\end{slide}
-
-\begin{slide}
-    \slideheading{MetaOCaml example (cont)}
-\begin{verbatim}
-let even n = (n mod 2) == 0;;
-let square x = .<let z=.~x in z*z>. ;;
-
-let rec power n x =
-      if n=0 then .< 1 >.
-      else if n=1 then x
-      else if even n then square(power (n/2) x )
-      else .< .~x * .~(power (n-1) x ) >. ;;
-
-let p1 = .< fun y -> .~(power 5 .<y>.) >. ;;
-# val p1 : ('a, int->int) code = 
-  .< fun y1 -> (y1* let y3= let y2=y1 in (y2*y2) in (y3*y3)) >.
-\end{verbatim}
-\end{slide}
-
-\begin{slide}
     \slideheading{Design Points \emph{(aspects)}}
     \hspace*{-2cm}
         \begin{tabular}{|l|l|l|} \hline
@@ -179,6 +114,24 @@ let p1 = .< fun y -> .~(power 5 .<y>.) >. ;;
         UserInformation & user-feedback & ZeroEquivalence\\ \hline
         Augmented & matrix is augmented & -- \\ \hline
     \end{tabular}
+\end{slide}
+
+\begin{slide}
+    \slideheading{let insertion}
+\begin{verbatim}
+let even n = (n mod 2) == 0;;
+let square x = .<let z=.~x in z*z>. ;;
+
+let rec power n x =
+      if n=0 then .< 1 >.
+      else if n=1 then x
+      else if even n then square(power (n/2) x )
+      else .< .~x * .~(power (n-1) x ) >. ;;
+
+let p1 = .< fun y -> .~(power 5 .<y>.) >. ;;
+# val p1 : ('a, int->int) code = 
+  .< fun y1 -> (y1* let y3= let y2=y1 in (y2*y2) in (y3*y3)) >.
+\end{verbatim}
 \end{slide}
 
 \begin{slide}
@@ -282,11 +235,12 @@ param_code2 plus one
 #val .<fun x_1 -> fun y_2 -> 
            let t_3 = (y_2 + 1) in (t_3 + (x_1 + t_3))>.
 \end{verbatim}
+From \textit{A Methodology for Generating Verified Combinatorial Circuits} by 
+Kiselyov, Swadi and Taha.
 \end{slide}
 
 \begin{slide}
     \slideheading{Monads}
-    Also known (in category theory) as \emph{Kleisli triples}.\\
     Method to encapsulate ``computations'', including state.\\
     We need \emph{state} and \emph{continuations}
 \begin{verbatim}
@@ -297,18 +251,33 @@ let bind a f = fun s k -> a s (fun s' b -> f b s' k)
 let k0 s v = v
 let runM m = m [] k0
 
+(* not monadic -- idiom ? *)
 let retN a = fun s k -> .<let t = .~a in .~(k s .<t>.)>.
+\end{verbatim}
+\end{slide}
 
+\begin{slide}
+    \slideheading{\textit{New} control structures}
+\begin{verbatim}
 let ifL test th el = ret .< if .~test then .~th else .~el >.
+
+(* Note the implicit `reset` *)
 let ifM test th el = fun s k ->
   k s .< if .~(test s k0) then .~(th s k0) else .~(el s k0) >.
+
+let seqM a b = fun s k -> k s .< begin .~(a s k0) ; .~(b s k0) end >.
+
+let rshiftM cf = fun s k -> k s (cf s)
+
+let whenM test th  = rshiftM (fun s -> 
+  .< if .~(test s k0) then .~(th s k0) else () >.)
 \end{verbatim}
 \end{slide}
 
 \begin{slide}
     \slideheading{Extensible Grammar}
     In all programming languages, a lot of \emph{expressible abstractions}
-    have attrocious syntax.  Definitely a problem of languages with
+    have atrocious syntax.  Definitely a problem of languages with
     just a few powerful primitives. \texttt{camlp4} for Ocaml allows one to add
     to (or redefine completely) the grammar of the language.  For monads:
 \begin{verbatim}
@@ -318,10 +287,23 @@ let param_code3 plus one =
   in .<fun x y -> .~(runM (gen .<x>. .<y>.))>.
 
 let param_code4 plus one =
-  let gen x y = mdo \{ ce <-- retN (plus y one);
-                      ret (plus ce (plus x ce)) \}
+  let gen x y = doM ce <-- retN (plus y one);
+                    ret (plus ce (plus x ce))
   in .<fun x y -> .~(runM (gen .<x>. .<y>.))>.
 \end{verbatim}
+\end{slide}
+
+\begin{slide}
+    \slideheading{Extensible Grammar (cont) }
+A multi-monad version also exists
+\begin{verbatim}
+let param_code4 plus one =
+  let gen x y = doM Monad in
+                    ce <-- retN (plus y one);
+                    ret (plus ce (plus x ce))
+  in .<fun x y -> .~(runM (gen .<x>. .<y>.))>.
+\end{verbatim}
+which will use \verb+Monad.bind+ instead of \verb+bind+.
 \end{slide}
 
 \begin{slide}
@@ -390,6 +372,7 @@ end
 \end{verbatim}
 \end{small}
 \end{slide}
+
 \begin{slide}
     \slideheading{Results}
 $8$ domains, $5$ container types, $3$ pivoting strategies, 
@@ -402,6 +385,144 @@ Using \emph{offshoring}, can generate C (and sometimes Fortran) code
 for results.
 \end{slide}
 
+
+\begin{slide}
+    \slideheading{Sample Output}
+\begin{small}
+\begin{verbatim}
+  ('a, Funct4.GenFA1.Ctr.contr ->
+   Funct4.OutJustMatrix(Funct4.FloatDomain)(Funct4.GenericArrayContainer)(Funct4.NoDet(Funct4.FloatDomain)).res)
+  code =
+  .<fun a_1 ->
+   let t_2 = (ref 0) in
+   let t_3 = (ref 0) in
+   let t_5 = (Array.map (fun x_4 -> (Array.copy x_4)) (Array.copy a_1)) in
+   let t_6 = (Array.length a_1.(0)) in
+   let t_7 = (Array.length a_1) in
+   while (((! t_3) < t_6) && ((! t_2) < t_7)) do
+    let t_8 = (! t_2) in let t_9 = (! t_3) in
+    let t_10 = (ref (None)) in
+    let t_16 =
+     begin
+      for j_13 = t_8 to (t_7 - 1) do
+       let t_14 = (t_5.(j_13)).(t_9) in
+       if (not (t_14 = 0.)) then
+        (match (! t_10) with
+         | Some (i_15) ->
+            if ((abs_float (snd i_15)) < (abs_float t_14)) then
+             (t_10 := (Some (j_13, t_14)))
+            else ()
+         | None -> (t_10 := (Some (j_13, t_14))))
+       else ()
+      done;
+      (match (! t_10) with
+       | Some (i_11) ->
+          if ((fst i_11) <> t_8) then begin
+           let t_12 = t_5.(t_8) in
+           t_5.(t_8) <- t_5.(fst i_11);
+           t_5.(fst i_11) <- t_12;
+           ()
+          end else ();
+          (Some (snd i_11))
+       | None -> (None))
+     end in
+    (match t_16 with
+     | Some (i_17) ->
+        begin
+         for j_18 = (t_8 + 1) to (t_7 - 1) do
+          if (not ((t_5.(j_18)).(t_9) = 0.)) then begin
+           for j_19 = (t_9 + 1) to (t_6 - 1) do
+            (t_5.(j_18)).(j_19) <-
+             ((t_5.(j_18)).(j_19) -.
+               (((t_5.(j_18)).(t_9) /. (t_5.(t_8)).(t_9)) *.
+                 (t_5.(t_8)).(j_19)))
+           done;
+           (t_5.(j_18)).(t_9) <- 0.
+          end else ()
+         done;
+         ()
+        end;
+        (t_2 := ((! t_2) + 1))
+     | None -> ());
+    (t_3 := ((! t_3) + 1))
+   done;
+   t_5>.
+
+  ('a,
+   Funct4.GenIA4.Ctr.contr ->
+   Funct4.OutDetRank(Funct4.IntegerDomain)(Funct4.GenericArrayContainer)(Funct4.IDet)(Funct4.Rank).res)
+  code =
+  .<fun a_280 ->
+   let t_281 = (ref 0) in
+   let t_282 = (ref 0) in
+   let t_284 =
+    (Array.map (fun x_283 -> (Array.copy x_283)) (Array.copy a_280)) in
+   let t_285 = (Array.length a_280.(0)) in
+   let t_286 = (Array.length a_280) in
+   let t_287 = (ref 1) in
+   let t_288 = (ref 1) in
+   while (((! t_282) < t_285) && ((! t_281) < t_286)) do
+    let t_289 = (! t_281) in
+    let t_290 = (! t_282) in
+    let t_291 = (ref (None)) in
+    let t_297 =
+     begin
+      for j_294 = t_289 to (t_286 - 1) do
+       let t_295 = (t_284.(j_294)).(t_290) in
+       if (not (t_295 = 0)) then
+        (match (! t_291) with
+         | Some (i_296) ->
+            if ((abs (snd i_296)) > (abs t_295)) then
+             (t_291 := (Some (j_294, t_295)))
+            else ()
+         | None -> (t_291 := (Some (j_294, t_295))))
+       else ()
+      done;
+      (match (! t_291) with
+       | Some (i_292) ->
+          if ((fst i_292) <> t_289) then begin
+           let t_293 = t_284.(t_289) in
+           t_284.(t_289) <- t_284.(fst i_292);
+           t_284.(fst i_292) <- t_293;
+           (t_288 := (~- (! t_288)))
+          end else ();
+          (Some (snd i_292))
+       | None -> (None))
+     end in
+    (match t_297 with
+     | Some (i_298) ->
+        begin
+         for j_299 = (t_289 + 1) to (t_286 - 1) do
+          if (not ((t_284.(j_299)).(t_290) = 0)) then begin
+           for j_300 = (t_290 + 1) to (t_285 - 1) do
+            (t_284.(j_299)).(j_300) <-
+             ((((t_284.(j_299)).(j_300) * (t_284.(t_289)).(t_290)) -
+                ((t_284.(t_289)).(j_300) * (t_284.(j_299)).(t_289))) /
+               (! t_287))
+           done;
+           (t_284.(j_299)).(t_290) <- 0
+          end else ()
+         done;
+         (t_287 := i_298)
+        end;
+        (t_281 := ((! t_281) + 1))
+     | None -> (t_288 := 0));
+    (t_282 := ((! t_282) + 1))
+   done;
+   (t_284,
+    if ((! t_288) = 0) then 0
+    else if ((! t_288) = 1) then (! t_287)
+    else (~- (! t_287)), (! t_281))>.
+\end{verbatim}
+\end{small}
+\end{slide}
+
+\begin{slide}
+    \slideheading{Timings}
+	P4 2.00Ghz, FreeBSD 4.9-RELEASE-p1, 1Gig memory\\
+	insert numbers here.
+\end{slide}
+
 \begin{slide}
     \slideheading{Conclusion}
     This is not Gaussian Elimination specific -- this should scale
@@ -412,3 +533,100 @@ for results.
 \end{slide}
 
 \end{document}
+
+Hello!
+
+	Here are some numbers, for byte- and native compilation.
+
+My computer is FreeBSD 4.9-RELEASE-p1
+hw.machine: i386
+hw.model: Intel(R) Pentium(R) 4 CPU 2.00GHz
+hw.ncpu: 1
+hw.byteorder: 1234
+hw.physmem: 1070080000
+hw.usermem: 927322112
+hw.pagesize: 4096
+hw.floatingpoint: 1
+hw.machine_arch: i386
+
+BTW, I added an assertion to the files exper.ml and exper2.ml
+
+Bytecode:
+
+~/langs/ML/num-math/trunk/code> metaocamlc -verbose -pp "camlp4o pa_extend.cmo q_MLast.cmo ../camlp4/pa_monad.cmo" -I +camlp4 ~/Cache/ometa-cvs/lib/ocaml/nums.cma funct4.ml direct2.ml exper.ml
+
+~/langs/ML/num-math/trunk/code> ./a.out 
+__ generated ________________ 4096x avg= 2.865859E-01 msec
+__ generation time ___________ 128x avg= 9.146503E+00 msec
+__ higher-order ______________ 512x avg= 2.834229E+00 msec
+__ generated _________________ 256x avg= 6.868903E+00 msec
+__ generation time ___________ 128x avg= 9.111401E+00 msec
+__ higher-order _______________ 16x avg= 6.680728E+01 msec
+__ generated __________________ 32x avg= 3.144436E+01 msec
+__ generation time ___________ 128x avg= 9.137982E+00 msec
+__ higher-order ________________ 4x avg= 3.045543E+02 msec
+__ generated __________________ 16x avg= 8.469101E+01 msec
+__ generation time ___________ 128x avg= 9.035031E+00 msec
+__ higher-order ________________ 2x avg= 8.165625E+02 msec
+
+
+~/langs/ML/num-math/trunk/code> metaocamlc -verbose -pp "camlp4o pa_extend.cmo q_MLast.cmo ../camlp4/pa_monad.cmo" -I +camlp4 ~/Cache/ometa-cvs/lib/ocaml/nums.cma funct4.ml direct2.ml exper2.ml
+
+~/langs/ML/num-math/trunk/code> ./a.out 
+__ generated ________________ 8192x avg= 1.842597E-01 msec
+__ generation time ___________ 128x avg= 9.033271E+00 msec
+__ higher-order ______________ 512x avg= 3.551199E+00 msec
+__ generated _________________ 512x avg= 2.001440E+00 msec
+__ generation time ___________ 128x avg= 9.044719E+00 msec
+__ higher-order _______________ 32x avg= 4.186380E+01 msec
+__ generated _________________ 128x avg= 1.135904E+01 msec
+__ generation time ___________ 128x avg= 9.038421E+00 msec
+__ higher-order ________________ 8x avg= 2.443530E+02 msec
+__ generated __________________ 32x avg= 5.056813E+01 msec
+__ generation time ___________ 128x avg= 8.988767E+00 msec
+__ higher-order ________________ 1x avg= 1.102511E+03 msec
+
+
+Niative code. That gave me some headache. Direct metaocamlopt with -pp
+option didn't work, some kind of fatal error. So, I had to expand
+manually:
+
+~/langs/ML/num-math/trunk/code> camlp4o -I ../camlp4/ ../camlp4/pa_monad.cmo pr_o.cmo funct4.ml > /tmp/funct4.ml
+~/langs/ML/num-math/trunk/code> camlp4o -I ../camlp4/ ../camlp4/pa_monad.cmo pr_o.cmo direct2.ml > /tmp/direct2.ml
+
+Alas, the file /tmp/funct4.ml needed a lot of adjustments: inserting
+parenetheses in many places. The pretty-printer pr_o.cmo misjudged the
+precedences of .~ operations and dropped the parentheses. It's so good
+to have static typing: OCaml helped me to put those parentheses back.
+
+Here are the results:
+
+~/langs/ML/num-math/trunk/code> metaocamlopt -verbose -I . -I /tmp ~/Cache/ometa-cvs/lib/ocaml/nums.cmxa /tmp/funct4.ml /tmp/direct2.ml exper.ml
+~/langs/ML/num-math/trunk/code> ./a.out 
+__ generated _______________ 65536x avg= 1.753359E-02 msec
+__ generation time ____________ 32x avg= 4.680109E+01 msec
+__ higher-order _____________ 1024x avg= 1.247749E+00 msec
+__ generated ________________ 4096x avg= 3.586502E-01 msec
+__ generation time ____________ 32x avg= 5.856777E+01 msec
+__ higher-order _______________ 64x avg= 2.944830E+01 msec
+__ generated ________________ 1024x avg= 1.817178E+00 msec
+__ generation time ____________ 16x avg= 6.433709E+01 msec
+__ higher-order ________________ 8x avg= 1.302654E+02 msec
+__ generated _________________ 256x avg= 4.856711E+00 msec
+__ generation time ____________ 16x avg= 6.970411E+01 msec
+__ higher-order ________________ 4x avg= 3.585474E+02 msec
+
+
+~/langs/ML/num-math/trunk/code> metaocamlopt -verbose -I . -I /tmp ~/Cache/ometa-cvs/lib/ocaml/nums.cmxa /tmp/funct4.ml /tmp/direct2.ml exper2.ml
+__ generated _______________ 65536x avg= 2.217953E-02 msec
+__ generation time ____________ 32x avg= 4.666901E+01 msec
+__ higher-order _____________ 1024x avg= 1.483538E+00 msec
+__ generated ________________ 4096x avg= 2.571623E-01 msec
+__ generation time ____________ 32x avg= 5.880562E+01 msec
+__ higher-order _______________ 64x avg= 1.722143E+01 msec
+__ generated ________________ 1024x avg= 1.513102E+00 msec
+__ generation time ____________ 16x avg= 6.604590E+01 msec
+__ higher-order _______________ 16x avg= 1.029261E+02 msec
+__ generated _________________ 256x avg= 6.858643E+00 msec
+__ generation time ____________ 16x avg= 7.118375E+01 msec
+__ higher-order ________________ 4x avg= 4.581764E+02 msec
