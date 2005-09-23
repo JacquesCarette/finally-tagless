@@ -1,0 +1,414 @@
+\documentclass[landscape]{slides}
+\usepackage[dvipsnames,usenames]{color}
+\usepackage{slidesec}
+\usepackage{background}
+\usepackage{pause}
+\usepackage{amssymb,amsmath}
+
+\newtheorem{defn}{Definition}
+\newtheorem{thm}{Theorem}
+\newtheorem{Ex}{Example}
+
+\DeclareMathOperator{\len}{length}
+\DeclareMathOperator{\theory}{theory}
+
+\begin{document}
+\pagestyle{empty}
+
+\setlength{\topmargin}{0in}
+\setlength{\headheight}{0.0in}
+\setlength{\headsep}{0in}
+\setlength{\topskip}{0in}
+\setlength{\footskip}{0in}
+%\setlength{\textwidth}{8.5in}
+%\setlength{\textheight}{11in}
+
+\newcommand{\vsi}{\vspace{-5mm}}
+\newcommand{\vsii}{\vspace{-7mm}}
+\newcommand{\vsiii}{\vspace{-11mm}}
+
+\newcommand{\seq}[1]{{\langle #1 \rangle}}
+\newcommand{\set}[1]{{\{ #1 \}}}
+\newcommand{\tuple}[1]{{( #1 )}}
+\newcommand{\mname}[1]{\mbox{\sf #1}}
+\newcommand{\Nat}{\mathbb N}
+
+\definecolor{bgblue}{rgb}{0.04,0.39,0.53}
+\definecolor{blue1}{rgb}{0.95,0.95,1}
+\definecolor{blue2}{rgb}{0.80,0.80,1}
+\vpagecolor[blue1]{blue2}
+
+\begin{slide}
+\title{Functors, CPS and Monads,\\
+or how to generate efficient algebraic code from abstract designs}
+\author{Jacques Carette\\
+McMaster University\\
+and\\
+Oleg Kiselyov}
+\date{June 6, 2005}
+\maketitle
+\end{slide}
+
+\begin{slide}
+\slideheading{Overview}
+\begin{enumerate}
+    \item Problem
+    \item MetaOCaml
+    \item Design Points
+    \item Functors, CPS, Monads, Extensible Grammar
+    \item Solution \& results
+\end{enumerate}
+
+% What is simpler?\\
+% \begin{tabular}{l|l}
+% $0$ & $(x+3)^3 - x^3 - 9x^2 -27x -27$\pause \\
+% $1+\sqrt{2}$ & $\sqrt[3]{7+5\sqrt{2}}$\pause \\
+% $9$ & $4+2+1+1+1$\pause \\
+% $2^{2^{20}}-1$ & \texttt{...} \pause \\
+% $\texttt{ChebyshevT}(10000, x)$ & \texttt{...} \pause \\
+% $\texttt{ChebyshevT}(5, x)$ & $16x^5 - 20x^3 + 5x$ \pause \\
+% $1$ & $\frac{x-1}{x-1}$ \\
+% \end{tabular}
+\end{slide}
+
+\begin{slide}
+    \slideheading{Problem (Origins)}
+    \begin{itemize}
+        \item 35+ implementations of GE in Maple
+        \item Efficiency:
+            \begin{itemize}
+                \item[+] specialized versions 
+                \item[-] generic slow
+                \item[-] not enough specialization
+            \end{itemize}
+        \item Problem: how to unify without losing speed?
+    \end{itemize}
+\end{slide}
+
+\begin{slide}
+    \slideheading{Problem (as solved)}
+    \textbf{Goal:} Type-safe, generic, efficient algorithms\\
+    \textbf{Issues:}
+    \begin{itemize}
+        \item Untyped $\Rightarrow$ lots of debugging, no certainty\vsii
+        \item Abstraction $\Rightarrow$ overhead 
+            (unless you're the compiler writer)\vsii
+        \item Efficiency requires \emph{no} overhead\vsi
+    \end{itemize}
+    $\Longrightarrow$ implement as a \emph{typed} meta-program
+\end{slide}
+
+\begin{slide}
+    \slideheading{www.metaocaml.org}
+    Version of \textbf{Ocaml} with typed metaprogramming facilities\\
+    \begin{tabular}{lll}\hline
+        \verb=.< x + y >.= & \emph{code} of $x+y$ & code expression\\
+        \verb=.~z= & \emph{code-value} of (code) $z$ & splice \\
+        \verb=.!z= & \emph{value} of (code) $z$ & run \\
+    \end{tabular}\\
+    Essentially: a form of \emph{typed} symbolic computation!\\
+    Except: \textit{closed} code cannot be manipulated other than being
+    spliced into other code.
+\end{slide}
+
+\begin{slide}
+    \slideheading{MetaOCaml example}
+    The classic: powering!
+\begin{verbatim}
+let square x = .< .~x * .~x >. ;;
+
+let rec power n x =
+  if n=0 then .< 1 >.
+  else .< .~x * .~(power (n-1) x ) >. ;;
+
+let p1 = .< fun y -> .~(power 5 .<y>.) >. ;;
+# val p1 : ('a, int->int) code = 
+  .< fun y1 -> (y1*(y1*(y1*(y1*(y1*1))))) >.
+\end{verbatim}
+\end{slide}
+
+\begin{slide}
+    \slideheading{MetaOCaml example (cont)}
+\begin{verbatim}
+let even n = (n mod 2) == 0;;
+let square x = .< .~x * .~x >. ;;
+
+let rec power n x =
+      if n=0 then .< 1 >.
+      else if n=1 then x
+      else if even n then square(power (n/2) x )
+      else .< .~x * .~(power (n-1) x ) >. ;;
+
+let p1 = .< fun y -> .~(power 5 .<y>.) >. ;;
+# val p1 : ('a, int->int) code = 
+  .< fun y1 -> (y1*(y1*y1)*(y1*y1)) >.
+\end{verbatim}
+\end{slide}
+
+\begin{slide}
+    \slideheading{MetaOCaml example (cont)}
+\begin{verbatim}
+let even n = (n mod 2) == 0;;
+let square x = .<let z=.~x in z*z>. ;;
+
+let rec power n x =
+      if n=0 then .< 1 >.
+      else if n=1 then x
+      else if even n then square(power (n/2) x )
+      else .< .~x * .~(power (n-1) x ) >. ;;
+
+let p1 = .< fun y -> .~(power 5 .<y>.) >. ;;
+# val p1 : ('a, int->int) code = 
+  .< fun y1 -> (y1* let y3= let y2=y1 in (y2*y2) in (y3*y3)) >.
+\end{verbatim}
+\end{slide}
+
+\begin{slide}
+    \slideheading{Design Points \emph{(aspects)}}
+    \hspace*{-2cm}
+        \begin{tabular}{|l|l|l|} \hline
+        Design Dimension & Abstracts & Depends on \\ \hline
+        Domain & Matrix values & -- \\ \hline
+        Representation & Matrix representation & -- \\ \hline
+        Fraction-free & use of division & Domain \\ \hline
+        Pivoting & length measure & Domain \\ \hline
+        Output & choice of output & -- \\ \hline
+        Normalization & domain needs normalization & Domain \\ \hline
+        Determinant & determinant tracking & Output \& Fraction-free \\ \hline
+        ZeroEquivalence & decidability of $=0$ & -- \\ \hline
+        UserInformation & user-feedback & ZeroEquivalence\\ \hline
+        Augmented & matrix is augmented & -- \\ \hline
+    \end{tabular}
+\end{slide}
+
+\begin{slide}
+    \slideheading{Modules \& Functors}
+\begin{verbatim}
+module IntegerDomain = 
+  struct
+    type v = int
+    type kind = domain_is_ring
+    type 'a vc = ('a,v) code
+    let zero = .< 0 >.  
+    let one = .< 1 >. 
+    let plus x y = ret .<.~x + .~y>. 
+    let times x y = ret .<.~x * .~y>.
+    let minus x y = ret .<.~x - .~y>.
+    let uminus x = ret .< - .~x>.
+    let div x y = ret .<.~x / .~y>. 
+    let better_than = Some (fun x y -> ret .<abs .~x > abs .~y >. )
+    let normalizerf = None 
+    let normalizerg = fun x -> x
+end
+\end{verbatim}
+\end{slide}
+
+\begin{slide}
+    \slideheading{Modules \& Functors}
+\begin{verbatim}
+module type DOMAIN = sig
+  type v
+  type kind (* Field or Ring ? *)
+  type 'a vc = ('a,v) code
+  val zero : 'a vc
+  val one : 'a vc
+  val plus : 'a vc -> 'a vc -> ('a vc, 's, 'w) monad
+  val times : 'a vc -> 'a vc -> ('a vc, 's, 'w) monad
+  val minus : 'a vc -> 'a vc -> ('a vc, 's, 'w) monad
+  val uminus : 'a vc -> ('a vc, 's, 'w) monad
+  val div : 'a vc -> 'a vc -> ('a vc, 's, 'w) monad
+  val better_than : ('a vc -> 'a vc -> (('a,bool) code, 's, 'w) monad) option
+  val normalizerf : (('a,v -> v) code ) option
+  val normalizerg : 'a vc -> 'a vc
+end 
+\end{verbatim}
+\end{slide}
+
+\begin{slide}
+    \slideheading{Modules \& Functors}
+\begin{verbatim}
+module GenericArrayContainer(Dom:DOMAIN) = struct
+  type contr = Dom.v array array (* Array of rows *)
+  type 'a vc = ('a,contr) code
+  type 'a vo = ('a,Dom.v) code
+  let get' x n m = .< (.~x).(.~n).(.~m) >.
+  let get x n m = ret (get' x n m)
+  let set' x n m y = .< (.~x).(.~n).(.~m) <- .~y >.
+  let set x n m y = ret (set' x n m y)
+  let dim2 x = .< Array.length .~x >.       (* number of rows *)
+  let dim1 x = .< Array.length (.~x).(0) >. (* number of cols *)
+  let mapper g a = match g with
+      | Some f -> .< Array.map (fun x -> Array.map .~f x) .~a >.
+      | None   -> a
+  let copy = (fun a -> .<Array.map (fun x -> Array.copy x) 
+                       (Array.copy .~a) >. )
+  let swap_rows_stmt a r1 r2 =
+      .< let t = (.~a).(.~r1) in
+         begin 
+             (.~a).(.~r1) <- (.~a).(.~r2);
+             (.~a).(.~r2) <- t
+         end >.
+end
+\end{verbatim}
+\end{slide}
+
+\begin{slide}
+    \slideheading{Continuation-passing Style (CPS)}
+\begin{verbatim}
+let one = .<1>. and plus x y = .<.~x + .~y>.
+let simplest_code = let gen x y = plus x (plus y one) in
+  .<fun x y -> .~(gen .<x>. .<y>.)>.
+# val .<fun x_1 -> fun y_2 -> (x_1 + (y_2 + 1))>.
+let param_code1' plus one =
+  let gen x y = let ce = (plus y one) in  plus ce (plus x ce) in
+  .<fun x y -> .~(gen .<x>. .<y>.)>.
+param_code1' plus one
+# val .<fun x_1 -> fun y_2 -> ((y_2 + 1) + (x_1 + (y_2 + 1)))>.
+\end{verbatim}
+Problem: \verb=y_2+1= repeated.  But obvious solution doesn't work!
+\end{slide}
+
+\begin{slide}
+    \slideheading{Continuation-passing Style (CPS)}
+    But if you pass your future around\dots
+\begin{verbatim}
+let letgen exp k = .<let t = .~exp in .~(k .<t>.)>.
+let param_code2 plus one =
+  let gen x y k = letgen (plus y one) 
+                  (fun ce -> k (plus ce (plus x ce)))
+  and k0 x = x
+  in .<fun x y -> .~(gen .<x>. .<y>. k0)>.
+param_code2 plus one
+#val .<fun x_1 -> fun y_2 -> 
+           let t_3 = (y_2 + 1) in (t_3 + (x_1 + t_3))>.
+\end{verbatim}
+\end{slide}
+
+\begin{slide}
+    \slideheading{Monads}
+    Also known (in category theory) as \emph{Kleisli triples}.\\
+    Method to encapsulate ``computations'', including state.\\
+    We need \emph{state} and \emph{continuations}
+\begin{verbatim}
+type ('v,'s,'w) monad = 's -> ('s -> 'v -> 'w) -> 'w
+let ret a = fun s k -> k s a
+let bind a f = fun s k -> a s (fun s' b -> f b s' k)
+
+let k0 s v = v
+let runM m = m [] k0
+
+let retN a = fun s k -> .<let t = .~a in .~(k s .<t>.)>.
+
+let ifL test th el = ret .< if .~test then .~th else .~el >.
+let ifM test th el = fun s k ->
+  k s .< if .~(test s k0) then .~(th s k0) else .~(el s k0) >.
+\end{verbatim}
+\end{slide}
+
+\begin{slide}
+    \slideheading{Extensible Grammar}
+    In all programming languages, a lot of \emph{expressible abstractions}
+    have attrocious syntax.  Definitely a problem of languages with
+    just a few powerful primitives. \texttt{camlp4} for Ocaml allows one to add
+    to (or redefine completely) the grammar of the language.  For monads:
+\begin{verbatim}
+let param_code3 plus one =
+  let gen x y = bind (retN (plus y one)) (fun ce -> 
+                ret (plus ce (plus x ce)))
+  in .<fun x y -> .~(runM (gen .<x>. .<y>.))>.
+
+let param_code4 plus one =
+  let gen x y = mdo \{ ce <-- retN (plus y one);
+                      ret (plus ce (plus x ce)) \}
+  in .<fun x y -> .~(runM (gen .<x>. .<y>.))>.
+\end{verbatim}
+\end{slide}
+
+\begin{slide}
+    \slideheading{Solution}
+    Have Modules and (higher-order) Functors, all using the CPS Monad, of
+    \emph{code generators} that assemble the solution from base \emph{code
+    combinators}.
+\begin{verbatim}
+module GenFA1 = 
+    Gen(FloatDomain)
+       (GenericArrayContainer)
+       (RowPivot)
+       (DivisionUpdate(FloatDomain)(GenericArrayContainer)
+                      (NoDet(FloatDomain)))
+       (OutJustMatrix(FloatDomain)(GenericArrayContainer)
+                     (NoDet(FloatDomain)))
+\end{verbatim}
+\end{slide}
+
+\begin{slide}
+    \slideheading{Solution}
+    \begin{small}
+\begin{verbatim}
+module Gen(Dom: DOMAIN)(C: CONTAINER2D)(PivotF: PIVOT)
+          (Update: UPDATE with type baseobj = Dom.v 
+                          and type ctr = C(Dom).contr)
+          (Out: OUTPUT with type contr = C(Dom).contr 
+                       and type D.indet = Dom.v 
+                       and type 'a D.lstate = 'a Update.D.lstate) =
+   struct
+    module Ctr = C(Dom) module Pivot = PivotF(Dom)(C)(Out.D)
+    type v = Dom.v
+    let gen =
+      let zerobelow b r c m n brc =
+        let innerbody i = mdo {
+            bic <-- Ctr.get b i c;
+            whenM (l1 LogicCode.not (LogicCode.equal bic Dom.zero ))
+                (seqM (retLoopM (Idx.succ c) (Idx.pred m)
+                          (fun k -> Update.update b r c i k) )
+                      (Ctr.set b i c Dom.zero)) } in 
+        mdo { seqM (retLoopM (Idx.succ r) (Idx.pred n) innerbody) 
+                   (Update.update_det brc) } in
+      let dogen a = mdo {
+          r <-- Out.R.decl ();
+          c <-- retN (liftRef Idx.zero);
+          b <-- retN (Ctr.mapper Dom.normalizerf (Ctr.copy a));
+          m <-- retN (Ctr.dim1 a);
+          n <-- retN (Ctr.dim2 a);
+          () <-- Update.D.decl ();
+          () <-- Out.P.decl ();
+          seqM 
+            (retWhileM (LogicCode.and_ (Idx.less (liftGet c) m)
+                                       (Idx.less (liftGet r) n) )
+               ( mdo {
+               rr <-- retN (liftGet r);
+               cc <-- retN (liftGet c);
+               pivot <-- l1 retN (Pivot.findpivot b rr m cc n);
+               seqM (retMatchM pivot (fun pv -> 
+                        seqM (zerobelow b rr cc m n pv)
+                             (Out.R.succ ()) )
+                        (Update.D.zero_sign () ))
+                    (Code.update c Idx.succ) } ))
+            (Out.make_result b) } 
+    in .<fun a -> .~(runM (dogen .<a>.)) >.
+end
+\end{verbatim}
+\end{small}
+\end{slide}
+\begin{slide}
+    \slideheading{Results}
+$8$ domains, $5$ container types, $3$ pivoting strategies, 
+$5$ output choices, $2$ elimination strategies\\
+$\Longrightarrow$ over 800 (of 1200) type-safe possibilities.
+
+Resulting code is \textbf{identical} to hand-written code.
+
+Using \emph{offshoring}, can generate C (and sometimes Fortran) code
+for results.
+\end{slide}
+
+\begin{slide}
+    \slideheading{Conclusion}
+    This is not Gaussian Elimination specific -- this should scale
+    easily to all of Linear Algebra, and with a bit more work, to
+    most algebraic code.
+
+    Need more syntactic sugar\dots
+\end{slide}
+
+\end{document}
