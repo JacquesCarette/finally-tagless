@@ -6,7 +6,7 @@
 % \usepackage{comment}
 \usepackage{amssymb,amsmath}
 \usepackage{fancyvrb}
-%\DefineShortVerb{\|}
+% \DefineShortVerb{}
 %\DefineVerbatimEnvironment{code}{Verbatim}{commandchars=\\\{\},fontsize=\small}
 \DefineVerbatimEnvironment{code}{Verbatim}{commandchars=\\\{\},fontsize=\small}
 \DefineVerbatimEnvironment{code2}{Verbatim}{commandchars=\\\{\},fontsize=\footnotesize}
@@ -94,7 +94,7 @@ Oleg Kiselyov\inst{2}}
 \begin{enumerate}
     \item Problem
     \item Design Points
-    \item Tools: CPS, Monads, Extensible Grammar, Functors
+    \item Tools: CPS, Monads, Extensible Grammar, Functors, \dots
     \item Solution \& Results
 \end{enumerate}
 \end{frame}
@@ -102,21 +102,21 @@ Oleg Kiselyov\inst{2}}
 \begin{frame}
 \frametitle{Problem (Origins)}
     \begin{itemize}
-        \item 35+ implementations of Gaussian Elimination in Maple
-        \item Efficiency:
+        \item<1-> 35+ implementations of Gaussian Elimination in Maple
+        \item<2-> Efficiency!
             \begin{itemize}
-                \item[+] specialized versions 
-                \item[-] generic slow
-                \item[-] not enough specialization
+                \item[+] get from specialized versions 
+                \item[-] generic versions are slow
             \end{itemize}
-        \item Problem: how to unify without losing speed?
+        \item<3-> Problem: how to unify without losing speed?
     \end{itemize}
 \end{frame}
 
 \begin{frame}
     \frametitle{Problem (as solved)}
-    \textbf{Goal:} Type-safe, generic, efficient algorithms\\
-    \textbf{Issues:}
+    \begin{itemize}
+        \item[]<1->\textbf{Goal:} Type-safe, generic, efficient algorithms
+        \item[]<2->\textbf{Issues:}
     \begin{itemize}
         \item Untyped $\Rightarrow$ lots of debugging, no certainty
         \item Abstraction $\Rightarrow$ overhead 
@@ -124,23 +124,26 @@ Oleg Kiselyov\inst{2}}
         \item Efficiency requires \emph{no} overhead
         \item Output type varies
     \end{itemize}
+    \end{itemize}
+    \begin{block}{conclusion}<3->
     $\Longrightarrow$ implement as a \emph{typed} meta-program
+\end{block}
 \end{frame}
 
 \begin{frame}
 \frametitle{Design Points \emph{(aspects)}}
 \begin{tabular}{@{}l|l|l@{}} \hline
-	Design Dimension & Abstracts & Depends on \\ \hline
+    Design Dimension & Abstracts & Depends on \\ \hline
     Domain & Matrix values & -- \\ \hline
     Representation & Matrix representation & Domain \\ \hline
-	Fraction-free & use of division & Domain \\ \hline
-	Pivoting Strategy & length measure \& user & Domain \\ \hline
-	Output & choice of output & -- \\ \hline
-	Normalization & domain needs normalization & Domain \\ \hline
-	Determinant & determinant tracking & Output \& Fraction-free \\ \hline
-	ZeroEquivalence & decidability of $=0$ & -- \\ \hline
-	UserInformation & user-feedback & ZeroEquivalence\\ \hline
-	Augmented & matrix is augmented & -- \\ \hline
+    Fraction-free & use of division & Domain \\ \hline
+    Pivoting Strategy & length measure \& user & Domain \\ \hline
+    Output & choice of output & -- \\ \hline
+    Normalization & domain needs normalization & Domain \\ \hline
+    Determinant & determinant tracking & Output \& Fraction-free \\ \hline
+    ZeroEquivalence & decidability of $=0$ & -- \\ \hline
+    UserInformation & user-feedback & ZeroEquivalence\\ \hline
+    Augmented & matrix is augmented & -- \\ \hline
 \end{tabular}
 
 \vspace{5mm}
@@ -154,14 +157,14 @@ let one = .<1>. and plus x y = .<.~x + .~y>.
 let simplestcode = let gen x y = plus x (plus y one) in
   .<fun x y -> .~(gen .<x>. .<y>.)>.
 The function above is generic (can change to float easily)
- val .<fun x1 -> fun y2 -> (x1 + (y2 + 1))>.
+# val .<fun x1 -> fun y2 -> (x1 + (y2 + 1))>.
 let paramcode1' plus one =
   let gen x y = let ce = (plus y one) in  plus ce (plus x ce) in
   .<fun x y -> .~(gen .<x>. .<y>.)>.
 paramcode1' plus one
- val .<fun x1 -> fun y2 -> ((y2 + 1) + (x1 + (y2 + 1)))>.
+# val .<fun x1 -> fun y2 -> ((y2 + 1) + (x1 + (y2 + 1)))>.
 \end{code}
-Problem: $y2+1$ repeated.  But obvious solution doesn't work!
+Problem: \verb=y2+1= repeated.  But obvious solution doesn't work!
 \end{frame}
 
 \begin{frame}[fragile]
@@ -175,7 +178,7 @@ let paramcode2 plus one =
   and k0 x = x
   in .<fun x y -> .~(gen .<x>. .<y>. k0)>.
 paramcode2 plus one
-val .<fun x1 -> fun y2 -> 
+# val .<fun x1 -> fun y2 -> 
            let t3 = (y2 + 1) in (t3 + (x1 + t3))>.
 \end{code}
 From \textit{A Methodology for Generating Verified Combinatorial Circuits} by 
@@ -184,8 +187,10 @@ Kiselyov, Swadi and Taha.
 
 \begin{frame}[fragile]
     \frametitle{Tools: Monads}
-    Method to encapsulate ``computations'', including state.\\
-    We need \emph{state} and \emph{continuations}
+    \begin{itemize}
+        \item[]<1->Method to encapsulate ``computations''.
+        \item[]<2->We need \emph{state} and \emph{continuations}
+        \item[]<3->
 \begin{code}
 type ('v,'s,'w) monad = 's -> ('s -> 'v -> 'w) -> 'w
 let ret a = fun s k -> k s a
@@ -196,6 +201,9 @@ let runM m = m [] k0
 
 let retN a = fun s k -> .<let t = .~a in .~(k s .<t>.)>.
 \end{code}
+\item[]<4->\textit{state} is encoded as a list of
+    \emph{polymorphic variants} for type-safety.
+    \end{itemize}
 \end{frame}
 
 \begin{frame}[fragile]
@@ -336,113 +344,129 @@ module Gen(Dom: DOMAIN)(C: CONTAINER2D)(PivotF: PIVOT)
     module Ctr = C(Dom) module Pivot = PivotF(Dom)(C)(Out.D)
     type v = Dom.v
     let gen =
-      let zerobelow b r c m n brc =
+      let zerobelow b r c m n brc = 
         let innerbody i = doM
             bic <-- Ctr.get b i c;
             whenM (l1 LogicCode.not (LogicCode.equal bic Dom.zero ))
                 (seqM (retLoopM (Idx.succ c) (Idx.pred m)
                           (fun k -> Update.update b r c i k) )
-					  (Ctr.set b i c Dom.zero)) in 
+                      (Ctr.set b i c Dom.zero)) in 
         doM seqM (retLoopM (Idx.succ r) (Idx.pred n) innerbody) 
                    (Update.update_det brc) in
-      let dogen a = doM
-          r <-- Out.R.decl ();
-          c <-- retN (liftRef Idx.zero);
-          b <-- retN (Ctr.mapper Dom.normalizerf (Ctr.copy a));
-          m <-- retN (Ctr.dim1 a);
-          n <-- retN (Ctr.dim2 a);
-          () <-- Update.D.decl ();
-          () <-- Out.P.decl ();
-          seqM 
-            (retWhileM (LogicCode.and_ (Idx.less (liftGet c) m)
-                                       (Idx.less (liftGet r) n) )
-               ( doM
-               rr <-- retN (liftGet r);
-               cc <-- retN (liftGet c);
-               pivot <-- l1 retN (Pivot.findpivot b rr m cc n);
-               seqM (retMatchM pivot (fun pv -> 
-                        seqM (zerobelow b rr cc m n pv)
-                             (Out.R.succ ()) )
-                        (Update.D.zero_sign () ))
-                    (Code.update c Idx.succ) ))
-            (Out.make_result b)
-    in .<fun a -> .~(runM (dogen .<a>.)) >.
-end
+\end{code2}
+\end{frame}
+
+\begin{frame}[fragile]
+    \frametitle{Solution (cont)}
+\begin{code2}
+  let dogen a = doM
+      r <-- Out.R.decl ();
+      c <-- retN (liftRef Idx.zero);
+      b <-- retN (Ctr.mapper Dom.normalizerf (Ctr.copy a));
+      m <-- retN (Ctr.dim1 a);
+      n <-- retN (Ctr.dim2 a);
+      () <-- Update.D.decl ();
+      () <-- Out.P.decl ();
+      seqM 
+        (retWhileM (LogicCode.and_ (Idx.less (liftGet c) m)
+                                   (Idx.less (liftGet r) n) )
+           ( doM
+           rr <-- retN (liftGet r);
+           cc <-- retN (liftGet c);
+           pivot <-- l1 retN (Pivot.findpivot b rr m cc n);
+           seqM (retMatchM pivot (fun pv -> 
+                    seqM (zerobelow b rr cc m n pv) (Out.R.succ ()) )
+                    (Update.D.zero_sign () ))
+                (Code.update c Idx.succ) ))
+        (Out.make_result b)
+in .<fun a -> .~(runM (dogen .<a>.)) >.  end
 \end{code2}
 \end{frame}
 
 \begin{frame}
     \frametitle{Results}
-$8$ domains, $5$ container types, $3$ pivoting strategies, 
-$5$ output choices, $2$ elimination strategies\\
-$\Longrightarrow$ over 800 (of 1200) type-safe possibilities.
+    \begin{enumerate}
+        \item Defined aspects:
+    \begin{itemize}
+        \item $8$ domains (of an infinite family)
+        \item $5$ container types
+        \item $3$ pivoting strategies 
+        \item $5$ output choices 
+        \item $2$ elimination strategies
+    \end{itemize}
+Which leads to 800 (of 1200) type-safe possibilities.
 
-Resulting code is \textbf{identical} to hand-written code.
+\item Resulting code is \textbf{completely isomorphic} to hand-written code.
 
-Using \emph{offshoring}, can generate C (and sometimes Fortran) code
+\item Using \emph{offshoring}, can generate C (and sometimes Fortran) code
 for results.
+
+\item Using (new) native code support, can generate (and run) code
+    natively on some platforms.
+    \end{enumerate}
 \end{frame}
 
 \begin{frame}
 \frametitle{Timings (Bytecode)}
-Floating-point version, matrix-only return, row-pivoting
-
+Machine: P4 2.00Ghz, FreeBSD 4.9-RELEASE-p1, 1Gig memory
+\begin{figure}
 \begin{tabular}{l|l|l|l}
-	size & generated & generation & direct \\ \hline
-	10 & 0.28 msec & 9.1 & 2.8 \\
-	30 & 6.9  & 9.1 & 66.8 \\
-	50 & 31.4 & 9.1 & 84.7 \\
-	70 & 84.7 & 9.1 & 816.6 \\
+    size & generated & generation & direct \\ \hline
+    10 & 0.28 msec & 9.1 & 2.8 \\
+    30 & 6.9  & 9.1 & 66.8 \\
+    50 & 31.4 & 9.1 & 84.7 \\
+    70 & 84.7 & 9.1 & 816.6 \\
 \end{tabular}
+\caption{Floating-point version, matrix-only return, row-pivoting}
+\end{figure}
 
-Integer, Matrix-rank-determinant return, fraction-free, row-pivoting 
-
+\begin{figure}
 \begin{tabular}{l|l|l|l}
-	size & generated & generation & direct \\ \hline
-	10 & 0.18 & 9.0 & 3.5 \\
-	30 & 2.0  & 9.0 & 41.8 \\
-	50 & 11.3 & 9.0 & 244.3 \\
-	70 & 50.6 & 9.0 & 1102.5 \\
-\end{tabular}\\
-P4 2.00Ghz, FreeBSD 4.9-RELEASE-p1, 1Gig memory
+    size & generated & generation & direct \\ \hline
+    10 & 0.18 & 9.0 & 3.5 \\
+    30 & 2.0  & 9.0 & 41.8 \\
+    50 & 11.3 & 9.0 & 244.3 \\
+    70 & 50.6 & 9.0 & 1102.5 \\
+\end{tabular}
+\caption{Integer, Matrix-rank-determinant return, fraction-free, row-pivoting}
+\end{figure}
 \end{frame}
 
 \begin{frame}
 \frametitle{Timings (Native)}
-Floating-point version, matrix-only return, row-pivoting
 
+\begin{figure}
 \begin{tabular}{l|l|l|l}
-	size & generated & generation & direct \\ \hline
-	10 & 0.017 msec & 46.8 & 1.25 \\
-	30 & 0.36       & 58.6 & 29.4 \\
-	50 & 1.82       & 64.3 & 130.2 \\
-	70 & 4.86       & 69.7 & 358.5 \\
+    size & generated & generation & direct \\ \hline
+    10 & 0.017 msec & 46.8 & 1.25 \\
+    30 & 0.36       & 58.6 & 29.4 \\
+    50 & 1.82       & 64.3 & 130.2 \\
+    70 & 4.86       & 69.7 & 358.5 \\
 \end{tabular}
+\caption{Floating-point version, matrix-only return, row-pivoting}
+\end{figure}
 
-Integer, Matrix-rank-determinant return, fraction-free, row-pivoting 
-
+\begin{figure}
 \begin{tabular}{l|l|l|l}
-	size & generated & generation & direct \\ \hline
-	10 & 0.022 msec & 46.6 & 1.48 \\
-	30 & 0.25       & 58.8 & 17.2 \\
-	50 & 1.51       & 66.0 & 102.9 \\
-	70 & 6.85       & 71.1 & 458.2 \\
+    size & generated & generation & direct \\ \hline
+    10 & 0.022 msec & 46.6 & 1.48 \\
+    30 & 0.25       & 58.8 & 17.2 \\
+    50 & 1.51       & 66.0 & 102.9 \\
+    70 & 6.85       & 71.1 & 458.2 \\
 \end{tabular}
+\caption{Integer, Matrix-rank-determinant return, fraction-free, row-pivoting}
+\end{figure}
 \end{frame}
 
-\begin{frame}[fragile]
+\begin{frame}[allowframebreaks=.99,fragile]
     \frametitle{Sample Output}
-\begin{small}
-\begin{code}
+\begin{code2}
   ('a, Funct4.GenFA1.Ctr.contr ->
    Funct4.OutJustMatrix(Funct4.FloatDomain)(Funct4.GenericArrayContainer)(Funct4.NoDet(Funct4.FloatDomain)).res)
   code =
-  .<fun a_1 ->
-   let t_2 = (ref 0) in
-   let t_3 = (ref 0) in
+  .<fun a_1 -> let t_2 = (ref 0) in let t_3 = (ref 0) in
    let t_5 = (Array.map (fun x_4 -> (Array.copy x_4)) (Array.copy a_1)) in
-   let t_6 = (Array.length a_1.(0)) in
-   let t_7 = (Array.length a_1) in
+   let t_6 = (Array.length a_1.(0)) in let t_7 = (Array.length a_1) in
    while (((! t_3) < t_6) && ((! t_2) < t_7)) do
     let t_8 = (! t_2) in let t_9 = (! t_3) in
     let t_10 = (ref (None)) in
@@ -457,15 +481,13 @@ Integer, Matrix-rank-determinant return, fraction-free, row-pivoting
              (t_10 := (Some (j_13, t_14)))
             else ()
          | None -> (t_10 := (Some (j_13, t_14))))
-       else ()
-      done;
+       else () done;
       (match (! t_10) with
        | Some (i_11) ->
           if ((fst i_11) <> t_8) then begin
            let t_12 = t_5.(t_8) in
            t_5.(t_8) <- t_5.(fst i_11);
            t_5.(fst i_11) <- t_12;
-           ()
           end else ();
           (Some (snd i_11))
        | None -> (None))
@@ -476,15 +498,12 @@ Integer, Matrix-rank-determinant return, fraction-free, row-pivoting
          for j_18 = (t_8 + 1) to (t_7 - 1) do
           if (not ((t_5.(j_18)).(t_9) = 0.)) then begin
            for j_19 = (t_9 + 1) to (t_6 - 1) do
-            (t_5.(j_18)).(j_19) <-
-             ((t_5.(j_18)).(j_19) -.
+            (t_5.(j_18)).(j_19) <- ((t_5.(j_18)).(j_19) -.
                (((t_5.(j_18)).(t_9) /. (t_5.(t_8)).(t_9)) *.
                  (t_5.(t_8)).(j_19)))
            done;
            (t_5.(j_18)).(t_9) <- 0.
-          end else ()
-         done;
-         ()
+          end else () done;
         end;
         (t_2 := ((! t_2) + 1))
      | None -> ());
@@ -492,22 +511,14 @@ Integer, Matrix-rank-determinant return, fraction-free, row-pivoting
    done;
    t_5>.
 
-  ('a,
-   Funct4.GenIA4.Ctr.contr ->
-   Funct4.OutDetRank(Funct4.IntegerDomain)(Funct4.GenericArrayContainer)(Funct4.IDet)(Funct4.Rank).res)
-  code =
-  .<fun a_280 ->
-   let t_281 = (ref 0) in
-   let t_282 = (ref 0) in
-   let t_284 =
-    (Array.map (fun x_283 -> (Array.copy x_283)) (Array.copy a_280)) in
-   let t_285 = (Array.length a_280.(0)) in
-   let t_286 = (Array.length a_280) in
-   let t_287 = (ref 1) in
-   let t_288 = (ref 1) in
+  ('a, Funct4.GenIA4.Ctr.contr ->
+   Funct4.OutDetRank(Funct4.IntegerDomain)(Funct4.GenericArrayContainer)(Funct4.IDet)(Funct4.Rank).res) code =
+  .<fun a_280 -> let t_281 = (ref 0) in let t_282 = (ref 0) in
+   let t_284 = (Array.map (fun x_283 -> (Array.copy x_283)) (Array.copy a_280)) in
+   let t_285 = (Array.length a_280.(0)) in let t_286 = (Array.length a_280) in
+   let t_287 = (ref 1) in let t_288 = (ref 1) in
    while (((! t_282) < t_285) && ((! t_281) < t_286)) do
-    let t_289 = (! t_281) in
-    let t_290 = (! t_282) in
+    let t_289 = (! t_281) in let t_290 = (! t_282) in
     let t_291 = (ref (None)) in
     let t_297 =
      begin
@@ -534,8 +545,7 @@ Integer, Matrix-rank-determinant return, fraction-free, row-pivoting
        | None -> (None))
      end in
     (match t_297 with
-     | Some (i_298) ->
-        begin
+     | Some (i_298) -> begin
          for j_299 = (t_289 + 1) to (t_286 - 1) do
           if (not ((t_284.(j_299)).(t_290) = 0)) then begin
            for j_300 = (t_290 + 1) to (t_285 - 1) do
@@ -545,125 +555,37 @@ Integer, Matrix-rank-determinant return, fraction-free, row-pivoting
                (! t_287))
            done;
            (t_284.(j_299)).(t_290) <- 0
-          end else ()
-         done;
+          end else () done;
          (t_287 := i_298)
         end;
         (t_281 := ((! t_281) + 1))
      | None -> (t_288 := 0));
     (t_282 := ((! t_282) + 1))
    done;
-   (t_284,
-    if ((! t_288) = 0) then 0
+   (t_284, if ((! t_288) = 0) then 0
     else if ((! t_288) = 1) then (! t_287)
     else (~- (! t_287)), (! t_281))>.
-\end{code}
-\end{small}
+\end{code2}
 \end{frame}
 
 \begin{frame}
-    \frametitle{Conclusion}
-    This is not Gaussian Elimination specific -- this should scale
-    easily to all of Linear Algebra, and with a bit more work, to
-    most algebraic code.
+\frametitle{Conclusions and future work}
+\textbf{Conclusions}
+\begin{itemize}
+    \item This is not Gaussian Elimination specific -- this should scale
+easily to all of Linear Algebra, and with a bit more work, to
+most algebraic code.
+    \item Need more syntactic sugar\dots
+\end{itemize}
 
-    Need more syntactic sugar\dots
+\textbf{Future work}
+\begin{itemize}
+    \item Implement more Linear Algebra algorithms
+    \item Implement all aspects
+    \item More complete code combinator library
+    \item Add some abstract interpretation for algorithm selection
+\end{itemize}
+
 \end{frame}
 
 \end{document}
-
-Hello!
-
-    Here are some numbers, for byte- and native compilation.
-
-My computer is FreeBSD 4.9-RELEASE-p1
-hw.machine: i386
-hw.model: Intel(R) Pentium(R) 4 CPU 2.00GHz
-hw.ncpu: 1
-hw.byteorder: 1234
-hw.physmem: 1070080000
-hw.usermem: 927322112
-hw.pagesize: 4096
-hw.floatingpoint: 1
-hw.machine_arch: i386
-
-BTW, I added an assertion to the files exper.ml and exper2.ml
-
-Bytecode:
-
-10,30,50,70
-~/langs/ML/num-math/trunk/code> ./a.out 
-__ generated ________________ 4096x avg= 2.865859E-01 msec
-__ generation time ___________ 128x avg= 9.146503E+00 msec
-__ higher-order ______________ 512x avg= 2.834229E+00 msec
-__ generated _________________ 256x avg= 6.868903E+00 msec
-__ generation time ___________ 128x avg= 9.111401E+00 msec
-__ higher-order _______________ 16x avg= 6.680728E+01 msec
-__ generated __________________ 32x avg= 3.144436E+01 msec
-__ generation time ___________ 128x avg= 9.137982E+00 msec
-__ higher-order ________________ 4x avg= 3.045543E+02 msec
-__ generated __________________ 16x avg= 8.469101E+01 msec
-__ generation time ___________ 128x avg= 9.035031E+00 msec
-__ higher-order ________________ 2x avg= 8.165625E+02 msec
-
-
-~/langs/ML/num-math/trunk/code> metaocamlc -verbose -pp "camlp4o pa_extend.cmo q_MLast.cmo ../camlp4/pa_monad.cmo" -I +camlp4 ~/Cache/ometa-cvs/lib/ocaml/nums.cma funct4.ml direct2.ml exper2.ml
-
-~/langs/ML/num-math/trunk/code> ./a.out 
-__ generated ________________ 8192x avg= 1.842597E-01 msec
-__ generation time ___________ 128x avg= 9.033271E+00 msec
-__ higher-order ______________ 512x avg= 3.551199E+00 msec
-__ generated _________________ 512x avg= 2.001440E+00 msec
-__ generation time ___________ 128x avg= 9.044719E+00 msec
-__ higher-order _______________ 32x avg= 4.186380E+01 msec
-__ generated _________________ 128x avg= 1.135904E+01 msec
-__ generation time ___________ 128x avg= 9.038421E+00 msec
-__ higher-order ________________ 8x avg= 2.443530E+02 msec
-__ generated __________________ 32x avg= 5.056813E+01 msec
-__ generation time ___________ 128x avg= 8.988767E+00 msec
-__ higher-order ________________ 1x avg= 1.102511E+03 msec
-
-
-Niative code. That gave me some headache. Direct metaocamlopt with -pp
-option didn't work, some kind of fatal error. So, I had to expand
-manually:
-
-~/langs/ML/num-math/trunk/code> camlp4o -I ../camlp4/ ../camlp4/pa_monad.cmo pr_o.cmo funct4.ml > /tmp/funct4.ml
-~/langs/ML/num-math/trunk/code> camlp4o -I ../camlp4/ ../camlp4/pa_monad.cmo pr_o.cmo direct2.ml > /tmp/direct2.ml
-
-Alas, the file /tmp/funct4.ml needed a lot of adjustments: inserting
-parenetheses in many places. The pretty-printer pr_o.cmo misjudged the
-precedences of .~ operations and dropped the parentheses. It's so good
-to have static typing: OCaml helped me to put those parentheses back.
-
-Here are the results:
-
-~/langs/ML/num-math/trunk/code> metaocamlopt -verbose -I . -I /tmp ~/Cache/ometa-cvs/lib/ocaml/nums.cmxa /tmp/funct4.ml /tmp/direct2.ml exper.ml
-~/langs/ML/num-math/trunk/code> ./a.out 
-__ generated _______________ 65536x avg= 1.753359E-02 msec
-__ generation time ____________ 32x avg= 4.680109E+01 msec
-__ higher-order _____________ 1024x avg= 1.247749E+00 msec
-__ generated ________________ 4096x avg= 3.586502E-01 msec
-__ generation time ____________ 32x avg= 5.856777E+01 msec
-__ higher-order _______________ 64x avg= 2.944830E+01 msec
-__ generated ________________ 1024x avg= 1.817178E+00 msec
-__ generation time ____________ 16x avg= 6.433709E+01 msec
-__ higher-order ________________ 8x avg= 1.302654E+02 msec
-__ generated _________________ 256x avg= 4.856711E+00 msec
-__ generation time ____________ 16x avg= 6.970411E+01 msec
-__ higher-order ________________ 4x avg= 3.585474E+02 msec
-
-
-~/langs/ML/num-math/trunk/code> metaocamlopt -verbose -I . -I /tmp ~/Cache/ometa-cvs/lib/ocaml/nums.cmxa /tmp/funct4.ml /tmp/direct2.ml exper2.ml
-__ generated _______________ 65536x avg= 2.217953E-02 msec
-__ generation time ____________ 32x avg= 4.666901E+01 msec
-__ higher-order _____________ 1024x avg= 1.483538E+00 msec
-__ generated ________________ 4096x avg= 2.571623E-01 msec
-__ generation time ____________ 32x avg= 5.880562E+01 msec
-__ higher-order _______________ 64x avg= 1.722143E+01 msec
-__ generated ________________ 1024x avg= 1.513102E+00 msec
-__ generation time ____________ 16x avg= 6.604590E+01 msec
-__ higher-order _______________ 16x avg= 1.029261E+02 msec
-__ generated _________________ 256x avg= 6.858643E+00 msec
-__ generation time ____________ 16x avg= 7.118375E+01 msec
-__ higher-order ________________ 4x avg= 4.581764E+02 msec
