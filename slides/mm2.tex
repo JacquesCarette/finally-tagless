@@ -1,9 +1,61 @@
-\documentclass[landscape]{slides}
-\usepackage[dvipsnames,usenames]{color}
-\usepackage{slidesec}
-\usepackage{background}
-\usepackage{pause}
-\usepackage{amssymb,amsmath}
+\documentclass{beamer}
+% \documentclass[t,utf8]{beamer}
+\setcounter{errorcontextlines}{100}
+% \usepackage[T1]{fontenc}
+% \usepackage{charter}
+% \usepackage{eulervm}
+% \usepackage{comment}
+% \usepackage{amssymb,amsmath}
+\usepackage{fancyvrb}
+\DefineShortVerb{\|}
+\DefineVerbatimEnvironment{code}{Verbatim}{commandchars=\\\{\},fontsize=\small}
+\DefineVerbatimEnvironment{code2}{Verbatim}{commandchars=\\\{\},fontsize=\footnotesize}
+
+% \usefonttheme{serif}
+%\makeatletter
+%\setbeamertemplate{frametitle}
+%{\vskip-2pt
+%  \@@tempdima=\textwidth%
+%  \advance\@@tempdima by\beamer@@leftmargin%
+%  \advance\@@tempdima by\beamer@@rightmargin%
+%  \begin{beamercolorbox}[sep=0.3cm,left,wd=\the\@@tempdima]{frametitle}
+%    {\usebeamerfont{frametitle}\smash[b]{\insertframetitle}\par}%
+%    {%
+%      \ifx\insertframesubtitle\@@empty%
+%      \else%
+%      {\usebeamerfont{framesubtitle}\usebeamercolor[fg]{framesubtitle}\smash[b]{\insertframesubtitle\par}}%
+%      \fi
+%    }%
+%  \end{beamercolorbox}%
+%}
+%\setbeamertemplate{block begin}
+%{
+%  \par\vskip\medskipamount%
+%  \ifx\insertblocktitle\@@empty\else
+%    \begin{beamercolorbox}[colsep*=.75ex]{block title}
+%      \usebeamerfont*{block title}\smash[b]{\insertblocktitle}%
+%    \end{beamercolorbox}%
+%    {\parskip0pt\par}%
+%    \ifbeamercolorempty[bg]{block title}
+%      {}
+%      {\ifbeamercolorempty[bg]{block body}{}{\nointerlineskip\vskip-0.5pt}}%
+%  \fi
+%  \usebeamerfont{block body}%
+%  \begin{beamercolorbox}[colsep*=.75ex,vmode]{block body}%
+%    \ifbeamercolorempty[bg]{block body}{\vskip-.25ex}{\vskip-.75ex}\vbox{}%
+%}
+%\makeatother
+\setbeamertemplate{sidebar right}{\vfill\llap{\usebeamerfont{framesubtitle}\insertframenumber\hskip\jot}\vskip\jot}
+\usecolortheme{crane}
+\setbeamercolor{alerted text}{fg=red!80!craneorange!80!fg}
+%%%\setbeamercolor{highlight}{bg=yellow!80!craneorange!80!bg}
+%\newcommand<>{\highlight}[1]{\text{\fboxsep=0pt \only#2{\colorbox{yellow}}{\strut$#1$}}}
+%\newcommand<>{\Overbrace}[2]{\alt#3{\mathord{\overbrace{#2}^{\text{\small #1}}}}{\vphantom{\overbrace{#2}^{\text{\small #1}}}#2}}
+%\newcommand<>{\Underbrace}[2]{\alt#3{\mathord{\underbrace{#2}_{\text{\small #1}}}}{\vphantom{\underbrace{#2}_{\text{\small #1}}}#2}}
+
+%\makeatletter
+%\makeatother
+% \def\Forall#1\circ{\forall#1.\:}
 
 \newtheorem{defn}{Definition}
 \newtheorem{thm}{Theorem}
@@ -12,20 +64,29 @@
 \DeclareMathOperator{\len}{length}
 \DeclareMathOperator{\theory}{theory}
 
-\begin{document}
-\pagestyle{empty}
+\title{Multi-stage programming with functors and monads:
+eliminating abstraction overhead from generic code}
+\author{Jacques Carette\inst{1} \and
+Oleg Kiselyov\inst{2}}
+\institute{\inst{1}McMaster University \inst{2} FNMOC}
+\date{GPCE 2005}
+\keywords{MetaOCaml, functors, monads, CPS, Gaussian Elimination, abstraction}
 
-\setlength{\topmargin}{0in}
-\setlength{\headheight}{0.0in}
-\setlength{\headsep}{0in}
-\setlength{\topskip}{0in}
-\setlength{\footskip}{0in}
+\begin{document}
+%\pagestyle{empty}
+\divide\abovedisplayskip 2
+\divide\belowdisplayskip 2
+\divide\abovedisplayshortskip 2
+\divide\belowdisplayshortskip 2
+%\blanklineskip\abovedisplayskip
+
+%\setlength{\topmargin}{0in}
+%\setlength{\headheight}{0.0in}
+%\setlength{\headsep}{0in}
+%\setlength{\topskip}{0in}
+%\setlength{\footskip}{0in}
 %\setlength{\textwidth}{8.5in}
 %\setlength{\textheight}{11in}
-
-\newcommand{\vsi}{\vspace{-5mm}}
-\newcommand{\vsii}{\vspace{-7mm}}
-\newcommand{\vsiii}{\vspace{-11mm}}
 
 \newcommand{\seq}[1]{{\langle #1 \rangle}}
 \newcommand{\set}[1]{{\{ #1 \}}}
@@ -33,46 +94,27 @@
 \newcommand{\mname}[1]{\mbox{\sf #1}}
 \newcommand{\Nat}{\mathbb N}
 
-\definecolor{bgblue}{rgb}{0.04,0.39,0.53}
-\definecolor{blue1}{rgb}{0.95,0.95,1}
-\definecolor{blue2}{rgb}{0.80,0.80,1}
-\vpagecolor[blue1]{blue2}
+%\definecolor{bgblue}{rgb}{0.04,0.39,0.53}
+%\definecolor{blue1}{rgb}{0.95,0.95,1}
+%\definecolor{blue2}{rgb}{0.80,0.80,1}
+%\vpagecolor[blue1]{blue2}
 
-\begin{slide}
-\title{Multi-stage programming with functors and monads:
-eliminating abstraction overhead from generic code}
-\author{Jacques Carette\\
-McMaster University\\
-and\\
-Oleg Kiselyov\\
-FNMOC}
-\date{June 6, 2005}
-\maketitle
-\end{slide}
+\begin{frame}
+\titlepage
+\end{frame}
 
-\begin{slide}
-\slideheading{Overview}
+\begin{frame}
+\frametitle{Overview}
 \begin{enumerate}
     \item Problem
     \item Design Points
     \item Tools: Functors, CPS, Monads, Extensible Grammar
-    \item Solution \& results
+    \item Solution \& Results
 \end{enumerate}
+\end{frame}
 
-% What is simpler?\\
-% \begin{tabular}{l|l}
-% $0$ & $(x+3)^3 - x^3 - 9x^2 -27x -27$\pause \\
-% $1+\sqrt{2}$ & $\sqrt[3]{7+5\sqrt{2}}$\pause \\
-% $9$ & $4+2+1+1+1$\pause \\
-% $2^{2^{20}}-1$ & \texttt{...} \pause \\
-% $\texttt{ChebyshevT}(10000, x)$ & \texttt{...} \pause \\
-% $\texttt{ChebyshevT}(5, x)$ & $16x^5 - 20x^3 + 5x$ \pause \\
-% $1$ & $\frac{x-1}{x-1}$ \\
-% \end{tabular}
-\end{slide}
-
-\begin{slide}
-    \slideheading{Problem (Origins)}
+\begin{frame}
+\frametitle{Problem (Origins)}
     \begin{itemize}
         \item 35+ implementations of Gaussian Elimination in Maple
         \item Efficiency:
@@ -83,81 +125,81 @@ FNMOC}
             \end{itemize}
         \item Problem: how to unify without losing speed?
     \end{itemize}
-\end{slide}
+\end{frame}
 
-\begin{slide}
-    \slideheading{Problem (as solved)}
+\begin{frame}
+    \frametitle{Problem (as solved)}
     \textbf{Goal:} Type-safe, generic, efficient algorithms\\
     \textbf{Issues:}
     \begin{itemize}
-        \item Untyped $\Rightarrow$ lots of debugging, no certainty\vsii
+        \item Untyped $\Rightarrow$ lots of debugging, no certainty
         \item Abstraction $\Rightarrow$ overhead 
-            (unless you're the compiler writer)\vsii
-        \item Efficiency requires \emph{no} overhead\vsii
-        \item Output type varies\vsi
+            (unless you're the compiler writer)
+        \item Efficiency requires \emph{no} overhead
+        \item Output type varies
     \end{itemize}
     $\Longrightarrow$ implement as a \emph{typed} meta-program
-\end{slide}
+\end{frame}
 
-\begin{slide}
-    \slideheading{Design Points \emph{(aspects)}}
-    \hspace*{-2cm}
-        \begin{tabular}{|l|l|l|} \hline
-        Design Dimension & Abstracts & Depends on \\ \hline
-        Domain & Matrix values & -- \\ \hline
-        Representation & Matrix representation & Domain \\ \hline
-        Fraction-free & use of division & Domain \\ \hline
-        Pivoting Strategy & length measure \& user & Domain \\ \hline
-        Output & choice of output & -- \\ \hline
-        Normalization & domain needs normalization & Domain \\ \hline
-        Determinant & determinant tracking & Output \& Fraction-free \\ \hline
-        ZeroEquivalence & decidability of $=0$ & -- \\ \hline
-        UserInformation & user-feedback & ZeroEquivalence\\ \hline
-        Augmented & matrix is augmented & -- \\ \hline
-    \end{tabular}\\
-\vspace{5mm}
+\begin{frame}
+\frametitle{Design Points \emph{(aspects)}}
+%\hspace*{-2cm}
+%\begin{block}
+%\begin{tabular}{|l|l|l|} \hline
+%	Design Dimension & Abstracts & Depends on \\ \hline
+%	Domain & Matrix values & -- \\ \hline
+%	Representation & Matrix representation & Domain \\ \hline
+%	Fraction-free & use of division & Domain \\ \hline
+%	Pivoting Strategy & length measure \& user & Domain \\ \hline
+%	Output & choice of output & -- \\ \hline
+%	Normalization & domain needs normalization & Domain \\ \hline
+%	Determinant & determinant tracking & Output \& Fraction-free \\ \hline
+%	ZeroEquivalence & decidability of $=0$ & -- \\ \hline
+%	UserInformation & user-feedback & ZeroEquivalence\\ \hline
+%	Augmented & matrix is augmented & -- \\ \hline
+%\end{tabular}
+%\vspace{5mm}
 Outputs: new matrix, rank, determinant, permutation matrix.
-\end{slide}
+%\end{block}
+\end{frame}
 
-\begin{slide}
-    \slideheading{MetaOCaml example}
+\begin{frame}[fragile]
+\frametitle{MetaOCaml example}
 \begin{verbatim}
 let one = .<1>. and plus x y = .<.~x + .~y>.
-let simplest_code = let gen x y = plus x (plus y one) in
+let simplestcode = let gen x y = plus x (plus y one) in
   .<fun x y -> .~(gen .<x>. .<y>.)>.
-
 The function above is generic (can change to float easily)
-
-# val .<fun x_1 -> fun y_2 -> (x_1 + (y_2 + 1))>.
-let param_code1' plus one =
+ val .<fun x1 -> fun y2 -> (x1 + (y2 + 1))>.
+let paramcode1' plus one =
   let gen x y = let ce = (plus y one) in  plus ce (plus x ce) in
   .<fun x y -> .~(gen .<x>. .<y>.)>.
-param_code1' plus one
-# val .<fun x_1 -> fun y_2 -> ((y_2 + 1) + (x_1 + (y_2 + 1)))>.
+paramcode1' plus one
+ val .<fun x1 -> fun y2 -> ((y2 + 1) + (x1 + (y2 + 1)))>.
 \end{verbatim}
-Problem: \verb=y_2+1= repeated.  But obvious solution doesn't work!
-\end{slide}
+Problem: $y2+1$ repeated.  But obvious solution doesn't work!
+\end{frame}
 
-\begin{slide}
-    \slideheading{Tools: Continuation-passing Style (CPS)}
+\begin{frame}[fragile]
+    \frametitle{Tools: Continuation passing Style (CPS)}
     But if you pass your future around\dots
 \begin{verbatim}
 let letgen exp k = .<let t = .~exp in .~(k .<t>.)>.
-let param_code2 plus one =
+let paramcode2 plus one =
   let gen x y k = letgen (plus y one) 
                   (fun ce -> k (plus ce (plus x ce)))
   and k0 x = x
   in .<fun x y -> .~(gen .<x>. .<y>. k0)>.
-param_code2 plus one
-#val .<fun x_1 -> fun y_2 -> 
-           let t_3 = (y_2 + 1) in (t_3 + (x_1 + t_3))>.
+paramcode2 plus one
+val .<fun x1 -> fun y2 -> 
+           let t3 = (y2 + 1) in (t3 + (x1 + t3))>.
 \end{verbatim}
 From \textit{A Methodology for Generating Verified Combinatorial Circuits} by 
 Kiselyov, Swadi and Taha.
-\end{slide}
+\end{frame}
 
-\begin{slide}
-    \slideheading{Tools: Monads}
+\begin{frame}[fragile]
+    \frametitle{Tools: Monads}
     Method to encapsulate ``computations'', including state.\\
     We need \emph{state} and \emph{continuations}
 \begin{verbatim}
@@ -170,10 +212,10 @@ let runM m = m [] k0
 
 let retN a = fun s k -> .<let t = .~a in .~(k s .<t>.)>.
 \end{verbatim}
-\end{slide}
+\end{frame}
 
-\begin{slide}
-    \slideheading{Tools: \textit{New} control structures}
+\begin{frame}[fragile]
+    \frametitle{Tools: \textit{New} control structures}
 \begin{verbatim}
 let ifL test th el = ret .< if .~test then .~th else .~el >.
 
@@ -187,10 +229,10 @@ let seqM a b = fun s k -> k s
 let whenM test th  = fun s k -> k s 
   .< if .~(test s k0) then .~(th s k0) else () >.
 \end{verbatim}
-\end{slide}
+\end{frame}
 
-\begin{slide}
-    \slideheading{Extensible Grammar}
+\begin{frame}[fragile]
+    \frametitle{Extensible Grammar}
     In all programming languages, a lot of \emph{expressible abstractions}
     have atrocious syntax.  Definitely a problem of languages with
     just a few powerful primitives. \texttt{camlp4} for Ocaml allows one to add
@@ -206,10 +248,10 @@ let param_code4 plus one =
                     ret (plus ce (plus x ce))
   in .<fun x y -> .~(runM (gen .<x>. .<y>.))>.
 \end{verbatim}
-\end{slide}
+\end{frame}
 
-\begin{slide}
-    \slideheading{Extensible Grammar (cont) }
+\begin{frame}[fragile]
+    \frametitle{Extensible Grammar (cont) }
 A multi-monad version also exists
 \begin{verbatim}
 let param_code4 plus one =
@@ -219,10 +261,10 @@ let param_code4 plus one =
   in .<fun x y -> .~(runM (gen .<x>. .<y>.))>.
 \end{verbatim}
 which will use \verb+Monad.bind+ instead of \verb+bind+.
-\end{slide}
+\end{frame}
 
-\begin{slide}
-    \slideheading{Tools: Modules \& Functors}
+\begin{frame}[fragile]
+    \frametitle{Tools: Modules \& Functors}
 \begin{verbatim}
 module IntegerDomain = 
   struct
@@ -238,10 +280,10 @@ module IntegerDomain =
     let normalizerf = None 
 end
 \end{verbatim}
-\end{slide}
+\end{frame}
 
-\begin{slide}
-    \slideheading{Tools: Modules \& Functors}
+\begin{frame}[fragile]
+    \frametitle{Tools: Modules \& Functors}
 \begin{verbatim}
 module type DOMAIN = sig
   type v
@@ -256,10 +298,10 @@ module type DOMAIN = sig
   val normalizerf : (('a,v -> v) code ) option
 end 
 \end{verbatim}
-\end{slide}
+\end{frame}
 
-\begin{slide}
-    \slideheading{Tools: Modules \& Functors}
+\begin{frame}[fragile]
+    \frametitle{Tools: Modules \& Functors}
 \begin{verbatim}
 module GenericArrayContainer(Dom:DOMAIN) = struct
   type contr = Dom.v array array (* Array of rows *)
@@ -278,10 +320,10 @@ module GenericArrayContainer(Dom:DOMAIN) = struct
          end >.
 end
 \end{verbatim}
-\end{slide}
+\end{frame}
 
-\begin{slide}
-    \slideheading{Solution}
+\begin{frame}[fragile]
+    \frametitle{Solution}
     Have Modules and (higher-order) Functors, all using the CPS Monad, of
     \emph{code generators} that assemble the solution from base \emph{code
     combinators}.
@@ -295,10 +337,10 @@ module GenFA1 =
        (OutJustMatrix(FloatDomain)(GenericArrayContainer)
                      (NoDet(FloatDomain)))
 \end{verbatim}
-\end{slide}
+\end{frame}
 
-\begin{slide}
-    \slideheading{Solution}
+\begin{frame}[fragile]
+    \frametitle{Solution}
     \begin{small}
 \begin{verbatim}
 module Gen(Dom: DOMAIN)(C: CONTAINER2D)(PivotF: PIVOT)
@@ -345,10 +387,10 @@ module Gen(Dom: DOMAIN)(C: CONTAINER2D)(PivotF: PIVOT)
 end
 \end{verbatim}
 \end{small}
-\end{slide}
+\end{frame}
 
-\begin{slide}
-    \slideheading{Results}
+\begin{frame}
+    \frametitle{Results}
 $8$ domains, $5$ container types, $3$ pivoting strategies, 
 $5$ output choices, $2$ elimination strategies\\
 $\Longrightarrow$ over 800 (of 1200) type-safe possibilities.
@@ -357,16 +399,16 @@ Resulting code is \textbf{identical} to hand-written code.
 
 Using \emph{offshoring}, can generate C (and sometimes Fortran) code
 for results.
-\end{slide}
+\end{frame}
 
-\begin{slide}
-    \slideheading{Timings}
+\begin{frame}
+    \frametitle{Timings}
     P4 2.00Ghz, FreeBSD 4.9-RELEASE-p1, 1Gig memory\\
     insert numbers here.
-\end{slide}
+\end{frame}
 
-\begin{slide}
-    \slideheading{Sample Output}
+\begin{frame}[fragile]
+    \frametitle{Sample Output}
 \begin{small}
 \begin{verbatim}
   ('a, Funct4.GenFA1.Ctr.contr ->
@@ -494,16 +536,16 @@ for results.
     else (~- (! t_287)), (! t_281))>.
 \end{verbatim}
 \end{small}
-\end{slide}
+\end{frame}
 
-\begin{slide}
-    \slideheading{Conclusion}
+\begin{frame}
+    \frametitle{Conclusion}
     This is not Gaussian Elimination specific -- this should scale
     easily to all of Linear Algebra, and with a bit more work, to
     most algebraic code.
 
     Need more syntactic sugar\dots
-\end{slide}
+\end{frame}
 
 \end{document}
 
