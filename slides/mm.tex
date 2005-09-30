@@ -360,9 +360,50 @@ for results.
 \end{slide}
 
 \begin{slide}
-    \slideheading{Timings}
-    P4 2.00Ghz, FreeBSD 4.9-RELEASE-p1, 1Gig memory\\
-    insert numbers here.
+\slideheading{Timings (Bytecode)}
+Floating-point version, matrix-only return, row-pivoting
+
+\begin{tabular}{l|l|l|l}
+	size & generated & generation & direct \\ \hline
+	10 & 0.28 msec & 9.1 & 2.8 \\
+	30 & 6.9  & 9.1 & 66.8 \\
+	50 & 31.4 & 9.1 & 84.7 \\
+	70 & 84.7 & 9.1 & 816.6 \\
+\end{tabular}
+
+Integer, Matrix-rank-determinant return, fraction-free, row-pivoting 
+
+\begin{tabular}{l|l|l|l}
+	size & generated & generation & direct \\ \hline
+	10 & 0.18 & 9.0 & 3.5 \\
+	30 & 2.0  & 9.0 & 41.8 \\
+	50 & 11.3 & 9.0 & 244.3 \\
+	70 & 50.6 & 9.0 & 1102.5 \\
+\end{tabular}\\
+P4 2.00Ghz, FreeBSD 4.9-RELEASE-p1, 1Gig memory
+\end{slide}
+
+\begin{slide}
+\slideheading{Timings (Native)}
+Floating-point version, matrix-only return, row-pivoting
+
+\begin{tabular}{l|l|l|l}
+	size & generated & generation & direct \\ \hline
+	10 & 0.017 msec & 46.8 & 1.25 \\
+	30 & 0.36       & 58.6 & 29.4 \\
+	50 & 1.82       & 64.3 & 130.2 \\
+	70 & 4.86       & 69.7 & 358.5 \\
+\end{tabular}
+
+Integer, Matrix-rank-determinant return, fraction-free, row-pivoting 
+
+\begin{tabular}{l|l|l|l}
+	size & generated & generation & direct \\ \hline
+	10 & 0.022 msec & 46.6 & 1.48 \\
+	30 & 0.25       & 58.8 & 17.2 \\
+	50 & 1.51       & 66.0 & 102.9 \\
+	70 & 6.85       & 71.1 & 458.2 \\
+\end{tabular}
 \end{slide}
 
 \begin{slide}
@@ -545,18 +586,21 @@ __ higher-order ________________ 2x avg= 8.165625E+02 msec
 
 ~/langs/ML/num-math/trunk/code> metaocamlc -verbose -pp "camlp4o pa_extend.cmo q_MLast.cmo ../camlp4/pa_monad.cmo" -I +camlp4 ~/Cache/ometa-cvs/lib/ocaml/nums.cma funct4.ml direct2.ml exper2.ml
 
+\begin{tabular}{l|l|l|l}
+	size & generated & generation & direct \\ \hline
+	10 & 0.18 & 9.0 & 3.5 \\
+	30 & 2.0  & 9.0 & 41.8 \\
+	50 & 11.3 & 9.0 & 244.3 \\
+	70 & 50.6 & 9.0 & 1102.5 \\
+\end{tabular}
 ~/langs/ML/num-math/trunk/code> ./a.out 
 __ generated ________________ 8192x avg= 1.842597E-01 msec
-__ generation time ___________ 128x avg= 9.033271E+00 msec
 __ higher-order ______________ 512x avg= 3.551199E+00 msec
 __ generated _________________ 512x avg= 2.001440E+00 msec
-__ generation time ___________ 128x avg= 9.044719E+00 msec
 __ higher-order _______________ 32x avg= 4.186380E+01 msec
 __ generated _________________ 128x avg= 1.135904E+01 msec
-__ generation time ___________ 128x avg= 9.038421E+00 msec
 __ higher-order ________________ 8x avg= 2.443530E+02 msec
 __ generated __________________ 32x avg= 5.056813E+01 msec
-__ generation time ___________ 128x avg= 8.988767E+00 msec
 __ higher-order ________________ 1x avg= 1.102511E+03 msec
 
 
@@ -576,6 +620,13 @@ Here are the results:
 
 ~/langs/ML/num-math/trunk/code> metaocamlopt -verbose -I . -I /tmp ~/Cache/ometa-cvs/lib/ocaml/nums.cmxa /tmp/funct4.ml /tmp/direct2.ml exper.ml
 ~/langs/ML/num-math/trunk/code> ./a.out 
+\begin{tabular}{l|l|l|l}
+	size & generated & generation & direct \\ \hline
+	10 & 0.017 msec & 46.8 & 1.25 \\
+	30 & 0.36       & 58.6 & 29.4 \\
+	50 & 1.82       & 64.3 & 130.2 \\
+	70 & 4.86       & 69.7 & 358.5 \\
+\end{tabular}
 __ generated _______________ 65536x avg= 1.753359E-02 msec
 __ generation time ____________ 32x avg= 4.680109E+01 msec
 __ higher-order _____________ 1024x avg= 1.247749E+00 msec

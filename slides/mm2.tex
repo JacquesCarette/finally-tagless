@@ -1,50 +1,50 @@
 \documentclass{beamer}
-% \documentclass[t,utf8]{beamer}
 \setcounter{errorcontextlines}{100}
-% \usepackage[T1]{fontenc}
-% \usepackage{charter}
-% \usepackage{eulervm}
+\usepackage[T1]{fontenc}
+\usepackage{charter}
+\usepackage{eulervm}
 % \usepackage{comment}
-% \usepackage{amssymb,amsmath}
+\usepackage{amssymb,amsmath}
 \usepackage{fancyvrb}
-\DefineShortVerb{\|}
+%\DefineShortVerb{\|}
+%\DefineVerbatimEnvironment{code}{Verbatim}{commandchars=\\\{\},fontsize=\small}
 \DefineVerbatimEnvironment{code}{Verbatim}{commandchars=\\\{\},fontsize=\small}
 \DefineVerbatimEnvironment{code2}{Verbatim}{commandchars=\\\{\},fontsize=\footnotesize}
 
-% \usefonttheme{serif}
-%\makeatletter
-%\setbeamertemplate{frametitle}
-%{\vskip-2pt
-%  \@@tempdima=\textwidth%
-%  \advance\@@tempdima by\beamer@@leftmargin%
-%  \advance\@@tempdima by\beamer@@rightmargin%
-%  \begin{beamercolorbox}[sep=0.3cm,left,wd=\the\@@tempdima]{frametitle}
-%    {\usebeamerfont{frametitle}\smash[b]{\insertframetitle}\par}%
-%    {%
-%      \ifx\insertframesubtitle\@@empty%
-%      \else%
-%      {\usebeamerfont{framesubtitle}\usebeamercolor[fg]{framesubtitle}\smash[b]{\insertframesubtitle\par}}%
-%      \fi
-%    }%
-%  \end{beamercolorbox}%
-%}
-%\setbeamertemplate{block begin}
-%{
-%  \par\vskip\medskipamount%
-%  \ifx\insertblocktitle\@@empty\else
-%    \begin{beamercolorbox}[colsep*=.75ex]{block title}
-%      \usebeamerfont*{block title}\smash[b]{\insertblocktitle}%
-%    \end{beamercolorbox}%
-%    {\parskip0pt\par}%
-%    \ifbeamercolorempty[bg]{block title}
-%      {}
-%      {\ifbeamercolorempty[bg]{block body}{}{\nointerlineskip\vskip-0.5pt}}%
-%  \fi
-%  \usebeamerfont{block body}%
-%  \begin{beamercolorbox}[colsep*=.75ex,vmode]{block body}%
-%    \ifbeamercolorempty[bg]{block body}{\vskip-.25ex}{\vskip-.75ex}\vbox{}%
-%}
-%\makeatother
+\usefonttheme{serif}
+\makeatletter
+\setbeamertemplate{frametitle}
+{\vskip-2pt
+  \@tempdima=\textwidth%
+  \advance\@tempdima by\beamer@leftmargin%
+  \advance\@tempdima by\beamer@rightmargin%
+  \begin{beamercolorbox}[sep=0.3cm,left,wd=\the\@tempdima]{frametitle}
+    {\usebeamerfont{frametitle}\smash[b]{\insertframetitle}\par}%
+    {%
+      \ifx\insertframesubtitle\@empty%
+      \else%
+      {\usebeamerfont{framesubtitle}\usebeamercolor[fg]{framesubtitle}\smash[b]{\insertframesubtitle\par}}%
+      \fi
+    }%
+  \end{beamercolorbox}%
+}
+\setbeamertemplate{block begin}
+{
+  \par\vskip\medskipamount%
+  \ifx\insertblocktitle\@empty\else
+    \begin{beamercolorbox}[colsep*=.75ex]{block title}
+      \usebeamerfont*{block title}\smash[b]{\insertblocktitle}%
+    \end{beamercolorbox}%
+    {\parskip0pt\par}%
+    \ifbeamercolorempty[bg]{block title}
+      {}
+      {\ifbeamercolorempty[bg]{block body}{}{\nointerlineskip\vskip-0.5pt}}%
+  \fi
+  \usebeamerfont{block body}%
+  \begin{beamercolorbox}[colsep*=.75ex,vmode]{block body}%
+    \ifbeamercolorempty[bg]{block body}{\vskip-.25ex}{\vskip-.75ex}\vbox{}%
+}
+\makeatother
 \setbeamertemplate{sidebar right}{\vfill\llap{\usebeamerfont{framesubtitle}\insertframenumber\hskip\jot}\vskip\jot}
 \usecolortheme{crane}
 \setbeamercolor{alerted text}{fg=red!80!craneorange!80!fg}
@@ -53,8 +53,7 @@
 %\newcommand<>{\Overbrace}[2]{\alt#3{\mathord{\overbrace{#2}^{\text{\small #1}}}}{\vphantom{\overbrace{#2}^{\text{\small #1}}}#2}}
 %\newcommand<>{\Underbrace}[2]{\alt#3{\mathord{\underbrace{#2}_{\text{\small #1}}}}{\vphantom{\underbrace{#2}_{\text{\small #1}}}#2}}
 
-%\makeatletter
-%\makeatother
+\setbeamersize{text margin left=2mm,text margin right=2mm}
 % \def\Forall#1\circ{\forall#1.\:}
 
 \newtheorem{defn}{Definition}
@@ -80,24 +79,11 @@ Oleg Kiselyov\inst{2}}
 \divide\belowdisplayshortskip 2
 %\blanklineskip\abovedisplayskip
 
-%\setlength{\topmargin}{0in}
-%\setlength{\headheight}{0.0in}
-%\setlength{\headsep}{0in}
-%\setlength{\topskip}{0in}
-%\setlength{\footskip}{0in}
-%\setlength{\textwidth}{8.5in}
-%\setlength{\textheight}{11in}
-
 \newcommand{\seq}[1]{{\langle #1 \rangle}}
 \newcommand{\set}[1]{{\{ #1 \}}}
 \newcommand{\tuple}[1]{{( #1 )}}
 \newcommand{\mname}[1]{\mbox{\sf #1}}
 \newcommand{\Nat}{\mathbb N}
-
-%\definecolor{bgblue}{rgb}{0.04,0.39,0.53}
-%\definecolor{blue1}{rgb}{0.95,0.95,1}
-%\definecolor{blue2}{rgb}{0.80,0.80,1}
-%\vpagecolor[blue1]{blue2}
 
 \begin{frame}
 \titlepage
@@ -108,7 +94,7 @@ Oleg Kiselyov\inst{2}}
 \begin{enumerate}
     \item Problem
     \item Design Points
-    \item Tools: Functors, CPS, Monads, Extensible Grammar
+    \item Tools: CPS, Monads, Extensible Grammar, Functors
     \item Solution \& Results
 \end{enumerate}
 \end{frame}
@@ -143,29 +129,27 @@ Oleg Kiselyov\inst{2}}
 
 \begin{frame}
 \frametitle{Design Points \emph{(aspects)}}
-%\hspace*{-2cm}
-%\begin{block}
-%\begin{tabular}{|l|l|l|} \hline
-%	Design Dimension & Abstracts & Depends on \\ \hline
-%	Domain & Matrix values & -- \\ \hline
-%	Representation & Matrix representation & Domain \\ \hline
-%	Fraction-free & use of division & Domain \\ \hline
-%	Pivoting Strategy & length measure \& user & Domain \\ \hline
-%	Output & choice of output & -- \\ \hline
-%	Normalization & domain needs normalization & Domain \\ \hline
-%	Determinant & determinant tracking & Output \& Fraction-free \\ \hline
-%	ZeroEquivalence & decidability of $=0$ & -- \\ \hline
-%	UserInformation & user-feedback & ZeroEquivalence\\ \hline
-%	Augmented & matrix is augmented & -- \\ \hline
-%\end{tabular}
-%\vspace{5mm}
+\begin{tabular}{@{}l|l|l@{}} \hline
+	Design Dimension & Abstracts & Depends on \\ \hline
+    Domain & Matrix values & -- \\ \hline
+    Representation & Matrix representation & Domain \\ \hline
+	Fraction-free & use of division & Domain \\ \hline
+	Pivoting Strategy & length measure \& user & Domain \\ \hline
+	Output & choice of output & -- \\ \hline
+	Normalization & domain needs normalization & Domain \\ \hline
+	Determinant & determinant tracking & Output \& Fraction-free \\ \hline
+	ZeroEquivalence & decidability of $=0$ & -- \\ \hline
+	UserInformation & user-feedback & ZeroEquivalence\\ \hline
+	Augmented & matrix is augmented & -- \\ \hline
+\end{tabular}
+
+\vspace{5mm}
 Outputs: new matrix, rank, determinant, permutation matrix.
-%\end{block}
 \end{frame}
 
 \begin{frame}[fragile]
 \frametitle{MetaOCaml example}
-\begin{verbatim}
+\begin{code}
 let one = .<1>. and plus x y = .<.~x + .~y>.
 let simplestcode = let gen x y = plus x (plus y one) in
   .<fun x y -> .~(gen .<x>. .<y>.)>.
@@ -176,14 +160,14 @@ let paramcode1' plus one =
   .<fun x y -> .~(gen .<x>. .<y>.)>.
 paramcode1' plus one
  val .<fun x1 -> fun y2 -> ((y2 + 1) + (x1 + (y2 + 1)))>.
-\end{verbatim}
+\end{code}
 Problem: $y2+1$ repeated.  But obvious solution doesn't work!
 \end{frame}
 
 \begin{frame}[fragile]
     \frametitle{Tools: Continuation passing Style (CPS)}
     But if you pass your future around\dots
-\begin{verbatim}
+\begin{code}
 let letgen exp k = .<let t = .~exp in .~(k .<t>.)>.
 let paramcode2 plus one =
   let gen x y k = letgen (plus y one) 
@@ -193,7 +177,7 @@ let paramcode2 plus one =
 paramcode2 plus one
 val .<fun x1 -> fun y2 -> 
            let t3 = (y2 + 1) in (t3 + (x1 + t3))>.
-\end{verbatim}
+\end{code}
 From \textit{A Methodology for Generating Verified Combinatorial Circuits} by 
 Kiselyov, Swadi and Taha.
 \end{frame}
@@ -202,7 +186,7 @@ Kiselyov, Swadi and Taha.
     \frametitle{Tools: Monads}
     Method to encapsulate ``computations'', including state.\\
     We need \emph{state} and \emph{continuations}
-\begin{verbatim}
+\begin{code}
 type ('v,'s,'w) monad = 's -> ('s -> 'v -> 'w) -> 'w
 let ret a = fun s k -> k s a
 let bind a f = fun s k -> a s (fun s' b -> f b s' k)
@@ -211,12 +195,12 @@ let k0 s v = v
 let runM m = m [] k0
 
 let retN a = fun s k -> .<let t = .~a in .~(k s .<t>.)>.
-\end{verbatim}
+\end{code}
 \end{frame}
 
 \begin{frame}[fragile]
     \frametitle{Tools: \textit{New} control structures}
-\begin{verbatim}
+\begin{code}
 let ifL test th el = ret .< if .~test then .~th else .~el >.
 
 (* Note the implicit `reset` *)
@@ -228,7 +212,7 @@ let seqM a b = fun s k -> k s
 
 let whenM test th  = fun s k -> k s 
   .< if .~(test s k0) then .~(th s k0) else () >.
-\end{verbatim}
+\end{code}
 \end{frame}
 
 \begin{frame}[fragile]
@@ -237,7 +221,7 @@ let whenM test th  = fun s k -> k s
     have atrocious syntax.  Definitely a problem of languages with
     just a few powerful primitives. \texttt{camlp4} for Ocaml allows one to add
     to (or redefine completely) the grammar of the language.  For monads:
-\begin{verbatim}
+\begin{code}
 let param_code3 plus one =
   let gen x y = bind (retN (plus y one)) (fun ce -> 
                 ret (plus ce (plus x ce)))
@@ -247,25 +231,25 @@ let param_code4 plus one =
   let gen x y = doM ce <-- retN (plus y one);
                     ret (plus ce (plus x ce))
   in .<fun x y -> .~(runM (gen .<x>. .<y>.))>.
-\end{verbatim}
+\end{code}
 \end{frame}
 
 \begin{frame}[fragile]
     \frametitle{Extensible Grammar (cont) }
 A multi-monad version also exists
-\begin{verbatim}
+\begin{code}
 let param_code4 plus one =
   let gen x y = doM Monad in
                     ce <-- retN (plus y one);
                     ret (plus ce (plus x ce))
   in .<fun x y -> .~(runM (gen .<x>. .<y>.))>.
-\end{verbatim}
+\end{code}
 which will use \verb+Monad.bind+ instead of \verb+bind+.
 \end{frame}
 
 \begin{frame}[fragile]
     \frametitle{Tools: Modules \& Functors}
-\begin{verbatim}
+\begin{code}
 module IntegerDomain = 
   struct
     type v = int
@@ -279,12 +263,12 @@ module IntegerDomain =
     let better_than = Some (fun x y -> ret .<abs .~x > abs .~y >. )
     let normalizerf = None 
 end
-\end{verbatim}
+\end{code}
 \end{frame}
 
 \begin{frame}[fragile]
     \frametitle{Tools: Modules \& Functors}
-\begin{verbatim}
+\begin{code}
 module type DOMAIN = sig
   type v
   type kind (* Field or Ring ? *)
@@ -297,12 +281,12 @@ module type DOMAIN = sig
                     (('a,bool) code, 's, 'w) monad) option
   val normalizerf : (('a,v -> v) code ) option
 end 
-\end{verbatim}
+\end{code}
 \end{frame}
 
 \begin{frame}[fragile]
     \frametitle{Tools: Modules \& Functors}
-\begin{verbatim}
+\begin{code}
 module GenericArrayContainer(Dom:DOMAIN) = struct
   type contr = Dom.v array array (* Array of rows *)
   type 'a vc = ('a,contr) code
@@ -319,7 +303,7 @@ module GenericArrayContainer(Dom:DOMAIN) = struct
              (.~a).(.~r2) <- t
          end >.
 end
-\end{verbatim}
+\end{code}
 \end{frame}
 
 \begin{frame}[fragile]
@@ -327,7 +311,7 @@ end
     Have Modules and (higher-order) Functors, all using the CPS Monad, of
     \emph{code generators} that assemble the solution from base \emph{code
     combinators}.
-\begin{verbatim}
+\begin{code}
 module GenFA1 = 
     Gen(FloatDomain)
        (GenericArrayContainer)
@@ -336,13 +320,12 @@ module GenFA1 =
                       (NoDet(FloatDomain)))
        (OutJustMatrix(FloatDomain)(GenericArrayContainer)
                      (NoDet(FloatDomain)))
-\end{verbatim}
+\end{code}
 \end{frame}
 
 \begin{frame}[fragile]
     \frametitle{Solution}
-    \begin{small}
-\begin{verbatim}
+\begin{code2}
 module Gen(Dom: DOMAIN)(C: CONTAINER2D)(PivotF: PIVOT)
           (Update: UPDATE with type baseobj = Dom.v 
                           and type ctr = C(Dom).contr)
@@ -354,15 +337,15 @@ module Gen(Dom: DOMAIN)(C: CONTAINER2D)(PivotF: PIVOT)
     type v = Dom.v
     let gen =
       let zerobelow b r c m n brc =
-        let innerbody i = mdo {
+        let innerbody i = doM
             bic <-- Ctr.get b i c;
             whenM (l1 LogicCode.not (LogicCode.equal bic Dom.zero ))
                 (seqM (retLoopM (Idx.succ c) (Idx.pred m)
                           (fun k -> Update.update b r c i k) )
-                      (Ctr.set b i c Dom.zero)) } in 
-        mdo { seqM (retLoopM (Idx.succ r) (Idx.pred n) innerbody) 
-                   (Update.update_det brc) } in
-      let dogen a = mdo {
+					  (Ctr.set b i c Dom.zero)) in 
+        doM seqM (retLoopM (Idx.succ r) (Idx.pred n) innerbody) 
+                   (Update.update_det brc) in
+      let dogen a = doM
           r <-- Out.R.decl ();
           c <-- retN (liftRef Idx.zero);
           b <-- retN (Ctr.mapper Dom.normalizerf (Ctr.copy a));
@@ -373,7 +356,7 @@ module Gen(Dom: DOMAIN)(C: CONTAINER2D)(PivotF: PIVOT)
           seqM 
             (retWhileM (LogicCode.and_ (Idx.less (liftGet c) m)
                                        (Idx.less (liftGet r) n) )
-               ( mdo {
+               ( doM
                rr <-- retN (liftGet r);
                cc <-- retN (liftGet c);
                pivot <-- l1 retN (Pivot.findpivot b rr m cc n);
@@ -381,12 +364,11 @@ module Gen(Dom: DOMAIN)(C: CONTAINER2D)(PivotF: PIVOT)
                         seqM (zerobelow b rr cc m n pv)
                              (Out.R.succ ()) )
                         (Update.D.zero_sign () ))
-                    (Code.update c Idx.succ) } ))
-            (Out.make_result b) } 
+                    (Code.update c Idx.succ) ))
+            (Out.make_result b)
     in .<fun a -> .~(runM (dogen .<a>.)) >.
 end
-\end{verbatim}
-\end{small}
+\end{code2}
 \end{frame}
 
 \begin{frame}
@@ -402,15 +384,56 @@ for results.
 \end{frame}
 
 \begin{frame}
-    \frametitle{Timings}
-    P4 2.00Ghz, FreeBSD 4.9-RELEASE-p1, 1Gig memory\\
-    insert numbers here.
+\frametitle{Timings (Bytecode)}
+Floating-point version, matrix-only return, row-pivoting
+
+\begin{tabular}{l|l|l|l}
+	size & generated & generation & direct \\ \hline
+	10 & 0.28 msec & 9.1 & 2.8 \\
+	30 & 6.9  & 9.1 & 66.8 \\
+	50 & 31.4 & 9.1 & 84.7 \\
+	70 & 84.7 & 9.1 & 816.6 \\
+\end{tabular}
+
+Integer, Matrix-rank-determinant return, fraction-free, row-pivoting 
+
+\begin{tabular}{l|l|l|l}
+	size & generated & generation & direct \\ \hline
+	10 & 0.18 & 9.0 & 3.5 \\
+	30 & 2.0  & 9.0 & 41.8 \\
+	50 & 11.3 & 9.0 & 244.3 \\
+	70 & 50.6 & 9.0 & 1102.5 \\
+\end{tabular}\\
+P4 2.00Ghz, FreeBSD 4.9-RELEASE-p1, 1Gig memory
+\end{frame}
+
+\begin{frame}
+\frametitle{Timings (Native)}
+Floating-point version, matrix-only return, row-pivoting
+
+\begin{tabular}{l|l|l|l}
+	size & generated & generation & direct \\ \hline
+	10 & 0.017 msec & 46.8 & 1.25 \\
+	30 & 0.36       & 58.6 & 29.4 \\
+	50 & 1.82       & 64.3 & 130.2 \\
+	70 & 4.86       & 69.7 & 358.5 \\
+\end{tabular}
+
+Integer, Matrix-rank-determinant return, fraction-free, row-pivoting 
+
+\begin{tabular}{l|l|l|l}
+	size & generated & generation & direct \\ \hline
+	10 & 0.022 msec & 46.6 & 1.48 \\
+	30 & 0.25       & 58.8 & 17.2 \\
+	50 & 1.51       & 66.0 & 102.9 \\
+	70 & 6.85       & 71.1 & 458.2 \\
+\end{tabular}
 \end{frame}
 
 \begin{frame}[fragile]
     \frametitle{Sample Output}
 \begin{small}
-\begin{verbatim}
+\begin{code}
   ('a, Funct4.GenFA1.Ctr.contr ->
    Funct4.OutJustMatrix(Funct4.FloatDomain)(Funct4.GenericArrayContainer)(Funct4.NoDet(Funct4.FloatDomain)).res)
   code =
@@ -534,7 +557,7 @@ for results.
     if ((! t_288) = 0) then 0
     else if ((! t_288) = 1) then (! t_287)
     else (~- (! t_287)), (! t_281))>.
-\end{verbatim}
+\end{code}
 \end{small}
 \end{frame}
 
@@ -568,8 +591,7 @@ BTW, I added an assertion to the files exper.ml and exper2.ml
 
 Bytecode:
 
-~/langs/ML/num-math/trunk/code> metaocamlc -verbose -pp "camlp4o pa_extend.cmo q_MLast.cmo ../camlp4/pa_monad.cmo" -I +camlp4 ~/Cache/ometa-cvs/lib/ocaml/nums.cma funct4.ml direct2.ml exper.ml
-
+10,30,50,70
 ~/langs/ML/num-math/trunk/code> ./a.out 
 __ generated ________________ 4096x avg= 2.865859E-01 msec
 __ generation time ___________ 128x avg= 9.146503E+00 msec

@@ -1,4 +1,4 @@
-\documentclass[t,utf8]{beamer}
+\documentclass[t]{beamer}
 \setcounter{errorcontextlines}{100}
 \usepackage[T1]{fontenc}
 \usepackage{charter}
@@ -50,24 +50,24 @@
 %include lhs2TeX.fmt
 %include lhs2TeX.sty
 \makeatletter
-\renewcommand{\PT@@resetandcr}[1][0pt]%
-  {\ifx\PT@@currentcol\PT@@lastcol
-   \else
-     \ifx\PT@@currentcol\PT@@nullcol
-       \edef\PT@@currentcol{\Head{\Tail\PT@@sortedlist}}%
-     \fi
-     \edef\PT@@currentcol@@{\StripColumn\PT@@currentcol}%
-     \edef\PT@@lastcol@@
-       {\StripColumn\PT@@lastcol}%
-     \PT@@typeout@@{adding implicit fromto from \PT@@currentcol@@
-                                  \space to \PT@@lastcol@@}%
-     \expandafter\expandafter\expandafter\fromto
-       \expandafter\expandafter\expandafter{%
-         \expandafter\expandafter\expandafter\PT@@currentcol@@
-           \expandafter}\expandafter{\PT@@lastcol@@}{}%
-   \fi
-   \PT@@typeout@@{Next line ...}%
-   \PT@@resetcolumn\@@newline[#1]} % CHANGED THIS LINE from polytable
+%\renewcommand{\PT@@resetandcr}[1][0pt]%
+%  {\ifx\PT@@currentcol\PT@@lastcol
+%   \else
+%     \ifx\PT@@currentcol\PT@@nullcol
+%       \edef\PT@@currentcol{\Head{\Tail\PT@@sortedlist}}%
+%     \fi
+%     \edef\PT@@currentcol@@{\StripColumn\PT@@currentcol}%
+%     \edef\PT@@lastcol@@
+%       {\StripColumn\PT@@lastcol}%
+%     \PT@@typeout@@{adding implicit fromto from \PT@@currentcol@@
+%                                  \space to \PT@@lastcol@@}%
+%     \expandafter\expandafter\expandafter\fromto
+%       \expandafter\expandafter\expandafter{%
+%         \expandafter\expandafter\expandafter\PT@@currentcol@@
+%           \expandafter}\expandafter{\PT@@lastcol@@}{}%
+%   \fi
+%   \PT@@typeout@@{Next line ...}%
+%   \PT@@resetcolumn\@@newline[#1]} % CHANGED THIS LINE from polytable
 \makeatother
 %format forall a = "\Forall " a
 %format . = "\circ "
@@ -120,11 +120,11 @@
 
 %subst code a    	= "\unskip\begingroup\parskip\abovedisplayskip\csname @@par\endcsname\noindent\advance\leftskip\mathindent\('n\begin{pboxed}\SaveRestoreHook'n" a "\ColumnHook'n\end{pboxed}'n\)\parskip\belowdisplayskip\csname @@par\endcsname\noindent\endgroup\resethooks'n"
 
-\renewcommand{\bind}{\mathbin{>\mkern-6mu>\mkern-2mu=}}
-\newcommand{\rbind}{\mathbin{=\mkern-2mu<\mkern-6mu<}}
-\newcommand{\bindi}{\mathbin{>\mkern-6mu>\mkern-6mu-}}
-\newcommand{\bindN}{\mathbin{>\mkern-6mu>}}
-\renewcommand{\plus}{\mathbin{+\mkern-4mu+}}
+%\renewcommand{\bind}{\mathbin{>\mkern-6mu>\mkern-2mu=}}
+%\newcommand{\rbind}{\mathbin{=\mkern-2mu<\mkern-6mu<}}
+%\newcommand{\bindi}{\mathbin{>\mkern-6mu>\mkern-6mu-}}
+%\newcommand{\bindN}{\mathbin{>\mkern-6mu>}}
+%\renewcommand{\plus}{\mathbin{+\mkern-4mu+}}
 
 \title{Backtracking, interleaving, and terminating monad transformers}
 \subtitle{Functional pearl}
@@ -138,7 +138,7 @@
 \divide\belowdisplayskip 2
 \divide\abovedisplayshortskip 2
 \divide\belowdisplayshortskip 2
-\blanklineskip\abovedisplayskip
+%\blanklineskip\abovedisplayskip
 
 \begin{comment}
 \begin{code}
@@ -164,19 +164,19 @@ Combinators for computations that yield solutions:
 
 \alert<5>{Failure} backtracks to the last choice point.
 
-\begin{spec}
-factor :: Int -> [(Int, Int)]
-factor n = [(i, j) |  i  <- [2{-"\mathinner{\highlight<4>{"-}..{-"}}"-}n-1]{-"\highlight<3>{"-},{-"}"-}
-                      j  <- [2{-"\mathinner{\highlight<4>{"-}..{-"}}"-}n-1]{-"\highlight<3>{"-},{-"}"-}
-                      () <- guard(n == i * j)]
-
-guard :: Bool -> [()]
-guard True   = [()]
-guard False  = {-"\highlight<5>{"-}[]{-"}"-}
-
-|> factor 15
-[(3,5),(5,3)]
-\end{spec}
+%\begin{spec}
+%factor :: Int -> [(Int, Int)]
+%factor n = [(i, j) |  i  <- [2{-"\mathinner{\highlight<4>{"-}..{-"}}"-}n-1]{-"\highlight<3>{"-},{-"}"-}
+%                      j  <- [2{-"\mathinner{\highlight<4>{"-}..{-"}}"-}n-1]{-"\highlight<3>{"-},{-"}"-}
+%                      () <- guard(n == i * j)]
+%
+%guard :: Bool -> [()]
+%guard True   = [()]
+%guard False  = {-"\highlight<5>{"-}[]{-"}"-}
+%
+%|> factor 15
+%[(3,5),(5,3)]
+%\end{spec}
 
 \onslide<6->
 Applications: parsing, nondeterminism, transactions, pattern combinators, failure handling, \dots.
