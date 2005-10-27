@@ -60,6 +60,10 @@ let retMatchM x som non = fun s k ->
            | Some i -> .~(som .<i>. s k0)
            | None   -> .~(non s k0) >.
 
+(* generic loop *)
+let genrecloop gen rtarg = fun s k ->
+    k s .<let rec loop j = .~(gen .<loop>. .<j>. s k0) in loop .~rtarg>.
+
 (* nothing *)
 (* Need to use `fun' explictly to avoid monomorphising *)
 let retUnit = fun s k -> k s .< () >.
@@ -286,4 +290,5 @@ module Code = struct
   let cunit = .< () >.
   let update a f = let b = f (liftGet a) in ret .< .~a := .~b >.
   let assign a b = ret .< .~a := .~b >.
+  let apply  f x = ret .< .~f .~x >.
 end

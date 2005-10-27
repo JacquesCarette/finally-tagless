@@ -385,14 +385,15 @@ struct
             ifM (l1 LogicCode.not (LogicCode.equal brc Dom.zero))
               (* the current element is good enough *)
               (Code.assign pivot (MaybeCode.just (TupleCode.tup2 r brc)))
-              (mdo {
-                  s <-- fetch;
-                  ret .< let rec loop j =
-                       if j < .~n then 
-                       let bjc = .~(Ctr.get' b .<j>. c) in
-                       if bjc = .~Dom.zero then loop (j+1)
-                       else .~pivot := Some (j,bjc)
-                      in loop (.~r+1) >.})}
+              (let traverse = fun o j ->
+                  whenM (ret (Idx.less j n))
+                    (mdo {
+                        bjc <-- l1 retN (Ctr.get b j c);
+                        ifM (LogicCode.equal bjc Dom.zero)
+                            (Code.apply o (Idx.succ j))
+                            (Code.assign pivot (MaybeCode.just 
+                                (TupleCode.tup2 j bjc))) }) in
+              (genrecloop traverse (Idx.succ r)))}
          )
          (retMatchM (liftGet pivot)
                 (fun pv ->
@@ -504,8 +505,7 @@ module Gen(Dom: DOMAIN)(C: CONTAINER2D)(PivotF: PIVOT)
                         (Update.D.zero_sign () ))
                     (Code.update c Idx.succ) } ))
             (Out.make_result b) } 
-    in
-    .<fun a -> .~(runM (dogen .<a>.)) >.
+    in dogen
 end
 
 module GenFA1 = Gen(FloatDomain)
