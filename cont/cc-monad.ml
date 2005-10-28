@@ -33,7 +33,7 @@ end ;;
 
 module CONT = struct
   (* type 'a m = {cont: 'w . ('a -> 'w) -> 'w } *)
-  type ('w,'a) m = {cont: ('a -> 'w) -> 'w }
+  type 'a m = {cont: ('a -> unit) -> unit }
   let return x = {cont = fun k -> k x}
   let (>>=) m f = {cont = fun k -> m.cont (fun x -> (f x).cont k) }
 end;;
@@ -73,20 +73,34 @@ let fmap f m = {cont = fun k -> m.cont (fun v -> k (f v))}
 ;;
 
 
+module type PROMPTPARAM = sig
+    type b
+    val init : b
+end;;
+
+module PromptBool = struct
+    type b=bool
+    let init = false
+end;;
+
 (* Our prompts and their primitive operations *)
-type 'a promptFP = PromptFP of (bool * (unit -> 'a)) ref
+module Prompt(X:PROMPTPARAM) = struct
+    type 'a promptFP = PromptFP of (X.b * (unit -> 'a)) ref
 
-let set'prompt (PromptFP p) v = lset p (false, fun () -> v)
-let get'prompt (PromptFP p) = fmap (fun x -> snd x ()) (lget p)
-let check'prompt (PromptFP p) 
-    = lget p >>= (fun (mark,v) ->
-                   if mark then (lset p (false, v) >> return true)
-                   else return false)
-let set'mark (PromptFP p) = lget p >>= (fun (mark,v) -> lset p (true,v))
-;;
+    let set'prompt (PromptFP p) v = lset p (X.init, fun () -> v)
+    let get'prompt (PromptFP p) = fmap (fun x -> snd x ()) (lget p)
+    let check'prompt (PromptFP p) b
+        = lget p >>= (fun (mark,v) ->
+                       if mark=b then (lset p (X.init, v) >> return true)
+                       else return false)
+    let set'mark (PromptFP p) b = lget p >>= (fun (mark,v) -> lset p (b,v))
+end;;
 
+module PB = Prompt(PromptBool) ;;
 
-type 'a cc1 = (unit,'a) CONT.m 
+open PB ;;
+
+type 'a cc1 = 'a CONT.m 
 type univs = unit
 type hfp = HFP of (univs cc1 -> hfp cc1) * 
                   ((univs cc1 -> univs cc1) -> univs cc1)
@@ -116,7 +130,7 @@ let rec
                (fun g -> return 
                            (HFP ((compose g (compose (hrStopF p0 p) f)), c)))
    in
-   check'prompt p >>= fun v -> if v then handle else relay
+   check'prompt p true >>= fun v -> if v then handle else relay
 ;;
 
 let shiftFP' p0 p f = 
@@ -127,7 +141,7 @@ let shiftFP' p0 p f =
                      >> get'prompt p
           in (f k1) >>= set'prompt p
        in
-       (set'mark p) >> 
+       (set'mark p true) >> 
        (oShift p0 (fun k -> return (HFP (k, f')))) >>
        (lget ans >>= (fun vc -> return (vc ()))))
 ;;
@@ -280,3 +294,4 @@ let testls = CCFP.run (
 ;;
 		
 (* ["a"] *)
+
