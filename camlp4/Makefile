@@ -69,9 +69,8 @@ pa-%.cmo: pa-%.ml
 test-lift1.txt: test-lift1.ml
 	camlp4o -I . pa-lift.cmo pr_o.cmo $<
 
-test-lift1: test-lift1.ml
-	metaocaml camlp4o.cma pa_extend.cmo pa-lift.cmo < test-lift1.ml
-
+test-lift%: test-lift%.ml
+	metaocaml camlp4o.cma pa_extend.cmo pa-lift.cmo < $<
 
 test3.cmo: test3.ml pa_monad.cmo
 	metaocamlc -c -pp 'camlp4o pa_extend.cmo q_MLast.cmo ./pa_monad.cmo' -I +camlp4 $<

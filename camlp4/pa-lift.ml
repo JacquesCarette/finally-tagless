@@ -1,3 +1,5 @@
+(* The SUPER-REIFIER: the reifier of AST as code *)
+
 let uplaceholder = "Placeholder"
 ;;
 
@@ -215,8 +217,8 @@ EXTEND
 *)
     | "apply" LEFTA
       [ e1 = SELF; e2 = SELF ->
-          MLast.ExBrk(loc,
-             <:expr< $MLast.ExEsc(loc,e1)$ $MLast.ExEsc(loc,e2)$ >>)
+          <:expr< $uid:uplaceholder$ . $lid:"app"$ $e1$ $e2$ >>
+
 (*
           match constr_expr_arity loc e1 with
           [ 1 -> <:expr< $e1$ $e2$ >>
@@ -292,7 +294,8 @@ EXTEND
     [ RIGHTA
       [ p = Pcaml.patt LEVEL "simple"; e = SELF -> <:expr< fun $p$ -> $e$ >>
       | "->"; e = myexpr ->
-	  MLast.ExEsc (loc, e)  ] ]
+	  MLast.ExEsc (loc, <:expr< $uid:uplaceholder$ . $lid:"run"$ $e$ >>)  
+      ] ]
   ;
 
 END;
