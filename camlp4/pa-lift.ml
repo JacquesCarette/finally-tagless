@@ -81,8 +81,8 @@ EXTEND
 
 	   let rec p a1 a2 = e in body
 	   ==>
-	   ENV.bind .<fun self a1 a2 ->
-                      let p x = self x in .~(.<e>.)>.
+	   ENV.bind (retS .<fun self a1 a2 ->
+                      let p x = self x in .~(.<e>.)>.)
            (fun loop ->
            .<let p = .~(ENV.ym loop) in .~(.<body>)>.)
           *)
@@ -93,8 +93,8 @@ EXTEND
          let self = gensym () in
          let l = [(p,<:expr< $lid:self$ >>)] in
          let bind_arg1 = 
-         MLast.ExBrk (loc,
-            List.fold_right 
+          lift_simple loc
+           (List.fold_right 
               (fun p1 e -> <:expr< fun [ $p1$ -> $e$ ] >>)
               (<:patt< $lid:self$ >> :: args)      
               <:expr< let $opt:false$ $list:l$ in $MLast.ExEsc(loc,e)$>>) in
