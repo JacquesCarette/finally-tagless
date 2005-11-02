@@ -212,8 +212,12 @@ EXTEND
     | "unary minus" NONA
       [ "-"; e = SELF -> <:expr< $mkumin loc "-" e$ >>
       | "-."; e = SELF -> <:expr< $mkumin loc "-." e$ >> ]
+*)
     | "apply" LEFTA
       [ e1 = SELF; e2 = SELF ->
+          MLast.ExBrk(loc,
+             <:expr< $MLast.ExEsc(loc,e1)$ $MLast.ExEsc(loc,e2)$ >>)
+(*
           match constr_expr_arity loc e1 with
           [ 1 -> <:expr< $e1$ $e2$ >>
           | _ ->
@@ -221,12 +225,17 @@ EXTEND
               [ <:expr< ( $list:el$ ) >> ->
                   List.fold_left (fun e1 e2 -> <:expr< $e1$ $e2$ >>) e1 el
               | _ -> <:expr< $e1$ $e2$ >> ] ]
+*)
+(*
       | "assert"; e = SELF ->
           match e with
           [ <:expr< False >> -> <:expr< assert False >>
           | _ -> <:expr< assert ($e$) >> ]
       | "lazy"; e = SELF ->
-          <:expr< lazy ($e$) >> ]
+          <:expr< lazy ($e$) >> 
+*)
+   ]
+(*
     | "meta" NONA                             (* XXO *)
       [ ".!"; e = SELF -> MLast.ExRun loc e   (* XXO *)
       | ".~"; e = SELF -> MLast.ExEsc loc e ] (* XXO *)
