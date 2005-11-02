@@ -63,6 +63,12 @@ clean:
 pa_%.cmo: pa_%.ml
 	ocamlc -c -pp 'camlp4o pa_extend.cmo q_MLast.cmo' -I +camlp4 $<
 
+pa-%.cmo: pa-%.ml
+	ocamlc -verbose -c -pp 'camlp4o pa_extend.cmo q_MLast.cmo' -I +camlp4 $<
+
+test-lift1.txt: test-lift1.ml
+	camlp4o -I . pa-lift.cmo pr_o.cmo $<
+
 
 test3.cmo: test3.ml pa_monad.cmo
 	metaocamlc -c -pp 'camlp4o pa_extend.cmo q_MLast.cmo ./pa_monad.cmo' -I +camlp4 $<
