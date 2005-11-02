@@ -1,6 +1,13 @@
 let uplaceholder = "Placeholder"
 ;;
 
+let id'counter = ref 0
+let gensym () = 
+  let v = !id'counter in
+  let () = id'counter := v+1 in
+  "g~~" ^ string_of_int v
+;;
+
 (* Replace UID uplaceholder with that of m *)
 let rec adjust'placeholder loc m e =
   match e with
@@ -24,6 +31,10 @@ let rec adjust'placeholder loc m e =
   | <:expr< ($list:el$) >> ->
       let es = List.map (adjust'placeholder loc m) el in
       <:expr< ($list:es$) >>
+  | <:expr< let $opt:o$ $list:l$ in $x$ >> ->
+      let x = adjust'placeholder loc m x in
+      let l = List.map (fun (p,e) -> (p,adjust'placeholder loc m e)) l in
+      <:expr< let $opt:o$ $list:l$ in $x$ >>
   | MLast.ExEsc (loc,e) -> 
       MLast.ExEsc (loc, adjust'placeholder loc m e)
   | MLast.ExBrk (loc,e) -> 
@@ -41,6 +52,8 @@ let lift2 loc name e1 e2 =
   <:expr< $uid:uplaceholder$ . $lid:name$ $e1$ $e2$ >>
 ;;
 
+let unit_expr loc = MLast.ExBrk (loc, <:expr< () >>) 
+;;
 
 EXTEND
     GLOBAL: Pcaml.expr; 
@@ -60,13 +73,59 @@ EXTEND
       [ e1 = SELF; ";" -> e1 ]
     | "expr1"
       [ 
+         (*
+	   We support only a subset of OCaml let rec
+	   In particular, args must be simple patterns. No "and" clauses.
+
+	   let rec p a1 a2 = e in body
+	   ==>
+	   ENV.bind .<fun self a1 a2 ->
+                      let p x = self x in .~(.<e>.)>.
+           (fun loop ->
+           .<let p = .~(ENV.ym loop) in .~(.<body>)>.)
+          *)
+      
+        "let"; "rec"; p = Pcaml.patt LEVEL "simple";
+          args = LIST1 Pcaml.patt LEVEL "simple"; "=";
+          e = myexpr; "in"; body = myexpr LEVEL "top" ->
+         let self = gensym () in
+         let l = [(p,<:expr< $lid:self$ >>)] in
+         let bind_arg1 = 
+         MLast.ExBrk (loc,
+            List.fold_right 
+              (fun p1 e -> <:expr< fun [ $p1$ -> $e$ ] >>)
+              (<:patt< $lid:self$ >> :: args)      
+              <:expr< let $opt:false$ $list:l$ in $MLast.ExEsc(loc,e)$>>) in
+         let lv = gensym () in
+         let lvp = <:patt< $lid:lv$ >> in
+         let l = [(p,MLast.ExEsc(loc,
+                  <:expr< $uid:uplaceholder$ . $lid:"ym"$ $lid:lv$ >>))] in
+         let body' = 
+           <:expr< let $opt:false$ $list:l$ in $MLast.ExEsc(loc,body)$ >> in
+         let bind_arg2 = 
+           <:expr< fun [ $lvp$ -> $MLast.ExBrk(loc,body')$ ] >> in
+        <:expr< $uid:uplaceholder$ . $lid:"bind"$ $bind_arg1$ $bind_arg2$ >>
+   
+
+         (*
+	    We support only a subset of OCaml let: No "and" clauses.
+	    only one pattern on the left of "=".
+
+	    let i = e in x
+	    ==>
+	    ENV.bind .<e>. (fun gensym -> .<let i = .~gensym in .~(.<x>.)>.)
+	 *)
+      | "let"; p = Pcaml.patt LEVEL "simple"; "="; e = myexpr; "in";
+           x = myexpr LEVEL "top" ->
+        let p' = gensym () in
+        let pp' = <:patt< $lid:p'$ >> in
+        let l = [(p,(MLast.ExEsc (loc,<:expr< $lid:p'$ >>)))] in
+        let fbody = MLast.ExBrk (loc, 
+             <:expr< let $opt:false$ $list:l$ in $MLast.ExEsc (loc, x)$ >>) in
+        <:expr< $uid:uplaceholder$ . $lid:"bind"$ 
+                  $e$ 
+                  (fun [ $pp'$ -> $fbody$ ])  >>
 (*
-	"let"; "rec"; l = let_binding "in";
-        x = myexpr LEVEL "top" ->
-          <:expr< let $opt:o2b o$ $list:l$ in $x$ >>
-      | "let"; l = let_binding "in";
-        x = myexpr LEVEL "top" ->
-          <:expr< let $opt:o2b o$ $list:l$ in $x$ >>
       | "function"; OPT "|"; l = LIST1 match_case SEP "|" ->
           <:expr< fun [ $list:l$ ] >>
       | "fun"; p = patt LEVEL "simple"; e = fun_def ->
@@ -77,12 +136,11 @@ EXTEND
           <:expr< try $e$ with [ $list:l$ ] >>
 *)
       (* all three branches must return a code value *)
-       "if"; e1 = SELF; "then"; e2 = myexpr LEVEL "expr1";
+      | "if"; e1 = SELF; "then"; e2 = myexpr LEVEL "expr1";
         "else"; e3 = myexpr LEVEL "expr1" ->
           <:expr< $uid:uplaceholder$ . $lid:"fif"$ $e1$ $e2$ $e3$ >>
       | "if"; e1 = SELF; "then"; e2 = myexpr LEVEL "expr1" ->
-	  let e3 = MLast.ExBrk (loc, <:expr< () >>) in
-          <:expr< $uid:uplaceholder$ . $lid:"fif"$ $e1$ $e2$ $e3$ >>
+          <:expr< $uid:uplaceholder$ . $lid:"fif"$ $e1$ $e2$ $unit_expr loc$ >>
 (*
       | "for"; i = LIDENT; "="; e1 = SELF; df = direction_flag; e2 = SELF;
         "do"; e = SELF; "done" ->
@@ -107,17 +165,20 @@ EXTEND
     | "&&" RIGHTA
       [ e1 = SELF; "&"; e2 = SELF -> <:expr< $lid:"&"$ $e1$ $e2$ >>
       | e1 = SELF; "&&"; e2 = SELF -> <:expr< $e1$ && $e2$ >> ]
+*)
     | "<" LEFTA
-      [ e1 = SELF; "<"; e2 = SELF -> <:expr< $e1$ < $e2$ >>
-      | e1 = SELF; ">"; e2 = SELF -> <:expr< $e1$ > $e2$ >>
-      | e1 = SELF; "<="; e2 = SELF -> <:expr< $e1$ <= $e2$ >>
-      | e1 = SELF; ">="; e2 = SELF -> <:expr< $e1$ >= $e2$ >>
-      | e1 = SELF; "="; e2 = SELF -> <:expr< $e1$ = $e2$ >>
-      | e1 = SELF; "<>"; e2 = SELF -> <:expr< $e1$ <> $e2$ >>
-      | e1 = SELF; "=="; e2 = SELF -> <:expr< $e1$ == $e2$ >>
-      | e1 = SELF; "!="; e2 = SELF -> <:expr< $e1$ != $e2$ >>
-      | e1 = SELF; "$"; e2 = SELF -> <:expr< $lid:"\$"$ $e1$ $e2$ >>
-      | e1 = SELF; op = infixop0; e2 = SELF -> <:expr< $lid:op$ $e1$ $e2$ >> ]
+      [ e1 = SELF; "<"; e2 = SELF ->  lift2 loc "<"  e1 e2
+      | e1 = SELF; ">"; e2 = SELF ->  lift2 loc ">"  e1 e2
+      | e1 = SELF; "<="; e2 = SELF -> lift2 loc "<=" e1 e2
+      | e1 = SELF; ">="; e2 = SELF -> lift2 loc ">=" e1 e2
+      | e1 = SELF; "="; e2 = SELF ->  lift2 loc "="  e1 e2
+      | e1 = SELF; "<>"; e2 = SELF -> lift2 loc "<>" e1 e2
+      | e1 = SELF; "=="; e2 = SELF -> lift2 loc "==" e1 e2 
+      | e1 = SELF; "!="; e2 = SELF -> lift2 loc "!=" e1 e2
+      | e1 = SELF; "$"; e2 = SELF ->  lift2 loc "$"  e1 e2
+   (* | e1 = SELF; op = infixop0; e2 = SELF -> <:expr< $lid:op$ $e1$ $e2$ >> *)
+     ]
+(*
     | "^" RIGHTA
       [ e1 = SELF; "^"; e2 = SELF -> <:expr< $e1$ ^ $e2$ >>
       | e1 = SELF; "@"; e2 = SELF -> <:expr< $e1$ @ $e2$ >>
@@ -126,23 +187,22 @@ EXTEND
       [ e1 = SELF; "::"; e2 = SELF -> <:expr< [$e1$ :: $e2$] >> ]
 *)
     | "+" LEFTA
-      [ e1 = SELF; "+"; e2 = SELF -> lift2 loc "plus" e1 e2
-      | e1 = SELF; "-"; e2 = SELF -> lift2 loc "minus" e1 e2
-(*
-      | e1 = SELF; op = Pcaml.infixop2; e2 = SELF -> 
-	  lift2 loc op e1 e2 
-*)
+      [ e1 = SELF; "+"; e2 = SELF -> lift2 loc "+" e1 e2
+      | e1 = SELF; "-"; e2 = SELF -> lift2 loc "-" e1 e2
+   (* | e1 = SELF; op = Pcaml.infixop2; e2 = SELF -> 
+	  lift2 loc op e1 e2  *)
+      ]
+    | "*" LEFTA
+      [ e1 = SELF; "*"; e2 = SELF ->    lift2 loc "*" e1 e2 
+      | e1 = SELF; "/"; e2 = SELF ->    lift2 loc "/" e1 e2
+      | e1 = SELF; "%"; e2 = SELF ->    lift2 loc "%" e1 e2
+      | e1 = SELF; "land"; e2 = SELF -> lift2 loc "land" e1 e2
+      | e1 = SELF; "lor"; e2 = SELF ->  lift2 loc "lor"  e1 e2
+      | e1 = SELF; "lxor"; e2 = SELF -> lift2 loc "lxor" e1 e2
+      | e1 = SELF; "mod"; e2 = SELF ->  lift2 loc "mod"  e1 e2
+   (* | e1 = SELF; op = infixop3; e2 = SELF -> <:expr< $lid:op$ $e1$ $e2$ >>*)
       ]
 (*
-    | "*" LEFTA
-      [ e1 = SELF; "*"; e2 = SELF -> <:expr< $e1$ * $e2$ >>
-      | e1 = SELF; "/"; e2 = SELF -> <:expr< $e1$ / $e2$ >>
-      | e1 = SELF; "%"; e2 = SELF -> <:expr< $lid:"%"$ $e1$ $e2$ >>
-      | e1 = SELF; "land"; e2 = SELF -> <:expr< $e1$ land $e2$ >>
-      | e1 = SELF; "lor"; e2 = SELF -> <:expr< $e1$ lor $e2$ >>
-      | e1 = SELF; "lxor"; e2 = SELF -> <:expr< $e1$ lxor $e2$ >>
-      | e1 = SELF; "mod"; e2 = SELF -> <:expr< $e1$ mod $e2$ >>
-      | e1 = SELF; op = infixop3; e2 = SELF -> <:expr< $lid:op$ $e1$ $e2$ >> ]
     | "**" RIGHTA
       [ e1 = SELF; "**"; e2 = SELF -> <:expr< $e1$ ** $e2$ >>
       | e1 = SELF; "asr"; e2 = SELF -> <:expr< $e1$ asr $e2$ >>
@@ -205,37 +265,14 @@ EXTEND
           <:expr< { $list:lel$ } >>
       | "{"; e = expr LEVEL "."; "with"; lel = lbl_expr_list; "}" ->
           <:expr< { ($e$) with $list:lel$ } >>
-      | "("; ")" -> <:expr< () >>
-      | "("; op = operator_rparen -> <:expr< $lid:op$ >>
-      | "("; e = SELF; ":"; t = ctyp; ")" -> <:expr< ($e$ : $t$) >>
-      | "("; e = SELF; ")" -> <:expr< $e$ >>
-      | ".<"; e = SELF; ">." -> MLast.ExBrk loc e  (* XXO *)
-      | "begin"; e = SELF; "end" -> <:expr< $e$ >>
-      | "begin"; "end" -> <:expr< () >>
-      | x = LOCATE ->
-          let x =
-            try
-              let i = String.index x ':' in
-              ({Lexing.pos_fname = "";
-                Lexing.pos_lnum = 0;
-                Lexing.pos_bol = 0;
-                Lexing.pos_cnum = int_of_string (String.sub x 0 i)},
-               String.sub x (i + 1) (String.length x - i - 1))
-            with
-            [ Not_found | Failure _ -> (Token.nowhere, x) ]
-          in
-          Pcaml.handle_expr_locate loc x
-      | x = QUOTATION ->
-          let x =
-            try
-              let i = String.index x ':' in
-              (String.sub x 0 i,
-               String.sub x (i + 1) (String.length x - i - 1))
-            with
-            [ Not_found -> ("", x) ]
-          in
-          Pcaml.handle_expr_quotation loc x 
 *)
+      | "("; ")" -> unit_expr loc 
+(*      | "("; op = operator_rparen -> <:expr< $lid:op$ >> *)
+(*      | "("; e = SELF; ":"; t = ctyp; ")" -> <:expr< ($e$ : $t$) >> *)
+      | "("; e = SELF; ")" -> <:expr< $e$ >>
+(*      | ".<"; e = SELF; ">." -> MLast.ExBrk loc e  (* XXO *) *)
+      | "begin"; e = SELF; "end" -> <:expr< $e$ >>
+      | "begin"; "end" -> unit_expr loc
       ]
   
    ]
