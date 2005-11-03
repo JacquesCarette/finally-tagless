@@ -49,6 +49,10 @@ let lift_simple loc e =
   let e = MLast.ExBrk (loc, e) in
   <:expr< $uid:uplaceholder$ . $lid:"retS"$ $e$ >>
 ;;
+let lift_lit loc e = 
+  let e = MLast.ExBrk (loc, e) in
+  <:expr< $uid:uplaceholder$ . $lid:"retL"$ $e$ >>
+;;
 
 let lift2 loc name e1 e2 = 
   <:expr< $uid:uplaceholder$ . $lid:name$ $e1$ $e2$ >>
@@ -245,21 +249,21 @@ EXTEND
       | f = prefixop; e = SELF -> <:expr< $lid:f$ $e$ >> ]
 *)
     | "simple" LEFTA
-      [ s = INT ->    lift_simple loc <:expr< $int:s$ >>
-      | s = FLOAT ->  lift_simple loc <:expr< $flo:s$ >>
-      | s = STRING -> lift_simple loc <:expr< $str:s$ >>
-      | c = CHAR ->   lift_simple loc <:expr< $chr:c$ >>
-      | UIDENT "True" ->  lift_simple loc <:expr< $uid:" True"$ >>
-      | UIDENT "False" -> lift_simple loc <:expr< $uid:" False"$ >>
+      [ s = INT ->    lift_lit loc <:expr< $int:s$ >>
+      | s = FLOAT ->  lift_lit loc <:expr< $flo:s$ >>
+      | s = STRING -> lift_lit loc <:expr< $str:s$ >>
+      | c = CHAR ->   lift_lit loc <:expr< $chr:c$ >>
+      | UIDENT "True" ->  lift_lit loc <:expr< $uid:" True"$ >>
+      | UIDENT "False" -> lift_lit loc <:expr< $uid:" False"$ >>
       |	i = LIDENT ->     lift_simple loc <:expr< $lid:i$ >>
 (*
  * Skip qualified identifiers...
       | i = expr_ident -> i
 *)
 
-      | s = "false" -> lift_simple loc <:expr< False >>
-      | s = "true" ->  lift_simple loc <:expr< True >>
-      | "["; "]" ->    lift_simple loc <:expr< [] >>
+      | s = "false" -> lift_lit loc <:expr< False >>
+      | s = "true" ->  lift_lit loc <:expr< True >>
+      | "["; "]" ->    lift_lit loc <:expr< [] >>
 (*
       | "["; el = expr1_semi_list; "]" -> <:expr< $mklistexp loc None el$ >>
       | "[|"; "|]" -> <:expr< [| |] >>
