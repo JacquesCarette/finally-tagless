@@ -10,7 +10,7 @@ let gensym () =
   "g~~" ^ string_of_int v
 ;;
 
-(* Replace UID uplaceholder with that of m *)
+(* Replace UID uplaceholder with UID m *)
 let rec adjust'placeholder loc m e =
   match e with
     <:expr< $lid:b$ >> as e -> e
@@ -69,7 +69,7 @@ EXTEND
     ] ;
 
   (* Core expressions, lifted from camlp4/etc/pa_o.ml *)
-  (* myexpr must return the code value *)
+  (* myexpr must return the code value, of a monadic type *)
   myexpr:
     [ "top" RIGHTA
       [ e1 = SELF; ";" -> e1 ]
@@ -81,10 +81,8 @@ EXTEND
 
 	   let rec p a1 a2 = e in body
 	   ==>
-	   ENV.bind (retS .<fun self a1 a2 ->
-                      let p x = self x in .~(.<e>.)>.)
-           (fun loop ->
-           .<let p = .~(ENV.ym loop) in .~(.<body>)>.)
+	   .<let p = .~(ENV.ym .<fun self a1 a2 -> let p = self in .~(.<e>.)>.)
+             in .~(.<body>.)>.
           *)
       
         "let"; "rec"; p = Pcaml.patt LEVEL "simple";
@@ -92,22 +90,16 @@ EXTEND
           e = myexpr; "in"; body = myexpr LEVEL "top" ->
          let self = gensym () in
          let l = [(p,<:expr< $lid:self$ >>)] in
-         let bind_arg1 = 
-          lift_simple loc
+         let ym_arg = 
+          MLast.ExBrk (loc,
            (List.fold_right 
               (fun p1 e -> <:expr< fun [ $p1$ -> $e$ ] >>)
               (<:patt< $lid:self$ >> :: args)      
-              <:expr< let $opt:false$ $list:l$ in $MLast.ExEsc(loc,e)$>>) in
-         let lv = gensym () in
-         let lvp = <:patt< $lid:lv$ >> in
-         let l = [(p,MLast.ExEsc(loc,
-                  <:expr< $uid:uplaceholder$ . $lid:"ym"$ $lid:lv$ >>))] in
-         let body' = 
-           <:expr< let $opt:false$ $list:l$ in $MLast.ExEsc(loc,body)$ >> in
-         let bind_arg2 = 
-           <:expr< fun [ $lvp$ -> $MLast.ExBrk(loc,body')$ ] >> in
-        <:expr< $uid:uplaceholder$ . $lid:"bind"$ $bind_arg1$ $bind_arg2$ >>
-   
+              <:expr< let $opt:false$ $list:l$ in $MLast.ExEsc(loc,e)$>>)) in
+         let ym_app = <:expr< $uid:uplaceholder$ . $lid:"ym"$ $ym_arg$ >> in
+         let l = [(p,<:expr< $MLast.ExEsc(loc,ym_app)$ >>)] in
+         MLast.ExBrk(loc,
+          <:expr< let $opt:false$ $list:l$ in $MLast.ExEsc(loc,body)$ >>)
 
          (*
 	    We support only a subset of OCaml let: No "and" clauses.
@@ -253,21 +245,21 @@ EXTEND
       | f = prefixop; e = SELF -> <:expr< $lid:f$ $e$ >> ]
 *)
     | "simple" LEFTA
-      [ s = INT -> lift_simple loc <:expr< $int:s$ >>
-      | s = FLOAT -> lift_simple loc <:expr< $flo:s$ >>
+      [ s = INT ->    lift_simple loc <:expr< $int:s$ >>
+      | s = FLOAT ->  lift_simple loc <:expr< $flo:s$ >>
       | s = STRING -> lift_simple loc <:expr< $str:s$ >>
-      | c = CHAR -> lift_simple loc <:expr< $chr:c$ >>
-      | UIDENT "True" -> lift_simple loc <:expr< $uid:" True"$ >>
+      | c = CHAR ->   lift_simple loc <:expr< $chr:c$ >>
+      | UIDENT "True" ->  lift_simple loc <:expr< $uid:" True"$ >>
       | UIDENT "False" -> lift_simple loc <:expr< $uid:" False"$ >>
-      |	i = LIDENT -> lift_simple loc <:expr< $lid:i$ >>
+      |	i = LIDENT ->     lift_simple loc <:expr< $lid:i$ >>
 (*
  * Skip qualified identifiers...
       | i = expr_ident -> i
 *)
 
       | s = "false" -> lift_simple loc <:expr< False >>
-      | s = "true" -> lift_simple loc <:expr< True >>
-      | "["; "]" -> lift_simple loc <:expr< [] >>
+      | s = "true" ->  lift_simple loc <:expr< True >>
+      | "["; "]" ->    lift_simple loc <:expr< [] >>
 (*
       | "["; el = expr1_semi_list; "]" -> <:expr< $mklistexp loc None el$ >>
       | "[|"; "|]" -> <:expr< [| |] >>
