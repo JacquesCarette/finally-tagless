@@ -111,6 +111,8 @@ let rec lift_exp loc m e =
 	| [(p,e)] -> do_openrec p e (lift_exp loc m body)
 	| _ -> failwith "only one binding is supported in let rec" )  
 
+  | <:expr< $e1$.val >> -> lift1 loc m "!" (lift_exp loc m e1)
+
   | <:expr< $lid:op$ $e1$ >> when List.mem op distinguished_1op 
     -> lift1 loc m op (lift_exp loc m e1)
   | <:expr< $lid:op$ $e1$ $e2$ >> when List.mem op distinguished_2op 
@@ -125,9 +127,29 @@ let rec lift_exp loc m e =
       |	(h::t) -> lift2 loc m "fseq" (lift_exp loc m h)
 	                   (lift_exp loc m  <:expr< do { $list:t$ } >>))
 
+	(* for i = e1 to e2 in body
+	   ==>
+	   ENV.ffor true <e1> <e2> (fun i' -> .<let i = .~i' in .~(<body>)>.)
+	 *)
+  | <:expr< for $s$ = $e1$ $to:b$ $e2$ do { $list:el$ } >> ->
+      let ni = gensym () in
+      let ni' = <:patt< $lid:ni$ >> in
+      let l = [(<:patt< $lid:s$ >>, MLast.ExEsc(loc,<:expr< $lid:ni$ >>))] in
+      let body = MLast.ExEsc(loc,lift_exp loc m <:expr< do { $list:el$ } >>) in
+      let body = MLast.ExBrk(loc,
+                             <:expr< let $opt:false$ $list:l$ in $body$ >>) in
+      let b = if b then <:expr< True >> else <:expr< False >> in
+      <:expr< $uid:m$ . $lid:"ffor"$ $b$
+                             $lift_exp loc m e1$
+                             $lift_exp loc m e2$
+                             (fun [$ni'$ -> $body$]) >>
+
   | <:expr< $e1$.val := $e2$ >> ->
       lift2 loc m "fass" (lift_exp loc m e1) (lift_exp loc m e2)
 
+  | <:expr< $e1$ .( $e2$ ) >> ->
+      lift2 loc m "aref" (lift_exp loc m e1) (lift_exp loc m e2)
+      
   | <:expr< $e1$ $e2$ >> -> 
       lift2 loc m "app" (lift_exp loc m e1) (lift_exp loc m e2)
 
