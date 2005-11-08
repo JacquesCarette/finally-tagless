@@ -20,9 +20,13 @@ module type ENVT = sig
   val ( + ): ('a, int m) code -> ('a, int m) code -> ('a, int m) code
   val ( - ): ('a, int m) code -> ('a, int m) code -> ('a, int m) code
   val ( * ): ('a, int m) code -> ('a, int m) code -> ('a, int m) code
+  val ( +.): ('a, float m) code -> ('a, float m) code -> ('a, float m) code
+  val ( -.): ('a, float m) code -> ('a, float m) code -> ('a, float m) code
+  val ( *.): ('a, float m) code -> ('a, float m) code -> ('a, float m) code
   val ( = ): ('a, 'v m) code -> ('a, 'v m) code -> ('a, bool m) code
   val fif  : ('a, bool m) code -> ('a, 'v m) code -> ('a, 'v m) code ->
              ('a, 'v m) code
+  val fseq : ('a, 'v1 m) code -> ('a, 'v m) code -> ('a, 'v m) code
   val ym   : ('a, ('v->'v1 m) -> ('v ->'v1 m)) code -> ('a, 'v ->'v1 m) code
 end;;
 
@@ -35,11 +39,15 @@ module ENV : ENVT = struct
  let bind m f = f m
  let run x = x
  let app f x = .<.~f .~x>.
- let (+) x y = .<Pervasives.(+) .~x .~y>.
- let (-) x y = .<Pervasives.(-) .~x .~y>.
+ let ( + ) x y = .<Pervasives.( + ) .~x .~y>.
+ let ( - ) x y = .<Pervasives.( - ) .~x .~y>.
  let ( * ) x y = .<Pervasives.( * ) .~x .~y>.
- let (=) x y = .<Pervasives.(=) .~x .~y>.
+ let ( = ) x y = .<Pervasives.( = ) .~x .~y>.
+ let ( +.) x y = .<Pervasives.( +.) .~x .~y>.
+ let ( -.) x y = .<Pervasives.( -.) .~x .~y>.
+ let ( *.) x y = .<Pervasives.( *.) .~x .~y>.
  let fif c t e = .<if .~c then .~t else .~e>.
+ let fseq e1 e2 = .<begin .~e1; .~e2 end>.
  let ym fc = .<let rec ym f x = f (ym f) x in ym .~fc>.
 end;;
 
