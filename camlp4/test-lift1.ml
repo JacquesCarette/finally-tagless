@@ -27,6 +27,8 @@ module type ENVT = sig
   val fif  : ('a, bool m) code -> ('a, 'v m) code -> ('a, 'v m) code ->
              ('a, 'v m) code
   val fseq : ('a, 'v1 m) code -> ('a, 'v m) code -> ('a, 'v m) code
+  val fass : ('a, ('v ref) m) code -> ('a,'v m) code -> ('a, unit m) code
+  val ref  : ('a,'v m) code -> ('a, ('v ref) m) code
   val ym   : ('a, ('v->'v1 m) -> ('v ->'v1 m)) code -> ('a, 'v ->'v1 m) code
 end;;
 
@@ -48,6 +50,8 @@ module ENV : ENVT = struct
  let ( *.) x y = .<Pervasives.( *.) .~x .~y>.
  let fif c t e = .<if .~c then .~t else .~e>.
  let fseq e1 e2 = .<begin .~e1; .~e2 end>.
+ let ref e = .<ref .~e>.
+ let fass e1 e2 = .<(.~e1) := (.~e2)>.
  let ym fc = .<let rec ym f x = f (ym f) x in ym .~fc>.
 end;;
 
@@ -73,3 +77,6 @@ let fact = funM ENV n x ->
 let test = (.!fact) 5 1
 ;;
 
+let ta = funM ENV n ->
+  let x = ref 1.0 in (x := 2.0; 3.0)
+;;
