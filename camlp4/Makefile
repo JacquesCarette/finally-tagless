@@ -66,7 +66,7 @@ pa_%.cmo: pa_%.ml
 pa-%.cmo: pa-%.ml
 	ocamlc -verbose -c -pp 'camlp4o pa_extend.cmo q_MLast.cmo' -I +camlp4 $<
 
-test-lift1.txt: test-lift1.ml
+test-lift%.txt: test-lift%.ml
 	camlp4o -I . pa-lift.cmo pr_o.cmo $<
 
 test-lift%: test-lift%.ml
