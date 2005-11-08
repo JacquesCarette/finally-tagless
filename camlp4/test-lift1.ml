@@ -1,9 +1,34 @@
 (* Tests of the pa-lift syntactic extension.
    Be sure to do make test-lift1.txt to see the generated code
    and make test-lift1 to see the thing run...
-   We're just interested in prettu-printing.
+   We're just interested in pretty-printing.
  *)
-module ENV = struct
+module type ENVT = sig
+  type 'v m
+  val retS : ('a,'v) code -> ('a,'v m) code
+  val retL : ('a,'v) code -> ('a,'v m) code
+  val bind : ('a,'v m) code -> (('a,'v) code -> ('a,'v1 m) code)
+             -> ('a,'v1 m) code
+  (* Actually, run should have 
+		 ('a,'v m) code -> ('a,'v out) code
+     for some 'out' type -- which is not abstract
+     But creating functors parameterized by out, and instantiating this
+     stuff seems more complex than it is worth.
+   *)
+  val run  : ('a,'v m) code -> ('a,'v) code
+  val app  : ('a,('v1->'v2 m) m) code -> ('a,'v1 m) code -> ('a,'v2 m) code
+  val ( + ): ('a, int m) code -> ('a, int m) code -> ('a, int m) code
+  val ( - ): ('a, int m) code -> ('a, int m) code -> ('a, int m) code
+  val ( * ): ('a, int m) code -> ('a, int m) code -> ('a, int m) code
+  val ( = ): ('a, 'v m) code -> ('a, 'v m) code -> ('a, bool m) code
+  val fif  : ('a, bool m) code -> ('a, 'v m) code -> ('a, 'v m) code ->
+             ('a, 'v m) code
+  val ym   : ('a, ('v->'v1 m) -> ('v ->'v1 m)) code -> ('a, 'v ->'v1 m) code
+end;;
+
+module ENV : ENVT = struct
+ type 'v m   = 'v
+
  let retS x = x
  let retL x = x
  let ret x  = x
