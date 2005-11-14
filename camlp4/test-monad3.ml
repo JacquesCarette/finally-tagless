@@ -124,7 +124,8 @@ let test_nondet () =
         | InC a -> run n a
         | Cons (a,b) -> (a::run (n-1) b)
   in
-  let rec numb () = InC (mplus (ret 0) (doM n <-- numb; ret (n+1))) in
+  (* Note the Left recursion! *)
+  let rec numb () = InC (mplus (doM n <-- numb; ret (n+1)) (ret 0)) in
   (* Don't try this in Prolog or in Haskell's MonadPlus! *)
   let tst = doM
                   i <-- numb;
