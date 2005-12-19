@@ -1,0 +1,56 @@
+2005-12-18  Lydia van Dijk  <lvandijk@freenet.de>
+
+	* pa_monad.ml: Beautify documentation.  Add section on known
+	issues with the syntax extension.
+	(exp_to_patt): Handle type restriction.
+	(convert/glob_then): Rename parameters.
+	(convert/glob_bind_irrefutable): Dito.
+	(convert/glob_bind_refutable): Dito.
+	(convert/folder): Reformat.
+	(EXTEND): Rename some parameters.
+	* test-syntax.ml: Add type-restriction test.  Add some tests that
+	do not work yet as comments.
+
+2005-12-17  Lydia van Dijk  <lvandijk@freenet.de>
+
+	Extend syntax with 'with exp1 and exp2'-form.
+	* pa_monad.ml: Document 'with exp1 and exp2'-form.
+	(failure_text): New value.
+	(default_bind_expr): New function.
+	(default_failure_fun_expr): Dito.
+	(default_failure_expr): Dito.
+	(qualify): Dito.
+	(EXTEND-Pcaml.expr): Rewrite using 'qualify'- and
+	'default_*'-functions.
+	(EXTEND-opt_failure_expr): New non-terminal.
+	* test-syntax.ml: Update test environment to rename of 'fail' to
+	'failwith'.  Add tests, e.g. for unit and parenthesized
+	expressions.
+
+	Rename 'fail' to 'failwith'.
+	* pa_monad.ml: Document irrefutable patterns and 'failwith' usage.
+	(convert/glob_bind_refutable): Rename 'fail' to 'failwith'.
+
+	Rename 'mdo' to 'perform'.
+	* pa_monad.ml: Rename 'mdo' to 'perform'.
+	* test-syntax: Dito.
+
+2005-12-11  Lydia van Dijk  <lvandijk@freenet.de>
+
+	* Makefile: New file.
+	* test-syntax.ml: New file.
+	* pa_monad.ml: Minor documentation changes.
+	(monadic_binding): New name for 'mondbind'.
+	Add constructors 'BindMRef' and 'BindMIrref'.
+	(exp_to_patt): Add handlers for several expressions (int, char,
+	string, ...).
+	(is_irrefutable_pattern): New function.
+	(is_irrefutable_expression): Dito.
+	(convert): New name for 'process'.
+	Add branches 'BindMRef' and 'BindMIrref' to distinguish between
+	refutable and irrefutable patterns.
+	(EXTEND-monadic_binding): Distinguish between refutable and
+	irrefutable patterns.
+	(EXTEND-patt_label_ident): New non-terminal.
+	(EXTEND-label_ipatt): Dito.
+	(EXTEND-ipatt): Dito.

@@ -20,7 +20,7 @@ TEST := test-monad
 
 DISTNAME := monad-syntax-extension
 
-VERSION := 1.0
+VERSION := 2.0
 
 
 ########################################################################
