@@ -319,6 +319,7 @@ and is_irrefutable_expression (an_expression: MLast.expr): bool =
     Convert all expressions of [a_binding_list] inside [perform] into
     core OCaml.  Use [a_bind_function] as the monad's "bind"-function,
     and [a_fail_function] as the "failure"-function. *)
+(*
 let convert
     (_loc: MLast.loc)
     (a_binding_list: monadic_binding list)
@@ -340,6 +341,63 @@ let convert
         [] -> failwith "convert: somehow got an empty list from a LIST1"
       | ThenM x :: xs -> List.fold_left folder <:expr< $x$ >> xs
       | _ -> failwith "convert: does not end with an expression"
+
+*)
+
+(* post-process the body of the perform expression. Essentially,
+   we do fold over the expression *)
+let rec convert
+    (_loc: MLast.loc)
+    (body: MLast.expr)
+    (a_bind_function: MLast.expr)
+    (a_fail_function: MLast.expr): MLast.expr =
+  match body with
+  | 
+    <:expr< let $opt:false$ $list:bs$ in $body$ >> ->
+      let body' = convert _loc body a_bind_function a_fail_function in
+      <:expr< let $opt:false$ $list:bs$ in $body'$ >>
+  | 
+    <:expr< let $opt:true$ $list:bs$ in $body$ >> ->
+      failwith "let rec in perform body is not supported yet"
+  | 
+    <:expr< let module $m$ = $mb$ in $body$ >> ->
+      let body' = convert _loc body a_bind_function a_fail_function in
+      <:expr< let module $m$ = $mb$ in $body'$ >>
+  | 
+    <:expr< $e1$.val := $e2$ >> ->
+      (* should probably issue a warning and admit that expression *)
+      failwith ":= at the top perform level"
+  | 
+    <:expr< $e1$ := $e2$ >> -> (* Monadic binding *)
+      Stdpp.raise_with_loc _loc 
+	(Stream.Error 
+	   "Monadic binding cannot be the last in thing in perform body")
+  | 
+    <:expr< do { $list:(b1 :: b2 :: brest)$ } >> ->
+      let body' = 
+	convert _loc
+	  (match brest with [] -> b2 
+	                    | _ -> <:expr< do { $list:(b2 :: brest)$ } >>)
+	  a_bind_function a_fail_function in
+      (match b1 with
+	|   <:expr< $e1$.val := $e2$ >> ->
+            (* should probably issue a warning and admit that expression *)
+	    failwith ":= at the top perform level"
+	| 
+	  <:expr< $e1$ := $e2$ >> ->
+	    let patt = exp_to_patt _loc e1 in
+	    if is_irrefutable_pattern patt
+	    then
+	      <:expr< $a_bind_function$ $e2$ (fun $patt$ -> $body'$) >>
+	    else
+	      <:expr< $a_bind_function$ $e2$ 
+	        (fun [$patt$ -> $body'$ | _ -> $a_fail_function$ ]) >> 
+	| _ -> 
+	    <:expr< $a_bind_function$ $b1$ (fun _ -> $body'$) >>)
+  | 
+    body -> body
+
+
 
 
 (** [qualify _loc a_module_expression a_function_expression]
@@ -364,40 +422,39 @@ EXTEND
     Pcaml.expr: LEVEL "expr1"
     [
       [ "perform"; "with"; "module"; monad_module = Pcaml.expr; "in";
-        bindings = LIST1 monadic_binding SEP ";" ->
+        perform_body = Pcaml.expr LEVEL "top" ->
           let qualified_fail_expr =
             qualify _loc monad_module (default_failure_fun_expr _loc) in
             convert _loc
-              bindings
+              perform_body
               (qualify _loc monad_module (default_bind_expr _loc))
               <:expr< $qualified_fail_expr$ $str:failure_text$ >>]
     |
       [ "perform"; "with"; bind_fun = Pcaml.expr; fail_fun = OPT opt_failure_expr; "in";
-        bindings = LIST1 monadic_binding SEP ";" ->
+        perform_body = Pcaml.expr LEVEL "top" ->
           convert _loc
-            bindings
+            perform_body
             bind_fun
             (match fail_fun with
                  None -> default_failure_expr _loc
                | Some f -> <:expr< $f$ $str:failure_text$ >>) ]
     |
       [ "perform";
-        bindings = LIST1 monadic_binding SEP ";" ->
+        perform_body = Pcaml.expr LEVEL "top" ->
           convert _loc
-            bindings
+            perform_body
             (default_bind_expr _loc)
             (default_failure_expr _loc) ]
     ] ;
-
+    opt_failure_expr:
+    [
+      [ "and"; fail_fun = Pcaml.expr -> fail_fun ]
+    ] ;
+(*
     Pcaml.expr: BEFORE "apply"
     [ NONA
 	[ e1 = SELF; "<--"; e2 = Pcaml.expr LEVEL "expr1" ->
             <:expr< $e1$ $lid:"<--"$ $e2$ >> ]
-    ] ;
-
-    opt_failure_expr:
-    [
-      [ "and"; fail_fun = Pcaml.expr -> fail_fun ]
     ] ;
 
     monadic_binding:
@@ -448,4 +505,5 @@ EXTEND
       | s = LIDENT -> <:patt< $lid:s$ >>       (* variable *)
       | "_" -> <:patt< _ >> ]                  (* wildcard *)
     ] ;
+*)
 END;
