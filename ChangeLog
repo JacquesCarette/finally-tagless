@@ -1,3 +1,79 @@
+2006-01-04  Lydia van Dijk  <lvandijk@freenet.de>
+
+	Recursive bindings ('perform rec ...').
+	* test-rec.ml: New file.
+	* Makefile (TESTS): Add 'test-rec.ml'.
+	(test-rec.cmo:...): New explicit target.
+	(test-rec:...): Dito.
+	* pa_monad.ml (patt_to_exp): New function.
+	(convert): Add parameter 'is_recursive'.  Perform conversion
+	according to parameter.
+	(Pcaml.expr): Duplicate all entries with 'perform' in them and add
+	'rec' to indicate a recursive binding.  For camlp4 is a beast
+	close to an LL(1)-parser, using 'r = OPT "rec"' does not work, as
+	then the extended forms 'perform with' and 'perform with module'
+	will not be recognized correctly anymore.  Oh well.
+
+2006-01-03  Lydia van Dijk  <lvandijk@freenet.de>
+
+	* COPYING, README: New files.
+	* test-syntax.ml: Reverse equality tests from 'perform ... = .'
+	to '. = perform ...'.  Keep both form where parenthesis are still
+	required, because of lacking polymorphy of the 'bind' function.
+
+2006-01-02  Christoph Spiel  <cspiel@try-to-spam.me>
+
+	* Makefile (OCAMLCFLAGS): Remove preprocessor call.
+	($(TESTS:.ml=.cmx): %.cmx: %.ml): New static rule for sources that
+	require preprocessing.
+	($(TESTS:.ml=.cmo): %.cmo: %.ml): Same for byte-code.
+
+2006-01-02  Lydia van Dijk  <lvandijk@freenet.de>
+
+	* test-syntax.ml (test_refutable_match_failure): New function.
+	* Makefile (VERSION): Bump version number.
+
+2006-01-01  Lydia van Dijk  <lvandijk@freenet.de>
+
+	Use unit-test suite.
+	* utest.mli, utest.ml: New files.
+	* exception.ml (test_exception_monad): New function.
+	* pythagorean-triples.ml (test_pythagorean_triples): Dito.
+	* test-monad.ml (test_simple_expression): Use unit-test suite.
+	(test_one_element_list): Dito.
+	(test_two_element_list): Dito.
+	(test_gcd): Dito.
+	(all_tests): Remove.
+	* test-syntax.ml: Use unit-test suite.
+
+2005-12-31  Lydia van Dijk  <lvandijk@freenet.de>
+
+	* exception.ml: New file.
+	* pythagorean-triples.ml: Dito.
+	* test-monad.ml: Dito.
+
+2005-12-28  Christoph L. Spiel  <cspiel@try-to-spam.me>
+
+	* Makefile: Switch from auto-generated dependencies (which never
+	worked correctly) to explicit rules.
+	(join-by): New macro.
+	(SYNTAX_EXTENSION): Rename 'SYNTAX_EXTENSIONS' to
+	'SYNTAX_EXTENSION'.
+	(PP): Dito.
+	(all): Dito.
+	(OCAMLDEP): Remove.
+	(depend): Dito.
+	(.depend): Dito.
+	(test): Use 'join-by' to abort tests after first failure.
+	(distcheck): Add 'doc' to prerequisites.
+	(FORCE): New target.
+	(%.ml-pp: %.ml): Force target.
+	(%.mli-gen: %.ml): Dito.
+
+2005-12-20  Christoph L. Spiel  <cspiel@try-to-spam.me>
+
+	* Makefile: Rewrite almost completely.
+
 2005-12-18  Lydia van Dijk  <lvandijk@freenet.de>
 
 	* pa_monad.ml: Beautify documentation.  Add section on known

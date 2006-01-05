@@ -1,0 +1,107 @@
+                      Syntactic Sugar for Monads
+                             January 2006
+
+
+* Contents
+
+COPYING                 -  License
+README                  -  This file
+ChangeLog               -  Recent changes
+Makefile                -  GNU make build rules for the extension and
+                           the test frame
+exception.ml            -  Exception monad coded with "pa_monad.ml"
+pa_monad.ml             -  Camlp4 syntax extension for Objective Caml
+pythagorean-triples.ml  -  Nondeterminism monad (backtracking) coded
+                           with "pa_monad.ml"
+test-monad.ml           -  Simple test frame for "pa_monad.ml"
+test-syntax.ml          -  Thorough test of the syntax extension
+utest.ml                -  Implementation of the unit-test framework
+utest.mli               -  Interface to the unit-test framework
+
+
+* What It Does
+
+This package adds some syntactic sugar to beautify monadic
+expressions.  The name of the syntax extension is a bit misleading as
+it does not provide any monad or monadic computation.  The correct
+name would have been "pa_perform", but was discarded because of lack
+of specificity.
+
+A simple but realistic example of the use of a list monad looks like
+this
+        bind
+          [1; 2; 3]
+          (fun a -> bind
+                      [3; 4; 5]
+                      (fun b -> return (a + b)))
+where we assume the appropriate definitions of the functions "bind"
+and "return".  With the help of "pa_monad" this can be written as
+        perform
+          a <-- [1; 2; 3];
+          b <-- [3; 4; 5];
+          return (a + b)
+which is much clearer and thus easier to understand and maintain.  By
+the way, the expression evaluates to
+        [4; 5; 6; 5; 6; 7; 6; 7; 8]
+the sum of each pair of the input lists.  For more examples have a
+look at the examples "exception.ml" or "pythagorean-triples.ml".
+
+
+
+** Status Quo
+
+See the section "Known Issues" in the documentation.
+
+
+** pa_monad
+
+...
+
+
+* How to...
+
+** Compile
+
+        make
+
+
+** Test
+
+        make test
+
+
+** Get (HTML) Documentation
+
+        make doc
+
+
+** Use
+
+Given the compiled extension "pa_monad.cmo" feed the source into the
+preprocessor by saying
+        ocamlc -pp 'camlp4o -I . pa_monad.cmo' -c ...
+Depending on where the cmo file lives the include path needs
+tweaking.
+
+
+* Email address
+
+Please report comments or suggestions to <lvandijk AT freenet DOT de>.
+
+
+* GPL
+
+The "pa_monad" extension is free software; you can redistribute it
+and/or modify it under the terms of the GNU General Public License as
+published by the Free Software Foundation; either version 2 of the
+License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+General Public License in the file "COPYING" for more details.
+
+
+local variables:
+mode: outline
+end:
