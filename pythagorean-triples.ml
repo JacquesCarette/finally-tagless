@@ -1,7 +1,7 @@
 (* name:          pythagorean-triples.ml
  * synopsis:      Test non-determinism monad in the simplest possible implementation.
  * authors:       Jacques Carette and Oleg Kiselyov,
- * last revision: Sun Jan  1 14:08:38 UTC 2006
+ * last revision: Thu Jan  5 15:46:50 UTC 2006
  * ocaml version: 3.09.0 *)
 
 
@@ -83,7 +83,7 @@ let pythagorean_triples a_count =
       k <-- number;
       Nondet.guard (k > 0);
       (* Just to illustrate the `let' form within perform *)
-      let predicate n = n * n = j * j + k * k in;
+      let predicate n = n * n = j * j + k * k in
         Nondet.guard (predicate i);
         Nondet.ret (i, j, k)
   in

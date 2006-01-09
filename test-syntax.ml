@@ -1,7 +1,7 @@
 (* name:          test-syntax.ml
  * synopsis:      test the syntax extension "pa_monad"
  * author:        Lydia E. Van Dijk
- * last revision: Tue Jan  3 08:54:03 UTC 2006
+ * last revision: Thu Jan  5 15:46:39 UTC 2006
  * ocaml version: 3.09.0 *)
 
 
@@ -53,7 +53,7 @@ let test_binding_int _ =
 let test_let_int _ =
   Utest.expect_pass
     "let (int)"
-    (fun () -> 1 = perform let x = 1 in; x)
+    (fun () -> 1 = perform let x = 1 in x)
 
 
 let test_id_char _ =
@@ -77,7 +77,7 @@ let test_binding_char _ =
 let test_let_char _ =
   Utest.expect_pass
     "let (char)"
-    (fun () -> '1' = perform let x = '1' in; x)
+    (fun () -> '1' = perform let x = '1' in x)
 
 
 let test_id_string _ =
@@ -101,7 +101,7 @@ let test_binding_string _ =
 let test_let_string _ =
   Utest.expect_pass
     "let (string)"
-    (fun () -> "1" = perform let x = "1" in; x)
+    (fun () -> "1" = perform let x = "1" in x)
 
 
 let test_unit _ =

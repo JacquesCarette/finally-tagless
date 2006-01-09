@@ -1,7 +1,7 @@
 # name:          Makefile
 # synopsis:      Construction rules for monadic "do" syntax extension
 # authors:       Chris L. Spiel (nifty stuff), Lydia E. van Dijk (boring rest)
-# last revision: Wed Jan  4 09:03:20 UTC 2006
+# last revision: Thu Jan  5 15:32:25 UTC 2006
 # ocaml version: 3.09.0
 
 
@@ -126,7 +126,7 @@ DISTNAME := monad-syntax-extension
 
 
 # Version number of the tarball.  (See DISTNAME.)
-VERSION := 2.1
+VERSION := 3.0
 
 
 ########################################################################
@@ -152,10 +152,10 @@ doc: $(HTML-DOCUMENTATION)/$(SYNTAX_EXTENSION:.cmo=).html
 
 
 # Create a distributable archive with the help of the revision
-# management system.  Run all checks before that.
+# management system.
 .PHONY: dist
-dist: distcheck
-	PATH=/bin:$PATH darcs dist --dist-name $(DISTNAME)-$(VERSION)
+dist:
+	darcs dist --dist-name $(DISTNAME)-$(VERSION)
 
 
 # Check whether the project is ready for distribution:

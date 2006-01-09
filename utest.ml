@@ -98,8 +98,8 @@ let run_tests ~verbose a_list_of_tests =
          ""
          ["testcases attempted ", results.total;
           "expected passes     ", results.passed;
-          "expected failures   ", results.failed;
+          "expected failures   ", results.xfailed;
           "unexpected passes   ", results.upassed;
-          "unexpected failures ", results.xfailed;
+          "unexpected failures ", results.failed;
           "unresolved testcases", results.unresolved]);
     results

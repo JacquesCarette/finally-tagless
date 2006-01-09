@@ -1,7 +1,7 @@
 (* name:          exception.ml
    synopsis:      exception monad
    author:        Lydia E. van Dijk
-   last revision: Sun Jan  1 14:16:18 UTC 2006
+   last revision: Thu Jan  5 15:47:03 UTC 2006
    ocaml version: 3.09.0 *)
 
 
@@ -151,7 +151,7 @@ struct
     perform with ExceptionMonad.bind in
       x' <-- x;
       y' <-- y;
-      let z' = f (Int64.of_int x') (Int64.of_int y') in;
+      let z' = f (Int64.of_int x') (Int64.of_int y') in
         if z' < L.min then
           ExceptionMonad.throw {value = Normal z'; func = name; cause = NegOverflow}
         else if z' > L.max then

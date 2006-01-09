@@ -1,3 +1,54 @@
+2006-01-09  Lydia van Dijk  <lvandijk@freenet.de>
+
+	* README: Extend and reword.  Add patch for Tuareg-mode to
+	recognize 'perform' keyword.
+	* test-rec.ml (replace_min_two_pass): New function.
+	(replace_min_one_pass): Integrate 'rp_min'.  Fix lazy computation
+	problems.
+	(replace_min): Remove.
+	(bind): New function.
+	(return): Dito.
+	(for_all): New function.
+	(test_replace_min_two_pass): Dito.
+	(test_replace_min_one_pass): Dito.
+	(first_of_lazy_four): Dito.
+	(second_of_lazy_four): Dito.
+	(third_of_lazy_four): Dito.
+	(deviation): Dito.
+	(test_deviation_one_pass): Dito.
+	(monadic_replace_min_one_pass): New function.  Essential
+	construct are still commented out as 'pa_monad' cannot translate
+	it yet.
+	(monadic_deviation): Dito.
+
+2006-01-05  Oleg Kiselyov <oleg@pobox.com>
+
+	Drop the semicolon from 'let ID = EXPR in; EXPR' construction.
+	* pa_monad.ml:	(is_irrefutable_expression): Remove.
+	(convert): Complete rewrite.
+	(Pcaml.expr): Switch from simple-minded LIST1 approach to full
+	fledged Pcaml.expr.
+	(Pcaml.expr: BEFORE "apply"): Update.
+	(monadic_binding): Remove.
+	(Pcaml.expr: LEVEL "simple"): New level.
+	(ipatt): Remove.
+	* pythagorean-triples.ml: Adapt to changed syntax.
+	* test-syntax.ml: Dito.
+	* test-syntax.ml: Dito.
+	* test-syntax.ml: Dito.
+	* Makefile (VERSION): Bump forward.
+
+2006-01-05  Lydia van Dijk  <lvandijk@freenet.de>
+
+	* utest.ml (run_tests): Correct swapped labels of expected and
+	unexpected number of failures.
+	* pa_monad.ml (is_irrefutable_pattern): Prepend '_' to unused
+	variables as to clarify the code and to avoid the compiler
+	warning.
+	(qualify): Dito.
+	* Makefile (dist): Drop prerequisite 'distcheck'.  Remove
+	tinkering with the PATH.
+
 2006-01-04  Lydia van Dijk  <lvandijk@freenet.de>
 
 	Recursive bindings ('perform rec ...').
