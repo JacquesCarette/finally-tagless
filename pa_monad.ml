@@ -2,7 +2,7 @@
  * synopsis:      Haskell-like "do" for monads
  * authors:       Jacques Carette and Oleg Kiselyov,
  *                based in part of work of Lydia E. Van Dijk
- * last revision: Thu Jan  5 15:17:28 UTC 2006
+ * last revision: Tue Jan 10 17:54:43 UTC 2006
  * ocaml version: 3.09.0 *)
 
 
@@ -113,7 +113,11 @@ The "[rec]" keyword allows for a recursive binding in
         PATTERN "<--" EXPR
 ]}
 Please consult Section 7.3 of the Manual for the allowed recursive
-definitions of values.
+definitions of values, as the only allowed [PATTERN] in the recursive
+case is a [NAME], similarly stringent restrictions apply to [EXPR].
+The theoretical aspects of recursive monadic bindings can be found in
+Levent Erkök, John Launchbury: "A Recursive do for Haskell".
+
 
 For any ['a monad] the expansion uses the functions "[bind]" and
 "[failwith]" with the signatures
@@ -315,6 +319,24 @@ let rec is_irrefutable_pattern (a_pattern: MLast.patt): bool =
     | _ -> false
 
 
+(** [tuplify_expr _loc an_expression_list]
+
+    Convert [an_expression_list] to a tuple of expressions. *)
+let tuplify_expr (_loc: MLast.loc) (an_expression_list: MLast.expr list): MLast.expr =
+  match an_expression_list with
+      x :: [] -> x
+    | xs -> <:expr< ($list:xs$) >>
+
+
+(** [tuplify_patt _loc a_pattern_list]
+
+    Convert [a_pattern_list] to a tuple of patterns. *)
+let tuplify_patt (_loc: MLast.loc) (a_pattern_list: MLast.patt list): MLast.patt =
+  match a_pattern_list with
+      x :: [] -> x
+    | xs -> <:patt< ($list:xs$) >>
+
+
 (** [convert _loc is_recursive a_perform_body a_bind_function a_fail_function]
 
     Convert all expressions of [a_perform_body] inside [perform] into
@@ -326,6 +348,7 @@ let rec is_irrefutable_pattern (a_pattern: MLast.patt): bool =
 let rec convert
     (_loc: MLast.loc)
     (is_recursive: bool)
+    (a_binding_accumulator: (MLast.patt * MLast.expr) list)
     (a_perform_body: MLast.expr)
     (a_bind_function: MLast.expr)
     (a_fail_function: MLast.expr): MLast.expr =
@@ -334,18 +357,19 @@ let rec convert
         Stdpp.raise_with_loc _loc
           (Stream.Error "convert: monadic binding cannot be last a \"perform\" body")
     | <:expr< let $opt:false$ $list:bs$ in $body$ >> ->
-        let body' = convert _loc is_recursive body a_bind_function a_fail_function in
+        let body' = convert _loc is_recursive a_binding_accumulator body a_bind_function a_fail_function in
           <:expr< let $opt:false$ $list:bs$ in $body'$ >>
     | <:expr< let $opt:true$ $list:bs$ in $body$ >> ->
-        let body' = convert _loc is_recursive body a_bind_function a_fail_function in
+        let body' = convert _loc is_recursive a_binding_accumulator body a_bind_function a_fail_function in
           <:expr< let $opt:true$ $list:bs$ in $body'$ >>
     | <:expr< let module $m$ = $mb$ in $body$ >> ->
-        let body' = convert _loc is_recursive body a_bind_function a_fail_function in
+        let body' = convert _loc is_recursive a_binding_accumulator body a_bind_function a_fail_function in
           <:expr< let module $m$ = $mb$ in $body'$ >>
     | <:expr< do { $list:(b1 :: b2 :: bs)$ } >> ->
-        let do_rest () =
+        let do_rest an_accumulator =
           convert _loc
             is_recursive
+            an_accumulator
             (match bs with
                  [] -> b2
                | _ -> <:expr< do { $list:(b2 :: bs)$ } >>)
@@ -354,6 +378,7 @@ let rec convert
         and do_merge a_body =
           convert _loc
             is_recursive
+            a_binding_accumulator
             <:expr< do { $list:(a_body :: b2 :: bs)$ } >>
             a_bind_function
             a_fail_function in
@@ -364,21 +389,38 @@ let rec convert
                 if is_irrefutable_pattern p then
                   begin
                     if is_recursive then
-                      <:expr< let rec $p$ = $e$ in
-                              $a_bind_function$
-                                $patt_to_exp _loc p$
-                                (fun $p$ -> $do_rest ()$) >>
+                      match b2 with (* look ahead... *)
+                          (* binding follows *)
+                          <:expr< let $opt:false$ $list:((_p, _e) :: [])$ in $lid:"<--"$ >> ->
+                            do_rest (a_binding_accumulator @ [p, e])
+                          (* We are done with the recursive bindings:
+                             Spill them in a single [let ... and ... in ...]
+                             binding then take care of the current expression. *)
+                        | _ ->
+                            let bindings = a_binding_accumulator @ [p, e] in
+                            let pattern_list = List.map (fun (a, b) -> a) bindings in
+                            let patterns = tuplify_patt _loc pattern_list
+                            and patt_as_exp =
+                              tuplify_expr
+                                _loc
+                                (List.map (fun x -> patt_to_exp _loc x) pattern_list)
+                            in
+                              <:expr< let rec $list:bindings$ in
+                                        $a_bind_function$
+                                          $patt_as_exp$
+                                          (fun $patterns$ -> $do_rest []$) >>
                     else
-                      <:expr< $a_bind_function$ $e$ (fun $p$ -> $do_rest ()$) >>
+                      <:expr< $a_bind_function$ $e$ (fun $p$ -> $do_rest []$) >>
                   end
                 else
                   begin
-                    if is_recursive then
-                      failwith "convert: refutable patterns and recursive binding do not go together"
+                    if is_recursive || a_binding_accumulator <> [] then
+                      failwith ("convert: refutable patterns and recursive " ^
+                                  "bindings do not go together")
                     else
                       <:expr< $a_bind_function$
                                 $e$
-                                (fun [$p$ -> $do_rest ()$ | _ -> $a_fail_function$ ]) >>
+                                (fun [$p$ -> $do_rest []$ | _ -> $a_fail_function$ ]) >>
                   end
             | (* map through the regular let *)
               <:expr< let $opt:false$ $list:bs$ in $body$ >> ->
@@ -387,7 +429,7 @@ let rec convert
                 <:expr< let $opt:true$ $list:bs$ in $do_merge body$ >>
             | <:expr< let module $m$ = $mb$ in $body$ >> ->
                 <:expr< let module $m$ = $mb$ in $do_merge body$ >>
-            | _ -> <:expr< $a_bind_function$ $b1$ (fun _ -> $do_rest ()$) >>
+            | _ -> <:expr< $a_bind_function$ $b1$ (fun _ -> $do_rest []$) >>
         end
   | any_body -> any_body
 
@@ -429,6 +471,7 @@ EXTEND
             qualify _loc monad_module (default_failure_fun_expr _loc) in
             convert _loc
               true                      (* is_recursive *)
+              []
               perform_body
               (qualify _loc monad_module (default_bind_expr _loc))
               <:expr< $qualified_fail_expr$ $str:failure_text$ >> ]
@@ -439,6 +482,7 @@ EXTEND
             qualify _loc monad_module (default_failure_fun_expr _loc) in
             convert _loc
               false                     (* is_recursive *)
+              []
               perform_body
               (qualify _loc monad_module (default_bind_expr _loc))
               <:expr< $qualified_fail_expr$ $str:failure_text$ >> ]
@@ -448,6 +492,7 @@ EXTEND
         perform_body = Pcaml.expr LEVEL "top" ->
           convert _loc
             true                        (* is_recursive *)
+            []
             perform_body
             bind_fun
             (match fail_fun with
@@ -459,6 +504,7 @@ EXTEND
         perform_body = Pcaml.expr LEVEL "top" ->
           convert _loc
             false                       (* not is_recursive *)
+            []
             perform_body
             bind_fun
             (match fail_fun with
@@ -469,6 +515,7 @@ EXTEND
         perform_body = Pcaml.expr LEVEL "top" ->
           convert _loc
             true                        (* is_recursive *)
+            []
             perform_body
             (default_bind_expr _loc)
             (default_failure_expr _loc) ]
@@ -477,6 +524,7 @@ EXTEND
         perform_body = Pcaml.expr LEVEL "top" ->
           convert _loc
             false                       (* not is_recursive *)
+            []
             perform_body
             (default_bind_expr _loc)
             (default_failure_expr _loc) ]

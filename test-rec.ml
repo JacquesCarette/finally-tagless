@@ -24,8 +24,7 @@ let test_ones _ =
 
 
 (* Richard Bird's famous example
-   See also: http://www.cse.ogi.edu/PacSoft/projects/rmb/repMin.html
- *)
+   See also: http://www.cse.ogi.edu/PacSoft/projects/rmb/repMin.html *)
 
 type 'a tree =
     Leaf of 'a
@@ -36,7 +35,8 @@ type 'a tree =
 let replace_min_two_pass a_tree =
   let rec replace = function
       Leaf _x, min -> Leaf min
-    | Branch (left, right), min -> Branch (replace (left, min), replace (right, min))
+    | Branch (left, right), min ->
+        Branch (replace (left, min), replace (right, min))
   and minval = function
       Leaf x -> x
     | Branch (left, right) -> Pervasives.min (minval left) (minval right)
@@ -53,7 +53,9 @@ let replace_min_one_pass a_tree =
         and right', right_min = rp_min (right, min)
         in
           (Branch (left', right'),
-           lazy (Pervasives.min (Lazy.force_val left_min) (Lazy.force_val right_min)))
+           lazy (Pervasives.min
+                   (Lazy.force_val left_min)
+                   (Lazy.force_val right_min)))
   in
   let rec x = lazy (rp_min (a_tree, m))
   and     t = lazy (fst (Lazy.force_val x))
@@ -62,31 +64,29 @@ let replace_min_one_pass a_tree =
     Lazy.force_val t
 
 
-let bind a f = f a
-let return a = a
-
 let monadic_replace_min_one_pass a_tree =
   let rec rp_min = function
       Leaf x, min ->
         perform
+          (* In Haskell we would use the IOMonad here.  In OCaml
+             all the fuzz is just ridiculous.
           print_int (Lazy.force_val x);
-          print_newline ();
+          print_newline (); *)
           return (Leaf min, x)
     | Branch (left, right), min ->
         perform
           (left', left_min)   <-- rp_min (left, min);
           (right', right_min) <-- rp_min (right, min);
           return (Branch (left', right'),
-                  lazy (Pervasives.min (Lazy.force_val left_min) (Lazy.force_val right_min)))
+                  lazy (Pervasives.min
+                          (Lazy.force_val left_min)
+                          (Lazy.force_val right_min)))
   in
-    (*
     perform rec
       x <-- lazy (rp_min (a_tree, m));
       t <-- lazy (fst (Lazy.force_val x));
       m <-- lazy (Lazy.force_val (snd (Lazy.force_val x)));
       return Lazy.force_val t
-      *)
-    ()
 
 
 (*
@@ -96,7 +96,8 @@ let monadic_replace_min_one_pass a_tree =
 let fold a_function an_initial_value a_tree =
   let rec traverse an_accumulator = function
       Leaf x -> a_function an_accumulator x
-    | Branch (left, right) -> traverse (traverse an_accumulator left) right
+    | Branch (left, right) ->
+        traverse (traverse an_accumulator left) right
   in
     traverse an_initial_value a_tree
 
@@ -115,28 +116,43 @@ let string_of_tree a_tree =
     a_tree
 
 
+let fixture_tree =
+  Branch (Branch (Leaf 24, Leaf 32),
+          Branch ((Leaf 3), Branch ((Leaf 14),
+                                    Branch ((Leaf 32), (Leaf 8)))))
+
+
 let test_replace_min_two_pass _ =
   Utest.expect_pass
     "replace with minimum (2-pass)"
     (fun () ->
-       let t =
-         Branch (Branch (Leaf 24, Leaf 32),
-                 Branch ((Leaf 3), Branch ((Leaf 14),
-                                           Branch ((Leaf 32), (Leaf 8)))))
-       in
-         for_all (fun x -> x = 3) (replace_min_two_pass t))
+       for_all
+         (fun x -> x = 3)
+         (replace_min_two_pass fixture_tree))
+
+
+let fixture_lazy_tree =
+  Branch (Branch (Leaf (lazy 24), Leaf (lazy 32)),
+          Branch ((Leaf (lazy 3)), Branch ((Leaf (lazy 14)),
+                                           Branch ((Leaf (lazy 32)), (Leaf (lazy 8))))))
 
 
 let test_replace_min_one_pass _ =
   Utest.expect_pass
     "replace with minimum (1-pass)"
     (fun () ->
-       let t =
-         Branch (Branch (Leaf (lazy 24), Leaf (lazy 32)),
-                 Branch ((Leaf (lazy 3)), Branch ((Leaf (lazy 14)),
-                                                  Branch ((Leaf (lazy 32)), (Leaf (lazy 8))))))
-       in
-         for_all (fun x -> Lazy.force_val x = 3) (replace_min_one_pass t))
+       for_all
+         (fun x -> Lazy.force_val x = 3)
+         (replace_min_one_pass fixture_lazy_tree))
+
+
+let test_monadic_replace_min_one_pass _ =
+  Utest.expect_pass
+    "replace with minimum (1-pass, monadic version)"
+    (fun () ->
+       for_all
+         (fun x -> Lazy.force_val x = 3)
+         (monadic_replace_min_one_pass fixture_lazy_tree))
 
 
 (**********************************************************************)
@@ -179,7 +195,6 @@ let monadic_deviation a_list_of_lazy_floats =
                      avg)
                     xs)
   in
-    (*
     perform rec
       x   <-- lazy (dev ([], 0, 0.0, avg) a_list_of_lazy_floats);
       lst <-- lazy (first_of_lazy_four x);
@@ -187,19 +202,32 @@ let monadic_deviation a_list_of_lazy_floats =
       sum <-- lazy (Lazy.force_val (third_of_lazy_four x));
       avg <-- lazy (Lazy.force_val sum /. float_of_int (Lazy.force_val n));
       return Lazy.force_val lst
-    *)
-    ()
+
+
+let fixture_list =
+  [10.0; 0.0; -10.0]
+
+
+let fixture_lazy_list =
+  [lazy 10.0; lazy 20.0; lazy 30.0]
 
 
 let test_deviation_one_pass _ =
   Utest.expect_pass
     "deviation (1-pass)"
     (fun () ->
-       let t = [lazy 10.0; lazy 20.0; lazy 30.0]
-       and result = [10.0; 0.0; -10.0] in
-         List.for_all
-           (fun (x, x') -> Lazy.force_val x = x')
-           (List.combine (deviation t) result))
+       List.for_all
+         (fun (x, x') -> Lazy.force_val x = x')
+         (List.combine (deviation fixture_lazy_list) fixture_list))
+
+
+let test_monadic_deviation_one_pass _ =
+  Utest.expect_pass
+    "deviation (1-pass, monadic version)"
+    (fun () ->
+       List.for_all
+         (fun (x, x') -> Lazy.force_val x = x')
+         (List.combine (monadic_deviation fixture_lazy_list) fixture_list))
 
 
 (**********************************************************************)
@@ -211,7 +239,9 @@ let (_: unit) =
       [test_ones;
        test_replace_min_two_pass;
        test_replace_min_one_pass;
-       test_deviation_one_pass]
+       test_monadic_replace_min_one_pass;
+       test_deviation_one_pass;
+       test_monadic_deviation_one_pass]
   in
     Pervasives.exit
       (if results.Utest.failed <> 0 || results.Utest.unresolved <> 0 then 1 else 0)

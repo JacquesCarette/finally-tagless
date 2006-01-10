@@ -54,6 +54,27 @@ have a look at the examples "exception.ml" or
 "pythagorean-triples.ml".
 
 
+** Highlights
+
+- Efficient code: The generated code is as efficient as hand-coded.
+- Highly flexible: The "bind" and "failwith" functions can be
+  specified in various ways
+  (a) Binding with default names:
+          perform ...
+  (b) Binding with user-defined names:
+          perform with my_bind and my_failwith in ...
+  (c) One-of-a-kind binding:
+          perform with fun a f -> f a and ... in ...
+  (d) Module-based binding:
+          perform with MyMonad in ...
+      or with OCaml's local modules:
+          let foo ... =
+            let module MyMonad = ... in
+            perform with MyMonad in ...
+- Recursive bindings:
+      perform rec ...
+
+
 ** Known Issues
 
 See the section "Known Issues" in the documentation.

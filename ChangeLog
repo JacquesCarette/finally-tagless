@@ -1,3 +1,27 @@
+2006-01-10  Lydia van Dijk  <lvandijk@freenet.de>
+
+	Mutually recursive bindings.
+	* pa_monad.ml: Expand documentation of 'perform rec'.
+	(tuplify_expr): New function.
+	(tuplify_patt): Dito.
+	(convert): Add parameter 'a_binding_accumulator'.  Adjust call
+	sites where necessary.
+	Handle mutually recursive bindings.
+	(convert/do_rest): Add parameter 'an_accumulator'.  Adjust call
+	sites where necessary.
+	* test-rec.ml (monadic_replace_min_one_pass): Use 'perform rec'.
+	(fixture_tree): New top-level value.
+	(test_replace_min_two_pass): Pull out 't' as 'fixture_tree'.
+	(fixture_lazy_tree): New top-level value.
+	(test_replace_min_one_pass): Pull out 't' as 'fixture_lazy_tree'.
+	(monadic_deviation): Use 'perform rec'.
+	(fixture_list): New top-level value.
+	(fixture_lazy_list): New top-level value.
+	(test_deviation_one_pass): Pull out 't' as 'fixture_list'.
+	(test_monadic_deviation_one_pass): New function.
+	* README: Add section on highlights of the syntax extension.
+	* Makefile (VERSION): Bump forward.
+
 2006-01-09  Lydia van Dijk  <lvandijk@freenet.de>
 
 	* README: Extend and reword.  Add patch for Tuareg-mode to
