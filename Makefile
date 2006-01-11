@@ -142,9 +142,14 @@ all: $(SYNTAX_EXTENSION)
 
 # Run all binaries with tests.  Stop if any test fails.
 .PHONY: test
-test: $(TESTS:.ml=)
-	$(call join-by, $^, && )
+test: $(foreach file,$(TESTS:.ml=),run-$(file))
 
+# test: $(TESTS:.ml=)
+# 	$(call join-by, $^, && )
+
+# Run a selected test only
+run-%: %
+	./$^
 
 # Generate the documentation.
 .PHONY: doc

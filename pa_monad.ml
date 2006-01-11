@@ -92,6 +92,9 @@ position -- we must add a second branch that catches the remaining
 values.  The user is free to override the "[failwith]" function with
 her own version.
 
+Refer to the discussions on the Haskell mailing list...
+
+
 {3 Grammar formally}
 {[
         "perform" ["rec"] ["with" <user-function-spec> "in"] <perform-body>
@@ -99,14 +102,14 @@ her own version.
                   EXPR ["and" EXPR]
                 | "module" MODULE-NAME
         <perform-body> ::=
-                  "let" LET-BINDING "=" EXPR ("and" LET-BINDING "=" EXPR)* "in" ";" <perform-body>
+                  <LET-FORM> <perform-body>
                 | EXPR
                 | (PATTERN "<--")? EXPR ";" <perform-body>
 ]}
 where [EXPR] is an OCaml expression {i expr} as defined in Section 6.7
 of the OCaml manual, [MODULE-NAME] a {i module-name} (Sec. 6.3),
-[LET-BINDING] a {i let-binding} (Sec. 6.7), and [PATTERN] a {i
-pattern} (Sec. 6.6).
+[LET-FORM] is any of the [let], [let rec], or [let module] {i let-forms}
+(Sec. 6.7), and [PATTERN] a {i pattern} (Sec. 6.6).
 
 The "[rec]" keyword allows for a recursive binding in
 {[
@@ -139,22 +142,26 @@ used in the [with module] form must enclose
 In the following, we abbreviate irrefutable patterns with [ipat] and
 refutable patterns with [rpat].
 {[
-        perform exp                                      ===>  exp
-        perform ipat <-- exp; rest                       ===>  bind exp (fun ipat -> perform rest)
-        perform rpat <-- exp; rest                       ===>  bind exp (fun rpat -> perform rest
-                                                                           | _ -> failwith "pattern match")
-        perform with bexp in ipat <-- exp; rest          ===>  bexp exp (fun ipat -> perform rest)
-        perform with bexp in rpat <-- exp; rest          ===>  bexp exp (fun rpat -> perform rest
-                                                                           | _ -> failwith "pattern match")
-        perform with bexp and fexp in rpat <-- exp; rest ===>  bexp exp (fun rpat -> perform rest
-                                                                         | _ -> fexp "pattern match")
-        perform with module Mod in ipat <-- exp; rest    ===>  Mod.bind exp (fun ipat -> perform rest)
-        perform with module Mod in rpat <-- exp; rest    ===>  Mod.bind exp (fun rpat -> perform rest
-                                                                               | _ -> Mod.failwith "pattern match")
-        perform exp; rest                                ===>  bind exp (fun _ -> perform rest)
-        perform with bexp in exp; rest                   ===>  bexp exp (fun _ -> perform rest)
-        perform with module Mod in exp; rest             ===>  Mod.bind exp (fun _ -> perform rest)
-        perform let pat = exp in; rest                   ===>  let pat = exp in perform rest
+        perform exp                  ===>  exp
+        perform ipat <-- exp; rest   ===>  bind exp (fun ipat -> perform rest)
+        perform rpat <-- exp; rest   ===>  bind exp (fun rpat -> perform rest
+                                                         | _ -> failwith "pattern match")
+        perform let ... in rest      ===>  let ... in perform rest
+        perform exp; rest            ===>  bind exp (fun _ -> perform rest)
+
+        perform with bexp in body 
+                ===> perform body 
+                        where bind is substituted with bexp
+
+        perform with bexp and fexp in body 
+                ===> perform body 
+                        where bind is substituted with bexp and
+                              failwith is substituted with fexp
+
+        perform with module Mod in body 
+                ===> perform body
+                        where bind is substituted with Mod.bind and
+                              failwith with Mod.failwith
 ]}
 
 It is be possible to use "[<-]" instead of "[<--]".  In that case,
@@ -200,17 +207,12 @@ about an unbound identifier "<--". That is the intention.
           ...
   ]}
   blows the extension out of the water.
+  As a metter of fact, it is not clear that should be supported at all:
+  patterns with aliases are not `simple patterns' (se pa_o.ml).
+  For example, pattern with aliases cannot be used in [fun pattern -> ...].
+  Thus, at present monadic bindings should include only those patterns
+  that are premissible in [fun]. And perhaps this is the optimal decision.
  *)
-
-
-(** Syntactically, we can encounter three different kinds of monadic
-    bindings.  Sometimes we find out about an expression that is not a
-    monadic binding, just an expression; this is the fourth case. *)
-type monadic_binding =
-    BindL of (MLast.patt * MLast.expr) list (** "[let]" inside "[perform]" *)
-  | BindMRef of MLast.patt * MLast.expr     (** bind ("[>>=]") using a refutable pattern *)
-  | BindMIrref of MLast.patt * MLast.expr   (** bind ("[>>=]") using an irrefutable pattern *)
-  | ThenM of MLast.expr                     (** "then"-binding, this is the "[>>]"-operator *)
 
 
 (** [failure_text]
@@ -270,7 +272,8 @@ let rec exp_to_patt (_loc: MLast.loc) (an_expression: MLast.expr): MLast.patt =
     | <:expr< ($e$ : $t$) >> ->                (* type restriction *)
       let p = exp_to_patt _loc e in
         <:patt< ($p$ : $t$) >>
-    | _ -> failwith "exp_to_patt: this pattern is not yet supported"
+    | _ -> Stdpp.raise_with_loc _loc
+	     (Stream.Error "exp_to_patt: this pattern is not yet supported")
 
 
 (** [patt_to_exp _loc a_pattern]
@@ -297,7 +300,9 @@ let rec patt_to_exp (_loc: MLast.loc) (a_pattern: MLast.patt): MLast.expr =
     | <:patt< ($e$ : $t$) >> ->                (* type restriction *)
       let p = patt_to_exp _loc e in
         <:expr< ($p$ : $t$) >>
-    | _ -> failwith "patt_to_exp: this expression is not yet supported"
+    | _ -> Stdpp.raise_with_loc _loc
+	     (Stream.Error "patt_to_exp: this expression is not yet supported")
+
 
 
 (** [is_irrefutable_pattern a_pattern]
@@ -345,47 +350,41 @@ let tuplify_patt (_loc: MLast.loc) (a_pattern_list: MLast.patt list): MLast.patt
 
     The [is_recursive] switch controls whether we generate code for
     non-recursive bindings or recursive ones. *)
-let rec convert
+let convert
     (_loc: MLast.loc)
     (is_recursive: bool)
-    (a_binding_accumulator: (MLast.patt * MLast.expr) list)
     (a_perform_body: MLast.expr)
     (a_bind_function: MLast.expr)
     (a_fail_function: MLast.expr): MLast.expr =
+ let rec loop _loc a_binding_accumulator a_perform_body =
   match a_perform_body with
-      <:expr< let $opt:false$ $list:((_patt, _expr) :: [])$ in $lid:"<--"$ >> ->
+      <:expr< let $opt:false$ $list:((_patt, _expr) :: [])$ in $lid:"<--"$ >>
+      ->
         Stdpp.raise_with_loc _loc
           (Stream.Error "convert: monadic binding cannot be last a \"perform\" body")
     | <:expr< let $opt:false$ $list:bs$ in $body$ >> ->
-        let body' = convert _loc is_recursive a_binding_accumulator body a_bind_function a_fail_function in
+        let body' = loop _loc a_binding_accumulator body in
           <:expr< let $opt:false$ $list:bs$ in $body'$ >>
     | <:expr< let $opt:true$ $list:bs$ in $body$ >> ->
-        let body' = convert _loc is_recursive a_binding_accumulator body a_bind_function a_fail_function in
+        let body' = loop _loc a_binding_accumulator body in
           <:expr< let $opt:true$ $list:bs$ in $body'$ >>
     | <:expr< let module $m$ = $mb$ in $body$ >> ->
-        let body' = convert _loc is_recursive a_binding_accumulator body a_bind_function a_fail_function in
+        let body' = loop _loc a_binding_accumulator body in
           <:expr< let module $m$ = $mb$ in $body'$ >>
     | <:expr< do { $list:(b1 :: b2 :: bs)$ } >> ->
         let do_rest an_accumulator =
-          convert _loc
-            is_recursive
-            an_accumulator
+          loop _loc an_accumulator
             (match bs with
-                 [] -> b2
-               | _ -> <:expr< do { $list:(b2 :: bs)$ } >>)
-            a_bind_function
-            a_fail_function
+               | [] -> b2
+               | _  -> <:expr< do { $list:(b2 :: bs)$ } >>)
         and do_merge a_body =
-          convert _loc
-            is_recursive
-            a_binding_accumulator
-            <:expr< do { $list:(a_body :: b2 :: bs)$ } >>
-            a_bind_function
-            a_fail_function in
+          loop _loc a_binding_accumulator
+            <:expr< do { $list:(a_body :: b2 :: bs)$ } >> in
         begin
           match b1 with
               (* monadic binding *)
-              <:expr< let $opt:false$ $list:((p, e) :: [])$ in $lid:"<--"$ >> ->
+            <:expr< let $opt:false$ $list:((p, e) :: [])$ in $lid:"<--"$ >>
+	      ->
                 if is_irrefutable_pattern p then
                   begin
                     if is_recursive then
@@ -398,7 +397,7 @@ let rec convert
                              binding then take care of the current expression. *)
                         | _ ->
                             let bindings = a_binding_accumulator @ [p, e] in
-                            let pattern_list = List.map (fun (a, b) -> a) bindings in
+                            let pattern_list = List.map fst bindings in
                             let patterns = tuplify_patt _loc pattern_list
                             and patt_as_exp =
                               tuplify_expr
@@ -409,19 +408,18 @@ let rec convert
                                         $a_bind_function$
                                           $patt_as_exp$
                                           (fun $patterns$ -> $do_rest []$) >>
-                    else
-                      <:expr< $a_bind_function$ $e$ (fun $p$ -> $do_rest []$) >>
+                    else (* non-recursive irrefutable binding *)
+                     <:expr< $a_bind_function$ $e$ (fun $p$ -> $do_rest []$) >>
                   end
-                else
-                  begin
-                    if is_recursive || a_binding_accumulator <> [] then
-                      failwith ("convert: refutable patterns and recursive " ^
-                                  "bindings do not go together")
-                    else
-                      <:expr< $a_bind_function$
-                                $e$
-                                (fun [$p$ -> $do_rest []$ | _ -> $a_fail_function$ ]) >>
-                  end
+                else  (* refutable pattern *)
+                  if is_recursive || a_binding_accumulator <> [] then
+		    Stdpp.raise_with_loc _loc
+		      (Stream.Error "convert: refutable patterns and recursive bindings do not go together")
+                  else
+                    <:expr< $a_bind_function$
+                              $e$
+                              (fun [$p$ -> $do_rest []$ 
+                                    | _ -> $a_fail_function$ ]) >>
             | (* map through the regular let *)
               <:expr< let $opt:false$ $list:bs$ in $body$ >> ->
                 <:expr< let $opt:false$ $list:bs$ in $do_merge body$ >>
@@ -432,6 +430,7 @@ let rec convert
             | _ -> <:expr< $a_bind_function$ $b1$ (fun _ -> $do_rest []$) >>
         end
   | any_body -> any_body
+ in loop _loc [] a_perform_body
 
 
 (** [qualify _loc a_module_expression a_function_expression]
@@ -453,11 +452,11 @@ let qualify
 (* Here we have to do the same nasty trick that Camlp4 uses and even
    mentions in its documentation (cf. 'horrible hack' in pa_o.ml).  We
    see if we can expect [patt <--] succeed.  Here [patt] is a simple
-   pattern and it definitely does not parse as an expression.  Well,
-   rather than resort to unlimited lookahead and emulating the
+   pattern and it definitely does not parse as an expression.
+   Rather than resorting to unlimited lookahead and emulating the
    Pcaml.patt LEVEL simple grammar, we do it the other way around: We
    make sure that a pattern can always be parsed as an expression and
-   declare "[_]" a valid identifier!  Well, if you attempt to use it,
+   declare "[_]" a valid identifier!  If you attempt to use it,
    you will get an undefined identifier anyway, so it is safe. *)
 
 EXTEND
@@ -471,7 +470,6 @@ EXTEND
             qualify _loc monad_module (default_failure_fun_expr _loc) in
             convert _loc
               true                      (* is_recursive *)
-              []
               perform_body
               (qualify _loc monad_module (default_bind_expr _loc))
               <:expr< $qualified_fail_expr$ $str:failure_text$ >> ]
@@ -482,7 +480,6 @@ EXTEND
             qualify _loc monad_module (default_failure_fun_expr _loc) in
             convert _loc
               false                     (* is_recursive *)
-              []
               perform_body
               (qualify _loc monad_module (default_bind_expr _loc))
               <:expr< $qualified_fail_expr$ $str:failure_text$ >> ]
@@ -492,7 +489,6 @@ EXTEND
         perform_body = Pcaml.expr LEVEL "top" ->
           convert _loc
             true                        (* is_recursive *)
-            []
             perform_body
             bind_fun
             (match fail_fun with
@@ -504,7 +500,6 @@ EXTEND
         perform_body = Pcaml.expr LEVEL "top" ->
           convert _loc
             false                       (* not is_recursive *)
-            []
             perform_body
             bind_fun
             (match fail_fun with
@@ -515,7 +510,6 @@ EXTEND
         perform_body = Pcaml.expr LEVEL "top" ->
           convert _loc
             true                        (* is_recursive *)
-            []
             perform_body
             (default_bind_expr _loc)
             (default_failure_expr _loc) ]
@@ -524,7 +518,6 @@ EXTEND
         perform_body = Pcaml.expr LEVEL "top" ->
           convert _loc
             false                       (* not is_recursive *)
-            []
             perform_body
             (default_bind_expr _loc)
             (default_failure_expr _loc) ]
