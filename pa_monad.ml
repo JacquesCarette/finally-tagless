@@ -2,7 +2,7 @@
  * synopsis:      Haskell-like "do" for monads
  * authors:       Jacques Carette and Oleg Kiselyov,
  *                based in part of work of Lydia E. Van Dijk
- * last revision: Tue Jan 10 17:54:43 UTC 2006
+ * last revision: Fri Jan 13 08:55:23 UTC 2006
  * ocaml version: 3.09.0 *)
 
 
@@ -149,16 +149,16 @@ refutable patterns with [rpat].
         perform let ... in rest      ===>  let ... in perform rest
         perform exp; rest            ===>  bind exp (fun _ -> perform rest)
 
-        perform with bexp in body 
-                ===> perform body 
+        perform with bexp in body
+                ===> perform body
                         where bind is substituted with bexp
 
-        perform with bexp and fexp in body 
-                ===> perform body 
+        perform with bexp and fexp in body
+                ===> perform body
                         where bind is substituted with bexp and
                               failwith is substituted with fexp
 
-        perform with module Mod in body 
+        perform with module Mod in body
                 ===> perform body
                         where bind is substituted with Mod.bind and
                               failwith with Mod.failwith
@@ -207,11 +207,11 @@ about an unbound identifier "<--". That is the intention.
           ...
   ]}
   blows the extension out of the water.
-  As a metter of fact, it is not clear that should be supported at all:
-  patterns with aliases are not `simple patterns' (se pa_o.ml).
+  As a matter of fact, it is not clear that should be supported at all:
+  patterns with aliases are not `simple patterns' (see pa_o.ml).
   For example, pattern with aliases cannot be used in [fun pattern -> ...].
   Thus, at present monadic bindings should include only those patterns
-  that are premissible in [fun]. And perhaps this is the optimal decision.
+  that are permissible in [fun]. And perhaps this is the optimal decision.
  *)
 
 
@@ -356,81 +356,79 @@ let convert
     (a_perform_body: MLast.expr)
     (a_bind_function: MLast.expr)
     (a_fail_function: MLast.expr): MLast.expr =
- let rec loop _loc a_binding_accumulator a_perform_body =
-  match a_perform_body with
-      <:expr< let $opt:false$ $list:((_patt, _expr) :: [])$ in $lid:"<--"$ >>
-      ->
-        Stdpp.raise_with_loc _loc
-          (Stream.Error "convert: monadic binding cannot be last a \"perform\" body")
-    | <:expr< let $opt:false$ $list:bs$ in $body$ >> ->
-        let body' = loop _loc a_binding_accumulator body in
-          <:expr< let $opt:false$ $list:bs$ in $body'$ >>
-    | <:expr< let $opt:true$ $list:bs$ in $body$ >> ->
-        let body' = loop _loc a_binding_accumulator body in
-          <:expr< let $opt:true$ $list:bs$ in $body'$ >>
-    | <:expr< let module $m$ = $mb$ in $body$ >> ->
-        let body' = loop _loc a_binding_accumulator body in
-          <:expr< let module $m$ = $mb$ in $body'$ >>
-    | <:expr< do { $list:(b1 :: b2 :: bs)$ } >> ->
-        let do_rest an_accumulator =
-          loop _loc an_accumulator
-            (match bs with
-               | [] -> b2
-               | _  -> <:expr< do { $list:(b2 :: bs)$ } >>)
-        and do_merge a_body =
-          loop _loc a_binding_accumulator
-            <:expr< do { $list:(a_body :: b2 :: bs)$ } >> in
-        begin
-          match b1 with
-              (* monadic binding *)
-            <:expr< let $opt:false$ $list:((p, e) :: [])$ in $lid:"<--"$ >>
-	      ->
-                if is_irrefutable_pattern p then
-                  begin
-                    if is_recursive then
-                      match b2 with (* look ahead... *)
-                          (* binding follows *)
-                          <:expr< let $opt:false$ $list:((_p, _e) :: [])$ in $lid:"<--"$ >> ->
-                            do_rest (a_binding_accumulator @ [p, e])
-                          (* We are done with the recursive bindings:
-                             Spill them in a single [let ... and ... in ...]
-                             binding then take care of the current expression. *)
-                        | _ ->
-                            let bindings = a_binding_accumulator @ [p, e] in
-                            let pattern_list = List.map fst bindings in
-                            let patterns = tuplify_patt _loc pattern_list
-                            and patt_as_exp =
-                              tuplify_expr
-                                _loc
-                                (List.map (fun x -> patt_to_exp _loc x) pattern_list)
-                            in
-                              <:expr< let rec $list:bindings$ in
-                                        $a_bind_function$
-                                          $patt_as_exp$
-                                          (fun $patterns$ -> $do_rest []$) >>
-                    else (* non-recursive irrefutable binding *)
-                     <:expr< $a_bind_function$ $e$ (fun $p$ -> $do_rest []$) >>
-                  end
-                else  (* refutable pattern *)
-                  if is_recursive || a_binding_accumulator <> [] then
-		    Stdpp.raise_with_loc _loc
-		      (Stream.Error "convert: refutable patterns and recursive bindings do not go together")
-                  else
-                    <:expr< $a_bind_function$
-                              $e$
-                              (fun [$p$ -> $do_rest []$ 
-                                    | _ -> $a_fail_function$ ]) >>
-            | (* map through the regular let *)
-              <:expr< let $opt:false$ $list:bs$ in $body$ >> ->
-                <:expr< let $opt:false$ $list:bs$ in $do_merge body$ >>
-            | <:expr< let $opt:true$ $list:bs$ in $body$ >> ->
-                <:expr< let $opt:true$ $list:bs$ in $do_merge body$ >>
-            | <:expr< let module $m$ = $mb$ in $body$ >> ->
-                <:expr< let module $m$ = $mb$ in $do_merge body$ >>
-            | _ -> <:expr< $a_bind_function$ $b1$ (fun _ -> $do_rest []$) >>
-        end
-  | any_body -> any_body
- in loop _loc [] a_perform_body
+  let rec loop _loc a_binding_accumulator a_perform_body =
+    match a_perform_body with
+        <:expr< let $opt:false$ $list:((_patt, _expr) :: [])$ in $lid:"<--"$ >> ->
+          Stdpp.raise_with_loc _loc
+            (Stream.Error "convert: monadic binding cannot be last a \"perform\" body")
+      | <:expr< let $opt:false$ $list:bs$ in $body$ >> ->
+          let body' = loop _loc a_binding_accumulator body in
+            <:expr< let $opt:false$ $list:bs$ in $body'$ >>
+      | <:expr< let $opt:true$ $list:bs$ in $body$ >> ->
+          let body' = loop _loc a_binding_accumulator body in
+            <:expr< let $opt:true$ $list:bs$ in $body'$ >>
+      | <:expr< let module $m$ = $mb$ in $body$ >> ->
+          let body' = loop _loc a_binding_accumulator body in
+            <:expr< let module $m$ = $mb$ in $body'$ >>
+      | <:expr< do { $list:(b1 :: b2 :: bs)$ } >> ->
+          let do_rest an_accumulator =
+            loop _loc an_accumulator
+              (match bs with
+                 | [] -> b2
+                 | _  -> <:expr< do { $list:(b2 :: bs)$ } >>)
+          and do_merge a_body =
+            loop _loc a_binding_accumulator
+              <:expr< do { $list:(a_body :: b2 :: bs)$ } >> in
+              begin
+                match b1 with
+                    (* monadic binding *)
+                    <:expr< let $opt:false$ $list:((p, e) :: [])$ in $lid:"<--"$ >> ->
+                      if is_irrefutable_pattern p then
+                        begin
+                          if is_recursive then
+                            match b2 with (* look ahead... *)
+                                (* binding follows *)
+                                <:expr< let $opt:false$ $list:((_p, _e) :: [])$ in $lid:"<--"$ >> ->
+                                  do_rest (a_binding_accumulator @ [p, e])
+                                (* We are done with the recursive bindings:
+                                   Spill them in a single [let ... and ... in ...]
+                                   binding then take care of the current expression. *)
+                              | _ ->
+                                  let bindings = a_binding_accumulator @ [p, e] in
+                                  let pattern_list = List.map fst bindings in
+                                  let patterns = tuplify_patt _loc pattern_list
+                                  and patt_as_exp =
+                                    tuplify_expr
+                                      _loc
+                                      (List.map (fun x -> patt_to_exp _loc x) pattern_list)
+                                  in
+                                    <:expr< let rec $list:bindings$ in
+                                              $a_bind_function$
+                                                $patt_as_exp$
+                                                (fun $patterns$ -> $do_rest []$) >>
+                          else (* non-recursive irrefutable binding *)
+                            <:expr< $a_bind_function$ $e$ (fun $p$ -> $do_rest []$) >>
+                        end
+                      else  (* refutable pattern *)
+                        if is_recursive || a_binding_accumulator <> [] then
+		          Stdpp.raise_with_loc _loc
+		            (Stream.Error "convert: refutable patterns and recursive bindings do not go together")
+                        else
+                          <:expr< $a_bind_function$
+                                    $e$
+                                    (fun [$p$ -> $do_rest []$
+                                          | _ -> $a_fail_function$ ]) >>
+                  | (* map through the regular let *)
+                    <:expr< let $opt:false$ $list:bs$ in $body$ >> ->
+                      <:expr< let $opt:false$ $list:bs$ in $do_merge body$ >>
+                  | <:expr< let $opt:true$ $list:bs$ in $body$ >> ->
+                      <:expr< let $opt:true$ $list:bs$ in $do_merge body$ >>
+                  | <:expr< let module $m$ = $mb$ in $body$ >> ->
+                      <:expr< let module $m$ = $mb$ in $do_merge body$ >>
+                  | _ -> <:expr< $a_bind_function$ $b1$ (fun _ -> $do_rest []$) >>
+              end
+      | any_body -> any_body
+  in loop _loc [] a_perform_body
 
 
 (** [qualify _loc a_module_expression a_function_expression]

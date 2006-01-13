@@ -1,7 +1,7 @@
 # name:          Makefile
 # synopsis:      Construction rules for monadic "do" syntax extension
 # authors:       Chris L. Spiel (nifty stuff), Lydia E. van Dijk (boring rest)
-# last revision: Tue Jan 10 17:54:29 UTC 2006
+# last revision: Fri Jan 13 08:53:36 UTC 2006
 # ocaml version: 3.09.0
 
 
@@ -144,12 +144,11 @@ all: $(SYNTAX_EXTENSION)
 .PHONY: test
 test: $(foreach file,$(TESTS:.ml=),run-$(file))
 
-# test: $(TESTS:.ml=)
-# 	$(call join-by, $^, && )
 
 # Run a selected test only
 run-%: %
 	./$^
+
 
 # Generate the documentation.
 .PHONY: doc

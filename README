@@ -168,7 +168,9 @@ a keyword with the correct indentation behavior.
 
 Literature on the use of monads in OCaml does not yet exist.  Most of
 the following articles are either language independent or use the
-Haskell language.
+Haskell language.  A large bibliography on "Monads and Arrows: Theory
+and Applications" can be found at
+        http://haskell.readscheme.org/monads.html
 
 
 ** Philip Wadler, "Monads for functional programming"

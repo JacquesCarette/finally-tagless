@@ -1,3 +1,20 @@
+2006-01-12  Oleg Kiselyov <oleg@pobox.com>
+
+	* pa_monad.ml: Improve on documentation.
+	(monadic_binding): Remove.
+	(exp_to_patt): Substitute 'Stdpp.raise_with_loc' for 'failwith'.
+	(patt_to_exp): Dito.
+	(convert/do_merge): Dito.
+	(convert): Remove parameter 'a_binding_accumulator'.
+	(convert/loop): Add parameter 'a_binding_accumulator'.
+	(Pcaml.expr): Adapt to interface change of function 'convert'.
+	* Makefile (test): Base target 'test' on phony target 'run-%'.
+	(run-%: %): New rule.
+
+2006-01-11  Lydia van Dijk  <lvandijk@freenet.de>
+
+	* README: Add URL of a comprehensive bibliography on monads.
+
 2006-01-10  Lydia van Dijk  <lvandijk@freenet.de>
 
 	Mutually recursive bindings.
