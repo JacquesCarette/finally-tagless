@@ -1,7 +1,7 @@
 (* name:          test-syntax.ml
  * synopsis:      test the syntax extension "pa_monad"
  * author:        Lydia E. Van Dijk
- * last revision: Thu Jan  5 15:46:39 UTC 2006
+ * last revision: Fri Jan 13 17:53:07 UTC 2006
  * ocaml version: 3.09.0 *)
 
 
@@ -293,17 +293,6 @@ let test_refutable_match_failure _ =
     "refutable match failure"
     (Failure "pattern match")
     (fun () -> 0 = perform 100 <-- 99; 1)
-
-
-(* Recursive Binding *)
-
-(* Does not work yet:
- * (See also: http://www.cse.ogi.edu/PacSoft/projects/rmb/repMin.html)
- *  let some_ones =
- *    perform
- *      xs <-- Some (1 :: xs);
- *      return xs
- *)
 
 
 (**********************************************************************)

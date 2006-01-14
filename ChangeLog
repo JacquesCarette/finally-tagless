@@ -1,3 +1,24 @@
+2006-01-13  Lydia van Dijk  <lvandijk@freenet.de>
+
+	Unit-tests with fixtures.
+	* utest.mli, utest.ml: Document types and functions.
+	(test): New type.
+	(InconsistentFixture): New exception.
+	(eval_with_imperative_fixture): New function.
+	(eval_with_functional_fixture): Dito.
+	* test-rec.ml (fixture_tree): Remove.
+	(fixture_lazy_tree): Dito.
+	(fixture_list): Dito.
+	(fixture_lazy_list): Dito.
+	(replace_fixture): New type.
+	(replace_setup): New function.
+	(deviation_setup): Dito.
+	(test_replace_min_two_pass): Add parameter 'a_fixture'.
+	(test_replace_min_one_pass): Dito.
+	(test_monadic_replace_min_one_pass): Dito.
+	(test_deviation_one_pass): Dito.
+	(test_monadic_deviation_one_pass): Dito
+
 2006-01-12  Oleg Kiselyov <oleg@pobox.com>
 
 	* pa_monad.ml: Improve on documentation.

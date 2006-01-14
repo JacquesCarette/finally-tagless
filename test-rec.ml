@@ -116,43 +116,50 @@ let string_of_tree a_tree =
     a_tree
 
 
-let fixture_tree =
-  Branch (Branch (Leaf 24, Leaf 32),
-          Branch ((Leaf 3), Branch ((Leaf 14),
-                                    Branch ((Leaf 32), (Leaf 8)))))
+type 'a replace_fixture = {
+  min: 'a;
+  tree: 'a tree;
+  lazy_tree: 'a Lazy.t tree
+}
 
 
-let test_replace_min_two_pass _ =
+let replace_setup () =
+  {min = 3;
+   tree =
+      Branch (Branch (Leaf 24, Leaf 32),
+              Branch ((Leaf 3), Branch ((Leaf 14),
+                                        Branch ((Leaf 32), (Leaf 8)))));
+   lazy_tree =
+      Branch (Branch (Leaf (lazy 24), Leaf (lazy 32)),
+              Branch ((Leaf (lazy 3)), Branch ((Leaf (lazy 14)),
+                                               Branch ((Leaf (lazy 32)), (Leaf (lazy 8))))))}
+
+
+let test_replace_min_two_pass a_fixture =
   Utest.expect_pass
     "replace with minimum (2-pass)"
     (fun () ->
        for_all
-         (fun x -> x = 3)
-         (replace_min_two_pass fixture_tree))
+         (fun x -> x = a_fixture.min)
+         (replace_min_two_pass a_fixture.tree))
 
 
-let fixture_lazy_tree =
-  Branch (Branch (Leaf (lazy 24), Leaf (lazy 32)),
-          Branch ((Leaf (lazy 3)), Branch ((Leaf (lazy 14)),
-                                           Branch ((Leaf (lazy 32)), (Leaf (lazy 8))))))
-
-
-let test_replace_min_one_pass _ =
+let test_replace_min_one_pass a_fixture =
   Utest.expect_pass
     "replace with minimum (1-pass)"
     (fun () ->
        for_all
-         (fun x -> Lazy.force_val x = 3)
-         (replace_min_one_pass fixture_lazy_tree))
+         (fun x -> Lazy.force_val x = a_fixture.min)
+         (replace_min_one_pass a_fixture.lazy_tree))
 
 
-let test_monadic_replace_min_one_pass _ =
+let test_monadic_replace_min_one_pass a_fixture =
   Utest.expect_pass
     "replace with minimum (1-pass, monadic version)"
     (fun () ->
        for_all
-         (fun x -> Lazy.force_val x = 3)
-         (monadic_replace_min_one_pass fixture_lazy_tree))
+         (fun x -> Lazy.force_val x = a_fixture.min)
+         (monadic_replace_min_one_pass a_fixture.lazy_tree))
 
 
 (**********************************************************************)
@@ -204,30 +211,33 @@ let monadic_deviation a_list_of_lazy_floats =
       return Lazy.force_val lst
 
 
-let fixture_list =
-  [10.0; 0.0; -10.0]
+type deviation_fixture = {
+  eager_list: float list;
+  lazy_list: float Lazy.t list
+}
 
 
-let fixture_lazy_list =
-  [lazy 10.0; lazy 20.0; lazy 30.0]
+let deviation_setup () =
+  {eager_list = [10.0; 0.0; -10.0];
+   lazy_list = [lazy 10.0; lazy 20.0; lazy 30.0]}
 
 
-let test_deviation_one_pass _ =
+let test_deviation_one_pass a_fixture =
   Utest.expect_pass
     "deviation (1-pass)"
     (fun () ->
        List.for_all
          (fun (x, x') -> Lazy.force_val x = x')
-         (List.combine (deviation fixture_lazy_list) fixture_list))
+         (List.combine (deviation a_fixture.lazy_list) a_fixture.eager_list))
 
 
-let test_monadic_deviation_one_pass _ =
+let test_monadic_deviation_one_pass a_fixture =
   Utest.expect_pass
     "deviation (1-pass, monadic version)"
     (fun () ->
        List.for_all
          (fun (x, x') -> Lazy.force_val x = x')
-         (List.combine (monadic_deviation fixture_lazy_list) fixture_list))
+         (List.combine (monadic_deviation a_fixture.lazy_list) a_fixture.eager_list))
 
 
 (**********************************************************************)
@@ -237,11 +247,11 @@ let (_: unit) =
     Utest.run_tests
       ~verbose:true
       [test_ones;
-       test_replace_min_two_pass;
-       test_replace_min_one_pass;
-       test_monadic_replace_min_one_pass;
-       test_deviation_one_pass;
-       test_monadic_deviation_one_pass]
+       Utest.eval_with_functional_fixture replace_setup test_replace_min_two_pass;
+       Utest.eval_with_functional_fixture replace_setup test_replace_min_one_pass;
+       Utest.eval_with_functional_fixture replace_setup test_monadic_replace_min_one_pass;
+       Utest.eval_with_functional_fixture deviation_setup test_deviation_one_pass;
+       Utest.eval_with_functional_fixture deviation_setup test_monadic_deviation_one_pass]
   in
     Pervasives.exit
       (if results.Utest.failed <> 0 || results.Utest.unresolved <> 0 then 1 else 0)
