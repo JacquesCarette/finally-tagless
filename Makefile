@@ -1,7 +1,7 @@
 # name:          Makefile
 # synopsis:      Construction rules for monadic "do" syntax extension
 # authors:       Chris L. Spiel (nifty stuff), Lydia E. van Dijk (boring rest)
-# last revision: Fri Jan 13 08:53:36 UTC 2006
+# last revision: Mon Jan 16 14:30:44 UTC 2006
 # ocaml version: 3.09.0
 
 
@@ -10,34 +10,6 @@
 # Macros
 #
 ########################################################################
-
-# [$(call exists, HAYSTACK, NEEDLES)] answers all [NEEDLES] in
-# [HAYSTACK], thus lending itself to an existence test.
-define exists
-$(filter $(1), $(2))
-endef
-
-
-# [$(call join-by LIST, SEPARATOR)] answers the (space-separated) LIST
-# catenated with SEPARATOR in between.
-#
-# The definition of [SPACE] -- a variable that holds a single space--
-# involves some very deep Make knowledge/magic.
-#
-# We cannot use a literal space in the [$(subst ...)] function,
-# because the parser throws it away.  After a variable expansion
-# whitespace survives.  The remaining task is to define a variable
-# with a single space.  The documentation says: "Whitespace around the
-# variable name and immediately after the '=' is ignored."  Make keeps
-# whitespace before a comment, unless the '=' rule is in effect.
-# Thus, we define [SPACE] to be the result of applying the built-in
-# function [$(strip)] to the empty string and a space, which is
-# protected by the following comment.
-SPACE := $(strip) # required comment; do _not_ remove or even move
-define join-by
-$(subst $(SPACE),$(2),$(strip $(1)))
-endef
-
 
 # [$(call rotate-left, LIST)] answers LIST rotated to the left by one
 # position
@@ -53,12 +25,18 @@ endef
 ########################################################################
 
 # Name of compiled syntax extension
-SYNTAX_EXTENSION := pa_monad.cmo
+SYNTAX-EXTENSION := pa_monad.cmo
 
 
-# Names of all sources that define tests
-TESTS := exception.ml pythagorean-triples.ml \
-         test-syntax.ml test-monad.ml test-rec.ml
+# Names of all sources that define non-interactive tests.  These files
+# will be compiled and run.
+TESTS := pythagorean-triples.ml \
+         test-exception.ml test-syntax.ml test-monad.ml test-rec.ml
+
+
+# Sources of interactive tests.  These files will only be compiled,
+# but not run by any make(1) command.
+INTERACTIVE-TESTS := monadic-io.ml
 
 
 # Pre-Precessor-Pretty-Printer for OCaml
@@ -68,7 +46,7 @@ CAMLP4 := camlp4o
 # Option to feed OCaml sources through the pre-processor. This
 # particular incantation is used to compile the test of our syntax
 # extensions.
-PP := -pp '$(CAMLP4) -I . $(SYNTAX_EXTENSION)'
+PP := -pp '$(CAMLP4) -I . $(SYNTAX-EXTENSION)'
 
 
 # Option to feed OCaml sources through the pre-processor.  This
@@ -137,12 +115,12 @@ VERSION := 4.0
 
 # Build all syntax extensions.
 .PHONY: all
-all: $(SYNTAX_EXTENSION)
+all: $(SYNTAX-EXTENSION)
 
 
 # Run all binaries with tests.  Stop if any test fails.
 .PHONY: test
-test: $(foreach file,$(TESTS:.ml=),run-$(file))
+test: $(foreach file,$(TESTS:.ml=),run-$(file)) $(INTERACTIVE-TESTS:.ml=)
 
 
 # Run a selected test only
@@ -152,7 +130,7 @@ run-%: %
 
 # Generate the documentation.
 .PHONY: doc
-doc: $(HTML-DOCUMENTATION)/$(SYNTAX_EXTENSION:.cmo=).html
+doc: $(HTML-DOCUMENTATION)/$(SYNTAX-EXTENSION:.cmo=).html
 
 
 # Create a distributable archive with the help of the revision
@@ -173,14 +151,16 @@ distcheck: distclean test doc
 # Launch an OCaml interpreter enriched with all of our syntax
 # extensions.
 .PHONY: top-level
-top-level: $(SYNTAX_EXTENSION)
-	$(OCAML) camlp4o.cma pa_extend.cmo $(SYNTAX_EXTENSION)
+top-level: $(SYNTAX-EXTENSION)
+	$(OCAML) camlp4o.cma pa_extend.cmo $(SYNTAX-EXTENSION)
 
 
 # Remove most files that we can remake
 .PHONY: clean
 clean:
-	rm --force *.cm[iox] *.annot $(TESTS:.ml=) $(TESTS:.ml=.opt)
+	rm --force *.cm[iox] *.annot
+	rm --force $(TESTS:.ml=) $(TESTS:.ml=.opt)
+	rm --force $(INTERACTIVE-TESTS:.ml=) $(INTERACTIVE-TESTS:.ml=.opt)
 
 
 # Remove all files that we can remake and all uninteresting ones, too.
@@ -206,8 +186,8 @@ pa_%.cmo: pa_%.ml
 
 
 # Pretty-print an OCaml file.
-%.ml-pp: %.ml $(SYNTAX_EXTENSION) FORCE
-	$(CAMLP4) -I . $(SYNTAX_EXTENSION) pr_o.cmo $< > $@
+%.ml-pp: %.ml $(SYNTAX-EXTENSION) FORCE
+	$(CAMLP4) -I . $(SYNTAX-EXTENSION) pr_o.cmo $< > $@
 
 
 # Extract the interface definition from an OCaml implementation
@@ -268,31 +248,48 @@ $(TESTS:.ml=.cmo): %.cmo: %.ml
 ########################################################################
 
 # Generate the documentation for all of our syntax extensions.
-$(HTML-DOCUMENTATION)/$(SYNTAX_EXTENSION:.cmo=).html: $(SYNTAX_EXTENSION:.cmo=.ml)
+$(HTML-DOCUMENTATION)/$(SYNTAX-EXTENSION:.cmo=).html: $(SYNTAX-EXTENSION:.cmo=.ml)
 	test -d $(HTML-DOCUMENTATION) || mkdir $(HTML-DOCUMENTATION)
 	$(OCAMLDOC) $(OCAMLDOCFLAGS) -html -d $(HTML-DOCUMENTATION) -o $@ $^
 
 
+# Additional dependencies of the exception monad
+exception.cmo: exception.cmi
+
+
+# Additional dependencies of the IO-monad
+io.cmo: exception.cmi io.cmi
+
+
 # Additional dependencies of the "Exception Monad" example
-exception.cmo: utest.cmi $(SYNTAX_EXTENSION)
-exception: utest.cmo
+test-exception.cmo: exception.cmi utest.cmi $(SYNTAX-EXTENSION)
+test-exception: exception.cmo utest.cmo
 
 
 # Additional dependencies of the "Pythogorean-Tiples" example
-pythagorean-triples.cmo: utest.cmi $(SYNTAX_EXTENSION)
+pythagorean-triples.cmo: utest.cmi $(SYNTAX-EXTENSION)
 pythagorean-triples: utest.cmo
 
 
 # Additional dependencies of the syntax tests
-test-syntax.cmo: utest.cmi $(SYNTAX_EXTENSION)
+test-syntax.cmo: utest.cmi $(SYNTAX-EXTENSION)
 test-syntax: utest.cmo
 
 
 # Additional dependencies of the application tests
-test-monad.cmo: utest.cmi $(SYNTAX_EXTENSION)
+test-monad.cmo: utest.cmi $(SYNTAX-EXTENSION)
 test-monad: utest.cmo
 
 
 # Additional dependencies of the recursive-binding tests
-test-rec.cmo: utest.cmi $(SYNTAX_EXTENSION)
+test-rec.cmo: utest.cmi $(SYNTAX-EXTENSION)
 test-rec: utest.cmo
+
+
+# Dependencies of "Monadic IO" example.  In contrary to the other
+# tests this one is interactive.  Thus we do not want it to run with
+# the non-interactive tests.
+monadic-io.cmo: monadic-io.ml exception.cmi io.cmi $(SYNTAX-EXTENSION)
+	$(OCAMLC) $(OCAMLCFLAGS) $(PP) -c $(@:cmo=ml)
+monadic-io: exception.cmo io.cmo monadic-io.cmo
+

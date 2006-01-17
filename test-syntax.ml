@@ -55,6 +55,7 @@ let test_let_int _ =
     "let (int)"
     (fun () -> 1 = perform let x = 1 in x)
 
+
 let test_binding_let_int _ =
   Utest.expect_pass
     "binding let (int)"
@@ -145,14 +146,15 @@ let test_type_restriction _ =
     "type restriction"
     (fun () -> 1 = perform (x: int) <-- 1; x)
 
+
 let test_advanced_let _ =
   Utest.expect_pass
     "advanced let"
-    (fun () -> 
-      120 = perform let module M = IdentityMonad in 
-                    let rec fact n = if n < 1 then 1 else n * (fact (n-1)) in
-		    M.ret (fact 5))
-
+    (fun () ->
+       120 = perform
+               let module M = IdentityMonad in
+               let rec fact n = if n < 1 then 1 else n * (fact (n - 1)) in
+               M.ret (fact 5))
 
 
 module Rec = struct type t = {x: int; y: int; z: int} end

@@ -5,15 +5,19 @@
 * Contents
 
 COPYING                 -  License
-README                  -  This file
 ChangeLog               -  Recent changes
-Makefile                -  GNU make build rules for the extension and
-                           the test frame
-exception.ml            -  Exception monad coded with "pa_monad.ml"
+Makefile                -  GNU make build rules for the extension and the test frame
+README                  -  This file
+exception.ml            -  Implementation of exception monad
+exception.mli           -  Interface of exception monad
+io.ml                   -  Implementation of I/O-monad
+io.mli                  -  Interface of I/O-monad
+monadic-io.ml           -  Example of input/output with the I/O-monad
 pa_monad.ml             -  Camlp4 syntax extension for Objective Caml
-pythagorean-triples.ml  -  Nondeterminism monad (backtracking) coded
-                           with "pa_monad.ml"
+pythagorean-triples.ml  -  Nondeterminism monad (backtracking) coded with "pa_monad.ml"
+test-exception.ml       -  Test of the exception monad
 test-monad.ml           -  Simple test frame for "pa_monad.ml"
+test-rec.ml             -  Test of recursive-binding features
 test-syntax.ml          -  Thorough test of the syntax extension
 utest.ml                -  Implementation of the unit-test framework
 utest.mli               -  Interface of the unit-test framework

@@ -1,3 +1,52 @@
+2006-01-17  Lydia van Dijk  <lvandijk@freenet.de>
+
+	* COPYING: Replace GPL with LGPL.
+	* exception.mli, exception.ml, io.mli, io.ml, utest.mli, utest.ml,
+	pa_monad.ml: Add copyright notice.
+
+2006-01-16  Oleg Kiselyov <oleg@pobox.com>
+
+	* pa_monad.ml: Update documentation concerning the disdussions on
+	the Haskell mailing list.
+	* test-syntax (test_binding_let_int): New test.
+	(test_advanced_let): Dito.
+
+2006-01-16  Lydia van Dijk  <lvandijk@freenet.de>
+
+	IO-Monad.
+	* README: Update with new files.
+	* exception.ml: Split interface, implementation, and test of the
+	exception monad.  This file now only contains the monad's
+	implementation.
+	* exception.mli, test-exception.ml: New files.
+	* io.mli, io.ml: Dito.
+	* monadic-io.ml: Dito.
+
+	* Makefile (exists): Remove macro.
+	(join-by): Dito.
+	(SYNTAX-EXTENSION): Rename 'SYNTAX_EXTENSION'.
+	(PP): Adapt to raneming of 'SYNTAX-EXTENSION'.
+	(all): Dito.
+	(doc): Dito.
+	(top-level): Dito.
+	(%.ml-pp): Dito.
+	($(HTML-DOCUMENTATION)/$(SYNTAX-EXTENSION:.cmo=).html): Dito.
+	(pythagorean-triples.cmo): Dito.
+	(test-syntax.cmo): Dito.
+	(test-monad.cmo): Dito.
+	(test-rec.cmo): Dito.
+	(TESTS): Adapt to split of 'exception' module.
+	(INTERACTIVE-TESTS): New variable.
+	(test): Add prerequisite 'INTERACTIVE-TESTS'.
+	(clean): Take care of 'INTERACTIVE-TESTS'.
+	(exception.cmo): Remove dependency of 'SYNTAX-EXTENSION'.
+	(exception): Remove target.
+	(io.cmo): New target.
+	(test-exception.cmo): Dito.
+	(test-exception): Dito.
+	(monadic-io.cmo): Dito.
+	(monadic-io): Dito.
+
 2006-01-13  Lydia van Dijk  <lvandijk@freenet.de>
 
 	Unit-tests with fixtures.

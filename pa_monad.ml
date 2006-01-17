@@ -3,7 +3,24 @@
  * authors:       Jacques Carette and Oleg Kiselyov,
  *                based in part of work of Lydia E. Van Dijk
  * last revision: Fri Jan 13 08:55:23 UTC 2006
- * ocaml version: 3.09.0 *)
+ * ocaml version: 3.09.0
+ *
+ * Copyright (C) 2006  J. Carette, L. E. van Dijk, O. Kiselyov
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Library General Public
+ * License as published by the Free Software Foundation; either
+ * version 2 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Library General Public License for more details.
+ *
+ * You should have received a copy of the GNU Library General Public
+ * License along with this library; if not, write to the Free
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *)
 
 
 (** {2 Syntax Extension to Support Monads}
@@ -26,7 +43,7 @@ which is almost literally the grammar of the Haskell "do"-notation,
 with the differences that Haskell uses "do" and "<-" where we use
 "[perform]" and "[<--]". We support not only [let x = foo in ...]
 expressions but arbitrarily complex [let]-expressions, including
-[let rec] and [let module]. 
+[let rec] and [let module].
 
 The actual bind function of the monad defaults to "[bind]" and the
 match-failure function to "[failwith]" (only used for refutable
