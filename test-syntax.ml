@@ -55,6 +55,11 @@ let test_let_int _ =
     "let (int)"
     (fun () -> 1 = perform let x = 1 in x)
 
+let test_binding_let_int _ =
+  Utest.expect_pass
+    "binding let (int)"
+    (fun () -> 1 = perform let x = 1 in x <-- x; x)
+
 
 let test_id_char _ =
   Utest.expect_pass
@@ -139,6 +144,15 @@ let test_type_restriction _ =
   Utest.expect_pass
     "type restriction"
     (fun () -> 1 = perform (x: int) <-- 1; x)
+
+let test_advanced_let _ =
+  Utest.expect_pass
+    "advanced let"
+    (fun () -> 
+      120 = perform let module M = IdentityMonad in 
+                    let rec fact n = if n < 1 then 1 else n * (fact (n-1)) in
+		    M.ret (fact 5))
+
 
 
 module Rec = struct type t = {x: int; y: int; z: int} end
@@ -305,6 +319,7 @@ let (_: unit) =
        test_seq_int;
        test_binding_int;
        test_let_int;
+       test_binding_let_int;
        test_id_char;
        test_seq_char;
        test_binding_char;
@@ -318,6 +333,7 @@ let (_: unit) =
        test_wildcard;
        test_tuple;
        test_type_restriction;
+       test_advanced_let;
        test_record;
        test_binding_with_form_unqualified_name;
        test_binding_with_form_unqualified_name';

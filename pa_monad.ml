@@ -24,7 +24,9 @@ expressions.
 ]}
 which is almost literally the grammar of the Haskell "do"-notation,
 with the differences that Haskell uses "do" and "<-" where we use
-"[perform]" and "[<--]".
+"[perform]" and "[<--]". We support not only [let x = foo in ...]
+expressions but arbitrarily complex [let]-expressions, including
+[let rec] and [let module]. 
 
 The actual bind function of the monad defaults to "[bind]" and the
 match-failure function to "[failwith]" (only used for refutable
@@ -92,7 +94,11 @@ position -- we must add a second branch that catches the remaining
 values.  The user is free to override the "[failwith]" function with
 her own version.
 
-Refer to the discussions on the Haskell mailing list...
+Refer to the discussions on the Haskell mailing list
+        http://www.haskell.org/pipermail/haskell/2006-January/017237.html
+ [and the replies in this thread]
+and an excerpt from an earlier discussion
+        http://www.cs.chalmers.se/~rjmh/Haskell/Messages/Decision.cgi?id=2
 
 
 {3 Grammar formally}
@@ -212,6 +218,12 @@ about an unbound identifier "<--". That is the intention.
   For example, pattern with aliases cannot be used in [fun pattern -> ...].
   Thus, at present monadic bindings should include only those patterns
   that are permissible in [fun]. And perhaps this is the optimal decision.
+
+- Recursive monadic do
+  "A Recursive do for Haskell"
+  Levent Erkoek  and John Launchbury
+  http://www.cse.ogi.edu/PacSoft/projects/rmb/recdo.ps.gz
+
  *)
 
 
