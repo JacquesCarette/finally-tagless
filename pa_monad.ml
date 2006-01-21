@@ -2,7 +2,7 @@
  * synopsis:      Haskell-like "do" for monads
  * authors:       Jacques Carette and Oleg Kiselyov,
  *                based in part of work of Lydia E. Van Dijk
- * last revision: Fri Jan 13 08:55:23 UTC 2006
+ * last revision: Wed Jan 18 13:33:39 UTC 2006
  * ocaml version: 3.09.0
  *
  * Copyright (C) 2006  J. Carette, L. E. van Dijk, O. Kiselyov
@@ -28,29 +28,39 @@
 This module extends OCaml's syntax by a Haskell-like "do"-notation
 particularly suited for the work with monads.
 
+By the nature of the translation process (at pre-processing time,
+before compilation) it cannot be guaranteed that the result code
+actually obeys the three fundamental laws for all monads:
++ [bind (return x) f]  is identical to  [f x]
++ [bind m return]      is identical to  [m]
++ [bind (bind m f) g]  is identical to  [bind m (fun x -> bind (f x) g)]
+
+where [bind] and [return] are user defined functions.
+
+
 {2 Conversion Rules}
 
 {3 Grammar informally}
 We support four different constructs to introduce a monadic
 expressions.
-{[
-        perform exp
-        perform exp1; exp2
-        perform x <-- exp1; exp2
-        perform let x = foo in exp
-]}
-which is almost literally the grammar of the Haskell "do"-notation,
-with the differences that Haskell uses "do" and "<-" where we use
-"[perform]" and "[<--]". We support not only [let x = foo in ...]
-expressions but arbitrarily complex [let]-expressions, including
-[let rec] and [let module].
+- [perform exp]
+- [perform exp1; exp2]
+- [perform x <-- exp1; exp2]
+- [perform let x = foo in exp]
 
-The actual bind function of the monad defaults to "[bind]" and the
-match-failure function to "[failwith]" (only used for refutable
-patterns; see below).
+which is almost literally the grammar of the Haskell's "do"-notation,
+with the differences that Haskell uses "do" and "<-" where we use
+"[perform]" and "[<--]".
+
+We support not only [let x = foo in ...]  expressions but arbitrarily
+complex [let]-expressions, including [let rec] and [let module].
+
 
 {4 Extended Forms}
-To select a different function, use the extended forms of "[perform]".
+The actual bind function of the monad defaults to "[bind]" and the
+match-failure function to "[failwith]" (only used for refutable
+patterns; see below).  To select a different function, use the
+extended forms of "[perform]".
 
 {b Expression:} Use the given expression as bind-function and apply
 the default match-failure function ([failwith]) where necessary.
@@ -60,8 +70,8 @@ the default match-failure function ([failwith]) where necessary.
         perform with exp1 in x <-- exp2; exp3
         perform with exp in let x = foo in exp
 ]}
-Use the first given expression as bind-function and the second as
-match-failure function.
+Use the first given expression ([exp1]) as bind-function and the
+second ([exp2]) as match-failure function.
 {[
         perform with exp1 and exp2 in exp3
         perform with exp1 and exp2 in exp3; exp4
@@ -70,13 +80,14 @@ match-failure function.
 ]}
 
 {b Module:} Use the function named "[bind]" from module "[Mod]".  In
-addition use the module's "[failwith]" function in refutable patterns.
+addition use the module's "[failwith]"-function in refutable patterns.
 {[
         perform with module Mod in exp2
         perform with module Mod in exp3; exp4
         perform with module Mod in x <-- exp2; exp3
         perform with module Mod in let x = foo in exp
 ]}
+
 
 {4 Refutable Patterns}
 An irrefutable pattern is either:
@@ -111,14 +122,15 @@ position -- we must add a second branch that catches the remaining
 values.  The user is free to override the "[failwith]" function with
 her own version.
 
-Refer to the discussions on the Haskell mailing list
-        http://www.haskell.org/pipermail/haskell/2006-January/017237.html
- [and the replies in this thread]
-and an excerpt from an earlier discussion
-        http://www.cs.chalmers.se/~rjmh/Haskell/Messages/Decision.cgi?id=2
+Refer to the thread on the Haskell mailing list concerning the topic
+of {{:http://www.haskell.org/pipermail/haskell/2006-January/017237.html}
+refutable patterns} and an excerpt from an earlier
+{{:http://www.cs.chalmers.se/~rjmh/Haskell/Messages/Decision.cgi?id=2}
+discussion} on the same issue.
 
 
 {3 Grammar formally}
+Formally the grammar of [pa_monad] can be specified as follows.
 {[
         "perform" ["rec"] ["with" <user-function-spec> "in"] <perform-body>
         <user-function-spec> ::=
@@ -138,11 +150,11 @@ The "[rec]" keyword allows for a recursive binding in
 {[
         PATTERN "<--" EXPR
 ]}
-Please consult Section 7.3 of the Manual for the allowed recursive
+Please consult Section 7.3 of the Manual for valid recursive
 definitions of values, as the only allowed [PATTERN] in the recursive
 case is a [NAME], similarly stringent restrictions apply to [EXPR].
 The theoretical aspects of recursive monadic bindings can be found in
-Levent Erkök, John Launchbury: "A Recursive do for Haskell".
+Levent Erkök, John Launchbury: "{i A Recursive do for Haskell}".
 
 
 For any ['a monad] the expansion uses the functions "[bind]" and
@@ -152,7 +164,7 @@ For any ['a monad] the expansion uses the functions "[bind]" and
         val failwith: string -> 'a monad
 ]}
 unless overridden by the user.  Analogously, the signatures of modules
-used in the [with module] form must enclose
+used in the "[with module]"-form must enclose
 {[
         sig
           type 'a monad
@@ -161,8 +173,9 @@ used in the [with module] form must enclose
         end
 ]}
 
+
 {3 Semantics (as re-writing into the core language)}
-In the following, we abbreviate irrefutable patterns with [ipat] and
+In this section, we abbreviate irrefutable patterns with [ipat] and
 refutable patterns with [rpat].
 {[
         perform exp                  ===>  exp
@@ -187,28 +200,32 @@ refutable patterns with [rpat].
                               failwith with Mod.failwith
 ]}
 
-It is be possible to use "[<-]" instead of "[<--]".  In that case,
-the similarity to the "[do]" notation of Haskell will be complete.
-However, if the program has [_ <- exp] outside of perform, this will be
-accepted by the parser (and create an (incomprehensible) error later on.
-It's better to use a dedicated symbol [<--], so if the user abuses
-it, the error should be clear right away.
+
+{4 Implementation Notes And Design Decisions}
+It is be possible to use "[<-]" instead of "[<--]".  In that case, the
+similarity to the "[do]" notation of Haskell will be complete.
+However, if the program has [_ <- exp] outside of [perform], this will
+be accepted by the parser (and create an (incomprehensible) error
+later on.  It is better to use a dedicated symbol "[<--]", so if the
+user abuses it, the error should be clear right away.
 
 The major difficulty with the [perform] notation is that it cannot
 truly be parsed by an LR-grammar.  Indeed, to figure out if we should
 start parsing <perform-body> as an expression or a pattern, we have to
-parse it as a pattern and check the "[<--]" delimiter.  If it is not
-there, we should {e backtrack} and parse it again as an expression.
-Furthermore, [a <-- b] (or [a <- b]) can also be parsed as an
-expression.  However, some patterns, for example ([_ <-- exp]), cannot
-be parsed as an expression.
+parse it as a pattern and check for the "[<--]" delimiter.  If it is
+not there, we should {e backtrack} and parse it again as an
+expression.  Furthermore, [a <-- b] (or [a <- b]) can also be parsed
+as an expression.  However, some patterns, for example ([_ <-- exp]),
+cannot be parsed as an expression.
 
 It is possible (via some kind of flag) to avoid parsing [_ <-- exp]
-outside of perform. But this becomes quite complex and unreliable.
-To record a particular expression [patt <-- exp] in AST, we use a node
-<:expr< let [(patt, exp)] in $lid:"<--"$ >>
-If the construction [_ <-- exp] is used by mistake, we get an error message
-about an unbound identifier "<--". That is the intention.
+outside of perform. But this becomes quite complex and unreliable.  To
+record a particular expression [patt <-- exp] in AST, we use the node
+{[
+    <:expr< let [(patt, exp)] in $lid:"<--"$ >>
+]}
+If the construction [_ <-- exp] is used by mistake, we get an error
+message about an unbound identifier "<--", which is our intention.
 
 
 {2 Known Issues}
@@ -223,24 +240,25 @@ about an unbound identifier "<--". That is the intention.
         perform T <- T; ...
   ]}
   you get "Warning U: this match case is unused." which is not deserved.
+
 - Aliases in patterns are not supported yet.  Code like
   {[
         perform
           ((x, y, z) as tuple) <-- 1, 2, 3;
           ...
   ]}
-  blows the extension out of the water.
-  As a matter of fact, it is not clear that should be supported at all:
-  patterns with aliases are not `simple patterns' (see pa_o.ml).
-  For example, pattern with aliases cannot be used in [fun pattern -> ...].
-  Thus, at present monadic bindings should include only those patterns
-  that are permissible in [fun]. And perhaps this is the optimal decision.
+  blows the extension out of the water.  As a matter of fact, it is
+  not clear that this should be supported at all: patterns with
+  aliases are not "simple patterns" (see {i pa_o.ml}).  For example,
+  patterns with aliases cannot be used in [fun pattern -> ...].  Thus,
+  at present monadic bindings should include only those patterns that
+  are permissible in [fun].  And perhaps this is the optimal decision.
 
-- Recursive monadic do
-  "A Recursive do for Haskell"
-  Levent Erkoek  and John Launchbury
-  http://www.cse.ogi.edu/PacSoft/projects/rmb/recdo.ps.gz
-
+- The recursive form "[perform rec]" is not implemented completely.
+  It lacks support for a (user-sepecified) fix-point function.  See
+  for example Erkök and Launchbury's
+  {{:http://www.cse.ogi.edu/PacSoft/projects/rmb/recdo.ps.gz} "A
+  Recursive do for Haskell"}.
  *)
 
 

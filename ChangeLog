@@ -1,3 +1,19 @@
+2006-01-21  Lydia van Dijk  <lvandijk@freenet.de>
+
+	Abstract 'world' even more.
+	* io.mli (World): Remove.
+	* io.mli, io.ml (world): New type.
+	('a t): Change from 'World.t' to 'world'.
+	(__conjure_up): Dito.
+
+	* exception.ml (bind): Use natural syntax for case-matching.
+
+2006-01-18  Lydia van Dijk  <lvandijk@freenet.de>
+
+	* README: Move sub-section 'pa_monad' to file 'pa_monad.ml'.
+	* pa_monad: Add paragraph on monad laws from file README.
+	Restructure documentation.  Some rewrites.
+
 2006-01-17  Lydia van Dijk  <lvandijk@freenet.de>
 
 	* COPYING: Replace GPL with LGPL.
@@ -6,7 +22,7 @@
 
 2006-01-16  Oleg Kiselyov <oleg@pobox.com>
 
-	* pa_monad.ml: Update documentation concerning the disdussions on
+	* pa_monad.ml: Update documentation concerning the discussions on
 	the Haskell mailing list.
 	* test-syntax (test_binding_let_int): New test.
 	(test_advanced_let): Dito.
@@ -25,7 +41,7 @@
 	* Makefile (exists): Remove macro.
 	(join-by): Dito.
 	(SYNTAX-EXTENSION): Rename 'SYNTAX_EXTENSION'.
-	(PP): Adapt to raneming of 'SYNTAX-EXTENSION'.
+	(PP): Adapt to renaming of 'SYNTAX-EXTENSION'.
 	(all): Dito.
 	(doc): Dito.
 	(top-level): Dito.

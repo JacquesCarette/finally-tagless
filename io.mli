@@ -1,7 +1,7 @@
 (* name:          io.mli
  * synopsis:      Interface of rudimentary IO-Monad
  * author:        Lydia E. Van Dijk
- * last revision: Mon Jan 16 10:53:41 UTC 2006
+ * last revision: Sat Jan 21 18:34:13 UTC 2006
  * ocaml version: 3.09.0
  *
  * Copyright (C) 2006  J. Carette, L. E. van Dijk, O. Kiselyov
@@ -22,9 +22,6 @@
  *)
 
 
-module World: sig type t end
-
-
 (** {3: IO-Monad} *)
 
 type error =
@@ -33,10 +30,13 @@ type error =
   | SysError of string
 
 
-type 'a t = World.t -> 'a * World.t
+type world
 
 
-val __conjure_up: unit -> World.t
+type 'a t = world -> 'a * world
+
+
+val __conjure_up: unit -> world
 
 val bind: 'a t -> ('a -> 'b t) -> 'b t
 val return: 'a -> 'a t

@@ -1,7 +1,7 @@
 (* name:          io.ml
  * synopsis:      Rudimentary IO-Monad
  * author:        Lydia E. Van Dijk
- * last revision: Mon Jan 16 10:53:22 UTC 2006
+ * last revision: Sat Jan 21 18:38:54 UTC 2006
  * ocaml version: 3.09.0
  *
  * Copyright (C) 2006  J. Carette, L. E. van Dijk, O. Kiselyov
@@ -38,7 +38,10 @@ type error =
   | SysError of string
 
 
-type 'a t = World.t -> 'a * World.t
+type world = World.t
+
+
+type 'a t = world -> 'a * world
 
 
 let __conjure_up () =

@@ -84,19 +84,6 @@ have a look at the examples "exception.ml" or
 See the section "Known Issues" in the documentation.
 
 
-** pa_monad
-
-The syntax extension "pa_monad" converts expressions involving the new
-keyword "perform" into core OCaml code.  By the nature of the
-translation process (at pre-processing time, before compilation) it
-cannot be guaranteed that the result code actually obeys the three
-fundamental laws for all monads
-  1. bind (return x) f  is identical to  f x
-  2. bind m return      is identical to  m
-  3. bind (bind m f) g  is identical to  bind m (fun x -> bind (f x) g)
-where "bind" and "return" are user defined functions.
-
-
 * How to...
 
 ** Compile

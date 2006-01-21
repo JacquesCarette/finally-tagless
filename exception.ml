@@ -1,7 +1,7 @@
 (* name:          exception.ml
  * synopsis:      exception monad
  * author:        Lydia E. van Dijk
- * last revision: Thu Jan  5 15:47:03 UTC 2006
+ * last revision: Sat Jan 21 18:39:03 UTC 2006
  * ocaml version: 3.09.0
  *
  * Copyright (C) 2006  J. Carette, L. E. van Dijk, O. Kiselyov
@@ -46,10 +46,9 @@ type ('left, 'right) t = ('left, 'right) Either.t
 
 
 let bind an_exception_monad a_function =
-  (function
-       Either.Right value -> a_function value
-     | Either.Left _ as error -> error)
-    an_exception_monad
+  match an_exception_monad with
+      Either.Right value -> a_function value
+    | Either.Left _ as error -> error
 
 
 let return a_value = Either.Right a_value
