@@ -24,8 +24,8 @@
 
 (** {3 Simple Unit-Test Framework}
 
-    [Utest] supplies a simpe framwork for performing unit-tests in an
-    Xtreme Programming style.  It has been influenced by Greg (Gnu
+    [Utest] supplies a simple framework for performing unit-tests in an
+    Extreme Programming style.  It has been influenced by Greg (Gnu
     REGression testing) and Maas-Maarten Zeeman's oUnit. *)
 
 
@@ -39,7 +39,7 @@ type expected_test_outcome =
 
 (** The actual outcome of a test case after it has been run. *)
 type test_outcome =
-    Pass                                (** We expected passing and we passsed. *)
+    Pass                                (** We expected passing and we passed. *)
   | Fail                                (** We expected passing but we failed. *)
   | UPass                               (** We expected failing but we did succeed. *)
   | XFail                               (** We expected failed and we failed. *)
@@ -54,8 +54,8 @@ type test =
 (** Results of some tests. *)
 type test_results = {
   total: int;                           (** Total number of test cases attempted *)
-  passed: int;                          (** Number of passed tessts *)
-  failed: int;                          (** Number of failed tessts *)
+  passed: int;                          (** Number of passed tests *)
+  failed: int;                          (** Number of failed tests *)
   upassed: int;                         (** Number of unexpectedly passed tests *)
   xfailed: int;                         (** Number of expectedly failed tests *)
   unresolved: int                       (** Number of unresolved tests *)
@@ -94,7 +94,7 @@ val expect_fail: string -> (unit -> bool) -> test
 val expect_exception: string -> exn -> (unit -> bool) -> test
 
 
-(** This exception is for the cenvenience of the user.  Raise it if
+(** This exception is for the convenience of the user.  Raise it if
     the test data itself is inconsistent. *)
 exception InconsistentFixture
 
@@ -126,5 +126,5 @@ val eval_with_functional_fixture: (unit -> 'fix) -> ('fix -> test) -> unit -> te
 (** [run_tests ~verbose a_list_of_tests]
 
     Run all tests in [a_list_of_tests].  The [verbose] flag controls
-    whetherthe function prints each test result or just the totals. *)
+    whether the function prints each test result or just the totals. *)
 val run_tests: verbose:bool -> (unit -> test) list -> test_results

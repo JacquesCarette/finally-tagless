@@ -1,7 +1,7 @@
 # name:          Makefile
 # synopsis:      Construction rules for monadic "do" syntax extension
 # authors:       Chris L. Spiel (nifty stuff), Lydia E. van Dijk (boring rest)
-# last revision: Mon Jan 16 14:30:44 UTC 2006
+# last revision: Sun Jan 22 15:48:39 UTC 2006
 # ocaml version: 3.09.0
 
 
@@ -37,6 +37,11 @@ TESTS := pythagorean-triples.ml \
 # Sources of interactive tests.  These files will only be compiled,
 # but not run by any make(1) command.
 INTERACTIVE-TESTS := monadic-io.ml
+
+
+# Names of all modules in addition to the syntax-extension that are
+# documented.
+ADDITIONAL-DOCUMENTED-MODULES := exception.ml io.ml utest.ml
 
 
 # Pre-Precessor-Pretty-Printer for OCaml
@@ -247,10 +252,12 @@ $(TESTS:.ml=.cmo): %.cmo: %.ml
 #
 ########################################################################
 
-# Generate the documentation for all of our syntax extensions.
-$(HTML-DOCUMENTATION)/$(SYNTAX-EXTENSION:.cmo=).html: $(SYNTAX-EXTENSION:.cmo=.ml)
+# Generate the documentation for our syntax extension.
+$(HTML-DOCUMENTATION)/$(SYNTAX-EXTENSION:.cmo=).html: \
+  $(SYNTAX-EXTENSION:.cmo=.ml) $(ADDITIONAL-DOCUMENTED-MODULES:.ml=.cmi)
 	test -d $(HTML-DOCUMENTATION) || mkdir $(HTML-DOCUMENTATION)
-	$(OCAMLDOC) $(OCAMLDOCFLAGS) -html -d $(HTML-DOCUMENTATION) -o $@ $^
+	$(OCAMLDOC) $(OCAMLDOCFLAGS) -html -d $(HTML-DOCUMENTATION) \
+	    -o $@ $< $(ADDITIONAL-DOCUMENTED-MODULES:.ml=.mli) $(ADDITIONAL-DOCUMENTED-MODULES)
 
 
 # Additional dependencies of the exception monad

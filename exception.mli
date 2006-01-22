@@ -22,14 +22,14 @@
  *)
 
 
-(** An [ExceptionMonad] is the purely functional replacement of
+(** Exception is a purely functional replacement of
     OCaml's built-in exceptions.
 
-    To indicate a normal value use {!ExceptionMonad.return}.  For
-    exceptional conditions use {!ExceptionMonad.throw}.  Function
-    {!ExceptionMonad.catch} splices in an exception handler into the
+    To indicate a normal value use {!Exception.return}.  For
+    exceptional conditions use {!Exception.throw}.  Function
+    {!Exception.catch} splices in an exception handler into the
     thread of control.  Execute an exception monad with
-    {!ExceptionMonad.run}. *)
+    {!Exception.run}. *)
 
 
 (** Type of an exception monad.  ['left] is the exception's type and
@@ -67,7 +67,7 @@ val catch: ('left, 'right) t -> ('left -> ('new_left, 'right) t) -> ('new_left, 
 
 (** [run a_failure_function a_success_function a_monad]
 
-    Run [a_monad].  If [a_monad] does not {!ExceptionMonad.throw} an
+    Run [a_monad].  If [a_monad] does not {!Exception.throw} an
     exception, pass the result of evaluating the monad to
     [a_success_function].  Otherwise, if the [a_monad] throws, pass
     the exception to [a_failure_function]. *)

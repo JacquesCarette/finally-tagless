@@ -1,11 +1,13 @@
 (* name:          monadic-io.ml
  * synopsis:      Do input/output in a monadic way
  * author:        Lydia E. Van Dijk
- * last revision: Tue Jan 17 08:34:35 UTC 2006
+ * last revision: Sun Jan 22 08:59:34 UTC 2006
  * ocaml version: 3.09.0 *)
 
 
 let bind = Io.bind
+let (>>=) = bind
+let (>!=) = Io.catch
 
 
 let print_upcased a_string =
@@ -20,57 +22,59 @@ let print_upcased a_string =
 
 
 let rec process_line a_channel =
-  perform
-    Io.print_string "> ";
-    Exception.run
-      (fun _e -> Io.prerr_endline "*** exit via signal ***")
-      (fun io ->
+  Io.catch
+    (perform
+       Io.print_string "> ";
+       s <-- Io.read_line ();
+       if s = "" then Io.prerr_endline "*** exit via line-feed ***"
+       else
          perform
-           s <-- io;
-           if s = "" then Io.prerr_endline "*** exit via line-feed ***"
-           else
-             perform
-               Io.output_string a_channel s;
-               Io.output_char a_channel '\n';
-               print_upcased s;
-               Io.print_newline ();
-               process_line a_channel)
-      (Io.read_line ())
+           Io.output_string a_channel s;
+           Io.output_char a_channel '\n';
+           print_upcased s;
+           Io.print_newline ();
+           process_line a_channel)
+    (fun _e -> Io.prerr_endline "*** exit via signal ***")
 
 
 let to_uppercase () =
-  Exception.run
-    (function Io.SysError s -> Io.prerr_endline ("o/s error: \"" ^ s ^ "\"")
-       | _ -> Io.prerr_endline "unknown error")
-    (fun io ->
-       perform
-         ch <-- io;
-         process_line ch;
-         Exception.run
-           (fun _e -> Io.return ())   (* ignore errors of [close_out] *)
-           (fun io -> io)
-           (Io.close_out ch))
-    (Io.open_out "transcript.log")
-
-
-(*
-let to_uppercase' () =
-  perform with module Exception in
-    io <-- Io.open_out "transcript.log";
-    Exception.return
-      (perform
-         ch <-- io;
-         process_line ch);
-*)
+  perform
+    let filename = "transcript.log" in
+      ch <-- Io.open_out filename >!=
+               (fun e ->
+                  perform
+                    Io.prerr_endline ("*** failed to open file \"" ^ filename ^ "\": " ^
+                                        match e with
+                                            Io.SysError s -> "system error \"" ^ s ^ "\""
+                                          | _e -> "unknown error");
+                    Io.throw e);
+      process_line ch;
+      Io.close_out ch >!= (fun _e ->
+                             Io.prerr_endline ("*** failed to close file \"" ^
+                                                 filename ^
+                                                 "\""))
 
 
 let main () =
   perform
     Io.print_endline "Monadic I/O";
+    Io.print_endline "Translate lines of text to uppercase.";
+    Io.print_endline "An empty line or SIGQUIT terminate.";
     to_uppercase ();
     Io.print_endline "done."
 
 
 let () =
-  let world = Io.__conjure_up () in
-    ignore (main () world)
+  let string_of_exception = function
+      Io.EndOfFile -> "end of file"
+    | Io.IntOfString -> "integer of string"
+    | Io.SysError s -> "operating system error: \"" ^ s ^ "\""
+  and world = Io.__conjure_up () in
+    ignore
+      begin
+        (Io.catch
+           (main ())
+           (fun e -> Io.prerr_endline ("*** uncaught I/O error: " ^
+                                         string_of_exception e)))
+          world
+      end

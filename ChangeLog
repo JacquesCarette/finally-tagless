@@ -1,3 +1,15 @@
+2006-01-22  Lydia van Dijk  <lvandijk@freenet.de>
+
+	Extend I/O-monad to get 'built-in' exception handling capability.
+	* io.mli, io.ml: Drop dependency of exception monad.  Rewrite to
+	integrate exception-handling capability with existing
+	functionality.  Add documentation.
+	* monadic-io.ml: Rewrite to work with new version of I/O-monad.
+
+	* Makefile (ADDITIONAL-DOCUMENTED-MODULES): New variable.
+	($(HTML-DOCUMENTATION)/$(SYNTAX-EXTENSION:.cmo=).html): Also
+	generate documentation for 'ADDITIONAL-DOCUMENTED-MODULES'.
+
 2006-01-21  Lydia van Dijk  <lvandijk@freenet.de>
 
 	Abstract 'world' even more.

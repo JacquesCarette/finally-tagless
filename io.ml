@@ -1,7 +1,7 @@
 (* name:          io.ml
  * synopsis:      Rudimentary IO-Monad
  * author:        Lydia E. Van Dijk
- * last revision: Sat Jan 21 18:38:54 UTC 2006
+ * last revision: Sun Jan 22 08:59:49 UTC 2006
  * ocaml version: 3.09.0
  *
  * Copyright (C) 2006  J. Carette, L. E. van Dijk, O. Kiselyov
@@ -41,7 +41,10 @@ type error =
 type world = World.t
 
 
-type 'a t = world -> 'a * world
+type ('left, 'right) either = Left of 'left | Right of 'right
+
+
+type 'a t = world -> (error, 'a) either * world
 
 
 let __conjure_up () =
@@ -50,100 +53,110 @@ let __conjure_up () =
 
 let bind an_iomonad a_function =
   fun w ->
-    let result, w' =
-      an_iomonad w
-    in
-      a_function result w'
+    match an_iomonad w with
+        (Left _e, _w) as error -> error
+      | Right result, w' -> a_function result w'
 
 
-let return x =
-  fun w -> x, w
+let return a_value =
+  fun w -> Right a_value, w
+
+
+let throw an_error =
+  fun w -> Left an_error, w
+
+
+let catch an_iomonad a_handler_function =
+  fun w ->
+    match an_iomonad w with
+        Left error, w' -> a_handler_function error w'
+      | (Right _r, _w) as result -> result
 
 
 (* Output Functions *)
 
 let print_char a_character =
-  fun w -> Pervasives.print_char a_character, w
+  return (Pervasives.print_char a_character)
 
 
 let print_string a_string =
-  fun w -> Pervasives.print_string a_string, w
+  return (Pervasives.print_string a_string)
 
 
 let print_int an_integer =
-  fun w -> Pervasives.print_int an_integer, w
+  return (Pervasives.print_int an_integer)
 
 
 let print_float a_float =
-  fun w -> Pervasives.print_float a_float, w
+  return (Pervasives.print_float a_float)
 
 
 let print_endline a_string =
-  fun w -> Pervasives.print_endline a_string, w
+  return (Pervasives.print_endline a_string)
 
 
 let print_newline () =
-  fun w -> Pervasives.print_newline (), w
+  return (Pervasives.print_newline ())
 
 
 let prerr_char a_character =
-  fun w -> Pervasives.prerr_char a_character, w
+  return (Pervasives.prerr_char a_character)
 
 
 let prerr_string a_string =
-  fun w -> Pervasives.prerr_string a_string, w
+  return (Pervasives.prerr_string a_string)
 
 
 let prerr_int an_integer =
-  fun w -> Pervasives.prerr_int an_integer, w
+  return (Pervasives.prerr_int an_integer)
 
 
 let prerr_float a_float =
-  fun w -> Pervasives.prerr_float a_float, w
+  return (Pervasives.prerr_float a_float)
 
 
 let prerr_endline a_string =
-  fun w -> Pervasives.prerr_endline a_string, w
+  return (Pervasives.prerr_endline a_string)
 
 
 let prerr_newline () =
-  fun w -> Pervasives.prerr_newline (), w
+  return (Pervasives.prerr_newline ())
 
 
 (* Input Functions *)
 
 let read_line () =
-  try Exception.return (fun w -> Pervasives.read_line (), w)
-  with End_of_file -> Exception.throw EndOfFile
+  try return (Pervasives.read_line ())
+  with End_of_file -> throw EndOfFile
 
 
 let read_int () =
-  try Exception.return (fun w -> Pervasives.read_int (), w)
+  try return (Pervasives.read_int ())
   with
-      End_of_file -> Exception.throw EndOfFile
-    | Failure "int_of_string" -> Exception.throw IntOfString
+      End_of_file -> throw EndOfFile
+    | Failure "int_of_string" -> throw IntOfString
 
 
 let read_float () =
-  try Exception.return (fun w -> Pervasives.read_float (), w)
-  with End_of_file -> Exception.throw EndOfFile
+  try return (Pervasives.read_float ())
+  with End_of_file -> throw EndOfFile
 
 
 (* General Output Functions *)
 
 let open_out a_filename =
-  try Exception.return (fun w -> Pervasives.open_out a_filename, w)
-  with Sys_error s -> Exception.throw (SysError s)
+  try return (Pervasives.open_out a_filename)
+  with Sys_error s -> throw (SysError s)
 
 
 let output_char a_channel a_char =
-  fun w -> Pervasives.output_char a_channel a_char, w
+  return (Pervasives.output_char a_channel a_char)
 
 
 let output_string a_channel a_string =
-  fun w -> Pervasives.output_string a_channel a_string, w
+  return (Pervasives.output_string a_channel a_string)
 
 
 let close_out a_channel =
-  try Exception.return (fun w -> Pervasives.close_out a_channel, w)
-  with Sys_error s -> Exception.throw (SysError s)
+  try return (Pervasives.close_out a_channel)
+  with Sys_error s -> throw (SysError s)
