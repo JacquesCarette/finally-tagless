@@ -1,3 +1,17 @@
+2006-01-29  Lydia van Dijk  <lvandijk@freenet.de>
+
+	Attach 'rec' keyword to individial binding, not to the 'perform'
+	keyword.
+	* pa_monad: Update documentation.
+	(convert): Remove parameter 'is_recursive'.  React to
+	recursive flag in each (intermediate) 'let'-binding individually.
+	(Pcaml.expr: LEVEL"expr1"): Drop all 'perform' 'rec' rules.
+	(Pcaml.expr: BEFORE "apply"): Add 'rec' rule with the correct
+	level for the expression at the lheft-hand side of the
+	'<--'-operator.
+	* test-rec.ml: Translate all examples from 'perform rec' to
+	'perform'; decorate bindings with 'rec' accordingly.
+
 2006-01-22  Lydia van Dijk  <lvandijk@freenet.de>
 
 	Extend I/O-monad to get 'built-in' exception handling capability.

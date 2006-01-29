@@ -33,7 +33,7 @@ type test_outcome =
   | Fail
   | UPass
   | XFail
-  | Unresolved
+  | Unresolved of string
 
 
 type test =
@@ -92,12 +92,12 @@ let run_single_testcase an_expected_outcome a_test_function a_fixture =
         ExpectPass ->
           begin
             try if a_test_function a_fixture then Pass else Fail
-            with _any_exception -> Unresolved
+            with any_exception -> Unresolved (Printexc.to_string any_exception)
           end
       | ExpectFail ->
           begin
             try if a_test_function a_fixture then UPass else XFail
-            with _any_exception -> Unresolved
+            with any_exception -> Unresolved (Printexc.to_string any_exception)
           end
       | ExpectException x ->
           begin
@@ -128,8 +128,9 @@ let run_tests ~verbose a_list_of_tests =
              | XFail ->
                  if verbose then print_endline ("XFAIL: " ^ title);
                  {a with total = succ a.total; xfailed = succ a.xfailed}
-             | Unresolved ->
-                 if verbose then print_endline ("UNRESOLVED: " ^ title);
+             | Unresolved s ->
+                 if verbose then
+                   print_endline ("UNRESOLVED: " ^ title ^ " (exception: " ^ s ^ ")");
                  {a with total = succ a.total; unresolved = succ a.unresolved})
       {total = 0; passed = 0; failed = 0; upassed = 0; xfailed = 0; unresolved = 0}
       a_list_of_tests

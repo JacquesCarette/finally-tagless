@@ -43,7 +43,8 @@ type test_outcome =
   | Fail                                (** We expected passing but we failed. *)
   | UPass                               (** We expected failing but we did succeed. *)
   | XFail                               (** We expected failed and we failed. *)
-  | Unresolved                          (** An unexpected exception occurred. *)
+  | Unresolved of string                (** An unexpected exception occurred.
+                                            The argument is the exception's text, *)
 
 
 (** A test itself. *)
