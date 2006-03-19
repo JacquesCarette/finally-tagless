@@ -1,7 +1,7 @@
 (* name:          utest.mli
  * synopsis:      simple unit-test framework
  * author:        Lydia E. van Dijk
- * last revision: Fri Jan 13 10:13:01 UTC 2006
+ * last revision: Fri Feb 10 14:27:27 UTC 2006
  * ocaml version: 3.09.0
  *
  * Copyright (C) 2006  J. Carette, L. E. van Dijk, O. Kiselyov
@@ -124,8 +124,16 @@ val eval_with_imperative_fixture: (unit -> 'fix) -> ('fix -> test) -> ('fix -> u
 val eval_with_functional_fixture: (unit -> 'fix) -> ('fix -> test) -> unit -> test
 
 
+(** Verbosity level when running tests *)
+type verbosity =
+    PrintNothing        (** Do not print anything *)
+  | PrintFailedTests    (** Only print failed tests *)
+  | PrintTestTotals     (** Show test totals *)
+  | PrintAllTests       (** Display each single test *)
+
+
 (** [run_tests ~verbose a_list_of_tests]
 
     Run all tests in [a_list_of_tests].  The [verbose] flag controls
     whether the function prints each test result or just the totals. *)
-val run_tests: verbose:bool -> (unit -> test) list -> test_results
+val run_tests: verbosity -> (unit -> test) list -> test_results

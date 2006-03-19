@@ -1,7 +1,7 @@
 (* name:          utest.ml
  * synopsis:      simple unit-test framework
  * author:        Lydia E. van Dijk
- * last revision: Fri Jan 13 10:12:57 UTC 2006
+ * last revision: Sun Mar 19 15:41:50 UTC 2006
  * ocaml version: 3.09.0
  *
  * Copyright (C) 2006  J. Carette, L. E. van Dijk, O. Kiselyov
@@ -110,40 +110,62 @@ let run_single_testcase an_expected_outcome a_test_function a_fixture =
           end
 
 
-let run_tests ~verbose a_list_of_tests =
+type verbosity =
+    PrintNothing
+  | PrintFailedTests
+  | PrintTestTotals
+  | PrintAllTests
+
+
+let (<=~) a_level another_level =
+  let int_of_verbosity = function
+      PrintNothing -> 0
+    | PrintFailedTests -> 1
+    | PrintTestTotals -> 2
+    | PrintAllTests -> 3
+  in
+    int_of_verbosity a_level <= int_of_verbosity another_level
+
+
+let run_tests a_verbosity_level a_list_of_tests =
   let results =
     List.fold_left
       (fun a x ->
          let TestCase (title, expect, test) = x () in
            match run_single_testcase expect test () with
                Pass ->
-                 if verbose then print_endline ("PASS: " ^ title);
+                 if PrintAllTests <=~ a_verbosity_level then
+                   print_endline ("PASS: " ^ title);
                  {a with total = succ a.total; passed = succ a.passed}
              | Fail ->
-                 if verbose then print_endline ("FAIL: " ^ title);
+                 if PrintFailedTests <=~ a_verbosity_level then
+                   print_endline ("FAIL: " ^ title);
                  {a with total = succ a.total; failed = succ a.failed}
              | UPass ->
-                 if verbose then print_endline ("UPASS: " ^ title);
+                 if PrintAllTests <=~ a_verbosity_level then
+                   print_endline ("UPASS: " ^ title);
                  {a with total = succ a.total; upassed = succ a.upassed}
              | XFail ->
-                 if verbose then print_endline ("XFAIL: " ^ title);
+                 if PrintAllTests <=~ a_verbosity_level then
+                   print_endline ("XFAIL: " ^ title);
                  {a with total = succ a.total; xfailed = succ a.xfailed}
              | Unresolved s ->
-                 if verbose then
+                 if PrintFailedTests <=~ a_verbosity_level then
                    print_endline ("UNRESOLVED: " ^ title ^ " (exception: " ^ s ^ ")");
                  {a with total = succ a.total; unresolved = succ a.unresolved})
       {total = 0; passed = 0; failed = 0; upassed = 0; xfailed = 0; unresolved = 0}
       a_list_of_tests
   in
-    print_string
-      (List.fold_left
-         (fun a (category, count) ->
-            a ^ "# of " ^ category ^ "   " ^ string_of_int count ^ "\n")
-         ""
-         ["testcases attempted ", results.total;
-          "expected passes     ", results.passed;
-          "expected failures   ", results.xfailed;
-          "unexpected passes   ", results.upassed;
-          "unexpected failures ", results.failed;
-          "unresolved testcases", results.unresolved]);
+    if PrintTestTotals <=~ a_verbosity_level then
+      print_string
+        (List.fold_left
+           (fun a (category, count) ->
+              a ^ "# of " ^ category ^ "   " ^ string_of_int count ^ "\n")
+           ""
+           ["testcases attempted ", results.total;
+            "expected passes     ", results.passed;
+            "expected failures   ", results.xfailed;
+            "unexpected passes   ", results.upassed;
+            "unexpected failures ", results.failed;
+            "unresolved testcases", results.unresolved]);
     results

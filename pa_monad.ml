@@ -2,7 +2,7 @@
  * synopsis:      Haskell-like "do" for monads
  * authors:       Jacques Carette and Oleg Kiselyov,
  *                based in part of work of Lydia E. Van Dijk
- * last revision: Sun Jan 29 15:09:37 UTC 2006
+ * last revision: Sun Mar 19 07:42:16 UTC 2006
  * ocaml version: 3.09.0
  *
  * Copyright (C) 2006  J. Carette, L. E. van Dijk, O. Kiselyov
@@ -136,10 +136,13 @@ Formally the grammar of [pa_monad] can be specified as follows.
         <user-function-spec> ::=
                   EXPR ["and" EXPR]
                 | "module" MODULE-NAME
+        <binding> ::=
+                  PATTERN "<--" EXPR
         <perform-body> ::=
                   <LET-FORM> <perform-body>
                 | EXPR
-                | [["rec"] PATTERN "<--"] EXPR ";" <perform-body>
+                | <binding> ";" <perform-body>
+                | "rec" <binding> ["and" <binding> [...]] ";" <perform-body>
 ]}
 where [EXPR] is an OCaml expression {i expr} as defined in Section 6.7
 of the OCaml manual, [MODULE-NAME] a {i module-name} (Sec. 6.3),
@@ -149,9 +152,13 @@ of the OCaml manual, [MODULE-NAME] a {i module-name} (Sec. 6.3),
 The "[rec]" keyword allows for a recursive binding in
 {[
         "rec" PATTERN "<--" EXPR
+        "and" PATTERN "<--" EXPR
+        ...
+        "and" PATTERN "<--" EXPR ";"
 ]}
-The syntax extension groups consecutive "[rec]"-bindings together.
-This is sometimes called segmentation.
+The syntax extension groups all bindings in a "[rec]"-"[and]", but
+it does not group consecutive "[rec]"-bindings.  This grouping is
+sometimes called segmentation.
 
 Example:
 Define a recursive group of bindings consisting of three patterns
@@ -160,10 +167,10 @@ binding PATTERN4/EXPR4, and finally a single recursive binding
 PATTERN5/EXPR5:
 {[
         "rec" PATTERN1 "<--" EXPR1
-        "rec" PATTERN2 "<--" EXPR2
-        "rec" PATTERN3 "<--" EXPR3
-              PATTERN4 "<--" EXPR4
-        "rec" PATTERN5 "<--" EXPR5
+        "and" PATTERN2 "<--" EXPR2
+        "and" PATTERN3 "<--" EXPR3 ";"
+              PATTERN4 "<--" EXPR4 ";"
+        "rec" PATTERN5 "<--" EXPR5 ";"
 ]}
 Please consult Section 7.3 of the Manual for valid recursive
 definitions of values, as the only allowed [PATTERN] in the recursive
@@ -273,9 +280,7 @@ message about an unbound identifier "<--", which is our intention.
   It lacks support for a (user-sepecified) fix-point function.  See
   for example Erkök and Launchbury's
   {{:http://www.cse.ogi.edu/PacSoft/projects/rmb/recdo.ps.gz} "A
-  Recursive do for Haskell"}.  Moreover it is not possible to define
-  several disjoint segments of recursive bindings without an
-  interspersed non-recursive binding.
+  Recursive do for Haskell"}.
  *)
 
 
@@ -315,7 +320,7 @@ let default_failure_expr (_loc: MLast.loc): MLast.expr =
 
     Convert [an_expression] to a (simple) pattern, if we "accidentally" parse
     a pattern as an expression. *)
-(*  The code is based on [pattern_eq_expression] in {i pa_fstream.ml}. *)
+(* The code is based on [pattern_eq_expression] in {i pa_fstream.ml}. *)
 let rec exp_to_patt (_loc: MLast.loc) (an_expression: MLast.expr): MLast.patt =
   match an_expression with
       <:expr< $int:s$ >> -> <:patt< $int:s$ >> (* integer constant *)
@@ -337,7 +342,7 @@ let rec exp_to_patt (_loc: MLast.loc) (an_expression: MLast.expr): MLast.patt =
       let p = exp_to_patt _loc e in
         <:patt< ($p$ : $t$) >>
     | _ -> Stdpp.raise_with_loc _loc
-	     (Stream.Error "exp_to_patt: this pattern is not yet supported")
+             (Stream.Error "exp_to_patt: this pattern is not yet supported")
 
 
 (** [patt_to_exp _loc a_pattern]
@@ -365,7 +370,7 @@ let rec patt_to_exp (_loc: MLast.loc) (a_pattern: MLast.patt): MLast.expr =
       let p = patt_to_exp _loc e in
         <:expr< ($p$ : $t$) >>
     | _ -> Stdpp.raise_with_loc _loc
-	     (Stream.Error "patt_to_exp: this expression is not yet supported")
+             (Stream.Error "patt_to_exp: this expression is not yet supported")
 
 
 
@@ -454,39 +459,27 @@ let convert
                                   (fun [$p$ -> $do_rest []$
                                         | _ -> $a_fail_function$ ]) >>
                     (* recursive monadic binding *)
-                  | <:expr< let $opt:true$ $list:((p, e) :: [])$ in $lid:"<--"$ >> ->
-                      if is_irrefutable_pattern p then
-                        begin
-                            match b2 with (* look ahead... *)
-                                (* another _recursive_ binding follows *)
-                                <:expr< let $opt:true$ $list:((_p, _e) :: [])$ in $lid:"<--"$ >> ->
-                                  do_rest (a_binding_accumulator @ [p, e])
-                                (* We are done with this _segment_ of recursive bindings:
-                                   Spill them in a single [let ... and ... in ...]
-                                   binding then take care of the current expression. *)
-                              | _ ->
-                                  let bindings = a_binding_accumulator @ [p, e] in
-                                  let pattern_list = List.map fst bindings in
-                                  let patterns = tuplify_patt _loc pattern_list
-                                  and patt_as_exp =
-                                    tuplify_expr
-                                      _loc
-                                      (List.map (fun x -> patt_to_exp _loc x) pattern_list)
-                                  in
-                                    <:expr< let rec $list:bindings$ in
-                                              $a_bind_function$
-                                                $patt_as_exp$
-                                                (fun $patterns$ -> $do_rest []$) >>
-                        end
-                      else  (* refutable pattern *)
-                        if a_binding_accumulator <> [] then
-		          Stdpp.raise_with_loc _loc
-		            (Stream.Error "convert: refutable patterns and recursive bindings do not go together")
-                        else
-                          <:expr< $a_bind_function$
-                                    $e$
-                                    (fun [$p$ -> $do_rest []$
-                                          | _ -> $a_fail_function$ ]) >>
+                  | <:expr< let $opt:true$ $list:bindings$ in $lid:"<--"$ >> ->
+                      let pattern_list = List.map fst bindings in
+                      let patterns = tuplify_patt _loc pattern_list
+                      and patt_as_exp =
+                        tuplify_expr
+                          _loc
+                          (List.map (fun x -> patt_to_exp _loc x) pattern_list)
+                      in
+                        List.iter
+                          (fun p ->
+                             if not (is_irrefutable_pattern p) then
+                               Stdpp.raise_with_loc _loc
+                                 (Stream.Error
+                                    ("convert: refutable patterns like '" ^
+                                       Pcaml.string_of Pcaml.pr_patt p ^
+                                       "' and recursive bindings do not go together")))
+                          pattern_list;
+                        <:expr< let rec $list:bindings$ in
+                          $a_bind_function$
+                            $patt_as_exp$
+                            (fun $patterns$ -> $do_rest []$) >>
                   | (* map through the regular let *)
                     <:expr< let $opt:false$ $list:bs$ in $body$ >> ->
                       <:expr< let $opt:false$ $list:bs$ in $do_merge body$ >>
@@ -503,7 +496,7 @@ let convert
 (** [qualify _loc a_module_expression a_function_expression]
 
     Append [a_function_expression] to the module name given in
-    [a_module_expression], this is qualify [a_function_expression] by
+    [a_module_expression], this is, qualify [a_function_expression] by
     [a_module_expression].  Fail if [a_module_expression] is not a valid
     module name. *)
 let qualify
@@ -517,14 +510,14 @@ let qualify
 
 
 (* Here we have to do the same nasty trick that Camlp4 uses and even
-   mentions in its documentation (cf. 'horrible hack' in pa_o.ml).  We
-   see if we can expect [patt <--] succeed.  Here [patt] is a simple
-   pattern and it definitely does not parse as an expression.
-   Rather than resorting to unlimited lookahead and emulating the
-   Pcaml.patt LEVEL simple grammar, we do it the other way around: We
-   make sure that a pattern can always be parsed as an expression and
-   declare "[_]" a valid identifier!  If you attempt to use it,
-   you will get an undefined identifier anyway, so it is safe. *)
+ * mentions in its documentation (cf. 'horrible hack' in pa_o.ml).  We
+ * see if we can expect [patt <--] succeed.  Here [patt] is a simple
+ * pattern and it definitely does not parse as an expression.
+ * Rather than resorting to unlimited lookahead and emulating the
+ * Pcaml.patt LEVEL simple grammar, we do it the other way around: We
+ * make sure that a pattern can always be parsed as an expression and
+ * declare "[_]" a valid identifier!  If you attempt to use it,
+ * you will get an undefined identifier anyway, so it is safe. *)
 
 EXTEND
     GLOBAL: Pcaml.expr;
@@ -563,19 +556,24 @@ EXTEND
       [ "and"; fail_fun = Pcaml.expr -> fail_fun ]
     ] ;
 
+    recursive_monadic_binding:
+    [
+      [ e1 = Pcaml.expr LEVEL "simple"; "<--"; e2 = Pcaml.expr LEVEL "expr1" ->
+        (exp_to_patt _loc e1, e2) ]
+    ] ;
+
     Pcaml.expr: BEFORE "apply"
     [ NONA
-      [ "rec"; e1 = Pcaml.expr LEVEL "simple"; "<--"; e2 = Pcaml.expr LEVEL "expr1" ->
-        let p1 = exp_to_patt _loc e1 in
-          <:expr< let $opt:true$ $list:((p1, e2) :: [])$ in $lid:"<--"$ >> ]
+      [ "rec"; binding_list = LIST1 recursive_monadic_binding SEP "and" ->
+          <:expr< let $opt:true$ $list:binding_list$ in $lid:"<--"$ >> ]
     |
       [ e1 = SELF; "<--"; e2 = Pcaml.expr LEVEL "expr1" ->
         let p1 = exp_to_patt _loc e1 in
           <:expr< let $opt:false$ $list:((p1, e2) :: [])$ in $lid:"<--"$ >> ]
     ] ;
 
-   (* The difference between the expression and patterns is just [_]
-      So, we make [_] identifier. *)
+   (* The difference between the expression and patterns is just [_].
+    * So, we make [_] identifier. *)
    Pcaml.expr: LEVEL "simple"
    [
      [ "_" -> <:expr< $lid:"_"$ >> ]

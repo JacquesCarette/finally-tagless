@@ -1,3 +1,39 @@
+2006-03-19  Lydia van Dijk  <lvandijk@freenet.de>
+
+	Change syntax of recursive bindings to 'rec'-'and'.
+	* pa_monad: Documentation update.
+	(convert): Take a list of recursive bindings.  Simplify logic.
+	Retrofit safety-check for refutable patterns.
+	(EXTEND-recursive_monadic_binding): New non-terminal.
+	(Pcaml.expr: BEFORE "apply"): Parse 'rec'-'and' as a list of
+	bindings.
+	* test-rec.ml (monadic_replace_min_one_pass): Change syntax to
+	'rec'-'and'.
+	(monadic_deviation): Dito.
+
+	* pa_monad: Cosmetic changes in some comments.
+	(convert): Swap 'then' with 'else' branch to get more legible
+	condition.
+	* README: Correctly refer to the license in the file COPYING as
+	'GNU Library General Public License'.  This is the one we want.
+
+2006-02-10  Lydia van Dijk  <lvandijk@freenet.de>
+
+	Finer granularity for unit-test verbosity.
+	* utest.mli (verbosity): New type.
+	(run_tests): Take verbosity as 'verbosity' not a just 'bool'.
+	* utest.ml (verbosity): New type.
+	(<=~): New operator to compare verbosity levels.
+	(run_tests): Print information on test run according to verbosity
+	level.
+	* pythagorean-triples.ml: Adapt to new signature of
+	'Utest.run_tests'.  Choose level where only failed tests are
+	printed.
+	* test-exception.ml: Dito.
+	* test-monad.ml: Dito.
+	* test-rec.ml: Dito.
+	* test-syntax.ml: Dito.
+
 2006-01-29  Lydia van Dijk  <lvandijk@freenet.de>
 
 	Attach 'rec' keyword to individial binding, not to the 'perform'
@@ -5,7 +41,7 @@
 	* pa_monad: Update documentation.
 	(convert): Remove parameter 'is_recursive'.  React to
 	recursive flag in each (intermediate) 'let'-binding individually.
-	(Pcaml.expr: LEVEL"expr1"): Drop all 'perform' 'rec' rules.
+	(Pcaml.expr: LEVEL "expr1"): Drop all 'perform' 'rec' rules.
 	(Pcaml.expr: BEFORE "apply"): Add 'rec' rule with the correct
 	level for the expression at the lheft-hand side of the
 	'<--'-operator.

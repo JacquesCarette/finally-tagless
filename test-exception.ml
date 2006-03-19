@@ -1,7 +1,7 @@
 (* name:          test-exception.ml
    synopsis:      test exception monad
    author:        Lydia E. van Dijk
-   last revision: Mon Jan 16 13:00:19 UTC 2006
+   last revision: Fri Feb 10 14:27:11 UTC 2006
    ocaml version: 3.09.0 *)
 
 
@@ -129,7 +129,7 @@ let test_exception_monad _ =
 (**********************************************************************)
 
 let (_: unit) =
-  let results = Utest.run_tests ~verbose:true [test_exception_monad]
+  let results = Utest.run_tests Utest.PrintFailedTests [test_exception_monad]
   in
     Pervasives.exit
       (if results.Utest.failed <> 0 || results.Utest.unresolved <> 0 then 1 else 0)

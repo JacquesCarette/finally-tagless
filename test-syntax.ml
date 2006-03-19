@@ -1,7 +1,7 @@
 (* name:          test-syntax.ml
  * synopsis:      test the syntax extension "pa_monad"
  * author:        Lydia E. Van Dijk
- * last revision: Fri Jan 13 17:53:07 UTC 2006
+ * last revision: Fri Feb 10 14:27:05 UTC 2006
  * ocaml version: 3.09.0 *)
 
 
@@ -316,7 +316,7 @@ let test_refutable_match_failure _ =
 let (_: unit) =
   let results =
     Utest.run_tests
-      ~verbose:true
+      Utest.PrintFailedTests
       [test_id_int;
        test_seq_int;
        test_binding_int;

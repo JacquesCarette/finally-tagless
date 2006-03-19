@@ -1,7 +1,7 @@
 (* name:          test-monad.ml
  * synopsis:      simple test frame for monadic syntax sugar
  * author:        Lydia E. van Dijk
- * last revision: Sun Jan  1 14:05:06 UTC 2006
+ * last revision: Fri Feb 10 14:26:58 UTC 2006
  * ocaml version: 3.09.0 *)
 
 
@@ -77,7 +77,7 @@ let test_gcd _ =
 let (_: unit) =
   let results =
     Utest.run_tests
-      ~verbose:true
+      Utest.PrintFailedTests
       [test_simple_expression;
        test_one_element_list;
        test_two_element_list;

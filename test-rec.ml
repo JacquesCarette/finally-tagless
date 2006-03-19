@@ -1,7 +1,7 @@
 (* name:          test-rec.ml
  * synopsis:      test recursive bindings of "pa_monad"
  * author:        Lydia E. Van Dijk
- * last revision: Sun Jan 29 15:09:44 UTC 2006
+ * last revision: Sun Mar 19 07:58:25 UTC 2006
  * ocaml version: 3.09.0 *)
 
 
@@ -83,9 +83,9 @@ let monadic_replace_min_one_pass a_tree =
                           (Lazy.force_val right_min)))
   in
     perform
-      rec x <-- lazy (rp_min (a_tree, m));
-      rec t <-- lazy (fst (Lazy.force_val x));
-      rec m <-- lazy (Lazy.force_val (snd (Lazy.force_val x)));
+      rec x <-- lazy (rp_min (a_tree, m))
+      and t <-- lazy (fst (Lazy.force_val x))
+      and m <-- lazy (Lazy.force_val (snd (Lazy.force_val x)));
       return Lazy.force_val t
 
 
@@ -203,11 +203,11 @@ let monadic_deviation a_list_of_lazy_floats =
                     xs)
   in
     perform
-      rec x   <-- lazy (dev ([], 0, 0.0, avg) a_list_of_lazy_floats);
-      rec lst <-- lazy (first_of_lazy_four x);
-      rec n   <-- lazy (Lazy.force_val (second_of_lazy_four x));
-      rec sum <-- lazy (Lazy.force_val (third_of_lazy_four x));
-      rec avg <-- lazy (Lazy.force_val sum /. float_of_int (Lazy.force_val n));
+      rec   x <-- lazy (dev ([], 0, 0.0, avg) a_list_of_lazy_floats)
+      and lst <-- lazy (first_of_lazy_four x)
+      and   n <-- lazy (Lazy.force_val (second_of_lazy_four x))
+      and sum <-- lazy (Lazy.force_val (third_of_lazy_four x))
+      and avg <-- lazy (Lazy.force_val sum /. float_of_int (Lazy.force_val n));
       return Lazy.force_val lst
 
 
@@ -245,7 +245,7 @@ let test_monadic_deviation_one_pass a_fixture =
 let (_: unit) =
   let results =
     Utest.run_tests
-      ~verbose:true
+      Utest.PrintFailedTests
       [test_ones;
        Utest.eval_with_functional_fixture replace_setup test_replace_min_two_pass;
        Utest.eval_with_functional_fixture replace_setup test_replace_min_one_pass;

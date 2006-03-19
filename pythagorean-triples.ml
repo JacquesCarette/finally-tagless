@@ -105,7 +105,7 @@ let test_pythagorean_triples _ =
 (**********************************************************************)
 
 let (_: unit) =
-  let results = Utest.run_tests ~verbose:true [test_pythagorean_triples]
+  let results = Utest.run_tests Utest.PrintFailedTests [test_pythagorean_triples]
   in
     Pervasives.exit
       (if results.Utest.failed <> 0 || results.Utest.unresolved <> 0 then 1 else 0)
