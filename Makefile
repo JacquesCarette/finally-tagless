@@ -163,9 +163,9 @@ top-level: $(SYNTAX-EXTENSION)
 # Remove most files that we can remake
 .PHONY: clean
 clean:
-	rm --force *.cm[iox] *.annot
-	rm --force $(TESTS:.ml=) $(TESTS:.ml=.opt)
-	rm --force $(INTERACTIVE-TESTS:.ml=) $(INTERACTIVE-TESTS:.ml=.opt)
+	rm -f *.cm[iox] *.annot
+	rm -f $(TESTS:.ml=) $(TESTS:.ml=.opt)
+	rm -f $(INTERACTIVE-TESTS:.ml=) $(INTERACTIVE-TESTS:.ml=.opt)
 
 
 # Remove all files that we can remake and all uninteresting ones, too.

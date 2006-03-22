@@ -35,7 +35,10 @@ actually obeys the three fundamental laws for all monads:
 + [bind m return]      is identical to  [m]
 + [bind (bind m f) g]  is identical to  [bind m (fun x -> bind (f x) g)]
 
-where [bind] and [return] are user defined functions.
+where [bind] and [return] are user defined functions. Incidentally, in
+Haskell, too, it is entirely the responsibility of the programmer to
+make sure that [bind] and [return] implemented for a particular Monad
+do indeed obey the above laws.
 
 
 {2 Conversion Rules}
@@ -200,7 +203,7 @@ used in the "[with module]"-form must enclose
 In this section, we abbreviate irrefutable patterns with [ipat] and
 refutable patterns with [rpat].
 {[
-        perform exp                  ===>  exp
+        perform exp1                 ===>  exp1
         perform ipat <-- exp; rest   ===>  bind exp (fun ipat -> perform rest)
         perform rpat <-- exp; rest   ===>  bind exp (fun rpat -> perform rest
                                                          | _ -> failwith "pattern match")
@@ -421,7 +424,7 @@ let convert
     (a_perform_body: MLast.expr)
     (a_bind_function: MLast.expr)
     (a_fail_function: MLast.expr): MLast.expr =
-  let rec loop _loc a_binding_accumulator a_perform_body =
+  let rec loop _loc a_perform_body =
     match a_perform_body with
         <:expr< let $opt:false$ $list:((_patt, _expr) :: [])$ in $lid:"<--"$ >> ->
           Stdpp.raise_with_loc _loc
@@ -430,33 +433,32 @@ let convert
           Stdpp.raise_with_loc _loc
             (Stream.Error "convert: recursive monadic binding cannot be last a \"perform\" body")
       | <:expr< let $opt:false$ $list:bs$ in $body$ >> ->
-          let body' = loop _loc a_binding_accumulator body in
+          let body' = loop _loc body in
             <:expr< let $opt:false$ $list:bs$ in $body'$ >>
       | <:expr< let $opt:true$ $list:bs$ in $body$ >> ->
-          let body' = loop _loc a_binding_accumulator body in
+          let body' = loop _loc body in
             <:expr< let $opt:true$ $list:bs$ in $body'$ >>
       | <:expr< let module $m$ = $mb$ in $body$ >> ->
-          let body' = loop _loc a_binding_accumulator body in
+          let body' = loop _loc body in
             <:expr< let module $m$ = $mb$ in $body'$ >>
       | <:expr< do { $list:(b1 :: b2 :: bs)$ } >> ->
-          let do_rest an_accumulator =
-            loop _loc an_accumulator
+          let do_rest () =
+            loop _loc
               (match bs with
                    [] -> b2
                  | _  -> <:expr< do { $list:(b2 :: bs)$ } >>)
           and do_merge a_body =
-            loop _loc a_binding_accumulator
-              <:expr< do { $list:(a_body :: b2 :: bs)$ } >> in
+            loop _loc <:expr< do { $list:(a_body :: b2 :: bs)$ } >> in
               begin
                 match b1 with
                     (* monadic binding *)
                     <:expr< let $opt:false$ $list:((p, e) :: [])$ in $lid:"<--"$ >> ->
                       if is_irrefutable_pattern p then
-                        <:expr< $a_bind_function$ $e$ (fun $p$ -> $do_rest []$) >>
+                        <:expr< $a_bind_function$ $e$ (fun $p$ -> $do_rest ()$) >>
                       else
                         <:expr< $a_bind_function$
                                   $e$
-                                  (fun [$p$ -> $do_rest []$
+                                  (fun [$p$ -> $do_rest ()$
                                         | _ -> $a_fail_function$ ]) >>
                     (* recursive monadic binding *)
                   | <:expr< let $opt:true$ $list:bindings$ in $lid:"<--"$ >> ->
@@ -479,7 +481,7 @@ let convert
                         <:expr< let rec $list:bindings$ in
                           $a_bind_function$
                             $patt_as_exp$
-                            (fun $patterns$ -> $do_rest []$) >>
+                            (fun $patterns$ -> $do_rest ()$) >>
                   | (* map through the regular let *)
                     <:expr< let $opt:false$ $list:bs$ in $body$ >> ->
                       <:expr< let $opt:false$ $list:bs$ in $do_merge body$ >>
@@ -487,10 +489,10 @@ let convert
                       <:expr< let $opt:true$ $list:bs$ in $do_merge body$ >>
                   | <:expr< let module $m$ = $mb$ in $body$ >> ->
                       <:expr< let module $m$ = $mb$ in $do_merge body$ >>
-                  | _ -> <:expr< $a_bind_function$ $b1$ (fun _ -> $do_rest []$) >>
+                  | _ -> <:expr< $a_bind_function$ $b1$ (fun _ -> $do_rest ()$) >>
               end
       | any_body -> any_body
-  in loop _loc [] a_perform_body
+  in loop _loc a_perform_body
 
 
 (** [qualify _loc a_module_expression a_function_expression]
@@ -510,7 +512,7 @@ let qualify
 
 
 (* Here we have to do the same nasty trick that Camlp4 uses and even
- * mentions in its documentation (cf. 'horrible hack' in pa_o.ml).  We
+ * mentions in its documentation (viz. 'horrible hack' in pa_o.ml).  We
  * see if we can expect [patt <--] succeed.  Here [patt] is a simple
  * pattern and it definitely does not parse as an expression.
  * Rather than resorting to unlimited lookahead and emulating the
