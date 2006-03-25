@@ -1,3 +1,11 @@
+2006-03-22  Oleg Kiselyov <oleg@pobox.com>
+
+	* Makefile (clean): Use short options in 'rm'-command for
+	compatability with non-GNU tools.
+	* pa_monad.ml: Documentation update.
+	(convert/loop): Remove argument 'a_binding_accumulator'.
+	(convert/loop/do_rest): Remove argument 'an_accumulator'.
+
 2006-03-19  Lydia van Dijk  <lvandijk@freenet.de>
 
 	Change syntax of recursive bindings to 'rec'-'and'.

@@ -2,7 +2,7 @@
  * synopsis:      Haskell-like "do" for monads
  * authors:       Jacques Carette and Oleg Kiselyov,
  *                based in part of work of Lydia E. Van Dijk
- * last revision: Sun Mar 19 07:42:16 UTC 2006
+ * last revision: Wed Mar 22 07:22:00 UTC 2006
  * ocaml version: 3.09.0
  *
  * Copyright (C) 2006  J. Carette, L. E. van Dijk, O. Kiselyov
