@@ -1,7 +1,7 @@
 (* name:          test-rec.ml
  * synopsis:      test recursive bindings of "pa_monad"
  * author:        Lydia E. Van Dijk
- * last revision: Sun Mar 19 07:58:25 UTC 2006
+ * last revision: Sat Apr  1 07:34:02 UTC 2006
  * ocaml version: 3.09.0 *)
 
 
@@ -19,12 +19,12 @@ let test_ones _ =
     (fun () ->
        let ones = perform rec xs <-- 1 :: xs; return xs in
          (* I would like to advise against testing
-            all elements of [ones].  ;-)  - lvd *)
+          * all elements of [ones].  ;-)  - lvd *)
          List.nth ones 0 = 1 && List.nth ones 1 = 1)
 
 
 (* Richard Bird's famous example
-   See also: http://www.cse.ogi.edu/PacSoft/projects/rmb/repMin.html *)
+ * See also: http://www.cse.ogi.edu/PacSoft/projects/rmb/repMin.html *)
 
 type 'a tree =
     Leaf of 'a
@@ -69,9 +69,9 @@ let monadic_replace_min_one_pass a_tree =
       Leaf x, min ->
         perform
           (* In Haskell we would use the IOMonad here.  In OCaml
-             all the fuzz is just ridiculous.
-          print_int (Lazy.force_val x);
-          print_newline (); *)
+           * all the fuzz is just ridiculous.  - lvd
+           *     print_int (Lazy.force_val x);
+           *     print_newline (); *)
           return (Leaf min, x)
     | Branch (left, right), min ->
         perform
@@ -242,7 +242,7 @@ let test_monadic_deviation_one_pass a_fixture =
 
 (**********************************************************************)
 
-let (_: unit) =
+let () =
   let results =
     Utest.run_tests
       Utest.PrintFailedTests
@@ -254,4 +254,7 @@ let (_: unit) =
        Utest.eval_with_functional_fixture deviation_setup test_monadic_deviation_one_pass]
   in
     Pervasives.exit
-      (if results.Utest.failed <> 0 || results.Utest.unresolved <> 0 then 1 else 0)
+      (if results.Utest.failed <> 0 ||
+         results.Utest.unresolved <> 0
+       then 1
+       else 0)

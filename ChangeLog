@@ -1,3 +1,11 @@
+2006-04-01  Lydia van Dijk  <lvandijk@freenet.de>
+
+	* pythagorean-triples.ml: Cosmetic changes.
+	* test-exception.ml: Dito.
+	* test-monad.ml: Dito.
+	* test-rec.ml: Dito.
+	* test-syntax.ml: Dito.
+
 2006-03-22  Oleg Kiselyov <oleg@pobox.com>
 
 	* Makefile (clean): Use short options in 'rm'-command for

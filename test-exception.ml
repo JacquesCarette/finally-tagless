@@ -1,8 +1,8 @@
 (* name:          test-exception.ml
-   synopsis:      test exception monad
-   author:        Lydia E. van Dijk
-   last revision: Fri Feb 10 14:27:11 UTC 2006
-   ocaml version: 3.09.0 *)
+ * synopsis:      test exception monad
+ * author:        Lydia E. van Dijk
+ * last revision: Sat Apr  1 07:33:31 UTC 2006
+ * ocaml version: 3.09.0 *)
 
 
 module type LIMIT =
@@ -115,7 +115,7 @@ let test_exception_monad _ =
               f
               (Arithmetic.string_of_extended v);
             false)
-         (fun v -> v = 127)
+         (fun v -> v = max_number)
          (Exception.catch
             result
             (fun {Arithmetic.value = v; func = _f; cause = _c} as e ->
@@ -128,8 +128,12 @@ let test_exception_monad _ =
 
 (**********************************************************************)
 
-let (_: unit) =
-  let results = Utest.run_tests Utest.PrintFailedTests [test_exception_monad]
+let () =
+  let results =
+    Utest.run_tests Utest.PrintFailedTests [test_exception_monad]
   in
     Pervasives.exit
-      (if results.Utest.failed <> 0 || results.Utest.unresolved <> 0 then 1 else 0)
+      (if results.Utest.failed <> 0 ||
+         results.Utest.unresolved <> 0
+       then 1
+       else 0)

@@ -1,7 +1,7 @@
 (* name:          pythagorean-triples.ml
  * synopsis:      Test non-determinism monad in the simplest possible implementation.
  * authors:       Jacques Carette and Oleg Kiselyov,
- * last revision: Thu Jan  5 15:46:50 UTC 2006
+ * last revision: Sat Apr  1 07:31:40 UTC 2006
  * ocaml version: 3.09.0 *)
 
 
@@ -104,8 +104,11 @@ let test_pythagorean_triples _ =
 
 (**********************************************************************)
 
-let (_: unit) =
+let () =
   let results = Utest.run_tests Utest.PrintFailedTests [test_pythagorean_triples]
   in
     Pervasives.exit
-      (if results.Utest.failed <> 0 || results.Utest.unresolved <> 0 then 1 else 0)
+      (if results.Utest.failed <> 0 ||
+         results.Utest.unresolved <> 0
+       then 1
+       else 0)
