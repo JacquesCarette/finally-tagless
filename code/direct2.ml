@@ -209,7 +209,7 @@ module GenericVectorContainer(Dom:DOMAIN) =
       | None   -> a
   let copy a = fun () ->  { (a ()) with arr = Array.copy (a ()).arr} 
   let swap_rows_stmt b r1 r2 = fun () -> 
-      let a = (b ()).arr and n = (b ()).n and m = (b ()).m in
+      let a = (b ()).arr and m = (b ()).m in
       let i1 = (r1 ())*m and i2 = (r2 ())*m in
       for i = 0 to m-1 do
           let t = a.(i1 + i) in

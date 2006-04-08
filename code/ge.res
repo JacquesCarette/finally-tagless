@@ -1,9 +1,9 @@
-        Objective Caml version 3.08.0
+        Objective Caml version 3.09.1
 
 # # #   val instantiate :
   (('a, 'b) code -> 'c list -> ('d -> 'e -> 'e) -> ('a, 'f) code) ->
   ('a, 'b -> 'f) code = <fun>
-# val resFA1 :
+#   val resFA1 :
   ('a,
    Ge.GenFA1.Ctr.contr ->
    Ge.OutJustMatrix(Infra.FloatDomain)(Infra.GenericArrayContainer)(Ge.NoDet(Infra.FloatDomain)).res)
@@ -270,53 +270,52 @@
     let t_9 = (! t_2) in
     let t_10 = (! t_3) in
     let t_11 = (ref (None)) in
-    let t_23 =
+    let t_22 =
      begin
-      for j_20 = t_9 to (t_6 - 1) do
-       let t_21 = (t_4.arr).((j_20 * t_4.m) + t_10) in
-       if (not (t_21 = 0.)) then
+      for j_19 = t_9 to (t_6 - 1) do
+       let t_20 = (t_4.arr).((j_19 * t_4.m) + t_10) in
+       if (not (t_20 = 0.)) then
         (match (! t_11) with
-         | Some (i_22) ->
-            if ((abs_float (snd i_22)) < (abs_float t_21)) then
-             (t_11 := (Some (j_20, t_21)))
+         | Some (i_21) ->
+            if ((abs_float (snd i_21)) < (abs_float t_20)) then
+             (t_11 := (Some (j_19, t_20)))
             else ()
-         | None -> (t_11 := (Some (j_20, t_21))))
+         | None -> (t_11 := (Some (j_19, t_20))))
        else ()
       done;
       (match (! t_11) with
        | Some (i_12) ->
           if ((fst i_12) <> t_9) then begin
            let a_13 = t_4.arr
-           and n_14 = t_4.n
-           and m_15 = t_4.m in
-           let i1_16 = (t_9 * m_15)
-           and i2_17 = ((fst i_12) * m_15) in
-           for i_18 = 0 to (m_15 - 1) do
-            let t_19 = a_13.(i1_16 + i_18) in
-            a_13.(i1_16 + i_18) <- a_13.(i2_17 + i_18);
-            a_13.(i2_17 + i_18) <- t_19
+           and m_14 = t_4.m in
+           let i1_15 = (t_9 * m_14)
+           and i2_16 = ((fst i_12) * m_14) in
+           for i_17 = 0 to (m_14 - 1) do
+            let t_18 = a_13.(i1_15 + i_17) in
+            a_13.(i1_15 + i_17) <- a_13.(i2_16 + i_17);
+            a_13.(i2_16 + i_17) <- t_18
            done;
            (t_8 := (~- (! t_8)))
           end else ();
           (Some (snd i_12))
        | None -> (None))
      end in
-    (match t_23 with
-     | Some (i_24) ->
+    (match t_22 with
+     | Some (i_23) ->
         begin
-         for j_25 = (t_9 + 1) to (t_6 - 1) do
-          if (not ((t_4.arr).((j_25 * t_4.m) + t_10) = 0.)) then begin
-           for j_26 = (t_10 + 1) to (t_5 - 1) do
-            (t_4.arr).((j_25 * t_4.m) + j_26) <-
-             ((t_4.arr).((j_25 * t_4.m) + j_26) -.
-               (((t_4.arr).((j_25 * t_4.m) + t_10) /.
+         for j_24 = (t_9 + 1) to (t_6 - 1) do
+          if (not ((t_4.arr).((j_24 * t_4.m) + t_10) = 0.)) then begin
+           for j_25 = (t_10 + 1) to (t_5 - 1) do
+            (t_4.arr).((j_24 * t_4.m) + j_25) <-
+             ((t_4.arr).((j_24 * t_4.m) + j_25) -.
+               (((t_4.arr).((j_24 * t_4.m) + t_10) /.
                   (t_4.arr).((t_9 * t_4.m) + t_10)) *.
-                 (t_4.arr).((t_9 * t_4.m) + j_26)))
+                 (t_4.arr).((t_9 * t_4.m) + j_25)))
            done;
-           (t_4.arr).((j_25 * t_4.m) + t_10) <- 0.
+           (t_4.arr).((j_24 * t_4.m) + t_10) <- 0.
           end else ()
          done;
-         (t_7 := ((! t_7) *. i_24))
+         (t_7 := ((! t_7) *. i_23))
         end;
         (t_2 := ((! t_2) + 1))
      | None -> (t_8 := 0));
@@ -340,53 +339,52 @@
     let t_9 = (! t_2) in
     let t_10 = (! t_3) in
     let t_11 = (ref (None)) in
-    let t_23 =
+    let t_22 =
      begin
-      for j_20 = t_9 to (t_6 - 1) do
-       let t_21 = (t_4.arr).((j_20 * t_4.m) + t_10) in
-       if (not (t_21 = 0.)) then
+      for j_19 = t_9 to (t_6 - 1) do
+       let t_20 = (t_4.arr).((j_19 * t_4.m) + t_10) in
+       if (not (t_20 = 0.)) then
         (match (! t_11) with
-         | Some (i_22) ->
-            if ((abs_float (snd i_22)) < (abs_float t_21)) then
-             (t_11 := (Some (j_20, t_21)))
+         | Some (i_21) ->
+            if ((abs_float (snd i_21)) < (abs_float t_20)) then
+             (t_11 := (Some (j_19, t_20)))
             else ()
-         | None -> (t_11 := (Some (j_20, t_21))))
+         | None -> (t_11 := (Some (j_19, t_20))))
        else ()
       done;
       (match (! t_11) with
        | Some (i_12) ->
           if ((fst i_12) <> t_9) then begin
            let a_13 = t_4.arr
-           and n_14 = t_4.n
-           and m_15 = t_4.m in
-           let i1_16 = (t_9 * m_15)
-           and i2_17 = ((fst i_12) * m_15) in
-           for i_18 = 0 to (m_15 - 1) do
-            let t_19 = a_13.(i1_16 + i_18) in
-            a_13.(i1_16 + i_18) <- a_13.(i2_17 + i_18);
-            a_13.(i2_17 + i_18) <- t_19
+           and m_14 = t_4.m in
+           let i1_15 = (t_9 * m_14)
+           and i2_16 = ((fst i_12) * m_14) in
+           for i_17 = 0 to (m_14 - 1) do
+            let t_18 = a_13.(i1_15 + i_17) in
+            a_13.(i1_15 + i_17) <- a_13.(i2_16 + i_17);
+            a_13.(i2_16 + i_17) <- t_18
            done;
            (t_8 := (~- (! t_8)))
           end else ();
           (Some (snd i_12))
        | None -> (None))
      end in
-    (match t_23 with
-     | Some (i_24) ->
+    (match t_22 with
+     | Some (i_23) ->
         begin
-         for j_25 = (t_9 + 1) to (t_6 - 1) do
-          if (not ((t_4.arr).((j_25 * t_4.m) + t_10) = 0.)) then begin
-           for j_26 = (t_10 + 1) to (t_5 - 1) do
-            (t_4.arr).((j_25 * t_4.m) + j_26) <-
-             ((t_4.arr).((j_25 * t_4.m) + j_26) -.
-               (((t_4.arr).((j_25 * t_4.m) + t_10) /.
+         for j_24 = (t_9 + 1) to (t_6 - 1) do
+          if (not ((t_4.arr).((j_24 * t_4.m) + t_10) = 0.)) then begin
+           for j_25 = (t_10 + 1) to (t_5 - 1) do
+            (t_4.arr).((j_24 * t_4.m) + j_25) <-
+             ((t_4.arr).((j_24 * t_4.m) + j_25) -.
+               (((t_4.arr).((j_24 * t_4.m) + t_10) /.
                   (t_4.arr).((t_9 * t_4.m) + t_10)) *.
-                 (t_4.arr).((t_9 * t_4.m) + j_26)))
+                 (t_4.arr).((t_9 * t_4.m) + j_25)))
            done;
-           (t_4.arr).((j_25 * t_4.m) + t_10) <- 0.
+           (t_4.arr).((j_24 * t_4.m) + t_10) <- 0.
           end else ()
          done;
-         (t_7 := ((! t_7) *. i_24))
+         (t_7 := ((! t_7) *. i_23))
         end;
         (t_2 := ((! t_2) + 1))
      | None -> (t_8 := 0));
@@ -411,50 +409,49 @@
     let t_7 = (! t_2) in
     let t_8 = (! t_3) in
     let t_9 = (ref (None)) in
-    let t_21 =
+    let t_20 =
      begin
-      for j_18 = t_7 to (t_6 - 1) do
-       let t_19 = (t_4.arr).((j_18 * t_4.m) + t_8) in
-       if (not (t_19 = 0.)) then
+      for j_17 = t_7 to (t_6 - 1) do
+       let t_18 = (t_4.arr).((j_17 * t_4.m) + t_8) in
+       if (not (t_18 = 0.)) then
         (match (! t_9) with
-         | Some (i_20) ->
-            if ((abs_float (snd i_20)) < (abs_float t_19)) then
-             (t_9 := (Some (j_18, t_19)))
+         | Some (i_19) ->
+            if ((abs_float (snd i_19)) < (abs_float t_18)) then
+             (t_9 := (Some (j_17, t_18)))
             else ()
-         | None -> (t_9 := (Some (j_18, t_19))))
+         | None -> (t_9 := (Some (j_17, t_18))))
        else ()
       done;
       (match (! t_9) with
        | Some (i_10) ->
           if ((fst i_10) <> t_7) then begin
            let a_11 = t_4.arr
-           and n_12 = t_4.n
-           and m_13 = t_4.m in
-           let i1_14 = (t_7 * m_13)
-           and i2_15 = ((fst i_10) * m_13) in
-           for i_16 = 0 to (m_13 - 1) do
-            let t_17 = a_11.(i1_14 + i_16) in
-            a_11.(i1_14 + i_16) <- a_11.(i2_15 + i_16);
-            a_11.(i2_15 + i_16) <- t_17
+           and m_12 = t_4.m in
+           let i1_13 = (t_7 * m_12)
+           and i2_14 = ((fst i_10) * m_12) in
+           for i_15 = 0 to (m_12 - 1) do
+            let t_16 = a_11.(i1_13 + i_15) in
+            a_11.(i1_13 + i_15) <- a_11.(i2_14 + i_15);
+            a_11.(i2_14 + i_15) <- t_16
            done;
            ()
           end else ();
           (Some (snd i_10))
        | None -> (None))
      end in
-    (match t_21 with
-     | Some (i_22) ->
+    (match t_20 with
+     | Some (i_21) ->
         begin
-         for j_23 = (t_7 + 1) to (t_6 - 1) do
-          if (not ((t_4.arr).((j_23 * t_4.m) + t_8) = 0.)) then begin
-           for j_24 = (t_8 + 1) to (t_5 - 1) do
-            (t_4.arr).((j_23 * t_4.m) + j_24) <-
-             ((t_4.arr).((j_23 * t_4.m) + j_24) -.
-               (((t_4.arr).((j_23 * t_4.m) + t_8) /.
+         for j_22 = (t_7 + 1) to (t_6 - 1) do
+          if (not ((t_4.arr).((j_22 * t_4.m) + t_8) = 0.)) then begin
+           for j_23 = (t_8 + 1) to (t_5 - 1) do
+            (t_4.arr).((j_22 * t_4.m) + j_23) <-
+             ((t_4.arr).((j_22 * t_4.m) + j_23) -.
+               (((t_4.arr).((j_22 * t_4.m) + t_8) /.
                   (t_4.arr).((t_7 * t_4.m) + t_8)) *.
-                 (t_4.arr).((t_7 * t_4.m) + j_24)))
+                 (t_4.arr).((t_7 * t_4.m) + j_23)))
            done;
-           (t_4.arr).((j_23 * t_4.m) + t_8) <- 0.
+           (t_4.arr).((j_22 * t_4.m) + t_8) <- 0.
           end else ()
          done;
          ()
@@ -481,53 +478,52 @@
     let t_9 = (! t_2) in
     let t_10 = (! t_3) in
     let t_11 = (ref (None)) in
-    let t_23 =
+    let t_22 =
      begin
-      for j_20 = t_9 to (t_6 - 1) do
-       let t_21 = (t_4.arr).((j_20 * t_4.m) + t_10) in
-       if (not (t_21 = 0.)) then
+      for j_19 = t_9 to (t_6 - 1) do
+       let t_20 = (t_4.arr).((j_19 * t_4.m) + t_10) in
+       if (not (t_20 = 0.)) then
         (match (! t_11) with
-         | Some (i_22) ->
-            if ((abs_float (snd i_22)) < (abs_float t_21)) then
-             (t_11 := (Some (j_20, t_21)))
+         | Some (i_21) ->
+            if ((abs_float (snd i_21)) < (abs_float t_20)) then
+             (t_11 := (Some (j_19, t_20)))
             else ()
-         | None -> (t_11 := (Some (j_20, t_21))))
+         | None -> (t_11 := (Some (j_19, t_20))))
        else ()
       done;
       (match (! t_11) with
        | Some (i_12) ->
           if ((fst i_12) <> t_9) then begin
            let a_13 = t_4.arr
-           and n_14 = t_4.n
-           and m_15 = t_4.m in
-           let i1_16 = (t_9 * m_15)
-           and i2_17 = ((fst i_12) * m_15) in
-           for i_18 = 0 to (m_15 - 1) do
-            let t_19 = a_13.(i1_16 + i_18) in
-            a_13.(i1_16 + i_18) <- a_13.(i2_17 + i_18);
-            a_13.(i2_17 + i_18) <- t_19
+           and m_14 = t_4.m in
+           let i1_15 = (t_9 * m_14)
+           and i2_16 = ((fst i_12) * m_14) in
+           for i_17 = 0 to (m_14 - 1) do
+            let t_18 = a_13.(i1_15 + i_17) in
+            a_13.(i1_15 + i_17) <- a_13.(i2_16 + i_17);
+            a_13.(i2_16 + i_17) <- t_18
            done;
            (t_8 := (~- (! t_8)))
           end else ();
           (Some (snd i_12))
        | None -> (None))
      end in
-    (match t_23 with
-     | Some (i_24) ->
+    (match t_22 with
+     | Some (i_23) ->
         begin
-         for j_25 = (t_9 + 1) to (t_6 - 1) do
-          if (not ((t_4.arr).((j_25 * t_4.m) + t_10) = 0.)) then begin
-           for j_26 = (t_10 + 1) to (t_5 - 1) do
-            (t_4.arr).((j_25 * t_4.m) + j_26) <-
-             ((t_4.arr).((j_25 * t_4.m) + j_26) -.
-               (((t_4.arr).((j_25 * t_4.m) + t_10) /.
+         for j_24 = (t_9 + 1) to (t_6 - 1) do
+          if (not ((t_4.arr).((j_24 * t_4.m) + t_10) = 0.)) then begin
+           for j_25 = (t_10 + 1) to (t_5 - 1) do
+            (t_4.arr).((j_24 * t_4.m) + j_25) <-
+             ((t_4.arr).((j_24 * t_4.m) + j_25) -.
+               (((t_4.arr).((j_24 * t_4.m) + t_10) /.
                   (t_4.arr).((t_9 * t_4.m) + t_10)) *.
-                 (t_4.arr).((t_9 * t_4.m) + j_26)))
+                 (t_4.arr).((t_9 * t_4.m) + j_25)))
            done;
-           (t_4.arr).((j_25 * t_4.m) + t_10) <- 0.
+           (t_4.arr).((j_24 * t_4.m) + t_10) <- 0.
           end else ()
          done;
-         (t_7 := ((! t_7) *. i_24))
+         (t_7 := ((! t_7) *. i_23))
         end;
         (t_2 := ((! t_2) + 1))
      | None -> (t_8 := 0));
@@ -554,71 +550,70 @@
     let t_9 = (! t_2) in
     let t_10 = (! t_3) in
     let t_11 = (ref (None)) in
-    let t_31 =
+    let t_30 =
      begin
-      for j_27 = t_9 to (t_6 - 1) do
-       for j_28 = t_10 to (t_5 - 1) do
-        let t_29 = (t_4.arr).((j_27 * t_4.m) + j_28) in
-        if (not (t_29 = 0.)) then
+      for j_26 = t_9 to (t_6 - 1) do
+       for j_27 = t_10 to (t_5 - 1) do
+        let t_28 = (t_4.arr).((j_26 * t_4.m) + j_27) in
+        if (not (t_28 = 0.)) then
          (match (! t_11) with
-          | Some (i_30) ->
-             if ((abs_float (snd i_30)) < (abs_float t_29)) then
-              (t_11 := (Some ((j_27, j_28), t_29)))
+          | Some (i_29) ->
+             if ((abs_float (snd i_29)) < (abs_float t_28)) then
+              (t_11 := (Some ((j_26, j_27), t_28)))
              else ()
-          | None -> (t_11 := (Some ((j_27, j_28), t_29))))
+          | None -> (t_11 := (Some ((j_26, j_27), t_28))))
         else ()
        done
       done;
       (match (! t_11) with
        | Some (i_12) ->
           if ((snd (fst i_12)) <> t_10) then begin
-           let a_20 = t_4.arr
-           and nm_21 = (t_4.n * t_4.m)
-           and m_22 = t_4.m in
-           let rec loop_23 =
-            fun i1_24 ->
-             fun i2_25 ->
-              if (i2_25 < nm_21) then
-               let t_26 = a_20.(i1_24) in
-               a_20.(i1_24) <- a_20.(i2_25);
-               a_20.(i2_25) <- t_26;
-               (loop_23 (i1_24 + m_22) (i2_25 + m_22))
+           let a_19 = t_4.arr
+           and nm_20 = (t_4.n * t_4.m)
+           and m_21 = t_4.m in
+           let rec loop_22 =
+            fun i1_23 ->
+             fun i2_24 ->
+              if (i2_24 < nm_20) then
+               let t_25 = a_19.(i1_23) in
+               a_19.(i1_23) <- a_19.(i2_24);
+               a_19.(i2_24) <- t_25;
+               (loop_22 (i1_23 + m_21) (i2_24 + m_21))
               else () in
-           (loop_23 t_10 (snd (fst i_12)));
+           (loop_22 t_10 (snd (fst i_12)));
            (t_8 := (~- (! t_8)))
           end else ();
           if ((fst (fst i_12)) <> t_10) then begin
            let a_13 = t_4.arr
-           and n_14 = t_4.n
-           and m_15 = t_4.m in
-           let i1_16 = (t_9 * m_15)
-           and i2_17 = ((fst (fst i_12)) * m_15) in
-           for i_18 = 0 to (m_15 - 1) do
-            let t_19 = a_13.(i1_16 + i_18) in
-            a_13.(i1_16 + i_18) <- a_13.(i2_17 + i_18);
-            a_13.(i2_17 + i_18) <- t_19
+           and m_14 = t_4.m in
+           let i1_15 = (t_9 * m_14)
+           and i2_16 = ((fst (fst i_12)) * m_14) in
+           for i_17 = 0 to (m_14 - 1) do
+            let t_18 = a_13.(i1_15 + i_17) in
+            a_13.(i1_15 + i_17) <- a_13.(i2_16 + i_17);
+            a_13.(i2_16 + i_17) <- t_18
            done;
            (t_8 := (~- (! t_8)))
           end else ();
           (Some (snd i_12))
        | None -> (None))
      end in
-    (match t_31 with
-     | Some (i_32) ->
+    (match t_30 with
+     | Some (i_31) ->
         begin
-         for j_33 = (t_9 + 1) to (t_6 - 1) do
-          if (not ((t_4.arr).((j_33 * t_4.m) + t_10) = 0.)) then begin
-           for j_34 = (t_10 + 1) to (t_5 - 1) do
-            (t_4.arr).((j_33 * t_4.m) + j_34) <-
-             ((t_4.arr).((j_33 * t_4.m) + j_34) -.
-               (((t_4.arr).((j_33 * t_4.m) + t_10) /.
+         for j_32 = (t_9 + 1) to (t_6 - 1) do
+          if (not ((t_4.arr).((j_32 * t_4.m) + t_10) = 0.)) then begin
+           for j_33 = (t_10 + 1) to (t_5 - 1) do
+            (t_4.arr).((j_32 * t_4.m) + j_33) <-
+             ((t_4.arr).((j_32 * t_4.m) + j_33) -.
+               (((t_4.arr).((j_32 * t_4.m) + t_10) /.
                   (t_4.arr).((t_9 * t_4.m) + t_10)) *.
-                 (t_4.arr).((t_9 * t_4.m) + j_34)))
+                 (t_4.arr).((t_9 * t_4.m) + j_33)))
            done;
-           (t_4.arr).((j_33 * t_4.m) + t_10) <- 0.
+           (t_4.arr).((j_32 * t_4.m) + t_10) <- 0.
           end else ()
          done;
-         (t_7 := ((! t_7) *. i_32))
+         (t_7 := ((! t_7) *. i_31))
         end;
         (t_2 := ((! t_2) + 1))
      | None -> (t_8 := 0));
@@ -895,53 +890,52 @@
     let t_9 = (! t_2) in
     let t_10 = (! t_3) in
     let t_11 = (ref (None)) in
-    let t_23 =
+    let t_22 =
      begin
-      for j_20 = t_9 to (t_6 - 1) do
-       let t_21 = (t_4.arr).((j_20 * t_4.m) + t_10) in
-       if (not (t_21 = 0)) then
+      for j_19 = t_9 to (t_6 - 1) do
+       let t_20 = (t_4.arr).((j_19 * t_4.m) + t_10) in
+       if (not (t_20 = 0)) then
         (match (! t_11) with
-         | Some (i_22) ->
-            if ((abs (snd i_22)) > (abs t_21)) then
-             (t_11 := (Some (j_20, t_21)))
+         | Some (i_21) ->
+            if ((abs (snd i_21)) > (abs t_20)) then
+             (t_11 := (Some (j_19, t_20)))
             else ()
-         | None -> (t_11 := (Some (j_20, t_21))))
+         | None -> (t_11 := (Some (j_19, t_20))))
        else ()
       done;
       (match (! t_11) with
        | Some (i_12) ->
           if ((fst i_12) <> t_9) then begin
            let a_13 = t_4.arr
-           and n_14 = t_4.n
-           and m_15 = t_4.m in
-           let i1_16 = (t_9 * m_15)
-           and i2_17 = ((fst i_12) * m_15) in
-           for i_18 = 0 to (m_15 - 1) do
-            let t_19 = a_13.(i1_16 + i_18) in
-            a_13.(i1_16 + i_18) <- a_13.(i2_17 + i_18);
-            a_13.(i2_17 + i_18) <- t_19
+           and m_14 = t_4.m in
+           let i1_15 = (t_9 * m_14)
+           and i2_16 = ((fst i_12) * m_14) in
+           for i_17 = 0 to (m_14 - 1) do
+            let t_18 = a_13.(i1_15 + i_17) in
+            a_13.(i1_15 + i_17) <- a_13.(i2_16 + i_17);
+            a_13.(i2_16 + i_17) <- t_18
            done;
            ()
           end else ();
           (Some (snd i_12))
        | None -> (None))
      end in
-    (match t_23 with
-     | Some (i_24) ->
+    (match t_22 with
+     | Some (i_23) ->
         begin
-         for j_25 = (t_9 + 1) to (t_6 - 1) do
-          if (not ((t_4.arr).((j_25 * t_4.m) + t_10) = 0)) then begin
-           for j_26 = (t_10 + 1) to (t_5 - 1) do
-            (t_4.arr).((j_25 * t_4.m) + j_26) <-
-             ((((t_4.arr).((j_25 * t_4.m) + j_26) *
+         for j_24 = (t_9 + 1) to (t_6 - 1) do
+          if (not ((t_4.arr).((j_24 * t_4.m) + t_10) = 0)) then begin
+           for j_25 = (t_10 + 1) to (t_5 - 1) do
+            (t_4.arr).((j_24 * t_4.m) + j_25) <-
+             ((((t_4.arr).((j_24 * t_4.m) + j_25) *
                  (t_4.arr).((t_9 * t_4.m) + t_10)) -
-                ((t_4.arr).((t_9 * t_4.m) + j_26) *
-                  (t_4.arr).((j_25 * t_4.m) + t_9))) / (! t_7))
+                ((t_4.arr).((t_9 * t_4.m) + j_25) *
+                  (t_4.arr).((j_24 * t_4.m) + t_9))) / (! t_7))
            done;
-           (t_4.arr).((j_25 * t_4.m) + t_10) <- 0
+           (t_4.arr).((j_24 * t_4.m) + t_10) <- 0
           end else ()
          done;
-         (t_7 := i_24)
+         (t_7 := i_23)
         end;
         (t_2 := ((! t_2) + 1))
      | None -> (t_8 := 0));
@@ -965,53 +959,52 @@
     let t_9 = (! t_2) in
     let t_10 = (! t_3) in
     let t_11 = (ref (None)) in
-    let t_23 =
+    let t_22 =
      begin
-      for j_20 = t_9 to (t_6 - 1) do
-       let t_21 = (t_4.arr).((j_20 * t_4.m) + t_10) in
-       if (not (t_21 = 0)) then
+      for j_19 = t_9 to (t_6 - 1) do
+       let t_20 = (t_4.arr).((j_19 * t_4.m) + t_10) in
+       if (not (t_20 = 0)) then
         (match (! t_11) with
-         | Some (i_22) ->
-            if ((abs (snd i_22)) > (abs t_21)) then
-             (t_11 := (Some (j_20, t_21)))
+         | Some (i_21) ->
+            if ((abs (snd i_21)) > (abs t_20)) then
+             (t_11 := (Some (j_19, t_20)))
             else ()
-         | None -> (t_11 := (Some (j_20, t_21))))
+         | None -> (t_11 := (Some (j_19, t_20))))
        else ()
       done;
       (match (! t_11) with
        | Some (i_12) ->
           if ((fst i_12) <> t_9) then begin
            let a_13 = t_4.arr
-           and n_14 = t_4.n
-           and m_15 = t_4.m in
-           let i1_16 = (t_9 * m_15)
-           and i2_17 = ((fst i_12) * m_15) in
-           for i_18 = 0 to (m_15 - 1) do
-            let t_19 = a_13.(i1_16 + i_18) in
-            a_13.(i1_16 + i_18) <- a_13.(i2_17 + i_18);
-            a_13.(i2_17 + i_18) <- t_19
+           and m_14 = t_4.m in
+           let i1_15 = (t_9 * m_14)
+           and i2_16 = ((fst i_12) * m_14) in
+           for i_17 = 0 to (m_14 - 1) do
+            let t_18 = a_13.(i1_15 + i_17) in
+            a_13.(i1_15 + i_17) <- a_13.(i2_16 + i_17);
+            a_13.(i2_16 + i_17) <- t_18
            done;
            (t_8 := (~- (! t_8)))
           end else ();
           (Some (snd i_12))
        | None -> (None))
      end in
-    (match t_23 with
-     | Some (i_24) ->
+    (match t_22 with
+     | Some (i_23) ->
         begin
-         for j_25 = (t_9 + 1) to (t_6 - 1) do
-          if (not ((t_4.arr).((j_25 * t_4.m) + t_10) = 0)) then begin
-           for j_26 = (t_10 + 1) to (t_5 - 1) do
-            (t_4.arr).((j_25 * t_4.m) + j_26) <-
-             ((((t_4.arr).((j_25 * t_4.m) + j_26) *
+         for j_24 = (t_9 + 1) to (t_6 - 1) do
+          if (not ((t_4.arr).((j_24 * t_4.m) + t_10) = 0)) then begin
+           for j_25 = (t_10 + 1) to (t_5 - 1) do
+            (t_4.arr).((j_24 * t_4.m) + j_25) <-
+             ((((t_4.arr).((j_24 * t_4.m) + j_25) *
                  (t_4.arr).((t_9 * t_4.m) + t_10)) -
-                ((t_4.arr).((t_9 * t_4.m) + j_26) *
-                  (t_4.arr).((j_25 * t_4.m) + t_9))) / (! t_7))
+                ((t_4.arr).((t_9 * t_4.m) + j_25) *
+                  (t_4.arr).((j_24 * t_4.m) + t_9))) / (! t_7))
            done;
-           (t_4.arr).((j_25 * t_4.m) + t_10) <- 0
+           (t_4.arr).((j_24 * t_4.m) + t_10) <- 0
           end else ()
          done;
-         (t_7 := i_24)
+         (t_7 := i_23)
         end;
         (t_2 := ((! t_2) + 1))
      | None -> (t_8 := 0));
@@ -1038,53 +1031,52 @@
     let t_9 = (! t_2) in
     let t_10 = (! t_3) in
     let t_11 = (ref (None)) in
-    let t_23 =
+    let t_22 =
      begin
-      for j_20 = t_9 to (t_6 - 1) do
-       let t_21 = (t_4.arr).((j_20 * t_4.m) + t_10) in
-       if (not (t_21 = 0)) then
+      for j_19 = t_9 to (t_6 - 1) do
+       let t_20 = (t_4.arr).((j_19 * t_4.m) + t_10) in
+       if (not (t_20 = 0)) then
         (match (! t_11) with
-         | Some (i_22) ->
-            if ((abs (snd i_22)) > (abs t_21)) then
-             (t_11 := (Some (j_20, t_21)))
+         | Some (i_21) ->
+            if ((abs (snd i_21)) > (abs t_20)) then
+             (t_11 := (Some (j_19, t_20)))
             else ()
-         | None -> (t_11 := (Some (j_20, t_21))))
+         | None -> (t_11 := (Some (j_19, t_20))))
        else ()
       done;
       (match (! t_11) with
        | Some (i_12) ->
           if ((fst i_12) <> t_9) then begin
            let a_13 = t_4.arr
-           and n_14 = t_4.n
-           and m_15 = t_4.m in
-           let i1_16 = (t_9 * m_15)
-           and i2_17 = ((fst i_12) * m_15) in
-           for i_18 = 0 to (m_15 - 1) do
-            let t_19 = a_13.(i1_16 + i_18) in
-            a_13.(i1_16 + i_18) <- a_13.(i2_17 + i_18);
-            a_13.(i2_17 + i_18) <- t_19
+           and m_14 = t_4.m in
+           let i1_15 = (t_9 * m_14)
+           and i2_16 = ((fst i_12) * m_14) in
+           for i_17 = 0 to (m_14 - 1) do
+            let t_18 = a_13.(i1_15 + i_17) in
+            a_13.(i1_15 + i_17) <- a_13.(i2_16 + i_17);
+            a_13.(i2_16 + i_17) <- t_18
            done;
            ()
           end else ();
           (Some (snd i_12))
        | None -> (None))
      end in
-    (match t_23 with
-     | Some (i_24) ->
+    (match t_22 with
+     | Some (i_23) ->
         begin
-         for j_25 = (t_9 + 1) to (t_6 - 1) do
-          if (not ((t_4.arr).((j_25 * t_4.m) + t_10) = 0)) then begin
-           for j_26 = (t_10 + 1) to (t_5 - 1) do
-            (t_4.arr).((j_25 * t_4.m) + j_26) <-
-             ((((t_4.arr).((j_25 * t_4.m) + j_26) *
+         for j_24 = (t_9 + 1) to (t_6 - 1) do
+          if (not ((t_4.arr).((j_24 * t_4.m) + t_10) = 0)) then begin
+           for j_25 = (t_10 + 1) to (t_5 - 1) do
+            (t_4.arr).((j_24 * t_4.m) + j_25) <-
+             ((((t_4.arr).((j_24 * t_4.m) + j_25) *
                  (t_4.arr).((t_9 * t_4.m) + t_10)) -
-                ((t_4.arr).((t_9 * t_4.m) + j_26) *
-                  (t_4.arr).((j_25 * t_4.m) + t_9))) / (! t_7))
+                ((t_4.arr).((t_9 * t_4.m) + j_25) *
+                  (t_4.arr).((j_24 * t_4.m) + t_9))) / (! t_7))
            done;
-           (t_4.arr).((j_25 * t_4.m) + t_10) <- 0
+           (t_4.arr).((j_24 * t_4.m) + t_10) <- 0
           end else ()
          done;
-         (t_7 := i_24)
+         (t_7 := i_23)
         end;
         (t_2 := ((! t_2) + 1))
      | None -> (t_8 := 0));
@@ -1108,53 +1100,52 @@
     let t_9 = (! t_2) in
     let t_10 = (! t_3) in
     let t_11 = (ref (None)) in
-    let t_23 =
+    let t_22 =
      begin
-      for j_20 = t_9 to (t_6 - 1) do
-       let t_21 = (t_4.arr).((j_20 * t_4.m) + t_10) in
-       if (not (t_21 = 0)) then
+      for j_19 = t_9 to (t_6 - 1) do
+       let t_20 = (t_4.arr).((j_19 * t_4.m) + t_10) in
+       if (not (t_20 = 0)) then
         (match (! t_11) with
-         | Some (i_22) ->
-            if ((abs (snd i_22)) > (abs t_21)) then
-             (t_11 := (Some (j_20, t_21)))
+         | Some (i_21) ->
+            if ((abs (snd i_21)) > (abs t_20)) then
+             (t_11 := (Some (j_19, t_20)))
             else ()
-         | None -> (t_11 := (Some (j_20, t_21))))
+         | None -> (t_11 := (Some (j_19, t_20))))
        else ()
       done;
       (match (! t_11) with
        | Some (i_12) ->
           if ((fst i_12) <> t_9) then begin
            let a_13 = t_4.arr
-           and n_14 = t_4.n
-           and m_15 = t_4.m in
-           let i1_16 = (t_9 * m_15)
-           and i2_17 = ((fst i_12) * m_15) in
-           for i_18 = 0 to (m_15 - 1) do
-            let t_19 = a_13.(i1_16 + i_18) in
-            a_13.(i1_16 + i_18) <- a_13.(i2_17 + i_18);
-            a_13.(i2_17 + i_18) <- t_19
+           and m_14 = t_4.m in
+           let i1_15 = (t_9 * m_14)
+           and i2_16 = ((fst i_12) * m_14) in
+           for i_17 = 0 to (m_14 - 1) do
+            let t_18 = a_13.(i1_15 + i_17) in
+            a_13.(i1_15 + i_17) <- a_13.(i2_16 + i_17);
+            a_13.(i2_16 + i_17) <- t_18
            done;
            (t_8 := (~- (! t_8)))
           end else ();
           (Some (snd i_12))
        | None -> (None))
      end in
-    (match t_23 with
-     | Some (i_24) ->
+    (match t_22 with
+     | Some (i_23) ->
         begin
-         for j_25 = (t_9 + 1) to (t_6 - 1) do
-          if (not ((t_4.arr).((j_25 * t_4.m) + t_10) = 0)) then begin
-           for j_26 = (t_10 + 1) to (t_5 - 1) do
-            (t_4.arr).((j_25 * t_4.m) + j_26) <-
-             ((((t_4.arr).((j_25 * t_4.m) + j_26) *
+         for j_24 = (t_9 + 1) to (t_6 - 1) do
+          if (not ((t_4.arr).((j_24 * t_4.m) + t_10) = 0)) then begin
+           for j_25 = (t_10 + 1) to (t_5 - 1) do
+            (t_4.arr).((j_24 * t_4.m) + j_25) <-
+             ((((t_4.arr).((j_24 * t_4.m) + j_25) *
                  (t_4.arr).((t_9 * t_4.m) + t_10)) -
-                ((t_4.arr).((t_9 * t_4.m) + j_26) *
-                  (t_4.arr).((j_25 * t_4.m) + t_9))) / (! t_7))
+                ((t_4.arr).((t_9 * t_4.m) + j_25) *
+                  (t_4.arr).((j_24 * t_4.m) + t_9))) / (! t_7))
            done;
-           (t_4.arr).((j_25 * t_4.m) + t_10) <- 0
+           (t_4.arr).((j_24 * t_4.m) + t_10) <- 0
           end else ()
          done;
-         (t_7 := i_24)
+         (t_7 := i_23)
         end;
         (t_2 := ((! t_2) + 1))
      | None -> (t_8 := 0));
@@ -1181,71 +1172,70 @@
     let t_9 = (! t_2) in
     let t_10 = (! t_3) in
     let t_11 = (ref (None)) in
-    let t_31 =
+    let t_30 =
      begin
-      for j_27 = t_9 to (t_6 - 1) do
-       for j_28 = t_10 to (t_5 - 1) do
-        let t_29 = (t_4.arr).((j_27 * t_4.m) + j_28) in
-        if (not (t_29 = 0)) then
+      for j_26 = t_9 to (t_6 - 1) do
+       for j_27 = t_10 to (t_5 - 1) do
+        let t_28 = (t_4.arr).((j_26 * t_4.m) + j_27) in
+        if (not (t_28 = 0)) then
          (match (! t_11) with
-          | Some (i_30) ->
-             if ((abs (snd i_30)) > (abs t_29)) then
-              (t_11 := (Some ((j_27, j_28), t_29)))
+          | Some (i_29) ->
+             if ((abs (snd i_29)) > (abs t_28)) then
+              (t_11 := (Some ((j_26, j_27), t_28)))
              else ()
-          | None -> (t_11 := (Some ((j_27, j_28), t_29))))
+          | None -> (t_11 := (Some ((j_26, j_27), t_28))))
         else ()
        done
       done;
       (match (! t_11) with
        | Some (i_12) ->
           if ((snd (fst i_12)) <> t_10) then begin
-           let a_20 = t_4.arr
-           and nm_21 = (t_4.n * t_4.m)
-           and m_22 = t_4.m in
-           let rec loop_23 =
-            fun i1_24 ->
-             fun i2_25 ->
-              if (i2_25 < nm_21) then
-               let t_26 = a_20.(i1_24) in
-               a_20.(i1_24) <- a_20.(i2_25);
-               a_20.(i2_25) <- t_26;
-               (loop_23 (i1_24 + m_22) (i2_25 + m_22))
+           let a_19 = t_4.arr
+           and nm_20 = (t_4.n * t_4.m)
+           and m_21 = t_4.m in
+           let rec loop_22 =
+            fun i1_23 ->
+             fun i2_24 ->
+              if (i2_24 < nm_20) then
+               let t_25 = a_19.(i1_23) in
+               a_19.(i1_23) <- a_19.(i2_24);
+               a_19.(i2_24) <- t_25;
+               (loop_22 (i1_23 + m_21) (i2_24 + m_21))
               else () in
-           (loop_23 t_10 (snd (fst i_12)));
+           (loop_22 t_10 (snd (fst i_12)));
            (t_8 := (~- (! t_8)))
           end else ();
           if ((fst (fst i_12)) <> t_10) then begin
            let a_13 = t_4.arr
-           and n_14 = t_4.n
-           and m_15 = t_4.m in
-           let i1_16 = (t_9 * m_15)
-           and i2_17 = ((fst (fst i_12)) * m_15) in
-           for i_18 = 0 to (m_15 - 1) do
-            let t_19 = a_13.(i1_16 + i_18) in
-            a_13.(i1_16 + i_18) <- a_13.(i2_17 + i_18);
-            a_13.(i2_17 + i_18) <- t_19
+           and m_14 = t_4.m in
+           let i1_15 = (t_9 * m_14)
+           and i2_16 = ((fst (fst i_12)) * m_14) in
+           for i_17 = 0 to (m_14 - 1) do
+            let t_18 = a_13.(i1_15 + i_17) in
+            a_13.(i1_15 + i_17) <- a_13.(i2_16 + i_17);
+            a_13.(i2_16 + i_17) <- t_18
            done;
            (t_8 := (~- (! t_8)))
           end else ();
           (Some (snd i_12))
        | None -> (None))
      end in
-    (match t_31 with
-     | Some (i_32) ->
+    (match t_30 with
+     | Some (i_31) ->
         begin
-         for j_33 = (t_9 + 1) to (t_6 - 1) do
-          if (not ((t_4.arr).((j_33 * t_4.m) + t_10) = 0)) then begin
-           for j_34 = (t_10 + 1) to (t_5 - 1) do
-            (t_4.arr).((j_33 * t_4.m) + j_34) <-
-             ((((t_4.arr).((j_33 * t_4.m) + j_34) *
+         for j_32 = (t_9 + 1) to (t_6 - 1) do
+          if (not ((t_4.arr).((j_32 * t_4.m) + t_10) = 0)) then begin
+           for j_33 = (t_10 + 1) to (t_5 - 1) do
+            (t_4.arr).((j_32 * t_4.m) + j_33) <-
+             ((((t_4.arr).((j_32 * t_4.m) + j_33) *
                  (t_4.arr).((t_9 * t_4.m) + t_10)) -
-                ((t_4.arr).((t_9 * t_4.m) + j_34) *
-                  (t_4.arr).((j_33 * t_4.m) + t_9))) / (! t_7))
+                ((t_4.arr).((t_9 * t_4.m) + j_33) *
+                  (t_4.arr).((j_32 * t_4.m) + t_9))) / (! t_7))
            done;
-           (t_4.arr).((j_33 * t_4.m) + t_10) <- 0
+           (t_4.arr).((j_32 * t_4.m) + t_10) <- 0
           end else ()
          done;
-         (t_7 := i_32)
+         (t_7 := i_31)
         end;
         (t_2 := ((! t_2) + 1))
      | None -> (t_8 := 0));
