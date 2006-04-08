@@ -2,7 +2,7 @@
  * synopsis:      Haskell-like "do" for monads
  * authors:       Jacques Carette, Oleg Kiselyov, and Lydia E. Van Dijk
  * last revision: Wed September 13, 2005.
- * ocaml version: 3.08.2 *)
+ * ocaml version: 3.09.1 *)
 
 
 (** {2 Conversion Rules}
@@ -78,21 +78,21 @@ type monbind =
 (* Convert MLast.expr into MLast.patt, if we `accidentally' parsed a
    pattern as an expression.  The code is based on
    pattern_eq_expression in pa_fstream.ml. *)
-let rec exp_to_patt loc e =
+let rec exp_to_patt _loc e =
   match e with
       <:expr< $lid:b$ >> -> <:patt< $lid:b$ >>
     | <:expr< $uid:b$ >> -> <:patt< $uid:b$ >>
     | <:expr< $e1$ $e2$ >> ->
-      let p1 = exp_to_patt loc e1
-      and p2 = exp_to_patt loc e2 in
+      let p1 = exp_to_patt _loc e1
+      and p2 = exp_to_patt _loc e2 in
         <:patt< $p1$ $p2$ >>
     | <:expr< ($list:el$) >> ->
-      let pl = List.map (exp_to_patt loc) el in
+      let pl = List.map (exp_to_patt _loc) el in
         <:patt< ($list:pl$) >>
     | _ -> failwith "exp_to_patt: this pattern is not yet supported"
 
 (* The main semantic function *)
-let process loc b f =
+let process _loc b f =
   let globbind1 x acc = <:expr< $f$ $x$ (fun _ -> $acc$) >>
   and globbind2 x p acc = <:expr< $f$ $x$ (fun $p$ -> $acc$) >>
   and ret n = <:expr< $n$ >> in
@@ -115,11 +115,11 @@ EXTEND
     [
       [ "doM"; bind_mod = UIDENT; "in";
         bindings = LIST1 monadic_binding SEP ";" ->
-          process loc bindings (<:expr< $uid:bind_mod$.bind >>) ]
+          process _loc bindings (<:expr< $uid:bind_mod$.bind >>) ]
     |
       [ "doM";
         bindings = LIST1 monadic_binding SEP ";" ->
-          process loc bindings (<:expr< bind >>) ]
+          process _loc bindings (<:expr< bind >>) ]
     ] ;
 
     Pcaml.expr: BEFORE "apply"
@@ -138,7 +138,7 @@ EXTEND
 	   expression too.  So we have to figure out which is which. *)
           match x with
               <:expr< $e1$  $lid:op$ $e3$ >> when op = "<--" ->
-                    BindM (exp_to_patt loc e1, e3)
+                    BindM (exp_to_patt _loc e1, e3)
             | _ -> ExpM x ]
     |
       [ p = Pcaml.patt LEVEL "simple"; "<--"; x = Pcaml.expr LEVEL "expr1" ->

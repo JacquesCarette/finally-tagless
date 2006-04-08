@@ -61,20 +61,20 @@ type monbind = BindL of (MLast.patt * MLast.expr) list
   The code is based on pattern_eq_expression in 
   /camlp4/etc/pa_fstream.ml *)
 
-let rec exp_to_patt loc e =
+let rec exp_to_patt _loc e =
   match e with
     <:expr< $lid:b$ >> -> <:patt< $lid:b$ >>
   | <:expr< $uid:b$ >> -> <:patt< $uid:b$ >>
   | <:expr< $e1$ $e2$ >> -> 
-      let p1 = exp_to_patt loc e1 and p2 = exp_to_patt loc e2 in
+      let p1 = exp_to_patt _loc e1 and p2 = exp_to_patt _loc e2 in
       <:patt< $p1$ $p2$ >>
   | <:expr< ($list:el$) >> ->
-      let pl = List.map (exp_to_patt loc) el in
+      let pl = List.map (exp_to_patt _loc) el in
       <:patt< ($list:pl$) >>
   | _ -> failwith "This pattern isn't yet supported"
 
 (* The main semantic function *)
-let process loc b = 
+let process _loc b = 
     let globbind2 x p acc =
         <:expr< bind $x$ (fun $p$ -> $acc$) >>
     and globbind1 x acc =
@@ -100,7 +100,7 @@ EXTEND
     [
       [ "mdo"; "{";
         bindings = LIST1 monadic_binding SEP ";"; "}" ->
-            process loc bindings
+            process _loc bindings
       ] 
     ] ;
 
@@ -121,7 +121,7 @@ EXTEND
 	   as an expression too. So we have to figure out which is which. *)
         match x with
               <:expr< $e1$  $lid:op$  $e3$  >> when op = "<--" 
-                  -> BindM((exp_to_patt loc e1),e3)
+                  -> BindM((exp_to_patt _loc e1),e3)
             | _ -> ExpM(x) ]
     | 
       [ p = Pcaml.patt LEVEL "simple"; "<--"; x = Pcaml.expr LEVEL "expr1" ->
