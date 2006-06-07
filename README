@@ -75,9 +75,6 @@ have a look at the examples "exception.ml" or
           let foo ... =
             let module MyMonad = ... in
             perform with MyMonad in ...
-- Recursive bindings:
-      perform rec ...
-
 
 ** Known Issues
 
@@ -242,7 +239,7 @@ Please report comments or suggestions to the authors.
 - Oleg Kiselyov, <oleg AT pobox DOT com>
 
 
-* GPL
+* LGPL
 
 The "pa_monad" extension is free software; you can redistribute it
 and/or modify it under the terms of the GNU Library General Public
