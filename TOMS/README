@@ -1,0 +1,6 @@
+This directory contains all the material related to a (future [June 2006])
+paper intended to get sent to TOMS.  A lot of the material is taken
+from the GPCE2005 work, as well as containing a copy of pa_monad 1.0.
+
+Only material relevant to the TOMS work should go here - various other
+experiments can stay in the old code/ directory.

@@ -1,0 +1,257 @@
+                      Syntactic Sugar for Monads
+                             January 2006
+
+
+* Contents
+
+COPYING                 -  License
+ChangeLog               -  Recent changes
+Makefile                -  GNU make build rules for the extension and the test frame
+README                  -  This file
+exception.ml            -  Implementation of exception monad
+exception.mli           -  Interface of exception monad
+io.ml                   -  Implementation of I/O-monad
+io.mli                  -  Interface of I/O-monad
+monadic-io.ml           -  Example of input/output with the I/O-monad
+pa_monad.ml             -  Camlp4 syntax extension for Objective Caml
+pythagorean-triples.ml  -  Nondeterminism monad (backtracking) coded with "pa_monad.ml"
+test-exception.ml       -  Test of the exception monad
+test-monad.ml           -  Simple test frame for "pa_monad.ml"
+test-rec.ml             -  Test of recursive-binding features
+test-syntax.ml          -  Thorough test of the syntax extension
+utest.ml                -  Implementation of the unit-test framework
+utest.mli               -  Interface of the unit-test framework
+
+
+* What It Does
+
+This Camlp4 parser adds some syntactic sugar to beautify monadic
+expressions.  The name of the syntax extension is a bit misleading as
+it does not provide any monad nor monadic computation.  The correct
+name would have been "pa_perform", but it was discarded because of
+lack of specificity.
+
+Example: A simple but realistic example of the use of a list monad
+looks like this
+
+        bind
+          [1; 2; 3]
+          (fun a -> bind
+                      [3; 4; 5]
+                      (fun b -> return (a + b)))
+
+where we assume the appropriate definitions of the functions "bind"
+and "return".  With the help of "pa_monad" this can be written as
+
+        perform
+          a <-- [1; 2; 3];
+          b <-- [3; 4; 5];
+          return (a + b)
+
+which is much clearer and thus easier to understand and maintain.  By
+the way, the expression evaluates to
+
+        [4; 5; 6; 5; 6; 7; 6; 7; 8]
+
+the sum of each pair of values of the input lists.  For more examples
+have a look at the examples "exception.ml" or
+"pythagorean-triples.ml".
+
+
+** Highlights
+
+- Efficient code: The generated code is as efficient as hand-coded.
+- Highly flexible: The "bind" and "failwith" functions can be
+  specified in various ways
+  (a) Binding with default names:
+          perform ...
+  (b) Binding with user-defined names:
+          perform with my_bind and my_failwith in ...
+  (c) One-of-a-kind binding:
+          perform with fun a f -> f a and ... in ...
+  (d) Module-based binding:
+          perform with MyMonad in ...
+      or with OCaml's local modules:
+          let foo ... =
+            let module MyMonad = ... in
+            perform with MyMonad in ...
+
+** Known Issues
+
+See the section "Known Issues" in the documentation.
+
+
+* How to...
+
+** Compile
+
+        make
+
+
+** Test
+
+        make test
+
+
+** Generate (HTML) Documentation
+
+        make doc
+
+
+** Use
+
+Given the compiled extension "pa_monad.cmo" feed the source into the
+preprocessor by saying
+        ocamlc -pp 'camlp4o -I . pa_monad.cmo' -c ...
+Depending on where the cmo file lives the include path needs
+tweaking.
+
+
+* Emacs - Tuareg Mode
+
+The following patch against Tuareg-mode version 1.45.2 makes "perform"
+a keyword with the correct indentation behavior.
+
+
+--- tuareg.el.orig	2006-01-09 10:33:32.000000000 +0100
++++ tuareg.el		2006-01-09 10:35:01.000000000 +0100
+@@ -881,7 +881,7 @@
+ (defvar tuareg-font-lock-keywords
+   (append
+   (list
+-   (list "\\<\\(external\\|open\\|include\\|rule\\|s\\(ig\\|truct\\)\\|module\\|functor\\|with[ \t\n]+\\(type\\|module\\)\\|val\\|type\\|method\\|virtual\\|constraint\\|class\\|in\\|inherit\\|initializer\\|let\\|rec\\|and\\|begin\\|object\\|end\\)\\>"
++   (list "\\<\\(external\\|open\\|include\\|rule\\|s\\(ig\\|truct\\)\\|module\\|functor\\|with[ \t\n]+\\(type\\|module\\)\\|val\\|type\\|method\\|virtual\\|constraint\\|class\\|in\\|inherit\\|initializer\\|perform\\|let\\|rec\\|and\\|begin\\|object\\|end\\)\\>"
+ 	 0 'tuareg-font-lock-governing-face nil nil)
+    (list "\\.<\\|>\\.\\|\\.~\\|\\.!"
+ 	 0 'tuareg-font-lock-multistage-face nil nil)
+@@ -1263,7 +1263,7 @@
+ ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+ ;;                               Indentation stuff
+ 
+-(defconst tuareg-keyword-regexp "\\<\\(object\\|initializer\\|and\\|c\\(onstraint\\|lass\\)\\|m\\(atch\\|odule\\|ethod\\|utable\\)\\|s\\(ig\\|truct\\)\\|begin\\|e\\(lse\\|x\\(ception\\|ternal\\)\\)\\|t\\(o\\|hen\\|ry\\|ype\\)\\|v\\(irtual\\|al\\)\\|w\\(h\\(ile\\|en\\)\\|ith\\)\\|i\\(f\\|n\\(herit\\)?\\)\\|f\\(or\\|un\\(ct\\(or\\|ion\\)\\)?\\)\\|let\\|do\\(wnto\\)?\\|parser?\\|rule\\|of\\)\\>\\|->\\|[;,|]"
++(defconst tuareg-keyword-regexp "\\<\\(object\\|initializer\\|and\\|c\\(onstraint\\|lass\\)\\|m\\(atch\\|odule\\|ethod\\|utable\\)\\|s\\(ig\\|truct\\)\\|begin\\|e\\(lse\\|x\\(ception\\|ternal\\)\\)\\|t\\(o\\|hen\\|ry\\|ype\\)\\|v\\(irtual\\|al\\)\\|w\\(h\\(ile\\|en\\)\\|ith\\)\\|i\\(f\\|n\\(herit\\)?\\)\\|f\\(or\\|un\\(ct\\(or\\|ion\\)\\)?\\)\\|let\\|do\\(wnto\\)?\\|parser?\\|perform\\|rule\\|of\\)\\>\\|->\\|[;,|]"
+   "Regexp for all recognized keywords.")
+ 
+ (defconst tuareg-match-|-keyword-regexp
+@@ -1332,6 +1332,7 @@
+     ("mutable" . tuareg-default-indent)
+     ("external" . tuareg-default-indent)
+     ("in" . tuareg-in-indent)
++    ("perform" . tuareg-default-indent)
+     ("of" . tuareg-default-indent)
+     ("to" . tuareg-default-indent)
+     ("downto" . tuareg-default-indent)
+@@ -1382,7 +1383,7 @@
+     (if found kwop (goto-char (point-min)) nil)))
+ 
+ (defconst tuareg-find-kwop-regexp
+-  (concat tuareg-matching-keyword-regexp "\\|\\<\\(for\\|while\\|do\\|if\\|begin\\|s\\(ig\\|truct\\)\\|object\\)\\>\\|[][(){}]\\|\\.<\\|>\\.\\|\\*)"))
++  (concat tuareg-matching-keyword-regexp "\\|\\<\\(for\\|while\\|do\\|if\\|begin\\|s\\(ig\\|truct\\)\\|object\\|perform\\)\\>\\|[][(){}]\\|\\.<\\|>\\.\\|\\*)"))
+ (defun tuareg-make-find-kwop-regexp (kwop-regexp)
+   (concat tuareg-find-kwop-regexp "\\|" kwop-regexp))
+ 
+
+
+* Useful Literature On Monads
+
+Literature on the use of monads in OCaml does not yet exist.  Most of
+the following articles are either language independent or use the
+Haskell language.  A large bibliography on "Monads and Arrows: Theory
+and Applications" can be found at
+        http://haskell.readscheme.org/monads.html
+
+
+** Philip Wadler, "Monads for functional programming"
+
+    The use of monads to structure functional programs is described.
+    Monads provide a convenient framework for simulating effects found
+    in other languages, such as global state, exception handling,
+    output, or non-determinism.  Three case studies are looked at in
+    detail: how monads ease the modification of a simple evaluator; how
+    monads act as the basis of a datatype of arrays subject to
+    in-place update; and how monads can be used to build parsers.
+
+
+** Theodore Norvel, "Monads for the Working Haskell Programmer"
+
+    This short tutorial introduces monads to Haskell programmers.
+
+
+** John Hughes, Magnus Carlsson, "Systematic Design of Monads"
+
+    Many useful monads can be designed in a systematic way, by
+    successively adding facilities to a trivial monad.  The
+    capabilities that can be added in this way include state,
+    exceptions, backtracking, and output.  Here we give a brief
+    description of the trivial monad, each kind of extension, and
+    sketches of some interesting operations that each monad supports.
+
+
+** Jeff Newbern, "All About Monads"
+
+    This tutorial aims to explain the concept of a monad and its
+    application to functional programming in a way that is easy to
+    understand and useful to beginning and intermediate Haskell
+    programmers.  Familiarity with the Haskell language is assumed,
+    but no prior experience with monads is required.  The tutorial
+    covers a lot of material and the later sections require a thorough
+    understanding of the earlier material.  Many code examples are
+    provided along the way to demonstrate monadic programming.  It is
+    not advisable to attempt to absorb all of the material in a single
+    reading.
+
+
+** Philip Wadler, "Comprehending Monads"
+
+    Category theorists invented monads in the 1960's to concisely
+    express certain aspects of universal algebra.  Functional
+    programmers invented list comprehensions in the 1970's to
+    concisely express certain programs involving lists.  This paper
+    shows how list comprehensions may be generalised to an arbitrary
+    monad, and how the resulting programming feature can concisely
+    express in a pure functional language some programs that
+    manipulate state, handle exceptions, parse text, or invoke
+    continuations.  A new solution to the old problem of destructive
+    array update is also presented.  No knowledge of category theory
+    is assumed.
+
+
+** Simon Peyton Jones, "Tackling the Awkward Squad"
+
+    Functional programming may be beautiful, but to write real
+    applications we must grapple with awkward real-world issues:
+    input/output, robustness, concurrency, and interfacing to programs
+    written in other languages.
+
+    These lecture notes give an overview of the techniques that have
+    been developed by the Haskell community to address these problems.
+    I introduce various proposed extensions to Haskell along the way,
+    and I offer an operational semantics that explains what these
+    extensions mean.
+
+
+* Authors
+
+Please report comments or suggestions to the authors.
+
+- Jacques Carette, <carette AT mcmaster DOT ca>
+- Lydia E. van Dijk, <lvandijk AT freenet DOT de>
+- Oleg Kiselyov, <oleg AT pobox DOT com>
+
+
+* LGPL
+
+The "pa_monad" extension is free software; you can redistribute it
+and/or modify it under the terms of the GNU Library General Public
+License as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+General Public License in the file "COPYING" for more details.
+
+
+local variables:
+mode: outline
+end:

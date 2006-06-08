@@ -1,0 +1,392 @@
+2006-06-07  Jacques Carette <carette@mcmaster.ca>
+	* README: Remove mention of recursive bindings for this release.
+    Make heading for license section LGPL.
+
+2006-04-01  Lydia van Dijk  <lvandijk@freenet.de>
+
+	* pythagorean-triples.ml: Cosmetic changes.
+	* test-exception.ml: Dito.
+	* test-monad.ml: Dito.
+	* test-rec.ml: Dito.
+	* test-syntax.ml: Dito.
+
+2006-03-22  Oleg Kiselyov <oleg@pobox.com>
+
+	* Makefile (clean): Use short options in 'rm'-command for
+	compatability with non-GNU tools.
+	* pa_monad.ml: Documentation update.
+	(convert/loop): Remove argument 'a_binding_accumulator'.
+	(convert/loop/do_rest): Remove argument 'an_accumulator'.
+
+2006-03-19  Lydia van Dijk  <lvandijk@freenet.de>
+
+	Change syntax of recursive bindings to 'rec'-'and'.
+	* pa_monad: Documentation update.
+	(convert): Take a list of recursive bindings.  Simplify logic.
+	Retrofit safety-check for refutable patterns.
+	(EXTEND-recursive_monadic_binding): New non-terminal.
+	(Pcaml.expr: BEFORE "apply"): Parse 'rec'-'and' as a list of
+	bindings.
+	* test-rec.ml (monadic_replace_min_one_pass): Change syntax to
+	'rec'-'and'.
+	(monadic_deviation): Dito.
+
+	* pa_monad: Cosmetic changes in some comments.
+	(convert): Swap 'then' with 'else' branch to get more legible
+	condition.
+	* README: Correctly refer to the license in the file COPYING as
+	'GNU Library General Public License'.  This is the one we want.
+
+2006-02-10  Lydia van Dijk  <lvandijk@freenet.de>
+
+	Finer granularity for unit-test verbosity.
+	* utest.mli (verbosity): New type.
+	(run_tests): Take verbosity as 'verbosity' not a just 'bool'.
+	* utest.ml (verbosity): New type.
+	(<=~): New operator to compare verbosity levels.
+	(run_tests): Print information on test run according to verbosity
+	level.
+	* pythagorean-triples.ml: Adapt to new signature of
+	'Utest.run_tests'.  Choose level where only failed tests are
+	printed.
+	* test-exception.ml: Dito.
+	* test-monad.ml: Dito.
+	* test-rec.ml: Dito.
+	* test-syntax.ml: Dito.
+
+2006-01-29  Lydia van Dijk  <lvandijk@freenet.de>
+
+	Attach 'rec' keyword to individial binding, not to the 'perform'
+	keyword.
+	* pa_monad: Update documentation.
+	(convert): Remove parameter 'is_recursive'.  React to
+	recursive flag in each (intermediate) 'let'-binding individually.
+	(Pcaml.expr: LEVEL "expr1"): Drop all 'perform' 'rec' rules.
+	(Pcaml.expr: BEFORE "apply"): Add 'rec' rule with the correct
+	level for the expression at the lheft-hand side of the
+	'<--'-operator.
+	* test-rec.ml: Translate all examples from 'perform rec' to
+	'perform'; decorate bindings with 'rec' accordingly.
+
+2006-01-22  Lydia van Dijk  <lvandijk@freenet.de>
+
+	Extend I/O-monad to get 'built-in' exception handling capability.
+	* io.mli, io.ml: Drop dependency of exception monad.  Rewrite to
+	integrate exception-handling capability with existing
+	functionality.  Add documentation.
+	* monadic-io.ml: Rewrite to work with new version of I/O-monad.
+
+	* Makefile (ADDITIONAL-DOCUMENTED-MODULES): New variable.
+	($(HTML-DOCUMENTATION)/$(SYNTAX-EXTENSION:.cmo=).html): Also
+	generate documentation for 'ADDITIONAL-DOCUMENTED-MODULES'.
+
+2006-01-21  Lydia van Dijk  <lvandijk@freenet.de>
+
+	Abstract 'world' even more.
+	* io.mli (World): Remove.
+	* io.mli, io.ml (world): New type.
+	('a t): Change from 'World.t' to 'world'.
+	(__conjure_up): Dito.
+
+	* exception.ml (bind): Use natural syntax for case-matching.
+
+2006-01-18  Lydia van Dijk  <lvandijk@freenet.de>
+
+	* README: Move sub-section 'pa_monad' to file 'pa_monad.ml'.
+	* pa_monad: Add paragraph on monad laws from file README.
+	Restructure documentation.  Some rewrites.
+
+2006-01-17  Lydia van Dijk  <lvandijk@freenet.de>
+
+	* COPYING: Replace GPL with LGPL.
+	* exception.mli, exception.ml, io.mli, io.ml, utest.mli, utest.ml,
+	pa_monad.ml: Add copyright notice.
+
+2006-01-16  Oleg Kiselyov <oleg@pobox.com>
+
+	* pa_monad.ml: Update documentation concerning the discussions on
+	the Haskell mailing list.
+	* test-syntax (test_binding_let_int): New test.
+	(test_advanced_let): Dito.
+
+2006-01-16  Lydia van Dijk  <lvandijk@freenet.de>
+
+	IO-Monad.
+	* README: Update with new files.
+	* exception.ml: Split interface, implementation, and test of the
+	exception monad.  This file now only contains the monad's
+	implementation.
+	* exception.mli, test-exception.ml: New files.
+	* io.mli, io.ml: Dito.
+	* monadic-io.ml: Dito.
+
+	* Makefile (exists): Remove macro.
+	(join-by): Dito.
+	(SYNTAX-EXTENSION): Rename 'SYNTAX_EXTENSION'.
+	(PP): Adapt to renaming of 'SYNTAX-EXTENSION'.
+	(all): Dito.
+	(doc): Dito.
+	(top-level): Dito.
+	(%.ml-pp): Dito.
+	($(HTML-DOCUMENTATION)/$(SYNTAX-EXTENSION:.cmo=).html): Dito.
+	(pythagorean-triples.cmo): Dito.
+	(test-syntax.cmo): Dito.
+	(test-monad.cmo): Dito.
+	(test-rec.cmo): Dito.
+	(TESTS): Adapt to split of 'exception' module.
+	(INTERACTIVE-TESTS): New variable.
+	(test): Add prerequisite 'INTERACTIVE-TESTS'.
+	(clean): Take care of 'INTERACTIVE-TESTS'.
+	(exception.cmo): Remove dependency of 'SYNTAX-EXTENSION'.
+	(exception): Remove target.
+	(io.cmo): New target.
+	(test-exception.cmo): Dito.
+	(test-exception): Dito.
+	(monadic-io.cmo): Dito.
+	(monadic-io): Dito.
+
+2006-01-13  Lydia van Dijk  <lvandijk@freenet.de>
+
+	Unit-tests with fixtures.
+	* utest.mli, utest.ml: Document types and functions.
+	(test): New type.
+	(InconsistentFixture): New exception.
+	(eval_with_imperative_fixture): New function.
+	(eval_with_functional_fixture): Dito.
+	* test-rec.ml (fixture_tree): Remove.
+	(fixture_lazy_tree): Dito.
+	(fixture_list): Dito.
+	(fixture_lazy_list): Dito.
+	(replace_fixture): New type.
+	(replace_setup): New function.
+	(deviation_setup): Dito.
+	(test_replace_min_two_pass): Add parameter 'a_fixture'.
+	(test_replace_min_one_pass): Dito.
+	(test_monadic_replace_min_one_pass): Dito.
+	(test_deviation_one_pass): Dito.
+	(test_monadic_deviation_one_pass): Dito
+
+2006-01-12  Oleg Kiselyov <oleg@pobox.com>
+
+	* pa_monad.ml: Improve on documentation.
+	(monadic_binding): Remove.
+	(exp_to_patt): Substitute 'Stdpp.raise_with_loc' for 'failwith'.
+	(patt_to_exp): Dito.
+	(convert/do_merge): Dito.
+	(convert): Remove parameter 'a_binding_accumulator'.
+	(convert/loop): Add parameter 'a_binding_accumulator'.
+	(Pcaml.expr): Adapt to interface change of function 'convert'.
+	* Makefile (test): Base target 'test' on phony target 'run-%'.
+	(run-%: %): New rule.
+
+2006-01-11  Lydia van Dijk  <lvandijk@freenet.de>
+
+	* README: Add URL of a comprehensive bibliography on monads.
+
+2006-01-10  Lydia van Dijk  <lvandijk@freenet.de>
+
+	Mutually recursive bindings.
+	* pa_monad.ml: Expand documentation of 'perform rec'.
+	(tuplify_expr): New function.
+	(tuplify_patt): Dito.
+	(convert): Add parameter 'a_binding_accumulator'.  Adjust call
+	sites where necessary.
+	Handle mutually recursive bindings.
+	(convert/do_rest): Add parameter 'an_accumulator'.  Adjust call
+	sites where necessary.
+	* test-rec.ml (monadic_replace_min_one_pass): Use 'perform rec'.
+	(fixture_tree): New top-level value.
+	(test_replace_min_two_pass): Pull out 't' as 'fixture_tree'.
+	(fixture_lazy_tree): New top-level value.
+	(test_replace_min_one_pass): Pull out 't' as 'fixture_lazy_tree'.
+	(monadic_deviation): Use 'perform rec'.
+	(fixture_list): New top-level value.
+	(fixture_lazy_list): New top-level value.
+	(test_deviation_one_pass): Pull out 't' as 'fixture_list'.
+	(test_monadic_deviation_one_pass): New function.
+	* README: Add section on highlights of the syntax extension.
+	* Makefile (VERSION): Bump forward.
+
+2006-01-09  Lydia van Dijk  <lvandijk@freenet.de>
+
+	* README: Extend and reword.  Add patch for Tuareg-mode to
+	recognize 'perform' keyword.
+	* test-rec.ml (replace_min_two_pass): New function.
+	(replace_min_one_pass): Integrate 'rp_min'.  Fix lazy computation
+	problems.
+	(replace_min): Remove.
+	(bind): New function.
+	(return): Dito.
+	(for_all): New function.
+	(test_replace_min_two_pass): Dito.
+	(test_replace_min_one_pass): Dito.
+	(first_of_lazy_four): Dito.
+	(second_of_lazy_four): Dito.
+	(third_of_lazy_four): Dito.
+	(deviation): Dito.
+	(test_deviation_one_pass): Dito.
+	(monadic_replace_min_one_pass): New function.  Essential
+	construct are still commented out as 'pa_monad' cannot translate
+	it yet.
+	(monadic_deviation): Dito.
+
+2006-01-05  Oleg Kiselyov <oleg@pobox.com>
+
+	Drop the semicolon from 'let ID = EXPR in; EXPR' construction.
+	* pa_monad.ml:	(is_irrefutable_expression): Remove.
+	(convert): Complete rewrite.
+	(Pcaml.expr): Switch from simple-minded LIST1 approach to full
+	fledged Pcaml.expr.
+	(Pcaml.expr: BEFORE "apply"): Update.
+	(monadic_binding): Remove.
+	(Pcaml.expr: LEVEL "simple"): New level.
+	(ipatt): Remove.
+	* pythagorean-triples.ml: Adapt to changed syntax.
+	* test-syntax.ml: Dito.
+	* test-syntax.ml: Dito.
+	* test-syntax.ml: Dito.
+	* Makefile (VERSION): Bump forward.
+
+2006-01-05  Lydia van Dijk  <lvandijk@freenet.de>
+
+	* utest.ml (run_tests): Correct swapped labels of expected and
+	unexpected number of failures.
+	* pa_monad.ml (is_irrefutable_pattern): Prepend '_' to unused
+	variables as to clarify the code and to avoid the compiler
+	warning.
+	(qualify): Dito.
+	* Makefile (dist): Drop prerequisite 'distcheck'.  Remove
+	tinkering with the PATH.
+
+2006-01-04  Lydia van Dijk  <lvandijk@freenet.de>
+
+	Recursive bindings ('perform rec ...').
+	* test-rec.ml: New file.
+	* Makefile (TESTS): Add 'test-rec.ml'.
+	(test-rec.cmo:...): New explicit target.
+	(test-rec:...): Dito.
+	* pa_monad.ml (patt_to_exp): New function.
+	(convert): Add parameter 'is_recursive'.  Perform conversion
+	according to parameter.
+	(Pcaml.expr): Duplicate all entries with 'perform' in them and add
+	'rec' to indicate a recursive binding.  For camlp4 is a beast
+	close to an LL(1)-parser, using 'r = OPT "rec"' does not work, as
+	then the extended forms 'perform with' and 'perform with module'
+	will not be recognized correctly anymore.  Oh well.
+
+2006-01-03  Lydia van Dijk  <lvandijk@freenet.de>
+
+	* COPYING, README: New files.
+	* test-syntax.ml: Reverse equality tests from 'perform ... = .'
+	to '. = perform ...'.  Keep both form where parenthesis are still
+	required, because of lacking polymorphy of the 'bind' function.
+
+2006-01-02  Christoph Spiel  <cspiel@try-to-spam.me>
+
+	* Makefile (OCAMLCFLAGS): Remove preprocessor call.
+	($(TESTS:.ml=.cmx): %.cmx: %.ml): New static rule for sources that
+	require preprocessing.
+	($(TESTS:.ml=.cmo): %.cmo: %.ml): Same for byte-code.
+
+2006-01-02  Lydia van Dijk  <lvandijk@freenet.de>
+
+	* test-syntax.ml (test_refutable_match_failure): New function.
+	* Makefile (VERSION): Bump version number.
+
+2006-01-01  Lydia van Dijk  <lvandijk@freenet.de>
+
+	Use unit-test suite.
+	* utest.mli, utest.ml: New files.
+	* exception.ml (test_exception_monad): New function.
+	* pythagorean-triples.ml (test_pythagorean_triples): Dito.
+	* test-monad.ml (test_simple_expression): Use unit-test suite.
+	(test_one_element_list): Dito.
+	(test_two_element_list): Dito.
+	(test_gcd): Dito.
+	(all_tests): Remove.
+	* test-syntax.ml: Use unit-test suite.
+
+2005-12-31  Lydia van Dijk  <lvandijk@freenet.de>
+
+	* exception.ml: New file.
+	* pythagorean-triples.ml: Dito.
+	* test-monad.ml: Dito.
+
+2005-12-28  Christoph L. Spiel  <cspiel@try-to-spam.me>
+
+	* Makefile: Switch from auto-generated dependencies (which never
+	worked correctly) to explicit rules.
+	(join-by): New macro.
+	(SYNTAX_EXTENSION): Rename 'SYNTAX_EXTENSIONS' to
+	'SYNTAX_EXTENSION'.
+	(PP): Dito.
+	(all): Dito.
+	(OCAMLDEP): Remove.
+	(depend): Dito.
+	(.depend): Dito.
+	(test): Use 'join-by' to abort tests after first failure.
+	(distcheck): Add 'doc' to prerequisites.
+	(FORCE): New target.
+	(%.ml-pp: %.ml): Force target.
+	(%.mli-gen: %.ml): Dito.
+
+2005-12-20  Christoph L. Spiel  <cspiel@try-to-spam.me>
+
+	* Makefile: Rewrite almost completely.
+
+2005-12-18  Lydia van Dijk  <lvandijk@freenet.de>
+
+	* pa_monad.ml: Beautify documentation.  Add section on known
+	issues with the syntax extension.
+	(exp_to_patt): Handle type restriction.
+	(convert/glob_then): Rename parameters.
+	(convert/glob_bind_irrefutable): Dito.
+	(convert/glob_bind_refutable): Dito.
+	(convert/folder): Reformat.
+	(EXTEND): Rename some parameters.
+	* test-syntax.ml: Add type-restriction test.  Add some tests that
+	do not work yet as comments.
+
+2005-12-17  Lydia van Dijk  <lvandijk@freenet.de>
+
+	Extend syntax with 'with exp1 and exp2'-form.
+	* pa_monad.ml: Document 'with exp1 and exp2'-form.
+	(failure_text): New value.
+	(default_bind_expr): New function.
+	(default_failure_fun_expr): Dito.
+	(default_failure_expr): Dito.
+	(qualify): Dito.
+	(EXTEND-Pcaml.expr): Rewrite using 'qualify'- and
+	'default_*'-functions.
+	(EXTEND-opt_failure_expr): New non-terminal.
+	* test-syntax.ml: Update test environment to rename of 'fail' to
+	'failwith'.  Add tests, e.g. for unit and parenthesized
+	expressions.
+
+	Rename 'fail' to 'failwith'.
+	* pa_monad.ml: Document irrefutable patterns and 'failwith' usage.
+	(convert/glob_bind_refutable): Rename 'fail' to 'failwith'.
+
+	Rename 'mdo' to 'perform'.
+	* pa_monad.ml: Rename 'mdo' to 'perform'.
+	* test-syntax: Dito.
+
+2005-12-11  Lydia van Dijk  <lvandijk@freenet.de>
+
+	* Makefile: New file.
+	* test-syntax.ml: New file.
+	* pa_monad.ml: Minor documentation changes.
+	(monadic_binding): New name for 'mondbind'.
+	Add constructors 'BindMRef' and 'BindMIrref'.
+	(exp_to_patt): Add handlers for several expressions (int, char,
+	string, ...).
+	(is_irrefutable_pattern): New function.
+	(is_irrefutable_expression): Dito.
+	(convert): New name for 'process'.
+	Add branches 'BindMRef' and 'BindMIrref' to distinguish between
+	refutable and irrefutable patterns.
+	(EXTEND-monadic_binding): Distinguish between refutable and
+	irrefutable patterns.
+	(EXTEND-patt_label_ident): New non-terminal.
+	(EXTEND-label_ipatt): Dito.
+	(EXTEND-ipatt): Dito.
