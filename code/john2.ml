@@ -15,7 +15,8 @@ let build_knots3 num_knots = fun acode bcode -> mdo {
     arr   <-- ret (Array.make num_knots .< () >. ) ;
     res   <-- ret (mloop num_knots arr (fun i c -> 
               .<(.~xknot).(i) <- (.~acode +. ((.~bcode -. .~acode) *. c)) >. )) ;
-    ret (Array.fold_left seq2 .<()>. arr)
+    res2  <-- ret (Array.fold_left seq2 .<()>. arr) ;
+    seqM res2 (ret xknot)
     }
 ;;
 
