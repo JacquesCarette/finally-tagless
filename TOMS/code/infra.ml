@@ -30,7 +30,8 @@ let store v s k = k (v::s) ()
    but not the other way around 
 *)
 
-let seq a b = ret .< begin .~a ; .~b end >.
+let seq' a b = .< begin .~a ; .~b end >.
+let seq a b = ret (seq' a b)
 
 let seqM a b = fun s k -> k s .< begin .~(a s k0) ; .~(b s k0) end >.
 
@@ -228,15 +229,37 @@ module GenericVectorContainer(Dom:DOMAIN) =
   let swap_cols_stmt b c1 c2 = .<
       let a = (.~b).arr and nm = (.~b).n * (.~b).m and m = (.~b).m in
       let rec loop i1 i2 =
-	if i2 < nm then
-	  let t = a.(i1) in
-	  begin
-	    a.(i1) <- a.(i2);
-	    a.(i2) <- t;
-	    loop (i1 + m) (i2 + m)
-	  end
+    if i2 < nm then
+      let t = a.(i1) in
+      begin
+        a.(i1) <- a.(i2);
+        a.(i2) <- t;
+        loop (i1 + m) (i2 + m)
+      end
       in loop .~c1 .~c2
      >.
+end
+
+module Array1D =
+  struct
+  let get' x n = .< x.(.~n) >.
+  let get x n = ret (get' x n)
+  let set' x n y = .< x.(.~n) <- .~y >.
+  let set x n y = ret (set' x n y)
+  let dim1 x = .< Array.length x >.
+  let mapper g a = match g with
+      | Some f -> .< (fun x -> Array.map .~f x) .~a >.
+      | None   -> a
+end
+
+module Array2D =
+  struct
+  let get' x n m = .< x.(.~n).(.~m) >.
+  let get x n m = ret (get' x n m)
+  let set' x n m y = .< x.(.~n).(.~m) <- .~y >.
+  let set x n y m = ret (set' x n m y)
+  let dim2 x = .< Array.length x >.       (* number of rows *)
+  let dim1 x = .< Array.length (x).(0) >. (* number of cols *)
 end
 
 (* set up some very general algebra that can be reused though not

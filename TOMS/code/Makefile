@@ -10,9 +10,10 @@ SYNTAX_EXTENSION := ../camlp4/pa_monad.cmo
 
 PP := camlp4o -I . $(SYNTAX_EXTENSION)
 
-OBJ  := infra.cmo ge.cmo
-TEST := ge.out
-RES  := ge.res
+BASE := infra.cmo
+OBJ  := ge.cmo rkf45.cmo
+TEST := ge.out rkf45.out
+RES  := ge.res rkf45.res
 
 VERSION := 1.0
 
@@ -27,11 +28,11 @@ all: clean-test test $(TEST)
 
 .PHONY: test 
 test: $(SYNTAX_EXTENSION) $(OBJ) $(RES) $(TEST)
-	diff ge.out ge.res
+	diff rkf45.out rkf45.res
 
 .PHONY: clean-test
 clean-test:
-	rm -f *.out
+	rm -f rkf45.out
 
 mytop: 
 	ocamlmktop -o mytop nums.cma
@@ -40,8 +41,7 @@ mytop:
 clean:
 	rm --force $(TEST) *.cm[io]
 
-# Special case - make sure this still works 'raw'
-#
+$(OBJ): $(BASE)
 
 ########################################################################
 #
@@ -53,16 +53,13 @@ clean:
 	metaocamlc -pp '$(PP)' -g -c $<
 
 %.out: test-%.ml %.cmo mytop
-	./mytop ./$*.cmo < $< > $@
+	./mytop ./infra.cmo ./$*.cmo < $< > $@
 
 ########################################################################
 #
 # Explicit Rules
 #
 ########################################################################
-
-ge.out: test-ge.ml ge.cmo infra.cmo mytop
-	./mytop ./infra.cmo ./ge.cmo < test-ge.ml > ge.out 
 
 ../camlp4/pa_monad.cmo:
 	(cd ../camlp4; make all)
