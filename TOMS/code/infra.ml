@@ -127,6 +127,7 @@ module IntegerDomain =
     let normalizerg = fun x -> x
 end
 
+(*
 module RationalDomain = 
   struct
     type v = Num.num
@@ -143,6 +144,7 @@ module RationalDomain =
     let normalizerf = None 
     let normalizerg = fun x -> x
 end
+*)
 
 module type CONTAINER2D = functor(Dom:DOMAIN) -> sig
   type contr
@@ -314,4 +316,12 @@ module Code = struct
   let update a f = let b = f (liftGet a) in ret .< .~a := .~b >.
   let assign a b = ret .< .~a := .~b >.
   let apply  f x = ret .< .~f .~x >.
+end
+
+(* code transformers *)
+module CodeTrans = struct
+    let rec full_unroll lb ub body = 
+        if lb>ub then Code.cunit
+        else if lb = ub then body lb
+        else .< begin .~(body lb); .~(full_unroll (lb+1) ub body) end >.
 end

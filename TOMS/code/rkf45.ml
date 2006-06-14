@@ -97,63 +97,17 @@ let spline x y =
     y2out
 ;;
 
-let find_spline_index num knots x =
-    let scale = knots.(num-1) -. knots.(0) in
-    let k0 = knots.(0) in
+let find_spline_index num knots =
     let n1 = num-1 and n2 = num-2 in
-    let fn1 = float_of_int n1 in
+    let scale = knots.(n1) -. knots.(0) in
+    let k0 = knots.(0) in
+    let fn1 = float_of_int num in
     let mult = fn1 /. scale in
-    perform
-        xx   <-- retN x;
-        kk   <-- retN .<k0>.;
-        x1   <-- FloatDomain.minus xx kk;
-        mu   <-- retN .<mult>.;
-        mm   <-- FloatDomain.times x1 mu;
-        nn   <-- ret (.<int_of_float .~mm>.);
-        ret (.<min .~nn n2>.);
+    .< fun x -> min (int_of_float ((x -. k0) *. mult)) n2 >.
 ;;
 
-let splinet knots yout y2out num_knots x =
-    perform
-        xx <-- retN x;
-        lo <-- find_spline_index num_knots knots x;
-        lo1 <-- IntegerDomain.plus lo IntegerDomain.one;
-        kl1 <-- Array1D.get knots lo1;
-        kl  <-- Array1D.get knots lo;
-        h  <-- FloatDomain.minus kl1 kl;
-        l1mx <-- FloatDomain.minus kl1 xx;
-        aa   <-- FloatDomain.div l1mx h;
-        a2   <-- FloatDomain.times aa aa;
-        a3   <-- FloatDomain.times a2 aa;
-        aaa  <-- FloatDomain.minus a3 aa;
-        xml  <-- FloatDomain.minus xx kl ;
-        bb   <-- FloatDomain.div xml h;
-        b2   <-- FloatDomain.times aa bb;
-        b3   <-- FloatDomain.times b2 bb;
-        bbb  <-- FloatDomain.minus b3 bb;
-        ret (Array.init (Array.length yout.(0)) (fun i ->
-            perform
-                ii   <-- retN .<i>. ;
-                yl   <-- Array2D.get yout lo ii;
-                x1   <-- FloatDomain.times aa yl;
-                yl1  <-- Array2D.get yout lo1 ii;
-                x2   <-- FloatDomain.times bbb yl1;
-                y2l  <-- Array2D.get y2out lo ii;
-                x3   <-- FloatDomain.times aaa y2l;
-                y2l1 <-- Array2D.get y2out lo1 ii;
-                x4   <-- FloatDomain.times aaa y2l1;
-                x5   <-- FloatDomain.plus  x3 x4;
-                hh   <-- FloatDomain.times h  h;
-                hh6  <-- FloatDomain.div   h .<6.0>.;
-                x6   <-- FloatDomain.plus  x1 x2;
-                x7   <-- FloatDomain.times x5 hh6;
-                res  <-- FloatDomain.plus x5 x7;
-                ret res
-        ))
-;;
-
-let prespline knots yout y2out num_knots x =
-    fun lo -> fun i -> 
+let prespline knots yout y2out num_knots xx =
+    fun lo -> (fun ii -> 
     let lo1 = lo+1 in
     let kl1 = knots.(lo1) and kl = knots.(lo) in
     let h = kl1 -. kl in
@@ -162,8 +116,6 @@ let prespline knots yout y2out num_knots x =
     let y2l' = y2out.(lo) in
     let y2l1' = y2out.(lo1) in
     perform
-        xx  <-- retN x;
-        ii  <-- retN .<i>.;
         kl1 <-- retN .<kl1>. ;
         kl  <-- retN .<kl>. ;
         h   <-- retN .<h>. ;
@@ -171,7 +123,8 @@ let prespline knots yout y2out num_knots x =
         aa   <-- FloatDomain.div l1mx h;
         a2   <-- FloatDomain.times aa aa;
         a3   <-- FloatDomain.times a2 aa;
-        aaa  <-- FloatDomain.minus a3 aa;
+        aa'  <-- FloatDomain.minus a3 aa;
+        aaa  <-- retN aa';
         xml  <-- FloatDomain.minus xx kl ;
         bb   <-- FloatDomain.div xml h;
         b2   <-- FloatDomain.times aa bb;
@@ -191,18 +144,31 @@ let prespline knots yout y2out num_knots x =
         x6   <-- FloatDomain.plus  x1 x2;
         x7   <-- FloatDomain.times x5 hh6;
         res  <-- FloatDomain.plus x5 x7;
-        ret res
+        ret res)
 
 (* this code should not use an array but instead generate an
 explicit binary search tree of code *)
-let splinet2 knots yout y2out num_knots x = fun i ->
-    let carr = Array.init (Array.length knots -1) (fun lo ->
-        (runM (prespline knots yout y2out num_knots x lo i)) in
-    perform
-        lo  <-- (find_spline_index num_knots knots x);
-        arr <-- retN .< carr.(.~lo) >.;
-        ret arr
+let splinet2 a b knots yout y2out num_knots =
+    let init arr = 
+        let body lo = 
+        .< (.~arr).(lo) <- fun y -> fun i ->
+          .~(runM (prespline knots yout y2out num_knots .<y>. lo .<i>. )) >.
+        in .< .~(CodeTrans.full_unroll 0 (num_knots-2) body); () >. in
+    let bod arr i = .< fun x -> 
+        if ((x<a) || (x>b)) then
+            Left "Error: x not in range"
+        else
+            Right ((.~arr).(
+                .~(find_spline_index num_knots knots) x) x .~i) >. in
+    (init, bod)
 ;;
+
+let foo a b k y y2 n =
+    let (init, bod) = splinet2 a b k y y2 n in
+    .< let arr = Array.init (n-1) (fun l -> 
+        (fun y -> fun i -> 0.)) in
+       ( (fun () -> .~(init .<arr>. )), 
+       (fun i -> .~(bod .<arr>. .<i>. ))) >. ;;
 
 exception Tolerance of string;;
 
@@ -224,9 +190,6 @@ let odesolve a b num_knots tolerance yin f =
     let odef = 
         if good == false then
             raise (Tolerance "Error: tolerance not satisfied")
-        else .< fun x -> if (x < a) || (x > b) then 
-            Left "Error: x not in range"
-        else
-            Right .~(runM 
-                ((splinet2 knots yout y2out num_knots .<x>.) 0)) >.
+        else 
+            .< .~(foo a b knots yout y2out num_knots ) >.
     in odef ;;
