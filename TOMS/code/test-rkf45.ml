@@ -20,13 +20,11 @@ let test_f0 x y =
 let test_f1 x y = 
     Array.init (Array.length y) (fun i -> x *. (y.(i) *. y.(i)));;
 
-let sol0 = (odesolve (-2.0) 2.0 20 0.001 (Array.make 1 (1.0)) test_f0) ;;
+let sol0 = (odesolve (-2.0) 2.0 4 0.01 (Array.make 1 (1.0)) test_f0) ;;
 
 let sf0 = .! sol0;;
 let ans0 = ans_g sf0;;
 
-(*
 let sol1 = (odesolve (-2.0) 2.0 20 0.001 (Array.make 1 (1.0)) test_f1) ;;
 let sf1 = .! sol1;;
 let ans1 = ans_g sf1;;
-*)
