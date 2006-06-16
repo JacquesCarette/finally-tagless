@@ -1,6 +1,19 @@
+2006-06-16  Lydia van Dijk  <lvandijk@freenet.de>
+
+	* META.in: New file.
+	* Makefile (OCAMLFIND, OCAMLFINDFLAGS, FINDLIB-NAME): New
+	variables.
+	(VERSION): Bump forward minor to honor findlib support.
+	(findlib-install, findlib-uninstall, %:%.in): New rules.
+	(distclean): Add 'META'.
+	* README: Add 'META' to section 'Contents' and findlib
+	installation and use to section 'How to'.  Clarify that OCaml
+	only needs the byte-code version of the syntax extension.
+
 2006-06-07  Jacques Carette <carette@mcmaster.ca>
+
 	* README: Remove mention of recursive bindings for this release.
-    Make heading for license section LGPL.
+	Make heading for license section LGPL.
 
 2006-04-01  Lydia van Dijk  <lvandijk@freenet.de>
 

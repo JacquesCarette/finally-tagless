@@ -6,6 +6,7 @@
 
 COPYING                 -  License
 ChangeLog               -  Recent changes
+META.in                 -  Configuration information for findlib
 Makefile                -  GNU make build rules for the extension and the test frame
 README                  -  This file
 exception.ml            -  Implementation of exception monad
@@ -87,6 +88,10 @@ See the section "Known Issues" in the documentation.
 
         make
 
+Note that "pa_monad.cmo" is the only interesting product file.  There
+is no "pa_monad.cmx" for OCaml just needs the byte-code version of the
+syntax extension.
+
 
 ** Test
 
@@ -98,6 +103,11 @@ See the section "Known Issues" in the documentation.
         make doc
 
 
+** Install (with findlib)
+
+        make findlib-install
+
+
 ** Use
 
 Given the compiled extension "pa_monad.cmo" feed the source into the
@@ -105,6 +115,9 @@ preprocessor by saying
         ocamlc -pp 'camlp4o -I . pa_monad.cmo' -c ...
 Depending on where the cmo file lives the include path needs
 tweaking.
+
+After installation, findlib users cast the usual spell
+        ocamlfind ocamlc -package monad -c ...
 
 
 * Emacs - Tuareg Mode

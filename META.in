@@ -1,0 +1,11 @@
+name = "@NAME@"
+version = "@VERSION@"
+description = "Monadic syntax extension"
+
+requires = "camlp4"
+
+archive(syntax, create_toploop) = "@EXTENSION@"
+archive(syntax, preprocessor) = "@EXTENSION@"
+archive(syntax, toploop) = "@EXTENSION@"
+archive(syntax, byte) = ""
+archive(syntax, native) = ""

@@ -1,7 +1,7 @@
 # name:          Makefile
 # synopsis:      Construction rules for monadic "do" syntax extension
 # authors:       Chris L. Spiel (nifty stuff), Lydia E. van Dijk (boring rest)
-# last revision: Sun Jan 22 15:48:39 UTC 2006
+# last revision: Fri Jun 16 06:27:49 UTC 2006
 # ocaml version: 3.09.0
 
 
@@ -80,6 +80,10 @@ OCAMLOPT := ocamlopt
 OCAMLDOC := ocamldoc
 
 
+# Ocaml's universal package manager
+OCAMLFIND := ocamlfind
+
+
 # Flags for both OCaml compilers
 OCAMLFLAGS := -warn-error AX -g -dtypes
 
@@ -104,12 +108,20 @@ OCAMLLINKFLAGS := -g
 OCAMLDOCFLAGS := $(OCAMLCFLAGS-PA)
 
 
+# Flags for all findlib commands
+OCAMLFINDFLAGS :=
+
+
 # Name of the tarball in which we package all files
 DISTNAME := monad-syntax-extension
 
 
 # Version number of the tarball.  (See DISTNAME.)
-VERSION := 4.0
+VERSION := 4.1
+
+
+# Name of the package for findlib
+FINDLIB-NAME := monad
 
 
 ########################################################################
@@ -136,6 +148,18 @@ run-%: %
 # Generate the documentation.
 .PHONY: doc
 doc: $(HTML-DOCUMENTATION)/$(SYNTAX-EXTENSION:.cmo=).html
+
+
+# Let findlib install the syntax extension
+.PHONY: findlib-install
+findlib-install: META $(SYNTAX-EXTENSION)
+	$(OCAMLFIND) install $(OCAMLFINDFLAGS) $(FINDLIB-NAME) $^
+
+
+# Let findlib install the syntax extension
+.PHONY: findlib-uninstall
+findlib-uninstall:
+	$(OCAMLFIND) remove $(OCAMLFINDFLAGS) $(FINDLIB-NAME)
 
 
 # Create a distributable archive with the help of the revision
@@ -173,6 +197,7 @@ clean:
 distclean: clean
 	rm --force *.ml-pp *.mli-gen $(DISTNAME)-*.tar.gz *~
 	rm --force --recursive $(HTML-DOCUMENTATION)
+	rm --force META
 
 
 # Target for forced rule application
@@ -246,6 +271,15 @@ $(TESTS:.ml=.cmo): %.cmo: %.ml
 	$(OCAMLOPT) $(OCAMLLINKFLAGS) -o $@ $(call rotate-left, $^)
 
 
+# Instantiate generic files with the values of this Makefile.
+%: %.in
+	sed \
+	    -e 's|@VERSION@|$(VERSION)|g' \
+	    -e 's|@NAME@|$(FINDLIB-NAME)|g' \
+	    -e 's|@EXTENSION@|$(SYNTAX-EXTENSION)|g' \
+	    < $< > $@
+
+
 ########################################################################
 #
 # Explicit Rules
@@ -299,4 +333,3 @@ test-rec: utest.cmo
 monadic-io.cmo: monadic-io.ml exception.cmi io.cmi $(SYNTAX-EXTENSION)
 	$(OCAMLC) $(OCAMLCFLAGS) $(PP) -c $(@:cmo=ml)
 monadic-io: exception.cmo io.cmo monadic-io.cmo
-
