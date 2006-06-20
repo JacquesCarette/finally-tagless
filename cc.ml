@@ -20,30 +20,24 @@
   published explanation. The one that exists is considered ``terse''
   by one of the co-authors. We are planning to submit the technique
   to a suitable venue. We are not sure which.
+
+  This is joint work with Chung-chieh Shan and Amr Sabry.
 *)
-
-module type MONAD = sig
-  type 'a m
-  val return : 'a -> 'a m
-  val (>>=) : 'a m -> ('a -> 'a m) -> 'a m
-end ;;
-
 
 (* Haskell's Cont monad _without_ the answer-type polymorphism *)
 
 module CONT = struct
   (* type 'a m = {cont: 'w . ('a -> 'w) -> 'w } *)
-  type ('w,'a) m = {cont: ('a -> 'w) -> 'w }
+  type ('w,'a) mc = {cont: ('a -> 'w) -> 'w }
   let return x = {cont = fun k -> k x}
   let (>>=) m f = {cont = fun k -> m.cont (fun x -> (f x).cont k) }
 end;;
 
-
 open CONT
+let (>>) m1 m2 = m1 >>= (fun _ -> m2)
 
 let id x = x
-let (>>) m1 m2 = m1 >>= (fun _ -> m2)
-;;
+let compose f g = fun x -> f (g x)
 
 
 (* From  http://www.haskell.org/hawiki/MonadCont 
@@ -62,19 +56,17 @@ shift e = ContT $ \k ->
 let reset e = {cont = fun k -> k (e.cont id)}
 let shift e = {cont = fun k -> 
    (e (fun v -> {cont = fun c -> c (k v)})).cont id}
-;;
 
 
 (* reading and writing of references lifted to the Cont monad *)
-let lget p = {cont = fun k -> k !p}
-let lset p v = {cont = fun k -> (p := v; k ())}
+let lget p    = {cont = fun k -> k !p}
+let lset p v  = {cont = fun k -> (p := v; k ())}
 let lnewref x = {cont = fun k -> k (ref x)}
-let fmap f m = {cont = fun k -> m.cont (fun v -> k (f v))}
-;;
+let fmap f m  = {cont = fun k -> m.cont (fun v -> k (f v))}
 
 
 (* Our prompts and their primitive operations *)
-type 'a promptFP = PromptFP of (bool * (unit -> 'a)) ref
+type 'a prompt = PromptFP of (bool * (unit -> 'a)) ref
 
 let set'prompt (PromptFP p) v = lset p (false, fun () -> v)
 let get'prompt (PromptFP p) = fmap (fun x -> snd x ()) (lget p)
@@ -83,25 +75,21 @@ let check'prompt (PromptFP p)
                    if mark then (lset p (false, v) >> return true)
                    else return false)
 let set'mark (PromptFP p) = lget p >>= (fun (mark,v) -> lset p (true,v))
-;;
 
 
-type 'a cc1 = (unit,'a) CONT.m 
+type 'a cc1 = (unit,'a) CONT.mc
 type univs = unit
 type hfp = HFP of (univs cc1 -> hfp cc1) * 
                   ((univs cc1 -> univs cc1) -> univs cc1)
          | HVFP of univs
 type promptF0 = hfp ref
-;;
+
 
 (* Object-level single-prompt shift-reset with enough polymorphism *)
 let oReset (p0:promptF0) m = reset (m >>= lset p0) >> lget p0
 let oShift (p0:promptF0) f =
    shift (fun g -> f (fun v -> (g v) >> lget p0) >>= lset p0) >>= id
-;;
 
-let compose f g = fun x -> f (g x)
-;;
 
 let rec 
   pushPFP' p0 p m = hrStopF p0 p 
@@ -117,7 +105,7 @@ let rec
                            (HFP ((compose g (compose (hrStopF p0 p) f)), c)))
    in
    check'prompt p >>= fun v -> if v then handle else relay
-;;
+
 
 let shiftFP' p0 p f = 
      (lnewref (fun () -> failwith "undefined")) >>=
@@ -130,153 +118,31 @@ let shiftFP' p0 p f =
        (set'mark p) >> 
        (oShift p0 (fun k -> return (HFP (k, f')))) >>
        (lget ans >>= (fun vc -> return (vc ()))))
-;;
-
-module CCFP = struct
-   type 'a m = 'a cc1
-   let the'p0 = ref (HVFP ())(* Just avoid the Reader monad and use one P0 *)
-   let return x = CONT.return x
-   let (>>=) m f = CONT.(>>=) m f
-   let run m =
-       let ans = ref (fun () -> failwith "no prompt set") in
-       let () = m.cont (fun v -> ans := (fun () -> v)) in
-       !ans ()
-
-   (* newPrompt *)
-   let newPFP () = CONT.(>>=) 
-                 (lnewref (false, fun () -> failwith "undefined"))
-                 (fun x -> CONT.return (PromptFP x))
-
-   let pushPFP p m = pushPFP' the'p0 p (m >>= set'prompt p) >> get'prompt p
-
-   let shiftFP p f = shiftFP' the'p0 p f
-end
-;;
-
-(*----------------------------------------------------------------------*)
-(* Tests *)
-
-open CCFP
-
-let lplus x y = return (x + y)
-let newP () = newPFP ()
-let shiftP p e = shiftFP p e
-let pushP p m = pushPFP p m
-let abortP p e = shiftP p (fun _ -> e)
-;;
 
 
-let test1 = CCFP.run (return 1 >>= lplus 4)
-;;
-(* 5 *)
 
-let test2 = CCFP.run (
-  newP () >>= (fun p ->
-    pushP p (pushP p (return 5)) >>= lplus 4))
-;;
-(* 9 *)
-
-let test3 = CCFP.run (
-  newP () >>= (fun p ->
-    (pushP p (abortP p (return 5) >>= lplus 6)) >>= lplus 4))
-;;
-(* 9 *)
-
-let test3' = CCFP.run (
-  newP () >>= (fun p ->
-    (pushP p (pushP p (abortP p (return 5) >>= lplus 6))) >>= lplus 4))
-;;
-(* 9 *)
-
-let test3' = CCFP.run (
-  newP () >>= (fun p ->
-   (pushP p (
-         (pushP p (abortP p (return 5) >>= lplus 6)) >>=
-         (fun v1 -> abortP p (return 7)) >>= lplus 10))
-   >>= lplus 20))
-;;
-(* 27 *)
-
-let test3'' = 
- try
- CCFP.run (
-  newP () >>= (fun p ->
-   (pushP p (
-         (pushP p (abortP p (return 5) >>= lplus 6)) >>=
-         (fun v1 -> abortP p (return 7)) >>= lplus 10))
-   >>= (fun _ -> abortP p (return 9)) >>= lplus 20))
- with Failure a -> print_string a; 0
-;;
-(* Must be an error *)
+(* The global prompt P0 *)
+let the'p0 = ref (HVFP ())
 
 
-(* The Standard shift test
- (display (+ 10 (reset (+ 2 (shift k (+ 100 (k (k 3))))))))
- ; --> 117
-*)
+(* Exported types and operations *)
+type 'a m = 'a cc1
 
-let test5 = CCFP.run (
-  newP () >>= (fun p0 ->
-  newP () >>= (fun p1 ->
-  (pushP p0 (
-    (shiftP p0 (fun sk -> sk (sk (return 3)) >>= lplus 100)) >>= lplus 2))
-  >>= lplus 10)))
-;;
-(* 117 *)
+(* Our return and bind are the same as those in the CONT monad *)
+let return x = CONT.return x
+let bind m f = CONT.(>>=) m f
 
-let test5' = CCFP.run (
-  newP () >>= (fun p0 ->
-  newP () >>= (fun p1 ->
-  (pushP p0 (
-    (shiftP p0 (fun sk -> (sk (return 3)) >>= lplus 100)) >>= lplus 2))
-  >>= lplus 10)))
-;;
-(* 115 *)
+let run m =
+  let ans = ref (fun () -> failwith "no prompt set") in
+  let () = m.cont (fun v -> ans := (fun () -> v)) in
+  !ans ()
 
-let test5'' = CCFP.run (
-  newP () >>= (fun p0 ->
-  newP () >>= (fun p1 ->
-  (pushP p0 (
-    (shiftP p0 (fun sk -> sk (pushP p1 (sk (abortP p1 (return 3))))
-       >>= lplus 100)) >>= lplus 2))
-  >>= lplus 10)))
-;;
-(* 115 *)
+let new_prompt () = 
+  CONT.(>>=) 
+    (lnewref (false, fun () -> failwith "undefined"))
+    (fun x -> CONT.return (PromptFP x))
 
-let test6 = CCFP.run (
-  newP () >>= (fun p1 ->
-  newP () >>= (fun p2 ->
-  let pushtwice sk = sk (sk (return 3)) in
-  (pushP p1 (pushP p2 (shiftP p1 pushtwice) >>= lplus 1) >>= lplus 10))))
-;;
+let pushP p m = pushPFP' the'p0 p (m >>= set'prompt p) >> get'prompt p
 
-(* 15 *)
+let shiftP p f = shiftFP' the'p0 p f
 
-(* The most stringent test: capturing prompts in subcontinuations:
-   or, overlapping control regions
- *)
-
-let test7 = CCFP.run (
-  newP () >>= (fun p1 ->
-  newP () >>= (fun p2 ->
-  newP () >>= (fun p3 ->
-  let pushtwice sk = sk (sk (shiftP p2 (fun sk2 -> sk2 (sk2 (return 3))))) in
-  (pushP p1 ((pushP p2 ((pushP p3 (shiftP p1 pushtwice)) >>= lplus 10))
-             >>= lplus 1))
-  >>= lplus 100))))
-;;
-(* 135 *)
-
-(*
- (reset (let ((x (shift f (cons 'a (f '()))))) (shift g x))))
- ==> '(a)
-*)
-
-let testls = CCFP.run (
-  newP () >>= (fun p ->
-    pushP p (
-       let x = shiftP p (fun f -> f (return []) >>= (fun t -> return ("a"::t)))
-       in x >>= (fun xv -> shiftP p (fun _ -> return xv)))))
-;;
-		
-(* ["a"] *)

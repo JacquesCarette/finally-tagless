@@ -31,7 +31,8 @@ SYNTAX-EXTENSION := pa_monad.cmo
 # Names of all sources that define non-interactive tests.  These files
 # will be compiled and run.
 TESTS := pythagorean-triples.ml \
-         test-exception.ml test-syntax.ml test-monad.ml test-rec.ml
+	test-exception.ml test-syntax.ml test-monad.ml test-rec.ml \
+	test-cc.ml
 
 
 # Sources of interactive tests.  These files will only be compiled,
@@ -41,7 +42,7 @@ INTERACTIVE-TESTS := monadic-io.ml
 
 # Names of all modules in addition to the syntax-extension that are
 # documented.
-ADDITIONAL-DOCUMENTED-MODULES := exception.ml io.ml utest.ml
+ADDITIONAL-DOCUMENTED-MODULES := exception.ml io.ml cc.ml utest.ml
 
 
 # Pre-Precessor-Pretty-Printer for OCaml
@@ -297,10 +298,15 @@ $(HTML-DOCUMENTATION)/$(SYNTAX-EXTENSION:.cmo=).html: \
 # Additional dependencies of the exception monad
 exception.cmo: exception.cmi
 
-
 # Additional dependencies of the IO-monad
 io.cmo: exception.cmi io.cmi
 
+# Additional dependencies of the CC-monad
+cc.cmo: cc.cmi
+
+# Additional dependencies of the "CC Monad" example
+test-cc.cmo: cc.cmi utest.cmi $(SYNTAX-EXTENSION)
+test-cc: cc.cmo utest.cmo
 
 # Additional dependencies of the "Exception Monad" example
 test-exception.cmo: exception.cmi utest.cmi $(SYNTAX-EXTENSION)
