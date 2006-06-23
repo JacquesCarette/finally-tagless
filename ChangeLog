@@ -1,3 +1,7 @@
+2006-06-26  Jacques Carette  <carette@mcmaster.ca>
+
+	* cc.ml: Fix 2 typos in the comments
+
 2006-06-19  Oleg  <oleg@okmij.org>
 
 	* cc.ml, cc.mli, test-cc.ml: Delimited continuation monad

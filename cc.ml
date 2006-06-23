@@ -7,7 +7,7 @@
   This code was a part of a constructive proof that if 
   reference cells are available, then the single-prompt shift/reset
   without polymoprhic answertype is sufficient to implement
-  muplti-prompt shift/reset with the polymoprhic answertype --
+  multi-prompt shift/reset with the polymorphic answertype --
   while fully preserving strong typing.
   In other words, if a type system is strong enough to support
   reference cells, it shall support multi-prompt delimited continuations.
