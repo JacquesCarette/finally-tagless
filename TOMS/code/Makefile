@@ -30,7 +30,7 @@ all: clean-test test $(TEST)
 test: $(SYNTAX_EXTENSION) $(OBJ) $(RES) $(TEST)
 	diff rkf45.out rkf45.res
 
-mytop: mytop.exe
+mytop: 
 	ocamlmktop -o mytop nums.cma
 
 .PHONY: clean-test

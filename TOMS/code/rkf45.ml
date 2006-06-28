@@ -76,7 +76,7 @@ let spline x y =
         y2out.(Array.length x - 1).(i) <- 0.0;
     done;
     (* Back substitution *)
-    for i = Array.length x - 2 to 0 do
+    for i = Array.length x - 2 downto 0 do
         for j = 0 to Array.length y2out.(0) - 1 do
             y2out.(i).(j) <- (y2out.(i).(j) *. y2out.(i+1).(j)) +. u.(i).(j);
         done
