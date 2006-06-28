@@ -30,6 +30,9 @@ all: clean-test test $(TEST)
 test: $(SYNTAX_EXTENSION) $(OBJ) $(RES) $(TEST)
 	diff rkf45.out rkf45.res
 
+mytop: mytop.exe
+	ocamlmktop -o mytop nums.cma
+
 .PHONY: clean-test
 clean-test:
 	rm -f rkf45.out
@@ -49,8 +52,8 @@ $(OBJ): $(BASE)
 %.cmo: %.ml
 	metaocamlc -pp '$(PP)' -g -c $<
 
-%.out: test-%.ml %.cmo
-	metaocaml ./infra.cmo ./$*.cmo < $< > $@
+%.out: test-%.ml %.cmo mytop
+	./mytop ./infra.cmo ./$*.cmo < $< > $@
 
 ########################################################################
 #

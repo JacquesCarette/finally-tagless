@@ -20,11 +20,22 @@ let test_f0 x y =
 let test_f1 x y = 
     Array.init (Array.length y) (fun i -> x *. (y.(i) *. y.(i)));;
 
-let sol0 = (odesolve (-2.0) 2.0 4 0.01 (Array.make 1 (1.0)) test_f0) ;;
+(* some poor unit testing *)
+let sp1 = spline (Array.of_list [1.;2.;3.;4.;5.;6.])
+                 (Array.of_list (List.map (fun x -> Array.make 1 x) [1.;3.;4.;3.;4.;2.])) ;;
+
+let knots = 
+     let a = -2.0 and b = 2.0 and num_knots = 5 in
+	 Array.init num_knots 
+        (fun i -> (a +. ((b -. a) *. (float_of_int
+        i /. float_of_int (num_knots - 1))))) ;;
+let (ss,e) = rk45 knots (Array.make 1 (1.0)) test_f0 ;;
+let tt = spline knots ss;;
+let (sol0,err0) = (odesolve (-2.0) 2.0 4 (Array.make 1 (1.0)) test_f0) ;;
 
 let sf0 = .! sol0;;
 let ans0 = ans_g sf0;;
 
-let sol1 = (odesolve (-2.0) 2.0 20 0.001 (Array.make 1 (1.0)) test_f1) ;;
+let (sol1,err1) = (odesolve (-2.0) 2.0 20 (Array.make 1 (1.0)) test_f1) ;;
 let sf1 = .! sol1;;
 let ans1 = ans_g sf1;;

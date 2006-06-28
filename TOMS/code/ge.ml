@@ -335,7 +335,7 @@ end
 
 module FDet = AbstractDet(FloatDomain)
 module IDet = AbstractDet(IntegerDomain)
-(* module RDet = AbstractDet(RationalDomain) *)
+module RDet = AbstractDet(RationalDomain)
 
 module type PIVOT = 
     functor (Dom: DOMAIN) -> 
@@ -631,7 +631,6 @@ module GenFA24 = Gen(FloatDomain)
                     (RowPivot)
                     (DivisionUpdate(FloatDomain)(GenericArrayContainer)(FDet))
                     (OutDetRankPivot(FloatDomain)(GenericArrayContainer)(FDet)(Rank))
-(*
 module GenRA1 = Gen(RationalDomain)
                    (GenericArrayContainer)
                    (RowPivot)
@@ -652,4 +651,3 @@ module GenRA4 = Gen(RationalDomain)
                    (RowPivot)
                    (DivisionUpdate(RationalDomain)(GenericArrayContainer)(RDet))
                    (OutDetRank(RationalDomain)(GenericArrayContainer)(RDet)(Rank))
-*)

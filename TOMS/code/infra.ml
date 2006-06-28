@@ -127,7 +127,6 @@ module IntegerDomain =
     let normalizerg = fun x -> x
 end
 
-(*
 module RationalDomain = 
   struct
     type v = Num.num
@@ -144,7 +143,6 @@ module RationalDomain =
     let normalizerf = None 
     let normalizerg = fun x -> x
 end
-*)
 
 module type CONTAINER2D = functor(Dom:DOMAIN) -> sig
   type contr
