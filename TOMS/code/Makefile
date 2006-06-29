@@ -11,9 +11,9 @@ SYNTAX_EXTENSION := ../camlp4/pa_monad.cmo
 PP := camlp4o -I . $(SYNTAX_EXTENSION)
 
 BASE := infra.cmo
-OBJ  := ge.cmo rkf45.cmo
-TEST := ge.out rkf45.out
-RES  := ge.res rkf45.res
+OBJ  := ge.cmo rkf45.cmo fft.cmo
+TEST := ge.out rkf45.out fft.out
+RES  := ge.res rkf45.res fft.res
 
 VERSION := 1.0
 
