@@ -266,4 +266,40 @@ val err1 : float = 0.000164713006552575573
 0.999504512797
 Error: x not in range
 val ans1 : unit = ()
+#   val sol2 :
+  ('a, (unit -> unit) * (int -> float -> (string, float) Rkf45.either)) code =
+  .<let arr_1 =
+   (Array.init (2 - 1)
+     (fun l_2 -> (Array.init (2 - 1) (fun p_3 -> fun q_4 -> 0.)))) in
+  (fun () ->
+    (arr_1.(0)).(0) <-
+     fun y_8 ->
+      let t_9 = ((2. -. y_8) /. 4.) in
+      let t_10 = (((t_9 *. t_9) *. t_9) -. t_9) in
+      let t_11 = ((y_8 -. (-2.)) /. 4.) in
+      let t_12 = (((t_11 *. t_11) *. t_11) -. t_11) in
+      (((t_9 *. 1.) +. (t_11 *. 1.)) +.
+        (((t_10 *. 0.) +. (t_12 *. 0.)) *. 2.66666666667));
+    (),
+   fun i_5 ->
+    fun x_6 ->
+     if ((x_6 < (-2.)) || (x_6 > 2.)) then (Left ("Error: x not in range"))
+     else
+      (Right
+        (((arr_1.((fun x_7 -> (min (int_of_float ((x_7 -. (-2.)) *. 0.5)) 0))
+                   x_6)).(i_5)) x_6)))>.
+val err2 : float = 0.
+# val sf2 : (unit -> unit) * (int -> float -> (string, float) Rkf45.either) =
+  (<fun>, <fun>)
+# Error: x not in range
+1.
+1.
+1.
+1.
+1.
+1.
+1.
+1.
+Error: x not in range
+val ans2 : unit = ()
 # 

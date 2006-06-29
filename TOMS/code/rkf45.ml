@@ -170,9 +170,9 @@ exception Tolerance of string;;
 
 let odesolve a b num_knots yin f =
     (* Create num_knots equally spaced knots across a..b *)
-    if num_knots < 3 then
+    if num_knots < 2 then
     begin
-        print_string "Error: There must be at least 3 knots";
+        print_string "Error: There must be at least 2 knots";
         print_endline ""
     end;
     let knots = Array.init num_knots 
