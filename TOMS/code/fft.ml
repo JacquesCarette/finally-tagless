@@ -144,7 +144,7 @@ let liftcM op (x,y) =
 *)
 let rec trivial_mult ((j,n) as f) =
    if 2*j >= n then (* f in III and IV quadrants: reflect *)
-                trivial_mult (rationalize (j-n/2,n))
+        trivial_mult (rationalize (j-n/2,n))
    else match f with
     (0,1) -> true (* multiplication by 1 *)
    |(1,4) -> true (* multiplication by I *)
@@ -176,20 +176,22 @@ let force_mult_ad (Code (f,rx,ix)) =
   let smc = s -. c in
   let () = assert (c > 0.0 && s > 0.0 )
   in
-  bind (retN .<c *. (.~rx +. .~ix)>.) (fun t1 ->
-  bind (retN .<spc *. .~ix>.) (fun t2 ->
-    if smc > 0.0 then
-      bind (retN .<smc *. .~rx>.) (fun t3 ->
-      bind (retN .<.~t1 -. .~t2>.) (fun rcs ->
-      bind (retN .<.~t1 +. .~t3>.) (fun ics ->
-      ret (Code (newf,rcs,ics)))))
-    else
-      let cms = c -. s in (* keep all the constants positive *)
-      bind (retN .<cms *. .~rx>.) (fun nt3 ->
-      bind (retN .<.~t1 -. .~t2>.) (fun rcs ->
-      bind (retN .<.~t1 -. .~nt3>.) (fun ics ->
-      ret (Code (newf,rcs,ics)))))
-))
+  perform
+      t1 <-- retN .<c *. (.~rx +. .~ix)>.;
+      t2 <-- retN .<spc *. .~ix>.;
+      if smc > 0.0 then
+          perform
+          t3  <-- retN .<smc *. .~rx>.;
+          rcs <-- retN .<.~t1 -. .~t2>.;
+          ics <-- retN .<.~t1 +. .~t3>.;
+          ret (Code (newf,rcs,ics))
+      else
+          let cms = c -. s in (* keep all the constants positive *)
+          perform
+          nt3 <-- retN .<cms *. .~rx>.;
+          rcs <-- retN .<.~t1 -. .~t2>.;
+          ics <-- retN .<.~t1 -. .~nt3>.;
+          ret (Code (newf,rcs,ics))
  
 
 (* Perform (rx,ix) +/- _complex_fy*(ry,iy) and set the resulting
@@ -199,27 +201,32 @@ let force_mult_ad (Code (f,rx,ix)) =
 *)
 let rec do_linear_ad fx rx ix ((j,n) as fy) ry iy =
    if 2*j >= n then (* fy in III and IV quadrants: reflect *)
-            bind (do_linear_ad fx rx ix (sub_rat fy (1,2)) ry iy)
-            (fun (p,m) -> ret (m,p)) else
+        perform
+            (p,m) <-- do_linear_ad fx rx ix (sub_rat fy (1,2)) ry iy;
+            ret (m,p) 
+   else
    match fy with (* x + y *)
-   (0,1) -> bind (retN .<.~rx +. .~ry>.) (fun re ->
-            bind (retN .<.~ix +. .~iy>.) (fun im ->
-            bind (retN .<.~rx -. .~ry>.) (fun re1 ->
-            bind (retN .<.~ix -. .~iy>.) (fun im1 ->
-            ret (Code (fx,re,im),Code (fx,re1,im1))))))
-  |(1,4) -> (* x + I*y *)
-            bind (retN .<.~rx -. .~iy>.) (fun re ->
-            bind (retN .<.~ix +. .~ry>.) (fun im ->
-            bind (retN .<.~rx +. .~iy>.) (fun re1 ->
-            bind (retN .<.~ix -. .~ry>.) (fun im1 ->
-            ret (Code (fx,re,im),Code (fx,re1,im1) )))))
+   (0,1) -> perform
+       re <-- retN .<.~rx +. .~ry>.;
+       im <-- retN .<.~ix +. .~iy>.;
+       re1 <-- retN .<.~rx -. .~ry>.;
+       im1 <-- retN .<.~ix -. .~iy>.;
+       ret (Code (fx,re,im),Code (fx,re1,im1))
+  |(1,4) -> perform (* x + I*y *)
+        re  <-- retN .<.~rx -. .~iy>.;
+        im  <-- retN .<.~ix +. .~ry>.;
+        re1 <-- retN .<.~rx +. .~iy>.;
+        im1 <-- retN .<.~ix -. .~ry>.;
+        ret (Code (fx,re,im),Code (fx,re1,im1) )
   |(j,8) -> (* x + (cos pi/4 + I*sin pi/4)*y *)
-            let cs = sin (pi /. 4.0) in
-            bind (retN .<cs *. (.~ry -. .~iy)>.) (fun rcs ->
-            bind (retN .<cs *. (.~ry +. .~iy)>.) (fun ics ->
-            do_linear_ad fx rx ix (rationalize (j-1,8)) rcs ics))
-  |(j,n) -> bind (force_mult_ad (Code (fy,ry,iy))) (fun (Code (fy,ry,iy)) ->
-do_linear_ad fx rx ix fy ry iy)
+        let cs = sin (pi /. 4.0) in
+        perform
+            rcs <-- retN .<cs *. (.~ry -. .~iy)>.;
+            ics <-- retN .<cs *. (.~ry +. .~iy)>.;
+            do_linear_ad fx rx ix (rationalize (j-1,8)) rcs ics
+  | _ -> perform
+        (Code (fy,ry,iy)) <-- force_mult_ad (Code (fy,ry,iy));
+        do_linear_ad fx rx ix fy ry iy
 
 (* This one is monadic: it may need to let-bind something
    Note: the add_sub_ad function is not symmetric!
@@ -236,34 +243,35 @@ let rec add_sub_ad ((Code (fx,rx,ix)) as x) ((Code (fy,ry,iy)) as y) =
    let fyx = (sub_rat fy fx) in
    if (trivial_mult fx) || (trivial_mult fyx) then
       do_linear_ad fx rx ix fyx ry iy
-   else
-   bind (force_mult_ad x) (fun x ->
-   bind (force_mult_ad y) (fun y ->
-   add_sub_ad x y))
+   else perform
+       x <-- force_mult_ad x;
+       y <-- force_mult_ad y;
+       add_sub_ad x y
 
 (* Staged Monadic split *)
 let split_ad dir l =
   let n = List.length l in
   let rec comb j = function
-      (x::xs, y::ys) ->
-        bind (add_sub_ad x y) (fun (xpy,xmy) ->
-		bind (comb (j+1) (xs,ys)) (fun (a,b) ->
-        ret (xpy::a, (mult_aa xmy (w_aa dir n j))::b)))
+      (x::xs, y::ys) -> perform
+        (xpy,xmy) <-- add_sub_ad x y;
+		(a,b) <-- comb (j+1) (xs,ys);
+        ret (xpy::a, (mult_aa xmy (w_aa dir n j))::b)
     | _ -> ret ([],[]) in
   comb 0 (cleave_list l)
 
 let fft_ad dir f l =
   if List.length l = 1 then ret l
-  else
-    bind (split_ad dir l) (fun (p0,p1) ->
-    bind (f p0) (fun y0 ->
-    bind (f p1) (fun y1 ->
-    ret (merge_u (y0,y1)))))
+  else perform
+    (p0,p1) <-- split_ad dir l;
+    y0      <-- f p0;
+    y1      <-- f p1;
+    ret (merge_u (y0,y1))
 
 let gen_ad dir size nums =
   run (y_sm (fft_ad dir))
-    ((fun p -> (bind (liftcM retN p)
-	(fun (x,y) -> ret (Code (rat_one, x, y))))),
+    ((fun p -> perform
+        (x,y) <-- (liftcM retN p);
+	    ret (Code (rat_one, x, y))),
      (* here we assert c is a simple piece of code!*)
      (* And it is because the last stage of *)
      (* FFT is only a+b and a-b *)

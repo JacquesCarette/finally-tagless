@@ -29,6 +29,7 @@ all: clean-test test $(TEST)
 .PHONY: test 
 test: $(SYNTAX_EXTENSION) $(OBJ) $(RES) $(TEST)
 	diff rkf45.out rkf45.res
+	diff fft.out fft.res
 
 mytop: 
 	ocamlmktop -o mytop nums.cma
