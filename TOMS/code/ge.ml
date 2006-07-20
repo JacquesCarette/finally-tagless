@@ -67,7 +67,7 @@ end
 
 module NoRank:RANK = struct
   include TrackRank
-  let fin () = ret Idx.minusone
+  let fin () = Idx.minusoneL
 end
 
 (* In the case of a non-fraction-free algorithm with no Det
@@ -95,12 +95,12 @@ module NoDet(Dom:DOMAIN) =
   type tdet = outdet ref
   type 'a lstate = 'a TD.lstate
   let decl () = ret ()
-  let upd_sign () = retUnit
-  let zero_sign () = retUnit
-  let acc v = retUnit
+  let upd_sign () = retUnitL
+  let zero_sign () = retUnitL
+  let acc v = retUnitL
   let get () = ret (liftRef Code.cunit)
-  let set v = retUnit
-  let fin () = retUnit
+  let set v = retUnitL
+  let fin () = retUnitL
 end
 
 module AbstractDet(Dom: DOMAIN) =
@@ -135,7 +135,7 @@ module AbstractDet(Dom: DOMAIN) =
   let acc v = perform
       det <-- dfetch ();
       det2 <-- ret (snd det);
-      r <-- Dom.times (liftGet det2) v;
+      r <-- Dom.timesL (liftGet det2) v;
       Code.assign det2 r
   let get () = perform
       det <-- dfetch ();
@@ -146,9 +146,9 @@ module AbstractDet(Dom: DOMAIN) =
       Code.assign det2 v
   let fin () = perform
       (det_sign,det) <-- dfetch ();
-      ifM (LogicCode.equal (liftGet det_sign) Idx.zero) (ret Dom.zero)
-      (ifM (LogicCode.equal (liftGet det_sign) Idx.one) (ret (liftGet det))
-          (Dom.uminus (liftGet det)))
+      ifM (LogicCode.equalL (liftGet det_sign) Idx.zero) (ret Dom.zero)
+      (ifM (LogicCode.equalL (liftGet det_sign) Idx.one) (ret (liftGet det))
+          (Dom.uminusL (liftGet det)))
 end
 
 module type UPDATE = sig
@@ -174,10 +174,10 @@ module DivisionUpdate
   type 'a idx = ('a,int) code
   module D = Det
   let update b r c i k = perform
-      t <-- l2 Dom.div (Ctr.get b i c) (Ctr.get b r c);
-      l <-- l1 (Dom.times t) (Ctr.get b r k);
-      y <-- l2 Dom.minus (Ctr.get b i k) (ret l);
-      Ctr.set b i k (Dom.normalizerg y)
+      t <-- Dom.divL (Ctr.get b i c) (Ctr.get b r c);
+      l <-- Dom.timesL t (Ctr.get b r k);
+      y <-- Dom.minusL (Ctr.get b i k) l;
+      Ctr.setL b i k (Dom.normalizerg y)
   let update_det v = Det.acc v
 end
 
@@ -190,13 +190,13 @@ module FractionFreeUpdate(Dom:DOMAIN)(C:CONTAINER2D)
   type 'a idx = ('a,int) code
   module D = Det
   let update b r c i k = perform
-      x <-- l2 Dom.times (Ctr.get b i k) (Ctr.get b r c);
-      y <-- l2 Dom.times (Ctr.get b r k) (Ctr.get b i r);
-      z <-- Dom.minus x y;
+      x <-- Dom.timesL (Ctr.get b i k) (Ctr.get b r c);
+      y <-- Dom.timesL (Ctr.get b r k) (Ctr.get b i r);
+      z <-- Dom.minusL x y;
       t <-- ret (Dom.normalizerg z);
       d <-- Det.get ();
-      ov <-- Dom.div t (liftGet d);
-      Ctr.set b i k ov
+      ov <-- Dom.divL t (liftGet d);
+      Ctr.setL b i k ov
   let update_det v = Det.set v
 end
 
@@ -244,7 +244,7 @@ end
 module DiscardPivot:TRACKPIVOT = struct
   type 'a lstate = ('a, perm list ref) code
   let decl () = ret ()
-  let add v = retUnit
+  let add v = retUnitL
   let fin () = ret ListCode.nil
 end
 
@@ -367,8 +367,8 @@ struct
         (match (Dom.better_than) with
          Some sel -> 
               retLoopM r (Idx.pred n) (fun j -> perform
-              bjc <-- l1 retN (Ctr.get b j c);
-              whenM (l1 LogicCode.not (LogicCode.equal bjc Dom.zero ))
+              bjc <-- l1 retN (Ctr.getL b j c);
+              whenM (l1 LogicCode.notL (LogicCode.equalL bjc Dom.zero ))
                   (retMatchM (liftGet pivot)
                     (fun pv ->
                       perform
@@ -381,15 +381,15 @@ struct
               )
          | None ->
            perform
-            brc <-- l1 retN (Ctr.get b r c);
-            ifM (l1 LogicCode.not (LogicCode.equal brc Dom.zero))
+            brc <-- l1 retN (Ctr.getL b r c);
+            ifM (l1 LogicCode.notL (LogicCode.equalL brc Dom.zero))
               (* the current element is good enough *)
               (Code.assign pivot (MaybeCode.just (TupleCode.tup2 r brc)))
               (let traverse = fun o j ->
                   whenM (ret (Idx.less j n))
                     (perform
-                        bjc <-- l1 retN (Ctr.get b j c);
-                        ifM (LogicCode.equal bjc Dom.zero)
+                        bjc <-- l1 retN (Ctr.getL b j c);
+                        ifM (LogicCode.equalL bjc Dom.zero)
                             (Code.apply o (Idx.succ j))
                             (Code.assign pivot (MaybeCode.just 
                                 (TupleCode.tup2 j bjc)))) in
@@ -399,7 +399,7 @@ struct
                 (fun pv ->
                      perform
                          (i,bic) <-- ret (liftPair pv);
-                         seqM (whenM (LogicCode.notequal i r)
+                         seqM (whenM (LogicCode.notequalL i r)
                                 (seqM 
                                    (ret (Ctr.swap_rows_stmt b r i))
                                    (D.upd_sign ())))
@@ -416,8 +416,8 @@ struct
        seqM (retLoopM r (Idx.pred n) (fun j -> 
               retLoopM c (Idx.pred m) (fun k ->
            perform
-              bjk <-- l1 retN (Ctr.get b j k);
-              whenM (l1 LogicCode.not ( LogicCode.equal bjk Dom.zero) )
+              bjk <-- l1 retN (Ctr.getL b j k);
+              whenM (l1 LogicCode.notL ( LogicCode.equalL bjk Dom.zero) )
               (match (Dom.better_than) with
               | Some sel ->
                   (retMatchM (liftGet pivot)
@@ -439,12 +439,12 @@ struct
                      perform
                          (pr,pc,brc) <-- ret (liftPPair pv);
                          seqM
-                             (whenM (LogicCode.notequal pc c)
+                             (whenM (LogicCode.notequalL pc c)
                                  (seqM
                                    (ret (Ctr.swap_cols_stmt b c pc))
                                    (D.upd_sign ())))
                            (seqM
-                             (whenM (LogicCode.notequal pr c)
+                             (whenM (LogicCode.notequalL pr c)
                                  (seqM
                                    (ret (Ctr.swap_rows_stmt b r pr))
                                    (D.upd_sign ())))
@@ -459,7 +459,7 @@ struct
    (* In this case, we assume diagonal dominance, and so
       just take the diagonal as ``pivot'' *)
    let findpivot b r n c m = perform 
-       brc <-- Ctr.get b r c;
+       brc <-- Ctr.getL b r c;
        ret (MaybeCode.just brc)
 end
 
@@ -474,11 +474,11 @@ module Gen(Dom: DOMAIN)(C: CONTAINER2D)(PivotF: PIVOT)
     let gen =
       let zerobelow b r c m n brc =
         let innerbody i = perform
-            bic <-- Ctr.get b i c;
-            whenM (l1 LogicCode.not (LogicCode.equal bic Dom.zero ))
+            bic <-- Ctr.getL b i c;
+            whenM (l1 LogicCode.notL (LogicCode.equalL bic Dom.zero ))
                 (seqM (retLoopM (Idx.succ c) (Idx.pred m)
                           (fun k -> Update.update b r c i k) )
-                      (Ctr.set b i c Dom.zero)) in 
+                      (Ctr.setL b i c Dom.zero)) in 
         perform
               seqM (retLoopM (Idx.succ r) (Idx.pred n) innerbody) 
                    (Update.update_det brc) in
@@ -491,7 +491,7 @@ module Gen(Dom: DOMAIN)(C: CONTAINER2D)(PivotF: PIVOT)
           () <-- Update.D.decl ();
           () <-- Out.P.decl ();
           seqM 
-            (retWhileM (LogicCode.and_ (Idx.less (liftGet c) m)
+            (retWhileM (LogicCode.and_L (Idx.less (liftGet c) m)
                                        (Idx.less (liftGet r) n) )
                ( perform
                rr <-- retN (liftGet r);

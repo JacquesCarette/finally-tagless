@@ -6,6 +6,7 @@ let retN a = fun s k -> .<let t = .~a in .~(k s .<t>.)>.
 let bind a f = fun s k -> a s (fun s' b -> f b s' k)
 let k0 s v = v  (* Initial continuation -- for `reset' and `run' *)
 let runM m = m [] k0 (* running our monad *)
+let lift x = .< x >.
 let liftRef x = .< ref .~x >. 
 let liftGet x = .< ! .~x >. 
 let liftPair x = (.< fst .~x >., .< snd .~x >.)
@@ -20,8 +21,11 @@ let l3 f = fun x y z -> perform tx <-- x; ty <-- y; tz <-- z; f tx ty tz
 let fetch s k = k s s
 let store v s k = k (v::s) ()
 
-(* Functions that end in M take monads as arguments and partially
-   run them -- in a reset fashion *)
+(* Naming conventions: 
+   Functions that end in M take monads as arguments and partially
+   run them -- in a reset fashion 
+   Functions that end in L always return monadic values from plain
+   value -- the L is stands for ``lifted'' *)
 
 (* sequencing *)
 (* Note: the difference between `seq' and `seqM' is quite akin
@@ -30,8 +34,8 @@ let store v s k = k (v::s) ()
    but not the other way around 
 *)
 
-let seq' a b = .< begin .~a ; .~b end >.
-let seq a b = ret (seq' a b)
+let seq a b = .< begin .~a ; .~b end >.
+let seqL a b = ret (seq a b)
 
 let seqM a b = fun s k -> k s .< begin .~(a s k0) ; .~(b s k0) end >.
 
@@ -67,7 +71,7 @@ let genrecloop gen rtarg = fun s k ->
 
 (* nothing *)
 (* Need to use `fun' explictly to avoid monomorphising *)
-let retUnit = fun s k -> k s .< () >.
+let retUnitL = fun s k -> k s .< () >.
 
 (* another non-trivial morphism: generate a bit of code *)
 (* let codegen v cf = fun s k -> cf (k s v) *)
@@ -79,11 +83,16 @@ module type DOMAIN = sig
   type 'a vc = ('a,v) code
   val zero : 'a vc
   val one : 'a vc
-  val plus : 'a vc -> 'a vc -> ('a vc, 's, 'w) monad
-  val times : 'a vc -> 'a vc -> ('a vc, 's, 'w) monad
-  val minus : 'a vc -> 'a vc -> ('a vc, 's, 'w) monad
-  val uminus : 'a vc -> ('a vc, 's, 'w) monad
-  val div : 'a vc -> 'a vc -> ('a vc, 's, 'w) monad
+  val plus : 'a vc -> 'a vc -> 'a vc
+  val times : 'a vc -> 'a vc -> 'a vc
+  val minus : 'a vc -> 'a vc -> 'a vc
+  val uminus : 'a vc -> 'a vc
+  val div : 'a vc -> 'a vc -> 'a vc
+  val plusL : 'a vc -> 'a vc -> ('a vc, 's, 'w) monad
+  val timesL : 'a vc -> 'a vc -> ('a vc, 's, 'w) monad
+  val minusL : 'a vc -> 'a vc -> ('a vc, 's, 'w) monad
+  val uminusL : 'a vc -> ('a vc, 's, 'w) monad
+  val divL : 'a vc -> 'a vc -> ('a vc, 's, 'w) monad
   val better_than : ('a vc -> 'a vc -> (('a,bool) code, 's, 'w) monad) option
   val normalizerf : (('a,v -> v) code ) option
   val normalizerg : 'a vc -> 'a vc
@@ -100,11 +109,16 @@ module FloatDomain =
     type 'a vc = ('a,v) code
     let zero = .< 0. >.  
     let one = .< 1. >. 
-    let plus x y = ret .<.~x +. .~y>. 
-    let times x y = ret .<.~x *. .~y>.
-    let minus x y = ret .<.~x -. .~y>.
-    let uminus x = ret .<-. .~x>.
-    let div x y = ret .<.~x /. .~y>. 
+    let plus x y = .<.~x +. .~y>. 
+    let times x y = .<.~x *. .~y>.
+    let minus x y = .<.~x -. .~y>.
+    let uminus x = .<-. .~x>.
+    let div x y = .<.~x /. .~y>. 
+    let plusL x y = ret (plus x y)
+    let timesL x y = ret (times x y)
+    let minusL x y = ret (minus x y)
+    let uminusL x = ret (uminus x)
+    let divL x y = ret (div x y)
     let better_than = Some (fun x y -> ret .<abs_float .~x < abs_float .~y >. )
     let normalizerf = None 
     let normalizerg = fun x -> x
@@ -117,11 +131,16 @@ module IntegerDomain =
     type 'a vc = ('a,v) code
     let zero = .< 0 >.  
     let one = .< 1 >. 
-    let plus x y = ret .<.~x + .~y>. 
-    let times x y = ret .<.~x * .~y>.
-    let minus x y = ret .<.~x - .~y>.
-    let uminus x = ret .< - .~x>.
-    let div x y = ret .<.~x / .~y>. 
+    let plus x y = .<.~x + .~y>. 
+    let times x y = .<.~x * .~y>.
+    let minus x y = .<.~x - .~y>.
+    let uminus x = .< - .~x>.
+    let div x y = .<.~x / .~y>. 
+    let plusL x y = ret (plus x y)
+    let timesL x y = ret (times x y)
+    let minusL x y = ret (minus x y)
+    let uminusL x = ret (uminus x)
+    let divL x y = ret (div x y)
     let better_than = Some (fun x y -> ret .<abs .~x > abs .~y >. )
     let normalizerf = None 
     let normalizerg = fun x -> x
@@ -134,11 +153,16 @@ module RationalDomain =
     type 'a vc = ('a,v) code
     let zero = let zero = Num.num_of_int 0 in .< zero >.  
     let one = let one = Num.num_of_int 1 in .< one >. 
-    let plus x y = ret .<Num.add_num .~x .~y >.
-    let times x y = ret .<Num.mult_num .~x .~y>.
-    let minus x y = ret .<Num.sub_num .~x .~y>.
-    let uminus x = ret .<Num.minus_num .~x>.
-    let div x y = ret .<Num.div_num .~x .~y>. 
+    let plus x y = .<Num.add_num .~x .~y >.
+    let times x y = .<Num.mult_num .~x .~y>.
+    let minus x y = .<Num.sub_num .~x .~y>.
+    let uminus x = .<Num.minus_num .~x>.
+    let div x y = .<Num.div_num .~x .~y>. 
+    let plusL x y = ret (plus x y)
+    let timesL x y = ret (times x y)
+    let minusL x y = ret (minus x y)
+    let uminusL x = ret (uminus x)
+    let divL x y = ret (div x y)
     let better_than = None (* no such thing here *)
     let normalizerf = None 
     let normalizerg = fun x -> x
@@ -148,11 +172,11 @@ module type CONTAINER2D = functor(Dom:DOMAIN) -> sig
   type contr
   type 'a vc = ('a,contr) code
   type 'a vo = ('a,Dom.v) code
-  val get : 'a vc -> ('a,int) code -> ('a,int) code -> ('a vo,'s,'w) monad
-  val get' : 'a vc -> ('a,int) code -> ('a,int) code -> 'a vo
-  val set : 'a vc -> ('a,int) code -> ('a,int) code -> 'a vo -> 
+  val getL : 'a vc -> ('a,int) code -> ('a,int) code -> ('a vo,'s,'w) monad
+  val get : 'a vc -> ('a,int) code -> ('a,int) code -> 'a vo
+  val setL : 'a vc -> ('a,int) code -> ('a,int) code -> 'a vo -> 
             (('a,unit) code, 's, 'w) monad
-  val set' : 'a vc -> ('a,int) code -> ('a,int) code -> 'a vo -> 
+  val set : 'a vc -> ('a,int) code -> ('a,int) code -> 'a vo -> 
             ('a,unit) code
   val dim1 : 'a vc -> ('a,int) code
   val dim2 : 'a vc -> ('a,int) code
@@ -169,10 +193,10 @@ module GenericArrayContainer(Dom:DOMAIN) =
   type contr = Dom.v array array (* Array of rows *)
   type 'a vc = ('a,contr) code
   type 'a vo = ('a,Dom.v) code
-  let get' x n m = .< (.~x).(.~n).(.~m) >.
-  let get x n m = ret (get' x n m)
-  let set' x n m y = .< (.~x).(.~n).(.~m) <- .~y >.
-  let set x n m y = ret (set' x n m y)
+  let get x n m = .< (.~x).(.~n).(.~m) >.
+  let getL x n m = ret (get x n m)
+  let set x n m y = .< (.~x).(.~n).(.~m) <- .~y >.
+  let setL x n m y = ret (set x n m y)
   let dim2 x = .< Array.length .~x >.       (* number of rows *)
   let dim1 x = .< Array.length (.~x).(0) >. (* number of cols *)
   let mapper g a = match g with
@@ -206,10 +230,10 @@ module GenericVectorContainer(Dom:DOMAIN) =
   type contr = Dom.v container2dfromvector
   type 'a vc = ('a,contr) code
   type 'a vo = ('a,Dom.v) code
-  let get' x n m = .< ((.~x).arr).(.~n* (.~x).m + .~m) >.
-  let get x n m = ret (get' x n m)
-  let set' x n m y = .< ((.~x).arr).(.~n* (.~x).m + .~m) <- .~y >.
-  let set x n m y = ret (set' x n m y)
+  let get x n m = .< ((.~x).arr).(.~n* (.~x).m + .~m) >.
+  let getL x n m = ret (get x n m)
+  let set x n m y = .< ((.~x).arr).(.~n* (.~x).m + .~m) <- .~y >.
+  let setL x n m y = ret (set x n m y)
   let dim2 x = .< (.~x).n >.
   let dim1 x = .< (.~x).m >.
   let mapper g a = match g with
@@ -242,10 +266,10 @@ end
 
 module Array1D =
   struct
-  let get' x n = .< x.(.~n) >.
-  let get x n = ret (get' x n)
-  let set' x n y = .< x.(.~n) <- .~y >.
-  let set x n y = ret (set' x n y)
+  let get x n = .< x.(.~n) >.
+  let getL x n = ret (get x n)
+  let set x n y = .< x.(.~n) <- .~y >.
+  let setL x n y = ret (set x n y)
   let dim1 x = .< Array.length x >.
   let mapper g a = match g with
       | Some f -> .< (fun x -> Array.map .~f x) .~a >.
@@ -254,10 +278,10 @@ end
 
 module Array2D =
   struct
-  let get' x n m = .< x.(.~n).(.~m) >.
-  let get x n m = ret (get' x n m)
-  let set' x n m y = .< x.(.~n).(.~m) <- .~y >.
-  let set x n y m = ret (set' x n m y)
+  let get x n m = .< x.(.~n).(.~m) >.
+  let getL x n m = ret (get x n m)
+  let set x n m y = .< x.(.~n).(.~m) <- .~y >.
+  let setL x n y m = ret (set x n m y)
   let dim2 x = .< Array.length x >.       (* number of rows *)
   let dim1 x = .< Array.length (x).(0) >. (* number of cols *)
 end
@@ -270,12 +294,16 @@ let concretize = function
     | Code x   -> x
 *)
 
-(* monadic logic code combinators *)
+(* logic code combinators - plain and monadic *)
 module LogicCode = struct
-  let not a = ret .< not .~a >.
-  let equal a b = ret .< .~a = .~ b >.
-  let notequal a b = ret .< .~a <> .~ b >.
-  let and_ a b = ret .< .~a && .~b >. 
+  let not a        = .< not .~a >.
+  let equal a b    = .< .~a = .~ b >.
+  let notequal a b = .< .~a <> .~ b >.
+  let and_ a b     = .< .~a && .~b >. 
+  let notL a        = ret (not a)
+  let equalL a b    = ret (equal a b)
+  let notequalL a b = ret (notequal a b)
+  let and_L a b     = ret (and_ a b)
 end
 
 (* operations on code indices *)
@@ -287,6 +315,9 @@ module Idx = struct
   let pred a = .< .~a - 1 >.
   let less a b = .< .~a < .~b >.
   let uminus a = .< - .~a >.
+
+  (* need explicit fun to avoid monomorphising *)
+  let minusoneL = fun s k -> k s minusone
 end
 
 (* Maybe code generator *)

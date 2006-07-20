@@ -28,6 +28,7 @@ all: clean-test test $(TEST)
 
 .PHONY: test 
 test: $(SYNTAX_EXTENSION) $(OBJ) $(RES) $(TEST)
+	diff ge.out ge.res
 	diff rkf45.out rkf45.res
 	diff fft.out fft.res
 

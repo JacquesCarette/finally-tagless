@@ -98,9 +98,15 @@ let rec rotate_to_QI ((j,n) as f) =
       in (add_rat rf (1,2),newf)
    else if 4*j >= n then ((1,4),sub_rat f (1,4)) else (rat_one,f)
 
-(* Use the infrastructure module to get at the monadic infrastructure *)
+(* Use the infrastructure module to get at the monadic infrastructure,
+   as well as at the various code manipulation functions.  The aim is
+   to avoid all annotations in the current code.  *)
 
 open Infra
+
+(* Use the FloatDomain module as well.  No need to parametrize by
+   Domain, as this is thoroughly float-specific *)
+open FloatDomain
 
 let (y_sm,run) =
   let rec y_sm f = f (fun x s k -> y_sm f x s k) in
@@ -177,8 +183,8 @@ let force_mult_ad (Code (f,rx,ix)) =
   let () = assert (c > 0.0 && s > 0.0 )
   in
   perform
-      t1 <-- retN .<c *. (.~rx +. .~ix)>.;
-      t2 <-- retN .<spc *. .~ix>.;
+      t1 <-- retN (times (lift c) (plus rx ix));
+      t2 <-- retN (times (lift spc) ix);
       if smc > 0.0 then
           perform
           t3  <-- retN .<smc *. .~rx>.;

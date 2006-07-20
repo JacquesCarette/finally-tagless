@@ -113,28 +113,28 @@ let prespline knots (yout:float array array)
         yl1  <-- ret .<yl1>. ;
         y2l  <-- ret .<y2l>. ;
         y2l1 <-- ret .<y2l1>. ;
-        l1mx <-- FloatDomain.minus kl1 xx;
-        a'   <-- FloatDomain.div l1mx h;
+        l1mx <-- FloatDomain.minusL kl1 xx;
+        a'   <-- FloatDomain.divL l1mx h;
         aa   <-- retN a';
-        a2   <-- FloatDomain.times aa aa;
-        a3   <-- FloatDomain.times a2 aa;
-        aa'  <-- FloatDomain.minus a3 aa;
+        a2   <-- FloatDomain.timesL aa aa;
+        a3   <-- FloatDomain.timesL a2 aa;
+        aa'  <-- FloatDomain.minusL a3 aa;
         aaa  <-- retN aa';
-        xml  <-- FloatDomain.minus xx kl ;
-        b'   <-- FloatDomain.div xml h;
+        xml  <-- FloatDomain.minusL xx kl ;
+        b'   <-- FloatDomain.divL xml h;
         bb   <-- retN b';
-        b2   <-- FloatDomain.times bb bb;
-        b3   <-- FloatDomain.times b2 bb;
-        bb'  <-- FloatDomain.minus b3 bb;
+        b2   <-- FloatDomain.timesL bb bb;
+        b3   <-- FloatDomain.timesL b2 bb;
+        bb'  <-- FloatDomain.minusL b3 bb;
         bbb  <-- retN bb';
-        x1   <-- FloatDomain.times aa yl;
-        x2   <-- FloatDomain.times bb yl1;
-        x3   <-- FloatDomain.times aaa y2l;
-        x4   <-- FloatDomain.times bbb y2l1;
-        x5   <-- FloatDomain.plus  x1 x2;
-        x6   <-- FloatDomain.plus  x3 x4;
-        x7   <-- FloatDomain.times x6 hh6;
-        res  <-- FloatDomain.plus x5 x7;
+        x1   <-- FloatDomain.timesL aa yl;
+        x2   <-- FloatDomain.timesL bb yl1;
+        x3   <-- FloatDomain.timesL aaa y2l;
+        x4   <-- FloatDomain.timesL bbb y2l1;
+        x5   <-- FloatDomain.plusL  x1 x2;
+        x6   <-- FloatDomain.plusL  x3 x4;
+        x7   <-- FloatDomain.timesL x6 hh6;
+        res  <-- FloatDomain.plusL x5 x7;
         ret res)
 
 (* this code should not use an array but instead generate an
