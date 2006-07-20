@@ -21,8 +21,8 @@ let test_f1 x y =
     Array.init (Array.length y) (fun i -> x *. (y.(i) *. y.(i)));;
 
 (* some poor unit testing *)
-let sp1 = spline (Array.of_list [1.;2.;3.;4.;5.;6.])
-                 (Array.of_list (List.map (fun x -> Array.make 1 x) [1.;3.;4.;3.;4.;2.])) ;;
+let sp1 = spline_interp (Array.of_list [1.;2.;3.;4.;5.;6.])
+                     (Array.of_list (List.map (fun x -> Array.make 1 x) [1.;3.;4.;3.;4.;2.])) ;;
 
 let knots = 
      let a = -2.0 and b = 2.0 and num_knots = 5 in
@@ -30,7 +30,7 @@ let knots =
         (fun i -> (a +. ((b -. a) *. (float_of_int
         i /. float_of_int (num_knots - 1))))) ;;
 let (ss,e) = rk45 knots (Array.make 1 (1.0)) test_f0 ;;
-let tt = spline knots ss;;
+let tt = spline_interp knots ss;;
 let (sol0,err0) = (odesolve (-2.0) 2.0 4 (Array.make 1 (1.0)) test_f0) ;;
 
 let sf0 = .! sol0;;

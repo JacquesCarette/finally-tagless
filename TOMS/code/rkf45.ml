@@ -1,6 +1,7 @@
-open Infra;;
+open Infra
+open FloatDomain
 
-type ('a, 'b) either = Left of 'a | Right of 'b;;
+type ('a, 'b) either = Left of 'a | Right of 'b
 
 (* runge kutta 4th order integration *)
 let evalrk45 x h yin f =
@@ -18,7 +19,7 @@ let evalrk45 x h yin f =
     let h6 = h /. 6.0 in
     Array.init l (fun i -> 
             yin.(i) +. h6 *. (dydx.(i)+.dytt.(i)+.2.0*.dym.(i)) )
-;;
+
 let rk45 xknot yin f =
     let xknot_l = Array.length xknot 
     and yin_l = Array.length yin in
@@ -48,10 +49,9 @@ let rk45 xknot yin f =
     done;
     (yout, !trunc_err)
 	end
-;;
 
 (* natural cubic spline interpolation *)
-let spline x y =
+let spline_interp x y =
     let y2out = Array.make_matrix (Array.length x) (Array.length y.(0)) 0.0 in
     let u = Array.make_matrix (Array.length x) (Array.length y.(0)) 0.0
     in
@@ -84,13 +84,13 @@ let spline x y =
     y2out
 ;;
 
-let find_spline_index num knots =
+let find_spline_index num knots x =
     let n1 = num-1 and n2 = num-2 in
     let scale = knots.(n1) -. knots.(0) in
     let k0 = knots.(0) in
     let fn1 = float_of_int num in
     let mult = fn1 /. scale in
-    .< fun x -> min (int_of_float ((x -. k0) *. mult)) n2 >.
+    .< min (int_of_float ((.~x -. k0) *. mult)) n2 >.
 ;;
 
 let prespline knots (yout:float array array) 
@@ -105,68 +105,46 @@ let prespline knots (yout:float array array)
     let y2l1 = y2out.(lo1).(ii) in
     let hh6   = (h *. h) /. 6.0 in
     perform
-        kl1 <-- ret .<kl1>. ;
-        kl  <-- ret .<kl>. ;
-        h   <-- ret .<h>. ;
-        hh6  <-- ret .<hh6>. ;
-        yl   <-- ret .<yl>. ;
-        yl1  <-- ret .<yl1>. ;
-        y2l  <-- ret .<y2l>. ;
-        y2l1 <-- ret .<y2l1>. ;
-        l1mx <-- FloatDomain.minusL kl1 xx;
-        a'   <-- FloatDomain.divL l1mx h;
-        aa   <-- retN a';
-        a2   <-- FloatDomain.timesL aa aa;
-        a3   <-- FloatDomain.timesL a2 aa;
-        aa'  <-- FloatDomain.minusL a3 aa;
-        aaa  <-- retN aa';
-        xml  <-- FloatDomain.minusL xx kl ;
-        b'   <-- FloatDomain.divL xml h;
-        bb   <-- retN b';
-        b2   <-- FloatDomain.timesL bb bb;
-        b3   <-- FloatDomain.timesL b2 bb;
-        bb'  <-- FloatDomain.minusL b3 bb;
-        bbb  <-- retN bb';
-        x1   <-- FloatDomain.timesL aa yl;
-        x2   <-- FloatDomain.timesL bb yl1;
-        x3   <-- FloatDomain.timesL aaa y2l;
-        x4   <-- FloatDomain.timesL bbb y2l1;
-        x5   <-- FloatDomain.plusL  x1 x2;
-        x6   <-- FloatDomain.plusL  x3 x4;
-        x7   <-- FloatDomain.timesL x6 hh6;
-        res  <-- FloatDomain.plusL x5 x7;
-        ret res)
+        h   <-- ret (lift h);
+        aa  <-- retN (div (minus (lift kl1) xx) h);
+        aaa <-- retN (minus (times (times aa aa) aa) aa);
+        bb  <-- retN (div (minus xx (lift kl)) h);
+        bbb <-- retN (minus (times (times bb bb) bb) bb);
+        x1   <-- timesL aa (lift yl);
+        x2   <-- timesL bb (lift yl1);
+        x3   <-- timesL aaa (lift y2l);
+        x4   <-- timesL bbb (lift y2l1);
+        x5   <-- timesL (plus x3 x4) (lift hh6);
+        plusL (plus x1 x2) x5)
 
 (* this code should not use an array but instead generate an
 explicit binary search tree of code *)
-let splinet2 a b knots (yout:float array array) 
+let spline_gen a b knots (yout:float array array) 
     (y2out:float array array) num_knots =
     let init arr = 
         let body lo i = 
         .< (.~arr).(lo).(i) <- fun y ->
           .~(runM (prespline knots yout y2out num_knots .<y>. lo i )) >. in
         let ll = Array.length (y2out.(0)) - 1 in
-        .< .~(CodeTrans.full_unroll 0 (num_knots-2) 
-            (fun j -> CodeTrans.full_unroll 0 ll (fun lo -> body j lo))); () >. in
+        let code = (CodeTrans.full_unroll 0 (num_knots-2) 
+            (fun j -> CodeTrans.full_unroll 0 ll (fun lo -> body j lo))) in
+            seq code Code.cunit in
     let bod arr i = .< fun x -> 
         if ((x<a) || (x>b)) then
             Left "Error: x not in range"
         else
             Right ((.~arr).(
-                .~(find_spline_index num_knots knots) x).(.~i) x ) >. in
+                .~(find_spline_index num_knots knots .<x>.)).(.~i) x ) >. in
     (init, bod)
 ;;
 
-let foo a b k y y2 n =
+let construct a b k y y2 n =
     let m = Array.length y in
-    let (init, bod) = splinet2 a b k y y2 n in
+    let (init, bod) = spline_gen a b k y y2 n in
     .< let arr = Array.init (n-1) (fun l -> 
-        Array.init (m-1) (fun p -> 
-        (fun q -> 0.))) in
+        Array.init (m-1) (fun p -> (fun q -> 0.))) in
        ( (fun () -> .~(init .<arr>. )), 
        (fun i -> .~(bod .<arr>. .<i>. ))) >. ;;
-
-exception Tolerance of string;;
 
 let odesolve a b num_knots yin f =
     (* Create num_knots equally spaced knots across a..b *)
@@ -181,6 +159,6 @@ let odesolve a b num_knots yin f =
     (* Compute the integrated values at each knot starting with yin *)
     let (yout,max_err) = rk45 knots yin f in
     (* Compute natural cubic spline second derivatives *)
-    let y2out = spline knots yout in
+    let y2out = spline_interp knots yout in
     (* Construct the ode solution as a function that takes input x in a..b*)
-	( .< .~(foo a b knots yout y2out num_knots ) >. , max_err ) ;;
+	( construct a b knots yout y2out num_knots , max_err ) ;;
