@@ -276,6 +276,15 @@ module Array1D =
       | None   -> a
 end
 
+module CArray1D = 
+  struct
+  let get x n = .< (.~x).(n) >.
+  let getL x n = ret (get x n)
+  let set x n y = .< (.~x).(n) <- .~y >.
+  let setL x n y = ret (set x n y)
+  let dim1 x = .< Array.length .~x >.
+end
+
 module Array2D =
   struct
   let get x n m = .< x.(.~n).(.~m) >.
@@ -342,9 +351,12 @@ end
 (* code generators *)
 module Code = struct
   let cunit = .< () >.
-  let update a f = let b = f (liftGet a) in ret .< .~a := .~b >.
-  let assign a b = ret .< .~a := .~b >.
-  let apply  f x = ret .< .~f .~x >.
+  let update a f = let b = f (liftGet a) in .< .~a := .~b >.
+  let assign a b = .< .~a := .~b >.
+  let apply  f x = .< .~f .~x >.
+  let updateL a f = ret (update a f)
+  let assignL a b = ret (assign a b)
+  let applyL  f x = ret (apply f x)
 end
 
 (* code transformers *)

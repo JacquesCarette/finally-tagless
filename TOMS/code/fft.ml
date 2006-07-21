@@ -119,9 +119,8 @@ let (y_sm,run) =
         | (c::tail) ->
             let sm = m+1 and ssm = m+2 in
 			let (x,y) = concretize c in
-            .<((.~arr).(m) <- .~x;
-               (.~arr).(sm) <- .~y;
-               (.~(lfta tail (ssm))))>.
+            seq  (CArray1D.set arr m x)
+            (seq (CArray1D.set arr sm y) (lfta tail (ssm)))
       in lfta l 0 in
     (* Read from an array *)
     let array_read arr n =
@@ -130,7 +129,8 @@ let (y_sm,run) =
         else
           let sm = m+1 in
            perform
-               c <-- abstract_simple (.<(.~arr).(m)>., .<(.~arr).(sm)>.);
+               c <-- abstract_simple 
+                   (CArray1D.get arr m, CArray1D.get arr sm);
                gl (m+2) (l @ [c])
       in gl 0 [] in
     let run_basic m = m [] (fun s x -> array_write x nums)
@@ -187,19 +187,18 @@ let force_mult_ad (Code (f,rx,ix)) =
       t2 <-- retN (times (lift spc) ix);
       if smc > 0.0 then
           perform
-          t3  <-- retN .<smc *. .~rx>.;
-          rcs <-- retN .<.~t1 -. .~t2>.;
-          ics <-- retN .<.~t1 +. .~t3>.;
+          t3  <-- retN (times (lift smc) rx);
+          rcs <-- retN (minus t1 t2);
+          ics <-- retN (plus t1 t3);
           ret (Code (newf,rcs,ics))
       else
           let cms = c -. s in (* keep all the constants positive *)
           perform
-          nt3 <-- retN .<cms *. .~rx>.;
-          rcs <-- retN .<.~t1 -. .~t2>.;
-          ics <-- retN .<.~t1 -. .~nt3>.;
+          nt3 <-- retN (times (lift cms) rx);
+          rcs <-- retN (minus t1 t2);
+          ics <-- retN (minus t1 nt3);
           ret (Code (newf,rcs,ics))
  
-
 (* Perform (rx,ix) +/- _complex_fy*(ry,iy) and set the resulting
    factor to fx
    Return a pair: fx* (x + complex_fy*y), fx*(x - complex_fy*y)
@@ -213,22 +212,22 @@ let rec do_linear_ad fx rx ix ((j,n) as fy) ry iy =
    else
    match fy with (* x + y *)
    (0,1) -> perform
-       re <-- retN .<.~rx +. .~ry>.;
-       im <-- retN .<.~ix +. .~iy>.;
-       re1 <-- retN .<.~rx -. .~ry>.;
-       im1 <-- retN .<.~ix -. .~iy>.;
+       re <-- retN (plus rx ry);
+       im <-- retN (plus ix iy);
+       re1 <-- retN (minus rx ry);
+       im1 <-- retN (minus ix iy);
        ret (Code (fx,re,im),Code (fx,re1,im1))
   |(1,4) -> perform (* x + I*y *)
-        re  <-- retN .<.~rx -. .~iy>.;
-        im  <-- retN .<.~ix +. .~ry>.;
-        re1 <-- retN .<.~rx +. .~iy>.;
-        im1 <-- retN .<.~ix -. .~ry>.;
+        re  <-- retN (minus rx iy);
+        im  <-- retN (plus ix ry);
+        re1 <-- retN (plus rx iy);
+        im1 <-- retN (minus ix ry);
         ret (Code (fx,re,im),Code (fx,re1,im1) )
   |(j,8) -> (* x + (cos pi/4 + I*sin pi/4)*y *)
         let cs = sin (pi /. 4.0) in
         perform
-            rcs <-- retN .<cs *. (.~ry -. .~iy)>.;
-            ics <-- retN .<cs *. (.~ry +. .~iy)>.;
+            rcs <-- retN (times (lift cs) (minus ry iy));
+            ics <-- retN (times (lift cs) (plus ry iy));
             do_linear_ad fx rx ix (rationalize (j-1,8)) rcs ics
   | _ -> perform
         (Code (fy,ry,iy)) <-- force_mult_ad (Code (fy,ry,iy));

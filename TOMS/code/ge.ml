@@ -55,7 +55,7 @@ module TrackRank =
       ret rdecl
   let succ () = perform
    r <-- rfetch ();
-   Code.assign r (Idx.succ (liftGet r))
+   Code.assignL r (Idx.succ (liftGet r))
 end
 
 module Rank:RANK = struct
@@ -127,23 +127,23 @@ module AbstractDet(Dom: DOMAIN) =
   let upd_sign () = perform
       det <-- dfetch ();
       det1 <-- ret (fst det);
-      Code.assign det1 (Idx.uminus (liftGet det1))
+      Code.assignL det1 (Idx.uminus (liftGet det1))
   let zero_sign () = perform
       det <-- dfetch ();
       det1 <-- ret (fst det);
-      Code.assign det1 Idx.zero
+      Code.assignL det1 Idx.zero
   let acc v = perform
       det <-- dfetch ();
       det2 <-- ret (snd det);
       r <-- Dom.timesL (liftGet det2) v;
-      Code.assign det2 r
+      Code.assignL det2 r
   let get () = perform
       det <-- dfetch ();
       ret (snd det)
   let set v = perform
       det <-- dfetch ();
       det2 <-- ret (snd det);
-      Code.assign det2 v
+      Code.assignL det2 v
   let fin () = perform
       (det_sign,det) <-- dfetch ();
       ifM (LogicCode.equalL (liftGet det_sign) Idx.zero) (ret Dom.zero)
@@ -231,7 +231,7 @@ module TrackPivot =
       pstore pdecl
   let add v = perform
    p <-- pfetch ();
-   Code.assign p (ListCode.cons v (liftGet p))
+   Code.assignL p (ListCode.cons v (liftGet p))
 end
 
 module KeepPivot:TRACKPIVOT = struct
@@ -367,31 +367,31 @@ struct
         (match (Dom.better_than) with
          Some sel -> 
               retLoopM r (Idx.pred n) (fun j -> perform
-              bjc <-- l1 retN (Ctr.getL b j c);
-              whenM (l1 LogicCode.notL (LogicCode.equalL bjc Dom.zero ))
+              bjc <-- retN (Ctr.get b j c);
+              whenM (LogicCode.notL (LogicCode.equal bjc Dom.zero ))
                   (retMatchM (liftGet pivot)
                     (fun pv ->
                       perform
                       (i,bic) <-- ret (liftPair pv);
                       whenM (sel bic bjc)
-                        (Code.assign pivot (MaybeCode.just 
+                        (Code.assignL pivot (MaybeCode.just 
                                      (TupleCode.tup2 j bjc))))
-                     (Code.assign pivot (MaybeCode.just 
+                     (Code.assignL pivot (MaybeCode.just 
                                   (TupleCode.tup2 j bjc))))
               )
          | None ->
            perform
-            brc <-- l1 retN (Ctr.getL b r c);
-            ifM (l1 LogicCode.notL (LogicCode.equalL brc Dom.zero))
+            brc <-- retN (Ctr.get b r c);
+            ifM (LogicCode.notL (LogicCode.equal brc Dom.zero))
               (* the current element is good enough *)
-              (Code.assign pivot (MaybeCode.just (TupleCode.tup2 r brc)))
+              (Code.assignL pivot (MaybeCode.just (TupleCode.tup2 r brc)))
               (let traverse = fun o j ->
                   whenM (ret (Idx.less j n))
                     (perform
-                        bjc <-- l1 retN (Ctr.getL b j c);
+                        bjc <-- retN (Ctr.get b j c);
                         ifM (LogicCode.equalL bjc Dom.zero)
-                            (Code.apply o (Idx.succ j))
-                            (Code.assign pivot (MaybeCode.just 
+                            (Code.applyL o (Idx.succ j))
+                            (Code.assignL pivot (MaybeCode.just 
                                 (TupleCode.tup2 j bjc)))) in
               (genrecloop traverse (Idx.succ r)))
          )
@@ -416,8 +416,8 @@ struct
        seqM (retLoopM r (Idx.pred n) (fun j -> 
               retLoopM c (Idx.pred m) (fun k ->
            perform
-              bjk <-- l1 retN (Ctr.getL b j k);
-              whenM (l1 LogicCode.notL ( LogicCode.equalL bjk Dom.zero) )
+              bjk <-- retN (Ctr.get b j k);
+              whenM (LogicCode.notL ( LogicCode.equal bjk Dom.zero) )
               (match (Dom.better_than) with
               | Some sel ->
                   (retMatchM (liftGet pivot)
@@ -425,12 +425,12 @@ struct
                       perform
                       (pr,pc,brc) <-- ret (liftPPair pv);
                       whenM (sel brc bjk)
-                        (Code.assign pivot (MaybeCode.just
+                        (Code.assignL pivot (MaybeCode.just
                             (TupleCode.tup2 (TupleCode.tup2 j k) bjk))))
-                     (Code.assign pivot (MaybeCode.just
+                     (Code.assignL pivot (MaybeCode.just
                             (TupleCode.tup2 (TupleCode.tup2 j k) bjk))))
               | None ->
-                  (Code.assign pivot (MaybeCode.just (
+                  (Code.assignL pivot (MaybeCode.just (
                       TupleCode.tup2 (TupleCode.tup2 j k) bjk)))
               ))))
               (* finished the loop *)
@@ -475,7 +475,7 @@ module Gen(Dom: DOMAIN)(C: CONTAINER2D)(PivotF: PIVOT)
       let zerobelow b r c m n brc =
         let innerbody i = perform
             bic <-- Ctr.getL b i c;
-            whenM (l1 LogicCode.notL (LogicCode.equalL bic Dom.zero ))
+            whenM (LogicCode.notL (LogicCode.equal bic Dom.zero ))
                 (seqM (retLoopM (Idx.succ c) (Idx.pred m)
                           (fun k -> Update.update b r c i k) )
                       (Ctr.setL b i c Dom.zero)) in 
@@ -501,7 +501,7 @@ module Gen(Dom: DOMAIN)(C: CONTAINER2D)(PivotF: PIVOT)
                         seqM (zerobelow b rr cc m n pv)
                              (Out.R.succ ()) )
                         (Update.D.zero_sign () ))
-                    (Code.update c Idx.succ) ))
+                    (Code.updateL c Idx.succ) ))
             (Out.make_result b)
     in dogen
 end
