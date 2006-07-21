@@ -5,7 +5,7 @@
   ('a, 'b -> 'f) code = <fun>
 #   val resFA1 :
   ('a,
-   Ge.GenFA1.Ctr.contr ->
+   Ge.GenFA1.Input.inp ->
    Ge.OutJustMatrix(Infra.FloatDomain)(Infra.GenericArrayContainer)(Ge.NoDet(Infra.FloatDomain)).res)
   code =
   .<fun a_1 ->
@@ -65,7 +65,7 @@
    t_5>.
 # val resFA2 :
   ('a,
-   Ge.GenFA2.Ctr.contr ->
+   Ge.GenFA2.Input.inp ->
    Ge.OutDet(Infra.FloatDomain)(Infra.GenericArrayContainer)(Ge.FDet).res)
   code =
   .<fun a_1 ->
@@ -130,7 +130,7 @@
     else (~-. (! t_8)))>.
 # val resFA3 :
   ('a,
-   Ge.GenFA3.Ctr.contr ->
+   Ge.GenFA3.Input.inp ->
    Ge.OutRank(Infra.FloatDomain)(Infra.GenericArrayContainer)(Ge.Rank).res)
   code =
   .<fun a_1 ->
@@ -190,7 +190,7 @@
    (t_5, (! t_2))>.
 # val resFA4 :
   ('a,
-   Ge.GenFA4.Ctr.contr ->
+   Ge.GenFA4.Input.inp ->
    Ge.OutDetRank(Infra.FloatDomain)(Infra.GenericArrayContainer)(Ge.FDet)(Ge.Rank).res)
   code =
   .<fun a_1 ->
@@ -255,7 +255,7 @@
     else (~-. (! t_8)), (! t_2))>.
 # val resFV1 :
   ('a,
-   Ge.GenFV1.Ctr.contr ->
+   Ge.GenFV1.Input.inp ->
    Ge.OutJustMatrix(Infra.FloatDomain)(Infra.GenericVectorContainer)(Ge.FDet).res)
   code =
   .<fun a_1 ->
@@ -324,7 +324,7 @@
    t_4>.
 # val resFV2 :
   ('a,
-   Ge.GenFV2.Ctr.contr ->
+   Ge.GenFV2.Input.inp ->
    Ge.OutDet(Infra.FloatDomain)(Infra.GenericVectorContainer)(Ge.FDet).res)
   code =
   .<fun a_1 ->
@@ -396,7 +396,7 @@
     else (~-. (! t_7)))>.
 # val resFV3 :
   ('a,
-   Ge.GenFV3.Ctr.contr ->
+   Ge.GenFV3.Input.inp ->
    Ge.OutRank(Infra.FloatDomain)(Infra.GenericVectorContainer)(Ge.Rank).res)
   code =
   .<fun a_1 ->
@@ -463,7 +463,7 @@
    (t_4, (! t_2))>.
 # val resFV4 :
   ('a,
-   Ge.GenFV4.Ctr.contr ->
+   Ge.GenFV4.Input.inp ->
    Ge.OutDetRank(Infra.FloatDomain)(Infra.GenericVectorContainer)(Ge.FDet)(Ge.Rank).res)
   code =
   .<fun a_1 ->
@@ -535,7 +535,7 @@
     else (~-. (! t_7)), (! t_2))>.
 # val resFV5 :
   ('a,
-   Ge.GenFV5.Ctr.contr ->
+   Ge.GenFV5.Input.inp ->
    Ge.OutDetRank(Infra.FloatDomain)(Infra.GenericVectorContainer)(Ge.FDet)(Ge.Rank).res)
   code =
   .<fun a_1 ->
@@ -625,7 +625,7 @@
     else (~-. (! t_7)), (! t_2))>.
 # val resIA1 :
   ('a,
-   Ge.GenIA1.Ctr.contr ->
+   Ge.GenIA1.Input.inp ->
    Ge.OutJustMatrix(Infra.IntegerDomain)(Infra.GenericArrayContainer)(Ge.IDet).res)
   code =
   .<fun a_1 ->
@@ -686,7 +686,7 @@
    t_5>.
 # val resIA2 :
   ('a,
-   Ge.GenIA2.Ctr.contr ->
+   Ge.GenIA2.Input.inp ->
    Ge.OutDet(Infra.IntegerDomain)(Infra.GenericArrayContainer)(Ge.IDet).res)
   code =
   .<fun a_1 ->
@@ -750,7 +750,7 @@
     else (~- (! t_8)))>.
 # val resIA3 :
   ('a,
-   Ge.GenIA3.Ctr.contr ->
+   Ge.GenIA3.Input.inp ->
    Ge.OutRank(Infra.IntegerDomain)(Infra.GenericArrayContainer)(Ge.Rank).res)
   code =
   .<fun a_1 ->
@@ -811,7 +811,7 @@
    (t_5, (! t_2))>.
 # val resIA4 :
   ('a,
-   Ge.GenIA4.Ctr.contr ->
+   Ge.GenIA4.Input.inp ->
    Ge.OutDetRank(Infra.IntegerDomain)(Infra.GenericArrayContainer)(Ge.IDet)(Ge.Rank).res)
   code =
   .<fun a_1 ->
@@ -875,7 +875,7 @@
     else (~- (! t_8)), (! t_2))>.
 # val resIV1 :
   ('a,
-   Ge.GenIV1.Ctr.contr ->
+   Ge.GenIV1.Input.inp ->
    Ge.OutJustMatrix(Infra.IntegerDomain)(Infra.GenericVectorContainer)(Ge.NoDet(Infra.IntegerDomain)).res)
   code =
   .<fun a_1 ->
@@ -944,7 +944,7 @@
    t_4>.
 # val resIV2 :
   ('a,
-   Ge.GenIV2.Ctr.contr ->
+   Ge.GenIV2.Input.inp ->
    Ge.OutDet(Infra.IntegerDomain)(Infra.GenericVectorContainer)(Ge.IDet).res)
   code =
   .<fun a_1 ->
@@ -1016,7 +1016,7 @@
     else (~- (! t_7)))>.
 # val resIV3 :
   ('a,
-   Ge.GenIV3.Ctr.contr ->
+   Ge.GenIV3.Input.inp ->
    Ge.OutRank(Infra.IntegerDomain)(Infra.GenericVectorContainer)(Ge.Rank).res)
   code =
   .<fun a_1 ->
@@ -1085,7 +1085,7 @@
    (t_4, (! t_2))>.
 # val resIV4 :
   ('a,
-   Ge.GenIV4.Ctr.contr ->
+   Ge.GenIV4.Input.inp ->
    Ge.OutDetRank(Infra.IntegerDomain)(Infra.GenericVectorContainer)(Ge.IDet)(Ge.Rank).res)
   code =
   .<fun a_1 ->
@@ -1157,7 +1157,7 @@
     else (~- (! t_7)), (! t_2))>.
 # val resIV5 :
   ('a,
-   Ge.GenIV5.Ctr.contr ->
+   Ge.GenIV5.Input.inp ->
    Ge.OutDetRank(Infra.IntegerDomain)(Infra.GenericVectorContainer)(Ge.IDet)(Ge.Rank).res)
   code =
   .<fun a_1 ->
@@ -1247,7 +1247,7 @@
     else (~- (! t_7)), (! t_2))>.
 # val resFA11 :
   ('a,
-   Ge.GenFA11.Ctr.contr ->
+   Ge.GenFA11.Input.inp ->
    Ge.OutJustMatrix(Infra.FloatDomain)(Infra.GenericArrayContainer)(Ge.NoDet(Infra.FloatDomain)).res)
   code =
   .<fun a_1 ->
@@ -1317,7 +1317,7 @@
    t_5>.
 # val resFA12 :
   ('a,
-   Ge.GenFA12.Ctr.contr ->
+   Ge.GenFA12.Input.inp ->
    Ge.OutDet(Infra.FloatDomain)(Infra.GenericArrayContainer)(Ge.FDet).res)
   code =
   .<fun a_1 ->
@@ -1392,7 +1392,7 @@
     else (~-. (! t_8)))>.
 # val resFA13 :
   ('a,
-   Ge.GenFA13.Ctr.contr ->
+   Ge.GenFA13.Input.inp ->
    Ge.OutRank(Infra.FloatDomain)(Infra.GenericArrayContainer)(Ge.Rank).res)
   code =
   .<fun a_1 ->
@@ -1462,7 +1462,7 @@
    (t_5, (! t_2))>.
 # val resFA14 :
   ('a,
-   Ge.GenFA14.Ctr.contr ->
+   Ge.GenFA14.Input.inp ->
    Ge.OutDetRank(Infra.FloatDomain)(Infra.GenericArrayContainer)(Ge.FDet)(Ge.Rank).res)
   code =
   .<fun a_1 ->
@@ -1537,7 +1537,7 @@
     else (~-. (! t_8)), (! t_2))>.
 # val resRA1 :
   ('a,
-   Ge.GenRA1.Ctr.contr ->
+   Ge.GenRA1.Input.inp ->
    Ge.OutJustMatrix(Infra.RationalDomain)(Infra.GenericArrayContainer)(Ge.RDet).res)
   code =
   .<fun a_1 ->
@@ -1609,7 +1609,7 @@
    t_5>.
 # val resRA2 :
   ('a,
-   Ge.GenRA2.Ctr.contr ->
+   Ge.GenRA2.Input.inp ->
    Ge.OutDet(Infra.RationalDomain)(Infra.GenericArrayContainer)(Ge.RDet).res)
   code =
   .<fun a_1 ->
@@ -1685,7 +1685,7 @@
      (((* cross-stage persistent value (as id: Num.minus_num) *)) (! t_8)))>.
 # val resRA3 :
   ('a,
-   Ge.GenRA3.Ctr.contr ->
+   Ge.GenRA3.Input.inp ->
    Ge.OutRank(Infra.RationalDomain)(Infra.GenericArrayContainer)(Ge.Rank).res)
   code =
   .<fun a_1 ->
@@ -1757,7 +1757,7 @@
    (t_5, (! t_2))>.
 # val resRA4 :
   ('a,
-   Ge.GenRA4.Ctr.contr ->
+   Ge.GenRA4.Input.inp ->
    Ge.OutDetRank(Infra.RationalDomain)(Infra.GenericArrayContainer)(Ge.RDet)(Ge.Rank).res)
   code =
   .<fun a_1 ->
@@ -1833,107 +1833,107 @@
      (((* cross-stage persistent value (as id: Num.minus_num) *)) (! t_8)),
     (! t_2))>.
 #   val rFA1 :
-  Ge.GenFA1.Ctr.contr ->
+  Ge.GenFA1.Input.inp ->
   Ge.OutJustMatrix(Infra.FloatDomain)(Infra.GenericArrayContainer)(Ge.NoDet(Infra.FloatDomain)).res =
   <fun>
 # val rFA2 :
-  Ge.GenFA2.Ctr.contr ->
+  Ge.GenFA2.Input.inp ->
   Ge.OutDet(Infra.FloatDomain)(Infra.GenericArrayContainer)(Ge.FDet).res =
   <fun>
 # val rFA3 :
-  Ge.GenFA3.Ctr.contr ->
+  Ge.GenFA3.Input.inp ->
   Ge.OutRank(Infra.FloatDomain)(Infra.GenericArrayContainer)(Ge.Rank).res =
   <fun>
 # val rFA4 :
-  Ge.GenFA4.Ctr.contr ->
+  Ge.GenFA4.Input.inp ->
   Ge.OutDetRank(Infra.FloatDomain)(Infra.GenericArrayContainer)(Ge.FDet)(Ge.Rank).res =
   <fun>
 # val rFV1 :
-  Ge.GenFV1.Ctr.contr ->
+  Ge.GenFV1.Input.inp ->
   Ge.OutJustMatrix(Infra.FloatDomain)(Infra.GenericVectorContainer)(Ge.FDet).res =
   <fun>
 # val rFV2 :
-  Ge.GenFV2.Ctr.contr ->
+  Ge.GenFV2.Input.inp ->
   Ge.OutDet(Infra.FloatDomain)(Infra.GenericVectorContainer)(Ge.FDet).res =
   <fun>
 # val rFV3 :
-  Ge.GenFV3.Ctr.contr ->
+  Ge.GenFV3.Input.inp ->
   Ge.OutRank(Infra.FloatDomain)(Infra.GenericVectorContainer)(Ge.Rank).res =
   <fun>
 # val rFV4 :
-  Ge.GenFV4.Ctr.contr ->
+  Ge.GenFV4.Input.inp ->
   Ge.OutDetRank(Infra.FloatDomain)(Infra.GenericVectorContainer)(Ge.FDet)(Ge.Rank).res =
   <fun>
 # val rFV5 :
-  Ge.GenFV5.Ctr.contr ->
+  Ge.GenFV5.Input.inp ->
   Ge.OutDetRank(Infra.FloatDomain)(Infra.GenericVectorContainer)(Ge.FDet)(Ge.Rank).res =
   <fun>
 # val rIA1 :
-  Ge.GenIA1.Ctr.contr ->
+  Ge.GenIA1.Input.inp ->
   Ge.OutJustMatrix(Infra.IntegerDomain)(Infra.GenericArrayContainer)(Ge.IDet).res =
   <fun>
 # val rIA2 :
-  Ge.GenIA2.Ctr.contr ->
+  Ge.GenIA2.Input.inp ->
   Ge.OutDet(Infra.IntegerDomain)(Infra.GenericArrayContainer)(Ge.IDet).res =
   <fun>
 # val rIA3 :
-  Ge.GenIA3.Ctr.contr ->
+  Ge.GenIA3.Input.inp ->
   Ge.OutRank(Infra.IntegerDomain)(Infra.GenericArrayContainer)(Ge.Rank).res =
   <fun>
 # val rIA4 :
-  Ge.GenIA4.Ctr.contr ->
+  Ge.GenIA4.Input.inp ->
   Ge.OutDetRank(Infra.IntegerDomain)(Infra.GenericArrayContainer)(Ge.IDet)(Ge.Rank).res =
   <fun>
 # val rIV1 :
-  Ge.GenIV1.Ctr.contr ->
+  Ge.GenIV1.Input.inp ->
   Ge.OutJustMatrix(Infra.IntegerDomain)(Infra.GenericVectorContainer)(Ge.NoDet(Infra.IntegerDomain)).res =
   <fun>
 # val rIV2 :
-  Ge.GenIV2.Ctr.contr ->
+  Ge.GenIV2.Input.inp ->
   Ge.OutDet(Infra.IntegerDomain)(Infra.GenericVectorContainer)(Ge.IDet).res =
   <fun>
 # val rIV3 :
-  Ge.GenIV3.Ctr.contr ->
+  Ge.GenIV3.Input.inp ->
   Ge.OutRank(Infra.IntegerDomain)(Infra.GenericVectorContainer)(Ge.Rank).res =
   <fun>
 # val rIV4 :
-  Ge.GenIV4.Ctr.contr ->
+  Ge.GenIV4.Input.inp ->
   Ge.OutDetRank(Infra.IntegerDomain)(Infra.GenericVectorContainer)(Ge.IDet)(Ge.Rank).res =
   <fun>
 # val rIV5 :
-  Ge.GenIV5.Ctr.contr ->
+  Ge.GenIV5.Input.inp ->
   Ge.OutDetRank(Infra.IntegerDomain)(Infra.GenericVectorContainer)(Ge.IDet)(Ge.Rank).res =
   <fun>
 # val rFA11 :
-  Ge.GenFA11.Ctr.contr ->
+  Ge.GenFA11.Input.inp ->
   Ge.OutJustMatrix(Infra.FloatDomain)(Infra.GenericArrayContainer)(Ge.NoDet(Infra.FloatDomain)).res =
   <fun>
 # val rFA12 :
-  Ge.GenFA12.Ctr.contr ->
+  Ge.GenFA12.Input.inp ->
   Ge.OutDet(Infra.FloatDomain)(Infra.GenericArrayContainer)(Ge.FDet).res =
   <fun>
 # val rFA13 :
-  Ge.GenFA13.Ctr.contr ->
+  Ge.GenFA13.Input.inp ->
   Ge.OutRank(Infra.FloatDomain)(Infra.GenericArrayContainer)(Ge.Rank).res =
   <fun>
 # val rFA14 :
-  Ge.GenFA14.Ctr.contr ->
+  Ge.GenFA14.Input.inp ->
   Ge.OutDetRank(Infra.FloatDomain)(Infra.GenericArrayContainer)(Ge.FDet)(Ge.Rank).res =
   <fun>
 # val rRA1 :
-  Ge.GenRA1.Ctr.contr ->
+  Ge.GenRA1.Input.inp ->
   Ge.OutJustMatrix(Infra.RationalDomain)(Infra.GenericArrayContainer)(Ge.RDet).res =
   <fun>
 # val rRA2 :
-  Ge.GenRA2.Ctr.contr ->
+  Ge.GenRA2.Input.inp ->
   Ge.OutDet(Infra.RationalDomain)(Infra.GenericArrayContainer)(Ge.RDet).res =
   <fun>
 # val rRA3 :
-  Ge.GenRA3.Ctr.contr ->
+  Ge.GenRA3.Input.inp ->
   Ge.OutRank(Infra.RationalDomain)(Infra.GenericArrayContainer)(Ge.Rank).res =
   <fun>
 # val rRA4 :
-  Ge.GenRA4.Ctr.contr ->
+  Ge.GenRA4.Input.inp ->
   Ge.OutDetRank(Infra.RationalDomain)(Infra.GenericArrayContainer)(Ge.RDet)(Ge.Rank).res =
   <fun>
 #                                                   val ia0 : Infra.IntegerDomain.v array array = [|[|1|]|]
