@@ -262,20 +262,22 @@ module type INPUT =
       functor (C: CONTAINER2D) -> sig
     type inp
     val get_input : ('a, inp) code ->
-        (('a, C(Dom).contr) code * ('a, int) code, 's, ('a, 'w) code) monad
+        (('a, C(Dom).contr) code * ('a, int) code * bool, 's, ('a, 'w) code) monad
 end 
 
 (* What is the input *)
 module InpJustMatrix(Dom:DOMAIN)(C: CONTAINER2D) = struct
     module Ctr = C(Dom)
     type inp   = Ctr.contr
-    let get_input a = ret (a, Ctr.dim1 a)
+    let get_input a = ret (a, Ctr.dim2 a, false)
 end
 
 module InpMatrixMargin(Dom:DOMAIN)(C: CONTAINER2D) = struct
     module Ctr = C(Dom)
     type inp   = Ctr.contr * int
-    let get_input a = ret a
+    let get_input a = perform
+        (b,c) <-- ret (liftPair a);
+        ret (b, c, true)
 end
 
 module type OUTPUT = sig
@@ -512,18 +514,19 @@ module Gen(Dom: DOMAIN)(C: CONTAINER2D)(PivotF: PIVOT)
         perform
               seqM (retLoopM (Idx.succ r) (Idx.pred n) innerbody) 
                    (Update.update_det brc) in
-      let dogen aa = perform
-          (a,rmar) <-- Input.get_input aa;
+      let dogen input = perform
+          (a,rmar,augmented) <-- Input.get_input input;
           r <-- Out.R.decl ();
           c <-- retN (liftRef Idx.zero);
           b <-- retN (Ctr.mapper Dom.normalizerf (Ctr.copy a));
           m <-- retN (Ctr.dim1 a);
-          n <-- retN (Ctr.dim2 a);
+          rmar <-- retN rmar;
+          n <-- if augmented then retN (Ctr.dim2 a) else ret rmar;
           Update.D.decl ();
           () <-- Out.P.decl ();
           seqM 
             (retWhileM (LogicCode.and_L (Idx.less (liftGet c) m)
-                                       (Idx.less (liftGet r) n) )
+                                       (Idx.less (liftGet r) rmar) )
                ( perform
                rr <-- retN (liftGet r);
                cc <-- retN (liftGet c);
@@ -713,3 +716,28 @@ module GenRA4 = Gen(RationalDomain)
                    (InpJustMatrix)
                    (OutDetRank(RationalDomain)(GenericArrayContainer)(RDet)(Rank))
 *)
+module GenFA5 = Gen(FloatDomain)
+                   (GenericArrayContainer)
+                   (RowPivot)
+                   (DivisionUpdate(FloatDomain)(GenericArrayContainer)(NoDet(FloatDomain)))
+                   (InpMatrixMargin)
+                   (OutJustMatrix(FloatDomain)(GenericArrayContainer)(NoDet(FloatDomain)))
+
+module GenFA6 = Gen(FloatDomain)
+                   (GenericArrayContainer)
+                   (RowPivot)
+                   (DivisionUpdate(FloatDomain)(GenericArrayContainer)(FDet))
+                   (InpMatrixMargin)
+                   (OutDet(FloatDomain)(GenericArrayContainer)(FDet))
+module GenFA7 = Gen(FloatDomain)
+                   (GenericArrayContainer)
+                   (RowPivot)
+                   (DivisionUpdate(FloatDomain)(GenericArrayContainer)(NoDet(FloatDomain)))
+                   (InpMatrixMargin)
+                   (OutRank(FloatDomain)(GenericArrayContainer)(Rank))
+module GenFA8 = Gen(FloatDomain)
+                   (GenericArrayContainer)
+                   (RowPivot)
+                   (DivisionUpdate(FloatDomain)(GenericArrayContainer)(FDet))
+                   (InpMatrixMargin)
+                   (OutDetRank(FloatDomain)(GenericArrayContainer)(FDet)(Rank))
