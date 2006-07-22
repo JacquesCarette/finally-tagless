@@ -29,6 +29,10 @@ let resRA1 = instantiate GenRA1.gen ;;
 let resRA2 = instantiate GenRA2.gen ;;
 let resRA3 = instantiate GenRA3.gen ;;
 let resRA4 = instantiate GenRA4.gen ;;
+let resFA5 = instantiate GenFA5.gen ;;
+let resFA6 = instantiate GenFA6.gen ;;
+let resFA7 = instantiate GenFA7.gen ;;
+let resFA8 = instantiate GenFA8.gen ;;
 
 let rFA1 = .! resFA1 ;;
 let rFA2 = .! resFA2 ;;
@@ -56,6 +60,10 @@ let rRA1 = .! resRA1 ;;
 let rRA2 = .! resRA2 ;;
 let rRA3 = .! resRA3 ;;
 let rRA4 = .! resRA4 ;;
+let rFA5 = .! resFA5 ;;
+let rFA6 = .! resFA6 ;;
+let rFA7 = .! resFA7 ;;
+let rFA8 = .! resFA8 ;;
 
 let ia0 = Array.make 1 (Array.make 1 1)
 let ia1 = Array.of_list [
@@ -124,6 +132,13 @@ let fa4 = Array.of_list [
     ] ;;
 let fa5 = [fa0; fa1; fa2; fa3; fa4]
 
+let fa6 = Array.make 1 (Array.make 2 1.)
+let fa7 = Array.of_list [
+    Array.of_list [1. ; 2. ; 3.   ; 1. ; 0. ; 0. ] ;
+    Array.of_list [4. ; 13. ; 5.  ; 0. ; 1. ; 0. ] ;
+    Array.of_list [(-1.) ; 3. ; 0.; 0. ; 0. ; 1. ]
+    ]
+
 let _ = assert (rFA1 fa0 = [|[|1.0|]|])
 (* permutation: 1<->2, 2<->3. Det is 50 *)
 let _ = assert (rFA1 fa1 =
@@ -139,6 +154,12 @@ let _ = assert (rFA1 fa3 =
 let _ = assert (rFA1 fa4 =
 	[|[|0.; 10.; 5.|]; [|0.; 0.; 2.|]; [|0.; 0.; -0.|]|]
 		  )
+
+let _ = assert( rFA5 (fa6,1) = [|[|1.0; 1.0|]|] )
+
+(* should also test more of these
+let fff = rFA6 (fa7,3);;
+*)
 
 let resF1 = List.map rFA1 fa5;;
 let _ = assert (List.map rFA2 fa5 =
