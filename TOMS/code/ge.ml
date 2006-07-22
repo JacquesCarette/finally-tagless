@@ -1,31 +1,36 @@
 open Infra
 
+(* Monad used in this module: code generation monad with open union state *)
+type ('a,'v,'s,'w) cmonad = (('a,'v) code, 's list, ('a,'w) code) monad
+
+
 module type DETERMINANT = sig
   type indet
   type outdet
   type tdet = outdet ref
   type 'a lstate
-  val decl : unit -> 
-    (unit, [> `TDet of 'a lstate ] list, ('a,'b) code) monad
-  val upd_sign : unit -> 
-    (('a,unit) code, [> `TDet of 'a lstate ] list, ('a,'b) code) monad
-  val zero_sign : unit -> 
-    (('a,unit) code, [> `TDet of 'a lstate ] list, ('a,'b) code) monad
-  val acc : ('a,indet) code -> 
-    (('a,unit) code, [> `TDet of 'a lstate ] list, ('a,'b) code) monad
-  val get : unit ->
-    (('a,tdet) code, [> `TDet of 'a lstate ] list, ('a,'b) code) monad
-  val set : ('a,indet) code -> 
-    (('a,unit) code, [> `TDet of 'a lstate ] list, ('a,'b) code) monad
-  val fin : unit -> 
-    (('a,outdet) code, [> `TDet of 'a lstate ] list, ('a,'b) code) monad
+  type 'a tag_lstate = [`TDet of 'a lstate ]
+	(* Here, parameter 'b account for all the extra polymorphims *)
+  type ('b,'v) lm = ('a,'v,'s,'w) cmonad
+	constraint 's = [> 'a tag_lstate]
+	constraint 'b = 'a * 's * 'w
+  val decl : unit -> ('b,unit) lm (* could be unit rather than unit code...*)
+  val upd_sign  : unit -> ('b,unit) lm
+  val zero_sign : unit -> ('b,unit) lm
+  val acc       : ('a,indet) code -> ('a * 's * 'w,unit) lm
+  val get       : unit -> ('b,tdet) lm
+  val set       : ('a,indet) code -> ('a * 's * 'w,unit) lm
+  val fin       : unit -> ('b,outdet) lm
 end
 
 (* no need to make the type abstract here - just leads to other problems *)
 module type RANK = sig
   type 'a lstate = ('a, int ref) code
-  val rfetch : unit -> 
-    (('a,int ref) code,[> `TRan of 'a lstate ] list,('a,'w) code) monad
+  type 'a tag_lstate = [`TRan of 'a lstate ]
+  type ('b,'v) lm = ('a,'v,'s,'w) cmonad
+	constraint 's = [> 'a tag_lstate]
+	constraint 'b = 'a * 's * 'w
+  val rfetch : unit -> ('b,int ref) lm
   val decl : unit -> 
     (('a,int ref) code,[> `TRan of 'a lstate ] list,('a,'w) code) monad
   val succ : unit -> 
@@ -39,6 +44,10 @@ end
 module TrackRank = 
   struct
   type 'a lstate = ('a, int ref) code
+  type 'a tag_lstate = [`TRan of 'a lstate ]
+  type ('b,'v) lm = ('a,'v,'s,'w) cmonad
+	constraint 's = [> 'a tag_lstate]
+	constraint 'b = 'a * 's * 'w
         (* the purpose of this function is to make the union open.
            Alas, Camlp4 does not understand the :> coercion notation *)
   let coerce = function `TRan x -> `TRan x | x -> x
@@ -73,10 +82,31 @@ end
 (* In the case of a non-fraction-free algorithm with no Det
    output, it is possible to not track the determinant, but
    in all other cases it is needed.
+*)
 
-   This module is just for deep type sharing.  The actual 
-   implementations are completely different.  *)
-module DetTypes(Dom: DOMAIN) = 
+(* we need the domain anyways to get things to type properly *)
+module NoDet(Dom:DOMAIN) =
+  struct
+  type indet = Dom.v
+  type outdet = unit
+  type tdet = outdet ref
+  type 'a lstate = unit
+  let decl () = retUnitL
+  let upd_sign () = retUnitL
+  let zero_sign () = retUnitL
+  let acc v = retUnitL
+  let get () = ret (liftRef Code.cunit)
+  let set v = retUnitL
+  let fin () = retUnitL
+  type 'a tag_lstate = [`TDet of 'a lstate ]
+  type ('b,'v) lm = ('a,'v,'s,'w) cmonad
+	constraint 's = [> 'a tag_lstate]
+	constraint 'b = 'a * 's * 'w
+end
+
+module AbstractDet(Dom: DOMAIN) : 
+    (DETERMINANT with type indet  = Dom.v and
+                      type outdet = Dom.v) =
   struct
   type indet = Dom.v
   type outdet = indet
@@ -84,36 +114,14 @@ module DetTypes(Dom: DOMAIN) =
   (* the first part of the state is an integer: which is +1, 0, -1:
      the sign of the determinant *)
   type 'a lstate = ('a,int ref) code * ('a,tdet) code
-end
-
-(* we need the domain anyways to get things to type properly *)
-module NoDet(Dom:DOMAIN) =
-  struct
-  module TD = DetTypes(Dom)
-  type indet = Dom.v
-  type outdet = unit
-  type tdet = outdet ref
-  type 'a lstate = 'a TD.lstate
-  let decl () = ret ()
-  let upd_sign () = retUnitL
-  let zero_sign () = retUnitL
-  let acc v = retUnitL
-  let get () = ret (liftRef Code.cunit)
-  let set v = retUnitL
-  let fin () = retUnitL
-end
-
-module AbstractDet(Dom: DOMAIN) =
-  struct
-  module TD = DetTypes(Dom)
-  type indet = TD.indet
-  type outdet = TD.outdet
-  type tdet = TD.tdet
-  type 'a lstate = 'a TD.lstate
+  type 'a tag_lstate = [`TDet of 'a lstate ]
+  type ('b,'v) lm = ('a,'v,'s,'w) cmonad
+	constraint 's = [> 'a tag_lstate]
+	constraint 'b = 'a * 's * 'w
         (* the purpose of this function is to make the union open.
            Alas, Camlp4 does not understand the :> coercion notation *)
   let coerce = function `TDet x -> `TDet x | x -> x
-  let rec fetch_iter (s : [> `TDet of 'a lstate] list) =
+  let rec fetch_iter (s : [> 'a tag_lstate] list) =
     match (coerce (List.hd s)) with
       `TDet x -> x
     |  _ -> fetch_iter (List.tl s)
@@ -123,7 +131,8 @@ module AbstractDet(Dom: DOMAIN) =
   let decl () = perform
       ddecl <-- retN (liftRef Dom.one);
       dsdecl <-- retN (liftRef Idx.one);
-      dstore (dsdecl,ddecl)
+      dstore (dsdecl,ddecl);
+      retUnitL
   let upd_sign () = perform
       det <-- dfetch ();
       det1 <-- ret (fst det);
@@ -157,9 +166,9 @@ module type UPDATE = sig
     type 'a idx = ('a,int) code
     module D : DETERMINANT
     val update : ('a, ctr) code -> 'a idx -> 'a idx -> 'a idx -> 'a idx ->
-        (('a,unit) code, [> `TDet of 'a D.lstate] list, ('a,'b) code) monad
+      ('a * 's * 'w,unit) D.lm
     val update_det : ('a, baseobj) code -> 
-        (('a,unit) code, [> `TDet of 'a D.lstate] list, ('a,'b) code) monad
+      ('a * 's * 'w,unit) D.lm
 end
 
 (* What is the update formula? *)
@@ -276,10 +285,7 @@ module type OUTPUT = sig
   module R : RANK
   module P : TRACKPIVOT
   val make_result : ('a,contr) code -> 
-    (('a,res) code,
-     [> `TDet of 'a D.lstate | `TRan of 'a R.lstate | `TPivot of 'a P.lstate]
-       list,
-     ('a,'w) code) monad
+    ('a,res,[> 'a D.tag_lstate | 'a R.tag_lstate],'w) cmonad
 end
 
 (* What to return *)
@@ -295,7 +301,9 @@ module OutJustMatrix(Dom:DOMAIN)(C: CONTAINER2D)(Det : DETERMINANT) =
 end
 
 module OutDet(Dom:DOMAIN)(C: CONTAINER2D)
-    (Det : DETERMINANT with type indet = Dom.v and type outdet = Dom.v) =
+    (Det : DETERMINANT with type indet = Dom.v and type outdet = Dom.v) :
+    (OUTPUT with type contr = C(Dom).contr and type D.indet = Dom.v
+                 and type 'a D.lstate = 'a Det.lstate) =
   struct
   module Ctr = C(Dom)
   type contr = Ctr.contr
@@ -371,8 +379,7 @@ sig
     When we permute the rows of columns, we update the sign of the det.
  *)
  val findpivot : 'a C(Dom).vc -> ('a,int) code -> ('a,int) code -> 
-   ('a,int) code -> ('a,int) code ->
-   (('a,Dom.v option) code,[> `TDet of 'a D.lstate] list,('a,'w) code) monad
+   ('a,int) code -> ('a,int) code -> ('a * 's * 'w,Dom.v option) D.lm
 end
 
 module RowPivot(Dom: DOMAIN)(C: CONTAINER2D)
@@ -393,7 +400,7 @@ struct
                   (retMatchM (liftGet pivot)
                     (fun pv ->
                       perform
-                      (i,bic) <-- ret (liftPair pv);
+                      (i,bic) <-- liftPair pv;
                       whenM (sel bic bjc)
                         (Code.assignL pivot (MaybeCode.just 
                                      (TupleCode.tup2 j bjc))))
@@ -419,7 +426,7 @@ struct
          (retMatchM (liftGet pivot)
                 (fun pv ->
                      perform
-                         (i,bic) <-- ret (liftPair pv);
+                         (i,bic) <-- liftPair pv;
                          seqM (whenM (LogicCode.notequalL i r)
                                 (seqM 
                                    (ret (Ctr.swap_rows_stmt b r i))
@@ -444,7 +451,7 @@ struct
                   (retMatchM (liftGet pivot)
                     (fun pv ->
                       perform
-                      (pr,pc,brc) <-- ret (liftPPair pv);
+                      (pr,pc,brc) <-- liftPPair pv;
                       whenM (sel brc bjk)
                         (Code.assignL pivot (MaybeCode.just
                             (TupleCode.tup2 (TupleCode.tup2 j k) bjk))))
@@ -458,7 +465,7 @@ struct
               (retMatchM (liftGet pivot)
                   (fun pv ->
                      perform
-                         (pr,pc,brc) <-- ret (liftPPair pv);
+                         (pr,pc,brc) <-- liftPPair pv;
                          seqM
                              (whenM (LogicCode.notequalL pc c)
                                  (seqM
@@ -512,7 +519,7 @@ module Gen(Dom: DOMAIN)(C: CONTAINER2D)(PivotF: PIVOT)
           b <-- retN (Ctr.mapper Dom.normalizerf (Ctr.copy a));
           m <-- retN (Ctr.dim1 a);
           n <-- retN (Ctr.dim2 a);
-          () <-- Update.D.decl ();
+          Update.D.decl ();
           () <-- Out.P.decl ();
           seqM 
             (retWhileM (LogicCode.and_L (Idx.less (liftGet c) m)
@@ -567,6 +574,8 @@ module GenFV2 = Gen(FloatDomain)
                    (DivisionUpdate(FloatDomain)(GenericVectorContainer)(FDet))
                    (InpJustMatrix)
                    (OutDet(FloatDomain)(GenericVectorContainer)(FDet))
+(*
+
 module GenFV3 = Gen(FloatDomain)
                    (GenericVectorContainer)
                    (RowPivot)
@@ -703,3 +712,4 @@ module GenRA4 = Gen(RationalDomain)
                    (DivisionUpdate(RationalDomain)(GenericArrayContainer)(RDet))
                    (InpJustMatrix)
                    (OutDetRank(RationalDomain)(GenericArrayContainer)(RDet)(Rank))
+*)

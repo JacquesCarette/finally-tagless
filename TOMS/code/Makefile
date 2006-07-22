@@ -41,7 +41,7 @@ clean-test:
 
 .PHONY: clean
 clean:
-	rm --force $(TEST) *.cm[io]
+	rm -f $(TEST) *.cm[io]
 
 $(OBJ): $(BASE)
 

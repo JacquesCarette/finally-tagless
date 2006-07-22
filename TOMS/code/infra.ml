@@ -9,8 +9,11 @@ let runM m = m [] k0 (* running our monad *)
 let lift x = .< x >.
 let liftRef x = .< ref .~x >. 
 let liftGet x = .< ! .~x >. 
-let liftPair x = (.< fst .~x >., .< snd .~x >.)
-let liftPPair x = (.< fst (fst .~x) >., .< snd (fst .~x) >., .< snd .~x >.)
+
+(* To be able to deconstruct pairs in monadic code:
+   perform (a,b) <-- liftPair pv *)
+let liftPair x = ret (.< fst .~x >., .< snd .~x >.)
+let liftPPair x = ret (.< fst (fst .~x) >., .< snd (fst .~x) >., .< snd .~x >.)
 
 (* Monad lifting functions *)
 let l1 f = fun x -> perform t <-- x; f t
@@ -40,8 +43,6 @@ let seqL a b = ret (seq a b)
 let seqM a b = fun s k -> k s .< begin .~(a s k0) ; .~(b s k0) end >.
 
 (* conditional *)
-let ifL test th el = ret .< if .~test then .~th else .~el >.
-
 (* Note the implicit `reset' *)
 let ifM test th el = fun s k ->
   k s .< if .~(test s k0) then .~(th s k0) else .~(el s k0) >.
