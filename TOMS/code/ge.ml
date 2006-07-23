@@ -10,7 +10,7 @@ module type DETERMINANT = sig
   type tdet = outdet ref
   type 'a lstate
   type 'a tag_lstate = [`TDet of 'a lstate ]
-	(* Here, parameter 'b account for all the extra polymorphims *)
+	(* Here, parameter 'b accounts for all the extra polymorphims *)
   type ('b,'v) lm = ('a,'v,'s,'w) cmonad
 	constraint 's = [> 'a tag_lstate]
 	constraint 'b = 'a * 's * 'w
@@ -30,13 +30,10 @@ module type RANK = sig
   type ('b,'v) lm = ('a,'v,'s,'w) cmonad
 	constraint 's = [> 'a tag_lstate]
 	constraint 'b = 'a * 's * 'w
-  val rfetch : unit -> ('b,int ref) lm
-  val decl : unit -> 
-    (('a,int ref) code,[> `TRan of 'a lstate ] list,('a,'w) code) monad
-  val succ : unit -> 
-    (('a,unit) code,[> `TRan of 'a lstate ] list,('a,'w) code) monad
-  val fin : unit ->  
-    (('a,int) code,[> `TRan of 'a lstate ] list,('a,'w) code) monad
+  val rfetch : unit -> ('b, int ref) lm
+  val decl   : unit -> ('b, int ref) lm
+  val succ   : unit -> ('b, unit) lm
+  val fin    : unit -> ('b, int) lm
 end
 
 (* Even if no rank is output, it needs to be tracked, as the rank
@@ -48,11 +45,9 @@ module TrackRank =
   type ('b,'v) lm = ('a,'v,'s,'w) cmonad
 	constraint 's = [> 'a tag_lstate]
 	constraint 'b = 'a * 's * 'w
-        (* the purpose of this function is to make the union open.
-           Alas, Camlp4 does not understand the :> coercion notation *)
-  let coerce = function `TRan x -> `TRan x | x -> x
-  let rec fetch_iter (s : [> `TRan of 'a lstate] list) =
-    match (coerce (List.hd s)) with
+  (* In 3.09, no need for any coercion at all, type inference works! *)
+  let rec fetch_iter s =
+    match (List.hd s) with
       `TRan x -> x
     |  _ -> fetch_iter (List.tl s)
   let rfetch () = perform s <-- fetch; (* unit for monomorphism restriction *)
@@ -104,7 +99,7 @@ module NoDet(Dom:DOMAIN) =
 	constraint 'b = 'a * 's * 'w
 end
 
-module AbstractDet(Dom: DOMAIN) : 
+module AbstractDet(Dom: DOMAIN) :
     (DETERMINANT with type indet  = Dom.v and
                       type outdet = Dom.v) =
   struct
