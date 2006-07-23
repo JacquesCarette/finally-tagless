@@ -99,9 +99,7 @@ module NoDet(Dom:DOMAIN) =
 	constraint 'b = 'a * 's * 'w
 end
 
-module AbstractDet(Dom: DOMAIN) :
-    (DETERMINANT with type indet  = Dom.v and
-                      type outdet = Dom.v) =
+module AbstractDet(Dom: DOMAIN) =
   struct
   type indet = Dom.v
   type outdet = indet
@@ -113,11 +111,8 @@ module AbstractDet(Dom: DOMAIN) :
   type ('b,'v) lm = ('a,'v,'s,'w) cmonad
 	constraint 's = [> 'a tag_lstate]
 	constraint 'b = 'a * 's * 'w
-        (* the purpose of this function is to make the union open.
-           Alas, Camlp4 does not understand the :> coercion notation *)
-  let coerce = function `TDet x -> `TDet x | x -> x
-  let rec fetch_iter (s : [> 'a tag_lstate] list) =
-    match (coerce (List.hd s)) with
+  let rec fetch_iter s =
+    match (List.hd s) with
       `TDet x -> x
     |  _ -> fetch_iter (List.tl s)
   let dfetch () = perform s <-- fetch; (* unit for monomorphism restriction *)
@@ -211,7 +206,11 @@ type perm = RowSwap of (int * int) | ColSwap of (int * int)
 module type TRACKPIVOT = sig
   type 'a lstate
   type 'a tag_lstate = [`TPivot of 'a lstate ]
-  val decl : unit -> (unit,[> 'a tag_lstate] list,('a,'w) code) monad
+	(* Here, parameter 'b accounts for all the extra polymorphims *)
+  type ('b,'v) lm = ('a,'v,'s,'w) cmonad
+	constraint 's = [> 'a tag_lstate]
+	constraint 'b = 'a * 's * 'w
+  val decl : unit -> ('b, unit) lm
   val add : ('a,perm) code -> 
     (('a,unit) code,[> 'a tag_lstate] list,('a,'w) code) monad
   val fin : unit -> 
@@ -222,19 +221,23 @@ module TrackPivot =
   struct
   type 'a lstate = ('a, perm list ref) code
   type 'a tag_lstate = [`TPivot of 'a lstate ]
+  type ('b,'v) lm = ('a,'v,'s,'w) cmonad
+	constraint 's = [> 'a tag_lstate]
+	constraint 'b = 'a * 's * 'w
         (* the purpose of this function is to make the union open.
            Alas, Camlp4 does not understand the :> coercion notation *)
-  let coerce = function `TPivot x -> `TPivot x | x -> x
-  let rec fetch_iter (s : [> `TPivot of 'a lstate] list) =
-    match (coerce (List.hd s)) with
+  (*let coerce = function `TPivot x -> `TPivot x | x -> x *)
+  let rec fetch_iter s =
+    match (List.hd s) with
       `TPivot x -> x
     |  _ -> fetch_iter (List.tl s)
   let pfetch () = perform s <-- fetch; (* unit for monomorphism restriction *)
                         ret (fetch_iter s)
   let pstore v = store (`TPivot v)
   let decl () = perform
-      pdecl <-- retN (liftRef ListCode.nil);
-      pstore pdecl
+      pdecl <-- retN (liftRef (ListCode.nil :> ('a, perm list) code));
+      pstore pdecl;
+      retUnitL
   let add v = perform
    p <-- pfetch ();
    Code.assignL p (ListCode.cons v (liftGet p))
@@ -250,7 +253,10 @@ end
 module DiscardPivot:TRACKPIVOT = struct
   type 'a lstate = ('a, perm list ref) code
   type 'a tag_lstate = [`TPivot of 'a lstate ]
-  let decl () = ret ()
+  type ('b,'v) lm = ('a,'v,'s,'w) cmonad
+	constraint 's = [> 'a tag_lstate]
+	constraint 'b = 'a * 's * 'w
+  let decl () = retUnitL
   let add v = retUnitL
   let fin () = ret ListCode.nil
 end
@@ -521,7 +527,7 @@ module Gen(Dom: DOMAIN)(C: CONTAINER2D)(PivotF: PIVOT)
           rmar <-- retN rmar;
           n <-- if augmented then retN (Ctr.dim2 a) else ret rmar;
           Update.D.decl ();
-          () <-- Out.P.decl ();
+          Out.P.decl ();
           seqM 
             (retWhileM (LogicCode.and_L (Idx.less (liftGet c) m)
                                        (Idx.less (liftGet r) rmar) )
