@@ -163,27 +163,27 @@ end
 
 (* What is the update formula? *)
 module DivisionUpdate
-    (Dom:DOMAIN with type kind = domain_is_field)
-    (C:CONTAINER2D)
-    (Det:DETERMINANT with type indet=Dom.v) = 
+    (C:CONTAINER2D with type Dom.kind = domain_is_field)
+    (Det:DETERMINANT with type indet=C.Dom.v) = 
   struct
-  module Ctr = C(Dom)
   type baseobj = Det.indet
-  type ctr = Ctr.contr
+  type ctr = C.contr
   type 'a idx = ('a,int) code
   module D = Det
+  module Dom = C.Dom
   let update b r c i k = perform
-      t <-- Dom.divL (Ctr.get b i c) (Ctr.get b r c);
-      l <-- Dom.timesL t (Ctr.get b r k);
-      y <-- Dom.minusL (Ctr.get b i k) l;
-      Ctr.setL b i k (Dom.normalizerg y)
+      t <-- Dom.divL (C.get b i c) (C.get b r c);
+      l <-- Dom.timesL t (C.get b r k);
+      y <-- Dom.minusL (C.get b i k) l;
+      C.setL b i k (Dom.normalizerg y)
   let update_det v = Det.acc v
 end
 
-module FractionFreeUpdate(Dom:DOMAIN)(C:CONTAINER2D)
-    (Det:DETERMINANT with type indet=Dom.v and type outdet=Dom.v) =
+module FractionFreeUpdate
+    (Ctr:CONTAINER2D)
+    (Det:DETERMINANT with type indet=Ctr.Dom.v and type outdet=Ctr.Dom.v) = 
   struct
-  module Ctr = C(Dom)
+  module Dom = Ctr.Dom
   type baseobj = Dom.v
   type ctr = Ctr.contr
   type 'a idx = ('a,int) code
@@ -262,23 +262,20 @@ module DiscardPivot:TRACKPIVOT = struct
 end
 
 module type INPUT =
-    functor (Dom: DOMAIN) -> 
       functor (C: CONTAINER2D) -> sig
     type inp
     val get_input : ('a, inp) code ->
-        (('a, C(Dom).contr) code * ('a, int) code * bool, 's, ('a, 'w) code) monad
+        (('a, C.contr) code * ('a, int) code * bool, 's, ('a, 'w) code) monad
 end 
 
 (* What is the input *)
-module InpJustMatrix(Dom:DOMAIN)(C: CONTAINER2D) = struct
-    module Ctr = C(Dom)
-    type inp   = Ctr.contr
-    let get_input a = ret (a, Ctr.dim2 a, false)
+module InpJustMatrix(C: CONTAINER2D) = struct
+    type inp   = C.contr
+    let get_input a = ret (a, C.dim2 a, false)
 end
 
-module InpMatrixMargin(Dom:DOMAIN)(C: CONTAINER2D) = struct
-    module Ctr = C(Dom)
-    type inp   = Ctr.contr * int
+module InpMatrixMargin(C: CONTAINER2D) = struct
+    type inp   = C.contr * int
     let get_input a = perform
         (b,c) <-- liftPair a;
         ret (b, c, true)
@@ -295,10 +292,9 @@ module type OUTPUT = sig
 end
 
 (* What to return *)
-module OutJustMatrix(Dom:DOMAIN)(C: CONTAINER2D)(Det : DETERMINANT) =
+module OutJustMatrix(C: CONTAINER2D)(Det : DETERMINANT) =
   struct
-  module Ctr = C(Dom)
-  type contr = Ctr.contr
+  type contr = C.contr
   type res = contr
   module D = Det
   module R = NoRank
@@ -306,11 +302,10 @@ module OutJustMatrix(Dom:DOMAIN)(C: CONTAINER2D)(Det : DETERMINANT) =
   let make_result b = ret b
 end
 
-module OutDet(Dom:DOMAIN)(C: CONTAINER2D)
-    (Det : DETERMINANT with type indet = Dom.v and type outdet = Dom.v) = 
+module OutDet(C: CONTAINER2D)
+    (Det : DETERMINANT with type indet = C.Dom.v and type outdet = C.Dom.v) = 
   struct
-  module Ctr = C(Dom)
-  type contr = Ctr.contr
+  type contr = C.contr
   type res = contr * Det.outdet
   module D = Det
   module R = NoRank
@@ -320,12 +315,11 @@ module OutDet(Dom:DOMAIN)(C: CONTAINER2D)
     ret (TupleCode.tup2 b det)
 end
 
-module OutRank(Dom:DOMAIN)(C: CONTAINER2D)
-    (Det: DETERMINANT with type indet = Dom.v)
+module OutRank(C: CONTAINER2D)
+    (Det: DETERMINANT with type indet = C.Dom.v)
     (Rank : RANK) =
   struct
-  module Ctr = C(Dom)
-  type contr = Ctr.contr
+  type contr = C.contr
   type res = contr * int
   module D = Det
   module R = Rank
@@ -335,12 +329,11 @@ module OutRank(Dom:DOMAIN)(C: CONTAINER2D)
     ret (TupleCode.tup2 b rank)
 end
 
-module OutDetRank(Dom:DOMAIN)(C: CONTAINER2D)
-    (Det : DETERMINANT with type indet = Dom.v and type outdet = Dom.v)
+module OutDetRank(C: CONTAINER2D)
+    (Det : DETERMINANT with type indet = C.Dom.v and type outdet = C.Dom.v)
     (Rank : RANK) =
   struct
-  module Ctr = C(Dom)
-  type contr = Ctr.contr
+  type contr = C.contr
   type res = contr * Det.outdet * int
   module D = Det
   module R = Rank
@@ -351,12 +344,11 @@ module OutDetRank(Dom:DOMAIN)(C: CONTAINER2D)
     ret (TupleCode.tup3 b det rank)
 end
 
-module OutDetRankPivot(Dom:DOMAIN)(C: CONTAINER2D)
-    (Det : DETERMINANT with type indet = Dom.v and type outdet = Dom.v)
+module OutDetRankPivot(C: CONTAINER2D)
+    (Det : DETERMINANT with type indet = C.Dom.v and type outdet = C.Dom.v)
     (Rank : RANK) =
   struct
-  module Ctr = C(Dom)
-  type contr = Ctr.contr
+  type contr = C.contr
   type res = contr * Det.outdet * int * perm list
   module D = Det
   module R = Rank
@@ -373,9 +365,8 @@ module IDet = AbstractDet(IntegerDomain)
 module RDet = AbstractDet(RationalDomain)
 
 module type PIVOT = 
-    functor (Dom: DOMAIN) -> 
-      functor (C: CONTAINER2D) ->
-        functor (D: DETERMINANT with type indet = Dom.v) -> 
+    functor (C: CONTAINER2D) ->
+      functor (D: DETERMINANT with type indet = C.Dom.v) -> 
 sig
  (* Find the pivot within [r,m-1] rows and [c,(n-1)] columns
     of containrer b.
@@ -384,25 +375,24 @@ sig
     Return the value of the pivot option. Or zero?
     When we permute the rows of columns, we update the sign of the det.
  *)
- val findpivot : 'a C(Dom).vc -> ('a,int) code -> ('a,int) code -> 
-   ('a,int) code -> ('a,int) code -> ('a * 's * 'w,Dom.v option) D.lm
+ val findpivot : 'a C.vc -> ('a,int) code -> ('a,int) code -> 
+   ('a,int) code -> ('a,int) code -> ('a * 's * 'w, C.Dom.v option) D.lm
 end
 
-module RowPivot(Dom: DOMAIN)(C: CONTAINER2D)
-   (D: DETERMINANT with type indet = Dom.v) =
+module RowPivot(C: CONTAINER2D)
+   (D: DETERMINANT with type indet = C.Dom.v) =
 struct
-   module Ctr = C(Dom)
    let findpivot b r n c m = perform
        pivot <-- retN (liftRef MaybeCode.none );
        (* If no better_than procedure defined, we just search for
       non-zero element. Any non-zero element is a good pivot.
       If better_than is defined, we search then for the best element *)
        seqM
-        (match (Dom.better_than) with
+        (match (C.Dom.better_than) with
          Some sel -> 
               retLoopM r (Idx.pred n) (fun j -> perform
-              bjc <-- retN (Ctr.get b j c);
-              whenM (LogicCode.notL (LogicCode.equal bjc Dom.zero ))
+              bjc <-- retN (C.get b j c);
+              whenM (LogicCode.notL (LogicCode.equal bjc C.Dom.zero ))
                   (retMatchM (liftGet pivot)
                     (fun pv ->
                       perform
@@ -415,15 +405,15 @@ struct
               )
          | None ->
            perform
-            brc <-- retN (Ctr.get b r c);
-            ifM (LogicCode.notL (LogicCode.equal brc Dom.zero))
+            brc <-- retN (C.get b r c);
+            ifM (LogicCode.notL (LogicCode.equal brc C.Dom.zero))
               (* the current element is good enough *)
               (Code.assignL pivot (MaybeCode.just (TupleCode.tup2 r brc)))
               (let traverse = fun o j ->
                   whenM (ret (Idx.less j n))
                     (perform
-                        bjc <-- retN (Ctr.get b j c);
-                        ifM (LogicCode.equalL bjc Dom.zero)
+                        bjc <-- retN (C.get b j c);
+                        ifM (LogicCode.equalL bjc C.Dom.zero)
                             (Code.applyL o (Idx.succ j))
                             (Code.assignL pivot (MaybeCode.just 
                                 (TupleCode.tup2 j bjc)))) in
@@ -435,24 +425,23 @@ struct
                          (i,bic) <-- liftPair pv;
                          seqM (whenM (LogicCode.notequalL i r)
                                 (seqM 
-                                   (ret (Ctr.swap_rows_stmt b r i))
+                                   (ret (C.swap_rows_stmt b r i))
                                    (D.upd_sign ())))
                               (ret (MaybeCode.just bic)))
                 (ret MaybeCode.none))
 end
 
-module FullPivot(Dom: DOMAIN)(C: CONTAINER2D)
-   (D: DETERMINANT with type indet = Dom.v) =
+module FullPivot(C: CONTAINER2D)
+   (D: DETERMINANT with type indet = C.Dom.v) =
 struct
-   module Ctr = C(Dom)
    let findpivot b r n c m = perform
        pivot <-- retN (liftRef MaybeCode.none );
        seqM (retLoopM r (Idx.pred n) (fun j -> 
               retLoopM c (Idx.pred m) (fun k ->
            perform
-              bjk <-- retN (Ctr.get b j k);
-              whenM (LogicCode.notL ( LogicCode.equal bjk Dom.zero) )
-              (match (Dom.better_than) with
+              bjk <-- retN (C.get b j k);
+              whenM (LogicCode.notL ( LogicCode.equal bjk C.Dom.zero) )
+              (match (C.Dom.better_than) with
               | Some sel ->
                   (retMatchM (liftGet pivot)
                     (fun pv ->
@@ -475,46 +464,43 @@ struct
                          seqM
                              (whenM (LogicCode.notequalL pc c)
                                  (seqM
-                                   (ret (Ctr.swap_cols_stmt b c pc))
+                                   (ret (C.swap_cols_stmt b c pc))
                                    (D.upd_sign ())))
                            (seqM
                              (whenM (LogicCode.notequalL pr c)
                                  (seqM
-                                   (ret (Ctr.swap_rows_stmt b r pr))
+                                   (ret (C.swap_rows_stmt b r pr))
                                    (D.upd_sign ())))
                               (ret (MaybeCode.just brc))))
                   (ret MaybeCode.none))
 end
 
-module NoPivot(Dom: DOMAIN)(C: CONTAINER2D)
-   (D: DETERMINANT with type indet = Dom.v) =
+module NoPivot(C: CONTAINER2D)
+   (D: DETERMINANT with type indet = C.Dom.v) =
 struct
-   module Ctr = C(Dom)
    (* In this case, we assume diagonal dominance, and so
       just take the diagonal as ``pivot'' *)
    let findpivot b r n c m = perform 
-       brc <-- Ctr.getL b r c;
+       brc <-- C.getL b r c;
        ret (MaybeCode.just brc)
 end
 
-module Gen(Dom: DOMAIN)(C: CONTAINER2D)(PivotF: PIVOT)
-          (Update: UPDATE with type baseobj = Dom.v and type ctr = C(Dom).contr)
+module Gen(C: CONTAINER2D)(PivotF: PIVOT)
+          (Update: UPDATE with type baseobj = C.Dom.v and type ctr = C.contr)
           (In: INPUT)
-          (Out: OUTPUT with type contr = C(Dom).contr and type D.indet = Dom.v 
+          (Out: OUTPUT with type contr = C.contr and type D.indet = C.Dom.v 
                         and type 'a D.lstate = 'a Update.D.lstate) =
    struct
-    module Ctr = C(Dom)
-    module Pivot = PivotF(Dom)(C)(Out.D)
-    module Input = In(Dom)(C)
-    type v = Dom.v
+    module Pivot = PivotF(C)(Out.D)
+    module Input = In(C)
     let gen =
       let zerobelow b r c m n brc =
         let innerbody i = perform
-            bic <-- Ctr.getL b i c;
-            whenM (LogicCode.notL (LogicCode.equal bic Dom.zero ))
+            bic <-- C.getL b i c;
+            whenM (LogicCode.notL (LogicCode.equal bic C.Dom.zero ))
                 (seqM (retLoopM (Idx.succ c) (Idx.pred m)
                           (fun k -> Update.update b r c i k) )
-                      (Ctr.setL b i c Dom.zero)) in 
+                      (C.setL b i c C.Dom.zero)) in 
         perform
               seqM (retLoopM (Idx.succ r) (Idx.pred n) innerbody) 
                    (Update.update_det brc) in
@@ -522,10 +508,10 @@ module Gen(Dom: DOMAIN)(C: CONTAINER2D)(PivotF: PIVOT)
           (a,rmar,augmented) <-- Input.get_input input;
           r <-- Out.R.decl ();
           c <-- retN (liftRef Idx.zero);
-          b <-- retN (Ctr.mapper Dom.normalizerf (Ctr.copy a));
-          m <-- retN (Ctr.dim1 a);
+          b <-- retN (C.mapper C.Dom.normalizerf (C.copy a));
+          m <-- retN (C.dim1 a);
           rmar <-- retN rmar;
-          n <-- if augmented then retN (Ctr.dim2 a) else ret rmar;
+          n <-- if augmented then retN (C.dim2 a) else ret rmar;
           Update.D.decl ();
           Out.P.decl ();
           seqM 
@@ -544,201 +530,175 @@ module Gen(Dom: DOMAIN)(C: CONTAINER2D)(PivotF: PIVOT)
     in dogen
 end
 
-module GenFA1 = Gen(FloatDomain)
-                   (GenericArrayContainer)
-                   (RowPivot)
-                   (DivisionUpdate(FloatDomain)(GenericArrayContainer)(NoDet(FloatDomain)))
-                   (InpJustMatrix)
-                   (OutJustMatrix(FloatDomain)(GenericArrayContainer)(NoDet(FloatDomain)))
+module GAC_F = GenericArrayContainer(FloatDomain)
+module GVC_F = GenericVectorContainer(FloatDomain)
+module GAC_I = GenericArrayContainer(IntegerDomain)
+module GVC_I = GenericVectorContainer(IntegerDomain)
+module GAC_R = GenericArrayContainer(RationalDomain)
 
-module GenFA2 = Gen(FloatDomain)
-                   (GenericArrayContainer)
+module GenFA1 = Gen(GAC_F)
                    (RowPivot)
-                   (DivisionUpdate(FloatDomain)(GenericArrayContainer)(FDet))
+                   (DivisionUpdate(GAC_F)(NoDet(FloatDomain)))
                    (InpJustMatrix)
-                   (OutDet(FloatDomain)(GenericArrayContainer)(FDet))
-module GenFA3 = Gen(FloatDomain)
-                   (GenericArrayContainer)
+                   (OutJustMatrix(GAC_F)(NoDet(FloatDomain)))
+
+module GenFA2 = Gen(GAC_F)
                    (RowPivot)
-                   (DivisionUpdate(FloatDomain)(GenericArrayContainer)(NoDet(FloatDomain)))
+                   (DivisionUpdate(GAC_F)(FDet))
                    (InpJustMatrix)
-                   (OutRank(FloatDomain)(GenericArrayContainer)(NoDet(FloatDomain))(Rank))
-module GenFA4 = Gen(FloatDomain)
-                   (GenericArrayContainer)
+                   (OutDet(GAC_F)(FDet))
+module GenFA3 = Gen(GAC_F)
                    (RowPivot)
-                   (DivisionUpdate(FloatDomain)(GenericArrayContainer)(FDet))
+                   (DivisionUpdate(GAC_F)(NoDet(FloatDomain)))
                    (InpJustMatrix)
-                   (OutDetRank(FloatDomain)(GenericArrayContainer)(FDet)(Rank))
-module GenFV1 = Gen(FloatDomain)
-                   (GenericVectorContainer)
+                   (OutRank(GAC_F)(NoDet(FloatDomain))(Rank))
+module GenFA4 = Gen(GAC_F)
                    (RowPivot)
-                   (DivisionUpdate(FloatDomain)(GenericVectorContainer)(FDet))
+                   (DivisionUpdate(GAC_F)(FDet))
                    (InpJustMatrix)
-                   (OutJustMatrix(FloatDomain)(GenericVectorContainer)(FDet))
-module GenFV2 = Gen(FloatDomain)
-                   (GenericVectorContainer)
+                   (OutDetRank(GAC_F)(FDet)(Rank))
+module GenFV1 = Gen(GVC_F)
                    (RowPivot)
-                   (DivisionUpdate(FloatDomain)(GenericVectorContainer)(FDet))
+                   (DivisionUpdate(GVC_F)(FDet))
                    (InpJustMatrix)
-                   (OutDet(FloatDomain)(GenericVectorContainer)(FDet))
-module GenFV3 = Gen(FloatDomain)
-                   (GenericVectorContainer)
+                   (OutJustMatrix(GVC_F)(FDet))
+module GenFV2 = Gen(GVC_F)
                    (RowPivot)
-                   (DivisionUpdate(FloatDomain)(GenericVectorContainer)(NoDet(FloatDomain)))
+                   (DivisionUpdate(GVC_F)(FDet))
                    (InpJustMatrix)
-                   (OutRank(FloatDomain)(GenericVectorContainer)(NoDet(FloatDomain))(Rank))
-module GenFV4 = Gen(FloatDomain)
-                   (GenericVectorContainer)
+                   (OutDet(GVC_F)(FDet))
+module GenFV3 = Gen(GVC_F)
                    (RowPivot)
-                   (DivisionUpdate(FloatDomain)(GenericVectorContainer)(FDet))
+                   (DivisionUpdate(GVC_F)(NoDet(FloatDomain)))
                    (InpJustMatrix)
-                   (OutDetRank(FloatDomain)(GenericVectorContainer)(FDet)(Rank))
-module GenFV5 = Gen(FloatDomain)
-                   (GenericVectorContainer)
+                   (OutRank(GVC_F)(NoDet(FloatDomain))(Rank))
+module GenFV4 = Gen(GVC_F)
+                   (RowPivot)
+                   (DivisionUpdate(GVC_F)(FDet))
+                   (InpJustMatrix)
+                   (OutDetRank(GVC_F)(FDet)(Rank))
+module GenFV5 = Gen(GVC_F)
                    (FullPivot)
-                   (DivisionUpdate(FloatDomain)(GenericVectorContainer)(FDet))
+                   (DivisionUpdate(GVC_F)(FDet))
                    (InpJustMatrix)
-                   (OutDetRank(FloatDomain)(GenericVectorContainer)(FDet)(Rank))
+                   (OutDetRank(GVC_F)(FDet)(Rank))
 
 (* But this is an error!
-module GenIA1 = Gen(IntegerDomain)
-                   (GenericArrayContainer)
+module GenIA1 = Gen(GAC_I)
                    (RowPivot)
-                   (DivisionUpdate(IntegerDomain)(GenericArrayContainer)(IDet))
+                   (DivisionUpdate(GAC_I)(IDet))
                    (InpJustMatrix)
-                   (OutJustMatrix(IntegerDomain)(GenericArrayContainer)(IDet))
+                   (OutJustMatrix(GAC_I)(IDet))
 *)
-module GenIA1 = Gen(IntegerDomain)
-                   (GenericArrayContainer)
+module GenIA1 = Gen(GAC_I)
                    (RowPivot)
-                   (FractionFreeUpdate(IntegerDomain)(GenericArrayContainer)(IDet))
+                   (FractionFreeUpdate(GAC_I)(IDet))
                    (InpJustMatrix)
-                   (OutJustMatrix(IntegerDomain)(GenericArrayContainer)(IDet))
-module GenIA2 = Gen(IntegerDomain)
-                   (GenericArrayContainer)
+                   (OutJustMatrix(GAC_I)(IDet))
+module GenIA2 = Gen(GAC_I)
                    (RowPivot)
-                   (FractionFreeUpdate(IntegerDomain)(GenericArrayContainer)(IDet))
+                   (FractionFreeUpdate(GAC_I)(IDet))
                    (InpJustMatrix)
-                   (OutDet(IntegerDomain)(GenericArrayContainer)(IDet))
-module GenIA3 = Gen(IntegerDomain)
-                   (GenericArrayContainer)
+                   (OutDet(GAC_I)(IDet))
+module GenIA3 = Gen(GAC_I)
                    (RowPivot)
-                   (FractionFreeUpdate(IntegerDomain)(GenericArrayContainer)(IDet))
+                   (FractionFreeUpdate(GAC_I)(IDet))
                    (InpJustMatrix)
-                   (OutRank(IntegerDomain)(GenericArrayContainer)(IDet)(Rank))
-module GenIA4 = Gen(IntegerDomain)
-                   (GenericArrayContainer)
+                   (OutRank(GAC_I)(IDet)(Rank))
+module GenIA4 = Gen(GAC_I)
                    (RowPivot)
-                   (FractionFreeUpdate(IntegerDomain)(GenericArrayContainer)(IDet))
+                   (FractionFreeUpdate(GAC_I)(IDet))
                    (InpJustMatrix)
-                   (OutDetRank(IntegerDomain)(GenericArrayContainer)(IDet)(Rank))
-module GenIV1 = Gen(IntegerDomain)
-                   (GenericVectorContainer)
+                   (OutDetRank(GAC_I)(IDet)(Rank))
+module GenIV1 = Gen(GVC_I)
                    (RowPivot)
-                   (FractionFreeUpdate(IntegerDomain)(GenericVectorContainer)(IDet))
+                   (FractionFreeUpdate(GVC_I)(IDet))
                    (InpJustMatrix)
-                   (OutJustMatrix(IntegerDomain)(GenericVectorContainer)(IDet))
-module GenIV2 = Gen(IntegerDomain)
-                   (GenericVectorContainer)
+                   (OutJustMatrix(GVC_I)(IDet))
+module GenIV2 = Gen(GVC_I)
                    (RowPivot)
-                   (FractionFreeUpdate(IntegerDomain)(GenericVectorContainer)(IDet))
+                   (FractionFreeUpdate(GVC_I)(IDet))
                    (InpJustMatrix)
-                   (OutDet(IntegerDomain)(GenericVectorContainer)(IDet))
-module GenIV3 = Gen(IntegerDomain)
-                   (GenericVectorContainer)
+                   (OutDet(GVC_I)(IDet))
+module GenIV3 = Gen(GVC_I)
                    (RowPivot)
-                   (FractionFreeUpdate(IntegerDomain)(GenericVectorContainer)(IDet))
+                   (FractionFreeUpdate(GVC_I)(IDet))
                    (InpJustMatrix)
-                   (OutRank(IntegerDomain)(GenericVectorContainer)(IDet)(Rank))
-module GenIV4 = Gen(IntegerDomain)
-                   (GenericVectorContainer)
+                   (OutRank(GVC_I)(IDet)(Rank))
+module GenIV4 = Gen(GVC_I)
                    (RowPivot)
-                   (FractionFreeUpdate(IntegerDomain)(GenericVectorContainer)(IDet))
+                   (FractionFreeUpdate(GVC_I)(IDet))
                    (InpJustMatrix)
-                   (OutDetRank(IntegerDomain)(GenericVectorContainer)(IDet)(Rank))
-module GenIV5 = Gen(IntegerDomain)
-                   (GenericVectorContainer)
+                   (OutDetRank(GVC_I)(IDet)(Rank))
+module GenIV5 = Gen(GVC_I)
                    (FullPivot)
-                   (FractionFreeUpdate(IntegerDomain)(GenericVectorContainer)(IDet))
+                   (FractionFreeUpdate(GVC_I)(IDet))
                    (InpJustMatrix)
-                   (OutDetRank(IntegerDomain)(GenericVectorContainer)(IDet)(Rank))
-module GenFA11 = Gen(FloatDomain)
-                   (GenericArrayContainer)
+                   (OutDetRank(GVC_I)(IDet)(Rank))
+module GenFA11 = Gen(GAC_F)
                    (FullPivot)
-                   (DivisionUpdate(FloatDomain)(GenericArrayContainer)(NoDet(FloatDomain)))
+                   (DivisionUpdate(GAC_F)(NoDet(FloatDomain)))
                    (InpJustMatrix)
-                   (OutJustMatrix(FloatDomain)(GenericArrayContainer)(NoDet(FloatDomain)))
-module GenFA12 = Gen(FloatDomain)
-                   (GenericArrayContainer)
+                   (OutJustMatrix(GAC_F)(NoDet(FloatDomain)))
+module GenFA12 = Gen(GAC_F)
                    (FullPivot)
-                   (DivisionUpdate(FloatDomain)(GenericArrayContainer)(FDet))
+                   (DivisionUpdate(GAC_F)(FDet))
                    (InpJustMatrix)
-                   (OutDet(FloatDomain)(GenericArrayContainer)(FDet))
-module GenFA13 = Gen(FloatDomain)
-                   (GenericArrayContainer)
+                   (OutDet(GAC_F)(FDet))
+module GenFA13 = Gen(GAC_F)
                    (FullPivot)
-                   (DivisionUpdate(FloatDomain)(GenericArrayContainer)(NoDet(FloatDomain)))
+                   (DivisionUpdate(GAC_F)(NoDet(FloatDomain)))
                    (InpJustMatrix)
-                   (OutRank(FloatDomain)(GenericArrayContainer)(NoDet(FloatDomain))(Rank))
-module GenFA14 = Gen(FloatDomain)
-                   (GenericArrayContainer)
+                   (OutRank(GAC_F)(NoDet(FloatDomain))(Rank))
+module GenFA14 = Gen(GAC_F)
                    (FullPivot)
-                   (DivisionUpdate(FloatDomain)(GenericArrayContainer)(FDet))
+                   (DivisionUpdate(GAC_F)(FDet))
                    (InpJustMatrix)
-                   (OutDetRank(FloatDomain)(GenericArrayContainer)(FDet)(Rank))
+                   (OutDetRank(GAC_F)(FDet)(Rank))
 
-module GenFA24 = Gen(FloatDomain)
-                    (GenericArrayContainer)
+module GenFA24 = Gen(GAC_F)
                     (RowPivot)
-                    (DivisionUpdate(FloatDomain)(GenericArrayContainer)(FDet))
+                    (DivisionUpdate(GAC_F)(FDet))
                     (InpJustMatrix)
-                    (OutDetRankPivot(FloatDomain)(GenericArrayContainer)(FDet)(Rank))
-module GenRA1 = Gen(RationalDomain)
-                   (GenericArrayContainer)
+                    (OutDetRankPivot(GAC_F)(FDet)(Rank))
+module GenRA1 = Gen(GAC_R)
                    (RowPivot)
-                   (DivisionUpdate(RationalDomain)(GenericArrayContainer)(RDet))
+                   (DivisionUpdate(GAC_R)(RDet))
                    (InpJustMatrix)
-                   (OutJustMatrix(RationalDomain)(GenericArrayContainer)(RDet))
-module GenRA2 = Gen(RationalDomain)
-                   (GenericArrayContainer)
+                   (OutJustMatrix(GAC_R)(RDet))
+module GenRA2 = Gen(GAC_R)
                    (RowPivot)
-                   (DivisionUpdate(RationalDomain)(GenericArrayContainer)(RDet))
+                   (DivisionUpdate(GAC_R)(RDet))
                    (InpJustMatrix)
-                   (OutDet(RationalDomain)(GenericArrayContainer)(RDet))
-module GenRA3 = Gen(RationalDomain)
-                   (GenericArrayContainer)
+                   (OutDet(GAC_R)(RDet))
+module GenRA3 = Gen(GAC_R)
                    (RowPivot)
-                   (DivisionUpdate(RationalDomain)(GenericArrayContainer)(RDet))
+                   (DivisionUpdate(GAC_R)(RDet))
                    (InpJustMatrix)
-                   (OutRank(RationalDomain)(GenericArrayContainer)(RDet)(Rank))
-module GenRA4 = Gen(RationalDomain)
-                   (GenericArrayContainer)
+                   (OutRank(GAC_R)(RDet)(Rank))
+module GenRA4 = Gen(GAC_R)
                    (RowPivot)
-                   (DivisionUpdate(RationalDomain)(GenericArrayContainer)(RDet))
+                   (DivisionUpdate(GAC_R)(RDet))
                    (InpJustMatrix)
-                   (OutDetRank(RationalDomain)(GenericArrayContainer)(RDet)(Rank))
-module GenFA5 = Gen(FloatDomain)
-                   (GenericArrayContainer)
+                   (OutDetRank(GAC_R)(RDet)(Rank))
+module GenFA5 = Gen(GAC_F)
                    (RowPivot)
-                   (DivisionUpdate(FloatDomain)(GenericArrayContainer)(NoDet(FloatDomain)))
+                   (DivisionUpdate(GAC_F)(NoDet(FloatDomain)))
                    (InpMatrixMargin)
-                   (OutJustMatrix(FloatDomain)(GenericArrayContainer)(NoDet(FloatDomain)))
+                   (OutJustMatrix(GAC_F)(NoDet(FloatDomain)))
 
-module GenFA6 = Gen(FloatDomain)
-                   (GenericArrayContainer)
+module GenFA6 = Gen(GAC_F)
                    (RowPivot)
-                   (DivisionUpdate(FloatDomain)(GenericArrayContainer)(FDet))
+                   (DivisionUpdate(GAC_F)(FDet))
                    (InpMatrixMargin)
-                   (OutDet(FloatDomain)(GenericArrayContainer)(FDet))
-module GenFA7 = Gen(FloatDomain)
-                   (GenericArrayContainer)
+                   (OutDet(GAC_F)(FDet))
+module GenFA7 = Gen(GAC_F)
                    (RowPivot)
-                   (DivisionUpdate(FloatDomain)(GenericArrayContainer)(NoDet(FloatDomain)))
+                   (DivisionUpdate(GAC_F)(NoDet(FloatDomain)))
                    (InpMatrixMargin)
-                   (OutRank(FloatDomain)(GenericArrayContainer)(NoDet(FloatDomain))(Rank))
-module GenFA8 = Gen(FloatDomain)
-                   (GenericArrayContainer)
+                   (OutRank(GAC_F)(NoDet(FloatDomain))(Rank))
+module GenFA8 = Gen(GAC_F)
                    (RowPivot)
-                   (DivisionUpdate(FloatDomain)(GenericArrayContainer)(FDet))
+                   (DivisionUpdate(GAC_F)(FDet))
                    (InpMatrixMargin)
-                   (OutDetRank(FloatDomain)(GenericArrayContainer)(FDet)(Rank))
+                   (OutDetRank(GAC_F)(FDet)(Rank))

@@ -169,7 +169,8 @@ module RationalDomain =
     let normalizerg = fun x -> x
 end
 
-module type CONTAINER2D = functor(Dom:DOMAIN) -> sig
+module type CONTAINER2D = sig
+  module Dom:DOMAIN
   type contr
   type 'a vc = ('a,contr) code
   type 'a vo = ('a,Dom.v) code
@@ -191,6 +192,7 @@ end
 
 module GenericArrayContainer(Dom:DOMAIN) =
   struct
+  module Dom = Dom
   type contr = Dom.v array array (* Array of rows *)
   type 'a vc = ('a,contr) code
   type 'a vo = ('a,Dom.v) code
@@ -228,6 +230,7 @@ type 'a container2dfromvector = {arr:('a array); n:int; m:int}
 
 module GenericVectorContainer(Dom:DOMAIN) =
   struct
+  module Dom = Dom
   type contr = Dom.v container2dfromvector
   type 'a vc = ('a,contr) code
   type 'a vo = ('a,Dom.v) code

@@ -6,7 +6,7 @@
 #   val resFA1 :
   ('a,
    Ge.GenFA1.Input.inp ->
-   Ge.OutJustMatrix(Infra.FloatDomain)(Infra.GenericArrayContainer)(Ge.NoDet(Infra.FloatDomain)).res)
+   Ge.OutJustMatrix(Ge.GAC_F)(Ge.NoDet(Infra.FloatDomain)).res)
   code =
   .<fun a_1 ->
    let t_2 = (ref 0) in
@@ -64,10 +64,7 @@
    done;
    t_5>.
 # val resFA2 :
-  ('a,
-   Ge.GenFA2.Input.inp ->
-   Ge.OutDet(Infra.FloatDomain)(Infra.GenericArrayContainer)(Ge.FDet).res)
-  code =
+  ('a, Ge.GenFA2.Input.inp -> Ge.OutDet(Ge.GAC_F)(Ge.FDet).res) code =
   .<fun a_1 ->
    let t_2 = (ref 0) in
    let t_3 = (ref 0) in
@@ -131,7 +128,7 @@
 # val resFA3 :
   ('a,
    Ge.GenFA3.Input.inp ->
-   Ge.OutRank(Infra.FloatDomain)(Infra.GenericArrayContainer)(Ge.NoDet(Infra.FloatDomain))(Ge.Rank).res)
+   Ge.OutRank(Ge.GAC_F)(Ge.NoDet(Infra.FloatDomain))(Ge.Rank).res)
   code =
   .<fun a_1 ->
    let t_2 = (ref 0) in
@@ -189,9 +186,7 @@
    done;
    (t_5, (! t_2))>.
 # val resFA4 :
-  ('a,
-   Ge.GenFA4.Input.inp ->
-   Ge.OutDetRank(Infra.FloatDomain)(Infra.GenericArrayContainer)(Ge.FDet)(Ge.Rank).res)
+  ('a, Ge.GenFA4.Input.inp -> Ge.OutDetRank(Ge.GAC_F)(Ge.FDet)(Ge.Rank).res)
   code =
   .<fun a_1 ->
    let t_2 = (ref 0) in
@@ -254,10 +249,7 @@
     else if ((! t_9) = 1) then (! t_8)
     else (~-. (! t_8)), (! t_2))>.
 # val resFV1 :
-  ('a,
-   Ge.GenFV1.Input.inp ->
-   Ge.OutJustMatrix(Infra.FloatDomain)(Infra.GenericVectorContainer)(Ge.FDet).res)
-  code =
+  ('a, Ge.GenFV1.Input.inp -> Ge.OutJustMatrix(Ge.GVC_F)(Ge.FDet).res) code =
   .<fun a_1 ->
    let t_2 = (ref 0) in
    let t_3 = (ref 0) in
@@ -323,10 +315,7 @@
    done;
    t_4>.
 # val resFV2 :
-  ('a,
-   Ge.GenFV2.Input.inp ->
-   Ge.OutDet(Infra.FloatDomain)(Infra.GenericVectorContainer)(Ge.FDet).res)
-  code =
+  ('a, Ge.GenFV2.Input.inp -> Ge.OutDet(Ge.GVC_F)(Ge.FDet).res) code =
   .<fun a_1 ->
    let t_2 = (ref 0) in
    let t_3 = (ref 0) in
@@ -397,7 +386,7 @@
 # val resFV3 :
   ('a,
    Ge.GenFV3.Input.inp ->
-   Ge.OutRank(Infra.FloatDomain)(Infra.GenericVectorContainer)(Ge.NoDet(Infra.FloatDomain))(Ge.Rank).res)
+   Ge.OutRank(Ge.GVC_F)(Ge.NoDet(Infra.FloatDomain))(Ge.Rank).res)
   code =
   .<fun a_1 ->
    let t_2 = (ref 0) in
@@ -462,9 +451,7 @@
    done;
    (t_4, (! t_2))>.
 # val resFV4 :
-  ('a,
-   Ge.GenFV4.Input.inp ->
-   Ge.OutDetRank(Infra.FloatDomain)(Infra.GenericVectorContainer)(Ge.FDet)(Ge.Rank).res)
+  ('a, Ge.GenFV4.Input.inp -> Ge.OutDetRank(Ge.GVC_F)(Ge.FDet)(Ge.Rank).res)
   code =
   .<fun a_1 ->
    let t_2 = (ref 0) in
@@ -534,9 +521,7 @@
     else if ((! t_8) = 1) then (! t_7)
     else (~-. (! t_7)), (! t_2))>.
 # val resFV5 :
-  ('a,
-   Ge.GenFV5.Input.inp ->
-   Ge.OutDetRank(Infra.FloatDomain)(Infra.GenericVectorContainer)(Ge.FDet)(Ge.Rank).res)
+  ('a, Ge.GenFV5.Input.inp -> Ge.OutDetRank(Ge.GVC_F)(Ge.FDet)(Ge.Rank).res)
   code =
   .<fun a_1 ->
    let t_2 = (ref 0) in
@@ -624,10 +609,7 @@
     else if ((! t_8) = 1) then (! t_7)
     else (~-. (! t_7)), (! t_2))>.
 # val resIA1 :
-  ('a,
-   Ge.GenIA1.Input.inp ->
-   Ge.OutJustMatrix(Infra.IntegerDomain)(Infra.GenericArrayContainer)(Ge.IDet).res)
-  code =
+  ('a, Ge.GenIA1.Input.inp -> Ge.OutJustMatrix(Ge.GAC_I)(Ge.IDet).res) code =
   .<fun a_1 ->
    let t_2 = (ref 0) in
    let t_3 = (ref 0) in
@@ -685,10 +667,7 @@
    done;
    t_5>.
 # val resIA2 :
-  ('a,
-   Ge.GenIA2.Input.inp ->
-   Ge.OutDet(Infra.IntegerDomain)(Infra.GenericArrayContainer)(Ge.IDet).res)
-  code =
+  ('a, Ge.GenIA2.Input.inp -> Ge.OutDet(Ge.GAC_I)(Ge.IDet).res) code =
   .<fun a_1 ->
    let t_2 = (ref 0) in
    let t_3 = (ref 0) in
@@ -749,9 +728,7 @@
     else if ((! t_9) = 1) then (! t_8)
     else (~- (! t_8)))>.
 # val resIA3 :
-  ('a,
-   Ge.GenIA3.Input.inp ->
-   Ge.OutRank(Infra.IntegerDomain)(Infra.GenericArrayContainer)(Ge.IDet)(Ge.Rank).res)
+  ('a, Ge.GenIA3.Input.inp -> Ge.OutRank(Ge.GAC_I)(Ge.IDet)(Ge.Rank).res)
   code =
   .<fun a_1 ->
    let t_2 = (ref 0) in
@@ -810,9 +787,7 @@
    done;
    (t_5, (! t_2))>.
 # val resIA4 :
-  ('a,
-   Ge.GenIA4.Input.inp ->
-   Ge.OutDetRank(Infra.IntegerDomain)(Infra.GenericArrayContainer)(Ge.IDet)(Ge.Rank).res)
+  ('a, Ge.GenIA4.Input.inp -> Ge.OutDetRank(Ge.GAC_I)(Ge.IDet)(Ge.Rank).res)
   code =
   .<fun a_1 ->
    let t_2 = (ref 0) in
@@ -874,10 +849,7 @@
     else if ((! t_9) = 1) then (! t_8)
     else (~- (! t_8)), (! t_2))>.
 # val resIV1 :
-  ('a,
-   Ge.GenIV1.Input.inp ->
-   Ge.OutJustMatrix(Infra.IntegerDomain)(Infra.GenericVectorContainer)(Ge.IDet).res)
-  code =
+  ('a, Ge.GenIV1.Input.inp -> Ge.OutJustMatrix(Ge.GVC_I)(Ge.IDet).res) code =
   .<fun a_1 ->
    let t_2 = (ref 0) in
    let t_3 = (ref 0) in
@@ -943,10 +915,7 @@
    done;
    t_4>.
 # val resIV2 :
-  ('a,
-   Ge.GenIV2.Input.inp ->
-   Ge.OutDet(Infra.IntegerDomain)(Infra.GenericVectorContainer)(Ge.IDet).res)
-  code =
+  ('a, Ge.GenIV2.Input.inp -> Ge.OutDet(Ge.GVC_I)(Ge.IDet).res) code =
   .<fun a_1 ->
    let t_2 = (ref 0) in
    let t_3 = (ref 0) in
@@ -1015,9 +984,7 @@
     else if ((! t_8) = 1) then (! t_7)
     else (~- (! t_7)))>.
 # val resIV3 :
-  ('a,
-   Ge.GenIV3.Input.inp ->
-   Ge.OutRank(Infra.IntegerDomain)(Infra.GenericVectorContainer)(Ge.IDet)(Ge.Rank).res)
+  ('a, Ge.GenIV3.Input.inp -> Ge.OutRank(Ge.GVC_I)(Ge.IDet)(Ge.Rank).res)
   code =
   .<fun a_1 ->
    let t_2 = (ref 0) in
@@ -1084,9 +1051,7 @@
    done;
    (t_4, (! t_2))>.
 # val resIV4 :
-  ('a,
-   Ge.GenIV4.Input.inp ->
-   Ge.OutDetRank(Infra.IntegerDomain)(Infra.GenericVectorContainer)(Ge.IDet)(Ge.Rank).res)
+  ('a, Ge.GenIV4.Input.inp -> Ge.OutDetRank(Ge.GVC_I)(Ge.IDet)(Ge.Rank).res)
   code =
   .<fun a_1 ->
    let t_2 = (ref 0) in
@@ -1156,9 +1121,7 @@
     else if ((! t_8) = 1) then (! t_7)
     else (~- (! t_7)), (! t_2))>.
 # val resIV5 :
-  ('a,
-   Ge.GenIV5.Input.inp ->
-   Ge.OutDetRank(Infra.IntegerDomain)(Infra.GenericVectorContainer)(Ge.IDet)(Ge.Rank).res)
+  ('a, Ge.GenIV5.Input.inp -> Ge.OutDetRank(Ge.GVC_I)(Ge.IDet)(Ge.Rank).res)
   code =
   .<fun a_1 ->
    let t_2 = (ref 0) in
@@ -1248,7 +1211,7 @@
 # val resFA11 :
   ('a,
    Ge.GenFA11.Input.inp ->
-   Ge.OutJustMatrix(Infra.FloatDomain)(Infra.GenericArrayContainer)(Ge.NoDet(Infra.FloatDomain)).res)
+   Ge.OutJustMatrix(Ge.GAC_F)(Ge.NoDet(Infra.FloatDomain)).res)
   code =
   .<fun a_1 ->
    let t_2 = (ref 0) in
@@ -1316,10 +1279,7 @@
    done;
    t_5>.
 # val resFA12 :
-  ('a,
-   Ge.GenFA12.Input.inp ->
-   Ge.OutDet(Infra.FloatDomain)(Infra.GenericArrayContainer)(Ge.FDet).res)
-  code =
+  ('a, Ge.GenFA12.Input.inp -> Ge.OutDet(Ge.GAC_F)(Ge.FDet).res) code =
   .<fun a_1 ->
    let t_2 = (ref 0) in
    let t_3 = (ref 0) in
@@ -1393,7 +1353,7 @@
 # val resFA13 :
   ('a,
    Ge.GenFA13.Input.inp ->
-   Ge.OutRank(Infra.FloatDomain)(Infra.GenericArrayContainer)(Ge.NoDet(Infra.FloatDomain))(Ge.Rank).res)
+   Ge.OutRank(Ge.GAC_F)(Ge.NoDet(Infra.FloatDomain))(Ge.Rank).res)
   code =
   .<fun a_1 ->
    let t_2 = (ref 0) in
@@ -1461,9 +1421,7 @@
    done;
    (t_5, (! t_2))>.
 # val resFA14 :
-  ('a,
-   Ge.GenFA14.Input.inp ->
-   Ge.OutDetRank(Infra.FloatDomain)(Infra.GenericArrayContainer)(Ge.FDet)(Ge.Rank).res)
+  ('a, Ge.GenFA14.Input.inp -> Ge.OutDetRank(Ge.GAC_F)(Ge.FDet)(Ge.Rank).res)
   code =
   .<fun a_1 ->
    let t_2 = (ref 0) in
@@ -1536,10 +1494,7 @@
     else if ((! t_9) = 1) then (! t_8)
     else (~-. (! t_8)), (! t_2))>.
 # val resRA1 :
-  ('a,
-   Ge.GenRA1.Input.inp ->
-   Ge.OutJustMatrix(Infra.RationalDomain)(Infra.GenericArrayContainer)(Ge.RDet).res)
-  code =
+  ('a, Ge.GenRA1.Input.inp -> Ge.OutJustMatrix(Ge.GAC_R)(Ge.RDet).res) code =
   .<fun a_1 ->
    let t_2 = (ref 0) in
    let t_3 = (ref 0) in
@@ -1608,10 +1563,7 @@
    done;
    t_5>.
 # val resRA2 :
-  ('a,
-   Ge.GenRA2.Input.inp ->
-   Ge.OutDet(Infra.RationalDomain)(Infra.GenericArrayContainer)(Ge.RDet).res)
-  code =
+  ('a, Ge.GenRA2.Input.inp -> Ge.OutDet(Ge.GAC_R)(Ge.RDet).res) code =
   .<fun a_1 ->
    let t_2 = (ref 0) in
    let t_3 = (ref 0) in
@@ -1684,9 +1636,7 @@
     else
      (((* cross-stage persistent value (as id: Num.minus_num) *)) (! t_8)))>.
 # val resRA3 :
-  ('a,
-   Ge.GenRA3.Input.inp ->
-   Ge.OutRank(Infra.RationalDomain)(Infra.GenericArrayContainer)(Ge.RDet)(Ge.Rank).res)
+  ('a, Ge.GenRA3.Input.inp -> Ge.OutRank(Ge.GAC_R)(Ge.RDet)(Ge.Rank).res)
   code =
   .<fun a_1 ->
    let t_2 = (ref 0) in
@@ -1756,9 +1706,7 @@
    done;
    (t_5, (! t_2))>.
 # val resRA4 :
-  ('a,
-   Ge.GenRA4.Input.inp ->
-   Ge.OutDetRank(Infra.RationalDomain)(Infra.GenericArrayContainer)(Ge.RDet)(Ge.Rank).res)
+  ('a, Ge.GenRA4.Input.inp -> Ge.OutDetRank(Ge.GAC_R)(Ge.RDet)(Ge.Rank).res)
   code =
   .<fun a_1 ->
    let t_2 = (ref 0) in
@@ -1835,7 +1783,7 @@
 # val resFA5 :
   ('a,
    Ge.GenFA5.Input.inp ->
-   Ge.OutJustMatrix(Infra.FloatDomain)(Infra.GenericArrayContainer)(Ge.NoDet(Infra.FloatDomain)).res)
+   Ge.OutJustMatrix(Ge.GAC_F)(Ge.NoDet(Infra.FloatDomain)).res)
   code =
   .<fun a_1 ->
    let t_2 = (ref 0) in
@@ -1894,10 +1842,7 @@
    done;
    t_5>.
 # val resFA6 :
-  ('a,
-   Ge.GenFA6.Input.inp ->
-   Ge.OutDet(Infra.FloatDomain)(Infra.GenericArrayContainer)(Ge.FDet).res)
-  code =
+  ('a, Ge.GenFA6.Input.inp -> Ge.OutDet(Ge.GAC_F)(Ge.FDet).res) code =
   .<fun a_1 ->
    let t_2 = (ref 0) in
    let t_3 = (ref 0) in
@@ -1962,7 +1907,7 @@
 # val resFA7 :
   ('a,
    Ge.GenFA7.Input.inp ->
-   Ge.OutRank(Infra.FloatDomain)(Infra.GenericArrayContainer)(Ge.NoDet(Infra.FloatDomain))(Ge.Rank).res)
+   Ge.OutRank(Ge.GAC_F)(Ge.NoDet(Infra.FloatDomain))(Ge.Rank).res)
   code =
   .<fun a_1 ->
    let t_2 = (ref 0) in
@@ -2021,9 +1966,7 @@
    done;
    (t_5, (! t_2))>.
 # val resFA8 :
-  ('a,
-   Ge.GenFA8.Input.inp ->
-   Ge.OutDetRank(Infra.FloatDomain)(Infra.GenericArrayContainer)(Ge.FDet)(Ge.Rank).res)
+  ('a, Ge.GenFA8.Input.inp -> Ge.OutDetRank(Ge.GAC_F)(Ge.FDet)(Ge.Rank).res)
   code =
   .<fun a_1 ->
    let t_2 = (ref 0) in
@@ -2088,210 +2031,141 @@
     else (~-. (! t_9)), (! t_2))>.
 #   val rFA1 :
   Ge.GenFA1.Input.inp ->
-  Ge.OutJustMatrix(Infra.FloatDomain)(Infra.GenericArrayContainer)(Ge.NoDet(Infra.FloatDomain)).res =
-  <fun>
-# val rFA2 :
-  Ge.GenFA2.Input.inp ->
-  Ge.OutDet(Infra.FloatDomain)(Infra.GenericArrayContainer)(Ge.FDet).res =
-  <fun>
+  Ge.OutJustMatrix(Ge.GAC_F)(Ge.NoDet(Infra.FloatDomain)).res = <fun>
+# val rFA2 : Ge.GenFA2.Input.inp -> Ge.OutDet(Ge.GAC_F)(Ge.FDet).res = <fun>
 # val rFA3 :
   Ge.GenFA3.Input.inp ->
-  Ge.OutRank(Infra.FloatDomain)(Infra.GenericArrayContainer)(Ge.NoDet(Infra.FloatDomain))(Ge.Rank).res =
-  <fun>
+  Ge.OutRank(Ge.GAC_F)(Ge.NoDet(Infra.FloatDomain))(Ge.Rank).res = <fun>
 # val rFA4 :
-  Ge.GenFA4.Input.inp ->
-  Ge.OutDetRank(Infra.FloatDomain)(Infra.GenericArrayContainer)(Ge.FDet)(Ge.Rank).res =
+  Ge.GenFA4.Input.inp -> Ge.OutDetRank(Ge.GAC_F)(Ge.FDet)(Ge.Rank).res =
   <fun>
-# val rFV1 :
-  Ge.GenFV1.Input.inp ->
-  Ge.OutJustMatrix(Infra.FloatDomain)(Infra.GenericVectorContainer)(Ge.FDet).res =
+# val rFV1 : Ge.GenFV1.Input.inp -> Ge.OutJustMatrix(Ge.GVC_F)(Ge.FDet).res =
   <fun>
-# val rFV2 :
-  Ge.GenFV2.Input.inp ->
-  Ge.OutDet(Infra.FloatDomain)(Infra.GenericVectorContainer)(Ge.FDet).res =
-  <fun>
+# val rFV2 : Ge.GenFV2.Input.inp -> Ge.OutDet(Ge.GVC_F)(Ge.FDet).res = <fun>
 # val rFV3 :
   Ge.GenFV3.Input.inp ->
-  Ge.OutRank(Infra.FloatDomain)(Infra.GenericVectorContainer)(Ge.NoDet(Infra.FloatDomain))(Ge.Rank).res =
-  <fun>
+  Ge.OutRank(Ge.GVC_F)(Ge.NoDet(Infra.FloatDomain))(Ge.Rank).res = <fun>
 # val rFV4 :
-  Ge.GenFV4.Input.inp ->
-  Ge.OutDetRank(Infra.FloatDomain)(Infra.GenericVectorContainer)(Ge.FDet)(Ge.Rank).res =
+  Ge.GenFV4.Input.inp -> Ge.OutDetRank(Ge.GVC_F)(Ge.FDet)(Ge.Rank).res =
   <fun>
 # val rFV5 :
-  Ge.GenFV5.Input.inp ->
-  Ge.OutDetRank(Infra.FloatDomain)(Infra.GenericVectorContainer)(Ge.FDet)(Ge.Rank).res =
+  Ge.GenFV5.Input.inp -> Ge.OutDetRank(Ge.GVC_F)(Ge.FDet)(Ge.Rank).res =
   <fun>
-# val rIA1 :
-  Ge.GenIA1.Input.inp ->
-  Ge.OutJustMatrix(Infra.IntegerDomain)(Infra.GenericArrayContainer)(Ge.IDet).res =
+# val rIA1 : Ge.GenIA1.Input.inp -> Ge.OutJustMatrix(Ge.GAC_I)(Ge.IDet).res =
   <fun>
-# val rIA2 :
-  Ge.GenIA2.Input.inp ->
-  Ge.OutDet(Infra.IntegerDomain)(Infra.GenericArrayContainer)(Ge.IDet).res =
-  <fun>
-# val rIA3 :
-  Ge.GenIA3.Input.inp ->
-  Ge.OutRank(Infra.IntegerDomain)(Infra.GenericArrayContainer)(Ge.IDet)(Ge.Rank).res =
+# val rIA2 : Ge.GenIA2.Input.inp -> Ge.OutDet(Ge.GAC_I)(Ge.IDet).res = <fun>
+# val rIA3 : Ge.GenIA3.Input.inp -> Ge.OutRank(Ge.GAC_I)(Ge.IDet)(Ge.Rank).res =
   <fun>
 # val rIA4 :
-  Ge.GenIA4.Input.inp ->
-  Ge.OutDetRank(Infra.IntegerDomain)(Infra.GenericArrayContainer)(Ge.IDet)(Ge.Rank).res =
+  Ge.GenIA4.Input.inp -> Ge.OutDetRank(Ge.GAC_I)(Ge.IDet)(Ge.Rank).res =
   <fun>
-# val rIV1 :
-  Ge.GenIV1.Input.inp ->
-  Ge.OutJustMatrix(Infra.IntegerDomain)(Infra.GenericVectorContainer)(Ge.IDet).res =
+# val rIV1 : Ge.GenIV1.Input.inp -> Ge.OutJustMatrix(Ge.GVC_I)(Ge.IDet).res =
   <fun>
-# val rIV2 :
-  Ge.GenIV2.Input.inp ->
-  Ge.OutDet(Infra.IntegerDomain)(Infra.GenericVectorContainer)(Ge.IDet).res =
-  <fun>
-# val rIV3 :
-  Ge.GenIV3.Input.inp ->
-  Ge.OutRank(Infra.IntegerDomain)(Infra.GenericVectorContainer)(Ge.IDet)(Ge.Rank).res =
+# val rIV2 : Ge.GenIV2.Input.inp -> Ge.OutDet(Ge.GVC_I)(Ge.IDet).res = <fun>
+# val rIV3 : Ge.GenIV3.Input.inp -> Ge.OutRank(Ge.GVC_I)(Ge.IDet)(Ge.Rank).res =
   <fun>
 # val rIV4 :
-  Ge.GenIV4.Input.inp ->
-  Ge.OutDetRank(Infra.IntegerDomain)(Infra.GenericVectorContainer)(Ge.IDet)(Ge.Rank).res =
+  Ge.GenIV4.Input.inp -> Ge.OutDetRank(Ge.GVC_I)(Ge.IDet)(Ge.Rank).res =
   <fun>
 # val rIV5 :
-  Ge.GenIV5.Input.inp ->
-  Ge.OutDetRank(Infra.IntegerDomain)(Infra.GenericVectorContainer)(Ge.IDet)(Ge.Rank).res =
+  Ge.GenIV5.Input.inp -> Ge.OutDetRank(Ge.GVC_I)(Ge.IDet)(Ge.Rank).res =
   <fun>
 # val rFA11 :
   Ge.GenFA11.Input.inp ->
-  Ge.OutJustMatrix(Infra.FloatDomain)(Infra.GenericArrayContainer)(Ge.NoDet(Infra.FloatDomain)).res =
-  <fun>
-# val rFA12 :
-  Ge.GenFA12.Input.inp ->
-  Ge.OutDet(Infra.FloatDomain)(Infra.GenericArrayContainer)(Ge.FDet).res =
-  <fun>
+  Ge.OutJustMatrix(Ge.GAC_F)(Ge.NoDet(Infra.FloatDomain)).res = <fun>
+# val rFA12 : Ge.GenFA12.Input.inp -> Ge.OutDet(Ge.GAC_F)(Ge.FDet).res = <fun>
 # val rFA13 :
   Ge.GenFA13.Input.inp ->
-  Ge.OutRank(Infra.FloatDomain)(Infra.GenericArrayContainer)(Ge.NoDet(Infra.FloatDomain))(Ge.Rank).res =
-  <fun>
+  Ge.OutRank(Ge.GAC_F)(Ge.NoDet(Infra.FloatDomain))(Ge.Rank).res = <fun>
 # val rFA14 :
-  Ge.GenFA14.Input.inp ->
-  Ge.OutDetRank(Infra.FloatDomain)(Infra.GenericArrayContainer)(Ge.FDet)(Ge.Rank).res =
+  Ge.GenFA14.Input.inp -> Ge.OutDetRank(Ge.GAC_F)(Ge.FDet)(Ge.Rank).res =
   <fun>
-# val rRA1 :
-  Ge.GenRA1.Input.inp ->
-  Ge.OutJustMatrix(Infra.RationalDomain)(Infra.GenericArrayContainer)(Ge.RDet).res =
+# val rRA1 : Ge.GenRA1.Input.inp -> Ge.OutJustMatrix(Ge.GAC_R)(Ge.RDet).res =
   <fun>
-# val rRA2 :
-  Ge.GenRA2.Input.inp ->
-  Ge.OutDet(Infra.RationalDomain)(Infra.GenericArrayContainer)(Ge.RDet).res =
-  <fun>
-# val rRA3 :
-  Ge.GenRA3.Input.inp ->
-  Ge.OutRank(Infra.RationalDomain)(Infra.GenericArrayContainer)(Ge.RDet)(Ge.Rank).res =
+# val rRA2 : Ge.GenRA2.Input.inp -> Ge.OutDet(Ge.GAC_R)(Ge.RDet).res = <fun>
+# val rRA3 : Ge.GenRA3.Input.inp -> Ge.OutRank(Ge.GAC_R)(Ge.RDet)(Ge.Rank).res =
   <fun>
 # val rRA4 :
-  Ge.GenRA4.Input.inp ->
-  Ge.OutDetRank(Infra.RationalDomain)(Infra.GenericArrayContainer)(Ge.RDet)(Ge.Rank).res =
+  Ge.GenRA4.Input.inp -> Ge.OutDetRank(Ge.GAC_R)(Ge.RDet)(Ge.Rank).res =
   <fun>
 # val rFA5 :
   Ge.GenFA5.Input.inp ->
-  Ge.OutJustMatrix(Infra.FloatDomain)(Infra.GenericArrayContainer)(Ge.NoDet(Infra.FloatDomain)).res =
-  <fun>
-# val rFA6 :
-  Ge.GenFA6.Input.inp ->
-  Ge.OutDet(Infra.FloatDomain)(Infra.GenericArrayContainer)(Ge.FDet).res =
-  <fun>
+  Ge.OutJustMatrix(Ge.GAC_F)(Ge.NoDet(Infra.FloatDomain)).res = <fun>
+# val rFA6 : Ge.GenFA6.Input.inp -> Ge.OutDet(Ge.GAC_F)(Ge.FDet).res = <fun>
 # val rFA7 :
   Ge.GenFA7.Input.inp ->
-  Ge.OutRank(Infra.FloatDomain)(Infra.GenericArrayContainer)(Ge.NoDet(Infra.FloatDomain))(Ge.Rank).res =
-  <fun>
+  Ge.OutRank(Ge.GAC_F)(Ge.NoDet(Infra.FloatDomain))(Ge.Rank).res = <fun>
 # val rFA8 :
-  Ge.GenFA8.Input.inp ->
-  Ge.OutDetRank(Infra.FloatDomain)(Infra.GenericArrayContainer)(Ge.FDet)(Ge.Rank).res =
+  Ge.GenFA8.Input.inp -> Ge.OutDetRank(Ge.GAC_F)(Ge.FDet)(Ge.Rank).res =
   <fun>
-#                                                   val ia0 : Infra.IntegerDomain.v array array = [|[|1|]|]
-val ia1 : Infra.IntegerDomain.v array array =
+#                                                   val ia0 : Ge.GAC_I.Dom.v array array = [|[|1|]|]
+val ia1 : Ge.GAC_I.Dom.v array array =
   [|[|1; 2; 3|]; [|4; 13; 5|]; [|-1; 3; 0|]|]
-val ia2 : Infra.IntegerDomain.v array array =
+val ia2 : Ge.GAC_I.Dom.v array array =
   [|[|1; 2; 3; 0|]; [|4; 13; 5; 0|]; [|-1; 3; 0; 0|]|]
-val ia3 : Infra.IntegerDomain.v array array =
+val ia3 : Ge.GAC_I.Dom.v array array =
   [|[|1; 2; 3|]; [|4; 13; 5|]; [|-1; 3; 0|]; [|0; 0; 0|]|]
-val ia4 : Infra.IntegerDomain.v array array =
+val ia4 : Ge.GAC_I.Dom.v array array =
   [|[|0; 2; 3|]; [|0; 13; 5|]; [|0; 3; 0|]|]
-val ia5 : Infra.IntegerDomain.v array array list =
+val ia5 : Ge.GAC_I.Dom.v array array list =
   [[|[|1|]|]; [|[|1; 2; 3|]; [|4; 13; 5|]; [|-1; 3; 0|]|];
    [|[|1; 2; 3; 0|]; [|4; 13; 5; 0|]; [|-1; 3; 0; 0|]|];
    [|[|1; 2; 3|]; [|4; 13; 5|]; [|-1; 3; 0|]; [|0; 0; 0|]|];
    [|[|0; 2; 3|]; [|0; 13; 5|]; [|0; 3; 0|]|]]
-val resI11 :
-  Ge.OutJustMatrix(Infra.IntegerDomain)(Infra.GenericArrayContainer)(Ge.IDet).res
-  list =
+val resI11 : Ge.OutJustMatrix(Ge.GAC_I)(Ge.IDet).res list =
   [[|[|1|]|]; [|[|1; 2; 3|]; [|0; 5; -7|]; [|0; 0; 50|]|];
    [|[|1; 2; 3; 0|]; [|0; 5; -7; 0|]; [|0; 0; 50; 0|]|];
    [|[|1; 2; 3|]; [|0; 5; -7|]; [|0; 0; 50|]; [|0; 0; 0|]|];
    [|[|0; 2; 3|]; [|0; 0; 10|]; [|0; 0; 0|]|]]
-# val resI12 :
-  Ge.OutDet(Infra.IntegerDomain)(Infra.GenericArrayContainer)(Ge.IDet).res
-  list =
+# val resI12 : Ge.OutDet(Ge.GAC_I)(Ge.IDet).res list =
   [([|[|1|]|], 1); ([|[|1; 2; 3|]; [|0; 5; -7|]; [|0; 0; 50|]|], 50);
    ([|[|1; 2; 3; 0|]; [|0; 5; -7; 0|]; [|0; 0; 50; 0|]|], 50);
    ([|[|1; 2; 3|]; [|0; 5; -7|]; [|0; 0; 50|]; [|0; 0; 0|]|], 50);
    ([|[|0; 2; 3|]; [|0; 0; 10|]; [|0; 0; 0|]|], 0)]
-# val resI13 :
-  Ge.OutRank(Infra.IntegerDomain)(Infra.GenericArrayContainer)(Ge.IDet)(Ge.Rank).res
-  list =
+# val resI13 : Ge.OutRank(Ge.GAC_I)(Ge.IDet)(Ge.Rank).res list =
   [([|[|1|]|], 1); ([|[|1; 2; 3|]; [|0; 5; -7|]; [|0; 0; 50|]|], 3);
    ([|[|1; 2; 3; 0|]; [|0; 5; -7; 0|]; [|0; 0; 50; 0|]|], 3);
    ([|[|1; 2; 3|]; [|0; 5; -7|]; [|0; 0; 50|]; [|0; 0; 0|]|], 3);
    ([|[|0; 2; 3|]; [|0; 0; 10|]; [|0; 0; 0|]|], 2)]
-# val resI14 :
-  Ge.OutDetRank(Infra.IntegerDomain)(Infra.GenericArrayContainer)(Ge.IDet)(Ge.Rank).res
-  list =
+# val resI14 : Ge.OutDetRank(Ge.GAC_I)(Ge.IDet)(Ge.Rank).res list =
   [([|[|1|]|], 1, 1); ([|[|1; 2; 3|]; [|0; 5; -7|]; [|0; 0; 50|]|], 50, 3);
    ([|[|1; 2; 3; 0|]; [|0; 5; -7; 0|]; [|0; 0; 50; 0|]|], 50, 3);
    ([|[|1; 2; 3|]; [|0; 5; -7|]; [|0; 0; 50|]; [|0; 0; 0|]|], 50, 3);
    ([|[|0; 2; 3|]; [|0; 0; 10|]; [|0; 0; 0|]|], 0, 2)]
-#                 val iv0 : Infra.IntegerDomain.v Infra.container2dfromvector =
+#                 val iv0 : Ge.GVC_I.Dom.v Infra.container2dfromvector =
   {arr = [|1|]; n = 1; m = 1}
-val iv1 : Infra.IntegerDomain.v Infra.container2dfromvector =
+val iv1 : Ge.GVC_I.Dom.v Infra.container2dfromvector =
   {arr = [|1; 2; 3; 4; 13; 5; -1; 3; 0|]; n = 3; m = 3}
-val iv2 : Infra.IntegerDomain.v Infra.container2dfromvector =
+val iv2 : Ge.GVC_I.Dom.v Infra.container2dfromvector =
   {arr = [|1; 2; 3; 0; 4; 13; 5; 0; -1; 3; 0; 0|]; n = 3; m = 4}
-val iv4 : Infra.IntegerDomain.v Infra.container2dfromvector =
+val iv4 : Ge.GVC_I.Dom.v Infra.container2dfromvector =
   {arr = [|0; 2; 3; 0; 13; 5; 0; 3; 0|]; n = 3; m = 3}
-val iv5 : Infra.IntegerDomain.v Infra.container2dfromvector list =
+val iv5 : Ge.GVC_I.Dom.v Infra.container2dfromvector list =
   [{arr = [|1|]; n = 1; m = 1};
    {arr = [|1; 2; 3; 4; 13; 5; -1; 3; 0|]; n = 3; m = 3};
    {arr = [|1; 2; 3; 0; 4; 13; 5; 0; -1; 3; 0; 0|]; n = 3; m = 4};
    {arr = [|0; 2; 3; 0; 13; 5; 0; 3; 0|]; n = 3; m = 3}]
-val resI21 :
-  Ge.OutJustMatrix(Infra.IntegerDomain)(Infra.GenericVectorContainer)(Ge.IDet).res
-  list =
+val resI21 : Ge.OutJustMatrix(Ge.GVC_I)(Ge.IDet).res list =
   [{arr = [|1|]; n = 1; m = 1};
    {arr = [|1; 2; 3; 0; 5; -7; 0; 0; 50|]; n = 3; m = 3};
    {arr = [|1; 2; 3; 0; 0; 5; -7; 0; 0; 0; 50; 0|]; n = 3; m = 4};
    {arr = [|0; 2; 3; 0; 0; 10; 0; 0; 0|]; n = 3; m = 3}]
-# val resI22 :
-  Ge.OutDet(Infra.IntegerDomain)(Infra.GenericVectorContainer)(Ge.IDet).res
-  list =
+# val resI22 : Ge.OutDet(Ge.GVC_I)(Ge.IDet).res list =
   [({arr = [|1|]; n = 1; m = 1}, 1);
    ({arr = [|1; 2; 3; 0; 5; -7; 0; 0; 50|]; n = 3; m = 3}, 50);
    ({arr = [|1; 2; 3; 0; 0; 5; -7; 0; 0; 0; 50; 0|]; n = 3; m = 4}, 50);
    ({arr = [|0; 2; 3; 0; 0; 10; 0; 0; 0|]; n = 3; m = 3}, 0)]
-# val resI23 :
-  Ge.OutRank(Infra.IntegerDomain)(Infra.GenericVectorContainer)(Ge.IDet)(Ge.Rank).res
-  list =
+# val resI23 : Ge.OutRank(Ge.GVC_I)(Ge.IDet)(Ge.Rank).res list =
   [({arr = [|1|]; n = 1; m = 1}, 1);
    ({arr = [|1; 2; 3; 0; 5; -7; 0; 0; 50|]; n = 3; m = 3}, 3);
    ({arr = [|1; 2; 3; 0; 0; 5; -7; 0; 0; 0; 50; 0|]; n = 3; m = 4}, 3);
    ({arr = [|0; 2; 3; 0; 0; 10; 0; 0; 0|]; n = 3; m = 3}, 2)]
-# val resI24 :
-  Ge.OutDetRank(Infra.IntegerDomain)(Infra.GenericVectorContainer)(Ge.IDet)(Ge.Rank).res
-  list =
+# val resI24 : Ge.OutDetRank(Ge.GVC_I)(Ge.IDet)(Ge.Rank).res list =
   [({arr = [|1|]; n = 1; m = 1}, 1, 1);
    ({arr = [|1; 2; 3; 0; 5; -7; 0; 0; 50|]; n = 3; m = 3}, 50, 3);
    ({arr = [|1; 2; 3; 0; 0; 5; -7; 0; 0; 0; 50; 0|]; n = 3; m = 4}, 50, 3);
    ({arr = [|0; 2; 3; 0; 0; 10; 0; 0; 0|]; n = 3; m = 3}, 0, 2)]
-# val resI25 :
-  Ge.OutDetRank(Infra.IntegerDomain)(Infra.GenericVectorContainer)(Ge.IDet)(Ge.Rank).res
-  list =
+# val resI25 : Ge.OutDetRank(Ge.GVC_I)(Ge.IDet)(Ge.Rank).res list =
   [({arr = [|1|]; n = 1; m = 1}, 1, 1);
    ({arr = [|1; 3; 2; 0; 3; 5; 0; 0; 50|]; n = 3; m = 3}, 50, 3);
    ({arr = [|1; 3; 2; 0; 0; 3; 5; 0; 0; 0; 50; 0|]; n = 3; m = 4}, 50, 3);
@@ -2305,32 +2179,28 @@ val resI21 :
   [|[|1.; 2.; 3.|]; [|4.; 13.; 5.|]; [|-1.; 3.; 0.|]; [|0.; 0.; 0.|]|]
 #           val fa4 : float array array =
   [|[|0.; 2.; 3.|]; [|0.; 10.; 5.|]; [|0.; 3.; 0.|]|]
-#                                                       * *     val fa5 : Infra.FloatDomain.v array array list =
+#                                                       * *     val fa5 : Ge.GAC_F.Dom.v array array list =
   [[|[|1.|]|]; [|[|1.; 2.; 3.|]; [|4.; 13.; 5.|]; [|-1.; 3.; 0.|]|];
    [|[|1.; 2.; 3.; 0.|]; [|4.; 13.; 5.; 0.|]; [|-1.; 3.; 0.; 0.|]|];
    [|[|1.; 2.; 3.|]; [|4.; 13.; 5.|]; [|-1.; 3.; 0.|]; [|0.; 0.; 0.|]|];
    [|[|0.; 2.; 3.|]; [|0.; 10.; 5.|]; [|0.; 3.; 0.|]|]]
-val fa6 : Infra.FloatDomain.v array array = [|[|1.; 1.|]|]
+val fa6 : Ge.GAC_F.Dom.v array array = [|[|1.; 1.|]|]
 val fa7 : float array array =
   [|[|1.; 2.; 3.; 1.; 0.; 0.|]; [|4.; 13.; 5.; 0.; 1.; 0.|];
     [|-1.; 3.; 0.; 0.; 0.; 1.|]|]
-val resF1 :
-  Ge.OutJustMatrix(Infra.FloatDomain)(Infra.GenericArrayContainer)(Ge.NoDet(Infra.FloatDomain)).res
-  list =
+val resF1 : Ge.OutJustMatrix(Ge.GAC_F)(Ge.NoDet(Infra.FloatDomain)).res list =
   [[|[|1.|]|]; [|[|4.; 13.; 5.|]; [|0.; 6.25; 1.25|]; [|0.; 0.; 2.|]|];
    [|[|4.; 13.; 5.; 0.|]; [|0.; 6.25; 1.25; 0.|]; [|0.; 0.; 2.; 0.|]|];
    [|[|4.; 13.; 5.|]; [|0.; 6.25; 1.25|]; [|0.; 0.; 2.|]; [|0.; 0.; 0.|]|];
    [|[|0.; 10.; 5.|]; [|0.; 0.; 2.|]; [|0.; 0.; 0.|]|]]
 #                                                                                                 val a2v : 'a array array -> 'a Infra.container2dfromvector = <fun>
-val xxx : Infra.FloatDomain.v Infra.container2dfromvector list =
+val xxx : Ge.GAC_F.Dom.v Infra.container2dfromvector list =
   [{arr = [|1.|]; n = 1; m = 1};
    {arr = [|1.; 2.; 3.; 4.; 13.; 5.; -1.; 3.; 0.|]; n = 3; m = 3};
    {arr = [|1.; 2.; 3.; 0.; 4.; 13.; 5.; 0.; -1.; 3.; 0.; 0.|]; n = 3; m = 4};
    {arr = [|1.; 2.; 3.; 4.; 13.; 5.; -1.; 3.; 0.; 0.; 0.; 0.|]; n = 4; m = 3};
    {arr = [|0.; 2.; 3.; 0.; 10.; 5.; 0.; 3.; 0.|]; n = 3; m = 3}]
-val resFV5 :
-  Ge.OutDetRank(Infra.FloatDomain)(Infra.GenericVectorContainer)(Ge.FDet)(Ge.Rank).res
-  list =
+val resFV5 : Ge.OutDetRank(Ge.GVC_F)(Ge.FDet)(Ge.Rank).res list =
   [({arr = [|1.|]; n = 1; m = 1}, 1., 1);
    ({arr =
       [|13.; 5.; 4.; 0.; 2.23076923076923084; 0.384615384615384581; 0.; 0.;
@@ -2348,9 +2218,7 @@ val resFV5 :
      n = 4; m = 3},
     50., 3);
    ({arr = [|10.; 5.; 0.; 0.; 2.; 0.; 0.; 0.; 0.|]; n = 3; m = 3}, 0., 2)]
-val resF11 :
-  Ge.OutJustMatrix(Infra.FloatDomain)(Infra.GenericArrayContainer)(Ge.NoDet(Infra.FloatDomain)).res
-  list =
+val resF11 : Ge.OutJustMatrix(Ge.GAC_F)(Ge.NoDet(Infra.FloatDomain)).res list =
   [[|[|1.|]|];
    [|[|13.; 5.; 4.|]; [|0.; 2.23076923076923084; 0.384615384615384581|];
      [|0.; 0.; -1.72413793103448287|]|];
@@ -2360,8 +2228,7 @@ val resF11 :
    [|[|13.; 5.; 4.|]; [|0.; 2.23076923076923084; 0.384615384615384581|];
      [|0.; 0.; -1.72413793103448287|]; [|0.; 0.; 0.|]|];
    [|[|10.; 5.; 0.|]; [|0.; 2.; 0.|]; [|0.; 0.; 0.|]|]]
-# val resF12 :
-  Ge.OutDet(Infra.FloatDomain)(Infra.GenericArrayContainer)(Ge.FDet).res list =
+# val resF12 : Ge.OutDet(Ge.GAC_F)(Ge.FDet).res list =
   [([|[|1.|]|], 1.);
    ([|[|13.; 5.; 4.|]; [|0.; 2.23076923076923084; 0.384615384615384581|];
       [|0.; 0.; -1.72413793103448287|]|],
@@ -2375,8 +2242,7 @@ val resF11 :
     50.);
    ([|[|10.; 5.; 0.|]; [|0.; 2.; 0.|]; [|0.; 0.; 0.|]|], 0.)]
 # val resF13 :
-  Ge.OutRank(Infra.FloatDomain)(Infra.GenericArrayContainer)(Ge.NoDet(Infra.FloatDomain))(Ge.Rank).res
-  list =
+  Ge.OutRank(Ge.GAC_F)(Ge.NoDet(Infra.FloatDomain))(Ge.Rank).res list =
   [([|[|1.|]|], 1);
    ([|[|13.; 5.; 4.|]; [|0.; 2.23076923076923084; 0.384615384615384581|];
       [|0.; 0.; -1.72413793103448287|]|],
@@ -2389,9 +2255,7 @@ val resF11 :
       [|0.; 0.; -1.72413793103448287|]; [|0.; 0.; 0.|]|],
     3);
    ([|[|10.; 5.; 0.|]; [|0.; 2.; 0.|]; [|0.; 0.; 0.|]|], 2)]
-# val resF14 :
-  Ge.OutDetRank(Infra.FloatDomain)(Infra.GenericArrayContainer)(Ge.FDet)(Ge.Rank).res
-  list =
+# val resF14 : Ge.OutDetRank(Ge.GAC_F)(Ge.FDet)(Ge.Rank).res list =
   [([|[|1.|]|], 1., 1);
    ([|[|13.; 5.; 4.|]; [|0.; 2.23076923076923084; 0.384615384615384581|];
       [|0.; 0.; -1.72413793103448287|]|],
@@ -2437,9 +2301,7 @@ val resF11 :
    [|[|Num.Int 0; Num.Int 2; Num.Int 3|];
      [|Num.Int 0; Num.Int 13; Num.Int 5|];
      [|Num.Int 0; Num.Int 3; Num.Int 0|]|]]
-#   val resR11 :
-  Ge.OutJustMatrix(Infra.RationalDomain)(Infra.GenericArrayContainer)(Ge.RDet).res
-  list =
+#   val resR11 : Ge.OutJustMatrix(Ge.GAC_R)(Ge.RDet).res list =
   [[|[|Num.Int 1|]|];
    [|[|Num.Int 1; Num.Int 2; Num.Int 3|];
      [|Num.Int 0; Num.Int 5; Num.Int (-7)|];
@@ -2454,9 +2316,7 @@ val resF11 :
    [|[|Num.Int 0; Num.Int 2; Num.Int 3|];
      [|Num.Int 0; Num.Int 0; Num.Ratio <abstr>|];
      [|Num.Int 0; Num.Int 0; Num.Int 0|]|]]
-# val resR12 :
-  Ge.OutDet(Infra.RationalDomain)(Infra.GenericArrayContainer)(Ge.RDet).res
-  list =
+# val resR12 : Ge.OutDet(Ge.GAC_R)(Ge.RDet).res list =
   [([|[|Num.Int 1|]|], Num.Int 1);
    ([|[|Num.Int 1; Num.Int 2; Num.Int 3|];
       [|Num.Int 0; Num.Int 5; Num.Int (-7)|];
@@ -2475,9 +2335,7 @@ val resF11 :
       [|Num.Int 0; Num.Int 0; Num.Ratio <abstr>|];
       [|Num.Int 0; Num.Int 0; Num.Int 0|]|],
     Num.Int 0)]
-# val resR13 :
-  Ge.OutRank(Infra.RationalDomain)(Infra.GenericArrayContainer)(Ge.RDet)(Ge.Rank).res
-  list =
+# val resR13 : Ge.OutRank(Ge.GAC_R)(Ge.RDet)(Ge.Rank).res list =
   [([|[|Num.Int 1|]|], 1);
    ([|[|Num.Int 1; Num.Int 2; Num.Int 3|];
       [|Num.Int 0; Num.Int 5; Num.Int (-7)|];
@@ -2496,9 +2354,7 @@ val resF11 :
       [|Num.Int 0; Num.Int 0; Num.Ratio <abstr>|];
       [|Num.Int 0; Num.Int 0; Num.Int 0|]|],
     2)]
-# val resR14 :
-  Ge.OutDetRank(Infra.RationalDomain)(Infra.GenericArrayContainer)(Ge.RDet)(Ge.Rank).res
-  list =
+# val resR14 : Ge.OutDetRank(Ge.GAC_R)(Ge.RDet)(Ge.Rank).res list =
   [([|[|Num.Int 1|]|], Num.Int 1, 1);
    ([|[|Num.Int 1; Num.Int 2; Num.Int 3|];
       [|Num.Int 0; Num.Int 5; Num.Int (-7)|];
