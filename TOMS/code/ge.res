@@ -3,11 +3,7 @@
 # # #   val instantiate :
   (('a, 'b) code -> 'c list -> ('d -> 'e -> 'e) -> ('a, 'f) code) ->
   ('a, 'b -> 'f) code = <fun>
-#   val resFA1 :
-  ('a,
-   Ge.GenFA1.Input.inp ->
-   Ge.OutJustMatrix(Ge.GAC_F)(Ge.NoDet(Infra.FloatDomain)).res)
-  code =
+#   val resFA1 : ('a, Ge.GenFA1.Input.inp -> Ge.GenFA1.Output.res) code =
   .<fun a_1 ->
    let t_2 = (ref 0) in
    let t_3 = (ref 0) in
@@ -63,8 +59,7 @@
     (t_3 := ((! t_3) + 1))
    done;
    t_5>.
-# val resFA2 :
-  ('a, Ge.GenFA2.Input.inp -> Ge.OutDet(Ge.GAC_F)(Ge.FDet).res) code =
+# val resFA2 : ('a, Ge.GenFA2.Input.inp -> Ge.GenFA2.Output.res) code =
   .<fun a_1 ->
    let t_2 = (ref 0) in
    let t_3 = (ref 0) in
@@ -125,11 +120,7 @@
     if ((! t_9) = 0) then 0.
     else if ((! t_9) = 1) then (! t_8)
     else (~-. (! t_8)))>.
-# val resFA3 :
-  ('a,
-   Ge.GenFA3.Input.inp ->
-   Ge.OutRank(Ge.GAC_F)(Ge.NoDet(Infra.FloatDomain))(Ge.Rank).res)
-  code =
+# val resFA3 : ('a, Ge.GenFA3.Input.inp -> Ge.GenFA3.Output.res) code =
   .<fun a_1 ->
    let t_2 = (ref 0) in
    let t_3 = (ref 0) in
@@ -185,9 +176,7 @@
     (t_3 := ((! t_3) + 1))
    done;
    (t_5, (! t_2))>.
-# val resFA4 :
-  ('a, Ge.GenFA4.Input.inp -> Ge.OutDetRank(Ge.GAC_F)(Ge.FDet)(Ge.Rank).res)
-  code =
+# val resFA4 : ('a, Ge.GenFA4.Input.inp -> Ge.GenFA4.Output.res) code =
   .<fun a_1 ->
    let t_2 = (ref 0) in
    let t_3 = (ref 0) in
@@ -248,74 +237,70 @@
     if ((! t_9) = 0) then 0.
     else if ((! t_9) = 1) then (! t_8)
     else (~-. (! t_8)), (! t_2))>.
-# val resFV1 :
-  ('a, Ge.GenFV1.Input.inp -> Ge.OutJustMatrix(Ge.GVC_F)(Ge.FDet).res) code =
+# val resFV1 : ('a, Ge.GenFV1.Input.inp -> Ge.GenFV1.Output.res) code =
   .<fun a_1 ->
    let t_2 = (ref 0) in
    let t_3 = (ref 0) in
    let t_4 = {arr = (Array.copy a_1.arr)} (a_1) in
    let t_5 = a_1.m in
    let t_6 = a_1.n in
-   let t_7 = (ref 1.) in
-   let t_8 = (ref 1) in
    while (((! t_3) < t_5) && ((! t_2) < t_6)) do
-    let t_9 = (! t_2) in
-    let t_10 = (! t_3) in
-    let t_11 = (ref (None)) in
-    let t_22 =
+    let t_7 = (! t_2) in
+    let t_8 = (! t_3) in
+    let t_9 = (ref (None)) in
+    let t_20 =
      begin
-      for j_19 = t_9 to (t_6 - 1) do
-       let t_20 = (t_4.arr).((j_19 * t_4.m) + t_10) in
-       if (not (t_20 = 0.)) then
-        (match (! t_11) with
-         | Some (i_21) ->
-            if ((abs_float (snd i_21)) < (abs_float t_20)) then
-             (t_11 := (Some (j_19, t_20)))
+      for j_17 = t_7 to (t_6 - 1) do
+       let t_18 = (t_4.arr).((j_17 * t_4.m) + t_8) in
+       if (not (t_18 = 0.)) then
+        (match (! t_9) with
+         | Some (i_19) ->
+            if ((abs_float (snd i_19)) < (abs_float t_18)) then
+             (t_9 := (Some (j_17, t_18)))
             else ()
-         | None -> (t_11 := (Some (j_19, t_20))))
+         | None -> (t_9 := (Some (j_17, t_18))))
        else ()
       done;
-      (match (! t_11) with
-       | Some (i_12) ->
-          if ((fst i_12) <> t_9) then begin
-           let a_13 = t_4.arr
-           and m_14 = t_4.m in
-           let i1_15 = (t_9 * m_14)
-           and i2_16 = ((fst i_12) * m_14) in
-           for i_17 = 0 to (m_14 - 1) do
-            let t_18 = a_13.(i1_15 + i_17) in
-            a_13.(i1_15 + i_17) <- a_13.(i2_16 + i_17);
-            a_13.(i2_16 + i_17) <- t_18
+      (match (! t_9) with
+       | Some (i_10) ->
+          if ((fst i_10) <> t_7) then begin
+           let a_11 = t_4.arr
+           and m_12 = t_4.m in
+           let i1_13 = (t_7 * m_12)
+           and i2_14 = ((fst i_10) * m_12) in
+           for i_15 = 0 to (m_12 - 1) do
+            let t_16 = a_11.(i1_13 + i_15) in
+            a_11.(i1_13 + i_15) <- a_11.(i2_14 + i_15);
+            a_11.(i2_14 + i_15) <- t_16
            done;
-           (t_8 := (~- (! t_8)))
+           ()
           end else ();
-          (Some (snd i_12))
+          (Some (snd i_10))
        | None -> (None))
      end in
-    (match t_22 with
-     | Some (i_23) ->
+    (match t_20 with
+     | Some (i_21) ->
         begin
-         for j_24 = (t_9 + 1) to (t_6 - 1) do
-          if (not ((t_4.arr).((j_24 * t_4.m) + t_10) = 0.)) then begin
-           for j_25 = (t_10 + 1) to (t_5 - 1) do
-            (t_4.arr).((j_24 * t_4.m) + j_25) <-
-             ((t_4.arr).((j_24 * t_4.m) + j_25) -.
-               (((t_4.arr).((j_24 * t_4.m) + t_10) /.
-                  (t_4.arr).((t_9 * t_4.m) + t_10)) *.
-                 (t_4.arr).((t_9 * t_4.m) + j_25)))
+         for j_22 = (t_7 + 1) to (t_6 - 1) do
+          if (not ((t_4.arr).((j_22 * t_4.m) + t_8) = 0.)) then begin
+           for j_23 = (t_8 + 1) to (t_5 - 1) do
+            (t_4.arr).((j_22 * t_4.m) + j_23) <-
+             ((t_4.arr).((j_22 * t_4.m) + j_23) -.
+               (((t_4.arr).((j_22 * t_4.m) + t_8) /.
+                  (t_4.arr).((t_7 * t_4.m) + t_8)) *.
+                 (t_4.arr).((t_7 * t_4.m) + j_23)))
            done;
-           (t_4.arr).((j_24 * t_4.m) + t_10) <- 0.
+           (t_4.arr).((j_22 * t_4.m) + t_8) <- 0.
           end else ()
          done;
-         (t_7 := ((! t_7) *. i_23))
+         ()
         end;
         (t_2 := ((! t_2) + 1))
-     | None -> (t_8 := 0));
+     | None -> ());
     (t_3 := ((! t_3) + 1))
    done;
    t_4>.
-# val resFV2 :
-  ('a, Ge.GenFV2.Input.inp -> Ge.OutDet(Ge.GVC_F)(Ge.FDet).res) code =
+# val resFV2 : ('a, Ge.GenFV2.Input.inp -> Ge.GenFV2.Output.res) code =
   .<fun a_1 ->
    let t_2 = (ref 0) in
    let t_3 = (ref 0) in
@@ -383,11 +368,7 @@
     if ((! t_8) = 0) then 0.
     else if ((! t_8) = 1) then (! t_7)
     else (~-. (! t_7)))>.
-# val resFV3 :
-  ('a,
-   Ge.GenFV3.Input.inp ->
-   Ge.OutRank(Ge.GVC_F)(Ge.NoDet(Infra.FloatDomain))(Ge.Rank).res)
-  code =
+# val resFV3 : ('a, Ge.GenFV3.Input.inp -> Ge.GenFV3.Output.res) code =
   .<fun a_1 ->
    let t_2 = (ref 0) in
    let t_3 = (ref 0) in
@@ -450,9 +431,7 @@
     (t_3 := ((! t_3) + 1))
    done;
    (t_4, (! t_2))>.
-# val resFV4 :
-  ('a, Ge.GenFV4.Input.inp -> Ge.OutDetRank(Ge.GVC_F)(Ge.FDet)(Ge.Rank).res)
-  code =
+# val resFV4 : ('a, Ge.GenFV4.Input.inp -> Ge.GenFV4.Output.res) code =
   .<fun a_1 ->
    let t_2 = (ref 0) in
    let t_3 = (ref 0) in
@@ -520,9 +499,7 @@
     if ((! t_8) = 0) then 0.
     else if ((! t_8) = 1) then (! t_7)
     else (~-. (! t_7)), (! t_2))>.
-# val resFV5 :
-  ('a, Ge.GenFV5.Input.inp -> Ge.OutDetRank(Ge.GVC_F)(Ge.FDet)(Ge.Rank).res)
-  code =
+# val resFV5 : ('a, Ge.GenFV5.Input.inp -> Ge.GenFV5.Output.res) code =
   .<fun a_1 ->
    let t_2 = (ref 0) in
    let t_3 = (ref 0) in
@@ -608,8 +585,7 @@
     if ((! t_8) = 0) then 0.
     else if ((! t_8) = 1) then (! t_7)
     else (~-. (! t_7)), (! t_2))>.
-# val resIA1 :
-  ('a, Ge.GenIA1.Input.inp -> Ge.OutJustMatrix(Ge.GAC_I)(Ge.IDet).res) code =
+# val resIA1 : ('a, Ge.GenIA1.Input.inp -> Ge.GenIA1.Output.res) code =
   .<fun a_1 ->
    let t_2 = (ref 0) in
    let t_3 = (ref 0) in
@@ -666,8 +642,7 @@
     (t_3 := ((! t_3) + 1))
    done;
    t_5>.
-# val resIA2 :
-  ('a, Ge.GenIA2.Input.inp -> Ge.OutDet(Ge.GAC_I)(Ge.IDet).res) code =
+# val resIA2 : ('a, Ge.GenIA2.Input.inp -> Ge.GenIA2.Output.res) code =
   .<fun a_1 ->
    let t_2 = (ref 0) in
    let t_3 = (ref 0) in
@@ -727,9 +702,7 @@
     if ((! t_9) = 0) then 0
     else if ((! t_9) = 1) then (! t_8)
     else (~- (! t_8)))>.
-# val resIA3 :
-  ('a, Ge.GenIA3.Input.inp -> Ge.OutRank(Ge.GAC_I)(Ge.IDet)(Ge.Rank).res)
-  code =
+# val resIA3 : ('a, Ge.GenIA3.Input.inp -> Ge.GenIA3.Output.res) code =
   .<fun a_1 ->
    let t_2 = (ref 0) in
    let t_3 = (ref 0) in
@@ -786,9 +759,7 @@
     (t_3 := ((! t_3) + 1))
    done;
    (t_5, (! t_2))>.
-# val resIA4 :
-  ('a, Ge.GenIA4.Input.inp -> Ge.OutDetRank(Ge.GAC_I)(Ge.IDet)(Ge.Rank).res)
-  code =
+# val resIA4 : ('a, Ge.GenIA4.Input.inp -> Ge.GenIA4.Output.res) code =
   .<fun a_1 ->
    let t_2 = (ref 0) in
    let t_3 = (ref 0) in
@@ -848,8 +819,7 @@
     if ((! t_9) = 0) then 0
     else if ((! t_9) = 1) then (! t_8)
     else (~- (! t_8)), (! t_2))>.
-# val resIV1 :
-  ('a, Ge.GenIV1.Input.inp -> Ge.OutJustMatrix(Ge.GVC_I)(Ge.IDet).res) code =
+# val resIV1 : ('a, Ge.GenIV1.Input.inp -> Ge.GenIV1.Output.res) code =
   .<fun a_1 ->
    let t_2 = (ref 0) in
    let t_3 = (ref 0) in
@@ -914,8 +884,7 @@
     (t_3 := ((! t_3) + 1))
    done;
    t_4>.
-# val resIV2 :
-  ('a, Ge.GenIV2.Input.inp -> Ge.OutDet(Ge.GVC_I)(Ge.IDet).res) code =
+# val resIV2 : ('a, Ge.GenIV2.Input.inp -> Ge.GenIV2.Output.res) code =
   .<fun a_1 ->
    let t_2 = (ref 0) in
    let t_3 = (ref 0) in
@@ -983,9 +952,7 @@
     if ((! t_8) = 0) then 0
     else if ((! t_8) = 1) then (! t_7)
     else (~- (! t_7)))>.
-# val resIV3 :
-  ('a, Ge.GenIV3.Input.inp -> Ge.OutRank(Ge.GVC_I)(Ge.IDet)(Ge.Rank).res)
-  code =
+# val resIV3 : ('a, Ge.GenIV3.Input.inp -> Ge.GenIV3.Output.res) code =
   .<fun a_1 ->
    let t_2 = (ref 0) in
    let t_3 = (ref 0) in
@@ -1050,9 +1017,7 @@
     (t_3 := ((! t_3) + 1))
    done;
    (t_4, (! t_2))>.
-# val resIV4 :
-  ('a, Ge.GenIV4.Input.inp -> Ge.OutDetRank(Ge.GVC_I)(Ge.IDet)(Ge.Rank).res)
-  code =
+# val resIV4 : ('a, Ge.GenIV4.Input.inp -> Ge.GenIV4.Output.res) code =
   .<fun a_1 ->
    let t_2 = (ref 0) in
    let t_3 = (ref 0) in
@@ -1120,9 +1085,7 @@
     if ((! t_8) = 0) then 0
     else if ((! t_8) = 1) then (! t_7)
     else (~- (! t_7)), (! t_2))>.
-# val resIV5 :
-  ('a, Ge.GenIV5.Input.inp -> Ge.OutDetRank(Ge.GVC_I)(Ge.IDet)(Ge.Rank).res)
-  code =
+# val resIV5 : ('a, Ge.GenIV5.Input.inp -> Ge.GenIV5.Output.res) code =
   .<fun a_1 ->
    let t_2 = (ref 0) in
    let t_3 = (ref 0) in
@@ -1208,11 +1171,7 @@
     if ((! t_8) = 0) then 0
     else if ((! t_8) = 1) then (! t_7)
     else (~- (! t_7)), (! t_2))>.
-# val resFA11 :
-  ('a,
-   Ge.GenFA11.Input.inp ->
-   Ge.OutJustMatrix(Ge.GAC_F)(Ge.NoDet(Infra.FloatDomain)).res)
-  code =
+# val resFA11 : ('a, Ge.GenFA11.Input.inp -> Ge.GenFA11.Output.res) code =
   .<fun a_1 ->
    let t_2 = (ref 0) in
    let t_3 = (ref 0) in
@@ -1278,8 +1237,7 @@
     (t_3 := ((! t_3) + 1))
    done;
    t_5>.
-# val resFA12 :
-  ('a, Ge.GenFA12.Input.inp -> Ge.OutDet(Ge.GAC_F)(Ge.FDet).res) code =
+# val resFA12 : ('a, Ge.GenFA12.Input.inp -> Ge.GenFA12.Output.res) code =
   .<fun a_1 ->
    let t_2 = (ref 0) in
    let t_3 = (ref 0) in
@@ -1350,11 +1308,7 @@
     if ((! t_9) = 0) then 0.
     else if ((! t_9) = 1) then (! t_8)
     else (~-. (! t_8)))>.
-# val resFA13 :
-  ('a,
-   Ge.GenFA13.Input.inp ->
-   Ge.OutRank(Ge.GAC_F)(Ge.NoDet(Infra.FloatDomain))(Ge.Rank).res)
-  code =
+# val resFA13 : ('a, Ge.GenFA13.Input.inp -> Ge.GenFA13.Output.res) code =
   .<fun a_1 ->
    let t_2 = (ref 0) in
    let t_3 = (ref 0) in
@@ -1420,9 +1374,7 @@
     (t_3 := ((! t_3) + 1))
    done;
    (t_5, (! t_2))>.
-# val resFA14 :
-  ('a, Ge.GenFA14.Input.inp -> Ge.OutDetRank(Ge.GAC_F)(Ge.FDet)(Ge.Rank).res)
-  code =
+# val resFA14 : ('a, Ge.GenFA14.Input.inp -> Ge.GenFA14.Output.res) code =
   .<fun a_1 ->
    let t_2 = (ref 0) in
    let t_3 = (ref 0) in
@@ -1493,8 +1445,7 @@
     if ((! t_9) = 0) then 0.
     else if ((! t_9) = 1) then (! t_8)
     else (~-. (! t_8)), (! t_2))>.
-# val resRA1 :
-  ('a, Ge.GenRA1.Input.inp -> Ge.OutJustMatrix(Ge.GAC_R)(Ge.RDet).res) code =
+# val resRA1 : ('a, Ge.GenRA1.Input.inp -> Ge.GenRA1.Output.res) code =
   .<fun a_1 ->
    let t_2 = (ref 0) in
    let t_3 = (ref 0) in
@@ -1562,8 +1513,7 @@
     (t_3 := ((! t_3) + 1))
    done;
    t_5>.
-# val resRA2 :
-  ('a, Ge.GenRA2.Input.inp -> Ge.OutDet(Ge.GAC_R)(Ge.RDet).res) code =
+# val resRA2 : ('a, Ge.GenRA2.Input.inp -> Ge.GenRA2.Output.res) code =
   .<fun a_1 ->
    let t_2 = (ref 0) in
    let t_3 = (ref 0) in
@@ -1635,9 +1585,7 @@
     else if ((! t_9) = 1) then (! t_8)
     else
      (((* cross-stage persistent value (as id: Num.minus_num) *)) (! t_8)))>.
-# val resRA3 :
-  ('a, Ge.GenRA3.Input.inp -> Ge.OutRank(Ge.GAC_R)(Ge.RDet)(Ge.Rank).res)
-  code =
+# val resRA3 : ('a, Ge.GenRA3.Input.inp -> Ge.GenRA3.Output.res) code =
   .<fun a_1 ->
    let t_2 = (ref 0) in
    let t_3 = (ref 0) in
@@ -1705,9 +1653,7 @@
     (t_3 := ((! t_3) + 1))
    done;
    (t_5, (! t_2))>.
-# val resRA4 :
-  ('a, Ge.GenRA4.Input.inp -> Ge.OutDetRank(Ge.GAC_R)(Ge.RDet)(Ge.Rank).res)
-  code =
+# val resRA4 : ('a, Ge.GenRA4.Input.inp -> Ge.GenRA4.Output.res) code =
   .<fun a_1 ->
    let t_2 = (ref 0) in
    let t_3 = (ref 0) in
@@ -1780,11 +1726,7 @@
     else
      (((* cross-stage persistent value (as id: Num.minus_num) *)) (! t_8)),
     (! t_2))>.
-# val resFA5 :
-  ('a,
-   Ge.GenFA5.Input.inp ->
-   Ge.OutJustMatrix(Ge.GAC_F)(Ge.NoDet(Infra.FloatDomain)).res)
-  code =
+# val resFA5 : ('a, Ge.GenFA5.Input.inp -> Ge.GenFA5.Output.res) code =
   .<fun a_1 ->
    let t_2 = (ref 0) in
    let t_3 = (ref 0) in
@@ -1841,8 +1783,7 @@
     (t_3 := ((! t_3) + 1))
    done;
    t_5>.
-# val resFA6 :
-  ('a, Ge.GenFA6.Input.inp -> Ge.OutDet(Ge.GAC_F)(Ge.FDet).res) code =
+# val resFA6 : ('a, Ge.GenFA6.Input.inp -> Ge.GenFA6.Output.res) code =
   .<fun a_1 ->
    let t_2 = (ref 0) in
    let t_3 = (ref 0) in
@@ -1904,11 +1845,7 @@
     if ((! t_10) = 0) then 0.
     else if ((! t_10) = 1) then (! t_9)
     else (~-. (! t_9)))>.
-# val resFA7 :
-  ('a,
-   Ge.GenFA7.Input.inp ->
-   Ge.OutRank(Ge.GAC_F)(Ge.NoDet(Infra.FloatDomain))(Ge.Rank).res)
-  code =
+# val resFA7 : ('a, Ge.GenFA7.Input.inp -> Ge.GenFA7.Output.res) code =
   .<fun a_1 ->
    let t_2 = (ref 0) in
    let t_3 = (ref 0) in
@@ -1965,9 +1902,7 @@
     (t_3 := ((! t_3) + 1))
    done;
    (t_5, (! t_2))>.
-# val resFA8 :
-  ('a, Ge.GenFA8.Input.inp -> Ge.OutDetRank(Ge.GAC_F)(Ge.FDet)(Ge.Rank).res)
-  code =
+# val resFA8 : ('a, Ge.GenFA8.Input.inp -> Ge.GenFA8.Output.res) code =
   .<fun a_1 ->
    let t_2 = (ref 0) in
    let t_3 = (ref 0) in
@@ -1975,129 +1910,85 @@
    let t_6 = (Array.length (fst a_1).(0)) in
    let t_7 = (snd a_1) in
    let t_8 = (Array.length (fst a_1)) in
-   let t_9 = (ref 1.) in
-   let t_10 = (ref 1) in
    while (((! t_3) < t_6) && ((! t_2) < t_7)) do
-    let t_11 = (! t_2) in
-    let t_12 = (! t_3) in
-    let t_13 = (ref (None)) in
-    let t_19 =
+    let t_9 = (! t_2) in
+    let t_10 = (! t_3) in
+    let t_11 = (ref (None)) in
+    let t_17 =
      begin
-      for j_16 = t_11 to (t_8 - 1) do
-       let t_17 = (t_5.(j_16)).(t_12) in
-       if (not (t_17 = 0.)) then
-        (match (! t_13) with
-         | Some (i_18) ->
-            if ((abs_float (snd i_18)) < (abs_float t_17)) then
-             (t_13 := (Some (j_16, t_17)))
+      for j_14 = t_9 to (t_8 - 1) do
+       let t_15 = (t_5.(j_14)).(t_10) in
+       if (not (t_15 = 0.)) then
+        (match (! t_11) with
+         | Some (i_16) ->
+            if ((abs_float (snd i_16)) < (abs_float t_15)) then
+             (t_11 := (Some (j_14, t_15)))
             else ()
-         | None -> (t_13 := (Some (j_16, t_17))))
+         | None -> (t_11 := (Some (j_14, t_15))))
        else ()
       done;
-      (match (! t_13) with
-       | Some (i_14) ->
-          if ((fst i_14) <> t_11) then begin
-           let t_15 = t_5.(t_11) in
-           t_5.(t_11) <- t_5.(fst i_14);
-           t_5.(fst i_14) <- t_15;
-           (t_10 := (~- (! t_10)))
+      (match (! t_11) with
+       | Some (i_12) ->
+          if ((fst i_12) <> t_9) then begin
+           let t_13 = t_5.(t_9) in
+           t_5.(t_9) <- t_5.(fst i_12);
+           t_5.(fst i_12) <- t_13;
+           ()
           end else ();
-          (Some (snd i_14))
+          (Some (snd i_12))
        | None -> (None))
      end in
-    (match t_19 with
-     | Some (i_20) ->
+    (match t_17 with
+     | Some (i_18) ->
         begin
-         for j_21 = (t_11 + 1) to (t_8 - 1) do
-          if (not ((t_5.(j_21)).(t_12) = 0.)) then begin
-           for j_22 = (t_12 + 1) to (t_6 - 1) do
-            (t_5.(j_21)).(j_22) <-
-             ((t_5.(j_21)).(j_22) -.
-               (((t_5.(j_21)).(t_12) /. (t_5.(t_11)).(t_12)) *.
-                 (t_5.(t_11)).(j_22)))
+         for j_19 = (t_9 + 1) to (t_8 - 1) do
+          if (not ((t_5.(j_19)).(t_10) = 0.)) then begin
+           for j_20 = (t_10 + 1) to (t_6 - 1) do
+            (t_5.(j_19)).(j_20) <-
+             ((t_5.(j_19)).(j_20) -.
+               (((t_5.(j_19)).(t_10) /. (t_5.(t_9)).(t_10)) *.
+                 (t_5.(t_9)).(j_20)))
            done;
-           (t_5.(j_21)).(t_12) <- 0.
+           (t_5.(j_19)).(t_10) <- 0.
           end else ()
          done;
-         (t_9 := ((! t_9) *. i_20))
+         ()
         end;
         (t_2 := ((! t_2) + 1))
-     | None -> (t_10 := 0));
+     | None -> ());
     (t_3 := ((! t_3) + 1))
    done;
-   (t_5,
-    if ((! t_10) = 0) then 0.
-    else if ((! t_10) = 1) then (! t_9)
-    else (~-. (! t_9)), (! t_2))>.
-#   val rFA1 :
-  Ge.GenFA1.Input.inp ->
-  Ge.OutJustMatrix(Ge.GAC_F)(Ge.NoDet(Infra.FloatDomain)).res = <fun>
-# val rFA2 : Ge.GenFA2.Input.inp -> Ge.OutDet(Ge.GAC_F)(Ge.FDet).res = <fun>
-# val rFA3 :
-  Ge.GenFA3.Input.inp ->
-  Ge.OutRank(Ge.GAC_F)(Ge.NoDet(Infra.FloatDomain))(Ge.Rank).res = <fun>
-# val rFA4 :
-  Ge.GenFA4.Input.inp -> Ge.OutDetRank(Ge.GAC_F)(Ge.FDet)(Ge.Rank).res =
-  <fun>
-# val rFV1 : Ge.GenFV1.Input.inp -> Ge.OutJustMatrix(Ge.GVC_F)(Ge.FDet).res =
-  <fun>
-# val rFV2 : Ge.GenFV2.Input.inp -> Ge.OutDet(Ge.GVC_F)(Ge.FDet).res = <fun>
-# val rFV3 :
-  Ge.GenFV3.Input.inp ->
-  Ge.OutRank(Ge.GVC_F)(Ge.NoDet(Infra.FloatDomain))(Ge.Rank).res = <fun>
-# val rFV4 :
-  Ge.GenFV4.Input.inp -> Ge.OutDetRank(Ge.GVC_F)(Ge.FDet)(Ge.Rank).res =
-  <fun>
-# val rFV5 :
-  Ge.GenFV5.Input.inp -> Ge.OutDetRank(Ge.GVC_F)(Ge.FDet)(Ge.Rank).res =
-  <fun>
-# val rIA1 : Ge.GenIA1.Input.inp -> Ge.OutJustMatrix(Ge.GAC_I)(Ge.IDet).res =
-  <fun>
-# val rIA2 : Ge.GenIA2.Input.inp -> Ge.OutDet(Ge.GAC_I)(Ge.IDet).res = <fun>
-# val rIA3 : Ge.GenIA3.Input.inp -> Ge.OutRank(Ge.GAC_I)(Ge.IDet)(Ge.Rank).res =
-  <fun>
-# val rIA4 :
-  Ge.GenIA4.Input.inp -> Ge.OutDetRank(Ge.GAC_I)(Ge.IDet)(Ge.Rank).res =
-  <fun>
-# val rIV1 : Ge.GenIV1.Input.inp -> Ge.OutJustMatrix(Ge.GVC_I)(Ge.IDet).res =
-  <fun>
-# val rIV2 : Ge.GenIV2.Input.inp -> Ge.OutDet(Ge.GVC_I)(Ge.IDet).res = <fun>
-# val rIV3 : Ge.GenIV3.Input.inp -> Ge.OutRank(Ge.GVC_I)(Ge.IDet)(Ge.Rank).res =
-  <fun>
-# val rIV4 :
-  Ge.GenIV4.Input.inp -> Ge.OutDetRank(Ge.GVC_I)(Ge.IDet)(Ge.Rank).res =
-  <fun>
-# val rIV5 :
-  Ge.GenIV5.Input.inp -> Ge.OutDetRank(Ge.GVC_I)(Ge.IDet)(Ge.Rank).res =
-  <fun>
-# val rFA11 :
-  Ge.GenFA11.Input.inp ->
-  Ge.OutJustMatrix(Ge.GAC_F)(Ge.NoDet(Infra.FloatDomain)).res = <fun>
-# val rFA12 : Ge.GenFA12.Input.inp -> Ge.OutDet(Ge.GAC_F)(Ge.FDet).res = <fun>
-# val rFA13 :
-  Ge.GenFA13.Input.inp ->
-  Ge.OutRank(Ge.GAC_F)(Ge.NoDet(Infra.FloatDomain))(Ge.Rank).res = <fun>
-# val rFA14 :
-  Ge.GenFA14.Input.inp -> Ge.OutDetRank(Ge.GAC_F)(Ge.FDet)(Ge.Rank).res =
-  <fun>
-# val rRA1 : Ge.GenRA1.Input.inp -> Ge.OutJustMatrix(Ge.GAC_R)(Ge.RDet).res =
-  <fun>
-# val rRA2 : Ge.GenRA2.Input.inp -> Ge.OutDet(Ge.GAC_R)(Ge.RDet).res = <fun>
-# val rRA3 : Ge.GenRA3.Input.inp -> Ge.OutRank(Ge.GAC_R)(Ge.RDet)(Ge.Rank).res =
-  <fun>
-# val rRA4 :
-  Ge.GenRA4.Input.inp -> Ge.OutDetRank(Ge.GAC_R)(Ge.RDet)(Ge.Rank).res =
-  <fun>
-# val rFA5 :
-  Ge.GenFA5.Input.inp ->
-  Ge.OutJustMatrix(Ge.GAC_F)(Ge.NoDet(Infra.FloatDomain)).res = <fun>
-# val rFA6 : Ge.GenFA6.Input.inp -> Ge.OutDet(Ge.GAC_F)(Ge.FDet).res = <fun>
-# val rFA7 :
-  Ge.GenFA7.Input.inp ->
-  Ge.OutRank(Ge.GAC_F)(Ge.NoDet(Infra.FloatDomain))(Ge.Rank).res = <fun>
-# val rFA8 :
-  Ge.GenFA8.Input.inp -> Ge.OutDetRank(Ge.GAC_F)(Ge.FDet)(Ge.Rank).res =
-  <fun>
+   (t_5, (), (! t_2))>.
+#   val rFA1 : Ge.GenFA1.Input.inp -> Ge.GenFA1.Output.res = <fun>
+# val rFA2 : Ge.GenFA2.Input.inp -> Ge.GenFA2.Output.res = <fun>
+# val rFA3 : Ge.GenFA3.Input.inp -> Ge.GenFA3.Output.res = <fun>
+# val rFA4 : Ge.GenFA4.Input.inp -> Ge.GenFA4.Output.res = <fun>
+# val rFV1 : Ge.GenFV1.Input.inp -> Ge.GenFV1.Output.res = <fun>
+# val rFV2 : Ge.GenFV2.Input.inp -> Ge.GenFV2.Output.res = <fun>
+# val rFV3 : Ge.GenFV3.Input.inp -> Ge.GenFV3.Output.res = <fun>
+# val rFV4 : Ge.GenFV4.Input.inp -> Ge.GenFV4.Output.res = <fun>
+# val rFV5 : Ge.GenFV5.Input.inp -> Ge.GenFV5.Output.res = <fun>
+# val rIA1 : Ge.GenIA1.Input.inp -> Ge.GenIA1.Output.res = <fun>
+# val rIA2 : Ge.GenIA2.Input.inp -> Ge.GenIA2.Output.res = <fun>
+# val rIA3 : Ge.GenIA3.Input.inp -> Ge.GenIA3.Output.res = <fun>
+# val rIA4 : Ge.GenIA4.Input.inp -> Ge.GenIA4.Output.res = <fun>
+# val rIV1 : Ge.GenIV1.Input.inp -> Ge.GenIV1.Output.res = <fun>
+# val rIV2 : Ge.GenIV2.Input.inp -> Ge.GenIV2.Output.res = <fun>
+# val rIV3 : Ge.GenIV3.Input.inp -> Ge.GenIV3.Output.res = <fun>
+# val rIV4 : Ge.GenIV4.Input.inp -> Ge.GenIV4.Output.res = <fun>
+# val rIV5 : Ge.GenIV5.Input.inp -> Ge.GenIV5.Output.res = <fun>
+# val rFA11 : Ge.GenFA11.Input.inp -> Ge.GenFA11.Output.res = <fun>
+# val rFA12 : Ge.GenFA12.Input.inp -> Ge.GenFA12.Output.res = <fun>
+# val rFA13 : Ge.GenFA13.Input.inp -> Ge.GenFA13.Output.res = <fun>
+# val rFA14 : Ge.GenFA14.Input.inp -> Ge.GenFA14.Output.res = <fun>
+# val rRA1 : Ge.GenRA1.Input.inp -> Ge.GenRA1.Output.res = <fun>
+# val rRA2 : Ge.GenRA2.Input.inp -> Ge.GenRA2.Output.res = <fun>
+# val rRA3 : Ge.GenRA3.Input.inp -> Ge.GenRA3.Output.res = <fun>
+# val rRA4 : Ge.GenRA4.Input.inp -> Ge.GenRA4.Output.res = <fun>
+# val rFA5 : Ge.GenFA5.Input.inp -> Ge.GenFA5.Output.res = <fun>
+# val rFA6 : Ge.GenFA6.Input.inp -> Ge.GenFA6.Output.res = <fun>
+# val rFA7 : Ge.GenFA7.Input.inp -> Ge.GenFA7.Output.res = <fun>
+# val rFA8 : Ge.GenFA8.Input.inp -> Ge.GenFA8.Output.res = <fun>
 #                                                   val ia0 : Ge.GAC_I.Dom.v array array = [|[|1|]|]
 val ia1 : Ge.GAC_I.Dom.v array array =
   [|[|1; 2; 3|]; [|4; 13; 5|]; [|-1; 3; 0|]|]
@@ -2112,22 +2003,22 @@ val ia5 : Ge.GAC_I.Dom.v array array list =
    [|[|1; 2; 3; 0|]; [|4; 13; 5; 0|]; [|-1; 3; 0; 0|]|];
    [|[|1; 2; 3|]; [|4; 13; 5|]; [|-1; 3; 0|]; [|0; 0; 0|]|];
    [|[|0; 2; 3|]; [|0; 13; 5|]; [|0; 3; 0|]|]]
-val resI11 : Ge.OutJustMatrix(Ge.GAC_I)(Ge.IDet).res list =
+val resI11 : Ge.GenIA1.Output.res list =
   [[|[|1|]|]; [|[|1; 2; 3|]; [|0; 5; -7|]; [|0; 0; 50|]|];
    [|[|1; 2; 3; 0|]; [|0; 5; -7; 0|]; [|0; 0; 50; 0|]|];
    [|[|1; 2; 3|]; [|0; 5; -7|]; [|0; 0; 50|]; [|0; 0; 0|]|];
    [|[|0; 2; 3|]; [|0; 0; 10|]; [|0; 0; 0|]|]]
-# val resI12 : Ge.OutDet(Ge.GAC_I)(Ge.IDet).res list =
+# val resI12 : Ge.GenIA2.Output.res list =
   [([|[|1|]|], 1); ([|[|1; 2; 3|]; [|0; 5; -7|]; [|0; 0; 50|]|], 50);
    ([|[|1; 2; 3; 0|]; [|0; 5; -7; 0|]; [|0; 0; 50; 0|]|], 50);
    ([|[|1; 2; 3|]; [|0; 5; -7|]; [|0; 0; 50|]; [|0; 0; 0|]|], 50);
    ([|[|0; 2; 3|]; [|0; 0; 10|]; [|0; 0; 0|]|], 0)]
-# val resI13 : Ge.OutRank(Ge.GAC_I)(Ge.IDet)(Ge.Rank).res list =
+# val resI13 : Ge.GenIA3.Output.res list =
   [([|[|1|]|], 1); ([|[|1; 2; 3|]; [|0; 5; -7|]; [|0; 0; 50|]|], 3);
    ([|[|1; 2; 3; 0|]; [|0; 5; -7; 0|]; [|0; 0; 50; 0|]|], 3);
    ([|[|1; 2; 3|]; [|0; 5; -7|]; [|0; 0; 50|]; [|0; 0; 0|]|], 3);
    ([|[|0; 2; 3|]; [|0; 0; 10|]; [|0; 0; 0|]|], 2)]
-# val resI14 : Ge.OutDetRank(Ge.GAC_I)(Ge.IDet)(Ge.Rank).res list =
+# val resI14 : Ge.GenIA4.Output.res list =
   [([|[|1|]|], 1, 1); ([|[|1; 2; 3|]; [|0; 5; -7|]; [|0; 0; 50|]|], 50, 3);
    ([|[|1; 2; 3; 0|]; [|0; 5; -7; 0|]; [|0; 0; 50; 0|]|], 50, 3);
    ([|[|1; 2; 3|]; [|0; 5; -7|]; [|0; 0; 50|]; [|0; 0; 0|]|], 50, 3);
@@ -2145,27 +2036,27 @@ val iv5 : Ge.GVC_I.Dom.v Infra.container2dfromvector list =
    {arr = [|1; 2; 3; 4; 13; 5; -1; 3; 0|]; n = 3; m = 3};
    {arr = [|1; 2; 3; 0; 4; 13; 5; 0; -1; 3; 0; 0|]; n = 3; m = 4};
    {arr = [|0; 2; 3; 0; 13; 5; 0; 3; 0|]; n = 3; m = 3}]
-val resI21 : Ge.OutJustMatrix(Ge.GVC_I)(Ge.IDet).res list =
+val resI21 : Ge.GenIV1.Output.res list =
   [{arr = [|1|]; n = 1; m = 1};
    {arr = [|1; 2; 3; 0; 5; -7; 0; 0; 50|]; n = 3; m = 3};
    {arr = [|1; 2; 3; 0; 0; 5; -7; 0; 0; 0; 50; 0|]; n = 3; m = 4};
    {arr = [|0; 2; 3; 0; 0; 10; 0; 0; 0|]; n = 3; m = 3}]
-# val resI22 : Ge.OutDet(Ge.GVC_I)(Ge.IDet).res list =
+# val resI22 : Ge.GenIV2.Output.res list =
   [({arr = [|1|]; n = 1; m = 1}, 1);
    ({arr = [|1; 2; 3; 0; 5; -7; 0; 0; 50|]; n = 3; m = 3}, 50);
    ({arr = [|1; 2; 3; 0; 0; 5; -7; 0; 0; 0; 50; 0|]; n = 3; m = 4}, 50);
    ({arr = [|0; 2; 3; 0; 0; 10; 0; 0; 0|]; n = 3; m = 3}, 0)]
-# val resI23 : Ge.OutRank(Ge.GVC_I)(Ge.IDet)(Ge.Rank).res list =
+# val resI23 : Ge.GenIV3.Output.res list =
   [({arr = [|1|]; n = 1; m = 1}, 1);
    ({arr = [|1; 2; 3; 0; 5; -7; 0; 0; 50|]; n = 3; m = 3}, 3);
    ({arr = [|1; 2; 3; 0; 0; 5; -7; 0; 0; 0; 50; 0|]; n = 3; m = 4}, 3);
    ({arr = [|0; 2; 3; 0; 0; 10; 0; 0; 0|]; n = 3; m = 3}, 2)]
-# val resI24 : Ge.OutDetRank(Ge.GVC_I)(Ge.IDet)(Ge.Rank).res list =
+# val resI24 : Ge.GenIV4.Output.res list =
   [({arr = [|1|]; n = 1; m = 1}, 1, 1);
    ({arr = [|1; 2; 3; 0; 5; -7; 0; 0; 50|]; n = 3; m = 3}, 50, 3);
    ({arr = [|1; 2; 3; 0; 0; 5; -7; 0; 0; 0; 50; 0|]; n = 3; m = 4}, 50, 3);
    ({arr = [|0; 2; 3; 0; 0; 10; 0; 0; 0|]; n = 3; m = 3}, 0, 2)]
-# val resI25 : Ge.OutDetRank(Ge.GVC_I)(Ge.IDet)(Ge.Rank).res list =
+# val resI25 : Ge.GenIV5.Output.res list =
   [({arr = [|1|]; n = 1; m = 1}, 1, 1);
    ({arr = [|1; 3; 2; 0; 3; 5; 0; 0; 50|]; n = 3; m = 3}, 50, 3);
    ({arr = [|1; 3; 2; 0; 0; 3; 5; 0; 0; 0; 50; 0|]; n = 3; m = 4}, 50, 3);
@@ -2188,7 +2079,7 @@ val fa6 : Ge.GAC_F.Dom.v array array = [|[|1.; 1.|]|]
 val fa7 : float array array =
   [|[|1.; 2.; 3.; 1.; 0.; 0.|]; [|4.; 13.; 5.; 0.; 1.; 0.|];
     [|-1.; 3.; 0.; 0.; 0.; 1.|]|]
-val resF1 : Ge.OutJustMatrix(Ge.GAC_F)(Ge.NoDet(Infra.FloatDomain)).res list =
+val resF1 : Ge.GenFA1.Output.res list =
   [[|[|1.|]|]; [|[|4.; 13.; 5.|]; [|0.; 6.25; 1.25|]; [|0.; 0.; 2.|]|];
    [|[|4.; 13.; 5.; 0.|]; [|0.; 6.25; 1.25; 0.|]; [|0.; 0.; 2.; 0.|]|];
    [|[|4.; 13.; 5.|]; [|0.; 6.25; 1.25|]; [|0.; 0.; 2.|]; [|0.; 0.; 0.|]|];
@@ -2200,7 +2091,7 @@ val xxx : Ge.GAC_F.Dom.v Infra.container2dfromvector list =
    {arr = [|1.; 2.; 3.; 0.; 4.; 13.; 5.; 0.; -1.; 3.; 0.; 0.|]; n = 3; m = 4};
    {arr = [|1.; 2.; 3.; 4.; 13.; 5.; -1.; 3.; 0.; 0.; 0.; 0.|]; n = 4; m = 3};
    {arr = [|0.; 2.; 3.; 0.; 10.; 5.; 0.; 3.; 0.|]; n = 3; m = 3}]
-val resFV5 : Ge.OutDetRank(Ge.GVC_F)(Ge.FDet)(Ge.Rank).res list =
+val resFV5 : Ge.GenFV5.Output.res list =
   [({arr = [|1.|]; n = 1; m = 1}, 1., 1);
    ({arr =
       [|13.; 5.; 4.; 0.; 2.23076923076923084; 0.384615384615384581; 0.; 0.;
@@ -2218,7 +2109,7 @@ val resFV5 : Ge.OutDetRank(Ge.GVC_F)(Ge.FDet)(Ge.Rank).res list =
      n = 4; m = 3},
     50., 3);
    ({arr = [|10.; 5.; 0.; 0.; 2.; 0.; 0.; 0.; 0.|]; n = 3; m = 3}, 0., 2)]
-val resF11 : Ge.OutJustMatrix(Ge.GAC_F)(Ge.NoDet(Infra.FloatDomain)).res list =
+val resF11 : Ge.GenFA11.Output.res list =
   [[|[|1.|]|];
    [|[|13.; 5.; 4.|]; [|0.; 2.23076923076923084; 0.384615384615384581|];
      [|0.; 0.; -1.72413793103448287|]|];
@@ -2228,7 +2119,7 @@ val resF11 : Ge.OutJustMatrix(Ge.GAC_F)(Ge.NoDet(Infra.FloatDomain)).res list =
    [|[|13.; 5.; 4.|]; [|0.; 2.23076923076923084; 0.384615384615384581|];
      [|0.; 0.; -1.72413793103448287|]; [|0.; 0.; 0.|]|];
    [|[|10.; 5.; 0.|]; [|0.; 2.; 0.|]; [|0.; 0.; 0.|]|]]
-# val resF12 : Ge.OutDet(Ge.GAC_F)(Ge.FDet).res list =
+# val resF12 : Ge.GenFA12.Output.res list =
   [([|[|1.|]|], 1.);
    ([|[|13.; 5.; 4.|]; [|0.; 2.23076923076923084; 0.384615384615384581|];
       [|0.; 0.; -1.72413793103448287|]|],
@@ -2241,8 +2132,7 @@ val resF11 : Ge.OutJustMatrix(Ge.GAC_F)(Ge.NoDet(Infra.FloatDomain)).res list =
       [|0.; 0.; -1.72413793103448287|]; [|0.; 0.; 0.|]|],
     50.);
    ([|[|10.; 5.; 0.|]; [|0.; 2.; 0.|]; [|0.; 0.; 0.|]|], 0.)]
-# val resF13 :
-  Ge.OutRank(Ge.GAC_F)(Ge.NoDet(Infra.FloatDomain))(Ge.Rank).res list =
+# val resF13 : Ge.GenFA13.Output.res list =
   [([|[|1.|]|], 1);
    ([|[|13.; 5.; 4.|]; [|0.; 2.23076923076923084; 0.384615384615384581|];
       [|0.; 0.; -1.72413793103448287|]|],
@@ -2255,7 +2145,7 @@ val resF11 : Ge.OutJustMatrix(Ge.GAC_F)(Ge.NoDet(Infra.FloatDomain)).res list =
       [|0.; 0.; -1.72413793103448287|]; [|0.; 0.; 0.|]|],
     3);
    ([|[|10.; 5.; 0.|]; [|0.; 2.; 0.|]; [|0.; 0.; 0.|]|], 2)]
-# val resF14 : Ge.OutDetRank(Ge.GAC_F)(Ge.FDet)(Ge.Rank).res list =
+# val resF14 : Ge.GenFA14.Output.res list =
   [([|[|1.|]|], 1., 1);
    ([|[|13.; 5.; 4.|]; [|0.; 2.23076923076923084; 0.384615384615384581|];
       [|0.; 0.; -1.72413793103448287|]|],
@@ -2301,7 +2191,7 @@ val resF11 : Ge.OutJustMatrix(Ge.GAC_F)(Ge.NoDet(Infra.FloatDomain)).res list =
    [|[|Num.Int 0; Num.Int 2; Num.Int 3|];
      [|Num.Int 0; Num.Int 13; Num.Int 5|];
      [|Num.Int 0; Num.Int 3; Num.Int 0|]|]]
-#   val resR11 : Ge.OutJustMatrix(Ge.GAC_R)(Ge.RDet).res list =
+#   val resR11 : Ge.GenRA1.Output.res list =
   [[|[|Num.Int 1|]|];
    [|[|Num.Int 1; Num.Int 2; Num.Int 3|];
      [|Num.Int 0; Num.Int 5; Num.Int (-7)|];
@@ -2316,7 +2206,7 @@ val resF11 : Ge.OutJustMatrix(Ge.GAC_F)(Ge.NoDet(Infra.FloatDomain)).res list =
    [|[|Num.Int 0; Num.Int 2; Num.Int 3|];
      [|Num.Int 0; Num.Int 0; Num.Ratio <abstr>|];
      [|Num.Int 0; Num.Int 0; Num.Int 0|]|]]
-# val resR12 : Ge.OutDet(Ge.GAC_R)(Ge.RDet).res list =
+# val resR12 : Ge.GenRA2.Output.res list =
   [([|[|Num.Int 1|]|], Num.Int 1);
    ([|[|Num.Int 1; Num.Int 2; Num.Int 3|];
       [|Num.Int 0; Num.Int 5; Num.Int (-7)|];
@@ -2335,7 +2225,7 @@ val resF11 : Ge.OutJustMatrix(Ge.GAC_F)(Ge.NoDet(Infra.FloatDomain)).res list =
       [|Num.Int 0; Num.Int 0; Num.Ratio <abstr>|];
       [|Num.Int 0; Num.Int 0; Num.Int 0|]|],
     Num.Int 0)]
-# val resR13 : Ge.OutRank(Ge.GAC_R)(Ge.RDet)(Ge.Rank).res list =
+# val resR13 : Ge.GenRA3.Output.res list =
   [([|[|Num.Int 1|]|], 1);
    ([|[|Num.Int 1; Num.Int 2; Num.Int 3|];
       [|Num.Int 0; Num.Int 5; Num.Int (-7)|];
@@ -2354,7 +2244,7 @@ val resF11 : Ge.OutJustMatrix(Ge.GAC_F)(Ge.NoDet(Infra.FloatDomain)).res list =
       [|Num.Int 0; Num.Int 0; Num.Ratio <abstr>|];
       [|Num.Int 0; Num.Int 0; Num.Int 0|]|],
     2)]
-# val resR14 : Ge.OutDetRank(Ge.GAC_R)(Ge.RDet)(Ge.Rank).res list =
+# val resR14 : Ge.GenRA4.Output.res list =
   [([|[|Num.Int 1|]|], Num.Int 1, 1);
    ([|[|Num.Int 1; Num.Int 2; Num.Int 3|];
       [|Num.Int 0; Num.Int 5; Num.Int (-7)|];
