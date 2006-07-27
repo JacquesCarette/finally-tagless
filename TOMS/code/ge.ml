@@ -3,7 +3,6 @@ open Infra
 (* Monad used in this module: code generation monad with open union state *)
 type ('a,'v,'s,'w) cmonad = (('a,'v) code, 's list, ('a,'w) code) monad
 
-
 module type DETERMINANT = sig
   type indet
   type outdet
@@ -151,52 +150,55 @@ module AbstractDet(Dom: DOMAIN) =
 end
 
 module type UPDATE = sig
-    type baseobj
     type ctr
+    type in_val
+    type out_val
     type 'a idx = ('a,int) code
-    module D : DETERMINANT
     val update : ('a, ctr) code -> 'a idx -> 'a idx -> 'a idx -> 'a idx ->
-      ('a * 's * 'w,unit) D.lm
-    val update_det : ('a, baseobj) code -> 
-      ('a * 's * 'w,unit) D.lm
+      ('a, out_val ref) code -> ('a, unit, 's, 'w) cmonad
+    val update_det : ('a, in_val) code -> 
+      (('a,in_val) code -> ('a, unit, 's, 'w) cmonad) ->
+      (('a,in_val) code -> ('a, unit, 's, 'w) cmonad) ->
+      ('a, unit, 's, 'w) cmonad
 end
 
 (* What is the update formula? *)
 module DivisionUpdate
     (C:CONTAINER2D with type Dom.kind = domain_is_field)
-    (Det:DETERMINANT with type indet=C.Dom.v) = 
+    (Det:DETERMINANT with type indet=C.Dom.v) =
   struct
-  type baseobj = Det.indet
-  type ctr = C.contr
-  type 'a idx = ('a,int) code
-  module D = Det
   module Dom = C.Dom
-  let update b r c i k = perform
+  type ctr = C.contr
+  type in_val = C.Dom.v
+  type out_val = Det.outdet
+  type 'a idx = ('a,int) code
+  (* module D = Det *)
+  let update b r c i k d = perform
       t <-- Dom.divL (C.get b i c) (C.get b r c);
       l <-- Dom.timesL t (C.get b r k);
       y <-- Dom.minusL (C.get b i k) l;
       C.setL b i k (Dom.normalizerg y)
-  let update_det v = Det.acc v
+  let update_det v set acc = acc v
 end
 
 module FractionFreeUpdate
     (Ctr:CONTAINER2D)
-    (Det:DETERMINANT with type indet=Ctr.Dom.v and type outdet=Ctr.Dom.v) = 
+    (Det:DETERMINANT with type indet=Ctr.Dom.v 
+                      and type outdet=Ctr.Dom.v) =
   struct
   module Dom = Ctr.Dom
-  type baseobj = Dom.v
   type ctr = Ctr.contr
+  type in_val = Ctr.Dom.v
+  type out_val = Det.outdet
   type 'a idx = ('a,int) code
-  module D = Det
-  let update b r c i k = perform
+  let update b r c i k d = perform
       x <-- Dom.timesL (Ctr.get b i k) (Ctr.get b r c);
       y <-- Dom.timesL (Ctr.get b r k) (Ctr.get b i r);
       z <-- Dom.minusL x y;
       t <-- ret (Dom.normalizerg z);
-      d <-- Det.get ();
       ov <-- Dom.divL t (liftGet d);
       Ctr.setL b i k ov
-  let update_det v = Det.set v
+  let update_det v set acc = set v
 end
 
 (* This type is needed for the output, and is tracked during
@@ -486,12 +488,14 @@ struct
 end
 
 module Gen(C: CONTAINER2D)(PivotF: PIVOT)
-          (Update: UPDATE with type baseobj = C.Dom.v and type ctr = C.contr)
+          (Update: UPDATE with type ctr = C.contr and type in_val = C.Dom.v) 
           (In: INPUT)
-          (Out: OUTPUT with type contr = C.contr and type D.indet = C.Dom.v 
-                        and type 'a D.lstate = 'a Update.D.lstate) =
+          (Out: OUTPUT with type contr = C.contr 
+                        and type D.indet = C.Dom.v 
+                        and type D.outdet = Update.out_val) =
    struct
-    module Pivot = PivotF(C)(Out.D)
+    module Det = Out.D
+    module Pivot = PivotF(C)(Det)
     module Input = In(C)
     let gen =
       let zerobelow b r c m n brc =
@@ -499,11 +503,13 @@ module Gen(C: CONTAINER2D)(PivotF: PIVOT)
             bic <-- C.getL b i c;
             whenM (LogicCode.notL (LogicCode.equal bic C.Dom.zero ))
                 (seqM (retLoopM (Idx.succ c) (Idx.pred m)
-                          (fun k -> Update.update b r c i k) )
+                          (fun k -> perform
+                              d <-- Det.get ();
+                              Update.update b r c i k d) )
                       (C.setL b i c C.Dom.zero)) in 
         perform
               seqM (retLoopM (Idx.succ r) (Idx.pred n) innerbody) 
-                   (Update.update_det brc) in
+                   (Update.update_det brc Det.set Det.acc)in
       let dogen input = perform
           (a,rmar,augmented) <-- Input.get_input input;
           r <-- Out.R.decl ();
@@ -512,7 +518,7 @@ module Gen(C: CONTAINER2D)(PivotF: PIVOT)
           m <-- retN (C.dim1 a);
           rmar <-- retN rmar;
           n <-- if augmented then retN (C.dim2 a) else ret rmar;
-          Update.D.decl ();
+          Det.decl ();
           Out.P.decl ();
           seqM 
             (retWhileM (LogicCode.and_L (Idx.less (liftGet c) m)
@@ -524,7 +530,7 @@ module Gen(C: CONTAINER2D)(PivotF: PIVOT)
                seqM (retMatchM pivot (fun pv -> 
                         seqM (zerobelow b rr cc m n pv)
                              (Out.R.succ ()) )
-                        (Update.D.zero_sign () ))
+                        (Det.zero_sign () ))
                     (Code.updateL c Idx.succ) ))
             (Out.make_result b)
     in dogen
