@@ -34,7 +34,7 @@ An attempt at a better FFT
 
  So, an N-point FFT reduces to two N/2-point FFTs.
 
- $Id: fft-neo.ml,v 1.13 2004/08/31 07:52:36 oleg Exp $
+ ^Id: fft-neo.ml,v 1.13 2004/08/31 07:52:36 oleg Exp ^
 *)
 
 (* ------------ unstaged nonmonadic list-based representation ------------ *)
@@ -106,7 +106,7 @@ open Infra
 
 (* Use the FloatDomain module as well.  No need to parametrize by
    Domain, as this is thoroughly float-specific *)
-open FloatDomain
+open FloatDomainL
 
 let (y_sm,run) =
   let rec y_sm f = f (fun x s k -> y_sm f x s k) in
@@ -119,8 +119,8 @@ let (y_sm,run) =
         | (c::tail) ->
             let sm = m+1 and ssm = m+2 in
 			let (x,y) = concretize c in
-            seq  (CArray1D.set arr m x)
-            (seq (CArray1D.set arr sm y) (lfta tail (ssm)))
+            seq  (CArray1D.setL arr m x)
+            (seq (CArray1D.setL arr sm y) (lfta tail (ssm)))
       in lfta l 0 in
     (* Read from an array *)
     let array_read arr n =
@@ -130,7 +130,7 @@ let (y_sm,run) =
           let sm = m+1 in
            perform
                c <-- abstract_simple 
-                   (CArray1D.get arr m, CArray1D.get arr sm);
+                   (CArray1D.getL arr m, CArray1D.getL arr sm);
                gl (m+2) (l @ [c])
       in gl 0 [] in
     let run_basic m = m [] (fun s x -> array_write x nums)
@@ -183,20 +183,20 @@ let force_mult_ad (Code (f,rx,ix)) =
   let () = assert (c > 0.0 && s > 0.0 )
   in
   perform
-      t1 <-- retN (times (lift c) (plus rx ix));
-      t2 <-- retN (times (lift spc) ix);
+      t1 <-- retN ((lift c) *^ (rx +^ ix));
+      t2 <-- retN ((lift spc) *^ ix);
       if smc > 0.0 then
           perform
-          t3  <-- retN (times (lift smc) rx);
-          rcs <-- retN (minus t1 t2);
-          ics <-- retN (plus t1 t3);
+          t3  <-- retN ((lift smc) *^ rx);
+          rcs <-- retN (t1 -^ t2);
+          ics <-- retN (t1 +^ t3);
           ret (Code (newf,rcs,ics))
       else
           let cms = c -. s in (* keep all the constants positive *)
           perform
-          nt3 <-- retN (times (lift cms) rx);
-          rcs <-- retN (minus t1 t2);
-          ics <-- retN (minus t1 nt3);
+          nt3 <-- retN ((lift cms) *^ rx);
+          rcs <-- retN (t1 -^ t2);
+          ics <-- retN (t1 -^ nt3);
           ret (Code (newf,rcs,ics))
  
 (* Perform (rx,ix) +/- _complex_fy*(ry,iy) and set the resulting
@@ -212,22 +212,22 @@ let rec do_linear_ad fx rx ix ((j,n) as fy) ry iy =
    else
    match fy with (* x + y *)
    (0,1) -> perform
-       re <-- retN (plus rx ry);
-       im <-- retN (plus ix iy);
-       re1 <-- retN (minus rx ry);
-       im1 <-- retN (minus ix iy);
+       re <-- retN (rx +^ ry);
+       im <-- retN (ix +^ iy);
+       re1 <-- retN (rx -^ ry);
+       im1 <-- retN (ix -^ iy);
        ret (Code (fx,re,im),Code (fx,re1,im1))
   |(1,4) -> perform (* x + I*y *)
-        re  <-- retN (minus rx iy);
-        im  <-- retN (plus ix ry);
-        re1 <-- retN (plus rx iy);
-        im1 <-- retN (minus ix ry);
+        re  <-- retN (rx -^ iy);
+        im  <-- retN (ix +^ ry);
+        re1 <-- retN (rx +^ iy);
+        im1 <-- retN (ix -^ ry);
         ret (Code (fx,re,im),Code (fx,re1,im1) )
   |(j,8) -> (* x + (cos pi/4 + I*sin pi/4)*y *)
         let cs = sin (pi /. 4.0) in
         perform
-            rcs <-- retN (times (lift cs) (minus ry iy));
-            ics <-- retN (times (lift cs) (plus ry iy));
+            rcs <-- retN ((lift cs) *^ (ry -^ iy));
+            ics <-- retN ((lift cs) *^ (ry +^ iy));
             do_linear_ad fx rx ix (rationalize (j-1,8)) rcs ics
   | _ -> perform
         (Code (fy,ry,iy)) <-- force_mult_ad (Code (fy,ry,iy));
@@ -281,4 +281,4 @@ let gen_ad dir size nums =
      (* And it is because the last stage of *)
      (* FFT is only a+b and a-b *)
      fun (Code ((0,1),x,y)) -> (x,y))
-    size nums
+     size nums

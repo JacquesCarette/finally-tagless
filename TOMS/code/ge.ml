@@ -22,7 +22,7 @@ module type DETERMINANT = sig
   val fin       : unit -> ('b,outdet) lm
 end
 
-module type DETF = functor(D:DOMAIN) -> DETERMINANT with type indet = D.v
+module type DETF = functor(D:DOMAINL) -> DETERMINANT with type indet = D.v
 
 (* no need to make the type abstract here - just leads to other problems *)
 module type RANK = sig
@@ -81,7 +81,7 @@ end
 *)
 
 (* we need the domain anyways to get things to type properly *)
-module NoDet(Dom:DOMAIN) =
+module NoDet(Dom:DOMAINL) =
   struct
   type indet = Dom.v
   type outdet = unit
@@ -100,10 +100,11 @@ module NoDet(Dom:DOMAIN) =
 	constraint 'b = 'a * 's * 'w
 end
 
-module AbstractDet(Dom: DOMAIN) =
+module AbstractDet(Dom: DOMAINL) =
   struct
-  type indet = Dom.v
-  type outdet = Dom.v
+  open Dom
+  type indet = v
+  type outdet = v
   type tdet = outdet ref
   (* the first part of the state is an integer: which is +1, 0, -1:
      the sign of the determinant *)
@@ -120,7 +121,7 @@ module AbstractDet(Dom: DOMAIN) =
                      ret (fetch_iter s)
   let dstore v = store (`TDet v)
   let decl () = perform
-      ddecl <-- retN (liftRef Dom.one);
+      ddecl <-- retN (liftRef oneL);
       dsdecl <-- retN (liftRef Idx.one);
       dstore (dsdecl,ddecl);
       retUnitL
@@ -135,7 +136,7 @@ module AbstractDet(Dom: DOMAIN) =
   let acc v = perform
       det <-- dfetch ();
       det2 <-- ret (snd det);
-      r <-- Dom.timesL (liftGet det2) v;
+      r <-- ret ((liftGet det2) *^ v);
       Code.assignL det2 r
   let get () = perform
       det <-- dfetch ();
@@ -146,9 +147,9 @@ module AbstractDet(Dom: DOMAIN) =
       Code.assignL det2 v
   let fin () = perform
       (det_sign,det) <-- dfetch ();
-      ifM (LogicCode.equalL (liftGet det_sign) Idx.zero) (ret Dom.zero)
+      ifM (LogicCode.equalL (liftGet det_sign) Idx.zero) (ret zeroL)
       (ifM (LogicCode.equalL (liftGet det_sign) Idx.one) (ret (liftGet det))
-          (Dom.uminusL (liftGet det)))
+          (ret (uminusL (liftGet det))))
 end
 
 
@@ -158,7 +159,7 @@ end
    leak of the outdet type.
 *)
 module UpdateProxy(C0:CONTAINER2D)(D0:DETF) = struct
-    module type T = functor(D1:DOMAIN) -> 
+    module type T = functor(D1:DOMAINL) -> 
         DETERMINANT with type indet = D1.v and type outdet = D0(D1).outdet
     module type S =
         functor(C:CONTAINER2D with type Dom.kind = C0.Dom.kind) -> 
@@ -182,31 +183,33 @@ module DivisionUpdate
     (Det:DETF) =
   struct
   module Dom = C.Dom
+  open Dom
   type ctr = C.contr
-  type in_val = C.Dom.v
+  type in_val = v
   type out_val = Det(C.Dom).outdet
   type 'a idx = ('a,int) code
   let update b r c i k d = perform
-      t <-- Dom.divL (C.get b i c) (C.get b r c);
-      l <-- Dom.timesL t (C.get b r k);
-      y <-- Dom.minusL (C.get b i k) l;
-      C.setL b i k (Dom.normalizerg y)
+      t <-- ret (divL (C.getL b i c) (C.getL b r c));
+      l <-- ret (t *^ (C.getL b r k));
+      y <-- ret ((C.getL b i k) -^ l);
+      ret (C.setL b i k (normalizerL y))
   let update_det v set acc = acc v
 end
 
 module FractionFreeUpdate(Ctr:CONTAINER2D)(Det:DETF) = struct
   module Dom = Ctr.Dom
+  open Dom
   type ctr = Ctr.contr
-  type in_val = Ctr.Dom.v
+  type in_val = v
   type out_val = Det(Ctr.Dom).outdet
   type 'a idx = ('a,int) code
   let update b r c i k d = perform
-      x <-- Dom.timesL (Ctr.get b i k) (Ctr.get b r c);
-      y <-- Dom.timesL (Ctr.get b r k) (Ctr.get b i r);
-      z <-- Dom.minusL x y;
-      t <-- ret (Dom.normalizerg z);
-      ov <-- Dom.divL t (liftGet d);
-      Ctr.setL b i k ov
+      x <-- ret ((Ctr.getL b i k) *^ (Ctr.getL b r c));
+      y <-- ret ((Ctr.getL b r k) *^ (Ctr.getL b i r));
+      z <-- ret (x -^ y);
+      t <-- ret (normalizerL z);
+      ov <-- ret (divL t (liftGet d));
+      ret (Ctr.setL b i k ov)
   let update_det v set acc = set v
 end
 
@@ -364,9 +367,9 @@ module OutDetRankPivot(C: CONTAINER2D)
     ret (TupleCode.tup4 b det rank pivmat)
 end
 
-module FDet = AbstractDet(FloatDomain)
-module IDet = AbstractDet(IntegerDomain)
-module RDet = AbstractDet(RationalDomain)
+module FDet = AbstractDet(FloatDomainL)
+module IDet = AbstractDet(IntegerDomainL)
+module RDet = AbstractDet(RationalDomainL)
 
 module type PIVOT = 
     functor (C: CONTAINER2D) ->
@@ -392,11 +395,11 @@ struct
       non-zero element. Any non-zero element is a good pivot.
       If better_than is defined, we search then for the best element *)
        seqM
-        (match (C.Dom.better_than) with
+        (match (C.Dom.better_thanL) with
          Some sel -> 
               retLoopM r (Idx.pred n) (fun j -> perform
-              bjc <-- retN (C.get b j c);
-              whenM (LogicCode.notL (LogicCode.equal bjc C.Dom.zero ))
+              bjc <-- retN (C.getL b j c);
+              whenM (LogicCode.notequalL bjc C.Dom.zeroL )
                   (retMatchM (liftGet pivot)
                     (fun pv ->
                       perform
@@ -409,15 +412,15 @@ struct
               )
          | None ->
            perform
-            brc <-- retN (C.get b r c);
-            ifM (LogicCode.notL (LogicCode.equal brc C.Dom.zero))
+            brc <-- retN (C.getL b r c);
+            ifM (LogicCode.notequalL brc C.Dom.zeroL)
               (* the current element is good enough *)
               (Code.assignL pivot (MaybeCode.just (TupleCode.tup2 r brc)))
               (let traverse = fun o j ->
-                  whenM (ret (Idx.less j n))
+                  whenM (Idx.less j n)
                     (perform
-                        bjc <-- retN (C.get b j c);
-                        ifM (LogicCode.equalL bjc C.Dom.zero)
+                        bjc <-- retN (C.getL b j c);
+                        ifM (LogicCode.equalL bjc C.Dom.zeroL)
                             (Code.applyL o (Idx.succ j))
                             (Code.assignL pivot (MaybeCode.just 
                                 (TupleCode.tup2 j bjc)))) in
@@ -443,9 +446,9 @@ struct
        seqM (retLoopM r (Idx.pred n) (fun j -> 
               retLoopM c (Idx.pred m) (fun k ->
            perform
-              bjk <-- retN (C.get b j k);
-              whenM (LogicCode.notL ( LogicCode.equal bjk C.Dom.zero) )
-              (match (C.Dom.better_than) with
+              bjk <-- retN (C.getL b j k);
+              whenM (LogicCode.notequalL bjk C.Dom.zeroL)
+              (match (C.Dom.better_thanL) with
               | Some sel ->
                   (retMatchM (liftGet pivot)
                     (fun pv ->
@@ -485,8 +488,7 @@ struct
    (* In this case, we assume diagonal dominance, and so
       just take the diagonal as ``pivot'' *)
    let findpivot b r n c m = perform 
-       brc <-- C.getL b r c;
-       ret (MaybeCode.just brc)
+       ret (MaybeCode.just (C.getL b r c));
 end
 
 module Gen(C: CONTAINER2D)
@@ -504,13 +506,13 @@ module Gen(C: CONTAINER2D)
     let gen =
       let zerobelow b r c m n brc =
         let innerbody i = perform
-            bic <-- C.getL b i c;
-            whenM (LogicCode.notL (LogicCode.equal bic C.Dom.zero ))
+            bic <-- ret (C.getL b i c);
+            whenM (LogicCode.notequalL bic C.Dom.zeroL )
                 (seqM (retLoopM (Idx.succ c) (Idx.pred m)
                           (fun k -> perform
                               d <-- Det.get ();
                               U.update b r c i k d) )
-                      (C.setL b i c C.Dom.zero)) in 
+                      (ret (C.setL b i c C.Dom.zeroL))) in 
         perform
               seqM (retLoopM (Idx.succ r) (Idx.pred n) innerbody) 
                    (U.update_det brc Det.set Det.acc)in
@@ -518,14 +520,14 @@ module Gen(C: CONTAINER2D)
           (a,rmar,augmented) <-- Input.get_input input;
           r <-- Output.R.decl ();
           c <-- retN (liftRef Idx.zero);
-          b <-- retN (C.mapper C.Dom.normalizerf (C.copy a));
+          b <-- retN (C.mapper C.Dom.normalizer_optL (C.copy a));
           m <-- retN (C.dim1 a);
           rmar <-- retN rmar;
           n <-- if augmented then retN (C.dim2 a) else ret rmar;
           Det.decl ();
           Output.P.decl ();
           seqM 
-            (retWhileM (LogicCode.and_L (Idx.less (liftGet c) m)
+            (retWhileM (LogicCode.andL (Idx.less (liftGet c) m)
                                        (Idx.less (liftGet r) rmar) )
                ( perform
                rr <-- retN (liftGet r);
@@ -540,11 +542,11 @@ module Gen(C: CONTAINER2D)
     in dogen
 end
 
-module GAC_F = GenericArrayContainer(FloatDomain)
-module GVC_F = GenericVectorContainer(FloatDomain)
-module GAC_I = GenericArrayContainer(IntegerDomain)
-module GVC_I = GenericVectorContainer(IntegerDomain)
-module GAC_R = GenericArrayContainer(RationalDomain)
+module GAC_F = GenericArrayContainer(FloatDomainL)
+module GVC_F = GenericVectorContainer(FloatDomainL)
+module GAC_I = GenericArrayContainer(IntegerDomainL)
+module GVC_I = GenericVectorContainer(IntegerDomainL)
+module GAC_R = GenericArrayContainer(RationalDomainL)
 
 module GenFA1 = Gen(GAC_F)
                    (RowPivot)

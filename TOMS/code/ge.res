@@ -18,7 +18,7 @@
      begin
       for j_13 = t_8 to (t_7 - 1) do
        let t_14 = (t_5.(j_13)).(t_9) in
-       if (not (t_14 = 0.)) then
+       if (t_14 <> 0.) then
         (match (! t_10) with
          | Some (i_15) ->
             if ((abs_float (snd i_15)) < (abs_float t_14)) then
@@ -42,7 +42,7 @@
      | Some (i_17) ->
         begin
          for j_18 = (t_8 + 1) to (t_7 - 1) do
-          if (not ((t_5.(j_18)).(t_9) = 0.)) then begin
+          if ((t_5.(j_18)).(t_9) <> 0.) then begin
            for j_19 = (t_9 + 1) to (t_6 - 1) do
             (t_5.(j_18)).(j_19) <-
              ((t_5.(j_18)).(j_19) -.
@@ -76,7 +76,7 @@
      begin
       for j_15 = t_10 to (t_7 - 1) do
        let t_16 = (t_5.(j_15)).(t_11) in
-       if (not (t_16 = 0.)) then
+       if (t_16 <> 0.) then
         (match (! t_12) with
          | Some (i_17) ->
             if ((abs_float (snd i_17)) < (abs_float t_16)) then
@@ -100,7 +100,7 @@
      | Some (i_19) ->
         begin
          for j_20 = (t_10 + 1) to (t_7 - 1) do
-          if (not ((t_5.(j_20)).(t_11) = 0.)) then begin
+          if ((t_5.(j_20)).(t_11) <> 0.) then begin
            for j_21 = (t_11 + 1) to (t_6 - 1) do
             (t_5.(j_20)).(j_21) <-
              ((t_5.(j_20)).(j_21) -.
@@ -135,7 +135,7 @@
      begin
       for j_13 = t_8 to (t_7 - 1) do
        let t_14 = (t_5.(j_13)).(t_9) in
-       if (not (t_14 = 0.)) then
+       if (t_14 <> 0.) then
         (match (! t_10) with
          | Some (i_15) ->
             if ((abs_float (snd i_15)) < (abs_float t_14)) then
@@ -159,7 +159,7 @@
      | Some (i_17) ->
         begin
          for j_18 = (t_8 + 1) to (t_7 - 1) do
-          if (not ((t_5.(j_18)).(t_9) = 0.)) then begin
+          if ((t_5.(j_18)).(t_9) <> 0.) then begin
            for j_19 = (t_9 + 1) to (t_6 - 1) do
             (t_5.(j_18)).(j_19) <-
              ((t_5.(j_18)).(j_19) -.
@@ -193,7 +193,7 @@
      begin
       for j_15 = t_10 to (t_7 - 1) do
        let t_16 = (t_5.(j_15)).(t_11) in
-       if (not (t_16 = 0.)) then
+       if (t_16 <> 0.) then
         (match (! t_12) with
          | Some (i_17) ->
             if ((abs_float (snd i_17)) < (abs_float t_16)) then
@@ -217,7 +217,7 @@
      | Some (i_19) ->
         begin
          for j_20 = (t_10 + 1) to (t_7 - 1) do
-          if (not ((t_5.(j_20)).(t_11) = 0.)) then begin
+          if ((t_5.(j_20)).(t_11) <> 0.) then begin
            for j_21 = (t_11 + 1) to (t_6 - 1) do
             (t_5.(j_20)).(j_21) <-
              ((t_5.(j_20)).(j_21) -.
@@ -252,7 +252,7 @@
      begin
       for j_17 = t_7 to (t_6 - 1) do
        let t_18 = (t_4.arr).((j_17 * t_4.m) + t_8) in
-       if (not (t_18 = 0.)) then
+       if (t_18 <> 0.) then
         (match (! t_9) with
          | Some (i_19) ->
             if ((abs_float (snd i_19)) < (abs_float t_18)) then
@@ -282,7 +282,7 @@
      | Some (i_21) ->
         begin
          for j_22 = (t_7 + 1) to (t_6 - 1) do
-          if (not ((t_4.arr).((j_22 * t_4.m) + t_8) = 0.)) then begin
+          if ((t_4.arr).((j_22 * t_4.m) + t_8) <> 0.) then begin
            for j_23 = (t_8 + 1) to (t_5 - 1) do
             (t_4.arr).((j_22 * t_4.m) + j_23) <-
              ((t_4.arr).((j_22 * t_4.m) + j_23) -.
@@ -317,7 +317,7 @@
      begin
       for j_19 = t_9 to (t_6 - 1) do
        let t_20 = (t_4.arr).((j_19 * t_4.m) + t_10) in
-       if (not (t_20 = 0.)) then
+       if (t_20 <> 0.) then
         (match (! t_11) with
          | Some (i_21) ->
             if ((abs_float (snd i_21)) < (abs_float t_20)) then
@@ -347,7 +347,7 @@
      | Some (i_23) ->
         begin
          for j_24 = (t_9 + 1) to (t_6 - 1) do
-          if (not ((t_4.arr).((j_24 * t_4.m) + t_10) = 0.)) then begin
+          if ((t_4.arr).((j_24 * t_4.m) + t_10) <> 0.) then begin
            for j_25 = (t_10 + 1) to (t_5 - 1) do
             (t_4.arr).((j_24 * t_4.m) + j_25) <-
              ((t_4.arr).((j_24 * t_4.m) + j_25) -.
@@ -383,7 +383,7 @@
      begin
       for j_17 = t_7 to (t_6 - 1) do
        let t_18 = (t_4.arr).((j_17 * t_4.m) + t_8) in
-       if (not (t_18 = 0.)) then
+       if (t_18 <> 0.) then
         (match (! t_9) with
          | Some (i_19) ->
             if ((abs_float (snd i_19)) < (abs_float t_18)) then
@@ -413,7 +413,7 @@
      | Some (i_21) ->
         begin
          for j_22 = (t_7 + 1) to (t_6 - 1) do
-          if (not ((t_4.arr).((j_22 * t_4.m) + t_8) = 0.)) then begin
+          if ((t_4.arr).((j_22 * t_4.m) + t_8) <> 0.) then begin
            for j_23 = (t_8 + 1) to (t_5 - 1) do
             (t_4.arr).((j_22 * t_4.m) + j_23) <-
              ((t_4.arr).((j_22 * t_4.m) + j_23) -.
@@ -448,7 +448,7 @@
      begin
       for j_19 = t_9 to (t_6 - 1) do
        let t_20 = (t_4.arr).((j_19 * t_4.m) + t_10) in
-       if (not (t_20 = 0.)) then
+       if (t_20 <> 0.) then
         (match (! t_11) with
          | Some (i_21) ->
             if ((abs_float (snd i_21)) < (abs_float t_20)) then
@@ -478,7 +478,7 @@
      | Some (i_23) ->
         begin
          for j_24 = (t_9 + 1) to (t_6 - 1) do
-          if (not ((t_4.arr).((j_24 * t_4.m) + t_10) = 0.)) then begin
+          if ((t_4.arr).((j_24 * t_4.m) + t_10) <> 0.) then begin
            for j_25 = (t_10 + 1) to (t_5 - 1) do
             (t_4.arr).((j_24 * t_4.m) + j_25) <-
              ((t_4.arr).((j_24 * t_4.m) + j_25) -.
@@ -517,7 +517,7 @@
       for j_26 = t_9 to (t_6 - 1) do
        for j_27 = t_10 to (t_5 - 1) do
         let t_28 = (t_4.arr).((j_26 * t_4.m) + j_27) in
-        if (not (t_28 = 0.)) then
+        if (t_28 <> 0.) then
          (match (! t_11) with
           | Some (i_29) ->
              if ((abs_float (snd i_29)) < (abs_float t_28)) then
@@ -564,7 +564,7 @@
      | Some (i_31) ->
         begin
          for j_32 = (t_9 + 1) to (t_6 - 1) do
-          if (not ((t_4.arr).((j_32 * t_4.m) + t_10) = 0.)) then begin
+          if ((t_4.arr).((j_32 * t_4.m) + t_10) <> 0.) then begin
            for j_33 = (t_10 + 1) to (t_5 - 1) do
             (t_4.arr).((j_32 * t_4.m) + j_33) <-
              ((t_4.arr).((j_32 * t_4.m) + j_33) -.
@@ -602,7 +602,7 @@
      begin
       for j_15 = t_10 to (t_7 - 1) do
        let t_16 = (t_5.(j_15)).(t_11) in
-       if (not (t_16 = 0)) then
+       if (t_16 <> 0) then
         (match (! t_12) with
          | Some (i_17) ->
             if ((abs (snd i_17)) > (abs t_16)) then
@@ -626,7 +626,7 @@
      | Some (i_19) ->
         begin
          for j_20 = (t_10 + 1) to (t_7 - 1) do
-          if (not ((t_5.(j_20)).(t_11) = 0)) then begin
+          if ((t_5.(j_20)).(t_11) <> 0) then begin
            for j_21 = (t_11 + 1) to (t_6 - 1) do
             (t_5.(j_20)).(j_21) <-
              ((((t_5.(j_20)).(j_21) * (t_5.(t_10)).(t_11)) -
@@ -659,7 +659,7 @@
      begin
       for j_15 = t_10 to (t_7 - 1) do
        let t_16 = (t_5.(j_15)).(t_11) in
-       if (not (t_16 = 0)) then
+       if (t_16 <> 0) then
         (match (! t_12) with
          | Some (i_17) ->
             if ((abs (snd i_17)) > (abs t_16)) then
@@ -683,7 +683,7 @@
      | Some (i_19) ->
         begin
          for j_20 = (t_10 + 1) to (t_7 - 1) do
-          if (not ((t_5.(j_20)).(t_11) = 0)) then begin
+          if ((t_5.(j_20)).(t_11) <> 0) then begin
            for j_21 = (t_11 + 1) to (t_6 - 1) do
             (t_5.(j_20)).(j_21) <-
              ((((t_5.(j_20)).(j_21) * (t_5.(t_10)).(t_11)) -
@@ -719,7 +719,7 @@
      begin
       for j_15 = t_10 to (t_7 - 1) do
        let t_16 = (t_5.(j_15)).(t_11) in
-       if (not (t_16 = 0)) then
+       if (t_16 <> 0) then
         (match (! t_12) with
          | Some (i_17) ->
             if ((abs (snd i_17)) > (abs t_16)) then
@@ -743,7 +743,7 @@
      | Some (i_19) ->
         begin
          for j_20 = (t_10 + 1) to (t_7 - 1) do
-          if (not ((t_5.(j_20)).(t_11) = 0)) then begin
+          if ((t_5.(j_20)).(t_11) <> 0) then begin
            for j_21 = (t_11 + 1) to (t_6 - 1) do
             (t_5.(j_20)).(j_21) <-
              ((((t_5.(j_20)).(j_21) * (t_5.(t_10)).(t_11)) -
@@ -776,7 +776,7 @@
      begin
       for j_15 = t_10 to (t_7 - 1) do
        let t_16 = (t_5.(j_15)).(t_11) in
-       if (not (t_16 = 0)) then
+       if (t_16 <> 0) then
         (match (! t_12) with
          | Some (i_17) ->
             if ((abs (snd i_17)) > (abs t_16)) then
@@ -800,7 +800,7 @@
      | Some (i_19) ->
         begin
          for j_20 = (t_10 + 1) to (t_7 - 1) do
-          if (not ((t_5.(j_20)).(t_11) = 0)) then begin
+          if ((t_5.(j_20)).(t_11) <> 0) then begin
            for j_21 = (t_11 + 1) to (t_6 - 1) do
             (t_5.(j_20)).(j_21) <-
              ((((t_5.(j_20)).(j_21) * (t_5.(t_10)).(t_11)) -
@@ -836,7 +836,7 @@
      begin
       for j_19 = t_9 to (t_6 - 1) do
        let t_20 = (t_4.arr).((j_19 * t_4.m) + t_10) in
-       if (not (t_20 = 0)) then
+       if (t_20 <> 0) then
         (match (! t_11) with
          | Some (i_21) ->
             if ((abs (snd i_21)) > (abs t_20)) then
@@ -866,7 +866,7 @@
      | Some (i_23) ->
         begin
          for j_24 = (t_9 + 1) to (t_6 - 1) do
-          if (not ((t_4.arr).((j_24 * t_4.m) + t_10) = 0)) then begin
+          if ((t_4.arr).((j_24 * t_4.m) + t_10) <> 0) then begin
            for j_25 = (t_10 + 1) to (t_5 - 1) do
             (t_4.arr).((j_24 * t_4.m) + j_25) <-
              ((((t_4.arr).((j_24 * t_4.m) + j_25) *
@@ -901,7 +901,7 @@
      begin
       for j_19 = t_9 to (t_6 - 1) do
        let t_20 = (t_4.arr).((j_19 * t_4.m) + t_10) in
-       if (not (t_20 = 0)) then
+       if (t_20 <> 0) then
         (match (! t_11) with
          | Some (i_21) ->
             if ((abs (snd i_21)) > (abs t_20)) then
@@ -931,7 +931,7 @@
      | Some (i_23) ->
         begin
          for j_24 = (t_9 + 1) to (t_6 - 1) do
-          if (not ((t_4.arr).((j_24 * t_4.m) + t_10) = 0)) then begin
+          if ((t_4.arr).((j_24 * t_4.m) + t_10) <> 0) then begin
            for j_25 = (t_10 + 1) to (t_5 - 1) do
             (t_4.arr).((j_24 * t_4.m) + j_25) <-
              ((((t_4.arr).((j_24 * t_4.m) + j_25) *
@@ -969,7 +969,7 @@
      begin
       for j_19 = t_9 to (t_6 - 1) do
        let t_20 = (t_4.arr).((j_19 * t_4.m) + t_10) in
-       if (not (t_20 = 0)) then
+       if (t_20 <> 0) then
         (match (! t_11) with
          | Some (i_21) ->
             if ((abs (snd i_21)) > (abs t_20)) then
@@ -999,7 +999,7 @@
      | Some (i_23) ->
         begin
          for j_24 = (t_9 + 1) to (t_6 - 1) do
-          if (not ((t_4.arr).((j_24 * t_4.m) + t_10) = 0)) then begin
+          if ((t_4.arr).((j_24 * t_4.m) + t_10) <> 0) then begin
            for j_25 = (t_10 + 1) to (t_5 - 1) do
             (t_4.arr).((j_24 * t_4.m) + j_25) <-
              ((((t_4.arr).((j_24 * t_4.m) + j_25) *
@@ -1034,7 +1034,7 @@
      begin
       for j_19 = t_9 to (t_6 - 1) do
        let t_20 = (t_4.arr).((j_19 * t_4.m) + t_10) in
-       if (not (t_20 = 0)) then
+       if (t_20 <> 0) then
         (match (! t_11) with
          | Some (i_21) ->
             if ((abs (snd i_21)) > (abs t_20)) then
@@ -1064,7 +1064,7 @@
      | Some (i_23) ->
         begin
          for j_24 = (t_9 + 1) to (t_6 - 1) do
-          if (not ((t_4.arr).((j_24 * t_4.m) + t_10) = 0)) then begin
+          if ((t_4.arr).((j_24 * t_4.m) + t_10) <> 0) then begin
            for j_25 = (t_10 + 1) to (t_5 - 1) do
             (t_4.arr).((j_24 * t_4.m) + j_25) <-
              ((((t_4.arr).((j_24 * t_4.m) + j_25) *
@@ -1103,7 +1103,7 @@
       for j_26 = t_9 to (t_6 - 1) do
        for j_27 = t_10 to (t_5 - 1) do
         let t_28 = (t_4.arr).((j_26 * t_4.m) + j_27) in
-        if (not (t_28 = 0)) then
+        if (t_28 <> 0) then
          (match (! t_11) with
           | Some (i_29) ->
              if ((abs (snd i_29)) > (abs t_28)) then
@@ -1150,7 +1150,7 @@
      | Some (i_31) ->
         begin
          for j_32 = (t_9 + 1) to (t_6 - 1) do
-          if (not ((t_4.arr).((j_32 * t_4.m) + t_10) = 0)) then begin
+          if ((t_4.arr).((j_32 * t_4.m) + t_10) <> 0) then begin
            for j_33 = (t_10 + 1) to (t_5 - 1) do
             (t_4.arr).((j_32 * t_4.m) + j_33) <-
              ((((t_4.arr).((j_32 * t_4.m) + j_33) *
@@ -1187,7 +1187,7 @@
       for j_15 = t_8 to (t_7 - 1) do
        for j_16 = t_9 to (t_6 - 1) do
         let t_17 = (t_5.(j_15)).(j_16) in
-        if (not (t_17 = 0.)) then
+        if (t_17 <> 0.) then
          (match (! t_10) with
           | Some (i_18) ->
              if ((abs_float (snd i_18)) < (abs_float t_17)) then
@@ -1220,7 +1220,7 @@
      | Some (i_20) ->
         begin
          for j_21 = (t_8 + 1) to (t_7 - 1) do
-          if (not ((t_5.(j_21)).(t_9) = 0.)) then begin
+          if ((t_5.(j_21)).(t_9) <> 0.) then begin
            for j_22 = (t_9 + 1) to (t_6 - 1) do
             (t_5.(j_21)).(j_22) <-
              ((t_5.(j_21)).(j_22) -.
@@ -1255,7 +1255,7 @@
       for j_17 = t_10 to (t_7 - 1) do
        for j_18 = t_11 to (t_6 - 1) do
         let t_19 = (t_5.(j_17)).(j_18) in
-        if (not (t_19 = 0.)) then
+        if (t_19 <> 0.) then
          (match (! t_12) with
           | Some (i_20) ->
              if ((abs_float (snd i_20)) < (abs_float t_19)) then
@@ -1288,7 +1288,7 @@
      | Some (i_22) ->
         begin
          for j_23 = (t_10 + 1) to (t_7 - 1) do
-          if (not ((t_5.(j_23)).(t_11) = 0.)) then begin
+          if ((t_5.(j_23)).(t_11) <> 0.) then begin
            for j_24 = (t_11 + 1) to (t_6 - 1) do
             (t_5.(j_23)).(j_24) <-
              ((t_5.(j_23)).(j_24) -.
@@ -1324,7 +1324,7 @@
       for j_15 = t_8 to (t_7 - 1) do
        for j_16 = t_9 to (t_6 - 1) do
         let t_17 = (t_5.(j_15)).(j_16) in
-        if (not (t_17 = 0.)) then
+        if (t_17 <> 0.) then
          (match (! t_10) with
           | Some (i_18) ->
              if ((abs_float (snd i_18)) < (abs_float t_17)) then
@@ -1357,7 +1357,7 @@
      | Some (i_20) ->
         begin
          for j_21 = (t_8 + 1) to (t_7 - 1) do
-          if (not ((t_5.(j_21)).(t_9) = 0.)) then begin
+          if ((t_5.(j_21)).(t_9) <> 0.) then begin
            for j_22 = (t_9 + 1) to (t_6 - 1) do
             (t_5.(j_21)).(j_22) <-
              ((t_5.(j_21)).(j_22) -.
@@ -1392,7 +1392,7 @@
       for j_17 = t_10 to (t_7 - 1) do
        for j_18 = t_11 to (t_6 - 1) do
         let t_19 = (t_5.(j_17)).(j_18) in
-        if (not (t_19 = 0.)) then
+        if (t_19 <> 0.) then
          (match (! t_12) with
           | Some (i_20) ->
              if ((abs_float (snd i_20)) < (abs_float t_19)) then
@@ -1425,7 +1425,7 @@
      | Some (i_22) ->
         begin
          for j_23 = (t_10 + 1) to (t_7 - 1) do
-          if (not ((t_5.(j_23)).(t_11) = 0.)) then begin
+          if ((t_5.(j_23)).(t_11) <> 0.) then begin
            for j_24 = (t_11 + 1) to (t_6 - 1) do
             (t_5.(j_23)).(j_24) <-
              ((t_5.(j_23)).(j_24) -.
@@ -1461,7 +1461,7 @@
     let t_19 =
      begin
       let t_15 = (t_5.(t_10)).(t_11) in
-      if (not (t_15 = (* cross-stage persistent value (as id: zero) *))) then
+      if (t_15 <> (* cross-stage persistent value (as id: zero) *)) then
        (t_12 := (Some (t_10, t_15)))
       else
        let rec loop_16 =
@@ -1488,9 +1488,8 @@
      | Some (i_20) ->
         begin
          for j_21 = (t_10 + 1) to (t_7 - 1) do
-          if (not
-               ((t_5.(j_21)).(t_11) =
-                 (* cross-stage persistent value (as id: zero) *))) then begin
+          if ((t_5.(j_21)).(t_11) <>
+               (* cross-stage persistent value (as id: zero) *)) then begin
            for j_22 = (t_11 + 1) to (t_6 - 1) do
             (t_5.(j_21)).(j_22) <-
              (((* cross-stage persistent value (as id: Num.sub_num) *))
@@ -1529,7 +1528,7 @@
     let t_19 =
      begin
       let t_15 = (t_5.(t_10)).(t_11) in
-      if (not (t_15 = (* cross-stage persistent value (as id: zero) *))) then
+      if (t_15 <> (* cross-stage persistent value (as id: zero) *)) then
        (t_12 := (Some (t_10, t_15)))
       else
        let rec loop_16 =
@@ -1556,9 +1555,8 @@
      | Some (i_20) ->
         begin
          for j_21 = (t_10 + 1) to (t_7 - 1) do
-          if (not
-               ((t_5.(j_21)).(t_11) =
-                 (* cross-stage persistent value (as id: zero) *))) then begin
+          if ((t_5.(j_21)).(t_11) <>
+               (* cross-stage persistent value (as id: zero) *)) then begin
            for j_22 = (t_11 + 1) to (t_6 - 1) do
             (t_5.(j_21)).(j_22) <-
              (((* cross-stage persistent value (as id: Num.sub_num) *))
@@ -1601,7 +1599,7 @@
     let t_19 =
      begin
       let t_15 = (t_5.(t_10)).(t_11) in
-      if (not (t_15 = (* cross-stage persistent value (as id: zero) *))) then
+      if (t_15 <> (* cross-stage persistent value (as id: zero) *)) then
        (t_12 := (Some (t_10, t_15)))
       else
        let rec loop_16 =
@@ -1628,9 +1626,8 @@
      | Some (i_20) ->
         begin
          for j_21 = (t_10 + 1) to (t_7 - 1) do
-          if (not
-               ((t_5.(j_21)).(t_11) =
-                 (* cross-stage persistent value (as id: zero) *))) then begin
+          if ((t_5.(j_21)).(t_11) <>
+               (* cross-stage persistent value (as id: zero) *)) then begin
            for j_22 = (t_11 + 1) to (t_6 - 1) do
             (t_5.(j_21)).(j_22) <-
              (((* cross-stage persistent value (as id: Num.sub_num) *))
@@ -1669,7 +1666,7 @@
     let t_19 =
      begin
       let t_15 = (t_5.(t_10)).(t_11) in
-      if (not (t_15 = (* cross-stage persistent value (as id: zero) *))) then
+      if (t_15 <> (* cross-stage persistent value (as id: zero) *)) then
        (t_12 := (Some (t_10, t_15)))
       else
        let rec loop_16 =
@@ -1696,9 +1693,8 @@
      | Some (i_20) ->
         begin
          for j_21 = (t_10 + 1) to (t_7 - 1) do
-          if (not
-               ((t_5.(j_21)).(t_11) =
-                 (* cross-stage persistent value (as id: zero) *))) then begin
+          if ((t_5.(j_21)).(t_11) <>
+               (* cross-stage persistent value (as id: zero) *)) then begin
            for j_22 = (t_11 + 1) to (t_6 - 1) do
             (t_5.(j_21)).(j_22) <-
              (((* cross-stage persistent value (as id: Num.sub_num) *))
@@ -1742,7 +1738,7 @@
      begin
       for j_14 = t_9 to (t_8 - 1) do
        let t_15 = (t_5.(j_14)).(t_10) in
-       if (not (t_15 = 0.)) then
+       if (t_15 <> 0.) then
         (match (! t_11) with
          | Some (i_16) ->
             if ((abs_float (snd i_16)) < (abs_float t_15)) then
@@ -1766,7 +1762,7 @@
      | Some (i_18) ->
         begin
          for j_19 = (t_9 + 1) to (t_8 - 1) do
-          if (not ((t_5.(j_19)).(t_10) = 0.)) then begin
+          if ((t_5.(j_19)).(t_10) <> 0.) then begin
            for j_20 = (t_10 + 1) to (t_6 - 1) do
             (t_5.(j_19)).(j_20) <-
              ((t_5.(j_19)).(j_20) -.
@@ -1801,7 +1797,7 @@
      begin
       for j_16 = t_11 to (t_8 - 1) do
        let t_17 = (t_5.(j_16)).(t_12) in
-       if (not (t_17 = 0.)) then
+       if (t_17 <> 0.) then
         (match (! t_13) with
          | Some (i_18) ->
             if ((abs_float (snd i_18)) < (abs_float t_17)) then
@@ -1825,7 +1821,7 @@
      | Some (i_20) ->
         begin
          for j_21 = (t_11 + 1) to (t_8 - 1) do
-          if (not ((t_5.(j_21)).(t_12) = 0.)) then begin
+          if ((t_5.(j_21)).(t_12) <> 0.) then begin
            for j_22 = (t_12 + 1) to (t_6 - 1) do
             (t_5.(j_21)).(j_22) <-
              ((t_5.(j_21)).(j_22) -.
@@ -1861,7 +1857,7 @@
      begin
       for j_14 = t_9 to (t_8 - 1) do
        let t_15 = (t_5.(j_14)).(t_10) in
-       if (not (t_15 = 0.)) then
+       if (t_15 <> 0.) then
         (match (! t_11) with
          | Some (i_16) ->
             if ((abs_float (snd i_16)) < (abs_float t_15)) then
@@ -1885,7 +1881,7 @@
      | Some (i_18) ->
         begin
          for j_19 = (t_9 + 1) to (t_8 - 1) do
-          if (not ((t_5.(j_19)).(t_10) = 0.)) then begin
+          if ((t_5.(j_19)).(t_10) <> 0.) then begin
            for j_20 = (t_10 + 1) to (t_6 - 1) do
             (t_5.(j_19)).(j_20) <-
              ((t_5.(j_19)).(j_20) -.
@@ -1918,7 +1914,7 @@
      begin
       for j_14 = t_9 to (t_8 - 1) do
        let t_15 = (t_5.(j_14)).(t_10) in
-       if (not (t_15 = 0.)) then
+       if (t_15 <> 0.) then
         (match (! t_11) with
          | Some (i_16) ->
             if ((abs_float (snd i_16)) < (abs_float t_15)) then
@@ -1942,7 +1938,7 @@
      | Some (i_18) ->
         begin
          for j_19 = (t_9 + 1) to (t_8 - 1) do
-          if (not ((t_5.(j_19)).(t_10) = 0.)) then begin
+          if ((t_5.(j_19)).(t_10) <> 0.) then begin
            for j_20 = (t_10 + 1) to (t_6 - 1) do
             (t_5.(j_19)).(j_20) <-
              ((t_5.(j_19)).(j_20) -.

@@ -1,5 +1,4 @@
 open Infra
-open FloatDomain
 
 type ('a, 'b) either = Left of 'a | Right of 'b
 
@@ -93,6 +92,7 @@ let find_spline_index num knots x =
     .< min (int_of_float ((.~x -. k0) *. mult)) n2 >.
 ;;
 
+open FloatDomainL
 let prespline knots (yout:float array array) 
     (y2out:float array array) num_knots xx =
     fun lo -> (fun ii -> 
@@ -106,16 +106,16 @@ let prespline knots (yout:float array array)
     let hh6   = (h *. h) /. 6.0 in
     perform
         h   <-- ret (lift h);
-        aa  <-- retN (div (minus (lift kl1) xx) h);
-        aaa <-- retN (minus (times (times aa aa) aa) aa);
-        bb  <-- retN (div (minus xx (lift kl)) h);
-        bbb <-- retN (minus (times (times bb bb) bb) bb);
-        x1   <-- timesL aa (lift yl);
-        x2   <-- timesL bb (lift yl1);
-        x3   <-- timesL aaa (lift y2l);
-        x4   <-- timesL bbb (lift y2l1);
-        x5   <-- timesL (plus x3 x4) (lift hh6);
-        plusL (plus x1 x2) x5)
+        aa  <-- retN (divL ((lift kl1) -^ xx) h);
+        aaa <-- retN ((aa *^ aa *^ aa) -^ aa);
+        bb  <-- retN (divL (xx -^ (lift kl)) h);
+        bbb <-- retN ((bb *^ bb *^ bb) -^ bb);
+        x1  <-- ret (aa *^ (lift yl));
+        x2  <-- ret (bb *^ (lift yl1));
+        x3  <-- ret (aaa *^ (lift y2l));
+        x4  <-- ret (bbb *^ (lift y2l1));
+        x5  <-- ret ((x3 +^ x4) *^ (lift hh6));
+        ret ((x1 +^ x2) +^ x5))
 
 (* this code should not use an array but instead generate an
 explicit binary search tree of code *)
