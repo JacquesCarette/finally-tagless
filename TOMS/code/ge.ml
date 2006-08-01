@@ -238,9 +238,6 @@ module TrackPivot =
   type ('b,'v) lm = ('a,'v,'s,'w) cmonad
 	constraint 's = [> 'a tag_lstate]
 	constraint 'b = 'a * 's * 'w
-        (* the purpose of this function is to make the union open.
-           Alas, Camlp4 does not understand the :> coercion notation *)
-  (*let coerce = function `TPivot x -> `TPivot x | x -> x *)
   let rec fetch_iter s =
     match (List.hd s) with
       `TPivot x -> x
@@ -249,7 +246,7 @@ module TrackPivot =
                         ret (fetch_iter s)
   let pstore v = store (`TPivot v)
   let decl () = perform
-      pdecl <-- retN (liftRef (ListCode.nil :> ('a, perm list) code));
+      pdecl <-- retN (liftRef (ListCode.nil : ('a, perm list) code));
       pstore pdecl;
       retUnitL
   let add v = perform
