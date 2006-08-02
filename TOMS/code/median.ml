@@ -28,59 +28,99 @@ max number of comparisons.
 
 open Infra
 
-type ('a,'v) carr =
-    CANil 
-  | CAL of ('a,'v) code * ('a,'v) carr
-  | CAE of ('a,'v) code * ('a,'v) carr
+(* Our domains:
+   Our goal is to find the median of a sequence of values of type 'v.
+   We assume the total order on that type of values. 
+   Because we are to generate decision trees, we need to operate
+   on (AST nodes, etc) that represent the run-time values of type 'v.
+   ('a,'v) code is such a representation.
+*)
+
+type asc
+type des
+
+(* ('a,'v,'d) carr is a (lazy) list of sorted values. 'd is the sorting
+ order: ascending or descending. 
+ The list is lazy and so it has two `cons' operations: 
+   CAE (x,l) -- real cons. It means that 'x' is definitely no smaller
+     than any element of 'l', if 'd = Asc.
+   CAL (x,l) -- lazy cons. The relationship of 'x' regarding the tail of
+     the list, 'l', is not yet known.
+*)
+
+type ('a,'v,'d) carr =
+    Nil 
+  | CAL of ('a,'v) code * ('a,'v,'d) carr
+  | CAE of ('a,'v) code * ('a,'v,'d) carr
 ;;
-type ('a,'v) farr = ('a,'v) carr * ('a,'v) carr
+
+let nil = Nil
+let cons x ca  = CAE (x,ca)
+let lcons x ca = CAL (x,ca)
+(* typecase on asc/des types: dictionaries for the dir typeclass *)
+let asc (dummy : ('a,'v,asc) carr) x y = (y,x)
+let des (dummy : ('a,'v,des) carr) x y = (x,y)
 ;;
+
+
+(* The data type ('c,'e) ecode represents nodes in the decision tree.
+   C ((x1,x2),n1,n2) represents the decision comparing x1 with x2,
+   and its two outcomes, n1 and n2. The outcome n1 corresponds to
+   x1 < x2.
+ *)
 
 type ('c,'e) ecode = 
     V of 'e
-  | C of 'c * 'c * ('c,'e) ecode * ('c,'e) ecode
+  | C of ('c * 'c) * ('c,'e) ecode * ('c,'e) ecode
 ;;
-
-type d = L | R;;
-
-let nil = CANil;;
-let cons x ca  = CAE (x,ca);;
-let lcons x ca = CAL (x,ca);;
 
 let rec elift f = function 
   | V x -> f x
-  | C (x,y,l,r) -> C (x,y,elift f l,elift f r)
+  | C (cmp,l,r) -> C (cmp,elift f l,elift f r)
 ;;
 
+(* Force a lazy cons cell. The function returns a decision tree,
+   which describes the choices comparing the element 'x' with the
+   other elements in the list. We force the lazy cons cell only as much
+   as needed to convert it to the eager cell -- but no further.
+*)
+
 let rec force dir = function 
-  | CAL (x,CANil) -> V (CAE (x,CANil))
-  | CAL (x,CAE (y,r)) -> C (x,y, V (CAE (x,CAE (y,r))),
-			    V (CAE (y,CAL (x,r))))
-  | CAL (x,CAL (y,r)) -> elift (fun yr -> force dir (CAL (x,yr)))
-	                       (force dir (CAL (y,r)))
+  | CAL (x,Nil) -> V (cons x nil)
+  | CAL (x,CAE (y,r)) as c -> 
+          C ((dir c x y), V (cons x (cons y r)), V (cons y (lcons x r)))
+  | CAL (x,(CAL _ as l)) -> elift (fun yr -> force dir (CAL (x,yr)))
+	                        (force dir l)
   | e -> V e
 ;;
 
+(* Force all the way and eliminate all lazy cells *)
+
 let rec force_all dir = function 
-  | CANil -> V CANil
+  | Nil -> V Nil
   | CAL _ as x -> elift (force_all dir) (force dir x)
   | CAE (x,r) -> elift (fun r' -> V (CAE (x,r'))) (force_all dir r)
 ;;
 
+(* convert the carr into a code value. That makes it easy to visualize *)
 let codify_carr dir vc = 
   let rec cod = function
-  | V CANil -> .<[]>.
+  | V Nil -> .<[]>.
   | V (CAE (x,r)) -> let c = cod (V r) in .< .~x :: .~c >.
-  | C (x1,x2,l,r) -> .<if .~x1 < .~ x2 then .~(cod l) else .~(cod r)>.
+  | C ((x1,x2),l,r) -> .<if .~x1 < .~ x2 then .~(cod l) else .~(cod r)>.
+  | V (CAL _) -> assert false
   in cod (elift (force_all dir) vc)
 ;;
 
 
-let test1 = codify_carr L (V (lcons .<1>. nil));;
-let test2 = codify_carr L (V (lcons .<2>. (lcons .<1>. nil)));;
-let test3 = codify_carr L (V (lcons .<3>. (lcons .<2>. (lcons .<1>. nil))));;
+let test1 = codify_carr asc (V (lcons .<1>. nil));;
+let test2 = codify_carr asc (V (lcons .<2>. (lcons .<1>. nil)));;
+let test3 = codify_carr asc (V (lcons .<3>. (lcons .<2>. (lcons .<1>. nil))));;
 
 (*	
+
+type ('a,'v) farr = ('a,'v) carr * ('a,'v) carr
+;;
 			    
 let rec fins x = function
     V (CANil,CANil) -> V (CAC (x,nil),nil)
