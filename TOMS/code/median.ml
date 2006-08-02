@@ -26,7 +26,13 @@ max number of comparisons.
 
 *)
 
-open Infra
+(* This algorithm differs from that in median-filt.scm.
+   The present algorithm uses essentially an insertion sort whereas
+   the former relied on a merge sort.
+*)
+
+(* open Infra *)
+
 
 (* Our domains:
    Our goal is to find the median of a sequence of values of type 'v.
@@ -117,24 +123,101 @@ let test1 = codify_carr asc (V (lcons .<1>. nil));;
 let test2 = codify_carr asc (V (lcons .<2>. (lcons .<1>. nil)));;
 let test3 = codify_carr asc (V (lcons .<3>. (lcons .<2>. (lcons .<1>. nil))));;
 
-(*	
 
-type ('a,'v) farr = ('a,'v) carr * ('a,'v) carr
-;;
-			    
-let rec fins x = function
-    V (CANil,CANil) -> V (CAC (x,nil),nil)
-  | V ((CAIns (y,ca)),co) -> ins x (cp (ins y carr) co)
-  | V ((CAC (c,l)),r) -> C (x,c,(V ((CAC (c,CAIns (x,l))),r)),
-			    (V (CAC (c,l)),(CAC 
-
-let rec gen = function
-    [x] -> cod nil x nil
-    [x1;x2] -> ins x1 (gen [x2])
-;;
-
-C (x1,x2,CA (CANil,[|V x1;V x2|],CANil),
-		        CA (CANil,[|V x1;V x2|],CANil))
-;;
-
+(* A center-view representation for the sorted list
+   A combination of two sorted lists: (l,r)
+   The list 'l' is sorted in ascending order, and list 'r' is in the descending
+   order, and all elements of r are no less than all elements of l.
+   Furthermore, we require that either
+       length(l) == length(r)       -- Even parity
+   or  length(l) == length(r) + 1   -- Odd number of elements
 *)
+
+type ('a,'v) farr = 
+   | Ev of ('a,'v,asc) carr * ('a,'v,des) carr
+   | Od of ('a,'v,asc) carr * ('a,'v,des) carr
+;;
+
+(* Insert a new element into the farr list *)
+
+let rec fins x = function
+   | Ev (Nil,Nil) -> V (Od (cons x nil,nil))
+   | Ev (Nil,_) -> assert false
+   | Od (Nil,_) -> assert false
+   | Ev ((CAL _ as l),r) -> elift (fun l' -> fins x (Ev (l',r))) (force asc l)
+   | Ev (CAE (y,l),r) -> C ((x,y),
+                             V (Od (cons y (lcons x l),r)), (* x < y *)
+			    (* x >= y, need to compare x with head of r *)
+			    let f = function 
+			      |	(CAE (x,r)) -> V (Od (cons x (cons y l),r))
+			      |	_ -> assert false in
+			    (elift f (force des (lcons x r))))
+   | Od ((CAL _ as l),r) -> elift (fun l' -> fins x (Od (l',r))) (force asc l)
+   | Od (CAE (y,l),r) -> C ((x,y),
+                             V (Ev (lcons x l,(cons y r))), (* x < y *)
+                             V (Ev (cons y l,(lcons x r))))
+;;
+
+(* Pick the median *)
+
+let rec pick = function 
+   | Ev (Nil,_) -> assert false
+   | Od (Nil,_) -> assert false
+   | Ev ((CAL _ as l),r) -> elift (fun l' -> pick (Ev (l',r))) (force asc l)
+   | Ev (CAE (x,_),_) -> V x
+   | Od ((CAL _ as l),r) -> elift (fun l' -> pick (Od (l',r))) (force asc l)
+   | Od (CAE (x,_),_) -> V x
+;;
+
+
+let gen l = List.fold_right (fun x -> elift (fins x)) l (V (Ev (nil,nil)))
+;;
+
+(* convert the result into a code value. That makes it easy to visualize *)
+let rec codify = function
+  | V x -> x
+  | C ((x1,x2),l,r) -> .<if .~x1 < .~ x2 then .~(codify l) else .~(codify r)>.
+;;
+
+let doit l = codify (elift pick (gen l));;
+
+let testm2 = doit [.<1>.;.<2>.];;
+let testm3 = doit [.<1>.;.<2>.;.<3>.];;
+let testm4 = doit [.<1>.;.<2>.;.<3>.;.<4>.];;
+
+
+
+(* Exhaustive testing *)
+
+let rec iota n = (* 1..n *)
+  if n <= 1 then [1] else (iota (pred n)) @ [n]
+;;
+
+let rec insert_all x = function
+  | [] -> [[x]]
+  | (h::t) -> (x::h::t) :: (List.map (fun l -> h::l) (insert_all x t))
+;;
+
+let rec permute_all = function
+  | [] -> [[]]
+  | (h::t) -> List.concat (List.map (insert_all h) (permute_all t))
+;;
+
+exception BM of int list * int
+
+let test_med n mf =
+  let l = iota n in
+  let expected = List.nth l ((n-1)/2) in
+  let () = Printf.printf "\ntesting median of 1..%d, which is %d" n expected in
+  List.iter (fun l -> let found = mf l in
+                      if expected = found then () else
+		      raise (BM (l,found)))
+    (permute_all l)
+;;
+
+
+let m4c = .<fun [x1;x2;x3;x4] -> .~(doit [.<x1>.;.<x2>.;.<x3>.;.<x4>.])>. in
+let m4  = .! m4c in
+   test_med 4 m4
+;;
+
