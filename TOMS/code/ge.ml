@@ -205,7 +205,7 @@ module FractionFreeUpdate(Ctr:CONTAINER2D)(Det:DETF) = struct
   type 'a idx = ('a,int) code
   let update b r c i k d = perform
       x <-- ret ((Ctr.getL b i k) *^ (Ctr.getL b r c));
-      y <-- ret ((Ctr.getL b r k) *^ (Ctr.getL b i r));
+      y <-- ret ((Ctr.getL b r k) *^ (Ctr.getL b i c));
       z <-- ret (x -^ y);
       t <-- ret (applyMaybe normalizerL z);
       ov <-- ret (divL t (liftGet d));
