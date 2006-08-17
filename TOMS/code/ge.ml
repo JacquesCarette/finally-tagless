@@ -393,7 +393,7 @@ struct
        seqM
         (match (C.Dom.better_thanL) with
          Some sel -> 
-              loopM r (Idx.pred n) (fun j -> perform
+              C.row_iter r (Idx.pred n) (fun j -> perform
               bjc <-- retN (C.getL b j c);
               whenM (LogicCode.notequalL bjc C.Dom.zeroL )
                   (matchM (liftGet pivot)
@@ -439,8 +439,8 @@ struct
    module D = Det(C.Dom)
    let findpivot b r n c m = perform
        pivot <-- retN (liftRef MaybeCode.none );
-       seqM (loopM r (Idx.pred n) (fun j -> 
-              loopM c (Idx.pred m) (fun k ->
+       seqM (C.row_iter r (Idx.pred n) (fun j -> 
+              C.col_iter c (Idx.pred m) (fun k ->
            perform
               bjk <-- retN (C.getL b j k);
               whenM (LogicCode.notequalL bjk C.Dom.zeroL)
@@ -504,7 +504,7 @@ module Gen(C: CONTAINER2D)
         let innerbody i = perform
             bic <-- retN (C.getL b i c);
             whenM (LogicCode.notequalL bic C.Dom.zeroL )
-                (seqM (loopM (Idx.succ c) (Idx.pred m)
+                (seqM (C.col_iter (Idx.succ c) (Idx.pred m)
                           (fun k -> perform
                               d <-- Det.get ();
                               brk <-- ret (C.getL b r k);
@@ -513,7 +513,7 @@ module Gen(C: CONTAINER2D)
                                   (fun ov -> C.setL b i k ov) d) )
                       (ret (C.setL b i c C.Dom.zeroL))) in 
         perform
-              seqM (loopM (Idx.succ r) (Idx.pred n) innerbody) 
+              seqM (C.row_iter (Idx.succ r) (Idx.pred n) innerbody) 
                    (U.update_det brc Det.set Det.acc)in
       let dogen input = perform
           (a,rmar,augmented) <-- Input.get_input input;

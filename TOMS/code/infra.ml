@@ -215,7 +215,14 @@ module type CONTAINER2D = sig
                        ('a,unit) code
   val swap_cols_stmt : 'a vc -> ('a, int) code -> ('a, int) code -> 
                        ('a,unit) code
+  val row_iter : ('a, int) code -> ('a, int) code ->
+      (('a,int) code -> 's -> ('s -> 'w -> 'w) -> ('a, 'e) code) ->
+          (('a,unit) code, 's, 'w) monad
+  val col_iter : ('a, int) code -> ('a, int) code ->
+      (('a,int) code -> 's -> ('s -> 'w -> 'w) -> ('a, 'e) code) ->
+          (('a,unit) code, 's, 'w) monad
 end
+
 
 module GenericArrayContainer(Dom:DOMAINL) =
   struct
@@ -248,6 +255,10 @@ module GenericArrayContainer(Dom:DOMAINL) =
               (.~a).(r).(.~c2) <- t
           end
       done  >.
+  let row_iter low high body = fun s k -> 
+    k s .< for j = .~low to .~high do .~(body .<j>. s k0) done >.
+  let col_iter low high body = fun s k -> 
+    k s .< for j = .~low to .~high do .~(body .<j>. s k0) done >.
 end
 
 (* Matrix layed out row after row, in a C fashion *)
@@ -289,6 +300,10 @@ module GenericVectorContainer(Dom:DOMAINL) =
       end
       in loop .~c1 .~c2
      >.
+  let row_iter low high body = fun s k -> 
+    k s .< for j = .~low to .~high do .~(body .<j>. s k0) done >.
+  let col_iter low high body = fun s k -> 
+    k s .< for j = .~low to .~high do .~(body .<j>. s k0) done >.
 end
 
 (* we use an association list as the representation of a sparse vector.
