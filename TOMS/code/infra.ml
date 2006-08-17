@@ -47,15 +47,15 @@ let whenM test th  = rshiftM (fun s ->
   .< if .~(test) then .~(th s k0) else () >.)
 
 (* loops actually bind a value *)
-let retLoopM low high body = fun s k -> 
+let loopM low high body = fun s k -> 
     k s .< for j = .~low to .~high do .~(body .<j>. s k0) done >.
 
 (* while ``loops'' do not naturally bind a value *)
-let retWhileM cond body = fun s k -> 
+let whileM cond body = fun s k -> 
     k s .< while .~(cond) do .~(body s k0) done >.
 
 (* match for Some/None *)
-let retMatchM x som non = fun s k ->
+let matchM x som non = fun s k ->
     k s .< match .~x with
            | Some i -> .~(som .<i>. s k0)
            | None   -> .~(non s k0) >.
@@ -291,6 +291,52 @@ module GenericVectorContainer(Dom:DOMAINL) =
      >.
 end
 
+(* we use an association list as the representation of a sparse vector.
+   It is assumed to be _sorted_ in increasing order of the index *)
+type 'a svect = (int*'a) list
+
+
+(* Our 'Sparse' container.  Since generically our matrices will not be
+rank-deficient, almost all rows will contain something, so we will
+represent matrices as a full array of sparse vectors *)
+type 'a container2dsparse = {sarr:('a svect array); mm:int}
+
+(*
+module GenericSparseContainer(Dom:DOMAINL) =
+  struct
+  module Dom = Dom
+  type contr = Dom.v svect array (* Array of rows *)
+  type 'a vc = ('a,contr) code
+  type 'a vo = ('a,Dom.v) code
+  let getL x n m = .< (.~x).(.~n).(.~m) >.
+  let setL x n m y = .< (.~x).(.~n).(.~m) <- .~y >.
+  let dim2 x = .< Array.length .~x >.       (* number of rows *)
+  let dim1 x = .< Array.length (.~x).(0) >. (* number of cols *)
+  let mapper (g:('a vo -> 'a vo) option) a = match g with
+      | Some f -> .< Array.map (fun x -> Array.map (fun z -> .~(f .<z>.)) x) .~a >.
+      | None   -> a
+  let copy = (fun a -> .<Array.map (fun x -> Array.copy x) 
+                       (Array.copy .~a) >. )
+  (* this can be optimized with a swap_rows_from if it is known that
+     everything before that is already = Dom.zero *)
+  let swap_rows_stmt a r1 r2 =
+      .< let t = (.~a).(.~r1) in
+         begin 
+             (.~a).(.~r1) <- (.~a).(.~r2);
+             (.~a).(.~r2) <- t
+         end >.
+  let swap_cols_stmt a c1 c2 = .< 
+      for r = 0 to .~(dim2 a)-1 do
+          let t = (.~a).(r).(.~c1) in
+          begin 
+              (.~a).(r).(.~c1) <- (.~a).(r).(.~c2);
+              (.~a).(r).(.~c2) <- t
+          end
+      done  >.
+end
+*)
+
+(* Matrix layed out row after row, in a C fashion *)
 module Array1D =
   struct
   let getL x n = .< x.(.~n) >.

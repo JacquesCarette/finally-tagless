@@ -393,10 +393,10 @@ struct
        seqM
         (match (C.Dom.better_thanL) with
          Some sel -> 
-              retLoopM r (Idx.pred n) (fun j -> perform
+              loopM r (Idx.pred n) (fun j -> perform
               bjc <-- retN (C.getL b j c);
               whenM (LogicCode.notequalL bjc C.Dom.zeroL )
-                  (retMatchM (liftGet pivot)
+                  (matchM (liftGet pivot)
                     (fun pv ->
                       perform
                       (i,bic) <-- liftPair pv;
@@ -422,7 +422,7 @@ struct
                                 (TupleCode.tup2 j bjc)))) in
               (genrecloop traverse (Idx.succ r)))
          )
-         (retMatchM (liftGet pivot)
+         (matchM (liftGet pivot)
                 (fun pv ->
                      perform
                          (i,bic) <-- liftPair pv;
@@ -439,14 +439,14 @@ struct
    module D = Det(C.Dom)
    let findpivot b r n c m = perform
        pivot <-- retN (liftRef MaybeCode.none );
-       seqM (retLoopM r (Idx.pred n) (fun j -> 
-              retLoopM c (Idx.pred m) (fun k ->
+       seqM (loopM r (Idx.pred n) (fun j -> 
+              loopM c (Idx.pred m) (fun k ->
            perform
               bjk <-- retN (C.getL b j k);
               whenM (LogicCode.notequalL bjk C.Dom.zeroL)
               (match (C.Dom.better_thanL) with
               | Some sel ->
-                  (retMatchM (liftGet pivot)
+                  (matchM (liftGet pivot)
                     (fun pv ->
                       perform
                       (pr,pc,brc) <-- liftPPair pv;
@@ -460,7 +460,7 @@ struct
                       TupleCode.tup2 (TupleCode.tup2 j k) bjk)))
               ))))
               (* finished the loop *)
-              (retMatchM (liftGet pivot)
+              (matchM (liftGet pivot)
                   (fun pv ->
                      perform
                          (pr,pc,brc) <-- liftPPair pv;
@@ -504,7 +504,7 @@ module Gen(C: CONTAINER2D)
         let innerbody i = perform
             bic <-- retN (C.getL b i c);
             whenM (LogicCode.notequalL bic C.Dom.zeroL )
-                (seqM (retLoopM (Idx.succ c) (Idx.pred m)
+                (seqM (loopM (Idx.succ c) (Idx.pred m)
                           (fun k -> perform
                               d <-- Det.get ();
                               brk <-- ret (C.getL b r k);
@@ -513,7 +513,7 @@ module Gen(C: CONTAINER2D)
                                   (fun ov -> C.setL b i k ov) d) )
                       (ret (C.setL b i c C.Dom.zeroL))) in 
         perform
-              seqM (retLoopM (Idx.succ r) (Idx.pred n) innerbody) 
+              seqM (loopM (Idx.succ r) (Idx.pred n) innerbody) 
                    (U.update_det brc Det.set Det.acc)in
       let dogen input = perform
           (a,rmar,augmented) <-- Input.get_input input;
@@ -526,13 +526,13 @@ module Gen(C: CONTAINER2D)
           Det.decl ();
           Output.P.decl ();
           seqM 
-            (retWhileM (LogicCode.andL (Idx.less (liftGet c) m)
+            (whileM (LogicCode.andL (Idx.less (liftGet c) m)
                                        (Idx.less (liftGet r) rmar) )
                ( perform
                rr <-- retN (liftGet r);
                cc <-- retN (liftGet c);
                pivot <-- l1 retN (Pivot.findpivot b rr n cc m);
-               seqM (retMatchM pivot (fun pv -> 
+               seqM (matchM pivot (fun pv -> 
                         seqM (zerobelow b rr cc m n pv)
                              (Output.R.succ ()) )
                         (Det.zero_sign () ))
