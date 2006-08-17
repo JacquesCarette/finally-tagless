@@ -165,14 +165,15 @@ module UpdateProxy(C0:CONTAINER2D)(D0:DETF) = struct
         functor(C:CONTAINER2D with type Dom.kind = C0.Dom.kind) -> 
         functor(D:T) -> sig
         type ctr = C.contr
-        type in_val = C.Dom.v
+        type 'a in_val = 'a C.Dom.vc
         type out_val = D(C.Dom).outdet
-        type 'a idx = ('a,int) code
-        val update : ('a, ctr) code -> 'a idx -> 'a idx -> 'a idx -> 'a idx ->
+        val update : 
+            'a in_val -> 'a in_val -> 'a in_val -> 'a in_val -> 
+          ('a in_val -> ('a, unit) code) ->
           ('a, out_val ref) code -> ('a, unit, 's, 'w) cmonad
-        val update_det : ('a, in_val) code -> 
-          (('a,in_val) code -> ('a, unit, 's, 'w) cmonad) ->
-          (('a,in_val) code -> ('a, unit, 's, 'w) cmonad) ->
+        val update_det : 'a in_val -> 
+          ('a in_val -> ('a, unit, 's, 'w) cmonad) ->
+          ('a in_val -> ('a, unit, 's, 'w) cmonad) ->
           ('a, unit, 's, 'w) cmonad
         end
 end
@@ -185,14 +186,13 @@ module DivisionUpdate
   module Dom = C.Dom
   open Dom
   type ctr = C.contr
-  type in_val = v
+  type 'a in_val = 'a vc
   type out_val = Det(C.Dom).outdet
-  type 'a idx = ('a,int) code
-  let update b r c i k d = perform
-      t <-- ret (divL (C.getL b i c) (C.getL b r c));
-      l <-- ret (t *^ (C.getL b r k));
-      y <-- ret ((C.getL b i k) -^ l);
-      ret (C.setL b i k (applyMaybe normalizerL y))
+  let update bic brc brk bik setter d = perform
+      t <-- ret (divL bic brc);
+      l <-- ret (t *^ brk);
+      y <-- ret (bik -^ l);
+      ret (setter (applyMaybe normalizerL y))
   let update_det v set acc = acc v
 end
 
@@ -200,16 +200,15 @@ module FractionFreeUpdate(Ctr:CONTAINER2D)(Det:DETF) = struct
   module Dom = Ctr.Dom
   open Dom
   type ctr = Ctr.contr
-  type in_val = v
+  type 'a in_val = ('a, v) code
   type out_val = Det(Ctr.Dom).outdet
-  type 'a idx = ('a,int) code
-  let update b r c i k d = perform
-      x <-- ret ((Ctr.getL b i k) *^ (Ctr.getL b r c));
-      y <-- ret ((Ctr.getL b r k) *^ (Ctr.getL b i c));
+  let update bic brc brk bik setter d = perform
+      x <-- ret (bik *^ brc);
+      y <-- ret (brk *^ bic);
       z <-- ret (x -^ y);
       t <-- ret (applyMaybe normalizerL z);
       ov <-- ret (divL t (liftGet d));
-      ret (Ctr.setL b i k ov)
+      ret (setter ov)
   let update_det v set acc = set v
 end
 
@@ -503,12 +502,15 @@ module Gen(C: CONTAINER2D)
     let gen =
       let zerobelow b r c m n brc =
         let innerbody i = perform
-            bic <-- ret (C.getL b i c);
+            bic <-- retN (C.getL b i c);
             whenM (LogicCode.notequalL bic C.Dom.zeroL )
                 (seqM (retLoopM (Idx.succ c) (Idx.pred m)
                           (fun k -> perform
                               d <-- Det.get ();
-                              U.update b r c i k d) )
+                              brk <-- ret (C.getL b r k);
+                              bik <-- ret (C.getL b i k);
+                              U.update bic brc brk bik 
+                                  (fun ov -> C.setL b i k ov) d) )
                       (ret (C.setL b i c C.Dom.zeroL))) in 
         perform
               seqM (retLoopM (Idx.succ r) (Idx.pred n) innerbody) 
