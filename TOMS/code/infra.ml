@@ -88,7 +88,7 @@ module type DOMAIN = sig
   val uminus : v -> v
   val div : v -> v -> v
   val better_than : (v -> v -> bool) option
-  val normalizer : v -> v
+  val normalizer : (v -> v) option
 end 
 
 (* Lift *)
@@ -103,8 +103,7 @@ module type DOMAINL = sig
   val uminusL : 'a vc -> 'a vc
   val divL : 'a vc -> 'a vc -> 'a vc
   val better_thanL : ('a vc -> 'a vc -> ('a,bool) code) option
-  val normalizer_optL : (('a,v -> v) code ) option
-  val normalizerL : 'a vc -> 'a vc
+  val normalizerL : ('a vc -> 'a vc) option
 end 
 
 (* The kind of the domain: a ring or a field *)
@@ -121,7 +120,7 @@ module FloatDomain = struct
     let minus x y = x -. y
     let uminus x = -.x
     let div x y = x /. y
-    let normalizer = fun x -> x
+    let normalizer = None
     let better_than = Some (fun x y -> abs_float x < abs_float y)
 end
 
@@ -137,8 +136,7 @@ module FloatDomainL = struct
     let ( -^ ) x y = .<.~x -. .~y>.
     let uminusL x = .<-. .~x>.
     let divL x y = .<.~x /. .~y>. 
-    let normalizerL x = x
-    let normalizer_optL = None
+    let normalizerL = None
     let better_thanL = Some (fun x y -> .<abs_float .~x < abs_float .~y >. )
 end
 module IntegerDomain = struct
@@ -151,7 +149,7 @@ module IntegerDomain = struct
     let minus x y = x - y
     let uminus x = -x
     let div x y = x / y
-    let normalizer = fun x -> x
+    let normalizer = None
     let better_than = Some (fun x y -> abs x > abs y)
 end
 
@@ -167,8 +165,7 @@ module IntegerDomainL = struct
     let ( -^ ) x y = .<.~x - .~y>.
     let uminusL x = .<- .~x>.
     let divL x y = .<.~x / .~y>. 
-    let normalizerL x = x
-    let normalizer_optL = None
+    let normalizerL = None
     let better_thanL = Some (fun x y -> .<abs .~x > abs .~y >. )
 end
 
@@ -182,7 +179,7 @@ module RationalDomain = struct
     let minus x y = Num.sub_num x y
     let uminus x = Num.minus_num x
     let div x y = Num.div_num x y
-    let normalizer = fun x -> x
+    let normalizer = None
     let better_than = None
 end
 
@@ -198,8 +195,7 @@ module RationalDomainL = struct
     let ( -^ ) x y = .< Num.sub_num .~x .~y >.
     let uminusL x = .<Num.minus_num .~x>.
     let divL x y = .< Num.div_num .~x .~y >.
-    let normalizerL x = x
-    let normalizer_optL = None
+    let normalizerL = None
     let better_thanL = None
 end
 
@@ -213,7 +209,7 @@ module type CONTAINER2D = sig
             ('a,unit) code
   val dim1 : 'a vc -> ('a,int) code
   val dim2 : 'a vc -> ('a,int) code
-  val mapper : ('a, Dom.v->Dom.v) code option -> 'a vc -> 'a vc
+  val mapper : ('a vo -> 'a vo) option -> 'a vc -> 'a vc
   val copy : 'a vc -> 'a vc
   val swap_rows_stmt : 'a vc -> ('a, int) code -> ('a, int) code -> 
                        ('a,unit) code
@@ -231,8 +227,8 @@ module GenericArrayContainer(Dom:DOMAINL) =
   let setL x n m y = .< (.~x).(.~n).(.~m) <- .~y >.
   let dim2 x = .< Array.length .~x >.       (* number of rows *)
   let dim1 x = .< Array.length (.~x).(0) >. (* number of cols *)
-  let mapper g a = match g with
-      | Some f -> .< Array.map (fun x -> Array.map .~f x) .~a >.
+  let mapper (g:('a vo -> 'a vo) option) a = match g with
+      | Some f -> .< Array.map (fun x -> Array.map (fun z -> .~(f .<z>.)) x) .~a >.
       | None   -> a
   let copy = (fun a -> .<Array.map (fun x -> Array.copy x) 
                        (Array.copy .~a) >. )
@@ -268,7 +264,7 @@ module GenericVectorContainer(Dom:DOMAINL) =
   let dim2 x = .< (.~x).n >.
   let dim1 x = .< (.~x).m >.
   let mapper g a = match g with
-      | Some f -> .< { (.~a) with arr = Array.map .~f (.~a).arr} >.
+      | Some f -> .< { (.~a) with arr = Array.map (fun z -> .~(f .<z>.)) (.~a).arr} >.
       | None   -> a
   let copy a = .< { (.~a) with arr = Array.copy (.~a).arr} >.
   let swap_rows_stmt b r1 r2 = .<
@@ -400,3 +396,7 @@ module CodeTrans = struct
         else if lb = ub then body lb
         else .< begin .~(body lb); .~(full_unroll (lb+1) ub body) end >.
 end
+
+let applyMaybe g x = match g with
+    | Some f -> f x
+    | None   -> x

@@ -192,7 +192,7 @@ module DivisionUpdate
       t <-- ret (divL (C.getL b i c) (C.getL b r c));
       l <-- ret (t *^ (C.getL b r k));
       y <-- ret ((C.getL b i k) -^ l);
-      ret (C.setL b i k (normalizerL y))
+      ret (C.setL b i k (applyMaybe normalizerL y))
   let update_det v set acc = acc v
 end
 
@@ -207,7 +207,7 @@ module FractionFreeUpdate(Ctr:CONTAINER2D)(Det:DETF) = struct
       x <-- ret ((Ctr.getL b i k) *^ (Ctr.getL b r c));
       y <-- ret ((Ctr.getL b r k) *^ (Ctr.getL b i r));
       z <-- ret (x -^ y);
-      t <-- ret (normalizerL z);
+      t <-- ret (applyMaybe normalizerL z);
       ov <-- ret (divL t (liftGet d));
       ret (Ctr.setL b i k ov)
   let update_det v set acc = set v
@@ -517,7 +517,7 @@ module Gen(C: CONTAINER2D)
           (a,rmar,augmented) <-- Input.get_input input;
           r <-- Output.R.decl ();
           c <-- retN (liftRef Idx.zero);
-          b <-- retN (C.mapper C.Dom.normalizer_optL (C.copy a));
+          b <-- retN (C.mapper C.Dom.normalizerL (C.copy a));
           m <-- retN (C.dim1 a);
           rmar <-- retN rmar;
           n <-- if augmented then retN (C.dim2 a) else ret rmar;
