@@ -415,14 +415,13 @@ struct
               (genrecloop traverse (Idx.succ r)))
          )
          (matchM (liftGet pivot)
-                (fun pv ->
-                     perform
-                         (i,bic) <-- liftPair pv;
-                         seqM (whenM (LogicCode.notequalL i r)
-                                (seqM 
-                                   (ret (C.swap_rows_stmt b r i))
-                                   (D.upd_sign ())))
-                              (ret (MaybeCode.just bic)))
+                (fun pv -> perform
+                     (i,bic) <-- liftPair pv;
+                     seqM (whenM (LogicCode.notequalL i r)
+                            (seqM 
+                               (ret (C.swap_rows_stmt b r i))
+                               (D.upd_sign ())))
+                          (ret (MaybeCode.just bic)))
                 (ret MaybeCode.none))
 end
 
@@ -455,20 +454,19 @@ struct
               ))))
               (* finished the loop *)
               (matchM (liftGet pivot)
-                  (fun pv ->
-                     perform
-                         (pr,pc,brc) <-- liftPPair pv;
-                         seqM
-                             (whenM (LogicCode.notequalL pc c)
-                                 (seqM
-                                   (ret (C.swap_cols_stmt b c pc))
-                                   (D.upd_sign ())))
-                           (seqM
-                             (whenM (LogicCode.notequalL pr c)
-                                 (seqM
-                                   (ret (C.swap_rows_stmt b r pr))
-                                   (D.upd_sign ())))
-                              (ret (MaybeCode.just brc))))
+                  (fun pv -> perform
+                     (pr,pc,brc) <-- liftPPair pv;
+                     seqM
+                         (whenM (LogicCode.notequalL pc c)
+                             (seqM
+                               (ret (C.swap_cols_stmt b c pc))
+                               (D.upd_sign ())))
+                       (seqM
+                         (whenM (LogicCode.notequalL pr c)
+                             (seqM
+                               (ret (C.swap_rows_stmt b r pr))
+                               (D.upd_sign ())))
+                          (ret (MaybeCode.just brc))))
                   (ret MaybeCode.none))
 end
 
