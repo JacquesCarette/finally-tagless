@@ -205,8 +205,6 @@ module type CONTAINER2D = sig
   type 'a vc = ('a,contr) code
   type 'a vo = ('a,Dom.v) code
   val getL : 'a vc -> ('a,int) code -> ('a,int) code -> 'a vo
-  val setL : 'a vc -> ('a,int) code -> ('a,int) code -> 'a vo -> 
-            ('a,unit) code
   val dim1 : 'a vc -> ('a,int) code
   val dim2 : 'a vc -> ('a,int) code
   val mapper : ('a vo -> 'a vo) option -> 'a vc -> 'a vc
@@ -215,9 +213,13 @@ module type CONTAINER2D = sig
                        ('a,unit) code
   val swap_cols_stmt : 'a vc -> ('a, int) code -> ('a, int) code -> 
                        ('a,unit) code
-  val row_iter : ('a, int) code -> ('a, int) code ->
-      (('a,int) code -> 's -> ('s -> 'w -> 'w) -> ('a, 'e) code) ->
-          (('a,unit) code, 's, 'w) monad
+  val row_head : 'a vc -> ('a, int) code -> ('a, int) code -> 'a vo
+  val row_iter : 'a vc -> ('a, int) code -> 
+      ('a, int) code -> ('a, int) code ->
+      (('a,int) code -> 'a vo -> 's -> ('s -> 'w -> 'w) -> ('a, 'e) code) ->
+          (('a,unit) code, 's, 'k) monad
+  val col_head_set : 'a vc -> ('a,int) code -> ('a,int) code -> 'a vo -> 
+            ('a,unit) code
   val col_iter : ('a, int) code -> ('a, int) code ->
       (('a,int) code -> 's -> ('s -> 'w -> 'w) -> ('a, 'e) code) ->
           (('a,unit) code, 's, 'w) monad
@@ -231,7 +233,7 @@ module GenericArrayContainer(Dom:DOMAINL) =
   type 'a vc = ('a,contr) code
   type 'a vo = ('a,Dom.v) code
   let getL x n m = .< (.~x).(.~n).(.~m) >.
-  let setL x n m y = .< (.~x).(.~n).(.~m) <- .~y >.
+  let setL x n m y = .< (.~x).(.~n).(.~m) <- .~y>.
   let dim2 x = .< Array.length .~x >.       (* number of rows *)
   let dim1 x = .< Array.length (.~x).(0) >. (* number of cols *)
   let mapper (g:('a vo -> 'a vo) option) a = match g with
@@ -255,8 +257,16 @@ module GenericArrayContainer(Dom:DOMAINL) =
               (.~a).(r).(.~c2) <- t
           end
       done  >.
-  let row_iter low high body = fun s k -> 
-    k s .< for j = .~low to .~high do .~(body .<j>. s k0) done >.
+  (* this is list an iterator's start *)
+  let row_head = getL
+  let row_iter b c low high body = 
+    let newbody j = perform
+        bjc <-- retN (getL b j c);
+        body j bjc
+    in  loopM low high newbody
+
+  (* only set the head of the current column *)
+  let col_head_set = setL
   let col_iter low high body = fun s k -> 
     k s .< for j = .~low to .~high do .~(body .<j>. s k0) done >.
 end
@@ -300,8 +310,15 @@ module GenericVectorContainer(Dom:DOMAINL) =
       end
       in loop .~c1 .~c2
      >.
-  let row_iter low high body = fun s k -> 
-    k s .< for j = .~low to .~high do .~(body .<j>. s k0) done >.
+  let row_head b c r = getL b r c
+  let row_iter b c low high body = fun s k -> 
+    k s .< for j = .~low to .~high do 
+        let t = .~(getL b .<j>. c) in
+        .~(body .<j>. .<t>. s k0) 
+    done >.
+
+  (* only set the head of the current column *)
+  let col_head_set = setL
   let col_iter low high body = fun s k -> 
     k s .< for j = .~low to .~high do .~(body .<j>. s k0) done >.
 end

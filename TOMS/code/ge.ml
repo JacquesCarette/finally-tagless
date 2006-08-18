@@ -393,8 +393,7 @@ struct
        seqM
         (match (C.Dom.better_thanL) with
          Some sel -> 
-              C.row_iter r (Idx.pred n) (fun j -> perform
-              bjc <-- retN (C.getL b j c);
+              C.row_iter b c r (Idx.pred n) (fun j bjc ->
               whenM (LogicCode.notequalL bjc C.Dom.zeroL )
                   (matchM (liftGet pivot)
                     (fun pv ->
@@ -408,7 +407,7 @@ struct
               )
          | None ->
            perform
-            brc <-- retN (C.getL b r c);
+            brc <-- retN (C.row_head b r c);
             ifM (LogicCode.notequalL brc C.Dom.zeroL)
               (* the current element is good enough *)
               (Code.assignL pivot (MaybeCode.just (TupleCode.tup2 r brc)))
@@ -439,8 +438,10 @@ struct
    module D = Det(C.Dom)
    let findpivot b r n c m = perform
        pivot <-- retN (liftRef MaybeCode.none );
-       seqM (C.row_iter r (Idx.pred n) (fun j -> 
-              C.col_iter c (Idx.pred m) (fun k ->
+       (* this is not really a row/column iteration, this is a
+          a full-matrix iteration, and should be coded as such *)
+       seqM (loopM r (Idx.pred n) (fun j -> 
+              loopM c (Idx.pred m) (fun k ->
            perform
               bjk <-- retN (C.getL b j k);
               whenM (LogicCode.notequalL bjk C.Dom.zeroL)
@@ -484,7 +485,7 @@ struct
    (* In this case, we assume diagonal dominance, and so
       just take the diagonal as ``pivot'' *)
    let findpivot b r n c m = perform 
-       ret (MaybeCode.just (C.getL b r c));
+       ret (MaybeCode.just (C.row_head b r c));
 end
 
 module Gen(C: CONTAINER2D)
@@ -501,19 +502,18 @@ module Gen(C: CONTAINER2D)
     module Output = Out(C)(Det)
     let gen =
       let zerobelow b r c m n brc =
-        let innerbody i = perform
-            bic <-- retN (C.getL b i c);
-            whenM (LogicCode.notequalL bic C.Dom.zeroL )
+        let innerbody j bjc = perform
+            whenM (LogicCode.notequalL bjc C.Dom.zeroL )
                 (seqM (C.col_iter (Idx.succ c) (Idx.pred m)
                           (fun k -> perform
                               d <-- Det.get ();
                               brk <-- ret (C.getL b r k);
-                              bik <-- ret (C.getL b i k);
-                              U.update bic brc brk bik 
-                                  (fun ov -> C.setL b i k ov) d) )
-                      (ret (C.setL b i c C.Dom.zeroL))) in 
+                              bjk <-- ret (C.getL b j k);
+                              U.update bjc brc brk bjk 
+                                  (fun ov -> C.col_head_set b j k ov) d) )
+                      (ret (C.col_head_set b j c C.Dom.zeroL))) in 
         perform
-              seqM (C.row_iter (Idx.succ r) (Idx.pred n) innerbody) 
+              seqM (C.row_iter b c (Idx.succ r) (Idx.pred n) innerbody) 
                    (U.update_det brc Det.set Det.acc)in
       let dogen input = perform
           (a,rmar,augmented) <-- Input.get_input input;
