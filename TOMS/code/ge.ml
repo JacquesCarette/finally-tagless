@@ -189,9 +189,7 @@ module DivisionUpdate
   type 'a in_val = 'a vc
   type out_val = Det(C.Dom).outdet
   let update bic brc brk bik setter d = perform
-      t <-- ret (divL bic brc);
-      l <-- ret (t *^ brk);
-      y <-- ret (bik -^ l);
+      y <-- ret (bik -^ ((divL bic brc) *^ brk));
       ret (setter (applyMaybe normalizerL y))
   let update_det v set acc = acc v
 end
@@ -203,9 +201,7 @@ module FractionFreeUpdate(Ctr:CONTAINER2D)(Det:DETF) = struct
   type 'a in_val = ('a, v) code
   type out_val = Det(Ctr.Dom).outdet
   let update bic brc brk bik setter d = perform
-      x <-- ret (bik *^ brc);
-      y <-- ret (brk *^ bic);
-      z <-- ret (x -^ y);
+      z <-- ret ((bik *^ brc) -^ (brk *^ bic));
       t <-- ret (applyMaybe normalizerL z);
       ov <-- ret (divL t (liftGet d));
       ret (setter ov)
@@ -504,11 +500,10 @@ module Gen(C: CONTAINER2D)
       let zerobelow b r c m n brc =
         let innerbody j bjc = perform
             whenM (LogicCode.notequalL bjc C.Dom.zeroL )
-                (seqM (C.col_iter (Idx.succ c) (Idx.pred m)
-                          (fun k -> perform
+                (seqM (C.col_iter b j (Idx.succ c) (Idx.pred m)
+                          (fun k bjk -> perform
                               d <-- Det.get ();
                               brk <-- ret (C.getL b r k);
-                              bjk <-- ret (C.getL b j k);
                               U.update bjc brc brk bjk 
                                   (fun ov -> C.col_head_set b j k ov) d) )
                       (ret (C.col_head_set b j c C.Dom.zeroL))) in 
