@@ -164,7 +164,6 @@ module UpdateProxy(C0:CONTAINER2D)(D0:DETF) = struct
     module type S =
         functor(C:CONTAINER2D with type Dom.kind = C0.Dom.kind) -> 
         functor(D:T) -> sig
-        type ctr = C.contr
         type 'a in_val = 'a C.Dom.vc
         type out_val = D(C.Dom).outdet
         val update : 
@@ -185,7 +184,6 @@ module DivisionUpdate
   struct
   module Dom = C.Dom
   open Dom
-  type ctr = C.contr
   type 'a in_val = 'a vc
   type out_val = Det(C.Dom).outdet
   let update bic brc brk bik setter d = perform
@@ -197,7 +195,6 @@ end
 module FractionFreeUpdate(Ctr:CONTAINER2D)(Det:DETF) = struct
   module Dom = Ctr.Dom
   open Dom
-  type ctr = Ctr.contr
   type 'a in_val = ('a, v) code
   type out_val = Det(Ctr.Dom).outdet
   let update bic brc brk bik setter d = perform
