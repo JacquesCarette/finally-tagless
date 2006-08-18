@@ -44,7 +44,7 @@ let ifM test th el = fun s k ->
 let rshiftM cf = fun s k -> k s (cf s)
 
 let whenM test th  = rshiftM (fun s -> 
-  .< if .~(test) then .~(th s k0) else () >.)
+  .< if .~(test) then .~(th s k0) >.)
 
 (* loops actually bind a value *)
 let loopM low high body = fun s k -> 
@@ -467,9 +467,9 @@ module Code = struct
   let update a f = let b = f (liftGet a) in .< .~a := .~b >.
   let assign a b = .< .~a := .~b >.
   let apply  f x = .< .~f .~x >.
-  let updateL a f = ret (update a f)
-  let assignL a b = ret (assign a b)
-  let applyL  f x = ret (apply f x)
+  let updateM a f = ret (update a f)
+  let assignM a b = ret (assign a b)
+  let applyM  f x = ret (apply f x)
 end
 
 (* code transformers *)
@@ -479,6 +479,10 @@ module CodeTrans = struct
         else if lb = ub then body lb
         else .< begin .~(body lb); .~(full_unroll (lb+1) ub body) end >.
 end
+
+let optSeq a = function
+    | Some c -> seq a c
+    | None   -> a
 
 let applyMaybe g x = match g with
     | Some f -> f x

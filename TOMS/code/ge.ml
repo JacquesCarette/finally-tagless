@@ -2,6 +2,8 @@ open Infra
 
 (* Monad used in this module: code generation monad with open union state *)
 type ('a,'v,'s,'w) cmonad = (('a,'v) code, 's list, ('a,'w) code) monad
+(* We also use this variant, where we _might_ generate code *)
+type ('a,'v,'s,'w) omonad = (('a,'v) code option, 's list, ('a,'w) code) monad
 
 module type DETERMINANT = sig
   type indet
@@ -13,8 +15,11 @@ module type DETERMINANT = sig
   type ('b,'v) lm = ('a,'v,'s,'w) cmonad
 	constraint 's = [> 'a tag_lstate]
 	constraint 'b = 'a * 's * 'w
+  type ('b,'v) om = ('a,'v,'s,'w) omonad
+	constraint 's = [> 'a tag_lstate]
+	constraint 'b = 'a * 's * 'w
   val decl : unit -> ('b,unit) lm (* could be unit rather than unit code...*)
-  val upd_sign  : unit -> ('b,unit) lm
+  val upd_sign  : unit -> ('b,unit) om
   val zero_sign : unit -> ('b,unit) lm
   val acc       : ('a,indet) code -> ('a * 's * 'w,unit) lm
   val get       : unit -> ('b,tdet) lm
@@ -60,7 +65,7 @@ module TrackRank =
       ret rdecl
   let succ () = perform
    r <-- rfetch ();
-   Code.assignL r (Idx.succ (liftGet r))
+   Code.assignM r (Idx.succ (liftGet r))
 end
 
 module Rank:RANK = struct
@@ -79,7 +84,7 @@ end
    output, it is possible to not track the determinant, but
    in all other cases it is needed.
 *)
-
+ 
 (* we need the domain anyways to get things to type properly *)
 module NoDet(Dom:DOMAINL) =
   struct
@@ -88,7 +93,7 @@ module NoDet(Dom:DOMAINL) =
   type tdet = outdet ref
   type 'a lstate = unit
   let decl () = retUnitL
-  let upd_sign () = retUnitL
+  let upd_sign () = ret None
   let zero_sign () = retUnitL
   let acc v = retUnitL
   let get () = ret (liftRef Code.cunit)
@@ -96,6 +101,9 @@ module NoDet(Dom:DOMAINL) =
   let fin () = retUnitL
   type 'a tag_lstate = [`TDet of 'a lstate ]
   type ('b,'v) lm = ('a,'v,'s,'w) cmonad
+	constraint 's = [> 'a tag_lstate]
+	constraint 'b = 'a * 's * 'w
+  type ('b,'v) om = ('a,'v,'s,'w) omonad
 	constraint 's = [> 'a tag_lstate]
 	constraint 'b = 'a * 's * 'w
 end
@@ -113,6 +121,9 @@ module AbstractDet(Dom: DOMAINL) =
   type ('b,'v) lm = ('a,'v,'s,'w) cmonad
 	constraint 's = [> 'a tag_lstate]
 	constraint 'b = 'a * 's * 'w
+  type ('b,'v) om = ('a,'v,'s,'w) omonad
+	constraint 's = [> 'a tag_lstate]
+	constraint 'b = 'a * 's * 'w
   let rec fetch_iter s =
     match (List.hd s) with
       `TDet x -> x
@@ -128,23 +139,23 @@ module AbstractDet(Dom: DOMAINL) =
   let upd_sign () = perform
       det <-- dfetch ();
       det1 <-- ret (fst det);
-      Code.assignL det1 (Idx.uminus (liftGet det1))
+      ret (Some (Code.assign det1 (Idx.uminus (liftGet det1))))
   let zero_sign () = perform
       det <-- dfetch ();
       det1 <-- ret (fst det);
-      Code.assignL det1 Idx.zero
+      Code.assignM det1 Idx.zero
   let acc v = perform
       det <-- dfetch ();
       det2 <-- ret (snd det);
       r <-- ret ((liftGet det2) *^ v);
-      Code.assignL det2 r
+      Code.assignM det2 r
   let get () = perform
       det <-- dfetch ();
       ret (snd det)
   let set v = perform
       det <-- dfetch ();
       det2 <-- ret (snd det);
-      Code.assignL det2 v
+      Code.assignM det2 v
   let fin () = perform
       (det_sign,det) <-- dfetch ();
       ifM (LogicCode.equalL (liftGet det_sign) Idx.zero) (ret zeroL)
@@ -208,6 +219,8 @@ end
 (* This type is needed for the output, and is tracked during
    pivoting. *)
 type perm = RowSwap of (int * int) | ColSwap of (int * int)
+let liftRowSwap a b = .< RowSwap (.~a, .~b) >.
+let liftColSwap a b = .< ColSwap (.~a, .~b) >.
  
 module type TRACKPIVOT = sig
   type 'a lstate
@@ -218,7 +231,7 @@ module type TRACKPIVOT = sig
 	constraint 'b = 'a * 's * 'w
   val decl : unit -> ('b, unit) lm
   val add : ('a,perm) code -> 
-    (('a,unit) code,[> 'a tag_lstate] list,('a,'w) code) monad
+    (('a,unit) code option,[> 'a tag_lstate] list,('a,'w) code) monad
   val fin : unit -> 
     (('a,perm list) code ,[> 'a tag_lstate] list,'w) monad
 end
@@ -243,7 +256,7 @@ module TrackPivot =
       retUnitL
   let add v = perform
    p <-- pfetch ();
-   Code.assignL p (ListCode.cons v (liftGet p))
+   ret (Some (Code.assign p (ListCode.cons v (liftGet p))))
 end
 
 module KeepPivot:TRACKPIVOT = struct
@@ -260,7 +273,7 @@ module DiscardPivot:TRACKPIVOT = struct
 	constraint 's = [> 'a tag_lstate]
 	constraint 'b = 'a * 's * 'w
   let decl () = retUnitL
-  let add v = retUnitL
+  let add v = ret None
   let fin () = ret ListCode.nil
 end
 
@@ -362,8 +375,8 @@ module RDet = AbstractDet(RationalDomainL)
 
 module type PIVOT = 
     functor (C: CONTAINER2D) ->
-      functor (D: DETF) ->
-sig
+      functor (D: DETF) -> 
+        functor (P: TRACKPIVOT) -> sig
  (* Find the pivot within [r,m-1] rows and [c,(n-1)] columns
     of containrer b.
     If pivot is found, permute the matrix rows and columns so that the pivot
@@ -372,60 +385,64 @@ sig
     When we permute the rows of columns, we update the sign of the det.
  *)
  val findpivot : 'a C.vc -> ('a,int) code -> ('a,int) code -> 
-   ('a,int) code -> ('a,int) code -> ('a * 's * 'w, C.Dom.v option) D(C.Dom).lm
+   ('a,int) code -> ('a,int) code -> 
+   ('a,C.Dom.v option,[> 'a D(C.Dom).tag_lstate | 'a P.tag_lstate],'w) cmonad
 end
 
-module RowPivot(C: CONTAINER2D)(Det: DETF) =
+module RowPivot(Ctr: CONTAINER2D)(Det: DETF)(P: TRACKPIVOT) =
 struct
-   module D = Det(C.Dom) 
+   module D = Det(Ctr.Dom) 
    let findpivot b r n c m = perform
        pivot <-- retN (liftRef MaybeCode.none );
        (* If no better_than procedure defined, we just search for
       non-zero element. Any non-zero element is a good pivot.
       If better_than is defined, we search then for the best element *)
        seqM
-        (match (C.Dom.better_thanL) with
+        (match (Ctr.Dom.better_thanL) with
          Some sel -> 
-              C.row_iter b c r (Idx.pred n) (fun j bjc ->
-              whenM (LogicCode.notequalL bjc C.Dom.zeroL )
+              Ctr.row_iter b c r (Idx.pred n) (fun j bjc ->
+              whenM (LogicCode.notequalL bjc Ctr.Dom.zeroL )
                   (matchM (liftGet pivot)
                     (fun pv ->
                       perform
                       (i,bic) <-- liftPair pv;
                       whenM (sel bic bjc)
-                        (Code.assignL pivot (MaybeCode.just 
+                        (Code.assignM pivot (MaybeCode.just 
                                      (TupleCode.tup2 j bjc))))
-                     (Code.assignL pivot (MaybeCode.just 
+                     (Code.assignM pivot (MaybeCode.just 
                                   (TupleCode.tup2 j bjc))))
               )
          | None ->
            perform
-            brc <-- retN (C.row_head b r c);
-            ifM (LogicCode.notequalL brc C.Dom.zeroL)
+            brc <-- retN (Ctr.row_head b r c);
+            ifM (LogicCode.notequalL brc Ctr.Dom.zeroL)
               (* the current element is good enough *)
-              (Code.assignL pivot (MaybeCode.just (TupleCode.tup2 r brc)))
+              (Code.assignM pivot (MaybeCode.just (TupleCode.tup2 r brc)))
               (let traverse = fun o j ->
                   whenM (Idx.less j n)
                     (perform
-                        bjc <-- retN (C.getL b j c);
-                        ifM (LogicCode.equalL bjc C.Dom.zeroL)
-                            (Code.applyL o (Idx.succ j))
-                            (Code.assignL pivot (MaybeCode.just 
+                        bjc <-- retN (Ctr.getL b j c);
+                        ifM (LogicCode.equalL bjc Ctr.Dom.zeroL)
+                            (Code.applyM o (Idx.succ j))
+                            (Code.assignM pivot (MaybeCode.just 
                                 (TupleCode.tup2 j bjc)))) in
               (genrecloop traverse (Idx.succ r)))
          )
          (matchM (liftGet pivot)
                 (fun pv -> perform
                      (i,bic) <-- liftPair pv;
-                     seqM (whenM (LogicCode.notequalL i r)
-                            (seqM 
-                               (ret (C.swap_rows_stmt b r i))
-                               (D.upd_sign ())))
+                     seqM (whenM (LogicCode.notequalL i r) (perform
+                            s1 <-- ret (Ctr.swap_rows_stmt b r i);
+                            s2 <-- D.upd_sign ();
+                            s3 <-- ret (optSeq s1 s2);
+                            s4 <-- P.add (liftRowSwap i r );
+                            ret (optSeq s3 s4)
+                           ))
                           (ret (MaybeCode.just bic)))
                 (ret MaybeCode.none))
 end
 
-module FullPivot(C: CONTAINER2D)(Det: DETF) = 
+module FullPivot(C: CONTAINER2D)(Det: DETF)(P: TRACKPIVOT) = 
 struct
    module D = Det(C.Dom)
    let findpivot b r n c m = perform
@@ -444,12 +461,12 @@ struct
                       perform
                       (pr,pc,brc) <-- liftPPair pv;
                       whenM (sel brc bjk)
-                        (Code.assignL pivot (MaybeCode.just
+                        (Code.assignM pivot (MaybeCode.just
                             (TupleCode.tup2 (TupleCode.tup2 j k) bjk))))
-                     (Code.assignL pivot (MaybeCode.just
+                     (Code.assignM pivot (MaybeCode.just
                             (TupleCode.tup2 (TupleCode.tup2 j k) bjk))))
               | None ->
-                  (Code.assignL pivot (MaybeCode.just (
+                  (Code.assignM pivot (MaybeCode.just (
                       TupleCode.tup2 (TupleCode.tup2 j k) bjk)))
               ))))
               (* finished the loop *)
@@ -457,20 +474,20 @@ struct
                   (fun pv -> perform
                      (pr,pc,brc) <-- liftPPair pv;
                      seqM
-                         (whenM (LogicCode.notequalL pc c)
-                             (seqM
-                               (ret (C.swap_cols_stmt b c pc))
-                               (D.upd_sign ())))
+                         (whenM (LogicCode.notequalL pc c) (perform
+                           s1 <-- ret (C.swap_cols_stmt b c pc);
+                           s2 <-- D.upd_sign ();
+                           ret (optSeq s1 s2)))
                        (seqM
-                         (whenM (LogicCode.notequalL pr c)
-                             (seqM
-                               (ret (C.swap_rows_stmt b r pr))
-                               (D.upd_sign ())))
-                          (ret (MaybeCode.just brc))))
+                         (whenM (LogicCode.notequalL pr c) (perform
+                           s1 <-- ret (C.swap_rows_stmt b r pc);
+                           s2 <-- D.upd_sign ();
+                           ret (optSeq s1 s2)))
+                         (ret (MaybeCode.just brc))))
                   (ret MaybeCode.none))
 end
 
-module NoPivot(C: CONTAINER2D)(Det: DETF) = 
+module NoPivot(C: CONTAINER2D)(Det: DETF)(P: TRACKPIVOT) = 
 struct
    module D = Det(C.Dom)
    (* In this case, we assume diagonal dominance, and so
@@ -488,9 +505,9 @@ module Gen(C: CONTAINER2D)
    struct
     module Det = Detf(C.Dom)
     module U = Update(C)(Detf)
-    module Pivot = PivotF(C)(Detf)
     module Input = In(C)
     module Output = Out(C)(Det)
+    module Pivot = PivotF(C)(Detf)(Output.P)
     let gen =
       let zerobelow b r c m n brc =
         let innerbody j bjc = perform
@@ -526,7 +543,7 @@ module Gen(C: CONTAINER2D)
                         seqM (zerobelow b rr cc m n pv)
                              (Output.R.succ ()) )
                         (Det.zero_sign () ))
-                    (Code.updateL c Idx.succ) ))
+                    (Code.updateM c Idx.succ) ))
             (Output.make_result b)
     in dogen
 end

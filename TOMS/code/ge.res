@@ -29,12 +29,11 @@
       done;
       (match (! t_10) with
        | Some (i_11) ->
-          if ((fst i_11) <> t_8) then begin
+          if ((fst i_11) <> t_8) then
            let t_12 = t_5.(t_8) in
            t_5.(t_8) <- t_5.(fst i_11);
-           t_5.(fst i_11) <- t_12;
-           ()
-          end else ();
+           t_5.(fst i_11) <- t_12
+          else ();
           (Some (snd i_11))
        | None -> (None))
      end in
@@ -144,12 +143,11 @@
       done;
       (match (! t_10) with
        | Some (i_11) ->
-          if ((fst i_11) <> t_8) then begin
+          if ((fst i_11) <> t_8) then
            let t_12 = t_5.(t_8) in
            t_5.(t_8) <- t_5.(fst i_11);
-           t_5.(fst i_11) <- t_12;
-           ()
-          end else ();
+           t_5.(fst i_11) <- t_12
+          else ();
           (Some (snd i_11))
        | None -> (None))
      end in
@@ -259,7 +257,7 @@
       done;
       (match (! t_9) with
        | Some (i_10) ->
-          if ((fst i_10) <> t_7) then begin
+          if ((fst i_10) <> t_7) then
            let a_11 = t_4.arr
            and m_12 = t_4.m in
            let i1_13 = (t_7 * m_12)
@@ -268,9 +266,8 @@
             let t_16 = a_11.(i1_13 + i_15) in
             a_11.(i1_13 + i_15) <- a_11.(i2_14 + i_15);
             a_11.(i2_14 + i_15) <- t_16
-           done;
-           ()
-          end else ();
+           done
+          else ();
           (Some (snd i_10))
        | None -> (None))
      end in
@@ -388,7 +385,7 @@
       done;
       (match (! t_9) with
        | Some (i_10) ->
-          if ((fst i_10) <> t_7) then begin
+          if ((fst i_10) <> t_7) then
            let a_11 = t_4.arr
            and m_12 = t_4.m in
            let i1_13 = (t_7 * m_12)
@@ -397,9 +394,8 @@
             let t_16 = a_11.(i1_13 + i_15) in
             a_11.(i1_13 + i_15) <- a_11.(i2_14 + i_15);
             a_11.(i2_14 + i_15) <- t_16
-           done;
-           ()
-          end else ();
+           done
+          else ();
           (Some (snd i_10))
        | None -> (None))
      end in
@@ -541,7 +537,7 @@
            let a_13 = t_4.arr
            and m_14 = t_4.m in
            let i1_15 = (t_9 * m_14)
-           and i2_16 = ((fst (fst i_12)) * m_14) in
+           and i2_16 = ((snd (fst i_12)) * m_14) in
            for i_17 = 0 to (m_14 - 1) do
             let t_18 = a_13.(i1_15 + i_17) in
             a_13.(i1_15 + i_17) <- a_13.(i2_16 + i_17);
@@ -1126,7 +1122,7 @@
            let a_13 = t_4.arr
            and m_14 = t_4.m in
            let i1_15 = (t_9 * m_14)
-           and i2_16 = ((fst (fst i_12)) * m_14) in
+           and i2_16 = ((snd (fst i_12)) * m_14) in
            for i_17 = 0 to (m_14 - 1) do
             let t_18 = a_13.(i1_15 + i_17) in
             a_13.(i1_15 + i_17) <- a_13.(i2_16 + i_17);
@@ -1189,20 +1185,18 @@
       done;
       (match (! t_10) with
        | Some (i_11) ->
-          if ((snd (fst i_11)) <> t_9) then begin
+          if ((snd (fst i_11)) <> t_9) then
            for r_13 = 0 to ((Array.length t_5) - 1) do
             let t_14 = (t_5.(r_13)).(t_9) in
             (t_5.(r_13)).(t_9) <- (t_5.(r_13)).(snd (fst i_11));
             (t_5.(r_13)).(snd (fst i_11)) <- t_14
-           done;
-           ()
-          end else ();
-          if ((fst (fst i_11)) <> t_9) then begin
+           done
+          else ();
+          if ((fst (fst i_11)) <> t_9) then
            let t_12 = t_5.(t_8) in
-           t_5.(t_8) <- t_5.(fst (fst i_11));
-           t_5.(fst (fst i_11)) <- t_12;
-           ()
-          end else ();
+           t_5.(t_8) <- t_5.(snd (fst i_11));
+           t_5.(snd (fst i_11)) <- t_12
+          else ();
           (Some (snd i_11))
        | None -> (None))
      end in
@@ -1266,8 +1260,8 @@
           end else ();
           if ((fst (fst i_13)) <> t_11) then begin
            let t_14 = t_5.(t_10) in
-           t_5.(t_10) <- t_5.(fst (fst i_13));
-           t_5.(fst (fst i_13)) <- t_14;
+           t_5.(t_10) <- t_5.(snd (fst i_13));
+           t_5.(snd (fst i_13)) <- t_14;
            (t_9 := (~- (! t_9)))
           end else ();
           (Some (snd i_13))
@@ -1324,20 +1318,18 @@
       done;
       (match (! t_10) with
        | Some (i_11) ->
-          if ((snd (fst i_11)) <> t_9) then begin
+          if ((snd (fst i_11)) <> t_9) then
            for r_13 = 0 to ((Array.length t_5) - 1) do
             let t_14 = (t_5.(r_13)).(t_9) in
             (t_5.(r_13)).(t_9) <- (t_5.(r_13)).(snd (fst i_11));
             (t_5.(r_13)).(snd (fst i_11)) <- t_14
-           done;
-           ()
-          end else ();
-          if ((fst (fst i_11)) <> t_9) then begin
+           done
+          else ();
+          if ((fst (fst i_11)) <> t_9) then
            let t_12 = t_5.(t_8) in
-           t_5.(t_8) <- t_5.(fst (fst i_11));
-           t_5.(fst (fst i_11)) <- t_12;
-           ()
-          end else ();
+           t_5.(t_8) <- t_5.(snd (fst i_11));
+           t_5.(snd (fst i_11)) <- t_12
+          else ();
           (Some (snd i_11))
        | None -> (None))
      end in
@@ -1401,8 +1393,8 @@
           end else ();
           if ((fst (fst i_13)) <> t_11) then begin
            let t_14 = t_5.(t_10) in
-           t_5.(t_10) <- t_5.(fst (fst i_13));
-           t_5.(fst (fst i_13)) <- t_14;
+           t_5.(t_10) <- t_5.(snd (fst i_13));
+           t_5.(snd (fst i_13)) <- t_14;
            (t_9 := (~- (! t_9)))
           end else ();
           (Some (snd i_13))
@@ -1431,6 +1423,70 @@
     if ((! t_9) = 0) then 0.
     else if ((! t_9) = 1) then (! t_8)
     else (~-. (! t_8)), (! t_2))>.
+# val resFA24 : ('a, Ge.GenFA24.Input.inp -> Ge.GenFA24.Output.res) code =
+  .<fun a_1 ->
+   let t_2 = (ref 0) in
+   let t_3 = (ref 0) in
+   let t_5 = (Array.map (fun x_4 -> (Array.copy x_4)) (Array.copy a_1)) in
+   let t_6 = (Array.length a_1.(0)) in
+   let t_7 = (Array.length a_1) in
+   let t_8 = (ref 1.) in
+   let t_9 = (ref 1) in
+   let t_10 = (ref ([])) in
+   while (((! t_3) < t_6) && ((! t_2) < t_7)) do
+    let t_11 = (! t_2) in
+    let t_12 = (! t_3) in
+    let t_13 = (ref (None)) in
+    let t_19 =
+     begin
+      for j_16 = t_11 to (t_7 - 1) do
+       let t_17 = (t_5.(j_16)).(t_12) in
+       if (t_17 <> 0.) then
+        (match (! t_13) with
+         | Some (i_18) ->
+            if ((abs_float (snd i_18)) < (abs_float t_17)) then
+             (t_13 := (Some (j_16, t_17)))
+            else ()
+         | None -> (t_13 := (Some (j_16, t_17))))
+       else ()
+      done;
+      (match (! t_13) with
+       | Some (i_14) ->
+          if ((fst i_14) <> t_11) then begin
+           begin
+            let t_15 = t_5.(t_11) in
+            t_5.(t_11) <- t_5.(fst i_14);
+            t_5.(fst i_14) <- t_15;
+            (t_9 := (~- (! t_9)))
+           end;
+           (t_10 := ((RowSwap ((fst i_14), t_11)) :: (! t_10)))
+          end else ();
+          (Some (snd i_14))
+       | None -> (None))
+     end in
+    (match t_19 with
+     | Some (i_20) ->
+        begin
+         for j_21 = (t_11 + 1) to (t_7 - 1) do
+          let t_22 = (t_5.(j_21)).(t_12) in
+          if (t_22 <> 0.) then begin
+           for j_23 = (t_12 + 1) to (t_6 - 1) do
+            (t_5.(j_21)).(j_23) <-
+             ((t_5.(j_21)).(j_23) -. ((t_22 /. i_20) *. (t_5.(t_11)).(j_23)))
+           done;
+           (t_5.(j_21)).(t_12) <- 0.
+          end else ()
+         done;
+         (t_8 := ((! t_8) *. i_20))
+        end;
+        (t_2 := ((! t_2) + 1))
+     | None -> (t_9 := 0));
+    (t_3 := ((! t_3) + 1))
+   done;
+   (t_5,
+    if ((! t_9) = 0) then 0.
+    else if ((! t_9) = 1) then (! t_8)
+    else (~-. (! t_8)), (! t_2), (! t_10))>.
 # val resRA1 : ('a, Ge.GenRA1.Input.inp -> Ge.GenRA1.Output.res) code =
   .<fun a_1 ->
    let t_2 = (ref 0) in
@@ -1731,12 +1787,11 @@
       done;
       (match (! t_11) with
        | Some (i_12) ->
-          if ((fst i_12) <> t_9) then begin
+          if ((fst i_12) <> t_9) then
            let t_13 = t_5.(t_9) in
            t_5.(t_9) <- t_5.(fst i_12);
-           t_5.(fst i_12) <- t_13;
-           ()
-          end else ();
+           t_5.(fst i_12) <- t_13
+          else ();
           (Some (snd i_12))
        | None -> (None))
      end in
@@ -1848,12 +1903,11 @@
       done;
       (match (! t_11) with
        | Some (i_12) ->
-          if ((fst i_12) <> t_9) then begin
+          if ((fst i_12) <> t_9) then
            let t_13 = t_5.(t_9) in
            t_5.(t_9) <- t_5.(fst i_12);
-           t_5.(fst i_12) <- t_13;
-           ()
-          end else ();
+           t_5.(fst i_12) <- t_13
+          else ();
           (Some (snd i_12))
        | None -> (None))
      end in
@@ -1904,12 +1958,11 @@
       done;
       (match (! t_11) with
        | Some (i_12) ->
-          if ((fst i_12) <> t_9) then begin
+          if ((fst i_12) <> t_9) then
            let t_13 = t_5.(t_9) in
            t_5.(t_9) <- t_5.(fst i_12);
-           t_5.(fst i_12) <- t_13;
-           ()
-          end else ();
+           t_5.(fst i_12) <- t_13
+          else ();
           (Some (snd i_12))
        | None -> (None))
      end in
@@ -1955,6 +2008,7 @@
 # val rFA12 : Ge.GenFA12.Input.inp -> Ge.GenFA12.Output.res = <fun>
 # val rFA13 : Ge.GenFA13.Input.inp -> Ge.GenFA13.Output.res = <fun>
 # val rFA14 : Ge.GenFA14.Input.inp -> Ge.GenFA14.Output.res = <fun>
+# val rFA24 : Ge.GenFA24.Input.inp -> Ge.GenFA24.Output.res = <fun>
 # val rRA1 : Ge.GenRA1.Input.inp -> Ge.GenRA1.Output.res = <fun>
 # val rRA2 : Ge.GenRA2.Input.inp -> Ge.GenRA2.Output.res = <fun>
 # val rRA3 : Ge.GenRA3.Input.inp -> Ge.GenRA3.Output.res = <fun>
@@ -2132,7 +2186,17 @@ val resF11 : Ge.GenFA11.Output.res list =
       [|0.; 0.; -1.72413793103448287|]; [|0.; 0.; 0.|]|],
     50., 3);
    ([|[|10.; 5.; 0.|]; [|0.; 2.; 0.|]; [|0.; 0.; 0.|]|], 0., 2)]
-#   val ra0 : Num.num array array = [|[|Num.Int 1|]|]
+# val resF24 : Ge.GenFA24.Output.res list =
+  [([|[|1.|]|], 1., 1, []);
+   ([|[|4.; 13.; 5.|]; [|0.; 6.25; 1.25|]; [|0.; 0.; 2.|]|], 50., 3,
+    [RowSwap (2, 1); RowSwap (1, 0)]);
+   ([|[|4.; 13.; 5.; 0.|]; [|0.; 6.25; 1.25; 0.|]; [|0.; 0.; 2.; 0.|]|], 50.,
+    3, [RowSwap (2, 1); RowSwap (1, 0)]);
+   ([|[|4.; 13.; 5.|]; [|0.; 6.25; 1.25|]; [|0.; 0.; 2.|]; [|0.; 0.; 0.|]|],
+    50., 3, [RowSwap (2, 1); RowSwap (1, 0)]);
+   ([|[|0.; 10.; 5.|]; [|0.; 0.; 2.|]; [|0.; 0.; 0.|]|], 0., 2,
+    [RowSwap (1, 0)])]
+#   * * * * * * * * *     val ra0 : Num.num array array = [|[|Num.Int 1|]|]
 #           val ra1 : Num.num array array =
   [|[|Num.Int 1; Num.Int 2; Num.Int 3|];
     [|Num.Int 4; Num.Int 13; Num.Int 5|];

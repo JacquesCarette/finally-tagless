@@ -25,6 +25,7 @@ let resFA11 = instantiate GenFA11.gen ;;
 let resFA12 = instantiate GenFA12.gen ;;
 let resFA13 = instantiate GenFA13.gen ;;
 let resFA14 = instantiate GenFA14.gen ;;
+let resFA24 = instantiate GenFA24.gen ;;
 let resRA1 = instantiate GenRA1.gen ;;
 let resRA2 = instantiate GenRA2.gen ;;
 let resRA3 = instantiate GenRA3.gen ;;
@@ -56,6 +57,7 @@ let rFA11 = .! resFA11 ;;
 let rFA12 = .! resFA12 ;;
 let rFA13 = .! resFA13 ;;
 let rFA14 = .! resFA14 ;;
+let rFA24 = .! resFA24 ;;
 let rRA1 = .! resRA1 ;;
 let rRA2 = .! resRA2 ;;
 let rRA3 = .! resRA3 ;;
@@ -214,6 +216,18 @@ let resF11 = List.map rFA11 fa5;;
 let resF12 = List.map rFA12 fa5;;
 let resF13 = List.map rFA13 fa5;;
 let resF14 = List.map rFA14 fa5;;
+let resF24 = List.map rFA24 fa5;;
+
+(*
+let _ = assert (List.map rFA24 fa5 =
+ [([|[|1.|]|], 1., 1, []);
+   ([|[|4.; 13.; 5.|]; [|0.; 6.25; 1.25|]; [|0.; 0.; 2.|]|], 50., 3, []);
+   ([|[|4.; 13.; 5.; 0.|]; [|0.; 6.25; 1.25; 0.|]; [|0.; 0.; 2.; 0.|]|], 50.,
+    3, []);
+   ([|[|4.; 13.; 5.|]; [|0.; 6.25; 1.25|]; [|0.; 0.; 2.|]; [|0.; 0.; 0.|]|],
+    50., 3, []);
+   ([|[|0.; 10.; 5.|]; [|0.; 0.; 2.|]; [|0.; 0.; 0.|]|], 0., 2, [])])
+*)
 
 let ra0 = Array.make 1 (Array.make 1 (Num.num_of_int 1)) ;;
 let ra1 = Array.map (fun a -> Array.map Num.num_of_int a) (
