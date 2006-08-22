@@ -1,5 +1,16 @@
+module Make(T: Abstractrep.T) = struct
 open StateCPSMonad
-open Code
+
+type ('a, 'b) rep = ('a, 'b) code
+
+module TheCode : 
+    functor(AR: Abstractrep.T) -> 
+        Coderep.T with type ('a,'b) abstract = ('a, 'b) rep
+    = Code.R
+    
+    
+module S = TheCode(T)
+let retN = S.retN
 
 (* Naming conventions: 
    Functions that end in M take monads as arguments and partially
@@ -203,7 +214,7 @@ module GenericArrayContainer(Dom:DOMAINL) =
     let newbody j = perform
         bjc <-- retN (getL b j c);
         body j bjc
-    in  loopM low high newbody
+    in  S.loopM low high newbody
 
   (* only set the head of the current column *)
   let col_head_set x n m y = .< (.~x).(.~n).(.~m) <- .~y >.
@@ -211,7 +222,7 @@ module GenericArrayContainer(Dom:DOMAINL) =
     let newbody k = perform
         bjk <-- ret (getL b j k);
         body k bjk
-    in  loopM low high newbody
+    in  S.loopM low high newbody
 end
 
 (* Matrix layed out row after row, in a C fashion *)
@@ -257,7 +268,7 @@ module GenericVectorContainer(Dom:DOMAINL) =
     let newbody j = perform
         bjc <-- retN (getL b j c);
         body j bjc
-    in  loopM low high newbody
+    in  S.loopM low high newbody
 
   (* only set the head of the current column *)
   let col_head_set x n m y = .< ((.~x).arr).(.~n* (.~x).m + .~m) <- .~y >.
@@ -265,7 +276,7 @@ module GenericVectorContainer(Dom:DOMAINL) =
     let newbody k = perform
         bjk <-- ret (getL b j k);
         body k bjk
-    in  loopM low high newbody
+    in  S.loopM low high newbody
 end
 
 (* we use an association list as the representation of a sparse vector.
@@ -337,4 +348,12 @@ module Array2D =
   let setL x n m y = .< x.(.~n).(.~m) <- .~y >.
   let dim2 x = .< Array.length x >.       (* number of rows *)
   let dim1 x = .< Array.length (x).(0) >. (* number of cols *)
+end
+
+(* This type is needed for the output, and is tracked during
+   pivoting. *)
+type perm = RowSwap of (int * int) | ColSwap of (int * int)
+let liftRowSwap a b = .< RowSwap (.~a, .~b) >.
+let liftColSwap a b = .< ColSwap (.~a, .~b) >.
+ 
 end

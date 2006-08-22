@@ -1,10 +1,17 @@
-open Infra
-open Code
+open StateCPSMonad
 
-(* Monad used in this module: code generation monad with open union state *)
-type ('a,'v,'s,'w) cmonad = (('a,'v) code, 's list, ('a,'w) code) monad
+module GEMake(CR: Abstractrep.T)(II: Infra.Proxy(CR).T) = struct
+
+open CR
+module I = II(CR)
+open I
+module TC = TheCode(CR)
+open TC
+
+(* Monad used in this module: (abstract) code generation monad with open union state *)
+type ('a,'v,'s,'w) cmonad = (('a,'v) abstract, 's list, ('a,'w) abstract) monad
 (* We also use this variant, where we _might_ generate code *)
-type ('a,'v,'s,'w) omonad = (('a,'v) code option, 's list, ('a,'w) code) monad
+type ('a,'v,'s,'w) omonad = (('a,'v) abstract option, 's list, ('a,'w) abstract) monad
 
 module type DETERMINANT = sig
   type indet
@@ -12,19 +19,19 @@ module type DETERMINANT = sig
   type tdet = outdet ref
   type 'a lstate
   type 'a tag_lstate = [`TDet of 'a lstate ]
-	(* Here, parameter 'b accounts for all the extra polymorphims *)
+    (* Here, parameter 'b accounts for all the extra polymorphims *)
   type ('b,'v) lm = ('a,'v,'s,'w) cmonad
-	constraint 's = [> 'a tag_lstate]
-	constraint 'b = 'a * 's * 'w
+    constraint 's = [> 'a tag_lstate]
+    constraint 'b = 'a * 's * 'w
   type ('b,'v) om = ('a,'v,'s,'w) omonad
-	constraint 's = [> 'a tag_lstate]
-	constraint 'b = 'a * 's * 'w
+    constraint 's = [> 'a tag_lstate]
+    constraint 'b = 'a * 's * 'w
   val decl : unit -> ('b,unit) lm (* could be unit rather than unit code...*)
   val upd_sign  : unit -> ('b,unit) om
   val zero_sign : unit -> ('b,unit) lm
-  val acc       : ('a,indet) code -> ('a * 's * 'w,unit) lm
+  val acc       : ('a,indet) abstract -> ('a * 's * 'w,unit) lm
   val get       : unit -> ('b,tdet) lm
-  val set       : ('a,indet) code -> ('a * 's * 'w,unit) lm
+  val set       : ('a,indet) abstract -> ('a * 's * 'w,unit) lm
   val fin       : unit -> ('b,outdet) lm
 end
 
@@ -32,11 +39,11 @@ module type DETF = functor(D:DOMAINL) -> DETERMINANT with type indet = D.v
 
 (* no need to make the type abstract here - just leads to other problems *)
 module type RANK = sig
-  type 'a lstate = ('a, int ref) code
+  type 'a lstate = ('a, int ref) abstract
   type 'a tag_lstate = [`TRan of 'a lstate ]
   type ('b,'v) lm = ('a,'v,'s,'w) cmonad
-	constraint 's = [> 'a tag_lstate]
-	constraint 'b = 'a * 's * 'w
+    constraint 's = [> 'a tag_lstate]
+    constraint 'b = 'a * 's * 'w
   val rfetch : unit -> ('b, int ref) lm
   val decl   : unit -> ('b, int ref) lm
   val succ   : unit -> ('b, unit) lm
@@ -47,11 +54,11 @@ end
    is also the outer loop index! *)
 module TrackRank = 
   struct
-  type 'a lstate = ('a, int ref) code
+  type 'a lstate = ('a, int ref) abstract
   type 'a tag_lstate = [`TRan of 'a lstate ]
   type ('b,'v) lm = ('a,'v,'s,'w) cmonad
-	constraint 's = [> 'a tag_lstate]
-	constraint 'b = 'a * 's * 'w
+    constraint 's = [> 'a tag_lstate]
+    constraint 'b = 'a * 's * 'w
   (* In 3.09, no need for any coercion at all, type inference works! *)
   let rec fetch_iter s =
     match (List.hd s) with
@@ -66,7 +73,7 @@ module TrackRank =
       ret rdecl
   let succ () = perform
    r <-- rfetch ();
-   Code.assignM r (Idx.succ (liftGet r))
+   assignM r (Idx.succ (liftGet r))
 end
 
 module Rank:RANK = struct
@@ -96,17 +103,17 @@ module NoDet(Dom:DOMAINL) =
   let decl () = unitL
   let upd_sign () = ret None
   let zero_sign () = unitL
-  let acc v = unitL
-  let get () = ret (liftRef Code.cunit)
-  let set v = unitL
+  let acc _ = unitL
+  let get () = ret (liftRef cunit)
+  let set _ = unitL
   let fin () = unitL
   type 'a tag_lstate = [`TDet of 'a lstate ]
   type ('b,'v) lm = ('a,'v,'s,'w) cmonad
-	constraint 's = [> 'a tag_lstate]
-	constraint 'b = 'a * 's * 'w
+    constraint 's = [> 'a tag_lstate]
+    constraint 'b = 'a * 's * 'w
   type ('b,'v) om = ('a,'v,'s,'w) omonad
-	constraint 's = [> 'a tag_lstate]
-	constraint 'b = 'a * 's * 'w
+    constraint 's = [> 'a tag_lstate]
+    constraint 'b = 'a * 's * 'w
 end
 
 module AbstractDet(Dom: DOMAINL) =
@@ -117,14 +124,14 @@ module AbstractDet(Dom: DOMAINL) =
   type tdet = outdet ref
   (* the first part of the state is an integer: which is +1, 0, -1:
      the sign of the determinant *)
-  type 'a lstate = ('a,int ref) code * ('a,tdet) code
+  type 'a lstate = ('a,int ref) abstract * ('a,tdet) abstract
   type 'a tag_lstate = [`TDet of 'a lstate ]
   type ('b,'v) lm = ('a,'v,'s,'w) cmonad
-	constraint 's = [> 'a tag_lstate]
-	constraint 'b = 'a * 's * 'w
+    constraint 's = [> 'a tag_lstate]
+    constraint 'b = 'a * 's * 'w
   type ('b,'v) om = ('a,'v,'s,'w) omonad
-	constraint 's = [> 'a tag_lstate]
-	constraint 'b = 'a * 's * 'w
+    constraint 's = [> 'a tag_lstate]
+    constraint 'b = 'a * 's * 'w
   let rec fetch_iter s =
     match (List.hd s) with
       `TDet x -> x
@@ -140,23 +147,23 @@ module AbstractDet(Dom: DOMAINL) =
   let upd_sign () = perform
       det <-- dfetch ();
       det1 <-- ret (fst det);
-      ret (Some (Code.assign det1 (Idx.uminus (liftGet det1))))
+      ret (Some (assign det1 (Idx.uminus (liftGet det1))))
   let zero_sign () = perform
       det <-- dfetch ();
       det1 <-- ret (fst det);
-      Code.assignM det1 Idx.zero
+      assignM det1 Idx.zero
   let acc v = perform
       det <-- dfetch ();
       det2 <-- ret (snd det);
       r <-- ret ((liftGet det2) *^ v);
-      Code.assignM det2 r
+      assignM det2 r
   let get () = perform
       det <-- dfetch ();
       ret (snd det)
   let set v = perform
       det <-- dfetch ();
       det2 <-- ret (snd det);
-      Code.assignM det2 v
+      assignM det2 v
   let fin () = perform
       (det_sign,det) <-- dfetch ();
       ifM (Logic.equalL (liftGet det_sign) Idx.zero) (ret zeroL)
@@ -180,8 +187,8 @@ module UpdateProxy(C0:CONTAINER2D)(D0:DETF) = struct
         type out_val = D(C.Dom).outdet
         val update : 
             'a in_val -> 'a in_val -> 'a in_val -> 'a in_val -> 
-          ('a in_val -> ('a, unit) code) ->
-          ('a, out_val ref) code -> ('a, unit, 's, 'w) cmonad
+          ('a in_val -> ('a, unit) abstract) ->
+          ('a, out_val ref) abstract -> ('a, unit, 's, 'w) cmonad
         val update_det : 'a in_val -> 
           ('a in_val -> ('a, unit, 's, 'w) cmonad) ->
           ('a in_val -> ('a, unit, 's, 'w) cmonad) ->
@@ -198,52 +205,46 @@ module DivisionUpdate
   open Dom
   type 'a in_val = 'a vc
   type out_val = Det(C.Dom).outdet
-  let update bic brc brk bik setter d = perform
+  let update bic brc brk bik setter _ = perform
       y <-- ret (bik -^ ((divL bic brc) *^ brk));
       ret (setter (applyMaybe normalizerL y))
-  let update_det v set acc = acc v
+  let update_det v _ acc = acc v
 end
 
 module FractionFreeUpdate(Ctr:CONTAINER2D)(Det:DETF) = struct
   module Dom = Ctr.Dom
   open Dom
-  type 'a in_val = ('a, v) code
+  type 'a in_val = ('a, v) abstract
   type out_val = Det(Ctr.Dom).outdet
   let update bic brc brk bik setter d = perform
       z <-- ret ((bik *^ brc) -^ (brk *^ bic));
       t <-- ret (applyMaybe normalizerL z);
       ov <-- ret (divL t (liftGet d));
       ret (setter ov)
-  let update_det v set acc = set v
+  let update_det v set _ = set v
 end
 
-(* This type is needed for the output, and is tracked during
-   pivoting. *)
-type perm = RowSwap of (int * int) | ColSwap of (int * int)
-let liftRowSwap a b = .< RowSwap (.~a, .~b) >.
-let liftColSwap a b = .< ColSwap (.~a, .~b) >.
- 
 module type TRACKPIVOT = sig
   type 'a lstate
   type 'a tag_lstate = [`TPivot of 'a lstate ]
-	(* Here, parameter 'b accounts for all the extra polymorphims *)
+    (* Here, parameter 'b accounts for all the extra polymorphims *)
   type ('b,'v) lm = ('a,'v,'s,'w) cmonad
-	constraint 's = [> 'a tag_lstate]
-	constraint 'b = 'a * 's * 'w
+    constraint 's = [> 'a tag_lstate]
+    constraint 'b = 'a * 's * 'w
   val decl : unit -> ('b, unit) lm
-  val add : ('a,perm) code -> 
-    (('a,unit) code option,[> 'a tag_lstate] list,('a,'w) code) monad
+  val add : ('a, perm) abstract -> 
+    (('a,unit) abstract option,[> 'a tag_lstate] list,('a,'w) abstract) monad
   val fin : unit -> 
-    (('a,perm list) code ,[> 'a tag_lstate] list,'w) monad
+    (('a, perm list) abstract ,[> 'a tag_lstate] list,'w) monad
 end
 
 module TrackPivot = 
   struct
-  type 'a lstate = ('a, perm list ref) code
+  type 'a lstate = ('a,  perm list ref) abstract
   type 'a tag_lstate = [`TPivot of 'a lstate ]
   type ('b,'v) lm = ('a,'v,'s,'w) cmonad
-	constraint 's = [> 'a tag_lstate]
-	constraint 'b = 'a * 's * 'w
+    constraint 's = [> 'a tag_lstate]
+    constraint 'b = 'a * 's * 'w
   let rec fetch_iter s =
     match (List.hd s) with
       `TPivot x -> x
@@ -252,12 +253,12 @@ module TrackPivot =
                         ret (fetch_iter s)
   let pstore v = store (`TPivot v)
   let decl () = perform
-      pdecl <-- retN (liftRef (CList.nil : ('a, perm list) code));
+      pdecl <-- retN (liftRef (CList.nil : ('a,  perm list) abstract));
       pstore pdecl;
       unitL
   let add v = perform
    p <-- pfetch ();
-   ret (Some (Code.assign p (CList.cons v (liftGet p))))
+   ret (Some (assign p (CList.cons v (liftGet p))))
 end
 
 module KeepPivot:TRACKPIVOT = struct
@@ -268,21 +269,22 @@ module KeepPivot:TRACKPIVOT = struct
 end
 
 module DiscardPivot:TRACKPIVOT = struct
-  type 'a lstate = ('a, perm list ref) code
+  type 'a lstate = ('a,  perm list ref) abstract
   type 'a tag_lstate = [`TPivot of 'a lstate ]
   type ('b,'v) lm = ('a,'v,'s,'w) cmonad
-	constraint 's = [> 'a tag_lstate]
-	constraint 'b = 'a * 's * 'w
+    constraint 's = [> 'a tag_lstate]
+    constraint 'b = 'a * 's * 'w
   let decl () = unitL
-  let add v = ret None
+  let add _ = ret None
   let fin () = ret CList.nil
 end
 
 module type INPUT =
       functor (C: CONTAINER2D) -> sig
     type inp
-    val get_input : ('a, inp) code ->
-        (('a, C.contr) code * ('a, int) code * bool, 's, ('a, 'w) code) monad
+    val get_input : ('a, inp) abstract ->
+        (('a, C.contr) abstract * ('a, int) abstract * bool, 's, ('a, 'w)
+        abstract) monad
 end 
 
 (* What is the input *)
@@ -307,7 +309,7 @@ module OutProxy(C0: CONTAINER2D)(Det0:DETF) = struct
       module D : DETERMINANT
       module R : RANK
       module P : TRACKPIVOT
-      val make_result : ('a,C.contr) code -> 
+      val make_result : ('a,C.contr) abstract -> 
         ('a,res,[> 'a Det.tag_lstate | 'a R.tag_lstate | 'a P.tag_lstate],'w) cmonad
     end
 end
@@ -359,7 +361,7 @@ end
 module OutDetRankPivot(C: CONTAINER2D)
     (Det : DETERMINANT) =
   struct
-  type res = C.contr * Det.outdet * int * perm list
+  type res = C.contr * Det.outdet * int *  perm list
   module D = Det
   module R = Rank
   module P = KeepPivot
@@ -385,15 +387,15 @@ module type PIVOT =
     Return the value of the pivot option. Or zero?
     When we permute the rows of columns, we update the sign of the det.
  *)
- val findpivot : 'a C.vc -> ('a,int) code -> ('a,int) code -> 
-   ('a,int) code -> ('a,int) code -> 
+ val findpivot : 'a C.vc -> ('a,int) abstract -> ('a,int) abstract -> 
+   ('a,int) abstract -> ('a,int) abstract -> 
    ('a,C.Dom.v option,[> 'a D(C.Dom).tag_lstate | 'a P.tag_lstate],'w) cmonad
 end
 
 module RowPivot(Ctr: CONTAINER2D)(Det: DETF)(P: TRACKPIVOT) =
 struct
    module D = Det(Ctr.Dom) 
-   let findpivot b r n c m = perform
+   let findpivot b r n c _ = perform
        pivot <-- retN (liftRef Maybe.none );
        (* If no better_than procedure defined, we just search for
       non-zero element. Any non-zero element is a good pivot.
@@ -406,11 +408,11 @@ struct
                   (matchM (liftGet pivot)
                     (fun pv ->
                       perform
-                      (i,bic) <-- ret (liftPair pv);
+                      (_,bic) <-- ret (liftPair pv);
                       whenM (sel bic bjc)
-                        (Code.assignM pivot (Maybe.just 
+                        (assignM pivot (Maybe.just 
                                      (Tuple.tup2 j bjc))))
-                     (Code.assignM pivot (Maybe.just 
+                     (assignM pivot (Maybe.just 
                                   (Tuple.tup2 j bjc))))
               )
          | None ->
@@ -418,14 +420,14 @@ struct
             brc <-- retN (Ctr.row_head b r c);
             ifM (Logic.notequalL brc Ctr.Dom.zeroL)
               (* the current element is good enough *)
-              (Code.assignM pivot (Maybe.just (Tuple.tup2 r brc)))
+              (assignM pivot (Maybe.just (Tuple.tup2 r brc)))
               (let traverse = fun o j ->
                   whenM (Idx.less j n)
                     (perform
                         bjc <-- retN (Ctr.getL b j c);
                         ifM (Logic.equalL bjc Ctr.Dom.zeroL)
-                            (Code.applyM o (Idx.succ j))
-                            (Code.assignM pivot (Maybe.just 
+                            (applyM o (Idx.succ j))
+                            (assignM pivot (Maybe.just 
                                 (Tuple.tup2 j bjc)))) in
               (genrecloop traverse (Idx.succ r)))
          )
@@ -460,14 +462,14 @@ struct
                   (matchM (liftGet pivot)
                     (fun pv ->
                       perform
-                      (pr,pc,brc) <-- ret (liftPPair pv);
+                      (i,j,brc) <-- ret (liftPPair pv);
                       whenM (sel brc bjk)
-                        (Code.assignM pivot (Maybe.just
+                        (assignM pivot (Maybe.just
                             (Tuple.tup2 (Tuple.tup2 j k) bjk))))
-                     (Code.assignM pivot (Maybe.just
+                     (assignM pivot (Maybe.just
                             (Tuple.tup2 (Tuple.tup2 j k) bjk))))
               | None ->
-                  (Code.assignM pivot (Maybe.just (
+                  (assignM pivot (Maybe.just (
                       Tuple.tup2 (Tuple.tup2 j k) bjk)))
               ))))
               (* finished the loop *)
@@ -493,7 +495,7 @@ struct
    module D = Det(C.Dom)
    (* In this case, we assume diagonal dominance, and so
       just take the diagonal as ``pivot'' *)
-   let findpivot b r n c m = perform 
+   let findpivot b r _ c _ = perform 
        ret (Maybe.just (C.row_head b r c));
 end
 
@@ -544,10 +546,20 @@ module Gen(C: CONTAINER2D)
                         seqM (zerobelow b rr cc m n pv)
                              (Output.R.succ ()) )
                         (Det.zero_sign () ))
-                    (Code.updateM c Idx.succ) ))
+                    (updateM c Idx.succ) ))
             (Output.make_result b)
     in dogen
 end
+
+end
+
+(* all of this needs to be moved elsewhere ! *)
+module CC = struct type ('a, 'b) abstract = ('a, 'b) code end
+module V1 = GEMake(CC)(Infra_code.Make)
+open V1
+
+module J = Infra_code.Make(CC)
+open J
 
 module GAC_F = GenericArrayContainer(FloatDomainL)
 module GVC_F = GenericVectorContainer(FloatDomainL)

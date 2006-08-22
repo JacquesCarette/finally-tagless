@@ -10,7 +10,7 @@ SYNTAX_EXTENSION := ../camlp4/pa_monad.cmo
 
 PP := camlp4o -I . $(SYNTAX_EXTENSION)
 
-BASE := stateCPSMonad.cmo code.cmo infra.cmo
+BASE := stateCPSMonad.cmo abstractrep.cmi coderep.cmi infra.cmo code.cmo infra_code.cmo
 OBJ  := ge.cmo rkf45.cmo fft.cmo
 TEST := ge.out rkf45.out fft.out
 RES  := ge.res rkf45.res fft.res
@@ -51,8 +51,13 @@ $(OBJ): $(BASE)
 #
 ########################################################################
 
-%.cmo: %.ml
-	metaocamlc -pp '$(PP)' -g -c $<
+.SUFFIXES: .ml .mli .cmo .cmi
+
+.ml.cmo:
+	metaocamlc -pp '$(PP)' -w A -g -c $<
+
+.mli.cmi:
+	metaocamlc -pp '$(PP)' -c $<
 
 %.out: test-%.ml %.cmo mytop
 	./mytop $(BASE) ./$*.cmo < $< > $@

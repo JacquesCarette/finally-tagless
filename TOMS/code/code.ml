@@ -1,4 +1,11 @@
+module R(AR:Abstractrep.T) = struct
+
+    type ('a, 'b) abstract = ('a, 'b) code
+
 open StateCPSMonad
+
+(* This one is very special! *)
+let retN a = fun s k -> .<let t = .~a in .~(k s .<t>.)>.
 
 (* Naming conventions: 
    Functions that end in M take monads as arguments and partially
@@ -144,4 +151,6 @@ module Transformers = struct
         if lb>ub then cunit
         else if lb = ub then body lb
         else .< begin .~(body lb); .~(full_unroll (lb+1) ub body) end >.
+end
+
 end
