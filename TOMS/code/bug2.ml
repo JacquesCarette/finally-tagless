@@ -29,7 +29,7 @@ module DivisionUpdate(D:DOMAIN with type kind = domain_is_field) = struct
     let update a = D.upd a
 end
 
-module BadUpdate(D:DOMAIN) = struct
+module UnconstrainedUpdate(D:DOMAIN) = struct
     type obj = D.foo
     let update a = D.upd a
 end
@@ -42,18 +42,22 @@ module A = DivisionUpdate(Integer)
 
 (* However, if we go higher order: *)
 module type UPDATE2 =
-    functor(D:DOMAIN) -> sig
+    functor(D:DOMAIN with type kind = domain_is_field) -> sig
     type obj = D.foo
     val update : obj -> obj
 end
 
-module Bar(D:DOMAIN)(U:UPDATE2) = struct
+module Bar(D:DOMAIN with type kind = domain_is_field)(U:UPDATE2) = struct
     module U = U(D)
     let update x = U.update x
 end
 
-(* works as there are no restrictions *)
-module T3 = Bar(Integer)(BadUpdate) ;;
+(* correctly barfs now
+module T3 = Bar(Integer)(DivisionUpdate) ;;
+*)
 
-(* and now this does not work?!?! *)
+(* and now this does work *)
 module T2 = Bar(Rational)(DivisionUpdate) ;;
+
+(* but this is ok too *)
+module T4 = Bar(Rational)(UnconstrainedUpdate) ;;

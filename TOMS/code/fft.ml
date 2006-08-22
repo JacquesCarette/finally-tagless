@@ -37,6 +37,8 @@ An attempt at a better FFT
  ^Id: fft-neo.ml,v 1.13 2004/08/31 07:52:36 oleg Exp ^
 *)
 
+open Code
+
 (* ------------ unstaged nonmonadic list-based representation ------------ *)
 let pi = 4.0 *. atan(1.0)
 

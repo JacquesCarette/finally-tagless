@@ -1,3 +1,4 @@
+open Code
 open Infra
 
 type ('a, 'b) either = Left of 'a | Right of 'b
@@ -126,9 +127,9 @@ let spline_gen a b knots (yout:float array array)
         .< (.~arr).(lo).(i) <- fun y ->
           .~(runM (prespline knots yout y2out num_knots .<y>. lo i )) >. in
         let ll = Array.length (y2out.(0)) - 1 in
-        let code = (CodeTrans.full_unroll 0 (num_knots-2) 
-            (fun j -> CodeTrans.full_unroll 0 ll (fun lo -> body j lo))) in
-            seq code Code.cunit in
+        let code = (Transformers.full_unroll 0 (num_knots-2) 
+            (fun j -> Transformers.full_unroll 0 ll (fun lo -> body j lo))) in
+            seq code cunit in
     let bod arr i = .< fun x -> 
         if ((x<a) || (x>b)) then
             Left "Error: x not in range"
