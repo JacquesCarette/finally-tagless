@@ -37,7 +37,14 @@ An attempt at a better FFT
  ^Id: fft-neo.ml,v 1.13 2004/08/31 07:52:36 oleg Exp ^
 *)
 
-open Code
+open StateCPSMonad
+module Concrete = struct type ('a, 'b) abstract = ('a, 'b) code end
+
+module TC = Infra_code.Make(Concrete)
+open TC
+
+module TC2 = TC.TheCode(Concrete)
+open TC2
 
 (* ------------ unstaged nonmonadic list-based representation ------------ *)
 let pi = 4.0 *. atan(1.0)
@@ -48,8 +55,8 @@ type dir = Forward | Inverse
 let rec merge_u = function
     ([], []) -> []
   | (y0::y0rest,y1::y1rest) -> y0::y1::(merge_u (y0rest,y1rest))
-  | (y0::y0rest, []) -> failwith "should never be reached"
-  | ([], y0::y0rest) -> failwith "should never be reached"
+  | (_::_, []) -> failwith "should never be reached"
+  | ([], _::_) -> failwith "should never be reached"
 
 let cleave_list l = (* split a non-empty list l into two equal halves *)
     let rec take_drop n l acc =
@@ -135,7 +142,7 @@ let (y_sm,run) =
                    (CArray1D.getL arr m, CArray1D.getL arr sm);
                gl (m+2) (l @ [c])
       in gl 0 [] in
-    let run_basic m = m [] (fun s x -> array_write x nums)
+    let run_basic m = m [] (fun _ x -> array_write x nums)
     in
     run_basic (perform l1 f (array_read nums size))
   in

@@ -1,6 +1,6 @@
         Objective Caml version 3.09.1
 
-# # #   val instantiate :
+#   # #   val instantiate :
   (('a, 'b) code -> 'c list -> ('d -> 'e -> 'e) -> ('a, 'f) code) ->
   ('a, 'b -> 'f) code = <fun>
 #   val resFA1 : ('a, Ge.GenFA1.Input.inp -> Ge.GenFA1.Output.res) code =
@@ -2051,15 +2051,15 @@ val resI11 : Ge.GenIA1.Output.res list =
    ([|[|1; 2; 3; 0|]; [|0; 5; -7; 0|]; [|0; 0; 50; 0|]|], 50, 3);
    ([|[|1; 2; 3|]; [|0; 5; -7|]; [|0; 0; 50|]; [|0; 0; 0|]|], 50, 3);
    ([|[|0; 2; 3|]; [|0; 0; -9|]; [|0; 0; 0|]|], 0, 2)]
-#                 val iv0 : Ge.GVC_I.Dom.v Infra.container2dfromvector =
+#                 val iv0 : Ge.GVC_I.Dom.v Ge.GEF.Infra.container2dfromvector =
   {arr = [|1|]; n = 1; m = 1}
-val iv1 : Ge.GVC_I.Dom.v Infra.container2dfromvector =
+val iv1 : Ge.GVC_I.Dom.v Ge.GEF.Infra.container2dfromvector =
   {arr = [|1; 2; 3; 4; 13; 5; -1; 3; 0|]; n = 3; m = 3}
-val iv2 : Ge.GVC_I.Dom.v Infra.container2dfromvector =
+val iv2 : Ge.GVC_I.Dom.v Ge.GEF.Infra.container2dfromvector =
   {arr = [|1; 2; 3; 0; 4; 13; 5; 0; -1; 3; 0; 0|]; n = 3; m = 4}
-val iv4 : Ge.GVC_I.Dom.v Infra.container2dfromvector =
+val iv4 : Ge.GVC_I.Dom.v Ge.GEF.Infra.container2dfromvector =
   {arr = [|0; 2; 3; 0; 13; 5; 0; 3; 0|]; n = 3; m = 3}
-val iv5 : Ge.GVC_I.Dom.v Infra.container2dfromvector list =
+val iv5 : Ge.GVC_I.Dom.v Ge.GEF.Infra.container2dfromvector list =
   [{arr = [|1|]; n = 1; m = 1};
    {arr = [|1; 2; 3; 4; 13; 5; -1; 3; 0|]; n = 3; m = 3};
    {arr = [|1; 2; 3; 0; 4; 13; 5; 0; -1; 3; 0; 0|]; n = 3; m = 4};
@@ -2112,8 +2112,8 @@ val resF1 : Ge.GenFA1.Output.res list =
    [|[|4.; 13.; 5.; 0.|]; [|0.; 6.25; 1.25; 0.|]; [|0.; 0.; 2.; 0.|]|];
    [|[|4.; 13.; 5.|]; [|0.; 6.25; 1.25|]; [|0.; 0.; 2.|]; [|0.; 0.; 0.|]|];
    [|[|0.; 10.; 5.|]; [|0.; 0.; 2.|]; [|0.; 0.; 0.|]|]]
-#                                                                                                 val a2v : 'a array array -> 'a Infra.container2dfromvector = <fun>
-val xxx : Ge.GAC_F.Dom.v Infra.container2dfromvector list =
+#                                                                                                 val a2v : 'a array array -> 'a Ge.GEF.Infra.container2dfromvector = <fun>
+val xxx : Ge.GAC_F.Dom.v Ge.GEF.Infra.container2dfromvector list =
   [{arr = [|1.|]; n = 1; m = 1};
    {arr = [|1.; 2.; 3.; 4.; 13.; 5.; -1.; 3.; 0.|]; n = 3; m = 3};
    {arr = [|1.; 2.; 3.; 0.; 4.; 13.; 5.; 0.; -1.; 3.; 0.; 0.|]; n = 3; m = 4};

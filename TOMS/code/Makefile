@@ -10,7 +10,8 @@ SYNTAX_EXTENSION := ../camlp4/pa_monad.cmo
 
 PP := camlp4o -I . $(SYNTAX_EXTENSION)
 
-BASE := stateCPSMonad.cmo abstractrep.cmi coderep.cmi infra.cmo code.cmo infra_code.cmo
+INFRA := abstractrep.cmi coderep.cmi 
+BASE := stateCPSMonad.cmo infra.cmo code.cmo infra_code.cmo
 OBJ  := ge.cmo rkf45.cmo fft.cmo
 TEST := ge.out rkf45.out fft.out
 RES  := ge.res rkf45.res fft.res
@@ -43,7 +44,7 @@ clean-test:
 clean:
 	rm -f $(TEST) *.cm[io]
 
-$(OBJ): $(BASE)
+$(OBJ): $(INFRA) $(BASE)
 
 ########################################################################
 #

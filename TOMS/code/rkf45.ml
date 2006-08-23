@@ -1,5 +1,11 @@
-open Code
-open Infra
+open StateCPSMonad
+module Concrete = struct type ('a, 'b) abstract = ('a, 'b) code end
+
+module TC = Infra_code.Make(Concrete)
+open TC
+
+module TC2 = TC.TheCode(Concrete)
+open TC2
 
 type ('a, 'b) either = Left of 'a | Right of 'b
 
@@ -95,7 +101,7 @@ let find_spline_index num knots x =
 
 open FloatDomainL
 let prespline knots (yout:float array array) 
-    (y2out:float array array) num_knots xx =
+    (y2out:float array array) xx =
     fun lo -> (fun ii -> 
     let lo1 = lo+1 in
     let kl1 = knots.(lo1) and kl = knots.(lo) in
@@ -125,7 +131,7 @@ let spline_gen a b knots (yout:float array array)
     let init arr = 
         let body lo i = 
         .< (.~arr).(lo).(i) <- fun y ->
-          .~(runM (prespline knots yout y2out num_knots .<y>. lo i )) >. in
+          .~(runM (prespline knots yout y2out .<y>. lo i )) >. in
         let ll = Array.length (y2out.(0)) - 1 in
         let code = (Transformers.full_unroll 0 (num_knots-2) 
             (fun j -> Transformers.full_unroll 0 ll (fun lo -> body j lo))) in
@@ -142,8 +148,8 @@ let spline_gen a b knots (yout:float array array)
 let construct a b k y y2 n =
     let m = Array.length y in
     let (init, bod) = spline_gen a b k y y2 n in
-    .< let arr = Array.init (n-1) (fun l -> 
-        Array.init (m-1) (fun p -> (fun q -> 0.))) in
+    .< let arr = Array.init (n-1) (fun _ -> 
+        Array.init (m-1) (fun _ -> (fun _ -> 0.))) in
        ( (fun () -> .~(init .<arr>. )), 
        (fun i -> .~(bod .<arr>. .<i>. ))) >. ;;
 

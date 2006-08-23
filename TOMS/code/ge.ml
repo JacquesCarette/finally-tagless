@@ -3,8 +3,8 @@ open StateCPSMonad
 module GEMake(CR: Abstractrep.T)(II: Infra.Proxy(CR).T) = struct
 
 open CR
-module I = II(CR)
-open I
+module Infra = II(CR)
+open Infra
 module TC = TheCode(CR)
 open TC
 
@@ -462,7 +462,7 @@ struct
                   (matchM (liftGet pivot)
                     (fun pv ->
                       perform
-                      (i,j,brc) <-- ret (liftPPair pv);
+                      (pr,pc,brc) <-- ret (liftPPair pv);
                       whenM (sel brc bjk)
                         (assignM pivot (Maybe.just
                             (Tuple.tup2 (Tuple.tup2 j k) bjk))))
@@ -555,11 +555,14 @@ end
 
 (* all of this needs to be moved elsewhere ! *)
 module CC = struct type ('a, 'b) abstract = ('a, 'b) code end
-module V1 = GEMake(CC)(Infra_code.Make)
-open V1
+module GEF = GEMake(CC)(Infra_code.Make)
+open GEF
+open Infra
 
+(*
 module J = Infra_code.Make(CC)
 open J
+*)
 
 module GAC_F = GenericArrayContainer(FloatDomainL)
 module GVC_F = GenericVectorContainer(FloatDomainL)

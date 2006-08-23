@@ -1,5 +1,6 @@
+open StateCPSMonad
 open Ge;;
-open Infra;; (* for some types *)
+open GEF.Infra;;
 
 let instantiate f = .<fun a -> .~(runM (f .<a>.)) >. ;;
 
