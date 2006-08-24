@@ -1,7 +1,7 @@
 open StateCPSMonad
 
-module CC = struct type ('a, 'b) abstract = ('a, 'b) code end
-module GEF = Ge.GEMake(CC)(Infra_code.Make)
+module CC = struct type ('a, 'b) abstract = unit -> 'b end
+module GEF = Ge.GEMake(CC)(Infra_direct.Make)
 open GEF
 open Infra
 
@@ -210,7 +210,7 @@ module GenFA8 = Gen(GAC_F)
                    (InpMatrixMargin)
                    (OutDetRank)
 
-let instantiate f = .<fun a -> .~(runM (f .<a>.)) >. ;;
+let instantiate f = fun a -> runM (f (fun () -> a)) () ;;
 
 let resFA1 = instantiate GenFA1.gen ;;
 let resFA2 = instantiate GenFA2.gen ;;
@@ -244,37 +244,37 @@ let resFA6 = instantiate GenFA6.gen ;;
 let resFA7 = instantiate GenFA7.gen ;;
 let resFA8 = instantiate GenFA8.gen ;;
 
-let rFA1 = .! resFA1 ;;
-let rFA2 = .! resFA2 ;;
-let rFA3 = .! resFA3 ;;
-let rFA4 = .! resFA4 ;;
-let rFV1 = .! resFV1 ;;
-let rFV2 = .! resFV2 ;;
-let rFV3 = .! resFV3 ;;
-let rFV4 = .! resFV4 ;;
-let rFV5 = .! resFV5 ;;
-let rIA1 = .! resIA1 ;;
-let rIA2 = .! resIA2 ;;
-let rIA3 = .! resIA3 ;;
-let rIA4 = .! resIA4 ;;
-let rIV1 = .! resIV1 ;;
-let rIV2 = .! resIV2 ;;
-let rIV3 = .! resIV3 ;;
-let rIV4 = .! resIV4 ;;
-let rIV5 = .! resIV5 ;;
-let rFA11 = .! resFA11 ;;
-let rFA12 = .! resFA12 ;;
-let rFA13 = .! resFA13 ;;
-let rFA14 = .! resFA14 ;;
-let rFA24 = .! resFA24 ;;
-let rRA1 = .! resRA1 ;;
-let rRA2 = .! resRA2 ;;
-let rRA3 = .! resRA3 ;;
-let rRA4 = .! resRA4 ;;
-let rFA5 = .! resFA5 ;;
-let rFA6 = .! resFA6 ;;
-let rFA7 = .! resFA7 ;;
-let rFA8 = .! resFA8 ;;
+let rFA1 = resFA1 ;;
+let rFA2 = resFA2 ;;
+let rFA3 = resFA3 ;;
+let rFA4 = resFA4 ;;
+let rFV1 = resFV1 ;;
+let rFV2 = resFV2 ;;
+let rFV3 = resFV3 ;;
+let rFV4 = resFV4 ;;
+let rFV5 = resFV5 ;;
+let rIA1 = resIA1 ;;
+let rIA2 = resIA2 ;;
+let rIA3 = resIA3 ;;
+let rIA4 = resIA4 ;;
+let rIV1 = resIV1 ;;
+let rIV2 = resIV2 ;;
+let rIV3 = resIV3 ;;
+let rIV4 = resIV4 ;;
+let rIV5 = resIV5 ;;
+let rFA11 = resFA11 ;;
+let rFA12 = resFA12 ;;
+let rFA13 = resFA13 ;;
+let rFA14 = resFA14 ;;
+let rFA24 = resFA24 ;;
+let rRA1 = resRA1 ;;
+let rRA2 = resRA2 ;;
+let rRA3 = resRA3 ;;
+let rRA4 = resRA4 ;;
+let rFA5 = resFA5 ;;
+let rFA6 = resFA6 ;;
+let rFA7 = resFA7 ;;
+let rFA8 = resFA8 ;;
 
 let ia0 = Array.make 1 (Array.make 1 1)
 let ia1 = Array.of_list [
