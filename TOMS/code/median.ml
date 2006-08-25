@@ -24,6 +24,11 @@ therefore, shortening the minimal depth will lengthen the maximal
 one. The only sensible optimality criterion is the average or the
 max number of comparisons.
 
+See the survey of various methods in
+http://ndevilla.free.fr/median/median/median.html ?
+
+It seems none of the methods seem (provably) better than O(n*log(N)), although
+Knuth shows the existence of O(n) methods.
 *)
 
 (* This algorithm differs from that in median-filt.scm.
