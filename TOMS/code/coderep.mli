@@ -113,4 +113,11 @@ module Transformers :
     val full_unroll :
       int -> int -> (int -> ('a, unit) abstract) -> ('a, unit) abstract
   end
+
+(* This type is needed for the output, and is tracked during pivoting. *)
+type perm = RowSwap of (int * int) | ColSwap of (int*int)
+val liftRowSwap : 
+    ('a, int) abstract -> ('a, int) abstract -> ('a, perm) abstract
+val liftColSwap : 
+    ('a, int) abstract -> ('a, int) abstract -> ('a, perm) abstract
 end

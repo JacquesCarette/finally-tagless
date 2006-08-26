@@ -1,9 +1,13 @@
 open StateCPSMonad
 
-module CC = struct type ('a, 'b) abstract = ('a, 'b) code end
-module GEF = Ge.GEMake(CC)(Infra_code.Make)
+module GEF = Ge.GEMake(Code)
 open GEF
-open Infra
+open Domains_code
+(* open Infra *)
+
+module FDet = AbstractDet(FloatDomainL)
+module IDet = AbstractDet(IntegerDomainL)
+module RDet = AbstractDet(RationalDomainL)
 
 module GAC_F = GenericArrayContainer(FloatDomainL)
 module GVC_F = GenericVectorContainer(FloatDomainL)

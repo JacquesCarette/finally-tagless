@@ -1,6 +1,4 @@
-module R(AR:Abstractrep.T) = struct
-
-    type ('a, 'b) abstract = ('a, 'b) code
+type ('a, 'b) abstract = ('a, 'b) code
 
 open StateCPSMonad
 
@@ -21,7 +19,7 @@ let retN a = fun s k -> .<let t = .~a in .~(k s .<t>.)>.
 *)
 
 let seq a b = .< begin .~a ; .~b end >.
-let seqL a b = fun s k -> k s (seq a b)
+let seqL a b = ret (seq a b)
 
 let seqM a b = fun s k -> k s .< begin .~(a s k0) ; .~(b s k0) end >.
 
@@ -32,7 +30,7 @@ let optSeq a = function
 (* conditional *)
 (* Note the implicit `reset'.  Also note how the condition does not
    involve a `reset' *)
-let ifM test th el = fun s k ->
+let ifM test th el = fun s k -> 
   k s .< if .~(test) then .~(th s k0) else .~(el s k0) >.
 
 let rshiftM cf = fun s k -> k s (cf s)
@@ -42,21 +40,20 @@ let whenM test th  = rshiftM (fun s ->
 
 (* loops actually bind a value *)
 let loopM low high body = fun s k -> 
-    k s .< for j = .~low to .~high do .~(body .<j>. s k0) done >.
+  k s .< for j = .~low to .~high do .~(body .<j>. s k0) done >.
 
 (* while ``loops'' do not naturally bind a value *)
 let whileM cond body = fun s k -> 
-    k s .< while .~(cond) do .~(body s k0) done >.
+  k s .< while .~(cond) do .~(body s k0) done >.
 
 (* match for Some/None *)
-let matchM x som non = fun s k ->
-    k s .< match .~x with
+let matchM x som non = fun s k -> k s .< match .~x with
            | Some i -> .~(som .<i>. s k0)
            | None   -> .~(non s k0) >.
 
 (* generic loop *)
-let genrecloop gen rtarg = fun s k ->
-    k s .<let rec loop j = .~(gen .<loop>. .<j>. s k0) in loop .~rtarg>.
+let genrecloop gen rtarg = fun s k -> 
+  k s .<let rec loop j = .~(gen .<loop>. .<j>. s k0) in loop .~rtarg>.
 
 (* another non-trivial morphism: generate a bit of code *)
 (* let codegen v cf = fun s k -> cf (k s v) *)
@@ -141,9 +138,18 @@ let cunit = .< () >.
 let update a f = let b = f (liftGet a) in .< .~a := .~b >.
 let assign a b = .< .~a := .~b >.
 let apply  f x = .< .~f .~x >.
-let updateM a f = fun s k -> k s (update a f)
-let assignM a b = fun s k -> k s (assign a b)
-let applyM  f x = fun s k -> k s (apply f x)
+let updateM a f = ret (update a f)
+let assignM a b = ret (assign a b)
+let applyM  f x = ret (apply f x)
+
+(* This type is needed for the output, and is tracked during pivoting. 
+   It's hard to find the right place for this lifting. If this
+   is moved to domans_*.ml modules, this code should be placed
+   into CONTAINER2D.
+*)
+type perm = RowSwap of (int * int) | ColSwap of (int*int)
+let liftRowSwap a b = .< RowSwap (.~a, .~b) >.
+let liftColSwap a b = .< ColSwap (.~a, .~b) >.
 
 (* code transformers *)
 module Transformers = struct
@@ -153,4 +159,3 @@ module Transformers = struct
         else .< begin .~(body lb); .~(full_unroll (lb+1) ub body) end >.
 end
 
-end

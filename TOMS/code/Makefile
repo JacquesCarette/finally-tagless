@@ -10,8 +10,9 @@ SYNTAX_EXTENSION := ../camlp4/pa_monad.cmo
 
 PP := camlp4o -I . $(SYNTAX_EXTENSION)
 
-INFRA := abstractrep.cmi coderep.cmi 
-BASE := stateCPSMonad.cmo infra.cmo code.cmo infra_code.cmo ge.cmo
+INFRA := coderep.cmi 
+BASE := stateCPSMonad.cmo domains_sig.cmo domains_code.cmo code.cmo ge.cmo
+# infra.cmo code.cmo infra_code.cmo ge.cmo
 BASE2 := direct.cmo infra_direct.cmo
 OBJ  := rkf45.cmo fft.cmo
 OBJ2  := 

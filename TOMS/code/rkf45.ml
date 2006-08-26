@@ -1,11 +1,7 @@
 open StateCPSMonad
-module Concrete = struct type ('a, 'b) abstract = ('a, 'b) code end
 
-module TC = Infra_code.Make(Concrete)
-open TC
-
-module TC2 = TC.TheCode(Concrete)
-open TC2
+open Domains_code
+open Code
 
 type ('a, 'b) either = Left of 'a | Right of 'b
 

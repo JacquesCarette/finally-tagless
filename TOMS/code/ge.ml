@@ -1,17 +1,37 @@
 open StateCPSMonad
 
-module GEMake(CR: Abstractrep.T)(II: Infra.Proxy(CR).T) = struct
+module GEMake(CODE: Coderep.T) = struct
 
-open CR
-module Infra = II(CR)
-open Infra
-module TC = TheCode(CR)
-open TC
+module D = Domains_sig.S(
+  struct type ('a, 'v) rep = ('a,'v) CODE.abstract end)
+open D
+open CODE
 
-(* Monad used in this module: (abstract) code generation monad with open union state *)
+(* moved from Infra (now Domains) so that the former uses no monads.
+  The following code is generic over the containers anyway.
+  If container-specific iterators are needed, they can still be
+  coded as `exceptions'
+*)
+module Iters(C:CONTAINER2D) = struct
+  let row_iter b c low high body = 
+    let newbody j = perform
+        bjc <-- retN (C.getL b j c);
+        body j bjc
+    in  loopM low high newbody
+  let col_iter b j low high body = 
+    let newbody k = perform
+        bjk <-- ret (C.getL b j k);
+        body k bjk
+    in  loopM low high newbody
+end
+
+
+(* Monad used in this module: 
+   (abstract) code generation monad with open union state *)
 type ('a,'v,'s,'w) cmonad = (('a,'v) abstract, 's list, ('a,'w) abstract) monad
 (* We also use this variant, where we _might_ generate code *)
-type ('a,'v,'s,'w) omonad = (('a,'v) abstract option, 's list, ('a,'w) abstract) monad
+type ('a,'v,'s,'w) omonad = (('a,'v) abstract option, 
+			     's list, ('a,'w) abstract) monad
 
 module type DETERMINANT = sig
   type indet
@@ -181,9 +201,11 @@ module UpdateProxy(C0:CONTAINER2D)(D0:DETF) = struct
     module type T = functor(D1:DOMAINL) -> 
         DETERMINANT with type indet = D1.v and type outdet = D0(D1).outdet
     module type S =
-        functor(C:CONTAINER2D with type Dom.kind = C0.Dom.kind) -> 
+        functor(C:CONTAINER2D with type Dom.kind = C0.Dom.kind)  ->
+(*        functor(CD: sig type 'a vc end) -> *)
         functor(D:T) -> sig
         type 'a in_val = 'a C.Dom.vc
+(*        type out_val = D(C0.Dom).outdet *)
         type out_val = D(C.Dom).outdet
         val update : 
             'a in_val -> 'a in_val -> 'a in_val -> 'a in_val -> 
@@ -198,7 +220,9 @@ end
 
 (* What is the update formula? *)
 module DivisionUpdate
-    (C:CONTAINER2D with type Dom.kind = domain_is_field)
+   (C:CONTAINER2D)
+(*    (C:CONTAINER2D with type Dom.kind = domain_is_field) *)
+(*    (C:sig module Dom : DOMAINL with type kind = float end) *)
     (Det:DETF) =
   struct
   module Dom = C.Dom
@@ -372,9 +396,6 @@ module OutDetRankPivot(C: CONTAINER2D)
     ret (Tuple.tup4 b det rank pivmat)
 end
 
-module FDet = AbstractDet(FloatDomainL)
-module IDet = AbstractDet(IntegerDomainL)
-module RDet = AbstractDet(RationalDomainL)
 
 module type PIVOT = 
     functor (C: CONTAINER2D) ->
@@ -394,7 +415,8 @@ end
 
 module RowPivot(Ctr: CONTAINER2D)(Det: DETF)(P: TRACKPIVOT) =
 struct
-   module D = Det(Ctr.Dom) 
+   module D = Det(Ctr.Dom)
+   module I = Iters(Ctr)
    let findpivot b r n c _ = perform
        pivot <-- retN (liftRef Maybe.none );
        (* If no better_than procedure defined, we just search for
@@ -403,7 +425,7 @@ struct
        seqM
         (match (Ctr.Dom.better_thanL) with
          Some sel -> 
-              Ctr.row_iter b c r (Idx.pred n) (fun j bjc ->
+              I.row_iter b c r (Idx.pred n) (fun j bjc ->
               whenM (Logic.notequalL bjc Ctr.Dom.zeroL )
                   (matchM (liftGet pivot)
                     (fun pv ->
@@ -462,7 +484,7 @@ struct
                   (matchM (liftGet pivot)
                     (fun pv ->
                       perform
-                      (pr,pc,brc) <-- ret (liftPPair pv);
+                      (pr,_,brc) <-- ret (liftPPair pv);
                       whenM (sel brc bjk)
                         (assignM pivot (Maybe.just
                             (Tuple.tup2 (Tuple.tup2 j k) bjk))))
@@ -511,11 +533,12 @@ module Gen(C: CONTAINER2D)
     module Input = In(C)
     module Output = Out(C)(Det)
     module Pivot = PivotF(C)(Detf)(Output.P)
+    module I = Iters(C)
     let gen =
       let zerobelow b r c m n brc =
         let innerbody j bjc = perform
             whenM (Logic.notequalL bjc C.Dom.zeroL )
-                (seqM (C.col_iter b j (Idx.succ c) (Idx.pred m)
+                (seqM (I.col_iter b j (Idx.succ c) (Idx.pred m)
                           (fun k bjk -> perform
                               d <-- Det.get ();
                               brk <-- ret (C.getL b r k);
@@ -523,7 +546,7 @@ module Gen(C: CONTAINER2D)
                                   (fun ov -> C.col_head_set b j k ov) d) )
                       (ret (C.col_head_set b j c C.Dom.zeroL))) in 
         perform
-              seqM (C.row_iter b c (Idx.succ r) (Idx.pred n) innerbody) 
+              seqM (I.row_iter b c (Idx.succ r) (Idx.pred n) innerbody) 
                    (U.update_det brc Det.set Det.acc)in
       let dogen input = perform
           (a,rmar,augmented) <-- Input.get_input input;
