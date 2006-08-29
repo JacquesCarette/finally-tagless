@@ -8,10 +8,6 @@ module S(T:
 
 open T
 
-(* The kind of the domain: a ring or a field *)
-type domain_is_field (* abstract *)
-type domain_is_ring  (* abstract *)
-
 module type DOMAIN = sig
   type v
   type kind (* Field or Ring ? *)

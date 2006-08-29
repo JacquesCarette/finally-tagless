@@ -7,6 +7,15 @@ module D = Domains_sig.S(
 open D
 open CODE
 
+open Kinds
+
+(* Was needed for debugging of the kind problem. Please keep it, just in case.
+module Foo(D:DOMAINL with type kind = domain_is_field) = (* debugging *)
+struct
+  module D = D
+end
+*)
+
 (* moved from Infra (now Domains) so that the former uses no monads.
   The following code is generic over the containers anyway.
   If container-specific iterators are needed, they can still be
@@ -205,7 +214,6 @@ module UpdateProxy(C0:CONTAINER2D)(D0:DETF) = struct
 (*        functor(CD: sig type 'a vc end) -> *)
         functor(D:T) -> sig
         type 'a in_val = 'a C.Dom.vc
-(*        type out_val = D(C0.Dom).outdet *)
         type out_val = D(C.Dom).outdet
         val update : 
             'a in_val -> 'a in_val -> 'a in_val -> 'a in_val -> 
@@ -220,8 +228,7 @@ end
 
 (* What is the update formula? *)
 module DivisionUpdate
-   (C:CONTAINER2D)
-(*    (C:CONTAINER2D with type Dom.kind = domain_is_field) *)
+    (C:CONTAINER2D with type Dom.kind = domain_is_field)
 (*    (C:sig module Dom : DOMAINL with type kind = float end) *)
     (Det:DETF) =
   struct

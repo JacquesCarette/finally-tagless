@@ -1,6 +1,4 @@
-module R(AR:Abstractrep.T) = struct
-
-    type ('a, 'b) abstract = unit -> 'b
+type ('a, 'b) abstract = unit -> 'b
 
 open StateCPSMonad
 
@@ -144,9 +142,18 @@ let cunit = fun () -> ()
 let update a f = let b = f (liftGet a) in fun () -> a () := b ()
 let assign a b = fun () -> (a ()) := (b ())
 let apply  f x = fun () -> (f ()) (x ())
-let updateM a f = fun s k -> k s (update a f)
-let assignM a b = fun s k -> k s (assign a b)
-let applyM  f x = fun s k -> k s (apply f x)
+let updateM a f = ret (update a f)
+let assignM a b = ret (assign a b)
+let applyM  f x = ret (apply f x)
+
+(* This type is needed for the output, and is tracked during pivoting. 
+   It's hard to find the right place for this lifting. If this
+   is moved to domans_*.ml modules, this code should be placed
+   into CONTAINER2D.
+*)
+type perm = RowSwap of (int * int) | ColSwap of (int*int)
+let liftRowSwap a b = fun () -> RowSwap (a (), b ())
+let liftColSwap a b = fun () -> ColSwap (a (), b ())
 
 (* code transformers *)
 module Transformers = struct
@@ -157,4 +164,3 @@ module Transformers = struct
             begin body lb (); full_unroll (lb+1) ub body () end
 end
 
-end

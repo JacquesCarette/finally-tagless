@@ -1,12 +1,13 @@
+(* Emulation `code' with thunks *)
+module DirectRep = struct type ('a, 'b) rep = unit -> 'b end
 
-module T = Domains_sig.S(struct type ('a, 'b) rep = ('a, 'b) code end)
+module T = Domains_sig.S(DirectRep)
 open T
+open DirectRep
 
 open Kinds
 
 (* Naming conventions: 
-   Functions that end in M take monads as arguments and partially
-   run them -- in a reset fashion 
    Functions that end in L always return abstract values from plain
    value -- the L is stands for ``lifted'' *)
 
@@ -19,7 +20,8 @@ open Kinds
    to make more use of Abstract Interpretation, we'll regret it,
    so do it now. *)
 
-(* Define instances. of the module types *)
+
+(* Define instances of the module types *)
 
 module FloatDomain = struct
     type v = float
@@ -39,17 +41,19 @@ end
    we have to repeat ourselves a lot *)
 module FloatDomainL = struct
     include FloatDomain
-    type 'a vc = ('a,v) code
-    let zeroL = .< 0. >.  
-    let oneL = .< 1. >. 
-    let (+^) x y = .<.~x +. .~y>. 
-    let ( *^ ) x y = .<.~x *. .~y>.
-    let ( -^ ) x y = .<.~x -. .~y>.
-    let uminusL x = .<-. .~x>.
-    let divL x y = .<.~x /. .~y>. 
-    let normalizerL = None
-    let better_thanL = Some (fun x y -> .<abs_float .~x < abs_float .~y >. )
+    type 'a vc = ('a,v) rep
+    let zeroL = fun () -> 0.
+    let oneL = fun () -> 1.
+    let (+^) x y = fun () -> (x ()) +. (y ())
+    let ( *^ ) x y = (fun () -> x () *. y ())
+    let ( -^ ) x y = (fun () -> x () -. y ())
+    let uminusL x = (fun () -> -. x ())
+    let divL x y = (fun () -> x () /. y ()) 
+    let better_thanL = 
+      Some (fun x y -> (fun () -> abs_float (x ()) < abs_float (y ()) ) )
+    let normalizerL = None 
 end
+
 module IntegerDomain = struct
     type v = int
     type kind = domain_is_ring
@@ -68,16 +72,17 @@ end
    we have to repeat ourselves a lot *)
 module IntegerDomainL = struct
     include IntegerDomain
-    type 'a vc = ('a,v) code
-    let zeroL = .< 0 >.  
-    let oneL = .< 1 >. 
-    let (+^) x y = .<.~x + .~y>. 
-    let ( *^ ) x y = .<.~x * .~y>.
-    let ( -^ ) x y = .<.~x - .~y>.
-    let uminusL x = .<- .~x>.
-    let divL x y = .<.~x / .~y>. 
-    let normalizerL = None
-    let better_thanL = Some (fun x y -> .<abs .~x > abs .~y >. )
+    type 'a vc = ('a,v) rep
+    let zeroL = fun () -> 0
+    let oneL = fun () -> 1
+    let (+^) x y = fun () -> (x ()) + (y ())
+    let ( *^ ) x y = (fun () -> x () * y ())
+    let ( -^ ) x y = (fun () -> x () - y ())
+    let uminusL x = (fun () -> - x ())
+    let divL x y = (fun () -> x () / y ()) 
+    let better_thanL = 
+      Some (fun x y -> (fun () -> abs (x ()) > abs (y ()) ) )
+    let normalizerL = None 
 end
 
 module RationalDomain = struct
@@ -98,66 +103,53 @@ end
    we have to repeat ourselves a lot *)
 module RationalDomainL = struct
     include RationalDomain
-    type 'a vc = ('a,v) code
-    let zeroL = .< zero >.  
-    let oneL = .< one >. 
-    let (+^) x y = .< Num.add_num .~x .~y >.
-    let ( *^ ) x y = .< Num.mult_num .~x .~y >.
-    let ( -^ ) x y = .< Num.sub_num .~x .~y >.
-    let uminusL x = .<Num.minus_num .~x>.
-    let divL x y = .< Num.div_num .~x .~y >.
-    let normalizerL = None
-    let better_thanL = None
+    type 'a vc = ('a,v) rep
+    let zeroL = let zero = Num.num_of_int 0 in (fun () ->  zero)
+    let oneL = let one = Num.num_of_int 1 in (fun () ->  one)
+    let ( +^ ) x y = (fun () -> Num.add_num (x ()) (y ()) )
+    let ( *^ ) x y = (fun () -> Num.mult_num (x ()) (y ()))
+    let ( -^ ) x y = (fun () -> Num.sub_num (x ()) (y ()))
+    let uminusL x = (fun () -> Num.minus_num (x ()))
+    let divL x y = (fun () -> Num.div_num (x ()) (y ())) 
+    let better_thanL = None (* no such thing here *)
+    let normalizerL = None 
 end
 
 module GenericArrayContainer(Dom:DOMAINL) =
   struct
   module Dom = Dom
   type contr = Dom.v array array (* Array of rows *)
-  type 'a vc = ('a,contr) code
-  type 'a vo = ('a,Dom.v) code
-  let getL x n m = .< (.~x).(.~n).(.~m) >.
-  let dim2 x = .< Array.length .~x >.       (* number of rows *)
-  let dim1 x = .< Array.length (.~x).(0) >. (* number of cols *)
+  type 'a vc = ('a,contr) rep
+  type 'a vo = ('a,Dom.v) rep
+  let getL x n m = fun () -> (x ()).(n ()).(m ())
+  let dim2 x = fun () -> Array.length (x ())       (* number of rows *)
+  let dim1 x = fun () -> Array.length (x ()).(0)   (* number of cols *)
   let mapper (g:('a vo -> 'a vo) option) a = match g with
-      | Some f -> .< Array.map (fun x -> Array.map (fun z -> .~(f .<z>.)) x) .~a >.
+      | Some f -> fun () -> Array.map (fun x -> Array.map (fun z -> f (fun ()
+      -> z) () ) x) (a ())
       | None   -> a
-  let copy = (fun a -> .<Array.map (fun x -> Array.copy x) 
-                       (Array.copy .~a) >. )
+  let copy a = fun () -> Array.map (fun x -> Array.copy x) 
+                       (Array.copy (a ()))
   (* this can be optimized with a swap_rows_from if it is known that
      everything before that is already = Dom.zero *)
-  let swap_rows_stmt a r1 r2 =
-      .< let t = (.~a).(.~r1) in
+  let swap_rows_stmt a r1 r2 = fun () ->
+      let t = (a ()).(r1 ()) in
          begin 
-             (.~a).(.~r1) <- (.~a).(.~r2);
-             (.~a).(.~r2) <- t
-         end >.
-  let swap_cols_stmt a c1 c2 = .< 
-      for r = 0 to .~(dim2 a)-1 do
-          let t = (.~a).(r).(.~c1) in
+             (a ()).(r1 ()) <- (a ()).(r2 ());
+             (a ()).(r2 ()) <- t
+         end
+  let swap_cols_stmt a c1 c2 = fun () ->
+      for r = 0 to (dim2 a ())-1 do
+          let t = (a ()).(r).(c1 ()) in
           begin 
-              (.~a).(r).(.~c1) <- (.~a).(r).(.~c2);
-              (.~a).(r).(.~c2) <- t
+              (a ()).(r).(c1 ()) <- (a ()).(r).(c2 ());
+              (a ()).(r).(c2 ()) <- t
           end
-      done  >.
+      done
   (* this is list an iterator's start *)
   let row_head = getL
-(*  No monads here
-  let row_iter b c low high body = 
-    let newbody j = perform
-        bjc <-- retN (getL b j c);
-        body j bjc
-    in  S.loopM low high newbody
-*)
   (* only set the head of the current column *)
-  let col_head_set x n m y = .< (.~x).(.~n).(.~m) <- .~y >.
-(* Let's avoid monads here
-  let col_iter b j low high body = 
-    let newbody k = perform
-        bjk <-- ret (getL b j k);
-        body k bjk
-    in  S.loopM low high newbody
-*)
+  let col_head_set x n m y = fun () -> (x ()).(n ()).(m ()) <- y ()
 end
 
 (* Matrix layed out row after row, in a C fashion *)
@@ -167,27 +159,28 @@ module GenericVectorContainer(Dom:DOMAINL) =
   struct
   module Dom = Dom
   type contr = Dom.v container2dfromvector
-  type 'a vc = ('a,contr) code
-  type 'a vo = ('a,Dom.v) code
-  let getL x n m = .< ((.~x).arr).(.~n* (.~x).m + .~m) >.
-  let dim2 x = .< (.~x).n >.
-  let dim1 x = .< (.~x).m >.
+  type 'a vc = ('a,contr) rep
+  type 'a vo = ('a,Dom.v) rep
+  let getL x n m = fun () -> ((x ()).arr).((n ())* (x ()).m + (m ()))
+  let dim2 x = fun () -> (x ()).n
+  let dim1 x = fun () -> (x ()).m
   let mapper g a = match g with
-      | Some f -> .< { (.~a) with arr = Array.map (fun z -> .~(f .<z>.)) (.~a).arr} >.
+      | Some f -> fun () -> { (a ()) with arr = Array.map (fun z -> (f (fun ()
+      -> z) ())) (a ()).arr}
       | None   -> a
-  let copy a = .< { (.~a) with arr = Array.copy (.~a).arr} >.
-  let swap_rows_stmt b r1 r2 = .<
-      let a = (.~b).arr and m = (.~b).m in
-      let i1 = .~r1*m and i2 = .~r2*m in
+  let copy a = fun () -> { (a ()) with arr = Array.copy (a ()).arr}
+  let swap_rows_stmt b r1 r2 = fun () ->
+      let a = (b ()).arr and m = (b ()).m in
+      let i1 = (r1 ())*m and i2 = (r2 ())*m in
       for i = 0 to m-1 do
           let t = a.(i1 + i) in
           begin 
               a.(i1 + i) <- a.(i2 + i);
               a.(i2 + i) <- t
           end
-      done  >.
-  let swap_cols_stmt b c1 c2 = .<
-      let a = (.~b).arr and nm = (.~b).n * (.~b).m and m = (.~b).m in
+      done
+  let swap_cols_stmt b c1 c2 = fun () ->
+      let a = (b ()).arr and nm = (b ()).n * (b ()).m and m = (b ()).m in
       let rec loop i1 i2 =
     if i2 < nm then
       let t = a.(i1) in
@@ -196,25 +189,11 @@ module GenericVectorContainer(Dom:DOMAINL) =
         a.(i2) <- t;
         loop (i1 + m) (i2 + m)
       end
-      in loop .~c1 .~c2
-     >.
+      in loop (c1 ()) (c2 ())
   let row_head b c r = getL b r c
-(* Let's avoid all monads here
-  let row_iter b c low high body = 
-    let newbody j = perform
-        bjc <-- retN (getL b j c);
-        body j bjc
-    in  S.loopM low high newbody
-*)
   (* only set the head of the current column *)
-  let col_head_set x n m y = .< ((.~x).arr).(.~n* (.~x).m + .~m) <- .~y >.
-(* Let's avoid all monads here
-  let col_iter b j low high body = 
-    let newbody k = perform
-        bjk <-- ret (getL b j k);
-        body k bjk
-    in  S.loopM low high newbody
-*)
+  let col_head_set x n m y = 
+    fun () -> ((x ()).arr).((n ())* (x ()).m + m ()) <- y ()
 end
 
 (* we use an association list as the representation of a sparse vector.
@@ -232,8 +211,8 @@ module GenericSparseContainer(Dom:DOMAINL) =
   struct
   module Dom = Dom
   type contr = Dom.v svect array (* Array of rows *)
-  type 'a vc = ('a,contr) code
-  type 'a vo = ('a,Dom.v) code
+  type 'a vc = ('a,contr) rep
+  type 'a vo = ('a,Dom.v) rep
   let getL x n m = .< (.~x).(.~n).(.~m) >.
   let setL x n m y = .< (.~x).(.~n).(.~m) <- .~y >.
   let dim2 x = .< Array.length .~x >.       (* number of rows *)
@@ -265,26 +244,25 @@ end
 (* Matrix layed out row after row, in a C fashion *)
 module Array1D =
   struct
-  let getL x n = .< x.(.~n) >.
-  let setL x n y = .< x.(.~n) <- .~y >.
-  let dim1 x = .< Array.length x >.
+  let getL x n = fun () -> x.(n ())
+  let setL x n y = fun () -> x.(n ()) <- y ()
+  let dim1 x = fun () -> Array.length x
   let mapper g a = match g with
-      | Some f -> .< (fun x -> Array.map .~f x) .~a >.
+      | Some f -> fun () -> (fun x -> Array.map (f ()) x) (a ())
       | None   -> a
 end
 
 module CArray1D = 
   struct
-  let getL x n = .< (.~x).(n) >.
-  let setL x n y = .< (.~x).(n) <- .~y >.
-  let dim1 x = .< Array.length .~x >.
+  let getL x n = fun () -> (x ()).(n)
+  let setL x n y = fun () -> (x ()).(n) <- y ()
+  let dim1 x = fun () -> Array.length (x ())
 end
 
 module Array2D =
   struct
-  let getL x n m = .< x.(.~n).(.~m) >.
-  let setL x n m y = .< x.(.~n).(.~m) <- .~y >.
-  let dim2 x = .< Array.length x >.       (* number of rows *)
-  let dim1 x = .< Array.length (x).(0) >. (* number of cols *)
+  let getL x n m = fun () -> x.(n ()).(m ())
+  let setL x n m y = fun () -> x.(n ()).(m ()) <- y ()
+  let dim2 x = fun () -> Array.length x       (* number of rows *)
+  let dim1 x = fun () -> Array.length (x).(0) (* number of cols *)
 end
-
