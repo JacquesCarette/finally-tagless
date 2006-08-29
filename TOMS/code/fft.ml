@@ -38,13 +38,8 @@ An attempt at a better FFT
 *)
 
 open StateCPSMonad
-module Concrete = struct type ('a, 'b) abstract = ('a, 'b) code end
 
-module TC = Infra_code.Make(Concrete)
-open TC
-
-module TC2 = TC.TheCode(Concrete)
-open TC2
+open Domains_code
 
 (* ------------ unstaged nonmonadic list-based representation ------------ *)
 let pi = 4.0 *. atan(1.0)
@@ -110,8 +105,7 @@ let rec rotate_to_QI ((j,n) as f) =
 (* Use the infrastructure module to get at the monadic infrastructure,
    as well as at the various code manipulation functions.  The aim is
    to avoid all annotations in the current code.  *)
-
-open Infra
+open Code
 
 (* Use the FloatDomain module as well.  No need to parametrize by
    Domain, as this is thoroughly float-specific *)

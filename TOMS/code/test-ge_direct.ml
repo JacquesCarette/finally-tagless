@@ -12,7 +12,6 @@ let runit f = f.pf;;
 
 (* The following should raise an error! One can't apply IntegerDomain
    with the DivisionUpdate, which requires a field 
-*)
 module GenFA1_error = Gen(GenericVectorContainer(IntegerDomainL))
                    (RowPivot)
                    (NoDet)
@@ -20,5 +19,6 @@ module GenFA1_error = Gen(GenericVectorContainer(IntegerDomainL))
                    (InpJustMatrix)
                    (OutJustMatrix)
 ;;
+*)
 
 #use "test-ge-common.ml";;
