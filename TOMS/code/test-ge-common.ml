@@ -12,11 +12,16 @@ module FDet = AbstractDet(FloatDomainL)
 module IDet = AbstractDet(IntegerDomainL)
 module RDet = AbstractDet(RationalDomainL)
 
+module Z3 = ZpMakeL(struct let p = 3 end)
+module Z19 = ZpMakeL(struct let p = 19 end)
+
 module GAC_F = GenericArrayContainer(FloatDomainL)
 module GVC_F = GenericVectorContainer(FloatDomainL)
 module GAC_I = GenericArrayContainer(IntegerDomainL)
 module GVC_I = GenericVectorContainer(IntegerDomainL)
 module GAC_R = GenericArrayContainer(RationalDomainL)
+module GVC_Z3 = GenericVectorContainer(Z3)
+module GVC_Z19 = GenericVectorContainer(Z19)
 
 module GenFA1 = Gen(GAC_F)
                    (RowPivot)
@@ -216,6 +221,18 @@ module GenFA8 = Gen(GAC_F)
                    (DivisionUpdate)
                    (InpMatrixMargin)
                    (OutDetRank)
+module GenZp3 = Gen(GVC_Z3)
+                   (RowPivot)
+                   (AbstractDet)
+                   (DivisionUpdate)
+                   (InpJustMatrix)
+                   (OutDetRankPivot)
+module GenZp19 = Gen(GVC_Z19)
+                   (RowPivot)
+                   (AbstractDet)
+                   (FractionFreeUpdate)
+                   (InpJustMatrix)
+                   (OutDetRankPivot)
 ;;
 
 let resFA1 = instantiate GenFA1.gen ;;
@@ -249,6 +266,8 @@ let resFA5 = instantiate GenFA5.gen ;;
 let resFA6 = instantiate GenFA6.gen ;;
 let resFA7 = instantiate GenFA7.gen ;;
 let resFA8 = instantiate GenFA8.gen ;;
+let resZp3 = instantiate GenZp3.gen ;;
+let resZp19 = instantiate GenZp19.gen ;;
 
 let rFA1 = runit {pf =  resFA1 } ;;
 let rFA2 = runit {pf =  resFA2 };;
@@ -281,6 +300,8 @@ let rFA5 = runit {pf =  resFA5 };;
 let rFA6 = runit {pf =  resFA6 };;
 let rFA7 = runit {pf =  resFA7 };;
 let rFA8 = runit {pf =  resFA8 };;
+let rZp3 = runit {pf =  resZp3 };;
+let rZp19 = runit {pf =  resZp19 };;
 
 let ia0 = Array.make 1 (Array.make 1 1)
 let ia1 = Array.of_list [

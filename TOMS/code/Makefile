@@ -32,7 +32,7 @@ VERSION := 1.0
 all: test $(TEST)
 
 .PHONY: test 
-test: $(SYNTAX_EXTENSION) $(OBJ) $(RES) $(TEST)
+test: $(SYNTAX_EXTENSION) $(OBJ) $(BASE) $(BASE2) $(RES) $(TEST)
 	diff ge.out ge.res
 	diff ge_direct.out ge_direct.res
 	diff rkf45.out rkf45.res
@@ -71,7 +71,7 @@ $(OBJ2): $(INFRA) $(BASE) $(BASE2)
 #
 ########################################################################
 
-ge_direct.out: test-ge_direct.ml $(BASE2) mytop
+ge_direct.out: test-ge_direct.ml $(BASE2) mytop test-ge.ml
 	./mytop $(BASE) $(BASE2) < $< > $@
 
 
@@ -83,3 +83,4 @@ ge_direct.out: test-ge_direct.ml $(BASE2) mytop
 ge.cmo :  stateCPSMonad.cmo coderep.cmi domains_sig.cmo kinds.cmo
 domains_code.cmo : kinds.cmo domains_sig.cmo
 test-ge.ml : ge.cmo code.cmo domains_code.cmo test-ge-common.ml
+test-ge_direct.ml : ge.cmo code.cmo domains_direct.cmo test-ge-common.ml

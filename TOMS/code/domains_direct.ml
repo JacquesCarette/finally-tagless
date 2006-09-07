@@ -115,6 +115,42 @@ module RationalDomainL = struct
     let normalizerL = None 
 end
 
+(* How do I make sure that 'p' actually is prime? 
+   I do want the field case, not the general case here. *)
+module ZpMake = functor(P:sig val p:int end) -> struct
+    type v = int
+    type kind = domain_is_field
+    let zero = 0
+    let one = 1
+    let plus x y = (x + y) mod P.p
+    let times x y = (x * y) mod P.p
+    let minus x y = (x - y) mod P.p
+    let uminus x = -x mod P.p
+    let rec extended_gcd a b =
+        if a mod b == 0 then
+            (0,1)
+        else
+            let (x,y) = extended_gcd b (a mod b) in
+            (y, x-y*(a / b))
+    let div x y = fst (extended_gcd x y)
+    let normalizer = None
+    let better_than = None
+end
+
+module ZpMakeL = functor(P:sig val p:int end) -> struct
+    include ZpMake(P)
+    type 'a vc = ('a,v) rep
+    let zeroL = let zero = 0 in (fun () ->  zero)
+    let oneL = let one = 1 in (fun () ->  one)
+    let ( +^ ) x y = (fun () -> plus (x ()) (y ()) )
+    let ( *^ ) x y = (fun () -> times (x ()) (y ()))
+    let ( -^ ) x y = (fun () -> minus (x ()) (y ()))
+    let uminusL x = (fun () -> uminus (x ()))
+    let divL x y = (fun () -> div (x ()) (y ())) 
+    let better_thanL = None (* no such thing here *)
+    let normalizerL = None 
+end
+
 module GenericArrayContainer(Dom:DOMAINL) =
   struct
   module Dom = Dom

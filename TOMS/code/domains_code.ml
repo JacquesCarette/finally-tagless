@@ -110,6 +110,42 @@ module RationalDomainL = struct
     let better_thanL = None
 end
 
+(* How do I make sure that 'p' actually is prime? 
+   I do want the field case, not the general case here. *)
+module ZpMake = functor(P:sig val p:int end) -> struct
+    type v = int
+    type kind = domain_is_field
+    let zero = 0
+    let one = 1
+    let plus x y = (x + y) mod P.p
+    let times x y = (x * y) mod P.p
+    let minus x y = (x - y) mod P.p
+    let uminus x = -x mod P.p
+    let rec extended_gcd a b =
+        if a mod b == 0 then
+            (0,1)
+        else
+            let (x,y) = extended_gcd b (a mod b) in
+            (y, x-y*(a / b))
+    let div x y = fst (extended_gcd x y)
+    let normalizer = None
+    let better_than = None
+end
+
+module ZpMakeL = functor(P:sig val p:int end) -> struct
+    include ZpMake(P)
+    type 'a vc = ('a,v) code
+    let zeroL = .< zero >.  
+    let oneL = .< one >. 
+    let (+^) x y = .< plus .~x .~y >.
+    let ( *^ ) x y = .< times .~x .~y >.
+    let ( -^ ) x y = .< minus .~x .~y >.
+    let uminusL x = .< uminus .~x>.
+    let divL x y = .< div .~x .~y >.
+    let normalizerL = None
+    let better_thanL = None
+end
+
 module GenericArrayContainer(Dom:DOMAINL) =
   struct
   module Dom = Dom
@@ -199,28 +235,13 @@ module GenericVectorContainer(Dom:DOMAINL) =
       in loop .~c1 .~c2
      >.
   let row_head b c r = getL b r c
-(* Let's avoid all monads here
-  let row_iter b c low high body = 
-    let newbody j = perform
-        bjc <-- retN (getL b j c);
-        body j bjc
-    in  S.loopM low high newbody
-*)
   (* only set the head of the current column *)
   let col_head_set x n m y = .< ((.~x).arr).(.~n* (.~x).m + .~m) <- .~y >.
-(* Let's avoid all monads here
-  let col_iter b j low high body = 
-    let newbody k = perform
-        bjk <-- ret (getL b j k);
-        body k bjk
-    in  S.loopM low high newbody
-*)
 end
 
 (* we use an association list as the representation of a sparse vector.
    It is assumed to be _sorted_ in increasing order of the index *)
 type 'a svect = (int*'a) list
-
 
 (* Our 'Sparse' container.  Since generically our matrices will not be
 rank-deficient, almost all rows will contain something, so we will
