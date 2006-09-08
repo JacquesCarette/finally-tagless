@@ -1402,6 +1402,13 @@
                           'b ->
                           ('b -> ('a, unit) Direct.abstract -> 'f) -> 'f
                       end
+                    type 'a wmatrix =
+                      'a
+                      Ge.GEMake(Direct).Gen(C)(PivotF)(Detf)(Update)(In)(Out).wmatrix = {
+                      matrix : 'a C.vc;
+                      numrow : ('a, int) Direct.abstract;
+                      numcol : ('a, int) Direct.abstract;
+                    }
                     val gen :
                       ('a, Input.inp) Direct.abstract ->
                       ([> `TDet of 'a Det.lstate
@@ -2172,6 +2179,13 @@ module GenFA1 :
            'a GAC_F.vo -> 'b -> ('c -> 'd -> 'd) -> ('a, 'e) Direct.abstract) ->
           'b -> ('b -> ('a, unit) Direct.abstract -> 'f) -> 'f
       end
+    type 'a wmatrix =
+      'a
+      Ge.GEMake(Direct).Gen(GAC_F)(GEF.RowPivot)(GEF.NoDet)(GEF.DivisionUpdate)(GEF.InpJustMatrix)(GEF.OutJustMatrix).wmatrix = {
+      matrix : 'a GAC_F.vc;
+      numrow : ('a, int) Direct.abstract;
+      numcol : ('a, int) Direct.abstract;
+    }
     val gen :
       ('a, Input.inp) Direct.abstract ->
       ([> `TDet of 'a Det.lstate
@@ -2332,6 +2346,13 @@ module GenFA2 :
            'a GAC_F.vo -> 'b -> ('c -> 'd -> 'd) -> ('a, 'e) Direct.abstract) ->
           'b -> ('b -> ('a, unit) Direct.abstract -> 'f) -> 'f
       end
+    type 'a wmatrix =
+      'a
+      Ge.GEMake(Direct).Gen(GAC_F)(GEF.RowPivot)(GEF.AbstractDet)(GEF.DivisionUpdate)(GEF.InpJustMatrix)(GEF.OutDet).wmatrix = {
+      matrix : 'a GAC_F.vc;
+      numrow : ('a, int) Direct.abstract;
+      numcol : ('a, int) Direct.abstract;
+    }
     val gen :
       ('a, Input.inp) Direct.abstract ->
       ([> `TDet of 'a Det.lstate
@@ -2492,6 +2513,13 @@ module GenFA3 :
            'a GAC_F.vo -> 'b -> ('c -> 'd -> 'd) -> ('a, 'e) Direct.abstract) ->
           'b -> ('b -> ('a, unit) Direct.abstract -> 'f) -> 'f
       end
+    type 'a wmatrix =
+      'a
+      Ge.GEMake(Direct).Gen(GAC_F)(GEF.RowPivot)(GEF.NoDet)(GEF.DivisionUpdate)(GEF.InpJustMatrix)(GEF.OutRank).wmatrix = {
+      matrix : 'a GAC_F.vc;
+      numrow : ('a, int) Direct.abstract;
+      numcol : ('a, int) Direct.abstract;
+    }
     val gen :
       ('a, Input.inp) Direct.abstract ->
       ([> `TDet of 'a Det.lstate
@@ -2652,6 +2680,13 @@ module GenFA4 :
            'a GAC_F.vo -> 'b -> ('c -> 'd -> 'd) -> ('a, 'e) Direct.abstract) ->
           'b -> ('b -> ('a, unit) Direct.abstract -> 'f) -> 'f
       end
+    type 'a wmatrix =
+      'a
+      Ge.GEMake(Direct).Gen(GAC_F)(GEF.RowPivot)(GEF.AbstractDet)(GEF.DivisionUpdate)(GEF.InpJustMatrix)(GEF.OutDetRank).wmatrix = {
+      matrix : 'a GAC_F.vc;
+      numrow : ('a, int) Direct.abstract;
+      numcol : ('a, int) Direct.abstract;
+    }
     val gen :
       ('a, Input.inp) Direct.abstract ->
       ([> `TDet of 'a Det.lstate
@@ -2812,6 +2847,13 @@ module GenFV1 :
            'a GVC_F.vo -> 'b -> ('c -> 'd -> 'd) -> ('a, 'e) Direct.abstract) ->
           'b -> ('b -> ('a, unit) Direct.abstract -> 'f) -> 'f
       end
+    type 'a wmatrix =
+      'a
+      Ge.GEMake(Direct).Gen(GVC_F)(GEF.RowPivot)(GEF.NoDet)(GEF.DivisionUpdate)(GEF.InpJustMatrix)(GEF.OutJustMatrix).wmatrix = {
+      matrix : 'a GVC_F.vc;
+      numrow : ('a, int) Direct.abstract;
+      numcol : ('a, int) Direct.abstract;
+    }
     val gen :
       ('a, Input.inp) Direct.abstract ->
       ([> `TDet of 'a Det.lstate
@@ -2972,6 +3014,13 @@ module GenFV2 :
            'a GVC_F.vo -> 'b -> ('c -> 'd -> 'd) -> ('a, 'e) Direct.abstract) ->
           'b -> ('b -> ('a, unit) Direct.abstract -> 'f) -> 'f
       end
+    type 'a wmatrix =
+      'a
+      Ge.GEMake(Direct).Gen(GVC_F)(GEF.RowPivot)(GEF.AbstractDet)(GEF.DivisionUpdate)(GEF.InpJustMatrix)(GEF.OutDet).wmatrix = {
+      matrix : 'a GVC_F.vc;
+      numrow : ('a, int) Direct.abstract;
+      numcol : ('a, int) Direct.abstract;
+    }
     val gen :
       ('a, Input.inp) Direct.abstract ->
       ([> `TDet of 'a Det.lstate
@@ -3132,6 +3181,13 @@ module GenFV3 :
            'a GVC_F.vo -> 'b -> ('c -> 'd -> 'd) -> ('a, 'e) Direct.abstract) ->
           'b -> ('b -> ('a, unit) Direct.abstract -> 'f) -> 'f
       end
+    type 'a wmatrix =
+      'a
+      Ge.GEMake(Direct).Gen(GVC_F)(GEF.RowPivot)(GEF.NoDet)(GEF.DivisionUpdate)(GEF.InpJustMatrix)(GEF.OutRank).wmatrix = {
+      matrix : 'a GVC_F.vc;
+      numrow : ('a, int) Direct.abstract;
+      numcol : ('a, int) Direct.abstract;
+    }
     val gen :
       ('a, Input.inp) Direct.abstract ->
       ([> `TDet of 'a Det.lstate
@@ -3292,6 +3348,13 @@ module GenFV4 :
            'a GVC_F.vo -> 'b -> ('c -> 'd -> 'd) -> ('a, 'e) Direct.abstract) ->
           'b -> ('b -> ('a, unit) Direct.abstract -> 'f) -> 'f
       end
+    type 'a wmatrix =
+      'a
+      Ge.GEMake(Direct).Gen(GVC_F)(GEF.RowPivot)(GEF.AbstractDet)(GEF.DivisionUpdate)(GEF.InpJustMatrix)(GEF.OutDetRank).wmatrix = {
+      matrix : 'a GVC_F.vc;
+      numrow : ('a, int) Direct.abstract;
+      numcol : ('a, int) Direct.abstract;
+    }
     val gen :
       ('a, Input.inp) Direct.abstract ->
       ([> `TDet of 'a Det.lstate
@@ -3452,6 +3515,13 @@ module GenFV5 :
            'a GVC_F.vo -> 'b -> ('c -> 'd -> 'd) -> ('a, 'e) Direct.abstract) ->
           'b -> ('b -> ('a, unit) Direct.abstract -> 'f) -> 'f
       end
+    type 'a wmatrix =
+      'a
+      Ge.GEMake(Direct).Gen(GVC_F)(GEF.FullPivot)(GEF.AbstractDet)(GEF.DivisionUpdate)(GEF.InpJustMatrix)(GEF.OutDetRank).wmatrix = {
+      matrix : 'a GVC_F.vc;
+      numrow : ('a, int) Direct.abstract;
+      numcol : ('a, int) Direct.abstract;
+    }
     val gen :
       ('a, Input.inp) Direct.abstract ->
       ([> `TDet of 'a Det.lstate
@@ -3612,6 +3682,13 @@ module GenIA1 :
            'a GAC_I.vo -> 'b -> ('c -> 'd -> 'd) -> ('a, 'e) Direct.abstract) ->
           'b -> ('b -> ('a, unit) Direct.abstract -> 'f) -> 'f
       end
+    type 'a wmatrix =
+      'a
+      Ge.GEMake(Direct).Gen(GAC_I)(GEF.RowPivot)(GEF.AbstractDet)(GEF.FractionFreeUpdate)(GEF.InpJustMatrix)(GEF.OutJustMatrix).wmatrix = {
+      matrix : 'a GAC_I.vc;
+      numrow : ('a, int) Direct.abstract;
+      numcol : ('a, int) Direct.abstract;
+    }
     val gen :
       ('a, Input.inp) Direct.abstract ->
       ([> `TDet of 'a Det.lstate
@@ -3772,6 +3849,13 @@ module GenIA2 :
            'a GAC_I.vo -> 'b -> ('c -> 'd -> 'd) -> ('a, 'e) Direct.abstract) ->
           'b -> ('b -> ('a, unit) Direct.abstract -> 'f) -> 'f
       end
+    type 'a wmatrix =
+      'a
+      Ge.GEMake(Direct).Gen(GAC_I)(GEF.RowPivot)(GEF.AbstractDet)(GEF.FractionFreeUpdate)(GEF.InpJustMatrix)(GEF.OutDet).wmatrix = {
+      matrix : 'a GAC_I.vc;
+      numrow : ('a, int) Direct.abstract;
+      numcol : ('a, int) Direct.abstract;
+    }
     val gen :
       ('a, Input.inp) Direct.abstract ->
       ([> `TDet of 'a Det.lstate
@@ -3932,6 +4016,13 @@ module GenIA3 :
            'a GAC_I.vo -> 'b -> ('c -> 'd -> 'd) -> ('a, 'e) Direct.abstract) ->
           'b -> ('b -> ('a, unit) Direct.abstract -> 'f) -> 'f
       end
+    type 'a wmatrix =
+      'a
+      Ge.GEMake(Direct).Gen(GAC_I)(GEF.RowPivot)(GEF.AbstractDet)(GEF.FractionFreeUpdate)(GEF.InpJustMatrix)(GEF.OutRank).wmatrix = {
+      matrix : 'a GAC_I.vc;
+      numrow : ('a, int) Direct.abstract;
+      numcol : ('a, int) Direct.abstract;
+    }
     val gen :
       ('a, Input.inp) Direct.abstract ->
       ([> `TDet of 'a Det.lstate
@@ -4092,6 +4183,13 @@ module GenIA4 :
            'a GAC_I.vo -> 'b -> ('c -> 'd -> 'd) -> ('a, 'e) Direct.abstract) ->
           'b -> ('b -> ('a, unit) Direct.abstract -> 'f) -> 'f
       end
+    type 'a wmatrix =
+      'a
+      Ge.GEMake(Direct).Gen(GAC_I)(GEF.RowPivot)(GEF.AbstractDet)(GEF.FractionFreeUpdate)(GEF.InpJustMatrix)(GEF.OutDetRank).wmatrix = {
+      matrix : 'a GAC_I.vc;
+      numrow : ('a, int) Direct.abstract;
+      numcol : ('a, int) Direct.abstract;
+    }
     val gen :
       ('a, Input.inp) Direct.abstract ->
       ([> `TDet of 'a Det.lstate
@@ -4252,6 +4350,13 @@ module GenIV1 :
            'a GVC_I.vo -> 'b -> ('c -> 'd -> 'd) -> ('a, 'e) Direct.abstract) ->
           'b -> ('b -> ('a, unit) Direct.abstract -> 'f) -> 'f
       end
+    type 'a wmatrix =
+      'a
+      Ge.GEMake(Direct).Gen(GVC_I)(GEF.RowPivot)(GEF.AbstractDet)(GEF.FractionFreeUpdate)(GEF.InpJustMatrix)(GEF.OutJustMatrix).wmatrix = {
+      matrix : 'a GVC_I.vc;
+      numrow : ('a, int) Direct.abstract;
+      numcol : ('a, int) Direct.abstract;
+    }
     val gen :
       ('a, Input.inp) Direct.abstract ->
       ([> `TDet of 'a Det.lstate
@@ -4412,6 +4517,13 @@ module GenIV2 :
            'a GVC_I.vo -> 'b -> ('c -> 'd -> 'd) -> ('a, 'e) Direct.abstract) ->
           'b -> ('b -> ('a, unit) Direct.abstract -> 'f) -> 'f
       end
+    type 'a wmatrix =
+      'a
+      Ge.GEMake(Direct).Gen(GVC_I)(GEF.RowPivot)(GEF.AbstractDet)(GEF.FractionFreeUpdate)(GEF.InpJustMatrix)(GEF.OutDet).wmatrix = {
+      matrix : 'a GVC_I.vc;
+      numrow : ('a, int) Direct.abstract;
+      numcol : ('a, int) Direct.abstract;
+    }
     val gen :
       ('a, Input.inp) Direct.abstract ->
       ([> `TDet of 'a Det.lstate
@@ -4572,6 +4684,13 @@ module GenIV3 :
            'a GVC_I.vo -> 'b -> ('c -> 'd -> 'd) -> ('a, 'e) Direct.abstract) ->
           'b -> ('b -> ('a, unit) Direct.abstract -> 'f) -> 'f
       end
+    type 'a wmatrix =
+      'a
+      Ge.GEMake(Direct).Gen(GVC_I)(GEF.RowPivot)(GEF.AbstractDet)(GEF.FractionFreeUpdate)(GEF.InpJustMatrix)(GEF.OutRank).wmatrix = {
+      matrix : 'a GVC_I.vc;
+      numrow : ('a, int) Direct.abstract;
+      numcol : ('a, int) Direct.abstract;
+    }
     val gen :
       ('a, Input.inp) Direct.abstract ->
       ([> `TDet of 'a Det.lstate
@@ -4732,6 +4851,13 @@ module GenIV4 :
            'a GVC_I.vo -> 'b -> ('c -> 'd -> 'd) -> ('a, 'e) Direct.abstract) ->
           'b -> ('b -> ('a, unit) Direct.abstract -> 'f) -> 'f
       end
+    type 'a wmatrix =
+      'a
+      Ge.GEMake(Direct).Gen(GVC_I)(GEF.RowPivot)(GEF.AbstractDet)(GEF.FractionFreeUpdate)(GEF.InpJustMatrix)(GEF.OutDetRank).wmatrix = {
+      matrix : 'a GVC_I.vc;
+      numrow : ('a, int) Direct.abstract;
+      numcol : ('a, int) Direct.abstract;
+    }
     val gen :
       ('a, Input.inp) Direct.abstract ->
       ([> `TDet of 'a Det.lstate
@@ -4892,6 +5018,13 @@ module GenIV5 :
            'a GVC_I.vo -> 'b -> ('c -> 'd -> 'd) -> ('a, 'e) Direct.abstract) ->
           'b -> ('b -> ('a, unit) Direct.abstract -> 'f) -> 'f
       end
+    type 'a wmatrix =
+      'a
+      Ge.GEMake(Direct).Gen(GVC_I)(GEF.FullPivot)(GEF.AbstractDet)(GEF.FractionFreeUpdate)(GEF.InpJustMatrix)(GEF.OutDetRank).wmatrix = {
+      matrix : 'a GVC_I.vc;
+      numrow : ('a, int) Direct.abstract;
+      numcol : ('a, int) Direct.abstract;
+    }
     val gen :
       ('a, Input.inp) Direct.abstract ->
       ([> `TDet of 'a Det.lstate
@@ -5052,6 +5185,13 @@ module GenFA11 :
            'a GAC_F.vo -> 'b -> ('c -> 'd -> 'd) -> ('a, 'e) Direct.abstract) ->
           'b -> ('b -> ('a, unit) Direct.abstract -> 'f) -> 'f
       end
+    type 'a wmatrix =
+      'a
+      Ge.GEMake(Direct).Gen(GAC_F)(GEF.FullPivot)(GEF.NoDet)(GEF.DivisionUpdate)(GEF.InpJustMatrix)(GEF.OutJustMatrix).wmatrix = {
+      matrix : 'a GAC_F.vc;
+      numrow : ('a, int) Direct.abstract;
+      numcol : ('a, int) Direct.abstract;
+    }
     val gen :
       ('a, Input.inp) Direct.abstract ->
       ([> `TDet of 'a Det.lstate
@@ -5212,6 +5352,13 @@ module GenFA12 :
            'a GAC_F.vo -> 'b -> ('c -> 'd -> 'd) -> ('a, 'e) Direct.abstract) ->
           'b -> ('b -> ('a, unit) Direct.abstract -> 'f) -> 'f
       end
+    type 'a wmatrix =
+      'a
+      Ge.GEMake(Direct).Gen(GAC_F)(GEF.FullPivot)(GEF.AbstractDet)(GEF.DivisionUpdate)(GEF.InpJustMatrix)(GEF.OutDet).wmatrix = {
+      matrix : 'a GAC_F.vc;
+      numrow : ('a, int) Direct.abstract;
+      numcol : ('a, int) Direct.abstract;
+    }
     val gen :
       ('a, Input.inp) Direct.abstract ->
       ([> `TDet of 'a Det.lstate
@@ -5372,6 +5519,13 @@ module GenFA13 :
            'a GAC_F.vo -> 'b -> ('c -> 'd -> 'd) -> ('a, 'e) Direct.abstract) ->
           'b -> ('b -> ('a, unit) Direct.abstract -> 'f) -> 'f
       end
+    type 'a wmatrix =
+      'a
+      Ge.GEMake(Direct).Gen(GAC_F)(GEF.FullPivot)(GEF.NoDet)(GEF.DivisionUpdate)(GEF.InpJustMatrix)(GEF.OutRank).wmatrix = {
+      matrix : 'a GAC_F.vc;
+      numrow : ('a, int) Direct.abstract;
+      numcol : ('a, int) Direct.abstract;
+    }
     val gen :
       ('a, Input.inp) Direct.abstract ->
       ([> `TDet of 'a Det.lstate
@@ -5532,6 +5686,13 @@ module GenFA14 :
            'a GAC_F.vo -> 'b -> ('c -> 'd -> 'd) -> ('a, 'e) Direct.abstract) ->
           'b -> ('b -> ('a, unit) Direct.abstract -> 'f) -> 'f
       end
+    type 'a wmatrix =
+      'a
+      Ge.GEMake(Direct).Gen(GAC_F)(GEF.FullPivot)(GEF.AbstractDet)(GEF.DivisionUpdate)(GEF.InpJustMatrix)(GEF.OutDetRank).wmatrix = {
+      matrix : 'a GAC_F.vc;
+      numrow : ('a, int) Direct.abstract;
+      numcol : ('a, int) Direct.abstract;
+    }
     val gen :
       ('a, Input.inp) Direct.abstract ->
       ([> `TDet of 'a Det.lstate
@@ -5692,6 +5853,13 @@ module GenFA24 :
            'a GAC_F.vo -> 'b -> ('c -> 'd -> 'd) -> ('a, 'e) Direct.abstract) ->
           'b -> ('b -> ('a, unit) Direct.abstract -> 'f) -> 'f
       end
+    type 'a wmatrix =
+      'a
+      Ge.GEMake(Direct).Gen(GAC_F)(GEF.RowPivot)(GEF.AbstractDet)(GEF.DivisionUpdate)(GEF.InpJustMatrix)(GEF.OutDetRankPivot).wmatrix = {
+      matrix : 'a GAC_F.vc;
+      numrow : ('a, int) Direct.abstract;
+      numcol : ('a, int) Direct.abstract;
+    }
     val gen :
       ('a, Input.inp) Direct.abstract ->
       ([> `TDet of 'a Det.lstate
@@ -5852,6 +6020,13 @@ module GenRA1 :
            'a GAC_R.vo -> 'b -> ('c -> 'd -> 'd) -> ('a, 'e) Direct.abstract) ->
           'b -> ('b -> ('a, unit) Direct.abstract -> 'f) -> 'f
       end
+    type 'a wmatrix =
+      'a
+      Ge.GEMake(Direct).Gen(GAC_R)(GEF.RowPivot)(GEF.AbstractDet)(GEF.DivisionUpdate)(GEF.InpJustMatrix)(GEF.OutJustMatrix).wmatrix = {
+      matrix : 'a GAC_R.vc;
+      numrow : ('a, int) Direct.abstract;
+      numcol : ('a, int) Direct.abstract;
+    }
     val gen :
       ('a, Input.inp) Direct.abstract ->
       ([> `TDet of 'a Det.lstate
@@ -6012,6 +6187,13 @@ module GenRA2 :
            'a GAC_R.vo -> 'b -> ('c -> 'd -> 'd) -> ('a, 'e) Direct.abstract) ->
           'b -> ('b -> ('a, unit) Direct.abstract -> 'f) -> 'f
       end
+    type 'a wmatrix =
+      'a
+      Ge.GEMake(Direct).Gen(GAC_R)(GEF.RowPivot)(GEF.AbstractDet)(GEF.DivisionUpdate)(GEF.InpJustMatrix)(GEF.OutDet).wmatrix = {
+      matrix : 'a GAC_R.vc;
+      numrow : ('a, int) Direct.abstract;
+      numcol : ('a, int) Direct.abstract;
+    }
     val gen :
       ('a, Input.inp) Direct.abstract ->
       ([> `TDet of 'a Det.lstate
@@ -6172,6 +6354,13 @@ module GenRA3 :
            'a GAC_R.vo -> 'b -> ('c -> 'd -> 'd) -> ('a, 'e) Direct.abstract) ->
           'b -> ('b -> ('a, unit) Direct.abstract -> 'f) -> 'f
       end
+    type 'a wmatrix =
+      'a
+      Ge.GEMake(Direct).Gen(GAC_R)(GEF.RowPivot)(GEF.AbstractDet)(GEF.DivisionUpdate)(GEF.InpJustMatrix)(GEF.OutRank).wmatrix = {
+      matrix : 'a GAC_R.vc;
+      numrow : ('a, int) Direct.abstract;
+      numcol : ('a, int) Direct.abstract;
+    }
     val gen :
       ('a, Input.inp) Direct.abstract ->
       ([> `TDet of 'a Det.lstate
@@ -6332,6 +6521,13 @@ module GenRA4 :
            'a GAC_R.vo -> 'b -> ('c -> 'd -> 'd) -> ('a, 'e) Direct.abstract) ->
           'b -> ('b -> ('a, unit) Direct.abstract -> 'f) -> 'f
       end
+    type 'a wmatrix =
+      'a
+      Ge.GEMake(Direct).Gen(GAC_R)(GEF.RowPivot)(GEF.AbstractDet)(GEF.DivisionUpdate)(GEF.InpJustMatrix)(GEF.OutDetRank).wmatrix = {
+      matrix : 'a GAC_R.vc;
+      numrow : ('a, int) Direct.abstract;
+      numcol : ('a, int) Direct.abstract;
+    }
     val gen :
       ('a, Input.inp) Direct.abstract ->
       ([> `TDet of 'a Det.lstate
@@ -6492,6 +6688,13 @@ module GenFA5 :
            'a GAC_F.vo -> 'b -> ('c -> 'd -> 'd) -> ('a, 'e) Direct.abstract) ->
           'b -> ('b -> ('a, unit) Direct.abstract -> 'f) -> 'f
       end
+    type 'a wmatrix =
+      'a
+      Ge.GEMake(Direct).Gen(GAC_F)(GEF.RowPivot)(GEF.NoDet)(GEF.DivisionUpdate)(GEF.InpMatrixMargin)(GEF.OutJustMatrix).wmatrix = {
+      matrix : 'a GAC_F.vc;
+      numrow : ('a, int) Direct.abstract;
+      numcol : ('a, int) Direct.abstract;
+    }
     val gen :
       ('a, Input.inp) Direct.abstract ->
       ([> `TDet of 'a Det.lstate
@@ -6652,6 +6855,13 @@ module GenFA6 :
            'a GAC_F.vo -> 'b -> ('c -> 'd -> 'd) -> ('a, 'e) Direct.abstract) ->
           'b -> ('b -> ('a, unit) Direct.abstract -> 'f) -> 'f
       end
+    type 'a wmatrix =
+      'a
+      Ge.GEMake(Direct).Gen(GAC_F)(GEF.RowPivot)(GEF.AbstractDet)(GEF.DivisionUpdate)(GEF.InpMatrixMargin)(GEF.OutDet).wmatrix = {
+      matrix : 'a GAC_F.vc;
+      numrow : ('a, int) Direct.abstract;
+      numcol : ('a, int) Direct.abstract;
+    }
     val gen :
       ('a, Input.inp) Direct.abstract ->
       ([> `TDet of 'a Det.lstate
@@ -6812,6 +7022,13 @@ module GenFA7 :
            'a GAC_F.vo -> 'b -> ('c -> 'd -> 'd) -> ('a, 'e) Direct.abstract) ->
           'b -> ('b -> ('a, unit) Direct.abstract -> 'f) -> 'f
       end
+    type 'a wmatrix =
+      'a
+      Ge.GEMake(Direct).Gen(GAC_F)(GEF.RowPivot)(GEF.NoDet)(GEF.DivisionUpdate)(GEF.InpMatrixMargin)(GEF.OutRank).wmatrix = {
+      matrix : 'a GAC_F.vc;
+      numrow : ('a, int) Direct.abstract;
+      numcol : ('a, int) Direct.abstract;
+    }
     val gen :
       ('a, Input.inp) Direct.abstract ->
       ([> `TDet of 'a Det.lstate
@@ -6972,6 +7189,13 @@ module GenFA8 :
            'a GAC_F.vo -> 'b -> ('c -> 'd -> 'd) -> ('a, 'e) Direct.abstract) ->
           'b -> ('b -> ('a, unit) Direct.abstract -> 'f) -> 'f
       end
+    type 'a wmatrix =
+      'a
+      Ge.GEMake(Direct).Gen(GAC_F)(GEF.RowPivot)(GEF.NoDet)(GEF.DivisionUpdate)(GEF.InpMatrixMargin)(GEF.OutDetRank).wmatrix = {
+      matrix : 'a GAC_F.vc;
+      numrow : ('a, int) Direct.abstract;
+      numcol : ('a, int) Direct.abstract;
+    }
     val gen :
       ('a, Input.inp) Direct.abstract ->
       ([> `TDet of 'a Det.lstate
@@ -7132,6 +7356,13 @@ module GenZp3 :
            'a GVC_Z3.vo -> 'b -> ('c -> 'd -> 'd) -> ('a, 'e) Direct.abstract) ->
           'b -> ('b -> ('a, unit) Direct.abstract -> 'f) -> 'f
       end
+    type 'a wmatrix =
+      'a
+      Ge.GEMake(Direct).Gen(GVC_Z3)(GEF.RowPivot)(GEF.AbstractDet)(GEF.DivisionUpdate)(GEF.InpJustMatrix)(GEF.OutDetRankPivot).wmatrix = {
+      matrix : 'a GVC_Z3.vc;
+      numrow : ('a, int) Direct.abstract;
+      numcol : ('a, int) Direct.abstract;
+    }
     val gen :
       ('a, Input.inp) Direct.abstract ->
       ([> `TDet of 'a Det.lstate
@@ -7293,6 +7524,13 @@ module GenZp19 :
            'b -> ('c -> 'd -> 'd) -> ('a, 'e) Direct.abstract) ->
           'b -> ('b -> ('a, unit) Direct.abstract -> 'f) -> 'f
       end
+    type 'a wmatrix =
+      'a
+      Ge.GEMake(Direct).Gen(GVC_Z19)(GEF.RowPivot)(GEF.AbstractDet)(GEF.FractionFreeUpdate)(GEF.InpJustMatrix)(GEF.OutDetRankPivot).wmatrix = {
+      matrix : 'a GVC_Z19.vc;
+      numrow : ('a, int) Direct.abstract;
+      numcol : ('a, int) Direct.abstract;
+    }
     val gen :
       ('a, Input.inp) Direct.abstract ->
       ([> `TDet of 'a Det.lstate
@@ -7458,6 +7696,9 @@ val fa6 : float array array = [|[|1.; 1.|]|]
 val fa7 : float array array =
   [|[|1.; 2.; 3.; 1.; 0.; 0.|]; [|4.; 13.; 5.; 0.; 1.; 0.|];
     [|-1.; 3.; 0.; 0.; 0.; 1.|]|]
+- : unit = ()
+- : unit = ()
+- : unit = ()
 - : unit = ()
 - : unit = ()
 - : unit = ()

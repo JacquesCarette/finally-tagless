@@ -42,6 +42,7 @@ type ('a,'v,'s,'w) cmonad = (('a,'v) abstract, 's list, ('a,'w) abstract) monad
 type ('a,'v,'s,'w) omonad = (('a,'v) abstract option, 
 			     's list, ('a,'w) abstract) monad
 
+(* Here are the various design aspects of GE-type algorithms *)
 module type DETERMINANT = sig
   type indet
   type outdet
@@ -541,21 +542,26 @@ module Gen(C: CONTAINER2D)
     module Output = Out(C)(Det)
     module Pivot = PivotF(C)(Detf)(Output.P)
     module I = Iters(C)
+
+    (* Bundle up some information, helps abstract some argument lists *)
+    type 'a wmatrix = {matrix: 'a C.vc; numrow: ('a,int) abstract; 
+                       numcol: ('a,int) abstract}
+
     let gen =
-      let zerobelow b r c m n brc =
+      let zerobelow mat r c brc =
         let innerbody j bjc = perform
             whenM (Logic.notequalL bjc C.Dom.zeroL )
-                (seqM (I.col_iter b j (Idx.succ c) (Idx.pred m)
+                (seqM (I.col_iter mat.matrix j (Idx.succ c) (Idx.pred mat.numcol)
                           (fun k bjk -> perform
-                              d <-- Det.get ();
-                              brk <-- ret (C.getL b r k);
-                              U.update bjc brc brk bjk 
-                                  (fun ov -> C.col_head_set b j k ov) d) )
-                      (ret (C.col_head_set b j c C.Dom.zeroL))) in 
+                          d <-- Det.get ();
+                          brk <-- ret (C.getL mat.matrix r k);
+                          U.update bjc brc brk bjk 
+                              (fun ov -> C.col_head_set mat.matrix j k ov) d) )
+                      (ret (C.col_head_set mat.matrix j c C.Dom.zeroL))) in 
         perform
-              seqM (I.row_iter b c (Idx.succ r) (Idx.pred n) innerbody) 
-                   (U.update_det brc Det.set Det.acc)in
-      let dogen input = perform
+              seqM (I.row_iter mat.matrix c (Idx.succ r) (Idx.pred mat.numrow) innerbody) 
+                   (U.update_det brc Det.set Det.acc) in
+      let ge_gen input = perform
           (a,rmar,augmented) <-- Input.get_input input;
           r <-- Output.R.decl ();
           c <-- retN (liftRef Idx.zero);
@@ -573,12 +579,12 @@ module Gen(C: CONTAINER2D)
                cc <-- retN (liftGet c);
                pivot <-- l1 retN (Pivot.findpivot b rr n cc m);
                seqM (matchM pivot (fun pv -> 
-                        seqM (zerobelow b rr cc m n pv)
+                        seqM (zerobelow {matrix=b; numrow=n; numcol=m} rr cc pv)
                              (Output.R.succ ()) )
                         (Det.zero_sign () ))
                     (updateM c Idx.succ) ))
             (Output.make_result b)
-    in dogen
+    in ge_gen
 end
 
 end
