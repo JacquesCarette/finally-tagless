@@ -291,6 +291,16 @@ module FractionFreeUpdate(Ctr:CONTAINER2D)(Det:DETF) = struct
   let update_det v set _ = set v
 end
 
+(* Given a container, we can generate a whole "Linear Algebra"
+   set of modules and generators all based on that container.
+   This layout makes sure the same container is shared (and thus
+   the same domain at the same time).
+
+   The main reason that some of the above modules are not contained
+   in this one are twofold:
+   1) some of the are container-independent, so why put them in here?
+   2) some have explicit kind restrictions, which have to be kept!
+*)
 module GenLA(C:CONTAINER2D) = struct
 (* moved from Infra (now Domains) so that the former uses no monads.
   The following code is generic over the containers anyway.
