@@ -73,27 +73,6 @@
               ('a, int) Code.abstract -> 'a vo -> ('a, unit) Code.abstract
           end
       end
-    module Iters :
-      functor (C : D.CONTAINER2D) ->
-        sig
-          val row_iter :
-            'a C.vc ->
-            ('a, int) Code.abstract ->
-            ('a, int) Code.abstract ->
-            ('a, int) Code.abstract ->
-            (('a, int) Code.abstract ->
-             ('a, C.Dom.v) Code.abstract ->
-             'b -> ('c -> 'd -> 'd) -> ('a, 'e) Code.abstract) ->
-            'b -> ('b -> ('a, unit) Code.abstract -> 'f) -> 'f
-          val col_iter :
-            'a C.vc ->
-            ('a, int) Code.abstract ->
-            ('a, int) Code.abstract ->
-            ('a, int) Code.abstract ->
-            (('a, int) Code.abstract ->
-             'a C.vo -> 'b -> ('c -> 'd -> 'd) -> ('a, 'e) Code.abstract) ->
-            'b -> ('b -> ('a, unit) Code.abstract -> 'f) -> 'f
-        end
     type ('a, 'b, 'c, 'd) cmonad =
         (('a, 'b) Code.abstract, 'c list, ('a, 'd) Code.abstract)
         StateCPSMonad.monad
@@ -280,6 +259,105 @@
                   ('b, int ref) Code.abstract * ('b, Dom.v ref) Code.abstract ]
              as 'a)
             list -> ('a list -> ('b, Dom.v) Code.abstract -> 'c) -> 'c
+        end
+    module type TRACKPIVOT =
+      sig
+        type 'a lstate
+        type 'a tag_lstate = [ `TPivot of 'a lstate ]
+        type ('a, 'b) lm = ('c, 'b, 'd, 'e) cmonad
+          constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
+        val decl : unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
+        val add :
+          ('a, Code.perm) Code.abstract ->
+          (('a, unit) Code.abstract option, [> 'a tag_lstate ] list,
+           ('a, 'b) Code.abstract)
+          StateCPSMonad.monad
+        val fin :
+          unit ->
+          (('a, Code.perm list) Code.abstract, [> 'a tag_lstate ] list, 'b)
+          StateCPSMonad.monad
+      end
+    module TrackPivot :
+      sig
+        type 'a lstate = ('a, Code.perm list ref) Code.abstract
+        type 'a tag_lstate = [ `TPivot of 'a lstate ]
+        type ('a, 'b) lm = ('c, 'b, 'd, 'e) cmonad
+          constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
+        val fetch_iter : [> `TPivot of 'a ] list -> 'a
+        val pfetch :
+          unit ->
+          ([> `TPivot of 'b ] as 'a) list -> ('a list -> 'b -> 'c) -> 'c
+        val pstore :
+          'a ->
+          ([> `TPivot of 'a ] as 'b) list -> ('b list -> unit -> 'c) -> 'c
+        val decl :
+          unit ->
+          ([> `TPivot of ('b, Code.perm list ref) Code.abstract ] as 'a) list ->
+          ('a list -> ('c, unit) Code.abstract -> ('b, 'd) Code.abstract) ->
+          ('b, 'd) Code.abstract
+        val add :
+          ('a, 'b) Code.abstract ->
+          ([> `TPivot of ('a, 'b list ref) Code.abstract ] as 'c) list ->
+          ('c list -> ('a, unit) Code.abstract option -> 'd) -> 'd
+      end
+    module KeepPivot :
+      sig
+        type 'a lstate = ('a, Code.perm list ref) Code.abstract
+        type 'a tag_lstate = [ `TPivot of 'a lstate ]
+        type ('a, 'b) lm = ('c, 'b, 'd, 'e) cmonad
+          constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
+        val fetch_iter : [> `TPivot of 'a ] list -> 'a
+        val pfetch :
+          unit ->
+          ([> `TPivot of 'b ] as 'a) list -> ('a list -> 'b -> 'c) -> 'c
+        val pstore :
+          'a ->
+          ([> `TPivot of 'a ] as 'b) list -> ('b list -> unit -> 'c) -> 'c
+        val decl :
+          unit ->
+          ([> `TPivot of ('b, Code.perm list ref) Code.abstract ] as 'a) list ->
+          ('a list -> ('c, unit) Code.abstract -> ('b, 'd) Code.abstract) ->
+          ('b, 'd) Code.abstract
+        val add :
+          ('a, 'b) Code.abstract ->
+          ([> `TPivot of ('a, 'b list ref) Code.abstract ] as 'c) list ->
+          ('c list -> ('a, unit) Code.abstract option -> 'd) -> 'd
+        val fin :
+          unit ->
+          ([> `TPivot of ('b, 'c ref) Code.abstract ] as 'a) list ->
+          ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd
+      end
+    module DiscardPivot :
+      sig
+        type 'a lstate = ('a, Code.perm list ref) Code.abstract
+        type 'a tag_lstate = [ `TPivot of 'a lstate ]
+        type ('a, 'b) lm = ('c, 'b, 'd, 'e) cmonad
+          constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
+        val decl : unit -> 'a -> ('a -> ('b, unit) Code.abstract -> 'c) -> 'c
+        val add : 'a -> 'b -> ('b -> 'c option -> 'd) -> 'd
+        val fin :
+          unit -> 'a -> ('a -> ('b, 'c list) Code.abstract -> 'd) -> 'd
+      end
+    module Iters :
+      functor (C : D.CONTAINER2D) ->
+        sig
+          val row_iter :
+            'a C.vc ->
+            ('a, int) Code.abstract ->
+            ('a, int) Code.abstract ->
+            ('a, int) Code.abstract ->
+            (('a, int) Code.abstract ->
+             ('a, C.Dom.v) Code.abstract ->
+             'b -> ('c -> 'd -> 'd) -> ('a, 'e) Code.abstract) ->
+            'b -> ('b -> ('a, unit) Code.abstract -> 'f) -> 'f
+          val col_iter :
+            'a C.vc ->
+            ('a, int) Code.abstract ->
+            ('a, int) Code.abstract ->
+            ('a, int) Code.abstract ->
+            (('a, int) Code.abstract ->
+             'a C.vo -> 'b -> ('c -> 'd -> 'd) -> ('a, 'e) Code.abstract) ->
+            'b -> ('b -> ('a, unit) Code.abstract -> 'f) -> 'f
         end
     module UpdateProxy :
       functor (C0 : D.CONTAINER2D) ->
@@ -519,84 +597,6 @@
               ('a, Dom.v ref) Code.abstract -> 'c -> ('c -> 'b -> 'd) -> 'd
             val update_det : 'a -> ('a -> 'b) -> 'c -> 'b
           end
-    module type TRACKPIVOT =
-      sig
-        type 'a lstate
-        type 'a tag_lstate = [ `TPivot of 'a lstate ]
-        type ('a, 'b) lm = ('c, 'b, 'd, 'e) cmonad
-          constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-        val decl : unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
-        val add :
-          ('a, Code.perm) Code.abstract ->
-          (('a, unit) Code.abstract option, [> 'a tag_lstate ] list,
-           ('a, 'b) Code.abstract)
-          StateCPSMonad.monad
-        val fin :
-          unit ->
-          (('a, Code.perm list) Code.abstract, [> 'a tag_lstate ] list, 'b)
-          StateCPSMonad.monad
-      end
-    module TrackPivot :
-      sig
-        type 'a lstate = ('a, Code.perm list ref) Code.abstract
-        type 'a tag_lstate = [ `TPivot of 'a lstate ]
-        type ('a, 'b) lm = ('c, 'b, 'd, 'e) cmonad
-          constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-        val fetch_iter : [> `TPivot of 'a ] list -> 'a
-        val pfetch :
-          unit ->
-          ([> `TPivot of 'b ] as 'a) list -> ('a list -> 'b -> 'c) -> 'c
-        val pstore :
-          'a ->
-          ([> `TPivot of 'a ] as 'b) list -> ('b list -> unit -> 'c) -> 'c
-        val decl :
-          unit ->
-          ([> `TPivot of ('b, Code.perm list ref) Code.abstract ] as 'a) list ->
-          ('a list -> ('c, unit) Code.abstract -> ('b, 'd) Code.abstract) ->
-          ('b, 'd) Code.abstract
-        val add :
-          ('a, 'b) Code.abstract ->
-          ([> `TPivot of ('a, 'b list ref) Code.abstract ] as 'c) list ->
-          ('c list -> ('a, unit) Code.abstract option -> 'd) -> 'd
-      end
-    module KeepPivot :
-      sig
-        type 'a lstate = ('a, Code.perm list ref) Code.abstract
-        type 'a tag_lstate = [ `TPivot of 'a lstate ]
-        type ('a, 'b) lm = ('c, 'b, 'd, 'e) cmonad
-          constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-        val fetch_iter : [> `TPivot of 'a ] list -> 'a
-        val pfetch :
-          unit ->
-          ([> `TPivot of 'b ] as 'a) list -> ('a list -> 'b -> 'c) -> 'c
-        val pstore :
-          'a ->
-          ([> `TPivot of 'a ] as 'b) list -> ('b list -> unit -> 'c) -> 'c
-        val decl :
-          unit ->
-          ([> `TPivot of ('b, Code.perm list ref) Code.abstract ] as 'a) list ->
-          ('a list -> ('c, unit) Code.abstract -> ('b, 'd) Code.abstract) ->
-          ('b, 'd) Code.abstract
-        val add :
-          ('a, 'b) Code.abstract ->
-          ([> `TPivot of ('a, 'b list ref) Code.abstract ] as 'c) list ->
-          ('c list -> ('a, unit) Code.abstract option -> 'd) -> 'd
-        val fin :
-          unit ->
-          ([> `TPivot of ('b, 'c ref) Code.abstract ] as 'a) list ->
-          ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd
-      end
-    module DiscardPivot :
-      sig
-        type 'a lstate = ('a, Code.perm list ref) Code.abstract
-        type 'a tag_lstate = [ `TPivot of 'a lstate ]
-        type ('a, 'b) lm = ('c, 'b, 'd, 'e) cmonad
-          constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-        val decl : unit -> 'a -> ('a -> ('b, unit) Code.abstract -> 'c) -> 'c
-        val add : 'a -> 'b -> ('b -> 'c option -> 'd) -> 'd
-        val fin :
-          unit -> 'a -> ('a -> ('b, 'c list) Code.abstract -> 'd) -> 'd
-      end
     module type INPUT =
       functor (C : D.CONTAINER2D) ->
         sig

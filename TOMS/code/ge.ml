@@ -16,31 +16,12 @@ struct
 end
 *)
 
-(* moved from Infra (now Domains) so that the former uses no monads.
-  The following code is generic over the containers anyway.
-  If container-specific iterators are needed, they can still be
-  coded as `exceptions'
-*)
-module Iters(C:CONTAINER2D) = struct
-  let row_iter b c low high body = 
-    let newbody j = perform
-        bjc <-- retN (C.getL b j c);
-        body j bjc
-    in  loopM low high newbody
-  let col_iter b j low high body = 
-    let newbody k = perform
-        bjk <-- ret (C.getL b j k);
-        body k bjk
-    in  loopM low high newbody
-end
-
-
 (* Monad used in this module: 
    (abstract) code generation monad with open union state *)
 type ('a,'v,'s,'w) cmonad = (('a,'v) abstract, 's list, ('a,'w) abstract) monad
 (* We also use this variant, where we _might_ generate code *)
 type ('a,'v,'s,'w) omonad = (('a,'v) abstract option, 
-			     's list, ('a,'w) abstract) monad
+                 's list, ('a,'w) abstract) monad
 
 (* Here are the various design aspects of GE-type algorithms *)
 module type DETERMINANT = sig
@@ -201,61 +182,6 @@ module AbstractDet(Dom: DOMAINL) =
           (ret (uminusL (liftGet det))))
 end
 
-
-(* Not only do we need to "pass down" the kind (in type S), we also need
-   to ensure that the outdet type is properly visible when we need it.
-   Type T ensure this.  It is essentially DETF but with an explicit
-   leak of the outdet type.
-*)
-module UpdateProxy(C0:CONTAINER2D)(D0:DETF) = struct
-    module type T = functor(D1:DOMAINL) -> 
-        DETERMINANT with type indet = D1.v and type outdet = D0(D1).outdet
-    module type S =
-        functor(C:CONTAINER2D with type Dom.kind = C0.Dom.kind)  ->
-(*        functor(CD: sig type 'a vc end) -> *)
-        functor(D:T) -> sig
-        type 'a in_val = 'a C.Dom.vc
-        type out_val = D(C.Dom).outdet
-        val update : 
-            'a in_val -> 'a in_val -> 'a in_val -> 'a in_val -> 
-          ('a in_val -> ('a, unit) abstract) ->
-          ('a, out_val ref) abstract -> ('a, unit, 's, 'w) cmonad
-        val update_det : 'a in_val -> 
-          ('a in_val -> ('a, unit, 's, 'w) cmonad) ->
-          ('a in_val -> ('a, unit, 's, 'w) cmonad) ->
-          ('a, unit, 's, 'w) cmonad
-        end
-end
-
-(* What is the update formula? *)
-module DivisionUpdate
-    (C:CONTAINER2D with type Dom.kind = domain_is_field)
-(*    (C:sig module Dom : DOMAINL with type kind = float end) *)
-    (Det:DETF) =
-  struct
-  module Dom = C.Dom
-  open Dom
-  type 'a in_val = 'a vc
-  type out_val = Det(C.Dom).outdet
-  let update bic brc brk bik setter _ = perform
-      y <-- ret (bik -^ ((divL bic brc) *^ brk));
-      ret (setter (applyMaybe normalizerL y))
-  let update_det v _ acc = acc v
-end
-
-module FractionFreeUpdate(Ctr:CONTAINER2D)(Det:DETF) = struct
-  module Dom = Ctr.Dom
-  open Dom
-  type 'a in_val = ('a, v) abstract
-  type out_val = Det(Ctr.Dom).outdet
-  let update bic brc brk bik setter d = perform
-      z <-- ret ((bik *^ brc) -^ (brk *^ bic));
-      t <-- ret (applyMaybe normalizerL z);
-      ov <-- ret (divL t (liftGet d));
-      ret (setter ov)
-  let update_det v set _ = set v
-end
-
 module type TRACKPIVOT = sig
   type 'a lstate
   type 'a tag_lstate = [`TPivot of 'a lstate ]
@@ -309,6 +235,80 @@ module DiscardPivot = struct
   let decl () = unitL
   let add _ = ret None
   let fin () = ret CList.nil
+end
+
+(* moved from Infra (now Domains) so that the former uses no monads.
+  The following code is generic over the containers anyway.
+  If container-specific iterators are needed, they can still be
+  coded as `exceptions'
+*)
+module Iters(C:CONTAINER2D) = struct
+  let row_iter b c low high body = 
+    let newbody j = perform
+        bjc <-- retN (C.getL b j c);
+        body j bjc
+    in  loopM low high newbody
+  let col_iter b j low high body = 
+    let newbody k = perform
+        bjk <-- ret (C.getL b j k);
+        body k bjk
+    in  loopM low high newbody
+end
+
+
+
+(* Not only do we need to "pass down" the kind (in type S), we also need
+   to ensure that the outdet type is properly visible when we need it.
+   Type T ensure this.  It is essentially DETF but with an explicit
+   leak of the outdet type.
+*)
+module UpdateProxy(C0:CONTAINER2D)(D0:DETF) = struct
+    module type T = functor(D1:DOMAINL) -> 
+        DETERMINANT with type indet = D1.v and type outdet = D0(D1).outdet
+    module type S =
+        functor(C:CONTAINER2D with type Dom.kind = C0.Dom.kind)  ->
+(*        functor(CD: sig type 'a vc end) -> *)
+        functor(D:T) -> sig
+        type 'a in_val = 'a C.Dom.vc
+        type out_val = D(C.Dom).outdet
+        val update : 
+            'a in_val -> 'a in_val -> 'a in_val -> 'a in_val -> 
+          ('a in_val -> ('a, unit) abstract) ->
+          ('a, out_val ref) abstract -> ('a, unit, 's, 'w) cmonad
+        val update_det : 'a in_val -> 
+          ('a in_val -> ('a, unit, 's, 'w) cmonad) ->
+          ('a in_val -> ('a, unit, 's, 'w) cmonad) ->
+          ('a, unit, 's, 'w) cmonad
+        end
+end
+
+(* What is the update formula? *)
+module DivisionUpdate
+    (C:CONTAINER2D with type Dom.kind = domain_is_field)
+(*    (C:sig module Dom : DOMAINL with type kind = float end) *)
+    (Det:DETF) =
+  struct
+  module Dom = C.Dom
+  open Dom
+  type 'a in_val = 'a vc
+  type out_val = Det(C.Dom).outdet
+  let update bic brc brk bik setter _ = perform
+      y <-- ret (bik -^ ((divL bic brc) *^ brk));
+      ret (setter (applyMaybe normalizerL y))
+  let update_det v _ acc = acc v
+end
+
+module FractionFreeUpdate(Ctr:CONTAINER2D)(Det:DETF) = struct
+  module Dom = Ctr.Dom
+  open Dom
+  type 'a in_val = ('a, v) abstract
+  type out_val = Det(Ctr.Dom).outdet
+  let update bic brc brk bik setter d = perform
+      z <-- ret ((bik *^ brc) -^ (brk *^ bic));
+      t <-- ret (applyMaybe normalizerL z);
+      ov <-- ret (divL t (liftGet d));
+      ret (setter ov)
+  let update_det v set _ = set v
 end
 
 module type INPUT =
@@ -573,7 +573,7 @@ module Gen(C: CONTAINER2D)
           Output.P.decl ();
           seqM 
             (whileM (Logic.andL (Idx.less (liftGet c) m)
-                                       (Idx.less (liftGet r) rmar) )
+                                (Idx.less (liftGet r) rmar) )
                ( perform
                rr <-- retN (liftGet r);
                cc <-- retN (liftGet c);
