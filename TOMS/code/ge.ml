@@ -237,26 +237,6 @@ module DiscardPivot = struct
   let fin () = ret CList.nil
 end
 
-(* moved from Infra (now Domains) so that the former uses no monads.
-  The following code is generic over the containers anyway.
-  If container-specific iterators are needed, they can still be
-  coded as `exceptions'
-*)
-module Iters(C:CONTAINER2D) = struct
-  let row_iter b c low high body = 
-    let newbody j = perform
-        bjc <-- retN (C.getL b j c);
-        body j bjc
-    in  loopM low high newbody
-  let col_iter b j low high body = 
-    let newbody k = perform
-        bjk <-- ret (C.getL b j k);
-        body k bjk
-    in  loopM low high newbody
-end
-
-
-
 (* Not only do we need to "pass down" the kind (in type S), we also need
    to ensure that the outdet type is properly visible when we need it.
    Type T ensure this.  It is essentially DETF but with an explicit
@@ -311,8 +291,26 @@ module FractionFreeUpdate(Ctr:CONTAINER2D)(Det:DETF) = struct
   let update_det v set _ = set v
 end
 
-module type INPUT =
-      functor (C: CONTAINER2D) -> sig
+module GenLA(C:CONTAINER2D) = struct
+(* moved from Infra (now Domains) so that the former uses no monads.
+  The following code is generic over the containers anyway.
+  If container-specific iterators are needed, they can still be
+  coded as `exceptions'
+*)
+module Iters = struct
+  let row_iter b c low high body = 
+    let newbody j = perform
+        bjc <-- retN (C.getL b j c);
+        body j bjc
+    in  loopM low high newbody
+  let col_iter b j low high body = 
+    let newbody k = perform
+        bjk <-- ret (C.getL b j k);
+        body k bjk
+    in  loopM low high newbody
+end
+
+module type INPUT = sig
     type inp
     val get_input : ('a, inp) abstract ->
         (('a, C.contr) abstract * ('a, int) abstract * bool, 's, ('a, 'w)
@@ -320,22 +318,21 @@ module type INPUT =
 end 
 
 (* What is the input *)
-module InpJustMatrix(C: CONTAINER2D) = struct
+module InpJustMatrix = struct
     type inp   = C.contr
     let get_input a = ret (a, C.dim2 a, false)
 end
 
-module InpMatrixMargin(C: CONTAINER2D) = struct
+module InpMatrixMargin = struct
     type inp   = C.contr * int
     let get_input a = perform
         (b,c) <-- ret (liftPair a);
         ret (b, c, true)
 end
 
-module OutProxy(C0: CONTAINER2D)(Det0:DETF) = struct
-    module D = Det0(C0.Dom)
+module OutProxy(Det0:DETF) = struct
+    module D = Det0(C.Dom)
     module type S = 
-        functor(C: CONTAINER2D) -> 
         functor(Det: DETERMINANT with type outdet = D.outdet) -> sig
       type res
       module D : DETERMINANT
@@ -347,7 +344,7 @@ module OutProxy(C0: CONTAINER2D)(Det0:DETF) = struct
 end
 
 (* What to return *)
-module OutJustMatrix(C: CONTAINER2D)(Det : DETERMINANT) =
+module OutJustMatrix(Det : DETERMINANT) =
   struct
   type res = C.contr
   module D = Det
@@ -356,7 +353,7 @@ module OutJustMatrix(C: CONTAINER2D)(Det : DETERMINANT) =
   let make_result b = ret b
 end
 
-module OutDet(C: CONTAINER2D)(Det : DETERMINANT) = 
+module OutDet(Det : DETERMINANT) = 
   struct
   type res = C.contr * Det.outdet
   module D = Det
@@ -367,7 +364,7 @@ module OutDet(C: CONTAINER2D)(Det : DETERMINANT) =
     ret (Tuple.tup2 b det)
 end
 
-module OutRank(C: CONTAINER2D)(Det: DETERMINANT) = 
+module OutRank(Det: DETERMINANT) = 
   struct
   type res = C.contr * int
   module D = Det
@@ -378,7 +375,7 @@ module OutRank(C: CONTAINER2D)(Det: DETERMINANT) =
     ret (Tuple.tup2 b rank)
 end
 
-module OutDetRank(C: CONTAINER2D)(Det : DETERMINANT) =
+module OutDetRank(Det : DETERMINANT) =
   struct
   type res = C.contr * Det.outdet * int
   module D = Det
@@ -390,8 +387,7 @@ module OutDetRank(C: CONTAINER2D)(Det : DETERMINANT) =
     ret (Tuple.tup3 b det rank)
 end
 
-module OutDetRankPivot(C: CONTAINER2D)
-    (Det : DETERMINANT) =
+module OutDetRankPivot(Det : DETERMINANT) =
   struct
   type res = C.contr * Det.outdet * int *  perm list
   module D = Det
@@ -406,7 +402,6 @@ end
 
 
 module type PIVOT = 
-    functor (C: CONTAINER2D) ->
       functor (D: DETF) -> 
         functor (P: TRACKPIVOT) -> sig
  (* Find the pivot within [r,m-1] rows and [c,(n-1)] columns
@@ -421,20 +416,20 @@ module type PIVOT =
    ('a,C.Dom.v option,[> 'a D(C.Dom).tag_lstate | 'a P.tag_lstate],'w) cmonad
 end
 
-module RowPivot(Ctr: CONTAINER2D)(Det: DETF)(P: TRACKPIVOT) =
+module RowPivot(Det: DETF)(P: TRACKPIVOT) =
 struct
-   module D = Det(Ctr.Dom)
-   module I = Iters(Ctr)
+   module D = Det(C.Dom)
+   module I = Iters
    let findpivot b r n c _ = perform
        pivot <-- retN (liftRef Maybe.none );
        (* If no better_than procedure defined, we just search for
       non-zero element. Any non-zero element is a good pivot.
       If better_than is defined, we search then for the best element *)
        seqM
-        (match (Ctr.Dom.better_thanL) with
+        (match (C.Dom.better_thanL) with
          Some sel -> 
               I.row_iter b c r (Idx.pred n) (fun j bjc ->
-              whenM (Logic.notequalL bjc Ctr.Dom.zeroL )
+              whenM (Logic.notequalL bjc C.Dom.zeroL )
                   (matchM (liftGet pivot)
                     (fun pv ->
                       perform
@@ -447,15 +442,15 @@ struct
               )
          | None ->
            perform
-            brc <-- retN (Ctr.row_head b r c);
-            ifM (Logic.notequalL brc Ctr.Dom.zeroL)
+            brc <-- retN (C.row_head b r c);
+            ifM (Logic.notequalL brc C.Dom.zeroL)
               (* the current element is good enough *)
               (assignM pivot (Maybe.just (Tuple.tup2 r brc)))
               (let traverse = fun o j ->
                   whenM (Idx.less j n)
                     (perform
-                        bjc <-- retN (Ctr.getL b j c);
-                        ifM (Logic.equalL bjc Ctr.Dom.zeroL)
+                        bjc <-- retN (C.getL b j c);
+                        ifM (Logic.equalL bjc C.Dom.zeroL)
                             (applyM o (Idx.succ j))
                             (assignM pivot (Maybe.just 
                                 (Tuple.tup2 j bjc)))) in
@@ -465,7 +460,7 @@ struct
                 (fun pv -> perform
                      (i,bic) <-- ret (liftPair pv);
                      seqM (whenM (Logic.notequalL i r) (perform
-                            s1 <-- ret (Ctr.swap_rows_stmt b r i);
+                            s1 <-- ret (C.swap_rows_stmt b r i);
                             s2 <-- D.upd_sign ();
                             s3 <-- ret (optSeq s1 s2);
                             s4 <-- P.add (liftRowSwap i r );
@@ -475,7 +470,7 @@ struct
                 (ret Maybe.none))
 end
 
-module FullPivot(C: CONTAINER2D)(Det: DETF)(P: TRACKPIVOT) = 
+module FullPivot(Det: DETF)(P: TRACKPIVOT) = 
 struct
    module D = Det(C.Dom)
    let findpivot b r n c m = perform
@@ -520,7 +515,7 @@ struct
                   (ret Maybe.none))
 end
 
-module NoPivot(C: CONTAINER2D)(Det: DETF)(P: TRACKPIVOT) = 
+module NoPivot(Det: DETF)(P: TRACKPIVOT) = 
 struct
    module D = Det(C.Dom)
    (* In this case, we assume diagonal dominance, and so
@@ -529,19 +524,18 @@ struct
        ret (Maybe.just (C.row_head b r c));
 end
 
-module Gen(C: CONTAINER2D)
-          (PivotF: PIVOT)
+module GenGE(PivotF: PIVOT)
           (Detf:DETF)
           (Update: UpdateProxy(C)(Detf).S)
           (In: INPUT)
-          (Out: OutProxy(C)(Detf).S) = 
+          (Out: OutProxy(Detf).S) = 
    struct
     module Det = Detf(C.Dom)
     module U = Update(C)(Detf)
-    module Input = In(C)
-    module Output = Out(C)(Det)
-    module Pivot = PivotF(C)(Detf)(Output.P)
-    module I = Iters(C)
+    module Input = In
+    module Output = Out(Det)
+    module Pivot = PivotF(Detf)(Output.P)
+    module I = Iters
 
     (* Bundle up some information, helps abstract some argument lists *)
     type 'a wmatrix = {matrix: 'a C.vc; numrow: ('a,int) abstract; 
@@ -585,6 +579,8 @@ module Gen(C: CONTAINER2D)
                     (updateM c Idx.succ) ))
             (Output.make_result b)
     in ge_gen
+end
+
 end
 
 end
