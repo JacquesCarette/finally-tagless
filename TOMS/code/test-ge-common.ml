@@ -15,6 +15,14 @@ module RDet = AbstractDet(RationalDomainL)
 module Z3 = ZpMakeL(struct let p = 3 end)
 module Z19 = ZpMakeL(struct let p = 19 end)
 
+(* That should fail, and we should check this. 9 is not the prime number *)
+let () = assert (
+          try
+            let module Z9 = ZpMakeL(struct let p = 9 end)
+	    in false
+	  with Assert_failure _ -> true)
+
+
 module GAC_F = GenericArrayContainer(FloatDomainL)
 module GVC_F = GenericVectorContainer(FloatDomainL)
 module GAC_I = GenericArrayContainer(IntegerDomainL)

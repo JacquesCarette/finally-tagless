@@ -5,7 +5,7 @@ module T = Domains_sig.S(DirectRep)
 open T
 open DirectRep
 
-open Kinds
+open Domains_common
 
 (* Naming conventions: 
    Functions that end in L always return abstract values from plain
@@ -23,20 +23,6 @@ open Kinds
 
 (* Define instances of the module types *)
 
-module FloatDomain = struct
-    type v = float
-    type kind = domain_is_field
-    let zero = 0.
-    let one = 1.
-    let plus x y = x +. y
-    let times x y = x *. y
-    let minus x y = x -. y
-    let uminus x = -.x
-    let div x y = x /. y
-    let normalizer = None
-    let better_than = Some (fun x y -> abs_float x < abs_float y)
-end
-
 (* because the operations are "syntactic" to a certain extent,
    we have to repeat ourselves a lot *)
 module FloatDomainL = struct
@@ -44,29 +30,16 @@ module FloatDomainL = struct
     type 'a vc = ('a,v) rep
     let zeroL = fun () -> 0.
     let oneL = fun () -> 1.
-    let (+^) x y = fun () -> (x ()) +. (y ())
+    let ( +^ ) x y = fun () -> (x ()) +. (y ())
     let ( *^ ) x y = (fun () -> x () *. y ())
     let ( -^ ) x y = (fun () -> x () -. y ())
-    let uminusL x = (fun () -> -. x ())
+    let uminusL x  = (fun () -> -. x ())
     let divL x y = (fun () -> x () /. y ()) 
     let better_thanL = 
       Some (fun x y -> (fun () -> abs_float (x ()) < abs_float (y ()) ) )
     let normalizerL = None 
 end
 
-module IntegerDomain = struct
-    type v = int
-    type kind = domain_is_ring
-    let zero = 0
-    let one = 1
-    let plus x y = x + y
-    let times x y = x * y
-    let minus x y = x - y
-    let uminus x = -x
-    let div x y = x / y
-    let normalizer = None
-    let better_than = Some (fun x y -> abs x > abs y)
-end
 
 (* because the operations are "syntactic" to a certain extent,
    we have to repeat ourselves a lot *)
@@ -85,19 +58,6 @@ module IntegerDomainL = struct
     let normalizerL = None 
 end
 
-module RationalDomain = struct
-    type v = Num.num
-    type kind = domain_is_field
-    let zero = Num.num_of_int 0
-    let one = Num.num_of_int 1
-    let plus x y = Num.add_num x y
-    let times x y = Num.mult_num x y
-    let minus x y = Num.sub_num x y
-    let uminus x = Num.minus_num x
-    let div x y = Num.div_num x y
-    let normalizer = None
-    let better_than = None
-end
 
 (* because the operations are "syntactic" to a certain extent,
    we have to repeat ourselves a lot *)
@@ -115,27 +75,6 @@ module RationalDomainL = struct
     let normalizerL = None 
 end
 
-(* How do I make sure that 'p' actually is prime? 
-   I do want the field case, not the general case here. *)
-module ZpMake = functor(P:sig val p:int end) -> struct
-    type v = int
-    type kind = domain_is_field
-    let zero = 0
-    let one = 1
-    let plus x y = (x + y) mod P.p
-    let times x y = (x * y) mod P.p
-    let minus x y = (x - y) mod P.p
-    let uminus x = -x mod P.p
-    let rec extended_gcd a b =
-        if a mod b == 0 then
-            (0,1)
-        else
-            let (x,y) = extended_gcd b (a mod b) in
-            (y, x-y*(a / b))
-    let div x y = fst (extended_gcd x y)
-    let normalizer = None
-    let better_than = None
-end
 
 module ZpMakeL = functor(P:sig val p:int end) -> struct
     include ZpMake(P)

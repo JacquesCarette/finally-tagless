@@ -11,7 +11,8 @@ SYNTAX_EXTENSION := ../camlp4/pa_monad.cmo
 PP := camlp4o -I . $(SYNTAX_EXTENSION)
 
 INFRA := coderep.cmi 
-BASE := stateCPSMonad.cmo kinds.cmo domains_sig.cmo domains_code.cmo \
+BASE := stateCPSMonad.cmo kinds.cmo domains_sig.cmo domains_common.cmo \
+	domains_code.cmo \
 	code.cmo ge.cmo
 # infra.cmo code.cmo infra_code.cmo ge.cmo
 BASE2 := direct.cmo domains_direct.cmo
@@ -81,6 +82,7 @@ ge_direct.out: test-ge_direct.ml $(BASE2) mytop test-ge.ml
 # Dependencies. Needed! Otherwise, old versions of files are compiled.
 
 ge.cmo :  stateCPSMonad.cmo coderep.cmi domains_sig.cmo kinds.cmo
-domains_code.cmo : kinds.cmo domains_sig.cmo
+domains_code.cmo : kinds.cmo domains_sig.cmo domains_common.cmo
 test-ge.ml : ge.cmo code.cmo domains_code.cmo test-ge-common.ml
-test-ge_direct.ml : ge.cmo code.cmo domains_direct.cmo test-ge-common.ml
+test-ge_direct.ml : ge.cmo code.cmo domains_direct.cmo domains_direct.cmo \
+	test-ge-common.ml
