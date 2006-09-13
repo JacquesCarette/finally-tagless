@@ -616,6 +616,22 @@
                  'b -> ('c -> 'd -> 'd) -> ('a, 'e) Direct.abstract) ->
                 'b -> ('b -> ('a, unit) Direct.abstract -> 'f) -> 'f
             end
+          type 'a wmatrix =
+            'a Ge.GEMake(Direct).GenLA(C).wmatrix = {
+            matrix : 'a C.vc;
+            numrow : ('a, int) Direct.abstract;
+            numcol : ('a, int) Direct.abstract;
+          }
+          type 'a curpos =
+            'a Ge.GEMake(Direct).GenLA(C).curpos = {
+            rowpos : ('a, int) Direct.abstract;
+            colpos : ('a, int) Direct.abstract;
+          }
+          type 'a curposval =
+            'a Ge.GEMake(Direct).GenLA(C).curposval = {
+            p : 'a curpos;
+            curval : ('a, C.Dom.v) Direct.abstract;
+          }
           module type INPUT =
             sig
               type inp
@@ -1092,11 +1108,8 @@
               functor (P : TRACKPIVOT) ->
                 sig
                   val findpivot :
-                    'a C.vc ->
-                    ('a, int) Direct.abstract ->
-                    ('a, int) Direct.abstract ->
-                    ('a, int) Direct.abstract ->
-                    ('a, int) Direct.abstract ->
+                    'a wmatrix ->
+                    'a curpos ->
                     ('a, C.Dom.v option,
                      [> `TDet of 'a D(C.Dom).lstate | `TPivot of 'a P.lstate ],
                      'b)
@@ -1156,17 +1169,14 @@
                         'b -> ('b -> ('a, unit) Direct.abstract -> 'f) -> 'f
                     end
                   val findpivot :
-                    'a C.vc ->
-                    ('a, int) Direct.abstract ->
-                    ('a, int) Direct.abstract ->
-                    ('a, int) Direct.abstract ->
-                    'b ->
-                    ([> `TDet of 'a D.lstate | `TPivot of 'a P.lstate ] as 'c)
+                    'a wmatrix ->
+                    'a curpos ->
+                    ([> `TDet of 'a D.lstate | `TPivot of 'a P.lstate ] as 'b)
                     list ->
-                    ('c list ->
+                    ('b list ->
                      ('a, C.Dom.v option) Direct.abstract ->
-                     ('a, 'd) Direct.abstract) ->
-                    ('a, 'd) Direct.abstract
+                     ('a, 'c) Direct.abstract) ->
+                    ('a, 'c) Direct.abstract
                 end
           module FullPivot :
             functor (Det : DETF) ->
@@ -1201,11 +1211,8 @@
                         unit -> ('a * [> 'a tag_lstate ] * 'b, outdet) lm
                     end
                   val findpivot :
-                    'a C.vc ->
-                    ('a, int) Direct.abstract ->
-                    ('a, int) Direct.abstract ->
-                    ('a, int) Direct.abstract ->
-                    ('a, int) Direct.abstract ->
+                    'a wmatrix ->
+                    'a curpos ->
                     ([> 'a D.tag_lstate ] as 'b) list ->
                     ('b list ->
                      ('a, C.Dom.v option) Direct.abstract ->
@@ -1245,13 +1252,10 @@
                         unit -> ('a * [> 'a tag_lstate ] * 'b, outdet) lm
                     end
                   val findpivot :
-                    'a C.vc ->
-                    ('a, int) Direct.abstract ->
+                    'a wmatrix ->
+                    'a curpos ->
                     'b ->
-                    ('a, int) Direct.abstract ->
-                    'c ->
-                    'd ->
-                    ('d -> ('a, C.Dom.v option) Direct.abstract -> 'e) -> 'e
+                    ('b -> ('a, C.Dom.v option) Direct.abstract -> 'c) -> 'c
                 end
           module GenGE :
             functor (PivotF : PIVOT) ->
@@ -1412,11 +1416,8 @@
                         module Pivot :
                           sig
                             val findpivot :
-                              'a C.vc ->
-                              ('a, int) Direct.abstract ->
-                              ('a, int) Direct.abstract ->
-                              ('a, int) Direct.abstract ->
-                              ('a, int) Direct.abstract ->
+                              'a wmatrix ->
+                              'a curpos ->
                               ('a, C.Dom.v option,
                                [> `TDet of 'a Detf(C.Dom).lstate
                                 | `TPivot of 'a Output.P.lstate ],
@@ -1448,20 +1449,6 @@
                               'b ->
                               ('b -> ('a, unit) Direct.abstract -> 'f) -> 'f
                           end
-                        type 'a wmatrix =
-                          'a
-                          Ge.GEMake(Direct).GenLA(C).GenGE(PivotF)(Detf)(Update)(In)(Out).wmatrix = {
-                          matrix : 'a C.vc;
-                          numrow : ('a, int) Direct.abstract;
-                          numcol : ('a, int) Direct.abstract;
-                        }
-                        type 'a curpos =
-                          'a
-                          Ge.GEMake(Direct).GenLA(C).GenGE(PivotF)(Detf)(Update)(In)(Out).curpos = {
-                          rowpos : ('a, int) Direct.abstract;
-                          colpos : ('a, int) Direct.abstract;
-                          curval : ('a, C.Dom.v) Direct.abstract;
-                        }
                         val gen :
                           ('a, Input.inp) Direct.abstract ->
                           ([> `TDet of 'a Det.lstate
@@ -2106,6 +2093,22 @@ module G_GAC_F :
            'a GAC_F.vo -> 'b -> ('c -> 'd -> 'd) -> ('a, 'e) Direct.abstract) ->
           'b -> ('b -> ('a, unit) Direct.abstract -> 'f) -> 'f
       end
+    type 'a wmatrix =
+      'a Ge.GEMake(Direct).GenLA(GAC_F).wmatrix = {
+      matrix : 'a GAC_F.vc;
+      numrow : ('a, int) Direct.abstract;
+      numcol : ('a, int) Direct.abstract;
+    }
+    type 'a curpos =
+      'a Ge.GEMake(Direct).GenLA(GAC_F).curpos = {
+      rowpos : ('a, int) Direct.abstract;
+      colpos : ('a, int) Direct.abstract;
+    }
+    type 'a curposval =
+      'a Ge.GEMake(Direct).GenLA(GAC_F).curposval = {
+      p : 'a curpos;
+      curval : ('a, GAC_F.Dom.v) Direct.abstract;
+    }
     module type INPUT =
       sig
         type inp
@@ -2519,11 +2522,8 @@ module G_GAC_F :
         functor (P : GEF.TRACKPIVOT) ->
           sig
             val findpivot :
-              'a GAC_F.vc ->
-              ('a, int) Direct.abstract ->
-              ('a, int) Direct.abstract ->
-              ('a, int) Direct.abstract ->
-              ('a, int) Direct.abstract ->
+              'a wmatrix ->
+              'a curpos ->
               ('a, GAC_F.Dom.v option,
                [> `TDet of 'a D(GAC_F.Dom).lstate | `TPivot of 'a P.lstate ],
                'b)
@@ -2580,16 +2580,13 @@ module G_GAC_F :
                   'b -> ('b -> ('a, unit) Direct.abstract -> 'f) -> 'f
               end
             val findpivot :
-              'a GAC_F.vc ->
-              ('a, int) Direct.abstract ->
-              ('a, int) Direct.abstract ->
-              ('a, int) Direct.abstract ->
-              'b ->
-              ([> `TDet of 'a D.lstate | `TPivot of 'a P.lstate ] as 'c) list ->
-              ('c list ->
+              'a wmatrix ->
+              'a curpos ->
+              ([> `TDet of 'a D.lstate | `TPivot of 'a P.lstate ] as 'b) list ->
+              ('b list ->
                ('a, GAC_F.Dom.v option) Direct.abstract ->
-               ('a, 'd) Direct.abstract) ->
-              ('a, 'd) Direct.abstract
+               ('a, 'c) Direct.abstract) ->
+              ('a, 'c) Direct.abstract
           end
     module FullPivot :
       functor (Det : GEF.DETF) ->
@@ -2621,11 +2618,8 @@ module G_GAC_F :
                 val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, outdet) lm
               end
             val findpivot :
-              'a GAC_F.vc ->
-              ('a, int) Direct.abstract ->
-              ('a, int) Direct.abstract ->
-              ('a, int) Direct.abstract ->
-              ('a, int) Direct.abstract ->
+              'a wmatrix ->
+              'a curpos ->
               ([> 'a D.tag_lstate ] as 'b) list ->
               ('b list ->
                ('a, GAC_F.Dom.v option) Direct.abstract ->
@@ -2662,13 +2656,10 @@ module G_GAC_F :
                 val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, outdet) lm
               end
             val findpivot :
-              'a GAC_F.vc ->
-              ('a, int) Direct.abstract ->
+              'a wmatrix ->
+              'a curpos ->
               'b ->
-              ('a, int) Direct.abstract ->
-              'c ->
-              'd ->
-              ('d -> ('a, GAC_F.Dom.v option) Direct.abstract -> 'e) -> 'e
+              ('b -> ('a, GAC_F.Dom.v option) Direct.abstract -> 'c) -> 'c
           end
     module GenGE :
       functor (PivotF : PIVOT) ->
@@ -2817,11 +2808,8 @@ module G_GAC_F :
                   module Pivot :
                     sig
                       val findpivot :
-                        'a GAC_F.vc ->
-                        ('a, int) Direct.abstract ->
-                        ('a, int) Direct.abstract ->
-                        ('a, int) Direct.abstract ->
-                        ('a, int) Direct.abstract ->
+                        'a wmatrix ->
+                        'a curpos ->
                         ('a, GAC_F.Dom.v option,
                          [> `TDet of 'a Detf(GAC_F.Dom).lstate
                           | `TPivot of 'a Output.P.lstate ],
@@ -2849,20 +2837,6 @@ module G_GAC_F :
                          'b -> ('c -> 'd -> 'd) -> ('a, 'e) Direct.abstract) ->
                         'b -> ('b -> ('a, unit) Direct.abstract -> 'f) -> 'f
                     end
-                  type 'a wmatrix =
-                    'a
-                    Ge.GEMake(Direct).GenLA(GAC_F).GenGE(PivotF)(Detf)(Update)(In)(Out).wmatrix = {
-                    matrix : 'a GAC_F.vc;
-                    numrow : ('a, int) Direct.abstract;
-                    numcol : ('a, int) Direct.abstract;
-                  }
-                  type 'a curpos =
-                    'a
-                    Ge.GEMake(Direct).GenLA(GAC_F).GenGE(PivotF)(Detf)(Update)(In)(Out).curpos = {
-                    rowpos : ('a, int) Direct.abstract;
-                    colpos : ('a, int) Direct.abstract;
-                    curval : ('a, GAC_F.Dom.v) Direct.abstract;
-                  }
                   val gen :
                     ('a, Input.inp) Direct.abstract ->
                     ([> `TDet of 'a Det.lstate
@@ -2898,6 +2872,22 @@ module G_GVC_F :
            'a GVC_F.vo -> 'b -> ('c -> 'd -> 'd) -> ('a, 'e) Direct.abstract) ->
           'b -> ('b -> ('a, unit) Direct.abstract -> 'f) -> 'f
       end
+    type 'a wmatrix =
+      'a Ge.GEMake(Direct).GenLA(GVC_F).wmatrix = {
+      matrix : 'a GVC_F.vc;
+      numrow : ('a, int) Direct.abstract;
+      numcol : ('a, int) Direct.abstract;
+    }
+    type 'a curpos =
+      'a Ge.GEMake(Direct).GenLA(GVC_F).curpos = {
+      rowpos : ('a, int) Direct.abstract;
+      colpos : ('a, int) Direct.abstract;
+    }
+    type 'a curposval =
+      'a Ge.GEMake(Direct).GenLA(GVC_F).curposval = {
+      p : 'a curpos;
+      curval : ('a, GVC_F.Dom.v) Direct.abstract;
+    }
     module type INPUT =
       sig
         type inp
@@ -3311,11 +3301,8 @@ module G_GVC_F :
         functor (P : GEF.TRACKPIVOT) ->
           sig
             val findpivot :
-              'a GVC_F.vc ->
-              ('a, int) Direct.abstract ->
-              ('a, int) Direct.abstract ->
-              ('a, int) Direct.abstract ->
-              ('a, int) Direct.abstract ->
+              'a wmatrix ->
+              'a curpos ->
               ('a, GVC_F.Dom.v option,
                [> `TDet of 'a D(GVC_F.Dom).lstate | `TPivot of 'a P.lstate ],
                'b)
@@ -3372,16 +3359,13 @@ module G_GVC_F :
                   'b -> ('b -> ('a, unit) Direct.abstract -> 'f) -> 'f
               end
             val findpivot :
-              'a GVC_F.vc ->
-              ('a, int) Direct.abstract ->
-              ('a, int) Direct.abstract ->
-              ('a, int) Direct.abstract ->
-              'b ->
-              ([> `TDet of 'a D.lstate | `TPivot of 'a P.lstate ] as 'c) list ->
-              ('c list ->
+              'a wmatrix ->
+              'a curpos ->
+              ([> `TDet of 'a D.lstate | `TPivot of 'a P.lstate ] as 'b) list ->
+              ('b list ->
                ('a, GVC_F.Dom.v option) Direct.abstract ->
-               ('a, 'd) Direct.abstract) ->
-              ('a, 'd) Direct.abstract
+               ('a, 'c) Direct.abstract) ->
+              ('a, 'c) Direct.abstract
           end
     module FullPivot :
       functor (Det : GEF.DETF) ->
@@ -3413,11 +3397,8 @@ module G_GVC_F :
                 val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, outdet) lm
               end
             val findpivot :
-              'a GVC_F.vc ->
-              ('a, int) Direct.abstract ->
-              ('a, int) Direct.abstract ->
-              ('a, int) Direct.abstract ->
-              ('a, int) Direct.abstract ->
+              'a wmatrix ->
+              'a curpos ->
               ([> 'a D.tag_lstate ] as 'b) list ->
               ('b list ->
                ('a, GVC_F.Dom.v option) Direct.abstract ->
@@ -3454,13 +3435,10 @@ module G_GVC_F :
                 val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, outdet) lm
               end
             val findpivot :
-              'a GVC_F.vc ->
-              ('a, int) Direct.abstract ->
+              'a wmatrix ->
+              'a curpos ->
               'b ->
-              ('a, int) Direct.abstract ->
-              'c ->
-              'd ->
-              ('d -> ('a, GVC_F.Dom.v option) Direct.abstract -> 'e) -> 'e
+              ('b -> ('a, GVC_F.Dom.v option) Direct.abstract -> 'c) -> 'c
           end
     module GenGE :
       functor (PivotF : PIVOT) ->
@@ -3609,11 +3587,8 @@ module G_GVC_F :
                   module Pivot :
                     sig
                       val findpivot :
-                        'a GVC_F.vc ->
-                        ('a, int) Direct.abstract ->
-                        ('a, int) Direct.abstract ->
-                        ('a, int) Direct.abstract ->
-                        ('a, int) Direct.abstract ->
+                        'a wmatrix ->
+                        'a curpos ->
                         ('a, GVC_F.Dom.v option,
                          [> `TDet of 'a Detf(GVC_F.Dom).lstate
                           | `TPivot of 'a Output.P.lstate ],
@@ -3641,20 +3616,6 @@ module G_GVC_F :
                          'b -> ('c -> 'd -> 'd) -> ('a, 'e) Direct.abstract) ->
                         'b -> ('b -> ('a, unit) Direct.abstract -> 'f) -> 'f
                     end
-                  type 'a wmatrix =
-                    'a
-                    Ge.GEMake(Direct).GenLA(GVC_F).GenGE(PivotF)(Detf)(Update)(In)(Out).wmatrix = {
-                    matrix : 'a GVC_F.vc;
-                    numrow : ('a, int) Direct.abstract;
-                    numcol : ('a, int) Direct.abstract;
-                  }
-                  type 'a curpos =
-                    'a
-                    Ge.GEMake(Direct).GenLA(GVC_F).GenGE(PivotF)(Detf)(Update)(In)(Out).curpos = {
-                    rowpos : ('a, int) Direct.abstract;
-                    colpos : ('a, int) Direct.abstract;
-                    curval : ('a, GVC_F.Dom.v) Direct.abstract;
-                  }
                   val gen :
                     ('a, Input.inp) Direct.abstract ->
                     ([> `TDet of 'a Det.lstate
@@ -3690,6 +3651,22 @@ module G_GAC_I :
            'a GAC_I.vo -> 'b -> ('c -> 'd -> 'd) -> ('a, 'e) Direct.abstract) ->
           'b -> ('b -> ('a, unit) Direct.abstract -> 'f) -> 'f
       end
+    type 'a wmatrix =
+      'a Ge.GEMake(Direct).GenLA(GAC_I).wmatrix = {
+      matrix : 'a GAC_I.vc;
+      numrow : ('a, int) Direct.abstract;
+      numcol : ('a, int) Direct.abstract;
+    }
+    type 'a curpos =
+      'a Ge.GEMake(Direct).GenLA(GAC_I).curpos = {
+      rowpos : ('a, int) Direct.abstract;
+      colpos : ('a, int) Direct.abstract;
+    }
+    type 'a curposval =
+      'a Ge.GEMake(Direct).GenLA(GAC_I).curposval = {
+      p : 'a curpos;
+      curval : ('a, GAC_I.Dom.v) Direct.abstract;
+    }
     module type INPUT =
       sig
         type inp
@@ -4103,11 +4080,8 @@ module G_GAC_I :
         functor (P : GEF.TRACKPIVOT) ->
           sig
             val findpivot :
-              'a GAC_I.vc ->
-              ('a, int) Direct.abstract ->
-              ('a, int) Direct.abstract ->
-              ('a, int) Direct.abstract ->
-              ('a, int) Direct.abstract ->
+              'a wmatrix ->
+              'a curpos ->
               ('a, GAC_I.Dom.v option,
                [> `TDet of 'a D(GAC_I.Dom).lstate | `TPivot of 'a P.lstate ],
                'b)
@@ -4164,16 +4138,13 @@ module G_GAC_I :
                   'b -> ('b -> ('a, unit) Direct.abstract -> 'f) -> 'f
               end
             val findpivot :
-              'a GAC_I.vc ->
-              ('a, int) Direct.abstract ->
-              ('a, int) Direct.abstract ->
-              ('a, int) Direct.abstract ->
-              'b ->
-              ([> `TDet of 'a D.lstate | `TPivot of 'a P.lstate ] as 'c) list ->
-              ('c list ->
+              'a wmatrix ->
+              'a curpos ->
+              ([> `TDet of 'a D.lstate | `TPivot of 'a P.lstate ] as 'b) list ->
+              ('b list ->
                ('a, GAC_I.Dom.v option) Direct.abstract ->
-               ('a, 'd) Direct.abstract) ->
-              ('a, 'd) Direct.abstract
+               ('a, 'c) Direct.abstract) ->
+              ('a, 'c) Direct.abstract
           end
     module FullPivot :
       functor (Det : GEF.DETF) ->
@@ -4205,11 +4176,8 @@ module G_GAC_I :
                 val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, outdet) lm
               end
             val findpivot :
-              'a GAC_I.vc ->
-              ('a, int) Direct.abstract ->
-              ('a, int) Direct.abstract ->
-              ('a, int) Direct.abstract ->
-              ('a, int) Direct.abstract ->
+              'a wmatrix ->
+              'a curpos ->
               ([> 'a D.tag_lstate ] as 'b) list ->
               ('b list ->
                ('a, GAC_I.Dom.v option) Direct.abstract ->
@@ -4246,13 +4214,10 @@ module G_GAC_I :
                 val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, outdet) lm
               end
             val findpivot :
-              'a GAC_I.vc ->
-              ('a, int) Direct.abstract ->
+              'a wmatrix ->
+              'a curpos ->
               'b ->
-              ('a, int) Direct.abstract ->
-              'c ->
-              'd ->
-              ('d -> ('a, GAC_I.Dom.v option) Direct.abstract -> 'e) -> 'e
+              ('b -> ('a, GAC_I.Dom.v option) Direct.abstract -> 'c) -> 'c
           end
     module GenGE :
       functor (PivotF : PIVOT) ->
@@ -4401,11 +4366,8 @@ module G_GAC_I :
                   module Pivot :
                     sig
                       val findpivot :
-                        'a GAC_I.vc ->
-                        ('a, int) Direct.abstract ->
-                        ('a, int) Direct.abstract ->
-                        ('a, int) Direct.abstract ->
-                        ('a, int) Direct.abstract ->
+                        'a wmatrix ->
+                        'a curpos ->
                         ('a, GAC_I.Dom.v option,
                          [> `TDet of 'a Detf(GAC_I.Dom).lstate
                           | `TPivot of 'a Output.P.lstate ],
@@ -4433,20 +4395,6 @@ module G_GAC_I :
                          'b -> ('c -> 'd -> 'd) -> ('a, 'e) Direct.abstract) ->
                         'b -> ('b -> ('a, unit) Direct.abstract -> 'f) -> 'f
                     end
-                  type 'a wmatrix =
-                    'a
-                    Ge.GEMake(Direct).GenLA(GAC_I).GenGE(PivotF)(Detf)(Update)(In)(Out).wmatrix = {
-                    matrix : 'a GAC_I.vc;
-                    numrow : ('a, int) Direct.abstract;
-                    numcol : ('a, int) Direct.abstract;
-                  }
-                  type 'a curpos =
-                    'a
-                    Ge.GEMake(Direct).GenLA(GAC_I).GenGE(PivotF)(Detf)(Update)(In)(Out).curpos = {
-                    rowpos : ('a, int) Direct.abstract;
-                    colpos : ('a, int) Direct.abstract;
-                    curval : ('a, GAC_I.Dom.v) Direct.abstract;
-                  }
                   val gen :
                     ('a, Input.inp) Direct.abstract ->
                     ([> `TDet of 'a Det.lstate
@@ -4482,6 +4430,22 @@ module G_GVC_I :
            'a GVC_I.vo -> 'b -> ('c -> 'd -> 'd) -> ('a, 'e) Direct.abstract) ->
           'b -> ('b -> ('a, unit) Direct.abstract -> 'f) -> 'f
       end
+    type 'a wmatrix =
+      'a Ge.GEMake(Direct).GenLA(GVC_I).wmatrix = {
+      matrix : 'a GVC_I.vc;
+      numrow : ('a, int) Direct.abstract;
+      numcol : ('a, int) Direct.abstract;
+    }
+    type 'a curpos =
+      'a Ge.GEMake(Direct).GenLA(GVC_I).curpos = {
+      rowpos : ('a, int) Direct.abstract;
+      colpos : ('a, int) Direct.abstract;
+    }
+    type 'a curposval =
+      'a Ge.GEMake(Direct).GenLA(GVC_I).curposval = {
+      p : 'a curpos;
+      curval : ('a, GVC_I.Dom.v) Direct.abstract;
+    }
     module type INPUT =
       sig
         type inp
@@ -4895,11 +4859,8 @@ module G_GVC_I :
         functor (P : GEF.TRACKPIVOT) ->
           sig
             val findpivot :
-              'a GVC_I.vc ->
-              ('a, int) Direct.abstract ->
-              ('a, int) Direct.abstract ->
-              ('a, int) Direct.abstract ->
-              ('a, int) Direct.abstract ->
+              'a wmatrix ->
+              'a curpos ->
               ('a, GVC_I.Dom.v option,
                [> `TDet of 'a D(GVC_I.Dom).lstate | `TPivot of 'a P.lstate ],
                'b)
@@ -4956,16 +4917,13 @@ module G_GVC_I :
                   'b -> ('b -> ('a, unit) Direct.abstract -> 'f) -> 'f
               end
             val findpivot :
-              'a GVC_I.vc ->
-              ('a, int) Direct.abstract ->
-              ('a, int) Direct.abstract ->
-              ('a, int) Direct.abstract ->
-              'b ->
-              ([> `TDet of 'a D.lstate | `TPivot of 'a P.lstate ] as 'c) list ->
-              ('c list ->
+              'a wmatrix ->
+              'a curpos ->
+              ([> `TDet of 'a D.lstate | `TPivot of 'a P.lstate ] as 'b) list ->
+              ('b list ->
                ('a, GVC_I.Dom.v option) Direct.abstract ->
-               ('a, 'd) Direct.abstract) ->
-              ('a, 'd) Direct.abstract
+               ('a, 'c) Direct.abstract) ->
+              ('a, 'c) Direct.abstract
           end
     module FullPivot :
       functor (Det : GEF.DETF) ->
@@ -4997,11 +4955,8 @@ module G_GVC_I :
                 val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, outdet) lm
               end
             val findpivot :
-              'a GVC_I.vc ->
-              ('a, int) Direct.abstract ->
-              ('a, int) Direct.abstract ->
-              ('a, int) Direct.abstract ->
-              ('a, int) Direct.abstract ->
+              'a wmatrix ->
+              'a curpos ->
               ([> 'a D.tag_lstate ] as 'b) list ->
               ('b list ->
                ('a, GVC_I.Dom.v option) Direct.abstract ->
@@ -5038,13 +4993,10 @@ module G_GVC_I :
                 val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, outdet) lm
               end
             val findpivot :
-              'a GVC_I.vc ->
-              ('a, int) Direct.abstract ->
+              'a wmatrix ->
+              'a curpos ->
               'b ->
-              ('a, int) Direct.abstract ->
-              'c ->
-              'd ->
-              ('d -> ('a, GVC_I.Dom.v option) Direct.abstract -> 'e) -> 'e
+              ('b -> ('a, GVC_I.Dom.v option) Direct.abstract -> 'c) -> 'c
           end
     module GenGE :
       functor (PivotF : PIVOT) ->
@@ -5193,11 +5145,8 @@ module G_GVC_I :
                   module Pivot :
                     sig
                       val findpivot :
-                        'a GVC_I.vc ->
-                        ('a, int) Direct.abstract ->
-                        ('a, int) Direct.abstract ->
-                        ('a, int) Direct.abstract ->
-                        ('a, int) Direct.abstract ->
+                        'a wmatrix ->
+                        'a curpos ->
                         ('a, GVC_I.Dom.v option,
                          [> `TDet of 'a Detf(GVC_I.Dom).lstate
                           | `TPivot of 'a Output.P.lstate ],
@@ -5225,20 +5174,6 @@ module G_GVC_I :
                          'b -> ('c -> 'd -> 'd) -> ('a, 'e) Direct.abstract) ->
                         'b -> ('b -> ('a, unit) Direct.abstract -> 'f) -> 'f
                     end
-                  type 'a wmatrix =
-                    'a
-                    Ge.GEMake(Direct).GenLA(GVC_I).GenGE(PivotF)(Detf)(Update)(In)(Out).wmatrix = {
-                    matrix : 'a GVC_I.vc;
-                    numrow : ('a, int) Direct.abstract;
-                    numcol : ('a, int) Direct.abstract;
-                  }
-                  type 'a curpos =
-                    'a
-                    Ge.GEMake(Direct).GenLA(GVC_I).GenGE(PivotF)(Detf)(Update)(In)(Out).curpos = {
-                    rowpos : ('a, int) Direct.abstract;
-                    colpos : ('a, int) Direct.abstract;
-                    curval : ('a, GVC_I.Dom.v) Direct.abstract;
-                  }
                   val gen :
                     ('a, Input.inp) Direct.abstract ->
                     ([> `TDet of 'a Det.lstate
@@ -5274,6 +5209,22 @@ module G_GAC_R :
            'a GAC_R.vo -> 'b -> ('c -> 'd -> 'd) -> ('a, 'e) Direct.abstract) ->
           'b -> ('b -> ('a, unit) Direct.abstract -> 'f) -> 'f
       end
+    type 'a wmatrix =
+      'a Ge.GEMake(Direct).GenLA(GAC_R).wmatrix = {
+      matrix : 'a GAC_R.vc;
+      numrow : ('a, int) Direct.abstract;
+      numcol : ('a, int) Direct.abstract;
+    }
+    type 'a curpos =
+      'a Ge.GEMake(Direct).GenLA(GAC_R).curpos = {
+      rowpos : ('a, int) Direct.abstract;
+      colpos : ('a, int) Direct.abstract;
+    }
+    type 'a curposval =
+      'a Ge.GEMake(Direct).GenLA(GAC_R).curposval = {
+      p : 'a curpos;
+      curval : ('a, GAC_R.Dom.v) Direct.abstract;
+    }
     module type INPUT =
       sig
         type inp
@@ -5687,11 +5638,8 @@ module G_GAC_R :
         functor (P : GEF.TRACKPIVOT) ->
           sig
             val findpivot :
-              'a GAC_R.vc ->
-              ('a, int) Direct.abstract ->
-              ('a, int) Direct.abstract ->
-              ('a, int) Direct.abstract ->
-              ('a, int) Direct.abstract ->
+              'a wmatrix ->
+              'a curpos ->
               ('a, GAC_R.Dom.v option,
                [> `TDet of 'a D(GAC_R.Dom).lstate | `TPivot of 'a P.lstate ],
                'b)
@@ -5748,16 +5696,13 @@ module G_GAC_R :
                   'b -> ('b -> ('a, unit) Direct.abstract -> 'f) -> 'f
               end
             val findpivot :
-              'a GAC_R.vc ->
-              ('a, int) Direct.abstract ->
-              ('a, int) Direct.abstract ->
-              ('a, int) Direct.abstract ->
-              'b ->
-              ([> `TDet of 'a D.lstate | `TPivot of 'a P.lstate ] as 'c) list ->
-              ('c list ->
+              'a wmatrix ->
+              'a curpos ->
+              ([> `TDet of 'a D.lstate | `TPivot of 'a P.lstate ] as 'b) list ->
+              ('b list ->
                ('a, GAC_R.Dom.v option) Direct.abstract ->
-               ('a, 'd) Direct.abstract) ->
-              ('a, 'd) Direct.abstract
+               ('a, 'c) Direct.abstract) ->
+              ('a, 'c) Direct.abstract
           end
     module FullPivot :
       functor (Det : GEF.DETF) ->
@@ -5789,11 +5734,8 @@ module G_GAC_R :
                 val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, outdet) lm
               end
             val findpivot :
-              'a GAC_R.vc ->
-              ('a, int) Direct.abstract ->
-              ('a, int) Direct.abstract ->
-              ('a, int) Direct.abstract ->
-              ('a, int) Direct.abstract ->
+              'a wmatrix ->
+              'a curpos ->
               ([> 'a D.tag_lstate ] as 'b) list ->
               ('b list ->
                ('a, GAC_R.Dom.v option) Direct.abstract ->
@@ -5830,13 +5772,10 @@ module G_GAC_R :
                 val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, outdet) lm
               end
             val findpivot :
-              'a GAC_R.vc ->
-              ('a, int) Direct.abstract ->
+              'a wmatrix ->
+              'a curpos ->
               'b ->
-              ('a, int) Direct.abstract ->
-              'c ->
-              'd ->
-              ('d -> ('a, GAC_R.Dom.v option) Direct.abstract -> 'e) -> 'e
+              ('b -> ('a, GAC_R.Dom.v option) Direct.abstract -> 'c) -> 'c
           end
     module GenGE :
       functor (PivotF : PIVOT) ->
@@ -5985,11 +5924,8 @@ module G_GAC_R :
                   module Pivot :
                     sig
                       val findpivot :
-                        'a GAC_R.vc ->
-                        ('a, int) Direct.abstract ->
-                        ('a, int) Direct.abstract ->
-                        ('a, int) Direct.abstract ->
-                        ('a, int) Direct.abstract ->
+                        'a wmatrix ->
+                        'a curpos ->
                         ('a, GAC_R.Dom.v option,
                          [> `TDet of 'a Detf(GAC_R.Dom).lstate
                           | `TPivot of 'a Output.P.lstate ],
@@ -6017,20 +5953,6 @@ module G_GAC_R :
                          'b -> ('c -> 'd -> 'd) -> ('a, 'e) Direct.abstract) ->
                         'b -> ('b -> ('a, unit) Direct.abstract -> 'f) -> 'f
                     end
-                  type 'a wmatrix =
-                    'a
-                    Ge.GEMake(Direct).GenLA(GAC_R).GenGE(PivotF)(Detf)(Update)(In)(Out).wmatrix = {
-                    matrix : 'a GAC_R.vc;
-                    numrow : ('a, int) Direct.abstract;
-                    numcol : ('a, int) Direct.abstract;
-                  }
-                  type 'a curpos =
-                    'a
-                    Ge.GEMake(Direct).GenLA(GAC_R).GenGE(PivotF)(Detf)(Update)(In)(Out).curpos = {
-                    rowpos : ('a, int) Direct.abstract;
-                    colpos : ('a, int) Direct.abstract;
-                    curval : ('a, GAC_R.Dom.v) Direct.abstract;
-                  }
                   val gen :
                     ('a, Input.inp) Direct.abstract ->
                     ([> `TDet of 'a Det.lstate
@@ -6066,6 +5988,22 @@ module G_GVC_Z3 :
            'a GVC_Z3.vo -> 'b -> ('c -> 'd -> 'd) -> ('a, 'e) Direct.abstract) ->
           'b -> ('b -> ('a, unit) Direct.abstract -> 'f) -> 'f
       end
+    type 'a wmatrix =
+      'a Ge.GEMake(Direct).GenLA(GVC_Z3).wmatrix = {
+      matrix : 'a GVC_Z3.vc;
+      numrow : ('a, int) Direct.abstract;
+      numcol : ('a, int) Direct.abstract;
+    }
+    type 'a curpos =
+      'a Ge.GEMake(Direct).GenLA(GVC_Z3).curpos = {
+      rowpos : ('a, int) Direct.abstract;
+      colpos : ('a, int) Direct.abstract;
+    }
+    type 'a curposval =
+      'a Ge.GEMake(Direct).GenLA(GVC_Z3).curposval = {
+      p : 'a curpos;
+      curval : ('a, GVC_Z3.Dom.v) Direct.abstract;
+    }
     module type INPUT =
       sig
         type inp
@@ -6479,11 +6417,8 @@ module G_GVC_Z3 :
         functor (P : GEF.TRACKPIVOT) ->
           sig
             val findpivot :
-              'a GVC_Z3.vc ->
-              ('a, int) Direct.abstract ->
-              ('a, int) Direct.abstract ->
-              ('a, int) Direct.abstract ->
-              ('a, int) Direct.abstract ->
+              'a wmatrix ->
+              'a curpos ->
               ('a, GVC_Z3.Dom.v option,
                [> `TDet of 'a D(GVC_Z3.Dom).lstate | `TPivot of 'a P.lstate ],
                'b)
@@ -6540,16 +6475,13 @@ module G_GVC_Z3 :
                   'b -> ('b -> ('a, unit) Direct.abstract -> 'f) -> 'f
               end
             val findpivot :
-              'a GVC_Z3.vc ->
-              ('a, int) Direct.abstract ->
-              ('a, int) Direct.abstract ->
-              ('a, int) Direct.abstract ->
-              'b ->
-              ([> `TDet of 'a D.lstate | `TPivot of 'a P.lstate ] as 'c) list ->
-              ('c list ->
+              'a wmatrix ->
+              'a curpos ->
+              ([> `TDet of 'a D.lstate | `TPivot of 'a P.lstate ] as 'b) list ->
+              ('b list ->
                ('a, GVC_Z3.Dom.v option) Direct.abstract ->
-               ('a, 'd) Direct.abstract) ->
-              ('a, 'd) Direct.abstract
+               ('a, 'c) Direct.abstract) ->
+              ('a, 'c) Direct.abstract
           end
     module FullPivot :
       functor (Det : GEF.DETF) ->
@@ -6581,11 +6513,8 @@ module G_GVC_Z3 :
                 val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, outdet) lm
               end
             val findpivot :
-              'a GVC_Z3.vc ->
-              ('a, int) Direct.abstract ->
-              ('a, int) Direct.abstract ->
-              ('a, int) Direct.abstract ->
-              ('a, int) Direct.abstract ->
+              'a wmatrix ->
+              'a curpos ->
               ([> 'a D.tag_lstate ] as 'b) list ->
               ('b list ->
                ('a, GVC_Z3.Dom.v option) Direct.abstract ->
@@ -6622,13 +6551,10 @@ module G_GVC_Z3 :
                 val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, outdet) lm
               end
             val findpivot :
-              'a GVC_Z3.vc ->
-              ('a, int) Direct.abstract ->
+              'a wmatrix ->
+              'a curpos ->
               'b ->
-              ('a, int) Direct.abstract ->
-              'c ->
-              'd ->
-              ('d -> ('a, GVC_Z3.Dom.v option) Direct.abstract -> 'e) -> 'e
+              ('b -> ('a, GVC_Z3.Dom.v option) Direct.abstract -> 'c) -> 'c
           end
     module GenGE :
       functor (PivotF : PIVOT) ->
@@ -6777,11 +6703,8 @@ module G_GVC_Z3 :
                   module Pivot :
                     sig
                       val findpivot :
-                        'a GVC_Z3.vc ->
-                        ('a, int) Direct.abstract ->
-                        ('a, int) Direct.abstract ->
-                        ('a, int) Direct.abstract ->
-                        ('a, int) Direct.abstract ->
+                        'a wmatrix ->
+                        'a curpos ->
                         ('a, GVC_Z3.Dom.v option,
                          [> `TDet of 'a Detf(GVC_Z3.Dom).lstate
                           | `TPivot of 'a Output.P.lstate ],
@@ -6809,20 +6732,6 @@ module G_GVC_Z3 :
                          'b -> ('c -> 'd -> 'd) -> ('a, 'e) Direct.abstract) ->
                         'b -> ('b -> ('a, unit) Direct.abstract -> 'f) -> 'f
                     end
-                  type 'a wmatrix =
-                    'a
-                    Ge.GEMake(Direct).GenLA(GVC_Z3).GenGE(PivotF)(Detf)(Update)(In)(Out).wmatrix = {
-                    matrix : 'a GVC_Z3.vc;
-                    numrow : ('a, int) Direct.abstract;
-                    numcol : ('a, int) Direct.abstract;
-                  }
-                  type 'a curpos =
-                    'a
-                    Ge.GEMake(Direct).GenLA(GVC_Z3).GenGE(PivotF)(Detf)(Update)(In)(Out).curpos = {
-                    rowpos : ('a, int) Direct.abstract;
-                    colpos : ('a, int) Direct.abstract;
-                    curval : ('a, GVC_Z3.Dom.v) Direct.abstract;
-                  }
                   val gen :
                     ('a, Input.inp) Direct.abstract ->
                     ([> `TDet of 'a Det.lstate
@@ -6859,6 +6768,22 @@ module G_GVC_Z19 :
            'b -> ('c -> 'd -> 'd) -> ('a, 'e) Direct.abstract) ->
           'b -> ('b -> ('a, unit) Direct.abstract -> 'f) -> 'f
       end
+    type 'a wmatrix =
+      'a Ge.GEMake(Direct).GenLA(GVC_Z19).wmatrix = {
+      matrix : 'a GVC_Z19.vc;
+      numrow : ('a, int) Direct.abstract;
+      numcol : ('a, int) Direct.abstract;
+    }
+    type 'a curpos =
+      'a Ge.GEMake(Direct).GenLA(GVC_Z19).curpos = {
+      rowpos : ('a, int) Direct.abstract;
+      colpos : ('a, int) Direct.abstract;
+    }
+    type 'a curposval =
+      'a Ge.GEMake(Direct).GenLA(GVC_Z19).curposval = {
+      p : 'a curpos;
+      curval : ('a, GVC_Z19.Dom.v) Direct.abstract;
+    }
     module type INPUT =
       sig
         type inp
@@ -7273,11 +7198,8 @@ module G_GVC_Z19 :
         functor (P : GEF.TRACKPIVOT) ->
           sig
             val findpivot :
-              'a GVC_Z19.vc ->
-              ('a, int) Direct.abstract ->
-              ('a, int) Direct.abstract ->
-              ('a, int) Direct.abstract ->
-              ('a, int) Direct.abstract ->
+              'a wmatrix ->
+              'a curpos ->
               ('a, GVC_Z19.Dom.v option,
                [> `TDet of 'a D(GVC_Z19.Dom).lstate | `TPivot of 'a P.lstate ],
                'b)
@@ -7334,16 +7256,13 @@ module G_GVC_Z19 :
                   'b -> ('b -> ('a, unit) Direct.abstract -> 'f) -> 'f
               end
             val findpivot :
-              'a GVC_Z19.vc ->
-              ('a, int) Direct.abstract ->
-              ('a, int) Direct.abstract ->
-              ('a, int) Direct.abstract ->
-              'b ->
-              ([> `TDet of 'a D.lstate | `TPivot of 'a P.lstate ] as 'c) list ->
-              ('c list ->
+              'a wmatrix ->
+              'a curpos ->
+              ([> `TDet of 'a D.lstate | `TPivot of 'a P.lstate ] as 'b) list ->
+              ('b list ->
                ('a, GVC_Z19.Dom.v option) Direct.abstract ->
-               ('a, 'd) Direct.abstract) ->
-              ('a, 'd) Direct.abstract
+               ('a, 'c) Direct.abstract) ->
+              ('a, 'c) Direct.abstract
           end
     module FullPivot :
       functor (Det : GEF.DETF) ->
@@ -7375,11 +7294,8 @@ module G_GVC_Z19 :
                 val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, outdet) lm
               end
             val findpivot :
-              'a GVC_Z19.vc ->
-              ('a, int) Direct.abstract ->
-              ('a, int) Direct.abstract ->
-              ('a, int) Direct.abstract ->
-              ('a, int) Direct.abstract ->
+              'a wmatrix ->
+              'a curpos ->
               ([> 'a D.tag_lstate ] as 'b) list ->
               ('b list ->
                ('a, GVC_Z19.Dom.v option) Direct.abstract ->
@@ -7416,13 +7332,10 @@ module G_GVC_Z19 :
                 val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, outdet) lm
               end
             val findpivot :
-              'a GVC_Z19.vc ->
-              ('a, int) Direct.abstract ->
+              'a wmatrix ->
+              'a curpos ->
               'b ->
-              ('a, int) Direct.abstract ->
-              'c ->
-              'd ->
-              ('d -> ('a, GVC_Z19.Dom.v option) Direct.abstract -> 'e) -> 'e
+              ('b -> ('a, GVC_Z19.Dom.v option) Direct.abstract -> 'c) -> 'c
           end
     module GenGE :
       functor (PivotF : PIVOT) ->
@@ -7571,11 +7484,8 @@ module G_GVC_Z19 :
                   module Pivot :
                     sig
                       val findpivot :
-                        'a GVC_Z19.vc ->
-                        ('a, int) Direct.abstract ->
-                        ('a, int) Direct.abstract ->
-                        ('a, int) Direct.abstract ->
-                        ('a, int) Direct.abstract ->
+                        'a wmatrix ->
+                        'a curpos ->
                         ('a, GVC_Z19.Dom.v option,
                          [> `TDet of 'a Detf(GVC_Z19.Dom).lstate
                           | `TPivot of 'a Output.P.lstate ],
@@ -7603,20 +7513,6 @@ module G_GVC_Z19 :
                          'b -> ('c -> 'd -> 'd) -> ('a, 'e) Direct.abstract) ->
                         'b -> ('b -> ('a, unit) Direct.abstract -> 'f) -> 'f
                     end
-                  type 'a wmatrix =
-                    'a
-                    Ge.GEMake(Direct).GenLA(GVC_Z19).GenGE(PivotF)(Detf)(Update)(In)(Out).wmatrix = {
-                    matrix : 'a GVC_Z19.vc;
-                    numrow : ('a, int) Direct.abstract;
-                    numcol : ('a, int) Direct.abstract;
-                  }
-                  type 'a curpos =
-                    'a
-                    Ge.GEMake(Direct).GenLA(GVC_Z19).GenGE(PivotF)(Detf)(Update)(In)(Out).curpos = {
-                    rowpos : ('a, int) Direct.abstract;
-                    colpos : ('a, int) Direct.abstract;
-                    curval : ('a, GVC_Z19.Dom.v) Direct.abstract;
-                  }
                   val gen :
                     ('a, Input.inp) Direct.abstract ->
                     ([> `TDet of 'a Det.lstate
@@ -7748,11 +7644,8 @@ module GenFA1 :
     module Pivot :
       sig
         val findpivot :
-          'a GAC_F.vc ->
-          ('a, int) Direct.abstract ->
-          ('a, int) Direct.abstract ->
-          ('a, int) Direct.abstract ->
-          ('a, int) Direct.abstract ->
+          'a G_GAC_F.wmatrix ->
+          'a G_GAC_F.curpos ->
           ('a, GAC_F.Dom.v option,
            [> `TDet of 'a GEF.NoDet(GAC_F.Dom).lstate
             | `TPivot of 'a Output.P.lstate ],
@@ -7779,20 +7672,6 @@ module GenFA1 :
            'a GAC_F.vo -> 'b -> ('c -> 'd -> 'd) -> ('a, 'e) Direct.abstract) ->
           'b -> ('b -> ('a, unit) Direct.abstract -> 'f) -> 'f
       end
-    type 'a wmatrix =
-      'a
-      Ge.GEMake(Direct).GenLA(GAC_F).GenGE(G_GAC_F.RowPivot)(GEF.NoDet)(GEF.DivisionUpdate)(G_GAC_F.InpJustMatrix)(G_GAC_F.OutJustMatrix).wmatrix = {
-      matrix : 'a GAC_F.vc;
-      numrow : ('a, int) Direct.abstract;
-      numcol : ('a, int) Direct.abstract;
-    }
-    type 'a curpos =
-      'a
-      Ge.GEMake(Direct).GenLA(GAC_F).GenGE(G_GAC_F.RowPivot)(GEF.NoDet)(GEF.DivisionUpdate)(G_GAC_F.InpJustMatrix)(G_GAC_F.OutJustMatrix).curpos = {
-      rowpos : ('a, int) Direct.abstract;
-      colpos : ('a, int) Direct.abstract;
-      curval : ('a, GAC_F.Dom.v) Direct.abstract;
-    }
     val gen :
       ('a, Input.inp) Direct.abstract ->
       ([> `TDet of 'a Det.lstate
@@ -7922,11 +7801,8 @@ module GenFA2 :
     module Pivot :
       sig
         val findpivot :
-          'a GAC_F.vc ->
-          ('a, int) Direct.abstract ->
-          ('a, int) Direct.abstract ->
-          ('a, int) Direct.abstract ->
-          ('a, int) Direct.abstract ->
+          'a G_GAC_F.wmatrix ->
+          'a G_GAC_F.curpos ->
           ('a, GAC_F.Dom.v option,
            [> `TDet of 'a GEF.AbstractDet(GAC_F.Dom).lstate
             | `TPivot of 'a Output.P.lstate ],
@@ -7953,20 +7829,6 @@ module GenFA2 :
            'a GAC_F.vo -> 'b -> ('c -> 'd -> 'd) -> ('a, 'e) Direct.abstract) ->
           'b -> ('b -> ('a, unit) Direct.abstract -> 'f) -> 'f
       end
-    type 'a wmatrix =
-      'a
-      Ge.GEMake(Direct).GenLA(GAC_F).GenGE(G_GAC_F.RowPivot)(GEF.AbstractDet)(GEF.DivisionUpdate)(G_GAC_F.InpJustMatrix)(G_GAC_F.OutDet).wmatrix = {
-      matrix : 'a GAC_F.vc;
-      numrow : ('a, int) Direct.abstract;
-      numcol : ('a, int) Direct.abstract;
-    }
-    type 'a curpos =
-      'a
-      Ge.GEMake(Direct).GenLA(GAC_F).GenGE(G_GAC_F.RowPivot)(GEF.AbstractDet)(GEF.DivisionUpdate)(G_GAC_F.InpJustMatrix)(G_GAC_F.OutDet).curpos = {
-      rowpos : ('a, int) Direct.abstract;
-      colpos : ('a, int) Direct.abstract;
-      curval : ('a, GAC_F.Dom.v) Direct.abstract;
-    }
     val gen :
       ('a, Input.inp) Direct.abstract ->
       ([> `TDet of 'a Det.lstate
@@ -8096,11 +7958,8 @@ module GenFA3 :
     module Pivot :
       sig
         val findpivot :
-          'a GAC_F.vc ->
-          ('a, int) Direct.abstract ->
-          ('a, int) Direct.abstract ->
-          ('a, int) Direct.abstract ->
-          ('a, int) Direct.abstract ->
+          'a G_GAC_F.wmatrix ->
+          'a G_GAC_F.curpos ->
           ('a, GAC_F.Dom.v option,
            [> `TDet of 'a GEF.NoDet(GAC_F.Dom).lstate
             | `TPivot of 'a Output.P.lstate ],
@@ -8127,20 +7986,6 @@ module GenFA3 :
            'a GAC_F.vo -> 'b -> ('c -> 'd -> 'd) -> ('a, 'e) Direct.abstract) ->
           'b -> ('b -> ('a, unit) Direct.abstract -> 'f) -> 'f
       end
-    type 'a wmatrix =
-      'a
-      Ge.GEMake(Direct).GenLA(GAC_F).GenGE(G_GAC_F.RowPivot)(GEF.NoDet)(GEF.DivisionUpdate)(G_GAC_F.InpJustMatrix)(G_GAC_F.OutRank).wmatrix = {
-      matrix : 'a GAC_F.vc;
-      numrow : ('a, int) Direct.abstract;
-      numcol : ('a, int) Direct.abstract;
-    }
-    type 'a curpos =
-      'a
-      Ge.GEMake(Direct).GenLA(GAC_F).GenGE(G_GAC_F.RowPivot)(GEF.NoDet)(GEF.DivisionUpdate)(G_GAC_F.InpJustMatrix)(G_GAC_F.OutRank).curpos = {
-      rowpos : ('a, int) Direct.abstract;
-      colpos : ('a, int) Direct.abstract;
-      curval : ('a, GAC_F.Dom.v) Direct.abstract;
-    }
     val gen :
       ('a, Input.inp) Direct.abstract ->
       ([> `TDet of 'a Det.lstate
@@ -8270,11 +8115,8 @@ module GenFA4 :
     module Pivot :
       sig
         val findpivot :
-          'a GAC_F.vc ->
-          ('a, int) Direct.abstract ->
-          ('a, int) Direct.abstract ->
-          ('a, int) Direct.abstract ->
-          ('a, int) Direct.abstract ->
+          'a G_GAC_F.wmatrix ->
+          'a G_GAC_F.curpos ->
           ('a, GAC_F.Dom.v option,
            [> `TDet of 'a GEF.AbstractDet(GAC_F.Dom).lstate
             | `TPivot of 'a Output.P.lstate ],
@@ -8301,20 +8143,6 @@ module GenFA4 :
            'a GAC_F.vo -> 'b -> ('c -> 'd -> 'd) -> ('a, 'e) Direct.abstract) ->
           'b -> ('b -> ('a, unit) Direct.abstract -> 'f) -> 'f
       end
-    type 'a wmatrix =
-      'a
-      Ge.GEMake(Direct).GenLA(GAC_F).GenGE(G_GAC_F.RowPivot)(GEF.AbstractDet)(GEF.DivisionUpdate)(G_GAC_F.InpJustMatrix)(G_GAC_F.OutDetRank).wmatrix = {
-      matrix : 'a GAC_F.vc;
-      numrow : ('a, int) Direct.abstract;
-      numcol : ('a, int) Direct.abstract;
-    }
-    type 'a curpos =
-      'a
-      Ge.GEMake(Direct).GenLA(GAC_F).GenGE(G_GAC_F.RowPivot)(GEF.AbstractDet)(GEF.DivisionUpdate)(G_GAC_F.InpJustMatrix)(G_GAC_F.OutDetRank).curpos = {
-      rowpos : ('a, int) Direct.abstract;
-      colpos : ('a, int) Direct.abstract;
-      curval : ('a, GAC_F.Dom.v) Direct.abstract;
-    }
     val gen :
       ('a, Input.inp) Direct.abstract ->
       ([> `TDet of 'a Det.lstate
@@ -8444,11 +8272,8 @@ module GenFA11 :
     module Pivot :
       sig
         val findpivot :
-          'a GAC_F.vc ->
-          ('a, int) Direct.abstract ->
-          ('a, int) Direct.abstract ->
-          ('a, int) Direct.abstract ->
-          ('a, int) Direct.abstract ->
+          'a G_GAC_F.wmatrix ->
+          'a G_GAC_F.curpos ->
           ('a, GAC_F.Dom.v option,
            [> `TDet of 'a GEF.NoDet(GAC_F.Dom).lstate
             | `TPivot of 'a Output.P.lstate ],
@@ -8475,20 +8300,6 @@ module GenFA11 :
            'a GAC_F.vo -> 'b -> ('c -> 'd -> 'd) -> ('a, 'e) Direct.abstract) ->
           'b -> ('b -> ('a, unit) Direct.abstract -> 'f) -> 'f
       end
-    type 'a wmatrix =
-      'a
-      Ge.GEMake(Direct).GenLA(GAC_F).GenGE(G_GAC_F.FullPivot)(GEF.NoDet)(GEF.DivisionUpdate)(G_GAC_F.InpJustMatrix)(G_GAC_F.OutJustMatrix).wmatrix = {
-      matrix : 'a GAC_F.vc;
-      numrow : ('a, int) Direct.abstract;
-      numcol : ('a, int) Direct.abstract;
-    }
-    type 'a curpos =
-      'a
-      Ge.GEMake(Direct).GenLA(GAC_F).GenGE(G_GAC_F.FullPivot)(GEF.NoDet)(GEF.DivisionUpdate)(G_GAC_F.InpJustMatrix)(G_GAC_F.OutJustMatrix).curpos = {
-      rowpos : ('a, int) Direct.abstract;
-      colpos : ('a, int) Direct.abstract;
-      curval : ('a, GAC_F.Dom.v) Direct.abstract;
-    }
     val gen :
       ('a, Input.inp) Direct.abstract ->
       ([> `TDet of 'a Det.lstate
@@ -8618,11 +8429,8 @@ module GenFA12 :
     module Pivot :
       sig
         val findpivot :
-          'a GAC_F.vc ->
-          ('a, int) Direct.abstract ->
-          ('a, int) Direct.abstract ->
-          ('a, int) Direct.abstract ->
-          ('a, int) Direct.abstract ->
+          'a G_GAC_F.wmatrix ->
+          'a G_GAC_F.curpos ->
           ('a, GAC_F.Dom.v option,
            [> `TDet of 'a GEF.AbstractDet(GAC_F.Dom).lstate
             | `TPivot of 'a Output.P.lstate ],
@@ -8649,20 +8457,6 @@ module GenFA12 :
            'a GAC_F.vo -> 'b -> ('c -> 'd -> 'd) -> ('a, 'e) Direct.abstract) ->
           'b -> ('b -> ('a, unit) Direct.abstract -> 'f) -> 'f
       end
-    type 'a wmatrix =
-      'a
-      Ge.GEMake(Direct).GenLA(GAC_F).GenGE(G_GAC_F.FullPivot)(GEF.AbstractDet)(GEF.DivisionUpdate)(G_GAC_F.InpJustMatrix)(G_GAC_F.OutDet).wmatrix = {
-      matrix : 'a GAC_F.vc;
-      numrow : ('a, int) Direct.abstract;
-      numcol : ('a, int) Direct.abstract;
-    }
-    type 'a curpos =
-      'a
-      Ge.GEMake(Direct).GenLA(GAC_F).GenGE(G_GAC_F.FullPivot)(GEF.AbstractDet)(GEF.DivisionUpdate)(G_GAC_F.InpJustMatrix)(G_GAC_F.OutDet).curpos = {
-      rowpos : ('a, int) Direct.abstract;
-      colpos : ('a, int) Direct.abstract;
-      curval : ('a, GAC_F.Dom.v) Direct.abstract;
-    }
     val gen :
       ('a, Input.inp) Direct.abstract ->
       ([> `TDet of 'a Det.lstate
@@ -8792,11 +8586,8 @@ module GenFA13 :
     module Pivot :
       sig
         val findpivot :
-          'a GAC_F.vc ->
-          ('a, int) Direct.abstract ->
-          ('a, int) Direct.abstract ->
-          ('a, int) Direct.abstract ->
-          ('a, int) Direct.abstract ->
+          'a G_GAC_F.wmatrix ->
+          'a G_GAC_F.curpos ->
           ('a, GAC_F.Dom.v option,
            [> `TDet of 'a GEF.NoDet(GAC_F.Dom).lstate
             | `TPivot of 'a Output.P.lstate ],
@@ -8823,20 +8614,6 @@ module GenFA13 :
            'a GAC_F.vo -> 'b -> ('c -> 'd -> 'd) -> ('a, 'e) Direct.abstract) ->
           'b -> ('b -> ('a, unit) Direct.abstract -> 'f) -> 'f
       end
-    type 'a wmatrix =
-      'a
-      Ge.GEMake(Direct).GenLA(GAC_F).GenGE(G_GAC_F.FullPivot)(GEF.NoDet)(GEF.DivisionUpdate)(G_GAC_F.InpJustMatrix)(G_GAC_F.OutRank).wmatrix = {
-      matrix : 'a GAC_F.vc;
-      numrow : ('a, int) Direct.abstract;
-      numcol : ('a, int) Direct.abstract;
-    }
-    type 'a curpos =
-      'a
-      Ge.GEMake(Direct).GenLA(GAC_F).GenGE(G_GAC_F.FullPivot)(GEF.NoDet)(GEF.DivisionUpdate)(G_GAC_F.InpJustMatrix)(G_GAC_F.OutRank).curpos = {
-      rowpos : ('a, int) Direct.abstract;
-      colpos : ('a, int) Direct.abstract;
-      curval : ('a, GAC_F.Dom.v) Direct.abstract;
-    }
     val gen :
       ('a, Input.inp) Direct.abstract ->
       ([> `TDet of 'a Det.lstate
@@ -8966,11 +8743,8 @@ module GenFA14 :
     module Pivot :
       sig
         val findpivot :
-          'a GAC_F.vc ->
-          ('a, int) Direct.abstract ->
-          ('a, int) Direct.abstract ->
-          ('a, int) Direct.abstract ->
-          ('a, int) Direct.abstract ->
+          'a G_GAC_F.wmatrix ->
+          'a G_GAC_F.curpos ->
           ('a, GAC_F.Dom.v option,
            [> `TDet of 'a GEF.AbstractDet(GAC_F.Dom).lstate
             | `TPivot of 'a Output.P.lstate ],
@@ -8997,20 +8771,6 @@ module GenFA14 :
            'a GAC_F.vo -> 'b -> ('c -> 'd -> 'd) -> ('a, 'e) Direct.abstract) ->
           'b -> ('b -> ('a, unit) Direct.abstract -> 'f) -> 'f
       end
-    type 'a wmatrix =
-      'a
-      Ge.GEMake(Direct).GenLA(GAC_F).GenGE(G_GAC_F.FullPivot)(GEF.AbstractDet)(GEF.DivisionUpdate)(G_GAC_F.InpJustMatrix)(G_GAC_F.OutDetRank).wmatrix = {
-      matrix : 'a GAC_F.vc;
-      numrow : ('a, int) Direct.abstract;
-      numcol : ('a, int) Direct.abstract;
-    }
-    type 'a curpos =
-      'a
-      Ge.GEMake(Direct).GenLA(GAC_F).GenGE(G_GAC_F.FullPivot)(GEF.AbstractDet)(GEF.DivisionUpdate)(G_GAC_F.InpJustMatrix)(G_GAC_F.OutDetRank).curpos = {
-      rowpos : ('a, int) Direct.abstract;
-      colpos : ('a, int) Direct.abstract;
-      curval : ('a, GAC_F.Dom.v) Direct.abstract;
-    }
     val gen :
       ('a, Input.inp) Direct.abstract ->
       ([> `TDet of 'a Det.lstate
@@ -9140,11 +8900,8 @@ module GenFA24 :
     module Pivot :
       sig
         val findpivot :
-          'a GAC_F.vc ->
-          ('a, int) Direct.abstract ->
-          ('a, int) Direct.abstract ->
-          ('a, int) Direct.abstract ->
-          ('a, int) Direct.abstract ->
+          'a G_GAC_F.wmatrix ->
+          'a G_GAC_F.curpos ->
           ('a, GAC_F.Dom.v option,
            [> `TDet of 'a GEF.AbstractDet(GAC_F.Dom).lstate
             | `TPivot of 'a Output.P.lstate ],
@@ -9171,20 +8928,6 @@ module GenFA24 :
            'a GAC_F.vo -> 'b -> ('c -> 'd -> 'd) -> ('a, 'e) Direct.abstract) ->
           'b -> ('b -> ('a, unit) Direct.abstract -> 'f) -> 'f
       end
-    type 'a wmatrix =
-      'a
-      Ge.GEMake(Direct).GenLA(GAC_F).GenGE(G_GAC_F.RowPivot)(GEF.AbstractDet)(GEF.DivisionUpdate)(G_GAC_F.InpJustMatrix)(G_GAC_F.OutDetRankPivot).wmatrix = {
-      matrix : 'a GAC_F.vc;
-      numrow : ('a, int) Direct.abstract;
-      numcol : ('a, int) Direct.abstract;
-    }
-    type 'a curpos =
-      'a
-      Ge.GEMake(Direct).GenLA(GAC_F).GenGE(G_GAC_F.RowPivot)(GEF.AbstractDet)(GEF.DivisionUpdate)(G_GAC_F.InpJustMatrix)(G_GAC_F.OutDetRankPivot).curpos = {
-      rowpos : ('a, int) Direct.abstract;
-      colpos : ('a, int) Direct.abstract;
-      curval : ('a, GAC_F.Dom.v) Direct.abstract;
-    }
     val gen :
       ('a, Input.inp) Direct.abstract ->
       ([> `TDet of 'a Det.lstate
@@ -9314,11 +9057,8 @@ module GenFA5 :
     module Pivot :
       sig
         val findpivot :
-          'a GAC_F.vc ->
-          ('a, int) Direct.abstract ->
-          ('a, int) Direct.abstract ->
-          ('a, int) Direct.abstract ->
-          ('a, int) Direct.abstract ->
+          'a G_GAC_F.wmatrix ->
+          'a G_GAC_F.curpos ->
           ('a, GAC_F.Dom.v option,
            [> `TDet of 'a GEF.NoDet(GAC_F.Dom).lstate
             | `TPivot of 'a Output.P.lstate ],
@@ -9345,20 +9085,6 @@ module GenFA5 :
            'a GAC_F.vo -> 'b -> ('c -> 'd -> 'd) -> ('a, 'e) Direct.abstract) ->
           'b -> ('b -> ('a, unit) Direct.abstract -> 'f) -> 'f
       end
-    type 'a wmatrix =
-      'a
-      Ge.GEMake(Direct).GenLA(GAC_F).GenGE(G_GAC_F.RowPivot)(GEF.NoDet)(GEF.DivisionUpdate)(G_GAC_F.InpMatrixMargin)(G_GAC_F.OutJustMatrix).wmatrix = {
-      matrix : 'a GAC_F.vc;
-      numrow : ('a, int) Direct.abstract;
-      numcol : ('a, int) Direct.abstract;
-    }
-    type 'a curpos =
-      'a
-      Ge.GEMake(Direct).GenLA(GAC_F).GenGE(G_GAC_F.RowPivot)(GEF.NoDet)(GEF.DivisionUpdate)(G_GAC_F.InpMatrixMargin)(G_GAC_F.OutJustMatrix).curpos = {
-      rowpos : ('a, int) Direct.abstract;
-      colpos : ('a, int) Direct.abstract;
-      curval : ('a, GAC_F.Dom.v) Direct.abstract;
-    }
     val gen :
       ('a, Input.inp) Direct.abstract ->
       ([> `TDet of 'a Det.lstate
@@ -9488,11 +9214,8 @@ module GenFA6 :
     module Pivot :
       sig
         val findpivot :
-          'a GAC_F.vc ->
-          ('a, int) Direct.abstract ->
-          ('a, int) Direct.abstract ->
-          ('a, int) Direct.abstract ->
-          ('a, int) Direct.abstract ->
+          'a G_GAC_F.wmatrix ->
+          'a G_GAC_F.curpos ->
           ('a, GAC_F.Dom.v option,
            [> `TDet of 'a GEF.AbstractDet(GAC_F.Dom).lstate
             | `TPivot of 'a Output.P.lstate ],
@@ -9519,20 +9242,6 @@ module GenFA6 :
            'a GAC_F.vo -> 'b -> ('c -> 'd -> 'd) -> ('a, 'e) Direct.abstract) ->
           'b -> ('b -> ('a, unit) Direct.abstract -> 'f) -> 'f
       end
-    type 'a wmatrix =
-      'a
-      Ge.GEMake(Direct).GenLA(GAC_F).GenGE(G_GAC_F.RowPivot)(GEF.AbstractDet)(GEF.DivisionUpdate)(G_GAC_F.InpMatrixMargin)(G_GAC_F.OutDet).wmatrix = {
-      matrix : 'a GAC_F.vc;
-      numrow : ('a, int) Direct.abstract;
-      numcol : ('a, int) Direct.abstract;
-    }
-    type 'a curpos =
-      'a
-      Ge.GEMake(Direct).GenLA(GAC_F).GenGE(G_GAC_F.RowPivot)(GEF.AbstractDet)(GEF.DivisionUpdate)(G_GAC_F.InpMatrixMargin)(G_GAC_F.OutDet).curpos = {
-      rowpos : ('a, int) Direct.abstract;
-      colpos : ('a, int) Direct.abstract;
-      curval : ('a, GAC_F.Dom.v) Direct.abstract;
-    }
     val gen :
       ('a, Input.inp) Direct.abstract ->
       ([> `TDet of 'a Det.lstate
@@ -9662,11 +9371,8 @@ module GenFA7 :
     module Pivot :
       sig
         val findpivot :
-          'a GAC_F.vc ->
-          ('a, int) Direct.abstract ->
-          ('a, int) Direct.abstract ->
-          ('a, int) Direct.abstract ->
-          ('a, int) Direct.abstract ->
+          'a G_GAC_F.wmatrix ->
+          'a G_GAC_F.curpos ->
           ('a, GAC_F.Dom.v option,
            [> `TDet of 'a GEF.NoDet(GAC_F.Dom).lstate
             | `TPivot of 'a Output.P.lstate ],
@@ -9693,20 +9399,6 @@ module GenFA7 :
            'a GAC_F.vo -> 'b -> ('c -> 'd -> 'd) -> ('a, 'e) Direct.abstract) ->
           'b -> ('b -> ('a, unit) Direct.abstract -> 'f) -> 'f
       end
-    type 'a wmatrix =
-      'a
-      Ge.GEMake(Direct).GenLA(GAC_F).GenGE(G_GAC_F.RowPivot)(GEF.NoDet)(GEF.DivisionUpdate)(G_GAC_F.InpMatrixMargin)(G_GAC_F.OutRank).wmatrix = {
-      matrix : 'a GAC_F.vc;
-      numrow : ('a, int) Direct.abstract;
-      numcol : ('a, int) Direct.abstract;
-    }
-    type 'a curpos =
-      'a
-      Ge.GEMake(Direct).GenLA(GAC_F).GenGE(G_GAC_F.RowPivot)(GEF.NoDet)(GEF.DivisionUpdate)(G_GAC_F.InpMatrixMargin)(G_GAC_F.OutRank).curpos = {
-      rowpos : ('a, int) Direct.abstract;
-      colpos : ('a, int) Direct.abstract;
-      curval : ('a, GAC_F.Dom.v) Direct.abstract;
-    }
     val gen :
       ('a, Input.inp) Direct.abstract ->
       ([> `TDet of 'a Det.lstate
@@ -9836,11 +9528,8 @@ module GenFA8 :
     module Pivot :
       sig
         val findpivot :
-          'a GAC_F.vc ->
-          ('a, int) Direct.abstract ->
-          ('a, int) Direct.abstract ->
-          ('a, int) Direct.abstract ->
-          ('a, int) Direct.abstract ->
+          'a G_GAC_F.wmatrix ->
+          'a G_GAC_F.curpos ->
           ('a, GAC_F.Dom.v option,
            [> `TDet of 'a GEF.NoDet(GAC_F.Dom).lstate
             | `TPivot of 'a Output.P.lstate ],
@@ -9867,20 +9556,6 @@ module GenFA8 :
            'a GAC_F.vo -> 'b -> ('c -> 'd -> 'd) -> ('a, 'e) Direct.abstract) ->
           'b -> ('b -> ('a, unit) Direct.abstract -> 'f) -> 'f
       end
-    type 'a wmatrix =
-      'a
-      Ge.GEMake(Direct).GenLA(GAC_F).GenGE(G_GAC_F.RowPivot)(GEF.NoDet)(GEF.DivisionUpdate)(G_GAC_F.InpMatrixMargin)(G_GAC_F.OutDetRank).wmatrix = {
-      matrix : 'a GAC_F.vc;
-      numrow : ('a, int) Direct.abstract;
-      numcol : ('a, int) Direct.abstract;
-    }
-    type 'a curpos =
-      'a
-      Ge.GEMake(Direct).GenLA(GAC_F).GenGE(G_GAC_F.RowPivot)(GEF.NoDet)(GEF.DivisionUpdate)(G_GAC_F.InpMatrixMargin)(G_GAC_F.OutDetRank).curpos = {
-      rowpos : ('a, int) Direct.abstract;
-      colpos : ('a, int) Direct.abstract;
-      curval : ('a, GAC_F.Dom.v) Direct.abstract;
-    }
     val gen :
       ('a, Input.inp) Direct.abstract ->
       ([> `TDet of 'a Det.lstate
@@ -10010,11 +9685,8 @@ module GenFV1 :
     module Pivot :
       sig
         val findpivot :
-          'a GVC_F.vc ->
-          ('a, int) Direct.abstract ->
-          ('a, int) Direct.abstract ->
-          ('a, int) Direct.abstract ->
-          ('a, int) Direct.abstract ->
+          'a G_GVC_F.wmatrix ->
+          'a G_GVC_F.curpos ->
           ('a, GVC_F.Dom.v option,
            [> `TDet of 'a GEF.NoDet(GVC_F.Dom).lstate
             | `TPivot of 'a Output.P.lstate ],
@@ -10041,20 +9713,6 @@ module GenFV1 :
            'a GVC_F.vo -> 'b -> ('c -> 'd -> 'd) -> ('a, 'e) Direct.abstract) ->
           'b -> ('b -> ('a, unit) Direct.abstract -> 'f) -> 'f
       end
-    type 'a wmatrix =
-      'a
-      Ge.GEMake(Direct).GenLA(GVC_F).GenGE(G_GVC_F.RowPivot)(GEF.NoDet)(GEF.DivisionUpdate)(G_GVC_F.InpJustMatrix)(G_GVC_F.OutJustMatrix).wmatrix = {
-      matrix : 'a GVC_F.vc;
-      numrow : ('a, int) Direct.abstract;
-      numcol : ('a, int) Direct.abstract;
-    }
-    type 'a curpos =
-      'a
-      Ge.GEMake(Direct).GenLA(GVC_F).GenGE(G_GVC_F.RowPivot)(GEF.NoDet)(GEF.DivisionUpdate)(G_GVC_F.InpJustMatrix)(G_GVC_F.OutJustMatrix).curpos = {
-      rowpos : ('a, int) Direct.abstract;
-      colpos : ('a, int) Direct.abstract;
-      curval : ('a, GVC_F.Dom.v) Direct.abstract;
-    }
     val gen :
       ('a, Input.inp) Direct.abstract ->
       ([> `TDet of 'a Det.lstate
@@ -10184,11 +9842,8 @@ module GenFV2 :
     module Pivot :
       sig
         val findpivot :
-          'a GVC_F.vc ->
-          ('a, int) Direct.abstract ->
-          ('a, int) Direct.abstract ->
-          ('a, int) Direct.abstract ->
-          ('a, int) Direct.abstract ->
+          'a G_GVC_F.wmatrix ->
+          'a G_GVC_F.curpos ->
           ('a, GVC_F.Dom.v option,
            [> `TDet of 'a GEF.AbstractDet(GVC_F.Dom).lstate
             | `TPivot of 'a Output.P.lstate ],
@@ -10215,20 +9870,6 @@ module GenFV2 :
            'a GVC_F.vo -> 'b -> ('c -> 'd -> 'd) -> ('a, 'e) Direct.abstract) ->
           'b -> ('b -> ('a, unit) Direct.abstract -> 'f) -> 'f
       end
-    type 'a wmatrix =
-      'a
-      Ge.GEMake(Direct).GenLA(GVC_F).GenGE(G_GVC_F.RowPivot)(GEF.AbstractDet)(GEF.DivisionUpdate)(G_GVC_F.InpJustMatrix)(G_GVC_F.OutDet).wmatrix = {
-      matrix : 'a GVC_F.vc;
-      numrow : ('a, int) Direct.abstract;
-      numcol : ('a, int) Direct.abstract;
-    }
-    type 'a curpos =
-      'a
-      Ge.GEMake(Direct).GenLA(GVC_F).GenGE(G_GVC_F.RowPivot)(GEF.AbstractDet)(GEF.DivisionUpdate)(G_GVC_F.InpJustMatrix)(G_GVC_F.OutDet).curpos = {
-      rowpos : ('a, int) Direct.abstract;
-      colpos : ('a, int) Direct.abstract;
-      curval : ('a, GVC_F.Dom.v) Direct.abstract;
-    }
     val gen :
       ('a, Input.inp) Direct.abstract ->
       ([> `TDet of 'a Det.lstate
@@ -10358,11 +9999,8 @@ module GenFV3 :
     module Pivot :
       sig
         val findpivot :
-          'a GVC_F.vc ->
-          ('a, int) Direct.abstract ->
-          ('a, int) Direct.abstract ->
-          ('a, int) Direct.abstract ->
-          ('a, int) Direct.abstract ->
+          'a G_GVC_F.wmatrix ->
+          'a G_GVC_F.curpos ->
           ('a, GVC_F.Dom.v option,
            [> `TDet of 'a GEF.NoDet(GVC_F.Dom).lstate
             | `TPivot of 'a Output.P.lstate ],
@@ -10389,20 +10027,6 @@ module GenFV3 :
            'a GVC_F.vo -> 'b -> ('c -> 'd -> 'd) -> ('a, 'e) Direct.abstract) ->
           'b -> ('b -> ('a, unit) Direct.abstract -> 'f) -> 'f
       end
-    type 'a wmatrix =
-      'a
-      Ge.GEMake(Direct).GenLA(GVC_F).GenGE(G_GVC_F.RowPivot)(GEF.NoDet)(GEF.DivisionUpdate)(G_GVC_F.InpJustMatrix)(G_GVC_F.OutRank).wmatrix = {
-      matrix : 'a GVC_F.vc;
-      numrow : ('a, int) Direct.abstract;
-      numcol : ('a, int) Direct.abstract;
-    }
-    type 'a curpos =
-      'a
-      Ge.GEMake(Direct).GenLA(GVC_F).GenGE(G_GVC_F.RowPivot)(GEF.NoDet)(GEF.DivisionUpdate)(G_GVC_F.InpJustMatrix)(G_GVC_F.OutRank).curpos = {
-      rowpos : ('a, int) Direct.abstract;
-      colpos : ('a, int) Direct.abstract;
-      curval : ('a, GVC_F.Dom.v) Direct.abstract;
-    }
     val gen :
       ('a, Input.inp) Direct.abstract ->
       ([> `TDet of 'a Det.lstate
@@ -10532,11 +10156,8 @@ module GenFV4 :
     module Pivot :
       sig
         val findpivot :
-          'a GVC_F.vc ->
-          ('a, int) Direct.abstract ->
-          ('a, int) Direct.abstract ->
-          ('a, int) Direct.abstract ->
-          ('a, int) Direct.abstract ->
+          'a G_GVC_F.wmatrix ->
+          'a G_GVC_F.curpos ->
           ('a, GVC_F.Dom.v option,
            [> `TDet of 'a GEF.AbstractDet(GVC_F.Dom).lstate
             | `TPivot of 'a Output.P.lstate ],
@@ -10563,20 +10184,6 @@ module GenFV4 :
            'a GVC_F.vo -> 'b -> ('c -> 'd -> 'd) -> ('a, 'e) Direct.abstract) ->
           'b -> ('b -> ('a, unit) Direct.abstract -> 'f) -> 'f
       end
-    type 'a wmatrix =
-      'a
-      Ge.GEMake(Direct).GenLA(GVC_F).GenGE(G_GVC_F.RowPivot)(GEF.AbstractDet)(GEF.DivisionUpdate)(G_GVC_F.InpJustMatrix)(G_GVC_F.OutDetRank).wmatrix = {
-      matrix : 'a GVC_F.vc;
-      numrow : ('a, int) Direct.abstract;
-      numcol : ('a, int) Direct.abstract;
-    }
-    type 'a curpos =
-      'a
-      Ge.GEMake(Direct).GenLA(GVC_F).GenGE(G_GVC_F.RowPivot)(GEF.AbstractDet)(GEF.DivisionUpdate)(G_GVC_F.InpJustMatrix)(G_GVC_F.OutDetRank).curpos = {
-      rowpos : ('a, int) Direct.abstract;
-      colpos : ('a, int) Direct.abstract;
-      curval : ('a, GVC_F.Dom.v) Direct.abstract;
-    }
     val gen :
       ('a, Input.inp) Direct.abstract ->
       ([> `TDet of 'a Det.lstate
@@ -10706,11 +10313,8 @@ module GenFV5 :
     module Pivot :
       sig
         val findpivot :
-          'a GVC_F.vc ->
-          ('a, int) Direct.abstract ->
-          ('a, int) Direct.abstract ->
-          ('a, int) Direct.abstract ->
-          ('a, int) Direct.abstract ->
+          'a G_GVC_F.wmatrix ->
+          'a G_GVC_F.curpos ->
           ('a, GVC_F.Dom.v option,
            [> `TDet of 'a GEF.AbstractDet(GVC_F.Dom).lstate
             | `TPivot of 'a Output.P.lstate ],
@@ -10737,20 +10341,6 @@ module GenFV5 :
            'a GVC_F.vo -> 'b -> ('c -> 'd -> 'd) -> ('a, 'e) Direct.abstract) ->
           'b -> ('b -> ('a, unit) Direct.abstract -> 'f) -> 'f
       end
-    type 'a wmatrix =
-      'a
-      Ge.GEMake(Direct).GenLA(GVC_F).GenGE(G_GVC_F.FullPivot)(GEF.AbstractDet)(GEF.DivisionUpdate)(G_GVC_F.InpJustMatrix)(G_GVC_F.OutDetRank).wmatrix = {
-      matrix : 'a GVC_F.vc;
-      numrow : ('a, int) Direct.abstract;
-      numcol : ('a, int) Direct.abstract;
-    }
-    type 'a curpos =
-      'a
-      Ge.GEMake(Direct).GenLA(GVC_F).GenGE(G_GVC_F.FullPivot)(GEF.AbstractDet)(GEF.DivisionUpdate)(G_GVC_F.InpJustMatrix)(G_GVC_F.OutDetRank).curpos = {
-      rowpos : ('a, int) Direct.abstract;
-      colpos : ('a, int) Direct.abstract;
-      curval : ('a, GVC_F.Dom.v) Direct.abstract;
-    }
     val gen :
       ('a, Input.inp) Direct.abstract ->
       ([> `TDet of 'a Det.lstate
@@ -10880,11 +10470,8 @@ module GenIA1 :
     module Pivot :
       sig
         val findpivot :
-          'a GAC_I.vc ->
-          ('a, int) Direct.abstract ->
-          ('a, int) Direct.abstract ->
-          ('a, int) Direct.abstract ->
-          ('a, int) Direct.abstract ->
+          'a G_GAC_I.wmatrix ->
+          'a G_GAC_I.curpos ->
           ('a, GAC_I.Dom.v option,
            [> `TDet of 'a GEF.AbstractDet(GAC_I.Dom).lstate
             | `TPivot of 'a Output.P.lstate ],
@@ -10911,20 +10498,6 @@ module GenIA1 :
            'a GAC_I.vo -> 'b -> ('c -> 'd -> 'd) -> ('a, 'e) Direct.abstract) ->
           'b -> ('b -> ('a, unit) Direct.abstract -> 'f) -> 'f
       end
-    type 'a wmatrix =
-      'a
-      Ge.GEMake(Direct).GenLA(GAC_I).GenGE(G_GAC_I.RowPivot)(GEF.AbstractDet)(GEF.FractionFreeUpdate)(G_GAC_I.InpJustMatrix)(G_GAC_I.OutJustMatrix).wmatrix = {
-      matrix : 'a GAC_I.vc;
-      numrow : ('a, int) Direct.abstract;
-      numcol : ('a, int) Direct.abstract;
-    }
-    type 'a curpos =
-      'a
-      Ge.GEMake(Direct).GenLA(GAC_I).GenGE(G_GAC_I.RowPivot)(GEF.AbstractDet)(GEF.FractionFreeUpdate)(G_GAC_I.InpJustMatrix)(G_GAC_I.OutJustMatrix).curpos = {
-      rowpos : ('a, int) Direct.abstract;
-      colpos : ('a, int) Direct.abstract;
-      curval : ('a, GAC_I.Dom.v) Direct.abstract;
-    }
     val gen :
       ('a, Input.inp) Direct.abstract ->
       ([> `TDet of 'a Det.lstate
@@ -11054,11 +10627,8 @@ module GenIA2 :
     module Pivot :
       sig
         val findpivot :
-          'a GAC_I.vc ->
-          ('a, int) Direct.abstract ->
-          ('a, int) Direct.abstract ->
-          ('a, int) Direct.abstract ->
-          ('a, int) Direct.abstract ->
+          'a G_GAC_I.wmatrix ->
+          'a G_GAC_I.curpos ->
           ('a, GAC_I.Dom.v option,
            [> `TDet of 'a GEF.AbstractDet(GAC_I.Dom).lstate
             | `TPivot of 'a Output.P.lstate ],
@@ -11085,20 +10655,6 @@ module GenIA2 :
            'a GAC_I.vo -> 'b -> ('c -> 'd -> 'd) -> ('a, 'e) Direct.abstract) ->
           'b -> ('b -> ('a, unit) Direct.abstract -> 'f) -> 'f
       end
-    type 'a wmatrix =
-      'a
-      Ge.GEMake(Direct).GenLA(GAC_I).GenGE(G_GAC_I.RowPivot)(GEF.AbstractDet)(GEF.FractionFreeUpdate)(G_GAC_I.InpJustMatrix)(G_GAC_I.OutDet).wmatrix = {
-      matrix : 'a GAC_I.vc;
-      numrow : ('a, int) Direct.abstract;
-      numcol : ('a, int) Direct.abstract;
-    }
-    type 'a curpos =
-      'a
-      Ge.GEMake(Direct).GenLA(GAC_I).GenGE(G_GAC_I.RowPivot)(GEF.AbstractDet)(GEF.FractionFreeUpdate)(G_GAC_I.InpJustMatrix)(G_GAC_I.OutDet).curpos = {
-      rowpos : ('a, int) Direct.abstract;
-      colpos : ('a, int) Direct.abstract;
-      curval : ('a, GAC_I.Dom.v) Direct.abstract;
-    }
     val gen :
       ('a, Input.inp) Direct.abstract ->
       ([> `TDet of 'a Det.lstate
@@ -11228,11 +10784,8 @@ module GenIA3 :
     module Pivot :
       sig
         val findpivot :
-          'a GAC_I.vc ->
-          ('a, int) Direct.abstract ->
-          ('a, int) Direct.abstract ->
-          ('a, int) Direct.abstract ->
-          ('a, int) Direct.abstract ->
+          'a G_GAC_I.wmatrix ->
+          'a G_GAC_I.curpos ->
           ('a, GAC_I.Dom.v option,
            [> `TDet of 'a GEF.AbstractDet(GAC_I.Dom).lstate
             | `TPivot of 'a Output.P.lstate ],
@@ -11259,20 +10812,6 @@ module GenIA3 :
            'a GAC_I.vo -> 'b -> ('c -> 'd -> 'd) -> ('a, 'e) Direct.abstract) ->
           'b -> ('b -> ('a, unit) Direct.abstract -> 'f) -> 'f
       end
-    type 'a wmatrix =
-      'a
-      Ge.GEMake(Direct).GenLA(GAC_I).GenGE(G_GAC_I.RowPivot)(GEF.AbstractDet)(GEF.FractionFreeUpdate)(G_GAC_I.InpJustMatrix)(G_GAC_I.OutRank).wmatrix = {
-      matrix : 'a GAC_I.vc;
-      numrow : ('a, int) Direct.abstract;
-      numcol : ('a, int) Direct.abstract;
-    }
-    type 'a curpos =
-      'a
-      Ge.GEMake(Direct).GenLA(GAC_I).GenGE(G_GAC_I.RowPivot)(GEF.AbstractDet)(GEF.FractionFreeUpdate)(G_GAC_I.InpJustMatrix)(G_GAC_I.OutRank).curpos = {
-      rowpos : ('a, int) Direct.abstract;
-      colpos : ('a, int) Direct.abstract;
-      curval : ('a, GAC_I.Dom.v) Direct.abstract;
-    }
     val gen :
       ('a, Input.inp) Direct.abstract ->
       ([> `TDet of 'a Det.lstate
@@ -11402,11 +10941,8 @@ module GenIA4 :
     module Pivot :
       sig
         val findpivot :
-          'a GAC_I.vc ->
-          ('a, int) Direct.abstract ->
-          ('a, int) Direct.abstract ->
-          ('a, int) Direct.abstract ->
-          ('a, int) Direct.abstract ->
+          'a G_GAC_I.wmatrix ->
+          'a G_GAC_I.curpos ->
           ('a, GAC_I.Dom.v option,
            [> `TDet of 'a GEF.AbstractDet(GAC_I.Dom).lstate
             | `TPivot of 'a Output.P.lstate ],
@@ -11433,20 +10969,6 @@ module GenIA4 :
            'a GAC_I.vo -> 'b -> ('c -> 'd -> 'd) -> ('a, 'e) Direct.abstract) ->
           'b -> ('b -> ('a, unit) Direct.abstract -> 'f) -> 'f
       end
-    type 'a wmatrix =
-      'a
-      Ge.GEMake(Direct).GenLA(GAC_I).GenGE(G_GAC_I.RowPivot)(GEF.AbstractDet)(GEF.FractionFreeUpdate)(G_GAC_I.InpJustMatrix)(G_GAC_I.OutDetRank).wmatrix = {
-      matrix : 'a GAC_I.vc;
-      numrow : ('a, int) Direct.abstract;
-      numcol : ('a, int) Direct.abstract;
-    }
-    type 'a curpos =
-      'a
-      Ge.GEMake(Direct).GenLA(GAC_I).GenGE(G_GAC_I.RowPivot)(GEF.AbstractDet)(GEF.FractionFreeUpdate)(G_GAC_I.InpJustMatrix)(G_GAC_I.OutDetRank).curpos = {
-      rowpos : ('a, int) Direct.abstract;
-      colpos : ('a, int) Direct.abstract;
-      curval : ('a, GAC_I.Dom.v) Direct.abstract;
-    }
     val gen :
       ('a, Input.inp) Direct.abstract ->
       ([> `TDet of 'a Det.lstate
@@ -11576,11 +11098,8 @@ module GenIV1 :
     module Pivot :
       sig
         val findpivot :
-          'a GVC_I.vc ->
-          ('a, int) Direct.abstract ->
-          ('a, int) Direct.abstract ->
-          ('a, int) Direct.abstract ->
-          ('a, int) Direct.abstract ->
+          'a G_GVC_I.wmatrix ->
+          'a G_GVC_I.curpos ->
           ('a, GVC_I.Dom.v option,
            [> `TDet of 'a GEF.AbstractDet(GVC_I.Dom).lstate
             | `TPivot of 'a Output.P.lstate ],
@@ -11607,20 +11126,6 @@ module GenIV1 :
            'a GVC_I.vo -> 'b -> ('c -> 'd -> 'd) -> ('a, 'e) Direct.abstract) ->
           'b -> ('b -> ('a, unit) Direct.abstract -> 'f) -> 'f
       end
-    type 'a wmatrix =
-      'a
-      Ge.GEMake(Direct).GenLA(GVC_I).GenGE(G_GVC_I.RowPivot)(GEF.AbstractDet)(GEF.FractionFreeUpdate)(G_GVC_I.InpJustMatrix)(G_GVC_I.OutJustMatrix).wmatrix = {
-      matrix : 'a GVC_I.vc;
-      numrow : ('a, int) Direct.abstract;
-      numcol : ('a, int) Direct.abstract;
-    }
-    type 'a curpos =
-      'a
-      Ge.GEMake(Direct).GenLA(GVC_I).GenGE(G_GVC_I.RowPivot)(GEF.AbstractDet)(GEF.FractionFreeUpdate)(G_GVC_I.InpJustMatrix)(G_GVC_I.OutJustMatrix).curpos = {
-      rowpos : ('a, int) Direct.abstract;
-      colpos : ('a, int) Direct.abstract;
-      curval : ('a, GVC_I.Dom.v) Direct.abstract;
-    }
     val gen :
       ('a, Input.inp) Direct.abstract ->
       ([> `TDet of 'a Det.lstate
@@ -11750,11 +11255,8 @@ module GenIV2 :
     module Pivot :
       sig
         val findpivot :
-          'a GVC_I.vc ->
-          ('a, int) Direct.abstract ->
-          ('a, int) Direct.abstract ->
-          ('a, int) Direct.abstract ->
-          ('a, int) Direct.abstract ->
+          'a G_GVC_I.wmatrix ->
+          'a G_GVC_I.curpos ->
           ('a, GVC_I.Dom.v option,
            [> `TDet of 'a GEF.AbstractDet(GVC_I.Dom).lstate
             | `TPivot of 'a Output.P.lstate ],
@@ -11781,20 +11283,6 @@ module GenIV2 :
            'a GVC_I.vo -> 'b -> ('c -> 'd -> 'd) -> ('a, 'e) Direct.abstract) ->
           'b -> ('b -> ('a, unit) Direct.abstract -> 'f) -> 'f
       end
-    type 'a wmatrix =
-      'a
-      Ge.GEMake(Direct).GenLA(GVC_I).GenGE(G_GVC_I.RowPivot)(GEF.AbstractDet)(GEF.FractionFreeUpdate)(G_GVC_I.InpJustMatrix)(G_GVC_I.OutDet).wmatrix = {
-      matrix : 'a GVC_I.vc;
-      numrow : ('a, int) Direct.abstract;
-      numcol : ('a, int) Direct.abstract;
-    }
-    type 'a curpos =
-      'a
-      Ge.GEMake(Direct).GenLA(GVC_I).GenGE(G_GVC_I.RowPivot)(GEF.AbstractDet)(GEF.FractionFreeUpdate)(G_GVC_I.InpJustMatrix)(G_GVC_I.OutDet).curpos = {
-      rowpos : ('a, int) Direct.abstract;
-      colpos : ('a, int) Direct.abstract;
-      curval : ('a, GVC_I.Dom.v) Direct.abstract;
-    }
     val gen :
       ('a, Input.inp) Direct.abstract ->
       ([> `TDet of 'a Det.lstate
@@ -11924,11 +11412,8 @@ module GenIV3 :
     module Pivot :
       sig
         val findpivot :
-          'a GVC_I.vc ->
-          ('a, int) Direct.abstract ->
-          ('a, int) Direct.abstract ->
-          ('a, int) Direct.abstract ->
-          ('a, int) Direct.abstract ->
+          'a G_GVC_I.wmatrix ->
+          'a G_GVC_I.curpos ->
           ('a, GVC_I.Dom.v option,
            [> `TDet of 'a GEF.AbstractDet(GVC_I.Dom).lstate
             | `TPivot of 'a Output.P.lstate ],
@@ -11955,20 +11440,6 @@ module GenIV3 :
            'a GVC_I.vo -> 'b -> ('c -> 'd -> 'd) -> ('a, 'e) Direct.abstract) ->
           'b -> ('b -> ('a, unit) Direct.abstract -> 'f) -> 'f
       end
-    type 'a wmatrix =
-      'a
-      Ge.GEMake(Direct).GenLA(GVC_I).GenGE(G_GVC_I.RowPivot)(GEF.AbstractDet)(GEF.FractionFreeUpdate)(G_GVC_I.InpJustMatrix)(G_GVC_I.OutRank).wmatrix = {
-      matrix : 'a GVC_I.vc;
-      numrow : ('a, int) Direct.abstract;
-      numcol : ('a, int) Direct.abstract;
-    }
-    type 'a curpos =
-      'a
-      Ge.GEMake(Direct).GenLA(GVC_I).GenGE(G_GVC_I.RowPivot)(GEF.AbstractDet)(GEF.FractionFreeUpdate)(G_GVC_I.InpJustMatrix)(G_GVC_I.OutRank).curpos = {
-      rowpos : ('a, int) Direct.abstract;
-      colpos : ('a, int) Direct.abstract;
-      curval : ('a, GVC_I.Dom.v) Direct.abstract;
-    }
     val gen :
       ('a, Input.inp) Direct.abstract ->
       ([> `TDet of 'a Det.lstate
@@ -12098,11 +11569,8 @@ module GenIV4 :
     module Pivot :
       sig
         val findpivot :
-          'a GVC_I.vc ->
-          ('a, int) Direct.abstract ->
-          ('a, int) Direct.abstract ->
-          ('a, int) Direct.abstract ->
-          ('a, int) Direct.abstract ->
+          'a G_GVC_I.wmatrix ->
+          'a G_GVC_I.curpos ->
           ('a, GVC_I.Dom.v option,
            [> `TDet of 'a GEF.AbstractDet(GVC_I.Dom).lstate
             | `TPivot of 'a Output.P.lstate ],
@@ -12129,20 +11597,6 @@ module GenIV4 :
            'a GVC_I.vo -> 'b -> ('c -> 'd -> 'd) -> ('a, 'e) Direct.abstract) ->
           'b -> ('b -> ('a, unit) Direct.abstract -> 'f) -> 'f
       end
-    type 'a wmatrix =
-      'a
-      Ge.GEMake(Direct).GenLA(GVC_I).GenGE(G_GVC_I.RowPivot)(GEF.AbstractDet)(GEF.FractionFreeUpdate)(G_GVC_I.InpJustMatrix)(G_GVC_I.OutDetRank).wmatrix = {
-      matrix : 'a GVC_I.vc;
-      numrow : ('a, int) Direct.abstract;
-      numcol : ('a, int) Direct.abstract;
-    }
-    type 'a curpos =
-      'a
-      Ge.GEMake(Direct).GenLA(GVC_I).GenGE(G_GVC_I.RowPivot)(GEF.AbstractDet)(GEF.FractionFreeUpdate)(G_GVC_I.InpJustMatrix)(G_GVC_I.OutDetRank).curpos = {
-      rowpos : ('a, int) Direct.abstract;
-      colpos : ('a, int) Direct.abstract;
-      curval : ('a, GVC_I.Dom.v) Direct.abstract;
-    }
     val gen :
       ('a, Input.inp) Direct.abstract ->
       ([> `TDet of 'a Det.lstate
@@ -12272,11 +11726,8 @@ module GenIV5 :
     module Pivot :
       sig
         val findpivot :
-          'a GVC_I.vc ->
-          ('a, int) Direct.abstract ->
-          ('a, int) Direct.abstract ->
-          ('a, int) Direct.abstract ->
-          ('a, int) Direct.abstract ->
+          'a G_GVC_I.wmatrix ->
+          'a G_GVC_I.curpos ->
           ('a, GVC_I.Dom.v option,
            [> `TDet of 'a GEF.AbstractDet(GVC_I.Dom).lstate
             | `TPivot of 'a Output.P.lstate ],
@@ -12303,20 +11754,6 @@ module GenIV5 :
            'a GVC_I.vo -> 'b -> ('c -> 'd -> 'd) -> ('a, 'e) Direct.abstract) ->
           'b -> ('b -> ('a, unit) Direct.abstract -> 'f) -> 'f
       end
-    type 'a wmatrix =
-      'a
-      Ge.GEMake(Direct).GenLA(GVC_I).GenGE(G_GVC_I.FullPivot)(GEF.AbstractDet)(GEF.FractionFreeUpdate)(G_GVC_I.InpJustMatrix)(G_GVC_I.OutDetRank).wmatrix = {
-      matrix : 'a GVC_I.vc;
-      numrow : ('a, int) Direct.abstract;
-      numcol : ('a, int) Direct.abstract;
-    }
-    type 'a curpos =
-      'a
-      Ge.GEMake(Direct).GenLA(GVC_I).GenGE(G_GVC_I.FullPivot)(GEF.AbstractDet)(GEF.FractionFreeUpdate)(G_GVC_I.InpJustMatrix)(G_GVC_I.OutDetRank).curpos = {
-      rowpos : ('a, int) Direct.abstract;
-      colpos : ('a, int) Direct.abstract;
-      curval : ('a, GVC_I.Dom.v) Direct.abstract;
-    }
     val gen :
       ('a, Input.inp) Direct.abstract ->
       ([> `TDet of 'a Det.lstate
@@ -12446,11 +11883,8 @@ module GenRA1 :
     module Pivot :
       sig
         val findpivot :
-          'a GAC_R.vc ->
-          ('a, int) Direct.abstract ->
-          ('a, int) Direct.abstract ->
-          ('a, int) Direct.abstract ->
-          ('a, int) Direct.abstract ->
+          'a G_GAC_R.wmatrix ->
+          'a G_GAC_R.curpos ->
           ('a, GAC_R.Dom.v option,
            [> `TDet of 'a GEF.AbstractDet(GAC_R.Dom).lstate
             | `TPivot of 'a Output.P.lstate ],
@@ -12477,20 +11911,6 @@ module GenRA1 :
            'a GAC_R.vo -> 'b -> ('c -> 'd -> 'd) -> ('a, 'e) Direct.abstract) ->
           'b -> ('b -> ('a, unit) Direct.abstract -> 'f) -> 'f
       end
-    type 'a wmatrix =
-      'a
-      Ge.GEMake(Direct).GenLA(GAC_R).GenGE(G_GAC_R.RowPivot)(GEF.AbstractDet)(GEF.DivisionUpdate)(G_GAC_R.InpJustMatrix)(G_GAC_R.OutJustMatrix).wmatrix = {
-      matrix : 'a GAC_R.vc;
-      numrow : ('a, int) Direct.abstract;
-      numcol : ('a, int) Direct.abstract;
-    }
-    type 'a curpos =
-      'a
-      Ge.GEMake(Direct).GenLA(GAC_R).GenGE(G_GAC_R.RowPivot)(GEF.AbstractDet)(GEF.DivisionUpdate)(G_GAC_R.InpJustMatrix)(G_GAC_R.OutJustMatrix).curpos = {
-      rowpos : ('a, int) Direct.abstract;
-      colpos : ('a, int) Direct.abstract;
-      curval : ('a, GAC_R.Dom.v) Direct.abstract;
-    }
     val gen :
       ('a, Input.inp) Direct.abstract ->
       ([> `TDet of 'a Det.lstate
@@ -12620,11 +12040,8 @@ module GenRA2 :
     module Pivot :
       sig
         val findpivot :
-          'a GAC_R.vc ->
-          ('a, int) Direct.abstract ->
-          ('a, int) Direct.abstract ->
-          ('a, int) Direct.abstract ->
-          ('a, int) Direct.abstract ->
+          'a G_GAC_R.wmatrix ->
+          'a G_GAC_R.curpos ->
           ('a, GAC_R.Dom.v option,
            [> `TDet of 'a GEF.AbstractDet(GAC_R.Dom).lstate
             | `TPivot of 'a Output.P.lstate ],
@@ -12651,20 +12068,6 @@ module GenRA2 :
            'a GAC_R.vo -> 'b -> ('c -> 'd -> 'd) -> ('a, 'e) Direct.abstract) ->
           'b -> ('b -> ('a, unit) Direct.abstract -> 'f) -> 'f
       end
-    type 'a wmatrix =
-      'a
-      Ge.GEMake(Direct).GenLA(GAC_R).GenGE(G_GAC_R.RowPivot)(GEF.AbstractDet)(GEF.DivisionUpdate)(G_GAC_R.InpJustMatrix)(G_GAC_R.OutDet).wmatrix = {
-      matrix : 'a GAC_R.vc;
-      numrow : ('a, int) Direct.abstract;
-      numcol : ('a, int) Direct.abstract;
-    }
-    type 'a curpos =
-      'a
-      Ge.GEMake(Direct).GenLA(GAC_R).GenGE(G_GAC_R.RowPivot)(GEF.AbstractDet)(GEF.DivisionUpdate)(G_GAC_R.InpJustMatrix)(G_GAC_R.OutDet).curpos = {
-      rowpos : ('a, int) Direct.abstract;
-      colpos : ('a, int) Direct.abstract;
-      curval : ('a, GAC_R.Dom.v) Direct.abstract;
-    }
     val gen :
       ('a, Input.inp) Direct.abstract ->
       ([> `TDet of 'a Det.lstate
@@ -12794,11 +12197,8 @@ module GenRA3 :
     module Pivot :
       sig
         val findpivot :
-          'a GAC_R.vc ->
-          ('a, int) Direct.abstract ->
-          ('a, int) Direct.abstract ->
-          ('a, int) Direct.abstract ->
-          ('a, int) Direct.abstract ->
+          'a G_GAC_R.wmatrix ->
+          'a G_GAC_R.curpos ->
           ('a, GAC_R.Dom.v option,
            [> `TDet of 'a GEF.AbstractDet(GAC_R.Dom).lstate
             | `TPivot of 'a Output.P.lstate ],
@@ -12825,20 +12225,6 @@ module GenRA3 :
            'a GAC_R.vo -> 'b -> ('c -> 'd -> 'd) -> ('a, 'e) Direct.abstract) ->
           'b -> ('b -> ('a, unit) Direct.abstract -> 'f) -> 'f
       end
-    type 'a wmatrix =
-      'a
-      Ge.GEMake(Direct).GenLA(GAC_R).GenGE(G_GAC_R.RowPivot)(GEF.AbstractDet)(GEF.DivisionUpdate)(G_GAC_R.InpJustMatrix)(G_GAC_R.OutRank).wmatrix = {
-      matrix : 'a GAC_R.vc;
-      numrow : ('a, int) Direct.abstract;
-      numcol : ('a, int) Direct.abstract;
-    }
-    type 'a curpos =
-      'a
-      Ge.GEMake(Direct).GenLA(GAC_R).GenGE(G_GAC_R.RowPivot)(GEF.AbstractDet)(GEF.DivisionUpdate)(G_GAC_R.InpJustMatrix)(G_GAC_R.OutRank).curpos = {
-      rowpos : ('a, int) Direct.abstract;
-      colpos : ('a, int) Direct.abstract;
-      curval : ('a, GAC_R.Dom.v) Direct.abstract;
-    }
     val gen :
       ('a, Input.inp) Direct.abstract ->
       ([> `TDet of 'a Det.lstate
@@ -12968,11 +12354,8 @@ module GenRA4 :
     module Pivot :
       sig
         val findpivot :
-          'a GAC_R.vc ->
-          ('a, int) Direct.abstract ->
-          ('a, int) Direct.abstract ->
-          ('a, int) Direct.abstract ->
-          ('a, int) Direct.abstract ->
+          'a G_GAC_R.wmatrix ->
+          'a G_GAC_R.curpos ->
           ('a, GAC_R.Dom.v option,
            [> `TDet of 'a GEF.AbstractDet(GAC_R.Dom).lstate
             | `TPivot of 'a Output.P.lstate ],
@@ -12999,20 +12382,6 @@ module GenRA4 :
            'a GAC_R.vo -> 'b -> ('c -> 'd -> 'd) -> ('a, 'e) Direct.abstract) ->
           'b -> ('b -> ('a, unit) Direct.abstract -> 'f) -> 'f
       end
-    type 'a wmatrix =
-      'a
-      Ge.GEMake(Direct).GenLA(GAC_R).GenGE(G_GAC_R.RowPivot)(GEF.AbstractDet)(GEF.DivisionUpdate)(G_GAC_R.InpJustMatrix)(G_GAC_R.OutDetRank).wmatrix = {
-      matrix : 'a GAC_R.vc;
-      numrow : ('a, int) Direct.abstract;
-      numcol : ('a, int) Direct.abstract;
-    }
-    type 'a curpos =
-      'a
-      Ge.GEMake(Direct).GenLA(GAC_R).GenGE(G_GAC_R.RowPivot)(GEF.AbstractDet)(GEF.DivisionUpdate)(G_GAC_R.InpJustMatrix)(G_GAC_R.OutDetRank).curpos = {
-      rowpos : ('a, int) Direct.abstract;
-      colpos : ('a, int) Direct.abstract;
-      curval : ('a, GAC_R.Dom.v) Direct.abstract;
-    }
     val gen :
       ('a, Input.inp) Direct.abstract ->
       ([> `TDet of 'a Det.lstate
@@ -13142,11 +12511,8 @@ module GenZp3 :
     module Pivot :
       sig
         val findpivot :
-          'a GVC_Z3.vc ->
-          ('a, int) Direct.abstract ->
-          ('a, int) Direct.abstract ->
-          ('a, int) Direct.abstract ->
-          ('a, int) Direct.abstract ->
+          'a G_GVC_Z3.wmatrix ->
+          'a G_GVC_Z3.curpos ->
           ('a, GVC_Z3.Dom.v option,
            [> `TDet of 'a GEF.AbstractDet(GVC_Z3.Dom).lstate
             | `TPivot of 'a Output.P.lstate ],
@@ -13173,20 +12539,6 @@ module GenZp3 :
            'a GVC_Z3.vo -> 'b -> ('c -> 'd -> 'd) -> ('a, 'e) Direct.abstract) ->
           'b -> ('b -> ('a, unit) Direct.abstract -> 'f) -> 'f
       end
-    type 'a wmatrix =
-      'a
-      Ge.GEMake(Direct).GenLA(GVC_Z3).GenGE(G_GVC_Z3.RowPivot)(GEF.AbstractDet)(GEF.DivisionUpdate)(G_GVC_Z3.InpJustMatrix)(G_GVC_Z3.OutDetRankPivot).wmatrix = {
-      matrix : 'a GVC_Z3.vc;
-      numrow : ('a, int) Direct.abstract;
-      numcol : ('a, int) Direct.abstract;
-    }
-    type 'a curpos =
-      'a
-      Ge.GEMake(Direct).GenLA(GVC_Z3).GenGE(G_GVC_Z3.RowPivot)(GEF.AbstractDet)(GEF.DivisionUpdate)(G_GVC_Z3.InpJustMatrix)(G_GVC_Z3.OutDetRankPivot).curpos = {
-      rowpos : ('a, int) Direct.abstract;
-      colpos : ('a, int) Direct.abstract;
-      curval : ('a, GVC_Z3.Dom.v) Direct.abstract;
-    }
     val gen :
       ('a, Input.inp) Direct.abstract ->
       ([> `TDet of 'a Det.lstate
@@ -13316,11 +12668,8 @@ module GenZp19 :
     module Pivot :
       sig
         val findpivot :
-          'a GVC_Z19.vc ->
-          ('a, int) Direct.abstract ->
-          ('a, int) Direct.abstract ->
-          ('a, int) Direct.abstract ->
-          ('a, int) Direct.abstract ->
+          'a G_GVC_Z19.wmatrix ->
+          'a G_GVC_Z19.curpos ->
           ('a, GVC_Z19.Dom.v option,
            [> `TDet of 'a GEF.AbstractDet(GVC_Z19.Dom).lstate
             | `TPivot of 'a Output.P.lstate ],
@@ -13348,20 +12697,6 @@ module GenZp19 :
            'b -> ('c -> 'd -> 'd) -> ('a, 'e) Direct.abstract) ->
           'b -> ('b -> ('a, unit) Direct.abstract -> 'f) -> 'f
       end
-    type 'a wmatrix =
-      'a
-      Ge.GEMake(Direct).GenLA(GVC_Z19).GenGE(G_GVC_Z19.RowPivot)(GEF.AbstractDet)(GEF.FractionFreeUpdate)(G_GVC_Z19.InpJustMatrix)(G_GVC_Z19.OutDetRankPivot).wmatrix = {
-      matrix : 'a GVC_Z19.vc;
-      numrow : ('a, int) Direct.abstract;
-      numcol : ('a, int) Direct.abstract;
-    }
-    type 'a curpos =
-      'a
-      Ge.GEMake(Direct).GenLA(GVC_Z19).GenGE(G_GVC_Z19.RowPivot)(GEF.AbstractDet)(GEF.FractionFreeUpdate)(G_GVC_Z19.InpJustMatrix)(G_GVC_Z19.OutDetRankPivot).curpos = {
-      rowpos : ('a, int) Direct.abstract;
-      colpos : ('a, int) Direct.abstract;
-      curval : ('a, GVC_Z19.Dom.v) Direct.abstract;
-    }
     val gen :
       ('a, Input.inp) Direct.abstract ->
       ([> `TDet of 'a Det.lstate

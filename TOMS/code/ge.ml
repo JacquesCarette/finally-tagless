@@ -320,6 +320,12 @@ module Iters = struct
     in  loopM low high newbody
 end
 
+(* Bundle up some information, helps abstract some argument lists *)
+type 'a wmatrix = {matrix: 'a C.vc; numrow: ('a,int) abstract; 
+                   numcol: ('a,int) abstract}
+type 'a curpos  = {rowpos: ('a, int) abstract; colpos: ('a, int) abstract}
+type 'a curposval = {p: 'a curpos; curval: ('a, C.Dom.v) abstract}
+
 module type INPUT = sig
     type inp
     val get_input : ('a, inp) abstract ->
@@ -421,8 +427,7 @@ module type PIVOT =
     Return the value of the pivot option. Or zero?
     When we permute the rows of columns, we update the sign of the det.
  *)
- val findpivot : 'a C.vc -> ('a,int) abstract -> ('a,int) abstract -> 
-   ('a,int) abstract -> ('a,int) abstract -> 
+ val findpivot : 'a wmatrix -> 'a curpos ->
    ('a,C.Dom.v option,[> 'a D(C.Dom).tag_lstate | 'a P.tag_lstate],'w) cmonad
 end
 
@@ -430,7 +435,7 @@ module RowPivot(Det: DETF)(P: TRACKPIVOT) =
 struct
    module D = Det(C.Dom)
    module I = Iters
-   let findpivot b r n c _ = perform
+   let findpivot mat pos = perform
        pivot <-- retN (liftRef Maybe.none );
        (* If no better_than procedure defined, we just search for
       non-zero element. Any non-zero element is a good pivot.
@@ -438,7 +443,7 @@ struct
        seqM
         (match (C.Dom.better_thanL) with
          Some sel -> 
-              I.row_iter b c r (Idx.pred n) (fun j bjc ->
+              I.row_iter mat.matrix pos.colpos pos.rowpos (Idx.pred mat.numrow) (fun j bjc ->
               whenM (Logic.notequalL bjc C.Dom.zeroL )
                   (matchM (liftGet pivot)
                     (fun pv ->
@@ -452,28 +457,28 @@ struct
               )
          | None ->
            perform
-            brc <-- retN (C.row_head b r c);
+            brc <-- retN (C.row_head mat.matrix pos.rowpos pos.colpos);
             ifM (Logic.notequalL brc C.Dom.zeroL)
               (* the current element is good enough *)
-              (assignM pivot (Maybe.just (Tuple.tup2 r brc)))
+              (assignM pivot (Maybe.just (Tuple.tup2 pos.rowpos brc)))
               (let traverse = fun o j ->
-                  whenM (Idx.less j n)
+                  whenM (Idx.less j mat.numrow)
                     (perform
-                        bjc <-- retN (C.getL b j c);
+                        bjc <-- retN (C.getL mat.matrix j pos.colpos);
                         ifM (Logic.equalL bjc C.Dom.zeroL)
                             (applyM o (Idx.succ j))
                             (assignM pivot (Maybe.just 
                                 (Tuple.tup2 j bjc)))) in
-              (genrecloop traverse (Idx.succ r)))
+              (genrecloop traverse (Idx.succ pos.rowpos)))
          )
          (matchM (liftGet pivot)
                 (fun pv -> perform
                      (i,bic) <-- ret (liftPair pv);
-                     seqM (whenM (Logic.notequalL i r) (perform
-                            s1 <-- ret (C.swap_rows_stmt b r i);
+                     seqM (whenM (Logic.notequalL i pos.rowpos) (perform
+                            s1 <-- ret (C.swap_rows_stmt mat.matrix pos.rowpos i);
                             s2 <-- D.upd_sign ();
                             s3 <-- ret (optSeq s1 s2);
-                            s4 <-- P.add (liftRowSwap i r );
+                            s4 <-- P.add (liftRowSwap i pos.rowpos );
                             ret (optSeq s3 s4)
                            ))
                           (ret (Maybe.just bic)))
@@ -483,14 +488,14 @@ end
 module FullPivot(Det: DETF)(P: TRACKPIVOT) = 
 struct
    module D = Det(C.Dom)
-   let findpivot b r n c m = perform
+   let findpivot mat pos = perform
        pivot <-- retN (liftRef Maybe.none );
        (* this is not really a row/column iteration, this is a
           a full-matrix iteration, and should be coded as such *)
-       seqM (loopM r (Idx.pred n) (fun j -> 
-              loopM c (Idx.pred m) (fun k ->
+       seqM (loopM pos.rowpos (Idx.pred mat.numrow) (fun j -> 
+              loopM pos.colpos (Idx.pred mat.numcol) (fun k ->
            perform
-              bjk <-- retN (C.getL b j k);
+              bjk <-- retN (C.getL mat.matrix j k);
               whenM (Logic.notequalL bjk C.Dom.zeroL)
               (match (C.Dom.better_thanL) with
               | Some sel ->
@@ -512,13 +517,13 @@ struct
                   (fun pv -> perform
                      (pr,pc,brc) <-- ret (liftPPair pv);
                      seqM
-                         (whenM (Logic.notequalL pc c) (perform
-                           s1 <-- ret (C.swap_cols_stmt b c pc);
+                         (whenM (Logic.notequalL pc pos.colpos) (perform
+                           s1 <-- ret (C.swap_cols_stmt mat.matrix pos.colpos pc);
                            s2 <-- D.upd_sign ();
                            ret (optSeq s1 s2)))
                        (seqM
-                         (whenM (Logic.notequalL pr c) (perform
-                           s1 <-- ret (C.swap_rows_stmt b r pc);
+                         (whenM (Logic.notequalL pr pos.colpos) (perform
+                           s1 <-- ret (C.swap_rows_stmt mat.matrix pos.rowpos pc);
                            s2 <-- D.upd_sign ();
                            ret (optSeq s1 s2)))
                          (ret (Maybe.just brc))))
@@ -530,8 +535,8 @@ struct
    module D = Det(C.Dom)
    (* In this case, we assume diagonal dominance, and so
       just take the diagonal as ``pivot'' *)
-   let findpivot b r _ c _ = perform 
-       ret (Maybe.just (C.row_head b r c));
+   let findpivot mat pos = perform 
+       ret (Maybe.just (C.row_head mat.matrix pos.rowpos pos.colpos));
 end
 
 module GenGE(PivotF: PIVOT)
@@ -547,25 +552,19 @@ module GenGE(PivotF: PIVOT)
     module Pivot = PivotF(Detf)(Output.P)
     module I = Iters
 
-    (* Bundle up some information, helps abstract some argument lists *)
-    type 'a wmatrix = {matrix: 'a C.vc; numrow: ('a,int) abstract; 
-                       numcol: ('a,int) abstract}
-    type 'a curpos  = {rowpos: ('a, int) abstract; colpos: ('a, int) abstract;
-                       curval: ('a, C.Dom.v) abstract}
-
     let gen =
       let zerobelow mat pos = 
         let innerbody j bjc = perform
             whenM (Logic.notequalL bjc C.Dom.zeroL )
-                (seqM (I.col_iter mat.matrix j (Idx.succ pos.colpos) (Idx.pred mat.numcol)
+                (seqM (I.col_iter mat.matrix j (Idx.succ pos.p.colpos) (Idx.pred mat.numcol)
                           (fun k bjk -> perform
                           d <-- Det.get ();
-                          brk <-- ret (C.getL mat.matrix pos.rowpos k);
+                          brk <-- ret (C.getL mat.matrix pos.p.rowpos k);
                           U.update bjc pos.curval brk bjk 
                               (fun ov -> C.col_head_set mat.matrix j k ov) d) )
-                      (ret (C.col_head_set mat.matrix j pos.colpos C.Dom.zeroL))) in 
+                      (ret (C.col_head_set mat.matrix j pos.p.colpos C.Dom.zeroL))) in 
         perform
-              seqM (I.row_iter mat.matrix pos.colpos (Idx.succ pos.rowpos) (Idx.pred mat.numrow) innerbody) 
+              seqM (I.row_iter mat.matrix pos.p.colpos (Idx.succ pos.p.rowpos) (Idx.pred mat.numrow) innerbody) 
                    (U.update_det pos.curval Det.set Det.acc) in
       let ge_gen input = perform
           (a,rmar,augmented) <-- Input.get_input input;
@@ -583,10 +582,11 @@ module GenGE(PivotF: PIVOT)
                ( perform
                rr <-- retN (liftGet r);
                cc <-- retN (liftGet c);
-               pivot <-- l1 retN (Pivot.findpivot b rr n cc m);
+               let mat = {matrix=b; numrow=n; numcol=m} in
+               let cp  = {rowpos=rr; colpos=cc} in
+               pivot <-- l1 retN (Pivot.findpivot mat cp);
                seqM (matchM pivot (fun pv -> 
-                        seqM (zerobelow {matrix=b; numrow=n; numcol=m} 
-                                        {rowpos=rr; colpos=cc; curval=pv} )
+                        seqM (zerobelow mat {p=cp; curval=pv} )
                              (Output.R.succ ()) )
                         (Det.zero_sign () ))
                     (updateM c Idx.succ) ))
