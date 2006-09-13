@@ -1427,6 +1427,13 @@
                           numrow : ('a, int) Code.abstract;
                           numcol : ('a, int) Code.abstract;
                         }
+                        type 'a curpos =
+                          'a
+                          Ge.GEMake(Code).GenLA(C).GenGE(PivotF)(Detf)(Update)(In)(Out).curpos = {
+                          rowpos : ('a, int) Code.abstract;
+                          colpos : ('a, int) Code.abstract;
+                          curval : ('a, C.Dom.v) Code.abstract;
+                        }
                         val gen :
                           ('a, Input.inp) Code.abstract ->
                           ([> `TDet of 'a Det.lstate
@@ -2803,6 +2810,13 @@ module G_GAC_F :
                     numrow : ('a, int) Code.abstract;
                     numcol : ('a, int) Code.abstract;
                   }
+                  type 'a curpos =
+                    'a
+                    Ge.GEMake(Code).GenLA(GAC_F).GenGE(PivotF)(Detf)(Update)(In)(Out).curpos = {
+                    rowpos : ('a, int) Code.abstract;
+                    colpos : ('a, int) Code.abstract;
+                    curval : ('a, GAC_F.Dom.v) Code.abstract;
+                  }
                   val gen :
                     ('a, Input.inp) Code.abstract ->
                     ([> `TDet of 'a Det.lstate
@@ -3578,6 +3592,13 @@ module G_GVC_F :
                     matrix : 'a GVC_F.vc;
                     numrow : ('a, int) Code.abstract;
                     numcol : ('a, int) Code.abstract;
+                  }
+                  type 'a curpos =
+                    'a
+                    Ge.GEMake(Code).GenLA(GVC_F).GenGE(PivotF)(Detf)(Update)(In)(Out).curpos = {
+                    rowpos : ('a, int) Code.abstract;
+                    colpos : ('a, int) Code.abstract;
+                    curval : ('a, GVC_F.Dom.v) Code.abstract;
                   }
                   val gen :
                     ('a, Input.inp) Code.abstract ->
@@ -4355,6 +4376,13 @@ module G_GAC_I :
                     numrow : ('a, int) Code.abstract;
                     numcol : ('a, int) Code.abstract;
                   }
+                  type 'a curpos =
+                    'a
+                    Ge.GEMake(Code).GenLA(GAC_I).GenGE(PivotF)(Detf)(Update)(In)(Out).curpos = {
+                    rowpos : ('a, int) Code.abstract;
+                    colpos : ('a, int) Code.abstract;
+                    curval : ('a, GAC_I.Dom.v) Code.abstract;
+                  }
                   val gen :
                     ('a, Input.inp) Code.abstract ->
                     ([> `TDet of 'a Det.lstate
@@ -5130,6 +5158,13 @@ module G_GVC_I :
                     matrix : 'a GVC_I.vc;
                     numrow : ('a, int) Code.abstract;
                     numcol : ('a, int) Code.abstract;
+                  }
+                  type 'a curpos =
+                    'a
+                    Ge.GEMake(Code).GenLA(GVC_I).GenGE(PivotF)(Detf)(Update)(In)(Out).curpos = {
+                    rowpos : ('a, int) Code.abstract;
+                    colpos : ('a, int) Code.abstract;
+                    curval : ('a, GVC_I.Dom.v) Code.abstract;
                   }
                   val gen :
                     ('a, Input.inp) Code.abstract ->
@@ -5907,6 +5942,13 @@ module G_GAC_R :
                     numrow : ('a, int) Code.abstract;
                     numcol : ('a, int) Code.abstract;
                   }
+                  type 'a curpos =
+                    'a
+                    Ge.GEMake(Code).GenLA(GAC_R).GenGE(PivotF)(Detf)(Update)(In)(Out).curpos = {
+                    rowpos : ('a, int) Code.abstract;
+                    colpos : ('a, int) Code.abstract;
+                    curval : ('a, GAC_R.Dom.v) Code.abstract;
+                  }
                   val gen :
                     ('a, Input.inp) Code.abstract ->
                     ([> `TDet of 'a Det.lstate
@@ -6682,6 +6724,13 @@ module G_GVC_Z3 :
                     matrix : 'a GVC_Z3.vc;
                     numrow : ('a, int) Code.abstract;
                     numcol : ('a, int) Code.abstract;
+                  }
+                  type 'a curpos =
+                    'a
+                    Ge.GEMake(Code).GenLA(GVC_Z3).GenGE(PivotF)(Detf)(Update)(In)(Out).curpos = {
+                    rowpos : ('a, int) Code.abstract;
+                    colpos : ('a, int) Code.abstract;
+                    curval : ('a, GVC_Z3.Dom.v) Code.abstract;
                   }
                   val gen :
                     ('a, Input.inp) Code.abstract ->
@@ -7459,6 +7508,13 @@ module G_GVC_Z19 :
                     numrow : ('a, int) Code.abstract;
                     numcol : ('a, int) Code.abstract;
                   }
+                  type 'a curpos =
+                    'a
+                    Ge.GEMake(Code).GenLA(GVC_Z19).GenGE(PivotF)(Detf)(Update)(In)(Out).curpos = {
+                    rowpos : ('a, int) Code.abstract;
+                    colpos : ('a, int) Code.abstract;
+                    curval : ('a, GVC_Z19.Dom.v) Code.abstract;
+                  }
                   val gen :
                     ('a, Input.inp) Code.abstract ->
                     ([> `TDet of 'a Det.lstate
@@ -7627,6 +7683,13 @@ module GenFA1 :
       numrow : ('a, int) Code.abstract;
       numcol : ('a, int) Code.abstract;
     }
+    type 'a curpos =
+      'a
+      Ge.GEMake(Code).GenLA(GAC_F).GenGE(G_GAC_F.RowPivot)(GEF.NoDet)(GEF.DivisionUpdate)(G_GAC_F.InpJustMatrix)(G_GAC_F.OutJustMatrix).curpos = {
+      rowpos : ('a, int) Code.abstract;
+      colpos : ('a, int) Code.abstract;
+      curval : ('a, GAC_F.Dom.v) Code.abstract;
+    }
     val gen :
       ('a, Input.inp) Code.abstract ->
       ([> `TDet of 'a Det.lstate
@@ -7792,6 +7855,13 @@ module GenFA2 :
       matrix : 'a GAC_F.vc;
       numrow : ('a, int) Code.abstract;
       numcol : ('a, int) Code.abstract;
+    }
+    type 'a curpos =
+      'a
+      Ge.GEMake(Code).GenLA(GAC_F).GenGE(G_GAC_F.RowPivot)(GEF.AbstractDet)(GEF.DivisionUpdate)(G_GAC_F.InpJustMatrix)(G_GAC_F.OutDet).curpos = {
+      rowpos : ('a, int) Code.abstract;
+      colpos : ('a, int) Code.abstract;
+      curval : ('a, GAC_F.Dom.v) Code.abstract;
     }
     val gen :
       ('a, Input.inp) Code.abstract ->
@@ -7959,6 +8029,13 @@ module GenFA3 :
       numrow : ('a, int) Code.abstract;
       numcol : ('a, int) Code.abstract;
     }
+    type 'a curpos =
+      'a
+      Ge.GEMake(Code).GenLA(GAC_F).GenGE(G_GAC_F.RowPivot)(GEF.NoDet)(GEF.DivisionUpdate)(G_GAC_F.InpJustMatrix)(G_GAC_F.OutRank).curpos = {
+      rowpos : ('a, int) Code.abstract;
+      colpos : ('a, int) Code.abstract;
+      curval : ('a, GAC_F.Dom.v) Code.abstract;
+    }
     val gen :
       ('a, Input.inp) Code.abstract ->
       ([> `TDet of 'a Det.lstate
@@ -8124,6 +8201,13 @@ module GenFA4 :
       matrix : 'a GAC_F.vc;
       numrow : ('a, int) Code.abstract;
       numcol : ('a, int) Code.abstract;
+    }
+    type 'a curpos =
+      'a
+      Ge.GEMake(Code).GenLA(GAC_F).GenGE(G_GAC_F.RowPivot)(GEF.AbstractDet)(GEF.DivisionUpdate)(G_GAC_F.InpJustMatrix)(G_GAC_F.OutDetRank).curpos = {
+      rowpos : ('a, int) Code.abstract;
+      colpos : ('a, int) Code.abstract;
+      curval : ('a, GAC_F.Dom.v) Code.abstract;
     }
     val gen :
       ('a, Input.inp) Code.abstract ->
@@ -8291,6 +8375,13 @@ module GenFA11 :
       numrow : ('a, int) Code.abstract;
       numcol : ('a, int) Code.abstract;
     }
+    type 'a curpos =
+      'a
+      Ge.GEMake(Code).GenLA(GAC_F).GenGE(G_GAC_F.FullPivot)(GEF.NoDet)(GEF.DivisionUpdate)(G_GAC_F.InpJustMatrix)(G_GAC_F.OutJustMatrix).curpos = {
+      rowpos : ('a, int) Code.abstract;
+      colpos : ('a, int) Code.abstract;
+      curval : ('a, GAC_F.Dom.v) Code.abstract;
+    }
     val gen :
       ('a, Input.inp) Code.abstract ->
       ([> `TDet of 'a Det.lstate
@@ -8456,6 +8547,13 @@ module GenFA12 :
       matrix : 'a GAC_F.vc;
       numrow : ('a, int) Code.abstract;
       numcol : ('a, int) Code.abstract;
+    }
+    type 'a curpos =
+      'a
+      Ge.GEMake(Code).GenLA(GAC_F).GenGE(G_GAC_F.FullPivot)(GEF.AbstractDet)(GEF.DivisionUpdate)(G_GAC_F.InpJustMatrix)(G_GAC_F.OutDet).curpos = {
+      rowpos : ('a, int) Code.abstract;
+      colpos : ('a, int) Code.abstract;
+      curval : ('a, GAC_F.Dom.v) Code.abstract;
     }
     val gen :
       ('a, Input.inp) Code.abstract ->
@@ -8623,6 +8721,13 @@ module GenFA13 :
       numrow : ('a, int) Code.abstract;
       numcol : ('a, int) Code.abstract;
     }
+    type 'a curpos =
+      'a
+      Ge.GEMake(Code).GenLA(GAC_F).GenGE(G_GAC_F.FullPivot)(GEF.NoDet)(GEF.DivisionUpdate)(G_GAC_F.InpJustMatrix)(G_GAC_F.OutRank).curpos = {
+      rowpos : ('a, int) Code.abstract;
+      colpos : ('a, int) Code.abstract;
+      curval : ('a, GAC_F.Dom.v) Code.abstract;
+    }
     val gen :
       ('a, Input.inp) Code.abstract ->
       ([> `TDet of 'a Det.lstate
@@ -8788,6 +8893,13 @@ module GenFA14 :
       matrix : 'a GAC_F.vc;
       numrow : ('a, int) Code.abstract;
       numcol : ('a, int) Code.abstract;
+    }
+    type 'a curpos =
+      'a
+      Ge.GEMake(Code).GenLA(GAC_F).GenGE(G_GAC_F.FullPivot)(GEF.AbstractDet)(GEF.DivisionUpdate)(G_GAC_F.InpJustMatrix)(G_GAC_F.OutDetRank).curpos = {
+      rowpos : ('a, int) Code.abstract;
+      colpos : ('a, int) Code.abstract;
+      curval : ('a, GAC_F.Dom.v) Code.abstract;
     }
     val gen :
       ('a, Input.inp) Code.abstract ->
@@ -8955,6 +9067,13 @@ module GenFA24 :
       numrow : ('a, int) Code.abstract;
       numcol : ('a, int) Code.abstract;
     }
+    type 'a curpos =
+      'a
+      Ge.GEMake(Code).GenLA(GAC_F).GenGE(G_GAC_F.RowPivot)(GEF.AbstractDet)(GEF.DivisionUpdate)(G_GAC_F.InpJustMatrix)(G_GAC_F.OutDetRankPivot).curpos = {
+      rowpos : ('a, int) Code.abstract;
+      colpos : ('a, int) Code.abstract;
+      curval : ('a, GAC_F.Dom.v) Code.abstract;
+    }
     val gen :
       ('a, Input.inp) Code.abstract ->
       ([> `TDet of 'a Det.lstate
@@ -9120,6 +9239,13 @@ module GenFA5 :
       matrix : 'a GAC_F.vc;
       numrow : ('a, int) Code.abstract;
       numcol : ('a, int) Code.abstract;
+    }
+    type 'a curpos =
+      'a
+      Ge.GEMake(Code).GenLA(GAC_F).GenGE(G_GAC_F.RowPivot)(GEF.NoDet)(GEF.DivisionUpdate)(G_GAC_F.InpMatrixMargin)(G_GAC_F.OutJustMatrix).curpos = {
+      rowpos : ('a, int) Code.abstract;
+      colpos : ('a, int) Code.abstract;
+      curval : ('a, GAC_F.Dom.v) Code.abstract;
     }
     val gen :
       ('a, Input.inp) Code.abstract ->
@@ -9287,6 +9413,13 @@ module GenFA6 :
       numrow : ('a, int) Code.abstract;
       numcol : ('a, int) Code.abstract;
     }
+    type 'a curpos =
+      'a
+      Ge.GEMake(Code).GenLA(GAC_F).GenGE(G_GAC_F.RowPivot)(GEF.AbstractDet)(GEF.DivisionUpdate)(G_GAC_F.InpMatrixMargin)(G_GAC_F.OutDet).curpos = {
+      rowpos : ('a, int) Code.abstract;
+      colpos : ('a, int) Code.abstract;
+      curval : ('a, GAC_F.Dom.v) Code.abstract;
+    }
     val gen :
       ('a, Input.inp) Code.abstract ->
       ([> `TDet of 'a Det.lstate
@@ -9452,6 +9585,13 @@ module GenFA7 :
       matrix : 'a GAC_F.vc;
       numrow : ('a, int) Code.abstract;
       numcol : ('a, int) Code.abstract;
+    }
+    type 'a curpos =
+      'a
+      Ge.GEMake(Code).GenLA(GAC_F).GenGE(G_GAC_F.RowPivot)(GEF.NoDet)(GEF.DivisionUpdate)(G_GAC_F.InpMatrixMargin)(G_GAC_F.OutRank).curpos = {
+      rowpos : ('a, int) Code.abstract;
+      colpos : ('a, int) Code.abstract;
+      curval : ('a, GAC_F.Dom.v) Code.abstract;
     }
     val gen :
       ('a, Input.inp) Code.abstract ->
@@ -9619,6 +9759,13 @@ module GenFA8 :
       numrow : ('a, int) Code.abstract;
       numcol : ('a, int) Code.abstract;
     }
+    type 'a curpos =
+      'a
+      Ge.GEMake(Code).GenLA(GAC_F).GenGE(G_GAC_F.RowPivot)(GEF.NoDet)(GEF.DivisionUpdate)(G_GAC_F.InpMatrixMargin)(G_GAC_F.OutDetRank).curpos = {
+      rowpos : ('a, int) Code.abstract;
+      colpos : ('a, int) Code.abstract;
+      curval : ('a, GAC_F.Dom.v) Code.abstract;
+    }
     val gen :
       ('a, Input.inp) Code.abstract ->
       ([> `TDet of 'a Det.lstate
@@ -9784,6 +9931,13 @@ module GenFV1 :
       matrix : 'a GVC_F.vc;
       numrow : ('a, int) Code.abstract;
       numcol : ('a, int) Code.abstract;
+    }
+    type 'a curpos =
+      'a
+      Ge.GEMake(Code).GenLA(GVC_F).GenGE(G_GVC_F.RowPivot)(GEF.NoDet)(GEF.DivisionUpdate)(G_GVC_F.InpJustMatrix)(G_GVC_F.OutJustMatrix).curpos = {
+      rowpos : ('a, int) Code.abstract;
+      colpos : ('a, int) Code.abstract;
+      curval : ('a, GVC_F.Dom.v) Code.abstract;
     }
     val gen :
       ('a, Input.inp) Code.abstract ->
@@ -9951,6 +10105,13 @@ module GenFV2 :
       numrow : ('a, int) Code.abstract;
       numcol : ('a, int) Code.abstract;
     }
+    type 'a curpos =
+      'a
+      Ge.GEMake(Code).GenLA(GVC_F).GenGE(G_GVC_F.RowPivot)(GEF.AbstractDet)(GEF.DivisionUpdate)(G_GVC_F.InpJustMatrix)(G_GVC_F.OutDet).curpos = {
+      rowpos : ('a, int) Code.abstract;
+      colpos : ('a, int) Code.abstract;
+      curval : ('a, GVC_F.Dom.v) Code.abstract;
+    }
     val gen :
       ('a, Input.inp) Code.abstract ->
       ([> `TDet of 'a Det.lstate
@@ -10116,6 +10277,13 @@ module GenFV3 :
       matrix : 'a GVC_F.vc;
       numrow : ('a, int) Code.abstract;
       numcol : ('a, int) Code.abstract;
+    }
+    type 'a curpos =
+      'a
+      Ge.GEMake(Code).GenLA(GVC_F).GenGE(G_GVC_F.RowPivot)(GEF.NoDet)(GEF.DivisionUpdate)(G_GVC_F.InpJustMatrix)(G_GVC_F.OutRank).curpos = {
+      rowpos : ('a, int) Code.abstract;
+      colpos : ('a, int) Code.abstract;
+      curval : ('a, GVC_F.Dom.v) Code.abstract;
     }
     val gen :
       ('a, Input.inp) Code.abstract ->
@@ -10283,6 +10451,13 @@ module GenFV4 :
       numrow : ('a, int) Code.abstract;
       numcol : ('a, int) Code.abstract;
     }
+    type 'a curpos =
+      'a
+      Ge.GEMake(Code).GenLA(GVC_F).GenGE(G_GVC_F.RowPivot)(GEF.AbstractDet)(GEF.DivisionUpdate)(G_GVC_F.InpJustMatrix)(G_GVC_F.OutDetRank).curpos = {
+      rowpos : ('a, int) Code.abstract;
+      colpos : ('a, int) Code.abstract;
+      curval : ('a, GVC_F.Dom.v) Code.abstract;
+    }
     val gen :
       ('a, Input.inp) Code.abstract ->
       ([> `TDet of 'a Det.lstate
@@ -10448,6 +10623,13 @@ module GenFV5 :
       matrix : 'a GVC_F.vc;
       numrow : ('a, int) Code.abstract;
       numcol : ('a, int) Code.abstract;
+    }
+    type 'a curpos =
+      'a
+      Ge.GEMake(Code).GenLA(GVC_F).GenGE(G_GVC_F.FullPivot)(GEF.AbstractDet)(GEF.DivisionUpdate)(G_GVC_F.InpJustMatrix)(G_GVC_F.OutDetRank).curpos = {
+      rowpos : ('a, int) Code.abstract;
+      colpos : ('a, int) Code.abstract;
+      curval : ('a, GVC_F.Dom.v) Code.abstract;
     }
     val gen :
       ('a, Input.inp) Code.abstract ->
@@ -10615,6 +10797,13 @@ module GenIA1 :
       numrow : ('a, int) Code.abstract;
       numcol : ('a, int) Code.abstract;
     }
+    type 'a curpos =
+      'a
+      Ge.GEMake(Code).GenLA(GAC_I).GenGE(G_GAC_I.RowPivot)(GEF.AbstractDet)(GEF.FractionFreeUpdate)(G_GAC_I.InpJustMatrix)(G_GAC_I.OutJustMatrix).curpos = {
+      rowpos : ('a, int) Code.abstract;
+      colpos : ('a, int) Code.abstract;
+      curval : ('a, GAC_I.Dom.v) Code.abstract;
+    }
     val gen :
       ('a, Input.inp) Code.abstract ->
       ([> `TDet of 'a Det.lstate
@@ -10780,6 +10969,13 @@ module GenIA2 :
       matrix : 'a GAC_I.vc;
       numrow : ('a, int) Code.abstract;
       numcol : ('a, int) Code.abstract;
+    }
+    type 'a curpos =
+      'a
+      Ge.GEMake(Code).GenLA(GAC_I).GenGE(G_GAC_I.RowPivot)(GEF.AbstractDet)(GEF.FractionFreeUpdate)(G_GAC_I.InpJustMatrix)(G_GAC_I.OutDet).curpos = {
+      rowpos : ('a, int) Code.abstract;
+      colpos : ('a, int) Code.abstract;
+      curval : ('a, GAC_I.Dom.v) Code.abstract;
     }
     val gen :
       ('a, Input.inp) Code.abstract ->
@@ -10947,6 +11143,13 @@ module GenIA3 :
       numrow : ('a, int) Code.abstract;
       numcol : ('a, int) Code.abstract;
     }
+    type 'a curpos =
+      'a
+      Ge.GEMake(Code).GenLA(GAC_I).GenGE(G_GAC_I.RowPivot)(GEF.AbstractDet)(GEF.FractionFreeUpdate)(G_GAC_I.InpJustMatrix)(G_GAC_I.OutRank).curpos = {
+      rowpos : ('a, int) Code.abstract;
+      colpos : ('a, int) Code.abstract;
+      curval : ('a, GAC_I.Dom.v) Code.abstract;
+    }
     val gen :
       ('a, Input.inp) Code.abstract ->
       ([> `TDet of 'a Det.lstate
@@ -11112,6 +11315,13 @@ module GenIA4 :
       matrix : 'a GAC_I.vc;
       numrow : ('a, int) Code.abstract;
       numcol : ('a, int) Code.abstract;
+    }
+    type 'a curpos =
+      'a
+      Ge.GEMake(Code).GenLA(GAC_I).GenGE(G_GAC_I.RowPivot)(GEF.AbstractDet)(GEF.FractionFreeUpdate)(G_GAC_I.InpJustMatrix)(G_GAC_I.OutDetRank).curpos = {
+      rowpos : ('a, int) Code.abstract;
+      colpos : ('a, int) Code.abstract;
+      curval : ('a, GAC_I.Dom.v) Code.abstract;
     }
     val gen :
       ('a, Input.inp) Code.abstract ->
@@ -11279,6 +11489,13 @@ module GenIV1 :
       numrow : ('a, int) Code.abstract;
       numcol : ('a, int) Code.abstract;
     }
+    type 'a curpos =
+      'a
+      Ge.GEMake(Code).GenLA(GVC_I).GenGE(G_GVC_I.RowPivot)(GEF.AbstractDet)(GEF.FractionFreeUpdate)(G_GVC_I.InpJustMatrix)(G_GVC_I.OutJustMatrix).curpos = {
+      rowpos : ('a, int) Code.abstract;
+      colpos : ('a, int) Code.abstract;
+      curval : ('a, GVC_I.Dom.v) Code.abstract;
+    }
     val gen :
       ('a, Input.inp) Code.abstract ->
       ([> `TDet of 'a Det.lstate
@@ -11444,6 +11661,13 @@ module GenIV2 :
       matrix : 'a GVC_I.vc;
       numrow : ('a, int) Code.abstract;
       numcol : ('a, int) Code.abstract;
+    }
+    type 'a curpos =
+      'a
+      Ge.GEMake(Code).GenLA(GVC_I).GenGE(G_GVC_I.RowPivot)(GEF.AbstractDet)(GEF.FractionFreeUpdate)(G_GVC_I.InpJustMatrix)(G_GVC_I.OutDet).curpos = {
+      rowpos : ('a, int) Code.abstract;
+      colpos : ('a, int) Code.abstract;
+      curval : ('a, GVC_I.Dom.v) Code.abstract;
     }
     val gen :
       ('a, Input.inp) Code.abstract ->
@@ -11611,6 +11835,13 @@ module GenIV3 :
       numrow : ('a, int) Code.abstract;
       numcol : ('a, int) Code.abstract;
     }
+    type 'a curpos =
+      'a
+      Ge.GEMake(Code).GenLA(GVC_I).GenGE(G_GVC_I.RowPivot)(GEF.AbstractDet)(GEF.FractionFreeUpdate)(G_GVC_I.InpJustMatrix)(G_GVC_I.OutRank).curpos = {
+      rowpos : ('a, int) Code.abstract;
+      colpos : ('a, int) Code.abstract;
+      curval : ('a, GVC_I.Dom.v) Code.abstract;
+    }
     val gen :
       ('a, Input.inp) Code.abstract ->
       ([> `TDet of 'a Det.lstate
@@ -11776,6 +12007,13 @@ module GenIV4 :
       matrix : 'a GVC_I.vc;
       numrow : ('a, int) Code.abstract;
       numcol : ('a, int) Code.abstract;
+    }
+    type 'a curpos =
+      'a
+      Ge.GEMake(Code).GenLA(GVC_I).GenGE(G_GVC_I.RowPivot)(GEF.AbstractDet)(GEF.FractionFreeUpdate)(G_GVC_I.InpJustMatrix)(G_GVC_I.OutDetRank).curpos = {
+      rowpos : ('a, int) Code.abstract;
+      colpos : ('a, int) Code.abstract;
+      curval : ('a, GVC_I.Dom.v) Code.abstract;
     }
     val gen :
       ('a, Input.inp) Code.abstract ->
@@ -11943,6 +12181,13 @@ module GenIV5 :
       numrow : ('a, int) Code.abstract;
       numcol : ('a, int) Code.abstract;
     }
+    type 'a curpos =
+      'a
+      Ge.GEMake(Code).GenLA(GVC_I).GenGE(G_GVC_I.FullPivot)(GEF.AbstractDet)(GEF.FractionFreeUpdate)(G_GVC_I.InpJustMatrix)(G_GVC_I.OutDetRank).curpos = {
+      rowpos : ('a, int) Code.abstract;
+      colpos : ('a, int) Code.abstract;
+      curval : ('a, GVC_I.Dom.v) Code.abstract;
+    }
     val gen :
       ('a, Input.inp) Code.abstract ->
       ([> `TDet of 'a Det.lstate
@@ -12108,6 +12353,13 @@ module GenRA1 :
       matrix : 'a GAC_R.vc;
       numrow : ('a, int) Code.abstract;
       numcol : ('a, int) Code.abstract;
+    }
+    type 'a curpos =
+      'a
+      Ge.GEMake(Code).GenLA(GAC_R).GenGE(G_GAC_R.RowPivot)(GEF.AbstractDet)(GEF.DivisionUpdate)(G_GAC_R.InpJustMatrix)(G_GAC_R.OutJustMatrix).curpos = {
+      rowpos : ('a, int) Code.abstract;
+      colpos : ('a, int) Code.abstract;
+      curval : ('a, GAC_R.Dom.v) Code.abstract;
     }
     val gen :
       ('a, Input.inp) Code.abstract ->
@@ -12275,6 +12527,13 @@ module GenRA2 :
       numrow : ('a, int) Code.abstract;
       numcol : ('a, int) Code.abstract;
     }
+    type 'a curpos =
+      'a
+      Ge.GEMake(Code).GenLA(GAC_R).GenGE(G_GAC_R.RowPivot)(GEF.AbstractDet)(GEF.DivisionUpdate)(G_GAC_R.InpJustMatrix)(G_GAC_R.OutDet).curpos = {
+      rowpos : ('a, int) Code.abstract;
+      colpos : ('a, int) Code.abstract;
+      curval : ('a, GAC_R.Dom.v) Code.abstract;
+    }
     val gen :
       ('a, Input.inp) Code.abstract ->
       ([> `TDet of 'a Det.lstate
@@ -12440,6 +12699,13 @@ module GenRA3 :
       matrix : 'a GAC_R.vc;
       numrow : ('a, int) Code.abstract;
       numcol : ('a, int) Code.abstract;
+    }
+    type 'a curpos =
+      'a
+      Ge.GEMake(Code).GenLA(GAC_R).GenGE(G_GAC_R.RowPivot)(GEF.AbstractDet)(GEF.DivisionUpdate)(G_GAC_R.InpJustMatrix)(G_GAC_R.OutRank).curpos = {
+      rowpos : ('a, int) Code.abstract;
+      colpos : ('a, int) Code.abstract;
+      curval : ('a, GAC_R.Dom.v) Code.abstract;
     }
     val gen :
       ('a, Input.inp) Code.abstract ->
@@ -12607,6 +12873,13 @@ module GenRA4 :
       numrow : ('a, int) Code.abstract;
       numcol : ('a, int) Code.abstract;
     }
+    type 'a curpos =
+      'a
+      Ge.GEMake(Code).GenLA(GAC_R).GenGE(G_GAC_R.RowPivot)(GEF.AbstractDet)(GEF.DivisionUpdate)(G_GAC_R.InpJustMatrix)(G_GAC_R.OutDetRank).curpos = {
+      rowpos : ('a, int) Code.abstract;
+      colpos : ('a, int) Code.abstract;
+      curval : ('a, GAC_R.Dom.v) Code.abstract;
+    }
     val gen :
       ('a, Input.inp) Code.abstract ->
       ([> `TDet of 'a Det.lstate
@@ -12773,6 +13046,13 @@ module GenZp3 :
       numrow : ('a, int) Code.abstract;
       numcol : ('a, int) Code.abstract;
     }
+    type 'a curpos =
+      'a
+      Ge.GEMake(Code).GenLA(GVC_Z3).GenGE(G_GVC_Z3.RowPivot)(GEF.AbstractDet)(GEF.DivisionUpdate)(G_GVC_Z3.InpJustMatrix)(G_GVC_Z3.OutDetRankPivot).curpos = {
+      rowpos : ('a, int) Code.abstract;
+      colpos : ('a, int) Code.abstract;
+      curval : ('a, GVC_Z3.Dom.v) Code.abstract;
+    }
     val gen :
       ('a, Input.inp) Code.abstract ->
       ([> `TDet of 'a Det.lstate
@@ -12938,6 +13218,13 @@ module GenZp19 :
       matrix : 'a GVC_Z19.vc;
       numrow : ('a, int) Code.abstract;
       numcol : ('a, int) Code.abstract;
+    }
+    type 'a curpos =
+      'a
+      Ge.GEMake(Code).GenLA(GVC_Z19).GenGE(G_GVC_Z19.RowPivot)(GEF.AbstractDet)(GEF.FractionFreeUpdate)(G_GVC_Z19.InpJustMatrix)(G_GVC_Z19.OutDetRankPivot).curpos = {
+      rowpos : ('a, int) Code.abstract;
+      colpos : ('a, int) Code.abstract;
+      curval : ('a, GVC_Z19.Dom.v) Code.abstract;
     }
     val gen :
       ('a, Input.inp) Code.abstract ->

@@ -550,21 +550,23 @@ module GenGE(PivotF: PIVOT)
     (* Bundle up some information, helps abstract some argument lists *)
     type 'a wmatrix = {matrix: 'a C.vc; numrow: ('a,int) abstract; 
                        numcol: ('a,int) abstract}
+    type 'a curpos  = {rowpos: ('a, int) abstract; colpos: ('a, int) abstract;
+                       curval: ('a, C.Dom.v) abstract}
 
     let gen =
-      let zerobelow mat r c brc =
+      let zerobelow mat pos = 
         let innerbody j bjc = perform
             whenM (Logic.notequalL bjc C.Dom.zeroL )
-                (seqM (I.col_iter mat.matrix j (Idx.succ c) (Idx.pred mat.numcol)
+                (seqM (I.col_iter mat.matrix j (Idx.succ pos.colpos) (Idx.pred mat.numcol)
                           (fun k bjk -> perform
                           d <-- Det.get ();
-                          brk <-- ret (C.getL mat.matrix r k);
-                          U.update bjc brc brk bjk 
+                          brk <-- ret (C.getL mat.matrix pos.rowpos k);
+                          U.update bjc pos.curval brk bjk 
                               (fun ov -> C.col_head_set mat.matrix j k ov) d) )
-                      (ret (C.col_head_set mat.matrix j c C.Dom.zeroL))) in 
+                      (ret (C.col_head_set mat.matrix j pos.colpos C.Dom.zeroL))) in 
         perform
-              seqM (I.row_iter mat.matrix c (Idx.succ r) (Idx.pred mat.numrow) innerbody) 
-                   (U.update_det brc Det.set Det.acc) in
+              seqM (I.row_iter mat.matrix pos.colpos (Idx.succ pos.rowpos) (Idx.pred mat.numrow) innerbody) 
+                   (U.update_det pos.curval Det.set Det.acc) in
       let ge_gen input = perform
           (a,rmar,augmented) <-- Input.get_input input;
           r <-- Output.R.decl ();
@@ -583,7 +585,8 @@ module GenGE(PivotF: PIVOT)
                cc <-- retN (liftGet c);
                pivot <-- l1 retN (Pivot.findpivot b rr n cc m);
                seqM (matchM pivot (fun pv -> 
-                        seqM (zerobelow {matrix=b; numrow=n; numcol=m} rr cc pv)
+                        seqM (zerobelow {matrix=b; numrow=n; numcol=m} 
+                                        {rowpos=rr; colpos=cc; curval=pv} )
                              (Output.R.succ ()) )
                         (Det.zero_sign () ))
                     (updateM c Idx.succ) ))
