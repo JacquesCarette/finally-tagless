@@ -6,7 +6,8 @@ open GEF
 open Domains_code
 
 type 'b pr = {pf : 'a . ('a,'b) code};;
-let instantiate f = .<fun a -> .~(runM (f .<a>.)) >.;;
+let instantiate (ge,lu) = 
+    .<fun a -> .~(runM (ge .<a>.)) >.;;
 let runit f = .! f.pf;;
 
 (* The following should raise an error! One can't apply IntegerDomain

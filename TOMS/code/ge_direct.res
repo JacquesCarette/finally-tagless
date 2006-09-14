@@ -1,6 +1,6 @@
         Objective Caml version 3.09.1
 
-#               module GEF :
+#                 module GEF :
   sig
     module D :
       sig
@@ -1450,22 +1450,32 @@
                               ('b -> ('a, unit) Direct.abstract -> 'f) -> 'f
                           end
                         val gen :
-                          ('a, Input.inp) Direct.abstract ->
-                          ([> `TDet of 'a Det.lstate
-                            | `TPivot of 'a Output.P.lstate
-                            | `TRan of 'a Output.R.lstate ]
-                           as 'b)
-                          list ->
-                          ('b list ->
-                           ('a, Output.res) Direct.abstract ->
-                           ('a, 'c) Direct.abstract) ->
-                          ('a, 'c) Direct.abstract
+                          (('a, Input.inp) Direct.abstract ->
+                           ([> `TDet of 'a Det.lstate
+                             | `TPivot of 'a Output.P.lstate
+                             | `TRan of 'a Output.R.lstate ]
+                            as 'b)
+                           list ->
+                           ('b list ->
+                            ('a, Output.res) Direct.abstract ->
+                            ('a, 'c) Direct.abstract) ->
+                           ('a, 'c) Direct.abstract) *
+                          (('d, Input.inp) Direct.abstract ->
+                           ([> `TDet of 'd Det.lstate
+                             | `TPivot of 'd Output.P.lstate
+                             | `TRan of 'd Output.R.lstate ]
+                            as 'e)
+                           list ->
+                           ('e list ->
+                            ('d, Output.res) Direct.abstract ->
+                            ('d, 'f) Direct.abstract) ->
+                           ('d, 'f) Direct.abstract)
                       end
         end
   end
 val instantiate :
-  ((unit -> 'a) -> 'b list -> ('c -> 'd -> 'd) -> unit -> 'e) -> 'a -> 'e =
-  <fun>
+  ((unit -> 'a) -> 'b list -> ('c -> 'd -> 'd) -> unit -> 'e) * 'f ->
+  'a -> 'e = <fun>
 #   type 'a pr = { pf : 'a; }
 # val runit : 'a pr -> 'a = <fun>
 #   * * * * * * * * *     module FDet :
@@ -2838,16 +2848,26 @@ module G_GAC_F :
                         'b -> ('b -> ('a, unit) Direct.abstract -> 'f) -> 'f
                     end
                   val gen :
-                    ('a, Input.inp) Direct.abstract ->
-                    ([> `TDet of 'a Det.lstate
-                      | `TPivot of 'a Output.P.lstate
-                      | `TRan of 'a Output.R.lstate ]
-                     as 'b)
-                    list ->
-                    ('b list ->
-                     ('a, Output.res) Direct.abstract ->
-                     ('a, 'c) Direct.abstract) ->
-                    ('a, 'c) Direct.abstract
+                    (('a, Input.inp) Direct.abstract ->
+                     ([> `TDet of 'a Det.lstate
+                       | `TPivot of 'a Output.P.lstate
+                       | `TRan of 'a Output.R.lstate ]
+                      as 'b)
+                     list ->
+                     ('b list ->
+                      ('a, Output.res) Direct.abstract ->
+                      ('a, 'c) Direct.abstract) ->
+                     ('a, 'c) Direct.abstract) *
+                    (('d, Input.inp) Direct.abstract ->
+                     ([> `TDet of 'd Det.lstate
+                       | `TPivot of 'd Output.P.lstate
+                       | `TRan of 'd Output.R.lstate ]
+                      as 'e)
+                     list ->
+                     ('e list ->
+                      ('d, Output.res) Direct.abstract ->
+                      ('d, 'f) Direct.abstract) ->
+                     ('d, 'f) Direct.abstract)
                 end
   end
 module G_GVC_F :
@@ -3617,16 +3637,26 @@ module G_GVC_F :
                         'b -> ('b -> ('a, unit) Direct.abstract -> 'f) -> 'f
                     end
                   val gen :
-                    ('a, Input.inp) Direct.abstract ->
-                    ([> `TDet of 'a Det.lstate
-                      | `TPivot of 'a Output.P.lstate
-                      | `TRan of 'a Output.R.lstate ]
-                     as 'b)
-                    list ->
-                    ('b list ->
-                     ('a, Output.res) Direct.abstract ->
-                     ('a, 'c) Direct.abstract) ->
-                    ('a, 'c) Direct.abstract
+                    (('a, Input.inp) Direct.abstract ->
+                     ([> `TDet of 'a Det.lstate
+                       | `TPivot of 'a Output.P.lstate
+                       | `TRan of 'a Output.R.lstate ]
+                      as 'b)
+                     list ->
+                     ('b list ->
+                      ('a, Output.res) Direct.abstract ->
+                      ('a, 'c) Direct.abstract) ->
+                     ('a, 'c) Direct.abstract) *
+                    (('d, Input.inp) Direct.abstract ->
+                     ([> `TDet of 'd Det.lstate
+                       | `TPivot of 'd Output.P.lstate
+                       | `TRan of 'd Output.R.lstate ]
+                      as 'e)
+                     list ->
+                     ('e list ->
+                      ('d, Output.res) Direct.abstract ->
+                      ('d, 'f) Direct.abstract) ->
+                     ('d, 'f) Direct.abstract)
                 end
   end
 module G_GAC_I :
@@ -4396,16 +4426,26 @@ module G_GAC_I :
                         'b -> ('b -> ('a, unit) Direct.abstract -> 'f) -> 'f
                     end
                   val gen :
-                    ('a, Input.inp) Direct.abstract ->
-                    ([> `TDet of 'a Det.lstate
-                      | `TPivot of 'a Output.P.lstate
-                      | `TRan of 'a Output.R.lstate ]
-                     as 'b)
-                    list ->
-                    ('b list ->
-                     ('a, Output.res) Direct.abstract ->
-                     ('a, 'c) Direct.abstract) ->
-                    ('a, 'c) Direct.abstract
+                    (('a, Input.inp) Direct.abstract ->
+                     ([> `TDet of 'a Det.lstate
+                       | `TPivot of 'a Output.P.lstate
+                       | `TRan of 'a Output.R.lstate ]
+                      as 'b)
+                     list ->
+                     ('b list ->
+                      ('a, Output.res) Direct.abstract ->
+                      ('a, 'c) Direct.abstract) ->
+                     ('a, 'c) Direct.abstract) *
+                    (('d, Input.inp) Direct.abstract ->
+                     ([> `TDet of 'd Det.lstate
+                       | `TPivot of 'd Output.P.lstate
+                       | `TRan of 'd Output.R.lstate ]
+                      as 'e)
+                     list ->
+                     ('e list ->
+                      ('d, Output.res) Direct.abstract ->
+                      ('d, 'f) Direct.abstract) ->
+                     ('d, 'f) Direct.abstract)
                 end
   end
 module G_GVC_I :
@@ -5175,16 +5215,26 @@ module G_GVC_I :
                         'b -> ('b -> ('a, unit) Direct.abstract -> 'f) -> 'f
                     end
                   val gen :
-                    ('a, Input.inp) Direct.abstract ->
-                    ([> `TDet of 'a Det.lstate
-                      | `TPivot of 'a Output.P.lstate
-                      | `TRan of 'a Output.R.lstate ]
-                     as 'b)
-                    list ->
-                    ('b list ->
-                     ('a, Output.res) Direct.abstract ->
-                     ('a, 'c) Direct.abstract) ->
-                    ('a, 'c) Direct.abstract
+                    (('a, Input.inp) Direct.abstract ->
+                     ([> `TDet of 'a Det.lstate
+                       | `TPivot of 'a Output.P.lstate
+                       | `TRan of 'a Output.R.lstate ]
+                      as 'b)
+                     list ->
+                     ('b list ->
+                      ('a, Output.res) Direct.abstract ->
+                      ('a, 'c) Direct.abstract) ->
+                     ('a, 'c) Direct.abstract) *
+                    (('d, Input.inp) Direct.abstract ->
+                     ([> `TDet of 'd Det.lstate
+                       | `TPivot of 'd Output.P.lstate
+                       | `TRan of 'd Output.R.lstate ]
+                      as 'e)
+                     list ->
+                     ('e list ->
+                      ('d, Output.res) Direct.abstract ->
+                      ('d, 'f) Direct.abstract) ->
+                     ('d, 'f) Direct.abstract)
                 end
   end
 module G_GAC_R :
@@ -5954,16 +6004,26 @@ module G_GAC_R :
                         'b -> ('b -> ('a, unit) Direct.abstract -> 'f) -> 'f
                     end
                   val gen :
-                    ('a, Input.inp) Direct.abstract ->
-                    ([> `TDet of 'a Det.lstate
-                      | `TPivot of 'a Output.P.lstate
-                      | `TRan of 'a Output.R.lstate ]
-                     as 'b)
-                    list ->
-                    ('b list ->
-                     ('a, Output.res) Direct.abstract ->
-                     ('a, 'c) Direct.abstract) ->
-                    ('a, 'c) Direct.abstract
+                    (('a, Input.inp) Direct.abstract ->
+                     ([> `TDet of 'a Det.lstate
+                       | `TPivot of 'a Output.P.lstate
+                       | `TRan of 'a Output.R.lstate ]
+                      as 'b)
+                     list ->
+                     ('b list ->
+                      ('a, Output.res) Direct.abstract ->
+                      ('a, 'c) Direct.abstract) ->
+                     ('a, 'c) Direct.abstract) *
+                    (('d, Input.inp) Direct.abstract ->
+                     ([> `TDet of 'd Det.lstate
+                       | `TPivot of 'd Output.P.lstate
+                       | `TRan of 'd Output.R.lstate ]
+                      as 'e)
+                     list ->
+                     ('e list ->
+                      ('d, Output.res) Direct.abstract ->
+                      ('d, 'f) Direct.abstract) ->
+                     ('d, 'f) Direct.abstract)
                 end
   end
 module G_GVC_Z3 :
@@ -6733,16 +6793,26 @@ module G_GVC_Z3 :
                         'b -> ('b -> ('a, unit) Direct.abstract -> 'f) -> 'f
                     end
                   val gen :
-                    ('a, Input.inp) Direct.abstract ->
-                    ([> `TDet of 'a Det.lstate
-                      | `TPivot of 'a Output.P.lstate
-                      | `TRan of 'a Output.R.lstate ]
-                     as 'b)
-                    list ->
-                    ('b list ->
-                     ('a, Output.res) Direct.abstract ->
-                     ('a, 'c) Direct.abstract) ->
-                    ('a, 'c) Direct.abstract
+                    (('a, Input.inp) Direct.abstract ->
+                     ([> `TDet of 'a Det.lstate
+                       | `TPivot of 'a Output.P.lstate
+                       | `TRan of 'a Output.R.lstate ]
+                      as 'b)
+                     list ->
+                     ('b list ->
+                      ('a, Output.res) Direct.abstract ->
+                      ('a, 'c) Direct.abstract) ->
+                     ('a, 'c) Direct.abstract) *
+                    (('d, Input.inp) Direct.abstract ->
+                     ([> `TDet of 'd Det.lstate
+                       | `TPivot of 'd Output.P.lstate
+                       | `TRan of 'd Output.R.lstate ]
+                      as 'e)
+                     list ->
+                     ('e list ->
+                      ('d, Output.res) Direct.abstract ->
+                      ('d, 'f) Direct.abstract) ->
+                     ('d, 'f) Direct.abstract)
                 end
   end
 module G_GVC_Z19 :
@@ -7514,16 +7584,26 @@ module G_GVC_Z19 :
                         'b -> ('b -> ('a, unit) Direct.abstract -> 'f) -> 'f
                     end
                   val gen :
-                    ('a, Input.inp) Direct.abstract ->
-                    ([> `TDet of 'a Det.lstate
-                      | `TPivot of 'a Output.P.lstate
-                      | `TRan of 'a Output.R.lstate ]
-                     as 'b)
-                    list ->
-                    ('b list ->
-                     ('a, Output.res) Direct.abstract ->
-                     ('a, 'c) Direct.abstract) ->
-                    ('a, 'c) Direct.abstract
+                    (('a, Input.inp) Direct.abstract ->
+                     ([> `TDet of 'a Det.lstate
+                       | `TPivot of 'a Output.P.lstate
+                       | `TRan of 'a Output.R.lstate ]
+                      as 'b)
+                     list ->
+                     ('b list ->
+                      ('a, Output.res) Direct.abstract ->
+                      ('a, 'c) Direct.abstract) ->
+                     ('a, 'c) Direct.abstract) *
+                    (('d, Input.inp) Direct.abstract ->
+                     ([> `TDet of 'd Det.lstate
+                       | `TPivot of 'd Output.P.lstate
+                       | `TRan of 'd Output.R.lstate ]
+                      as 'e)
+                     list ->
+                     ('e list ->
+                      ('d, Output.res) Direct.abstract ->
+                      ('d, 'f) Direct.abstract) ->
+                     ('d, 'f) Direct.abstract)
                 end
   end
 module GenFA1 :
@@ -7673,15 +7753,24 @@ module GenFA1 :
           'b -> ('b -> ('a, unit) Direct.abstract -> 'f) -> 'f
       end
     val gen :
-      ('a, Input.inp) Direct.abstract ->
-      ([> `TDet of 'a Det.lstate
-        | `TPivot of 'a Output.P.lstate
-        | `TRan of 'a Output.R.lstate ]
-       as 'b)
-      list ->
-      ('b list ->
-       ('a, Output.res) Direct.abstract -> ('a, 'c) Direct.abstract) ->
-      ('a, 'c) Direct.abstract
+      (('a, Input.inp) Direct.abstract ->
+       ([> `TDet of 'a Det.lstate
+         | `TPivot of 'a Output.P.lstate
+         | `TRan of 'a Output.R.lstate ]
+        as 'b)
+       list ->
+       ('b list ->
+        ('a, Output.res) Direct.abstract -> ('a, 'c) Direct.abstract) ->
+       ('a, 'c) Direct.abstract) *
+      (('d, Input.inp) Direct.abstract ->
+       ([> `TDet of 'd Det.lstate
+         | `TPivot of 'd Output.P.lstate
+         | `TRan of 'd Output.R.lstate ]
+        as 'e)
+       list ->
+       ('e list ->
+        ('d, Output.res) Direct.abstract -> ('d, 'f) Direct.abstract) ->
+       ('d, 'f) Direct.abstract)
   end
 module GenFA2 :
   sig
@@ -7830,15 +7919,24 @@ module GenFA2 :
           'b -> ('b -> ('a, unit) Direct.abstract -> 'f) -> 'f
       end
     val gen :
-      ('a, Input.inp) Direct.abstract ->
-      ([> `TDet of 'a Det.lstate
-        | `TPivot of 'a Output.P.lstate
-        | `TRan of 'a Output.R.lstate ]
-       as 'b)
-      list ->
-      ('b list ->
-       ('a, Output.res) Direct.abstract -> ('a, 'c) Direct.abstract) ->
-      ('a, 'c) Direct.abstract
+      (('a, Input.inp) Direct.abstract ->
+       ([> `TDet of 'a Det.lstate
+         | `TPivot of 'a Output.P.lstate
+         | `TRan of 'a Output.R.lstate ]
+        as 'b)
+       list ->
+       ('b list ->
+        ('a, Output.res) Direct.abstract -> ('a, 'c) Direct.abstract) ->
+       ('a, 'c) Direct.abstract) *
+      (('d, Input.inp) Direct.abstract ->
+       ([> `TDet of 'd Det.lstate
+         | `TPivot of 'd Output.P.lstate
+         | `TRan of 'd Output.R.lstate ]
+        as 'e)
+       list ->
+       ('e list ->
+        ('d, Output.res) Direct.abstract -> ('d, 'f) Direct.abstract) ->
+       ('d, 'f) Direct.abstract)
   end
 module GenFA3 :
   sig
@@ -7987,15 +8085,24 @@ module GenFA3 :
           'b -> ('b -> ('a, unit) Direct.abstract -> 'f) -> 'f
       end
     val gen :
-      ('a, Input.inp) Direct.abstract ->
-      ([> `TDet of 'a Det.lstate
-        | `TPivot of 'a Output.P.lstate
-        | `TRan of 'a Output.R.lstate ]
-       as 'b)
-      list ->
-      ('b list ->
-       ('a, Output.res) Direct.abstract -> ('a, 'c) Direct.abstract) ->
-      ('a, 'c) Direct.abstract
+      (('a, Input.inp) Direct.abstract ->
+       ([> `TDet of 'a Det.lstate
+         | `TPivot of 'a Output.P.lstate
+         | `TRan of 'a Output.R.lstate ]
+        as 'b)
+       list ->
+       ('b list ->
+        ('a, Output.res) Direct.abstract -> ('a, 'c) Direct.abstract) ->
+       ('a, 'c) Direct.abstract) *
+      (('d, Input.inp) Direct.abstract ->
+       ([> `TDet of 'd Det.lstate
+         | `TPivot of 'd Output.P.lstate
+         | `TRan of 'd Output.R.lstate ]
+        as 'e)
+       list ->
+       ('e list ->
+        ('d, Output.res) Direct.abstract -> ('d, 'f) Direct.abstract) ->
+       ('d, 'f) Direct.abstract)
   end
 module GenFA4 :
   sig
@@ -8144,15 +8251,24 @@ module GenFA4 :
           'b -> ('b -> ('a, unit) Direct.abstract -> 'f) -> 'f
       end
     val gen :
-      ('a, Input.inp) Direct.abstract ->
-      ([> `TDet of 'a Det.lstate
-        | `TPivot of 'a Output.P.lstate
-        | `TRan of 'a Output.R.lstate ]
-       as 'b)
-      list ->
-      ('b list ->
-       ('a, Output.res) Direct.abstract -> ('a, 'c) Direct.abstract) ->
-      ('a, 'c) Direct.abstract
+      (('a, Input.inp) Direct.abstract ->
+       ([> `TDet of 'a Det.lstate
+         | `TPivot of 'a Output.P.lstate
+         | `TRan of 'a Output.R.lstate ]
+        as 'b)
+       list ->
+       ('b list ->
+        ('a, Output.res) Direct.abstract -> ('a, 'c) Direct.abstract) ->
+       ('a, 'c) Direct.abstract) *
+      (('d, Input.inp) Direct.abstract ->
+       ([> `TDet of 'd Det.lstate
+         | `TPivot of 'd Output.P.lstate
+         | `TRan of 'd Output.R.lstate ]
+        as 'e)
+       list ->
+       ('e list ->
+        ('d, Output.res) Direct.abstract -> ('d, 'f) Direct.abstract) ->
+       ('d, 'f) Direct.abstract)
   end
 module GenFA11 :
   sig
@@ -8301,15 +8417,24 @@ module GenFA11 :
           'b -> ('b -> ('a, unit) Direct.abstract -> 'f) -> 'f
       end
     val gen :
-      ('a, Input.inp) Direct.abstract ->
-      ([> `TDet of 'a Det.lstate
-        | `TPivot of 'a Output.P.lstate
-        | `TRan of 'a Output.R.lstate ]
-       as 'b)
-      list ->
-      ('b list ->
-       ('a, Output.res) Direct.abstract -> ('a, 'c) Direct.abstract) ->
-      ('a, 'c) Direct.abstract
+      (('a, Input.inp) Direct.abstract ->
+       ([> `TDet of 'a Det.lstate
+         | `TPivot of 'a Output.P.lstate
+         | `TRan of 'a Output.R.lstate ]
+        as 'b)
+       list ->
+       ('b list ->
+        ('a, Output.res) Direct.abstract -> ('a, 'c) Direct.abstract) ->
+       ('a, 'c) Direct.abstract) *
+      (('d, Input.inp) Direct.abstract ->
+       ([> `TDet of 'd Det.lstate
+         | `TPivot of 'd Output.P.lstate
+         | `TRan of 'd Output.R.lstate ]
+        as 'e)
+       list ->
+       ('e list ->
+        ('d, Output.res) Direct.abstract -> ('d, 'f) Direct.abstract) ->
+       ('d, 'f) Direct.abstract)
   end
 module GenFA12 :
   sig
@@ -8458,15 +8583,24 @@ module GenFA12 :
           'b -> ('b -> ('a, unit) Direct.abstract -> 'f) -> 'f
       end
     val gen :
-      ('a, Input.inp) Direct.abstract ->
-      ([> `TDet of 'a Det.lstate
-        | `TPivot of 'a Output.P.lstate
-        | `TRan of 'a Output.R.lstate ]
-       as 'b)
-      list ->
-      ('b list ->
-       ('a, Output.res) Direct.abstract -> ('a, 'c) Direct.abstract) ->
-      ('a, 'c) Direct.abstract
+      (('a, Input.inp) Direct.abstract ->
+       ([> `TDet of 'a Det.lstate
+         | `TPivot of 'a Output.P.lstate
+         | `TRan of 'a Output.R.lstate ]
+        as 'b)
+       list ->
+       ('b list ->
+        ('a, Output.res) Direct.abstract -> ('a, 'c) Direct.abstract) ->
+       ('a, 'c) Direct.abstract) *
+      (('d, Input.inp) Direct.abstract ->
+       ([> `TDet of 'd Det.lstate
+         | `TPivot of 'd Output.P.lstate
+         | `TRan of 'd Output.R.lstate ]
+        as 'e)
+       list ->
+       ('e list ->
+        ('d, Output.res) Direct.abstract -> ('d, 'f) Direct.abstract) ->
+       ('d, 'f) Direct.abstract)
   end
 module GenFA13 :
   sig
@@ -8615,15 +8749,24 @@ module GenFA13 :
           'b -> ('b -> ('a, unit) Direct.abstract -> 'f) -> 'f
       end
     val gen :
-      ('a, Input.inp) Direct.abstract ->
-      ([> `TDet of 'a Det.lstate
-        | `TPivot of 'a Output.P.lstate
-        | `TRan of 'a Output.R.lstate ]
-       as 'b)
-      list ->
-      ('b list ->
-       ('a, Output.res) Direct.abstract -> ('a, 'c) Direct.abstract) ->
-      ('a, 'c) Direct.abstract
+      (('a, Input.inp) Direct.abstract ->
+       ([> `TDet of 'a Det.lstate
+         | `TPivot of 'a Output.P.lstate
+         | `TRan of 'a Output.R.lstate ]
+        as 'b)
+       list ->
+       ('b list ->
+        ('a, Output.res) Direct.abstract -> ('a, 'c) Direct.abstract) ->
+       ('a, 'c) Direct.abstract) *
+      (('d, Input.inp) Direct.abstract ->
+       ([> `TDet of 'd Det.lstate
+         | `TPivot of 'd Output.P.lstate
+         | `TRan of 'd Output.R.lstate ]
+        as 'e)
+       list ->
+       ('e list ->
+        ('d, Output.res) Direct.abstract -> ('d, 'f) Direct.abstract) ->
+       ('d, 'f) Direct.abstract)
   end
 module GenFA14 :
   sig
@@ -8772,15 +8915,24 @@ module GenFA14 :
           'b -> ('b -> ('a, unit) Direct.abstract -> 'f) -> 'f
       end
     val gen :
-      ('a, Input.inp) Direct.abstract ->
-      ([> `TDet of 'a Det.lstate
-        | `TPivot of 'a Output.P.lstate
-        | `TRan of 'a Output.R.lstate ]
-       as 'b)
-      list ->
-      ('b list ->
-       ('a, Output.res) Direct.abstract -> ('a, 'c) Direct.abstract) ->
-      ('a, 'c) Direct.abstract
+      (('a, Input.inp) Direct.abstract ->
+       ([> `TDet of 'a Det.lstate
+         | `TPivot of 'a Output.P.lstate
+         | `TRan of 'a Output.R.lstate ]
+        as 'b)
+       list ->
+       ('b list ->
+        ('a, Output.res) Direct.abstract -> ('a, 'c) Direct.abstract) ->
+       ('a, 'c) Direct.abstract) *
+      (('d, Input.inp) Direct.abstract ->
+       ([> `TDet of 'd Det.lstate
+         | `TPivot of 'd Output.P.lstate
+         | `TRan of 'd Output.R.lstate ]
+        as 'e)
+       list ->
+       ('e list ->
+        ('d, Output.res) Direct.abstract -> ('d, 'f) Direct.abstract) ->
+       ('d, 'f) Direct.abstract)
   end
 module GenFA24 :
   sig
@@ -8929,15 +9081,24 @@ module GenFA24 :
           'b -> ('b -> ('a, unit) Direct.abstract -> 'f) -> 'f
       end
     val gen :
-      ('a, Input.inp) Direct.abstract ->
-      ([> `TDet of 'a Det.lstate
-        | `TPivot of 'a Output.P.lstate
-        | `TRan of 'a Output.R.lstate ]
-       as 'b)
-      list ->
-      ('b list ->
-       ('a, Output.res) Direct.abstract -> ('a, 'c) Direct.abstract) ->
-      ('a, 'c) Direct.abstract
+      (('a, Input.inp) Direct.abstract ->
+       ([> `TDet of 'a Det.lstate
+         | `TPivot of 'a Output.P.lstate
+         | `TRan of 'a Output.R.lstate ]
+        as 'b)
+       list ->
+       ('b list ->
+        ('a, Output.res) Direct.abstract -> ('a, 'c) Direct.abstract) ->
+       ('a, 'c) Direct.abstract) *
+      (('d, Input.inp) Direct.abstract ->
+       ([> `TDet of 'd Det.lstate
+         | `TPivot of 'd Output.P.lstate
+         | `TRan of 'd Output.R.lstate ]
+        as 'e)
+       list ->
+       ('e list ->
+        ('d, Output.res) Direct.abstract -> ('d, 'f) Direct.abstract) ->
+       ('d, 'f) Direct.abstract)
   end
 module GenFA5 :
   sig
@@ -9086,15 +9247,24 @@ module GenFA5 :
           'b -> ('b -> ('a, unit) Direct.abstract -> 'f) -> 'f
       end
     val gen :
-      ('a, Input.inp) Direct.abstract ->
-      ([> `TDet of 'a Det.lstate
-        | `TPivot of 'a Output.P.lstate
-        | `TRan of 'a Output.R.lstate ]
-       as 'b)
-      list ->
-      ('b list ->
-       ('a, Output.res) Direct.abstract -> ('a, 'c) Direct.abstract) ->
-      ('a, 'c) Direct.abstract
+      (('a, Input.inp) Direct.abstract ->
+       ([> `TDet of 'a Det.lstate
+         | `TPivot of 'a Output.P.lstate
+         | `TRan of 'a Output.R.lstate ]
+        as 'b)
+       list ->
+       ('b list ->
+        ('a, Output.res) Direct.abstract -> ('a, 'c) Direct.abstract) ->
+       ('a, 'c) Direct.abstract) *
+      (('d, Input.inp) Direct.abstract ->
+       ([> `TDet of 'd Det.lstate
+         | `TPivot of 'd Output.P.lstate
+         | `TRan of 'd Output.R.lstate ]
+        as 'e)
+       list ->
+       ('e list ->
+        ('d, Output.res) Direct.abstract -> ('d, 'f) Direct.abstract) ->
+       ('d, 'f) Direct.abstract)
   end
 module GenFA6 :
   sig
@@ -9243,15 +9413,24 @@ module GenFA6 :
           'b -> ('b -> ('a, unit) Direct.abstract -> 'f) -> 'f
       end
     val gen :
-      ('a, Input.inp) Direct.abstract ->
-      ([> `TDet of 'a Det.lstate
-        | `TPivot of 'a Output.P.lstate
-        | `TRan of 'a Output.R.lstate ]
-       as 'b)
-      list ->
-      ('b list ->
-       ('a, Output.res) Direct.abstract -> ('a, 'c) Direct.abstract) ->
-      ('a, 'c) Direct.abstract
+      (('a, Input.inp) Direct.abstract ->
+       ([> `TDet of 'a Det.lstate
+         | `TPivot of 'a Output.P.lstate
+         | `TRan of 'a Output.R.lstate ]
+        as 'b)
+       list ->
+       ('b list ->
+        ('a, Output.res) Direct.abstract -> ('a, 'c) Direct.abstract) ->
+       ('a, 'c) Direct.abstract) *
+      (('d, Input.inp) Direct.abstract ->
+       ([> `TDet of 'd Det.lstate
+         | `TPivot of 'd Output.P.lstate
+         | `TRan of 'd Output.R.lstate ]
+        as 'e)
+       list ->
+       ('e list ->
+        ('d, Output.res) Direct.abstract -> ('d, 'f) Direct.abstract) ->
+       ('d, 'f) Direct.abstract)
   end
 module GenFA7 :
   sig
@@ -9400,15 +9579,24 @@ module GenFA7 :
           'b -> ('b -> ('a, unit) Direct.abstract -> 'f) -> 'f
       end
     val gen :
-      ('a, Input.inp) Direct.abstract ->
-      ([> `TDet of 'a Det.lstate
-        | `TPivot of 'a Output.P.lstate
-        | `TRan of 'a Output.R.lstate ]
-       as 'b)
-      list ->
-      ('b list ->
-       ('a, Output.res) Direct.abstract -> ('a, 'c) Direct.abstract) ->
-      ('a, 'c) Direct.abstract
+      (('a, Input.inp) Direct.abstract ->
+       ([> `TDet of 'a Det.lstate
+         | `TPivot of 'a Output.P.lstate
+         | `TRan of 'a Output.R.lstate ]
+        as 'b)
+       list ->
+       ('b list ->
+        ('a, Output.res) Direct.abstract -> ('a, 'c) Direct.abstract) ->
+       ('a, 'c) Direct.abstract) *
+      (('d, Input.inp) Direct.abstract ->
+       ([> `TDet of 'd Det.lstate
+         | `TPivot of 'd Output.P.lstate
+         | `TRan of 'd Output.R.lstate ]
+        as 'e)
+       list ->
+       ('e list ->
+        ('d, Output.res) Direct.abstract -> ('d, 'f) Direct.abstract) ->
+       ('d, 'f) Direct.abstract)
   end
 module GenFA8 :
   sig
@@ -9557,15 +9745,24 @@ module GenFA8 :
           'b -> ('b -> ('a, unit) Direct.abstract -> 'f) -> 'f
       end
     val gen :
-      ('a, Input.inp) Direct.abstract ->
-      ([> `TDet of 'a Det.lstate
-        | `TPivot of 'a Output.P.lstate
-        | `TRan of 'a Output.R.lstate ]
-       as 'b)
-      list ->
-      ('b list ->
-       ('a, Output.res) Direct.abstract -> ('a, 'c) Direct.abstract) ->
-      ('a, 'c) Direct.abstract
+      (('a, Input.inp) Direct.abstract ->
+       ([> `TDet of 'a Det.lstate
+         | `TPivot of 'a Output.P.lstate
+         | `TRan of 'a Output.R.lstate ]
+        as 'b)
+       list ->
+       ('b list ->
+        ('a, Output.res) Direct.abstract -> ('a, 'c) Direct.abstract) ->
+       ('a, 'c) Direct.abstract) *
+      (('d, Input.inp) Direct.abstract ->
+       ([> `TDet of 'd Det.lstate
+         | `TPivot of 'd Output.P.lstate
+         | `TRan of 'd Output.R.lstate ]
+        as 'e)
+       list ->
+       ('e list ->
+        ('d, Output.res) Direct.abstract -> ('d, 'f) Direct.abstract) ->
+       ('d, 'f) Direct.abstract)
   end
 module GenFV1 :
   sig
@@ -9714,15 +9911,24 @@ module GenFV1 :
           'b -> ('b -> ('a, unit) Direct.abstract -> 'f) -> 'f
       end
     val gen :
-      ('a, Input.inp) Direct.abstract ->
-      ([> `TDet of 'a Det.lstate
-        | `TPivot of 'a Output.P.lstate
-        | `TRan of 'a Output.R.lstate ]
-       as 'b)
-      list ->
-      ('b list ->
-       ('a, Output.res) Direct.abstract -> ('a, 'c) Direct.abstract) ->
-      ('a, 'c) Direct.abstract
+      (('a, Input.inp) Direct.abstract ->
+       ([> `TDet of 'a Det.lstate
+         | `TPivot of 'a Output.P.lstate
+         | `TRan of 'a Output.R.lstate ]
+        as 'b)
+       list ->
+       ('b list ->
+        ('a, Output.res) Direct.abstract -> ('a, 'c) Direct.abstract) ->
+       ('a, 'c) Direct.abstract) *
+      (('d, Input.inp) Direct.abstract ->
+       ([> `TDet of 'd Det.lstate
+         | `TPivot of 'd Output.P.lstate
+         | `TRan of 'd Output.R.lstate ]
+        as 'e)
+       list ->
+       ('e list ->
+        ('d, Output.res) Direct.abstract -> ('d, 'f) Direct.abstract) ->
+       ('d, 'f) Direct.abstract)
   end
 module GenFV2 :
   sig
@@ -9871,15 +10077,24 @@ module GenFV2 :
           'b -> ('b -> ('a, unit) Direct.abstract -> 'f) -> 'f
       end
     val gen :
-      ('a, Input.inp) Direct.abstract ->
-      ([> `TDet of 'a Det.lstate
-        | `TPivot of 'a Output.P.lstate
-        | `TRan of 'a Output.R.lstate ]
-       as 'b)
-      list ->
-      ('b list ->
-       ('a, Output.res) Direct.abstract -> ('a, 'c) Direct.abstract) ->
-      ('a, 'c) Direct.abstract
+      (('a, Input.inp) Direct.abstract ->
+       ([> `TDet of 'a Det.lstate
+         | `TPivot of 'a Output.P.lstate
+         | `TRan of 'a Output.R.lstate ]
+        as 'b)
+       list ->
+       ('b list ->
+        ('a, Output.res) Direct.abstract -> ('a, 'c) Direct.abstract) ->
+       ('a, 'c) Direct.abstract) *
+      (('d, Input.inp) Direct.abstract ->
+       ([> `TDet of 'd Det.lstate
+         | `TPivot of 'd Output.P.lstate
+         | `TRan of 'd Output.R.lstate ]
+        as 'e)
+       list ->
+       ('e list ->
+        ('d, Output.res) Direct.abstract -> ('d, 'f) Direct.abstract) ->
+       ('d, 'f) Direct.abstract)
   end
 module GenFV3 :
   sig
@@ -10028,15 +10243,24 @@ module GenFV3 :
           'b -> ('b -> ('a, unit) Direct.abstract -> 'f) -> 'f
       end
     val gen :
-      ('a, Input.inp) Direct.abstract ->
-      ([> `TDet of 'a Det.lstate
-        | `TPivot of 'a Output.P.lstate
-        | `TRan of 'a Output.R.lstate ]
-       as 'b)
-      list ->
-      ('b list ->
-       ('a, Output.res) Direct.abstract -> ('a, 'c) Direct.abstract) ->
-      ('a, 'c) Direct.abstract
+      (('a, Input.inp) Direct.abstract ->
+       ([> `TDet of 'a Det.lstate
+         | `TPivot of 'a Output.P.lstate
+         | `TRan of 'a Output.R.lstate ]
+        as 'b)
+       list ->
+       ('b list ->
+        ('a, Output.res) Direct.abstract -> ('a, 'c) Direct.abstract) ->
+       ('a, 'c) Direct.abstract) *
+      (('d, Input.inp) Direct.abstract ->
+       ([> `TDet of 'd Det.lstate
+         | `TPivot of 'd Output.P.lstate
+         | `TRan of 'd Output.R.lstate ]
+        as 'e)
+       list ->
+       ('e list ->
+        ('d, Output.res) Direct.abstract -> ('d, 'f) Direct.abstract) ->
+       ('d, 'f) Direct.abstract)
   end
 module GenFV4 :
   sig
@@ -10185,15 +10409,24 @@ module GenFV4 :
           'b -> ('b -> ('a, unit) Direct.abstract -> 'f) -> 'f
       end
     val gen :
-      ('a, Input.inp) Direct.abstract ->
-      ([> `TDet of 'a Det.lstate
-        | `TPivot of 'a Output.P.lstate
-        | `TRan of 'a Output.R.lstate ]
-       as 'b)
-      list ->
-      ('b list ->
-       ('a, Output.res) Direct.abstract -> ('a, 'c) Direct.abstract) ->
-      ('a, 'c) Direct.abstract
+      (('a, Input.inp) Direct.abstract ->
+       ([> `TDet of 'a Det.lstate
+         | `TPivot of 'a Output.P.lstate
+         | `TRan of 'a Output.R.lstate ]
+        as 'b)
+       list ->
+       ('b list ->
+        ('a, Output.res) Direct.abstract -> ('a, 'c) Direct.abstract) ->
+       ('a, 'c) Direct.abstract) *
+      (('d, Input.inp) Direct.abstract ->
+       ([> `TDet of 'd Det.lstate
+         | `TPivot of 'd Output.P.lstate
+         | `TRan of 'd Output.R.lstate ]
+        as 'e)
+       list ->
+       ('e list ->
+        ('d, Output.res) Direct.abstract -> ('d, 'f) Direct.abstract) ->
+       ('d, 'f) Direct.abstract)
   end
 module GenFV5 :
   sig
@@ -10342,15 +10575,24 @@ module GenFV5 :
           'b -> ('b -> ('a, unit) Direct.abstract -> 'f) -> 'f
       end
     val gen :
-      ('a, Input.inp) Direct.abstract ->
-      ([> `TDet of 'a Det.lstate
-        | `TPivot of 'a Output.P.lstate
-        | `TRan of 'a Output.R.lstate ]
-       as 'b)
-      list ->
-      ('b list ->
-       ('a, Output.res) Direct.abstract -> ('a, 'c) Direct.abstract) ->
-      ('a, 'c) Direct.abstract
+      (('a, Input.inp) Direct.abstract ->
+       ([> `TDet of 'a Det.lstate
+         | `TPivot of 'a Output.P.lstate
+         | `TRan of 'a Output.R.lstate ]
+        as 'b)
+       list ->
+       ('b list ->
+        ('a, Output.res) Direct.abstract -> ('a, 'c) Direct.abstract) ->
+       ('a, 'c) Direct.abstract) *
+      (('d, Input.inp) Direct.abstract ->
+       ([> `TDet of 'd Det.lstate
+         | `TPivot of 'd Output.P.lstate
+         | `TRan of 'd Output.R.lstate ]
+        as 'e)
+       list ->
+       ('e list ->
+        ('d, Output.res) Direct.abstract -> ('d, 'f) Direct.abstract) ->
+       ('d, 'f) Direct.abstract)
   end
 module GenIA1 :
   sig
@@ -10499,15 +10741,24 @@ module GenIA1 :
           'b -> ('b -> ('a, unit) Direct.abstract -> 'f) -> 'f
       end
     val gen :
-      ('a, Input.inp) Direct.abstract ->
-      ([> `TDet of 'a Det.lstate
-        | `TPivot of 'a Output.P.lstate
-        | `TRan of 'a Output.R.lstate ]
-       as 'b)
-      list ->
-      ('b list ->
-       ('a, Output.res) Direct.abstract -> ('a, 'c) Direct.abstract) ->
-      ('a, 'c) Direct.abstract
+      (('a, Input.inp) Direct.abstract ->
+       ([> `TDet of 'a Det.lstate
+         | `TPivot of 'a Output.P.lstate
+         | `TRan of 'a Output.R.lstate ]
+        as 'b)
+       list ->
+       ('b list ->
+        ('a, Output.res) Direct.abstract -> ('a, 'c) Direct.abstract) ->
+       ('a, 'c) Direct.abstract) *
+      (('d, Input.inp) Direct.abstract ->
+       ([> `TDet of 'd Det.lstate
+         | `TPivot of 'd Output.P.lstate
+         | `TRan of 'd Output.R.lstate ]
+        as 'e)
+       list ->
+       ('e list ->
+        ('d, Output.res) Direct.abstract -> ('d, 'f) Direct.abstract) ->
+       ('d, 'f) Direct.abstract)
   end
 module GenIA2 :
   sig
@@ -10656,15 +10907,24 @@ module GenIA2 :
           'b -> ('b -> ('a, unit) Direct.abstract -> 'f) -> 'f
       end
     val gen :
-      ('a, Input.inp) Direct.abstract ->
-      ([> `TDet of 'a Det.lstate
-        | `TPivot of 'a Output.P.lstate
-        | `TRan of 'a Output.R.lstate ]
-       as 'b)
-      list ->
-      ('b list ->
-       ('a, Output.res) Direct.abstract -> ('a, 'c) Direct.abstract) ->
-      ('a, 'c) Direct.abstract
+      (('a, Input.inp) Direct.abstract ->
+       ([> `TDet of 'a Det.lstate
+         | `TPivot of 'a Output.P.lstate
+         | `TRan of 'a Output.R.lstate ]
+        as 'b)
+       list ->
+       ('b list ->
+        ('a, Output.res) Direct.abstract -> ('a, 'c) Direct.abstract) ->
+       ('a, 'c) Direct.abstract) *
+      (('d, Input.inp) Direct.abstract ->
+       ([> `TDet of 'd Det.lstate
+         | `TPivot of 'd Output.P.lstate
+         | `TRan of 'd Output.R.lstate ]
+        as 'e)
+       list ->
+       ('e list ->
+        ('d, Output.res) Direct.abstract -> ('d, 'f) Direct.abstract) ->
+       ('d, 'f) Direct.abstract)
   end
 module GenIA3 :
   sig
@@ -10813,15 +11073,24 @@ module GenIA3 :
           'b -> ('b -> ('a, unit) Direct.abstract -> 'f) -> 'f
       end
     val gen :
-      ('a, Input.inp) Direct.abstract ->
-      ([> `TDet of 'a Det.lstate
-        | `TPivot of 'a Output.P.lstate
-        | `TRan of 'a Output.R.lstate ]
-       as 'b)
-      list ->
-      ('b list ->
-       ('a, Output.res) Direct.abstract -> ('a, 'c) Direct.abstract) ->
-      ('a, 'c) Direct.abstract
+      (('a, Input.inp) Direct.abstract ->
+       ([> `TDet of 'a Det.lstate
+         | `TPivot of 'a Output.P.lstate
+         | `TRan of 'a Output.R.lstate ]
+        as 'b)
+       list ->
+       ('b list ->
+        ('a, Output.res) Direct.abstract -> ('a, 'c) Direct.abstract) ->
+       ('a, 'c) Direct.abstract) *
+      (('d, Input.inp) Direct.abstract ->
+       ([> `TDet of 'd Det.lstate
+         | `TPivot of 'd Output.P.lstate
+         | `TRan of 'd Output.R.lstate ]
+        as 'e)
+       list ->
+       ('e list ->
+        ('d, Output.res) Direct.abstract -> ('d, 'f) Direct.abstract) ->
+       ('d, 'f) Direct.abstract)
   end
 module GenIA4 :
   sig
@@ -10970,15 +11239,24 @@ module GenIA4 :
           'b -> ('b -> ('a, unit) Direct.abstract -> 'f) -> 'f
       end
     val gen :
-      ('a, Input.inp) Direct.abstract ->
-      ([> `TDet of 'a Det.lstate
-        | `TPivot of 'a Output.P.lstate
-        | `TRan of 'a Output.R.lstate ]
-       as 'b)
-      list ->
-      ('b list ->
-       ('a, Output.res) Direct.abstract -> ('a, 'c) Direct.abstract) ->
-      ('a, 'c) Direct.abstract
+      (('a, Input.inp) Direct.abstract ->
+       ([> `TDet of 'a Det.lstate
+         | `TPivot of 'a Output.P.lstate
+         | `TRan of 'a Output.R.lstate ]
+        as 'b)
+       list ->
+       ('b list ->
+        ('a, Output.res) Direct.abstract -> ('a, 'c) Direct.abstract) ->
+       ('a, 'c) Direct.abstract) *
+      (('d, Input.inp) Direct.abstract ->
+       ([> `TDet of 'd Det.lstate
+         | `TPivot of 'd Output.P.lstate
+         | `TRan of 'd Output.R.lstate ]
+        as 'e)
+       list ->
+       ('e list ->
+        ('d, Output.res) Direct.abstract -> ('d, 'f) Direct.abstract) ->
+       ('d, 'f) Direct.abstract)
   end
 module GenIV1 :
   sig
@@ -11127,15 +11405,24 @@ module GenIV1 :
           'b -> ('b -> ('a, unit) Direct.abstract -> 'f) -> 'f
       end
     val gen :
-      ('a, Input.inp) Direct.abstract ->
-      ([> `TDet of 'a Det.lstate
-        | `TPivot of 'a Output.P.lstate
-        | `TRan of 'a Output.R.lstate ]
-       as 'b)
-      list ->
-      ('b list ->
-       ('a, Output.res) Direct.abstract -> ('a, 'c) Direct.abstract) ->
-      ('a, 'c) Direct.abstract
+      (('a, Input.inp) Direct.abstract ->
+       ([> `TDet of 'a Det.lstate
+         | `TPivot of 'a Output.P.lstate
+         | `TRan of 'a Output.R.lstate ]
+        as 'b)
+       list ->
+       ('b list ->
+        ('a, Output.res) Direct.abstract -> ('a, 'c) Direct.abstract) ->
+       ('a, 'c) Direct.abstract) *
+      (('d, Input.inp) Direct.abstract ->
+       ([> `TDet of 'd Det.lstate
+         | `TPivot of 'd Output.P.lstate
+         | `TRan of 'd Output.R.lstate ]
+        as 'e)
+       list ->
+       ('e list ->
+        ('d, Output.res) Direct.abstract -> ('d, 'f) Direct.abstract) ->
+       ('d, 'f) Direct.abstract)
   end
 module GenIV2 :
   sig
@@ -11284,15 +11571,24 @@ module GenIV2 :
           'b -> ('b -> ('a, unit) Direct.abstract -> 'f) -> 'f
       end
     val gen :
-      ('a, Input.inp) Direct.abstract ->
-      ([> `TDet of 'a Det.lstate
-        | `TPivot of 'a Output.P.lstate
-        | `TRan of 'a Output.R.lstate ]
-       as 'b)
-      list ->
-      ('b list ->
-       ('a, Output.res) Direct.abstract -> ('a, 'c) Direct.abstract) ->
-      ('a, 'c) Direct.abstract
+      (('a, Input.inp) Direct.abstract ->
+       ([> `TDet of 'a Det.lstate
+         | `TPivot of 'a Output.P.lstate
+         | `TRan of 'a Output.R.lstate ]
+        as 'b)
+       list ->
+       ('b list ->
+        ('a, Output.res) Direct.abstract -> ('a, 'c) Direct.abstract) ->
+       ('a, 'c) Direct.abstract) *
+      (('d, Input.inp) Direct.abstract ->
+       ([> `TDet of 'd Det.lstate
+         | `TPivot of 'd Output.P.lstate
+         | `TRan of 'd Output.R.lstate ]
+        as 'e)
+       list ->
+       ('e list ->
+        ('d, Output.res) Direct.abstract -> ('d, 'f) Direct.abstract) ->
+       ('d, 'f) Direct.abstract)
   end
 module GenIV3 :
   sig
@@ -11441,15 +11737,24 @@ module GenIV3 :
           'b -> ('b -> ('a, unit) Direct.abstract -> 'f) -> 'f
       end
     val gen :
-      ('a, Input.inp) Direct.abstract ->
-      ([> `TDet of 'a Det.lstate
-        | `TPivot of 'a Output.P.lstate
-        | `TRan of 'a Output.R.lstate ]
-       as 'b)
-      list ->
-      ('b list ->
-       ('a, Output.res) Direct.abstract -> ('a, 'c) Direct.abstract) ->
-      ('a, 'c) Direct.abstract
+      (('a, Input.inp) Direct.abstract ->
+       ([> `TDet of 'a Det.lstate
+         | `TPivot of 'a Output.P.lstate
+         | `TRan of 'a Output.R.lstate ]
+        as 'b)
+       list ->
+       ('b list ->
+        ('a, Output.res) Direct.abstract -> ('a, 'c) Direct.abstract) ->
+       ('a, 'c) Direct.abstract) *
+      (('d, Input.inp) Direct.abstract ->
+       ([> `TDet of 'd Det.lstate
+         | `TPivot of 'd Output.P.lstate
+         | `TRan of 'd Output.R.lstate ]
+        as 'e)
+       list ->
+       ('e list ->
+        ('d, Output.res) Direct.abstract -> ('d, 'f) Direct.abstract) ->
+       ('d, 'f) Direct.abstract)
   end
 module GenIV4 :
   sig
@@ -11598,15 +11903,24 @@ module GenIV4 :
           'b -> ('b -> ('a, unit) Direct.abstract -> 'f) -> 'f
       end
     val gen :
-      ('a, Input.inp) Direct.abstract ->
-      ([> `TDet of 'a Det.lstate
-        | `TPivot of 'a Output.P.lstate
-        | `TRan of 'a Output.R.lstate ]
-       as 'b)
-      list ->
-      ('b list ->
-       ('a, Output.res) Direct.abstract -> ('a, 'c) Direct.abstract) ->
-      ('a, 'c) Direct.abstract
+      (('a, Input.inp) Direct.abstract ->
+       ([> `TDet of 'a Det.lstate
+         | `TPivot of 'a Output.P.lstate
+         | `TRan of 'a Output.R.lstate ]
+        as 'b)
+       list ->
+       ('b list ->
+        ('a, Output.res) Direct.abstract -> ('a, 'c) Direct.abstract) ->
+       ('a, 'c) Direct.abstract) *
+      (('d, Input.inp) Direct.abstract ->
+       ([> `TDet of 'd Det.lstate
+         | `TPivot of 'd Output.P.lstate
+         | `TRan of 'd Output.R.lstate ]
+        as 'e)
+       list ->
+       ('e list ->
+        ('d, Output.res) Direct.abstract -> ('d, 'f) Direct.abstract) ->
+       ('d, 'f) Direct.abstract)
   end
 module GenIV5 :
   sig
@@ -11755,15 +12069,24 @@ module GenIV5 :
           'b -> ('b -> ('a, unit) Direct.abstract -> 'f) -> 'f
       end
     val gen :
-      ('a, Input.inp) Direct.abstract ->
-      ([> `TDet of 'a Det.lstate
-        | `TPivot of 'a Output.P.lstate
-        | `TRan of 'a Output.R.lstate ]
-       as 'b)
-      list ->
-      ('b list ->
-       ('a, Output.res) Direct.abstract -> ('a, 'c) Direct.abstract) ->
-      ('a, 'c) Direct.abstract
+      (('a, Input.inp) Direct.abstract ->
+       ([> `TDet of 'a Det.lstate
+         | `TPivot of 'a Output.P.lstate
+         | `TRan of 'a Output.R.lstate ]
+        as 'b)
+       list ->
+       ('b list ->
+        ('a, Output.res) Direct.abstract -> ('a, 'c) Direct.abstract) ->
+       ('a, 'c) Direct.abstract) *
+      (('d, Input.inp) Direct.abstract ->
+       ([> `TDet of 'd Det.lstate
+         | `TPivot of 'd Output.P.lstate
+         | `TRan of 'd Output.R.lstate ]
+        as 'e)
+       list ->
+       ('e list ->
+        ('d, Output.res) Direct.abstract -> ('d, 'f) Direct.abstract) ->
+       ('d, 'f) Direct.abstract)
   end
 module GenRA1 :
   sig
@@ -11912,15 +12235,24 @@ module GenRA1 :
           'b -> ('b -> ('a, unit) Direct.abstract -> 'f) -> 'f
       end
     val gen :
-      ('a, Input.inp) Direct.abstract ->
-      ([> `TDet of 'a Det.lstate
-        | `TPivot of 'a Output.P.lstate
-        | `TRan of 'a Output.R.lstate ]
-       as 'b)
-      list ->
-      ('b list ->
-       ('a, Output.res) Direct.abstract -> ('a, 'c) Direct.abstract) ->
-      ('a, 'c) Direct.abstract
+      (('a, Input.inp) Direct.abstract ->
+       ([> `TDet of 'a Det.lstate
+         | `TPivot of 'a Output.P.lstate
+         | `TRan of 'a Output.R.lstate ]
+        as 'b)
+       list ->
+       ('b list ->
+        ('a, Output.res) Direct.abstract -> ('a, 'c) Direct.abstract) ->
+       ('a, 'c) Direct.abstract) *
+      (('d, Input.inp) Direct.abstract ->
+       ([> `TDet of 'd Det.lstate
+         | `TPivot of 'd Output.P.lstate
+         | `TRan of 'd Output.R.lstate ]
+        as 'e)
+       list ->
+       ('e list ->
+        ('d, Output.res) Direct.abstract -> ('d, 'f) Direct.abstract) ->
+       ('d, 'f) Direct.abstract)
   end
 module GenRA2 :
   sig
@@ -12069,15 +12401,24 @@ module GenRA2 :
           'b -> ('b -> ('a, unit) Direct.abstract -> 'f) -> 'f
       end
     val gen :
-      ('a, Input.inp) Direct.abstract ->
-      ([> `TDet of 'a Det.lstate
-        | `TPivot of 'a Output.P.lstate
-        | `TRan of 'a Output.R.lstate ]
-       as 'b)
-      list ->
-      ('b list ->
-       ('a, Output.res) Direct.abstract -> ('a, 'c) Direct.abstract) ->
-      ('a, 'c) Direct.abstract
+      (('a, Input.inp) Direct.abstract ->
+       ([> `TDet of 'a Det.lstate
+         | `TPivot of 'a Output.P.lstate
+         | `TRan of 'a Output.R.lstate ]
+        as 'b)
+       list ->
+       ('b list ->
+        ('a, Output.res) Direct.abstract -> ('a, 'c) Direct.abstract) ->
+       ('a, 'c) Direct.abstract) *
+      (('d, Input.inp) Direct.abstract ->
+       ([> `TDet of 'd Det.lstate
+         | `TPivot of 'd Output.P.lstate
+         | `TRan of 'd Output.R.lstate ]
+        as 'e)
+       list ->
+       ('e list ->
+        ('d, Output.res) Direct.abstract -> ('d, 'f) Direct.abstract) ->
+       ('d, 'f) Direct.abstract)
   end
 module GenRA3 :
   sig
@@ -12226,15 +12567,24 @@ module GenRA3 :
           'b -> ('b -> ('a, unit) Direct.abstract -> 'f) -> 'f
       end
     val gen :
-      ('a, Input.inp) Direct.abstract ->
-      ([> `TDet of 'a Det.lstate
-        | `TPivot of 'a Output.P.lstate
-        | `TRan of 'a Output.R.lstate ]
-       as 'b)
-      list ->
-      ('b list ->
-       ('a, Output.res) Direct.abstract -> ('a, 'c) Direct.abstract) ->
-      ('a, 'c) Direct.abstract
+      (('a, Input.inp) Direct.abstract ->
+       ([> `TDet of 'a Det.lstate
+         | `TPivot of 'a Output.P.lstate
+         | `TRan of 'a Output.R.lstate ]
+        as 'b)
+       list ->
+       ('b list ->
+        ('a, Output.res) Direct.abstract -> ('a, 'c) Direct.abstract) ->
+       ('a, 'c) Direct.abstract) *
+      (('d, Input.inp) Direct.abstract ->
+       ([> `TDet of 'd Det.lstate
+         | `TPivot of 'd Output.P.lstate
+         | `TRan of 'd Output.R.lstate ]
+        as 'e)
+       list ->
+       ('e list ->
+        ('d, Output.res) Direct.abstract -> ('d, 'f) Direct.abstract) ->
+       ('d, 'f) Direct.abstract)
   end
 module GenRA4 :
   sig
@@ -12383,15 +12733,24 @@ module GenRA4 :
           'b -> ('b -> ('a, unit) Direct.abstract -> 'f) -> 'f
       end
     val gen :
-      ('a, Input.inp) Direct.abstract ->
-      ([> `TDet of 'a Det.lstate
-        | `TPivot of 'a Output.P.lstate
-        | `TRan of 'a Output.R.lstate ]
-       as 'b)
-      list ->
-      ('b list ->
-       ('a, Output.res) Direct.abstract -> ('a, 'c) Direct.abstract) ->
-      ('a, 'c) Direct.abstract
+      (('a, Input.inp) Direct.abstract ->
+       ([> `TDet of 'a Det.lstate
+         | `TPivot of 'a Output.P.lstate
+         | `TRan of 'a Output.R.lstate ]
+        as 'b)
+       list ->
+       ('b list ->
+        ('a, Output.res) Direct.abstract -> ('a, 'c) Direct.abstract) ->
+       ('a, 'c) Direct.abstract) *
+      (('d, Input.inp) Direct.abstract ->
+       ([> `TDet of 'd Det.lstate
+         | `TPivot of 'd Output.P.lstate
+         | `TRan of 'd Output.R.lstate ]
+        as 'e)
+       list ->
+       ('e list ->
+        ('d, Output.res) Direct.abstract -> ('d, 'f) Direct.abstract) ->
+       ('d, 'f) Direct.abstract)
   end
 module GenZp3 :
   sig
@@ -12540,15 +12899,24 @@ module GenZp3 :
           'b -> ('b -> ('a, unit) Direct.abstract -> 'f) -> 'f
       end
     val gen :
-      ('a, Input.inp) Direct.abstract ->
-      ([> `TDet of 'a Det.lstate
-        | `TPivot of 'a Output.P.lstate
-        | `TRan of 'a Output.R.lstate ]
-       as 'b)
-      list ->
-      ('b list ->
-       ('a, Output.res) Direct.abstract -> ('a, 'c) Direct.abstract) ->
-      ('a, 'c) Direct.abstract
+      (('a, Input.inp) Direct.abstract ->
+       ([> `TDet of 'a Det.lstate
+         | `TPivot of 'a Output.P.lstate
+         | `TRan of 'a Output.R.lstate ]
+        as 'b)
+       list ->
+       ('b list ->
+        ('a, Output.res) Direct.abstract -> ('a, 'c) Direct.abstract) ->
+       ('a, 'c) Direct.abstract) *
+      (('d, Input.inp) Direct.abstract ->
+       ([> `TDet of 'd Det.lstate
+         | `TPivot of 'd Output.P.lstate
+         | `TRan of 'd Output.R.lstate ]
+        as 'e)
+       list ->
+       ('e list ->
+        ('d, Output.res) Direct.abstract -> ('d, 'f) Direct.abstract) ->
+       ('d, 'f) Direct.abstract)
   end
 module GenZp19 :
   sig
@@ -12698,15 +13066,24 @@ module GenZp19 :
           'b -> ('b -> ('a, unit) Direct.abstract -> 'f) -> 'f
       end
     val gen :
-      ('a, Input.inp) Direct.abstract ->
-      ([> `TDet of 'a Det.lstate
-        | `TPivot of 'a Output.P.lstate
-        | `TRan of 'a Output.R.lstate ]
-       as 'b)
-      list ->
-      ('b list ->
-       ('a, Output.res) Direct.abstract -> ('a, 'c) Direct.abstract) ->
-      ('a, 'c) Direct.abstract
+      (('a, Input.inp) Direct.abstract ->
+       ([> `TDet of 'a Det.lstate
+         | `TPivot of 'a Output.P.lstate
+         | `TRan of 'a Output.R.lstate ]
+        as 'b)
+       list ->
+       ('b list ->
+        ('a, Output.res) Direct.abstract -> ('a, 'c) Direct.abstract) ->
+       ('a, 'c) Direct.abstract) *
+      (('d, Input.inp) Direct.abstract ->
+       ([> `TDet of 'd Det.lstate
+         | `TPivot of 'd Output.P.lstate
+         | `TRan of 'd Output.R.lstate ]
+        as 'e)
+       list ->
+       ('e list ->
+        ('d, Output.res) Direct.abstract -> ('d, 'f) Direct.abstract) ->
+       ('d, 'f) Direct.abstract)
   end
 val resFA1 : GenFA1.Input.inp -> GenFA1.Output.res = <fun>
 val resFA2 : GenFA2.Input.inp -> GenFA2.Output.res = <fun>

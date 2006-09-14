@@ -1422,22 +1422,32 @@
                               ('b -> ('a, unit) Code.abstract -> 'f) -> 'f
                           end
                         val gen :
-                          ('a, Input.inp) Code.abstract ->
-                          ([> `TDet of 'a Det.lstate
-                            | `TPivot of 'a Output.P.lstate
-                            | `TRan of 'a Output.R.lstate ]
-                           as 'b)
-                          list ->
-                          ('b list ->
-                           ('a, Output.res) Code.abstract ->
-                           ('a, 'c) Code.abstract) ->
-                          ('a, 'c) Code.abstract
+                          (('a, Input.inp) Code.abstract ->
+                           ([> `TDet of 'a Det.lstate
+                             | `TPivot of 'a Output.P.lstate
+                             | `TRan of 'a Output.R.lstate ]
+                            as 'b)
+                           list ->
+                           ('b list ->
+                            ('a, Output.res) Code.abstract ->
+                            ('a, 'c) Code.abstract) ->
+                           ('a, 'c) Code.abstract) *
+                          (('d, Input.inp) Code.abstract ->
+                           ([> `TDet of 'd Det.lstate
+                             | `TPivot of 'd Output.P.lstate
+                             | `TRan of 'd Output.R.lstate ]
+                            as 'e)
+                           list ->
+                           ('e list ->
+                            ('d, Output.res) Code.abstract ->
+                            ('d, 'f) Code.abstract) ->
+                           ('d, 'f) Code.abstract)
                       end
         end
   end
 type 'a pr = { pf : 'b. ('b, 'a) code; }
-# val instantiate :
-  (('a, 'b) code -> 'c list -> ('d -> 'e -> 'e) -> ('a, 'f) code) ->
+#   val instantiate :
+  (('a, 'b) code -> 'c list -> ('d -> 'e -> 'e) -> ('a, 'f) code) * 'g ->
   ('a, 'b -> 'f) code = <fun>
 # val runit : 'a pr -> 'a = <fun>
 #   * * * * * * * * *     module FDet :
@@ -2792,15 +2802,26 @@ module G_GAC_F :
                         'b -> ('b -> ('a, unit) Code.abstract -> 'f) -> 'f
                     end
                   val gen :
-                    ('a, Input.inp) Code.abstract ->
-                    ([> `TDet of 'a Det.lstate
-                      | `TPivot of 'a Output.P.lstate
-                      | `TRan of 'a Output.R.lstate ]
-                     as 'b)
-                    list ->
-                    ('b list ->
-                     ('a, Output.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-                    ('a, 'c) Code.abstract
+                    (('a, Input.inp) Code.abstract ->
+                     ([> `TDet of 'a Det.lstate
+                       | `TPivot of 'a Output.P.lstate
+                       | `TRan of 'a Output.R.lstate ]
+                      as 'b)
+                     list ->
+                     ('b list ->
+                      ('a, Output.res) Code.abstract ->
+                      ('a, 'c) Code.abstract) ->
+                     ('a, 'c) Code.abstract) *
+                    (('d, Input.inp) Code.abstract ->
+                     ([> `TDet of 'd Det.lstate
+                       | `TPivot of 'd Output.P.lstate
+                       | `TRan of 'd Output.R.lstate ]
+                      as 'e)
+                     list ->
+                     ('e list ->
+                      ('d, Output.res) Code.abstract ->
+                      ('d, 'f) Code.abstract) ->
+                     ('d, 'f) Code.abstract)
                 end
   end
 module G_GVC_F :
@@ -3562,15 +3583,26 @@ module G_GVC_F :
                         'b -> ('b -> ('a, unit) Code.abstract -> 'f) -> 'f
                     end
                   val gen :
-                    ('a, Input.inp) Code.abstract ->
-                    ([> `TDet of 'a Det.lstate
-                      | `TPivot of 'a Output.P.lstate
-                      | `TRan of 'a Output.R.lstate ]
-                     as 'b)
-                    list ->
-                    ('b list ->
-                     ('a, Output.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-                    ('a, 'c) Code.abstract
+                    (('a, Input.inp) Code.abstract ->
+                     ([> `TDet of 'a Det.lstate
+                       | `TPivot of 'a Output.P.lstate
+                       | `TRan of 'a Output.R.lstate ]
+                      as 'b)
+                     list ->
+                     ('b list ->
+                      ('a, Output.res) Code.abstract ->
+                      ('a, 'c) Code.abstract) ->
+                     ('a, 'c) Code.abstract) *
+                    (('d, Input.inp) Code.abstract ->
+                     ([> `TDet of 'd Det.lstate
+                       | `TPivot of 'd Output.P.lstate
+                       | `TRan of 'd Output.R.lstate ]
+                      as 'e)
+                     list ->
+                     ('e list ->
+                      ('d, Output.res) Code.abstract ->
+                      ('d, 'f) Code.abstract) ->
+                     ('d, 'f) Code.abstract)
                 end
   end
 module G_GAC_I :
@@ -4332,15 +4364,26 @@ module G_GAC_I :
                         'b -> ('b -> ('a, unit) Code.abstract -> 'f) -> 'f
                     end
                   val gen :
-                    ('a, Input.inp) Code.abstract ->
-                    ([> `TDet of 'a Det.lstate
-                      | `TPivot of 'a Output.P.lstate
-                      | `TRan of 'a Output.R.lstate ]
-                     as 'b)
-                    list ->
-                    ('b list ->
-                     ('a, Output.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-                    ('a, 'c) Code.abstract
+                    (('a, Input.inp) Code.abstract ->
+                     ([> `TDet of 'a Det.lstate
+                       | `TPivot of 'a Output.P.lstate
+                       | `TRan of 'a Output.R.lstate ]
+                      as 'b)
+                     list ->
+                     ('b list ->
+                      ('a, Output.res) Code.abstract ->
+                      ('a, 'c) Code.abstract) ->
+                     ('a, 'c) Code.abstract) *
+                    (('d, Input.inp) Code.abstract ->
+                     ([> `TDet of 'd Det.lstate
+                       | `TPivot of 'd Output.P.lstate
+                       | `TRan of 'd Output.R.lstate ]
+                      as 'e)
+                     list ->
+                     ('e list ->
+                      ('d, Output.res) Code.abstract ->
+                      ('d, 'f) Code.abstract) ->
+                     ('d, 'f) Code.abstract)
                 end
   end
 module G_GVC_I :
@@ -5102,15 +5145,26 @@ module G_GVC_I :
                         'b -> ('b -> ('a, unit) Code.abstract -> 'f) -> 'f
                     end
                   val gen :
-                    ('a, Input.inp) Code.abstract ->
-                    ([> `TDet of 'a Det.lstate
-                      | `TPivot of 'a Output.P.lstate
-                      | `TRan of 'a Output.R.lstate ]
-                     as 'b)
-                    list ->
-                    ('b list ->
-                     ('a, Output.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-                    ('a, 'c) Code.abstract
+                    (('a, Input.inp) Code.abstract ->
+                     ([> `TDet of 'a Det.lstate
+                       | `TPivot of 'a Output.P.lstate
+                       | `TRan of 'a Output.R.lstate ]
+                      as 'b)
+                     list ->
+                     ('b list ->
+                      ('a, Output.res) Code.abstract ->
+                      ('a, 'c) Code.abstract) ->
+                     ('a, 'c) Code.abstract) *
+                    (('d, Input.inp) Code.abstract ->
+                     ([> `TDet of 'd Det.lstate
+                       | `TPivot of 'd Output.P.lstate
+                       | `TRan of 'd Output.R.lstate ]
+                      as 'e)
+                     list ->
+                     ('e list ->
+                      ('d, Output.res) Code.abstract ->
+                      ('d, 'f) Code.abstract) ->
+                     ('d, 'f) Code.abstract)
                 end
   end
 module G_GAC_R :
@@ -5872,15 +5926,26 @@ module G_GAC_R :
                         'b -> ('b -> ('a, unit) Code.abstract -> 'f) -> 'f
                     end
                   val gen :
-                    ('a, Input.inp) Code.abstract ->
-                    ([> `TDet of 'a Det.lstate
-                      | `TPivot of 'a Output.P.lstate
-                      | `TRan of 'a Output.R.lstate ]
-                     as 'b)
-                    list ->
-                    ('b list ->
-                     ('a, Output.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-                    ('a, 'c) Code.abstract
+                    (('a, Input.inp) Code.abstract ->
+                     ([> `TDet of 'a Det.lstate
+                       | `TPivot of 'a Output.P.lstate
+                       | `TRan of 'a Output.R.lstate ]
+                      as 'b)
+                     list ->
+                     ('b list ->
+                      ('a, Output.res) Code.abstract ->
+                      ('a, 'c) Code.abstract) ->
+                     ('a, 'c) Code.abstract) *
+                    (('d, Input.inp) Code.abstract ->
+                     ([> `TDet of 'd Det.lstate
+                       | `TPivot of 'd Output.P.lstate
+                       | `TRan of 'd Output.R.lstate ]
+                      as 'e)
+                     list ->
+                     ('e list ->
+                      ('d, Output.res) Code.abstract ->
+                      ('d, 'f) Code.abstract) ->
+                     ('d, 'f) Code.abstract)
                 end
   end
 module G_GVC_Z3 :
@@ -6642,15 +6707,26 @@ module G_GVC_Z3 :
                         'b -> ('b -> ('a, unit) Code.abstract -> 'f) -> 'f
                     end
                   val gen :
-                    ('a, Input.inp) Code.abstract ->
-                    ([> `TDet of 'a Det.lstate
-                      | `TPivot of 'a Output.P.lstate
-                      | `TRan of 'a Output.R.lstate ]
-                     as 'b)
-                    list ->
-                    ('b list ->
-                     ('a, Output.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-                    ('a, 'c) Code.abstract
+                    (('a, Input.inp) Code.abstract ->
+                     ([> `TDet of 'a Det.lstate
+                       | `TPivot of 'a Output.P.lstate
+                       | `TRan of 'a Output.R.lstate ]
+                      as 'b)
+                     list ->
+                     ('b list ->
+                      ('a, Output.res) Code.abstract ->
+                      ('a, 'c) Code.abstract) ->
+                     ('a, 'c) Code.abstract) *
+                    (('d, Input.inp) Code.abstract ->
+                     ([> `TDet of 'd Det.lstate
+                       | `TPivot of 'd Output.P.lstate
+                       | `TRan of 'd Output.R.lstate ]
+                      as 'e)
+                     list ->
+                     ('e list ->
+                      ('d, Output.res) Code.abstract ->
+                      ('d, 'f) Code.abstract) ->
+                     ('d, 'f) Code.abstract)
                 end
   end
 module G_GVC_Z19 :
@@ -7412,15 +7488,26 @@ module G_GVC_Z19 :
                         'b -> ('b -> ('a, unit) Code.abstract -> 'f) -> 'f
                     end
                   val gen :
-                    ('a, Input.inp) Code.abstract ->
-                    ([> `TDet of 'a Det.lstate
-                      | `TPivot of 'a Output.P.lstate
-                      | `TRan of 'a Output.R.lstate ]
-                     as 'b)
-                    list ->
-                    ('b list ->
-                     ('a, Output.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-                    ('a, 'c) Code.abstract
+                    (('a, Input.inp) Code.abstract ->
+                     ([> `TDet of 'a Det.lstate
+                       | `TPivot of 'a Output.P.lstate
+                       | `TRan of 'a Output.R.lstate ]
+                      as 'b)
+                     list ->
+                     ('b list ->
+                      ('a, Output.res) Code.abstract ->
+                      ('a, 'c) Code.abstract) ->
+                     ('a, 'c) Code.abstract) *
+                    (('d, Input.inp) Code.abstract ->
+                     ([> `TDet of 'd Det.lstate
+                       | `TPivot of 'd Output.P.lstate
+                       | `TRan of 'd Output.R.lstate ]
+                      as 'e)
+                     list ->
+                     ('e list ->
+                      ('d, Output.res) Code.abstract ->
+                      ('d, 'f) Code.abstract) ->
+                     ('d, 'f) Code.abstract)
                 end
   end
 module GenFA1 :
@@ -7570,14 +7657,22 @@ module GenFA1 :
           'b -> ('b -> ('a, unit) Code.abstract -> 'f) -> 'f
       end
     val gen :
-      ('a, Input.inp) Code.abstract ->
-      ([> `TDet of 'a Det.lstate
-        | `TPivot of 'a Output.P.lstate
-        | `TRan of 'a Output.R.lstate ]
-       as 'b)
-      list ->
-      ('b list -> ('a, Output.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
+      (('a, Input.inp) Code.abstract ->
+       ([> `TDet of 'a Det.lstate
+         | `TPivot of 'a Output.P.lstate
+         | `TRan of 'a Output.R.lstate ]
+        as 'b)
+       list ->
+       ('b list -> ('a, Output.res) Code.abstract -> ('a, 'c) Code.abstract) ->
+       ('a, 'c) Code.abstract) *
+      (('d, Input.inp) Code.abstract ->
+       ([> `TDet of 'd Det.lstate
+         | `TPivot of 'd Output.P.lstate
+         | `TRan of 'd Output.R.lstate ]
+        as 'e)
+       list ->
+       ('e list -> ('d, Output.res) Code.abstract -> ('d, 'f) Code.abstract) ->
+       ('d, 'f) Code.abstract)
   end
 module GenFA2 :
   sig
@@ -7726,14 +7821,22 @@ module GenFA2 :
           'b -> ('b -> ('a, unit) Code.abstract -> 'f) -> 'f
       end
     val gen :
-      ('a, Input.inp) Code.abstract ->
-      ([> `TDet of 'a Det.lstate
-        | `TPivot of 'a Output.P.lstate
-        | `TRan of 'a Output.R.lstate ]
-       as 'b)
-      list ->
-      ('b list -> ('a, Output.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
+      (('a, Input.inp) Code.abstract ->
+       ([> `TDet of 'a Det.lstate
+         | `TPivot of 'a Output.P.lstate
+         | `TRan of 'a Output.R.lstate ]
+        as 'b)
+       list ->
+       ('b list -> ('a, Output.res) Code.abstract -> ('a, 'c) Code.abstract) ->
+       ('a, 'c) Code.abstract) *
+      (('d, Input.inp) Code.abstract ->
+       ([> `TDet of 'd Det.lstate
+         | `TPivot of 'd Output.P.lstate
+         | `TRan of 'd Output.R.lstate ]
+        as 'e)
+       list ->
+       ('e list -> ('d, Output.res) Code.abstract -> ('d, 'f) Code.abstract) ->
+       ('d, 'f) Code.abstract)
   end
 module GenFA3 :
   sig
@@ -7882,14 +7985,22 @@ module GenFA3 :
           'b -> ('b -> ('a, unit) Code.abstract -> 'f) -> 'f
       end
     val gen :
-      ('a, Input.inp) Code.abstract ->
-      ([> `TDet of 'a Det.lstate
-        | `TPivot of 'a Output.P.lstate
-        | `TRan of 'a Output.R.lstate ]
-       as 'b)
-      list ->
-      ('b list -> ('a, Output.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
+      (('a, Input.inp) Code.abstract ->
+       ([> `TDet of 'a Det.lstate
+         | `TPivot of 'a Output.P.lstate
+         | `TRan of 'a Output.R.lstate ]
+        as 'b)
+       list ->
+       ('b list -> ('a, Output.res) Code.abstract -> ('a, 'c) Code.abstract) ->
+       ('a, 'c) Code.abstract) *
+      (('d, Input.inp) Code.abstract ->
+       ([> `TDet of 'd Det.lstate
+         | `TPivot of 'd Output.P.lstate
+         | `TRan of 'd Output.R.lstate ]
+        as 'e)
+       list ->
+       ('e list -> ('d, Output.res) Code.abstract -> ('d, 'f) Code.abstract) ->
+       ('d, 'f) Code.abstract)
   end
 module GenFA4 :
   sig
@@ -8038,14 +8149,22 @@ module GenFA4 :
           'b -> ('b -> ('a, unit) Code.abstract -> 'f) -> 'f
       end
     val gen :
-      ('a, Input.inp) Code.abstract ->
-      ([> `TDet of 'a Det.lstate
-        | `TPivot of 'a Output.P.lstate
-        | `TRan of 'a Output.R.lstate ]
-       as 'b)
-      list ->
-      ('b list -> ('a, Output.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
+      (('a, Input.inp) Code.abstract ->
+       ([> `TDet of 'a Det.lstate
+         | `TPivot of 'a Output.P.lstate
+         | `TRan of 'a Output.R.lstate ]
+        as 'b)
+       list ->
+       ('b list -> ('a, Output.res) Code.abstract -> ('a, 'c) Code.abstract) ->
+       ('a, 'c) Code.abstract) *
+      (('d, Input.inp) Code.abstract ->
+       ([> `TDet of 'd Det.lstate
+         | `TPivot of 'd Output.P.lstate
+         | `TRan of 'd Output.R.lstate ]
+        as 'e)
+       list ->
+       ('e list -> ('d, Output.res) Code.abstract -> ('d, 'f) Code.abstract) ->
+       ('d, 'f) Code.abstract)
   end
 module GenFA11 :
   sig
@@ -8194,14 +8313,22 @@ module GenFA11 :
           'b -> ('b -> ('a, unit) Code.abstract -> 'f) -> 'f
       end
     val gen :
-      ('a, Input.inp) Code.abstract ->
-      ([> `TDet of 'a Det.lstate
-        | `TPivot of 'a Output.P.lstate
-        | `TRan of 'a Output.R.lstate ]
-       as 'b)
-      list ->
-      ('b list -> ('a, Output.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
+      (('a, Input.inp) Code.abstract ->
+       ([> `TDet of 'a Det.lstate
+         | `TPivot of 'a Output.P.lstate
+         | `TRan of 'a Output.R.lstate ]
+        as 'b)
+       list ->
+       ('b list -> ('a, Output.res) Code.abstract -> ('a, 'c) Code.abstract) ->
+       ('a, 'c) Code.abstract) *
+      (('d, Input.inp) Code.abstract ->
+       ([> `TDet of 'd Det.lstate
+         | `TPivot of 'd Output.P.lstate
+         | `TRan of 'd Output.R.lstate ]
+        as 'e)
+       list ->
+       ('e list -> ('d, Output.res) Code.abstract -> ('d, 'f) Code.abstract) ->
+       ('d, 'f) Code.abstract)
   end
 module GenFA12 :
   sig
@@ -8350,14 +8477,22 @@ module GenFA12 :
           'b -> ('b -> ('a, unit) Code.abstract -> 'f) -> 'f
       end
     val gen :
-      ('a, Input.inp) Code.abstract ->
-      ([> `TDet of 'a Det.lstate
-        | `TPivot of 'a Output.P.lstate
-        | `TRan of 'a Output.R.lstate ]
-       as 'b)
-      list ->
-      ('b list -> ('a, Output.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
+      (('a, Input.inp) Code.abstract ->
+       ([> `TDet of 'a Det.lstate
+         | `TPivot of 'a Output.P.lstate
+         | `TRan of 'a Output.R.lstate ]
+        as 'b)
+       list ->
+       ('b list -> ('a, Output.res) Code.abstract -> ('a, 'c) Code.abstract) ->
+       ('a, 'c) Code.abstract) *
+      (('d, Input.inp) Code.abstract ->
+       ([> `TDet of 'd Det.lstate
+         | `TPivot of 'd Output.P.lstate
+         | `TRan of 'd Output.R.lstate ]
+        as 'e)
+       list ->
+       ('e list -> ('d, Output.res) Code.abstract -> ('d, 'f) Code.abstract) ->
+       ('d, 'f) Code.abstract)
   end
 module GenFA13 :
   sig
@@ -8506,14 +8641,22 @@ module GenFA13 :
           'b -> ('b -> ('a, unit) Code.abstract -> 'f) -> 'f
       end
     val gen :
-      ('a, Input.inp) Code.abstract ->
-      ([> `TDet of 'a Det.lstate
-        | `TPivot of 'a Output.P.lstate
-        | `TRan of 'a Output.R.lstate ]
-       as 'b)
-      list ->
-      ('b list -> ('a, Output.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
+      (('a, Input.inp) Code.abstract ->
+       ([> `TDet of 'a Det.lstate
+         | `TPivot of 'a Output.P.lstate
+         | `TRan of 'a Output.R.lstate ]
+        as 'b)
+       list ->
+       ('b list -> ('a, Output.res) Code.abstract -> ('a, 'c) Code.abstract) ->
+       ('a, 'c) Code.abstract) *
+      (('d, Input.inp) Code.abstract ->
+       ([> `TDet of 'd Det.lstate
+         | `TPivot of 'd Output.P.lstate
+         | `TRan of 'd Output.R.lstate ]
+        as 'e)
+       list ->
+       ('e list -> ('d, Output.res) Code.abstract -> ('d, 'f) Code.abstract) ->
+       ('d, 'f) Code.abstract)
   end
 module GenFA14 :
   sig
@@ -8662,14 +8805,22 @@ module GenFA14 :
           'b -> ('b -> ('a, unit) Code.abstract -> 'f) -> 'f
       end
     val gen :
-      ('a, Input.inp) Code.abstract ->
-      ([> `TDet of 'a Det.lstate
-        | `TPivot of 'a Output.P.lstate
-        | `TRan of 'a Output.R.lstate ]
-       as 'b)
-      list ->
-      ('b list -> ('a, Output.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
+      (('a, Input.inp) Code.abstract ->
+       ([> `TDet of 'a Det.lstate
+         | `TPivot of 'a Output.P.lstate
+         | `TRan of 'a Output.R.lstate ]
+        as 'b)
+       list ->
+       ('b list -> ('a, Output.res) Code.abstract -> ('a, 'c) Code.abstract) ->
+       ('a, 'c) Code.abstract) *
+      (('d, Input.inp) Code.abstract ->
+       ([> `TDet of 'd Det.lstate
+         | `TPivot of 'd Output.P.lstate
+         | `TRan of 'd Output.R.lstate ]
+        as 'e)
+       list ->
+       ('e list -> ('d, Output.res) Code.abstract -> ('d, 'f) Code.abstract) ->
+       ('d, 'f) Code.abstract)
   end
 module GenFA24 :
   sig
@@ -8818,14 +8969,22 @@ module GenFA24 :
           'b -> ('b -> ('a, unit) Code.abstract -> 'f) -> 'f
       end
     val gen :
-      ('a, Input.inp) Code.abstract ->
-      ([> `TDet of 'a Det.lstate
-        | `TPivot of 'a Output.P.lstate
-        | `TRan of 'a Output.R.lstate ]
-       as 'b)
-      list ->
-      ('b list -> ('a, Output.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
+      (('a, Input.inp) Code.abstract ->
+       ([> `TDet of 'a Det.lstate
+         | `TPivot of 'a Output.P.lstate
+         | `TRan of 'a Output.R.lstate ]
+        as 'b)
+       list ->
+       ('b list -> ('a, Output.res) Code.abstract -> ('a, 'c) Code.abstract) ->
+       ('a, 'c) Code.abstract) *
+      (('d, Input.inp) Code.abstract ->
+       ([> `TDet of 'd Det.lstate
+         | `TPivot of 'd Output.P.lstate
+         | `TRan of 'd Output.R.lstate ]
+        as 'e)
+       list ->
+       ('e list -> ('d, Output.res) Code.abstract -> ('d, 'f) Code.abstract) ->
+       ('d, 'f) Code.abstract)
   end
 module GenFA5 :
   sig
@@ -8974,14 +9133,22 @@ module GenFA5 :
           'b -> ('b -> ('a, unit) Code.abstract -> 'f) -> 'f
       end
     val gen :
-      ('a, Input.inp) Code.abstract ->
-      ([> `TDet of 'a Det.lstate
-        | `TPivot of 'a Output.P.lstate
-        | `TRan of 'a Output.R.lstate ]
-       as 'b)
-      list ->
-      ('b list -> ('a, Output.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
+      (('a, Input.inp) Code.abstract ->
+       ([> `TDet of 'a Det.lstate
+         | `TPivot of 'a Output.P.lstate
+         | `TRan of 'a Output.R.lstate ]
+        as 'b)
+       list ->
+       ('b list -> ('a, Output.res) Code.abstract -> ('a, 'c) Code.abstract) ->
+       ('a, 'c) Code.abstract) *
+      (('d, Input.inp) Code.abstract ->
+       ([> `TDet of 'd Det.lstate
+         | `TPivot of 'd Output.P.lstate
+         | `TRan of 'd Output.R.lstate ]
+        as 'e)
+       list ->
+       ('e list -> ('d, Output.res) Code.abstract -> ('d, 'f) Code.abstract) ->
+       ('d, 'f) Code.abstract)
   end
 module GenFA6 :
   sig
@@ -9130,14 +9297,22 @@ module GenFA6 :
           'b -> ('b -> ('a, unit) Code.abstract -> 'f) -> 'f
       end
     val gen :
-      ('a, Input.inp) Code.abstract ->
-      ([> `TDet of 'a Det.lstate
-        | `TPivot of 'a Output.P.lstate
-        | `TRan of 'a Output.R.lstate ]
-       as 'b)
-      list ->
-      ('b list -> ('a, Output.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
+      (('a, Input.inp) Code.abstract ->
+       ([> `TDet of 'a Det.lstate
+         | `TPivot of 'a Output.P.lstate
+         | `TRan of 'a Output.R.lstate ]
+        as 'b)
+       list ->
+       ('b list -> ('a, Output.res) Code.abstract -> ('a, 'c) Code.abstract) ->
+       ('a, 'c) Code.abstract) *
+      (('d, Input.inp) Code.abstract ->
+       ([> `TDet of 'd Det.lstate
+         | `TPivot of 'd Output.P.lstate
+         | `TRan of 'd Output.R.lstate ]
+        as 'e)
+       list ->
+       ('e list -> ('d, Output.res) Code.abstract -> ('d, 'f) Code.abstract) ->
+       ('d, 'f) Code.abstract)
   end
 module GenFA7 :
   sig
@@ -9286,14 +9461,22 @@ module GenFA7 :
           'b -> ('b -> ('a, unit) Code.abstract -> 'f) -> 'f
       end
     val gen :
-      ('a, Input.inp) Code.abstract ->
-      ([> `TDet of 'a Det.lstate
-        | `TPivot of 'a Output.P.lstate
-        | `TRan of 'a Output.R.lstate ]
-       as 'b)
-      list ->
-      ('b list -> ('a, Output.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
+      (('a, Input.inp) Code.abstract ->
+       ([> `TDet of 'a Det.lstate
+         | `TPivot of 'a Output.P.lstate
+         | `TRan of 'a Output.R.lstate ]
+        as 'b)
+       list ->
+       ('b list -> ('a, Output.res) Code.abstract -> ('a, 'c) Code.abstract) ->
+       ('a, 'c) Code.abstract) *
+      (('d, Input.inp) Code.abstract ->
+       ([> `TDet of 'd Det.lstate
+         | `TPivot of 'd Output.P.lstate
+         | `TRan of 'd Output.R.lstate ]
+        as 'e)
+       list ->
+       ('e list -> ('d, Output.res) Code.abstract -> ('d, 'f) Code.abstract) ->
+       ('d, 'f) Code.abstract)
   end
 module GenFA8 :
   sig
@@ -9442,14 +9625,22 @@ module GenFA8 :
           'b -> ('b -> ('a, unit) Code.abstract -> 'f) -> 'f
       end
     val gen :
-      ('a, Input.inp) Code.abstract ->
-      ([> `TDet of 'a Det.lstate
-        | `TPivot of 'a Output.P.lstate
-        | `TRan of 'a Output.R.lstate ]
-       as 'b)
-      list ->
-      ('b list -> ('a, Output.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
+      (('a, Input.inp) Code.abstract ->
+       ([> `TDet of 'a Det.lstate
+         | `TPivot of 'a Output.P.lstate
+         | `TRan of 'a Output.R.lstate ]
+        as 'b)
+       list ->
+       ('b list -> ('a, Output.res) Code.abstract -> ('a, 'c) Code.abstract) ->
+       ('a, 'c) Code.abstract) *
+      (('d, Input.inp) Code.abstract ->
+       ([> `TDet of 'd Det.lstate
+         | `TPivot of 'd Output.P.lstate
+         | `TRan of 'd Output.R.lstate ]
+        as 'e)
+       list ->
+       ('e list -> ('d, Output.res) Code.abstract -> ('d, 'f) Code.abstract) ->
+       ('d, 'f) Code.abstract)
   end
 module GenFV1 :
   sig
@@ -9598,14 +9789,22 @@ module GenFV1 :
           'b -> ('b -> ('a, unit) Code.abstract -> 'f) -> 'f
       end
     val gen :
-      ('a, Input.inp) Code.abstract ->
-      ([> `TDet of 'a Det.lstate
-        | `TPivot of 'a Output.P.lstate
-        | `TRan of 'a Output.R.lstate ]
-       as 'b)
-      list ->
-      ('b list -> ('a, Output.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
+      (('a, Input.inp) Code.abstract ->
+       ([> `TDet of 'a Det.lstate
+         | `TPivot of 'a Output.P.lstate
+         | `TRan of 'a Output.R.lstate ]
+        as 'b)
+       list ->
+       ('b list -> ('a, Output.res) Code.abstract -> ('a, 'c) Code.abstract) ->
+       ('a, 'c) Code.abstract) *
+      (('d, Input.inp) Code.abstract ->
+       ([> `TDet of 'd Det.lstate
+         | `TPivot of 'd Output.P.lstate
+         | `TRan of 'd Output.R.lstate ]
+        as 'e)
+       list ->
+       ('e list -> ('d, Output.res) Code.abstract -> ('d, 'f) Code.abstract) ->
+       ('d, 'f) Code.abstract)
   end
 module GenFV2 :
   sig
@@ -9754,14 +9953,22 @@ module GenFV2 :
           'b -> ('b -> ('a, unit) Code.abstract -> 'f) -> 'f
       end
     val gen :
-      ('a, Input.inp) Code.abstract ->
-      ([> `TDet of 'a Det.lstate
-        | `TPivot of 'a Output.P.lstate
-        | `TRan of 'a Output.R.lstate ]
-       as 'b)
-      list ->
-      ('b list -> ('a, Output.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
+      (('a, Input.inp) Code.abstract ->
+       ([> `TDet of 'a Det.lstate
+         | `TPivot of 'a Output.P.lstate
+         | `TRan of 'a Output.R.lstate ]
+        as 'b)
+       list ->
+       ('b list -> ('a, Output.res) Code.abstract -> ('a, 'c) Code.abstract) ->
+       ('a, 'c) Code.abstract) *
+      (('d, Input.inp) Code.abstract ->
+       ([> `TDet of 'd Det.lstate
+         | `TPivot of 'd Output.P.lstate
+         | `TRan of 'd Output.R.lstate ]
+        as 'e)
+       list ->
+       ('e list -> ('d, Output.res) Code.abstract -> ('d, 'f) Code.abstract) ->
+       ('d, 'f) Code.abstract)
   end
 module GenFV3 :
   sig
@@ -9910,14 +10117,22 @@ module GenFV3 :
           'b -> ('b -> ('a, unit) Code.abstract -> 'f) -> 'f
       end
     val gen :
-      ('a, Input.inp) Code.abstract ->
-      ([> `TDet of 'a Det.lstate
-        | `TPivot of 'a Output.P.lstate
-        | `TRan of 'a Output.R.lstate ]
-       as 'b)
-      list ->
-      ('b list -> ('a, Output.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
+      (('a, Input.inp) Code.abstract ->
+       ([> `TDet of 'a Det.lstate
+         | `TPivot of 'a Output.P.lstate
+         | `TRan of 'a Output.R.lstate ]
+        as 'b)
+       list ->
+       ('b list -> ('a, Output.res) Code.abstract -> ('a, 'c) Code.abstract) ->
+       ('a, 'c) Code.abstract) *
+      (('d, Input.inp) Code.abstract ->
+       ([> `TDet of 'd Det.lstate
+         | `TPivot of 'd Output.P.lstate
+         | `TRan of 'd Output.R.lstate ]
+        as 'e)
+       list ->
+       ('e list -> ('d, Output.res) Code.abstract -> ('d, 'f) Code.abstract) ->
+       ('d, 'f) Code.abstract)
   end
 module GenFV4 :
   sig
@@ -10066,14 +10281,22 @@ module GenFV4 :
           'b -> ('b -> ('a, unit) Code.abstract -> 'f) -> 'f
       end
     val gen :
-      ('a, Input.inp) Code.abstract ->
-      ([> `TDet of 'a Det.lstate
-        | `TPivot of 'a Output.P.lstate
-        | `TRan of 'a Output.R.lstate ]
-       as 'b)
-      list ->
-      ('b list -> ('a, Output.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
+      (('a, Input.inp) Code.abstract ->
+       ([> `TDet of 'a Det.lstate
+         | `TPivot of 'a Output.P.lstate
+         | `TRan of 'a Output.R.lstate ]
+        as 'b)
+       list ->
+       ('b list -> ('a, Output.res) Code.abstract -> ('a, 'c) Code.abstract) ->
+       ('a, 'c) Code.abstract) *
+      (('d, Input.inp) Code.abstract ->
+       ([> `TDet of 'd Det.lstate
+         | `TPivot of 'd Output.P.lstate
+         | `TRan of 'd Output.R.lstate ]
+        as 'e)
+       list ->
+       ('e list -> ('d, Output.res) Code.abstract -> ('d, 'f) Code.abstract) ->
+       ('d, 'f) Code.abstract)
   end
 module GenFV5 :
   sig
@@ -10222,14 +10445,22 @@ module GenFV5 :
           'b -> ('b -> ('a, unit) Code.abstract -> 'f) -> 'f
       end
     val gen :
-      ('a, Input.inp) Code.abstract ->
-      ([> `TDet of 'a Det.lstate
-        | `TPivot of 'a Output.P.lstate
-        | `TRan of 'a Output.R.lstate ]
-       as 'b)
-      list ->
-      ('b list -> ('a, Output.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
+      (('a, Input.inp) Code.abstract ->
+       ([> `TDet of 'a Det.lstate
+         | `TPivot of 'a Output.P.lstate
+         | `TRan of 'a Output.R.lstate ]
+        as 'b)
+       list ->
+       ('b list -> ('a, Output.res) Code.abstract -> ('a, 'c) Code.abstract) ->
+       ('a, 'c) Code.abstract) *
+      (('d, Input.inp) Code.abstract ->
+       ([> `TDet of 'd Det.lstate
+         | `TPivot of 'd Output.P.lstate
+         | `TRan of 'd Output.R.lstate ]
+        as 'e)
+       list ->
+       ('e list -> ('d, Output.res) Code.abstract -> ('d, 'f) Code.abstract) ->
+       ('d, 'f) Code.abstract)
   end
 module GenIA1 :
   sig
@@ -10378,14 +10609,22 @@ module GenIA1 :
           'b -> ('b -> ('a, unit) Code.abstract -> 'f) -> 'f
       end
     val gen :
-      ('a, Input.inp) Code.abstract ->
-      ([> `TDet of 'a Det.lstate
-        | `TPivot of 'a Output.P.lstate
-        | `TRan of 'a Output.R.lstate ]
-       as 'b)
-      list ->
-      ('b list -> ('a, Output.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
+      (('a, Input.inp) Code.abstract ->
+       ([> `TDet of 'a Det.lstate
+         | `TPivot of 'a Output.P.lstate
+         | `TRan of 'a Output.R.lstate ]
+        as 'b)
+       list ->
+       ('b list -> ('a, Output.res) Code.abstract -> ('a, 'c) Code.abstract) ->
+       ('a, 'c) Code.abstract) *
+      (('d, Input.inp) Code.abstract ->
+       ([> `TDet of 'd Det.lstate
+         | `TPivot of 'd Output.P.lstate
+         | `TRan of 'd Output.R.lstate ]
+        as 'e)
+       list ->
+       ('e list -> ('d, Output.res) Code.abstract -> ('d, 'f) Code.abstract) ->
+       ('d, 'f) Code.abstract)
   end
 module GenIA2 :
   sig
@@ -10534,14 +10773,22 @@ module GenIA2 :
           'b -> ('b -> ('a, unit) Code.abstract -> 'f) -> 'f
       end
     val gen :
-      ('a, Input.inp) Code.abstract ->
-      ([> `TDet of 'a Det.lstate
-        | `TPivot of 'a Output.P.lstate
-        | `TRan of 'a Output.R.lstate ]
-       as 'b)
-      list ->
-      ('b list -> ('a, Output.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
+      (('a, Input.inp) Code.abstract ->
+       ([> `TDet of 'a Det.lstate
+         | `TPivot of 'a Output.P.lstate
+         | `TRan of 'a Output.R.lstate ]
+        as 'b)
+       list ->
+       ('b list -> ('a, Output.res) Code.abstract -> ('a, 'c) Code.abstract) ->
+       ('a, 'c) Code.abstract) *
+      (('d, Input.inp) Code.abstract ->
+       ([> `TDet of 'd Det.lstate
+         | `TPivot of 'd Output.P.lstate
+         | `TRan of 'd Output.R.lstate ]
+        as 'e)
+       list ->
+       ('e list -> ('d, Output.res) Code.abstract -> ('d, 'f) Code.abstract) ->
+       ('d, 'f) Code.abstract)
   end
 module GenIA3 :
   sig
@@ -10690,14 +10937,22 @@ module GenIA3 :
           'b -> ('b -> ('a, unit) Code.abstract -> 'f) -> 'f
       end
     val gen :
-      ('a, Input.inp) Code.abstract ->
-      ([> `TDet of 'a Det.lstate
-        | `TPivot of 'a Output.P.lstate
-        | `TRan of 'a Output.R.lstate ]
-       as 'b)
-      list ->
-      ('b list -> ('a, Output.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
+      (('a, Input.inp) Code.abstract ->
+       ([> `TDet of 'a Det.lstate
+         | `TPivot of 'a Output.P.lstate
+         | `TRan of 'a Output.R.lstate ]
+        as 'b)
+       list ->
+       ('b list -> ('a, Output.res) Code.abstract -> ('a, 'c) Code.abstract) ->
+       ('a, 'c) Code.abstract) *
+      (('d, Input.inp) Code.abstract ->
+       ([> `TDet of 'd Det.lstate
+         | `TPivot of 'd Output.P.lstate
+         | `TRan of 'd Output.R.lstate ]
+        as 'e)
+       list ->
+       ('e list -> ('d, Output.res) Code.abstract -> ('d, 'f) Code.abstract) ->
+       ('d, 'f) Code.abstract)
   end
 module GenIA4 :
   sig
@@ -10846,14 +11101,22 @@ module GenIA4 :
           'b -> ('b -> ('a, unit) Code.abstract -> 'f) -> 'f
       end
     val gen :
-      ('a, Input.inp) Code.abstract ->
-      ([> `TDet of 'a Det.lstate
-        | `TPivot of 'a Output.P.lstate
-        | `TRan of 'a Output.R.lstate ]
-       as 'b)
-      list ->
-      ('b list -> ('a, Output.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
+      (('a, Input.inp) Code.abstract ->
+       ([> `TDet of 'a Det.lstate
+         | `TPivot of 'a Output.P.lstate
+         | `TRan of 'a Output.R.lstate ]
+        as 'b)
+       list ->
+       ('b list -> ('a, Output.res) Code.abstract -> ('a, 'c) Code.abstract) ->
+       ('a, 'c) Code.abstract) *
+      (('d, Input.inp) Code.abstract ->
+       ([> `TDet of 'd Det.lstate
+         | `TPivot of 'd Output.P.lstate
+         | `TRan of 'd Output.R.lstate ]
+        as 'e)
+       list ->
+       ('e list -> ('d, Output.res) Code.abstract -> ('d, 'f) Code.abstract) ->
+       ('d, 'f) Code.abstract)
   end
 module GenIV1 :
   sig
@@ -11002,14 +11265,22 @@ module GenIV1 :
           'b -> ('b -> ('a, unit) Code.abstract -> 'f) -> 'f
       end
     val gen :
-      ('a, Input.inp) Code.abstract ->
-      ([> `TDet of 'a Det.lstate
-        | `TPivot of 'a Output.P.lstate
-        | `TRan of 'a Output.R.lstate ]
-       as 'b)
-      list ->
-      ('b list -> ('a, Output.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
+      (('a, Input.inp) Code.abstract ->
+       ([> `TDet of 'a Det.lstate
+         | `TPivot of 'a Output.P.lstate
+         | `TRan of 'a Output.R.lstate ]
+        as 'b)
+       list ->
+       ('b list -> ('a, Output.res) Code.abstract -> ('a, 'c) Code.abstract) ->
+       ('a, 'c) Code.abstract) *
+      (('d, Input.inp) Code.abstract ->
+       ([> `TDet of 'd Det.lstate
+         | `TPivot of 'd Output.P.lstate
+         | `TRan of 'd Output.R.lstate ]
+        as 'e)
+       list ->
+       ('e list -> ('d, Output.res) Code.abstract -> ('d, 'f) Code.abstract) ->
+       ('d, 'f) Code.abstract)
   end
 module GenIV2 :
   sig
@@ -11158,14 +11429,22 @@ module GenIV2 :
           'b -> ('b -> ('a, unit) Code.abstract -> 'f) -> 'f
       end
     val gen :
-      ('a, Input.inp) Code.abstract ->
-      ([> `TDet of 'a Det.lstate
-        | `TPivot of 'a Output.P.lstate
-        | `TRan of 'a Output.R.lstate ]
-       as 'b)
-      list ->
-      ('b list -> ('a, Output.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
+      (('a, Input.inp) Code.abstract ->
+       ([> `TDet of 'a Det.lstate
+         | `TPivot of 'a Output.P.lstate
+         | `TRan of 'a Output.R.lstate ]
+        as 'b)
+       list ->
+       ('b list -> ('a, Output.res) Code.abstract -> ('a, 'c) Code.abstract) ->
+       ('a, 'c) Code.abstract) *
+      (('d, Input.inp) Code.abstract ->
+       ([> `TDet of 'd Det.lstate
+         | `TPivot of 'd Output.P.lstate
+         | `TRan of 'd Output.R.lstate ]
+        as 'e)
+       list ->
+       ('e list -> ('d, Output.res) Code.abstract -> ('d, 'f) Code.abstract) ->
+       ('d, 'f) Code.abstract)
   end
 module GenIV3 :
   sig
@@ -11314,14 +11593,22 @@ module GenIV3 :
           'b -> ('b -> ('a, unit) Code.abstract -> 'f) -> 'f
       end
     val gen :
-      ('a, Input.inp) Code.abstract ->
-      ([> `TDet of 'a Det.lstate
-        | `TPivot of 'a Output.P.lstate
-        | `TRan of 'a Output.R.lstate ]
-       as 'b)
-      list ->
-      ('b list -> ('a, Output.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
+      (('a, Input.inp) Code.abstract ->
+       ([> `TDet of 'a Det.lstate
+         | `TPivot of 'a Output.P.lstate
+         | `TRan of 'a Output.R.lstate ]
+        as 'b)
+       list ->
+       ('b list -> ('a, Output.res) Code.abstract -> ('a, 'c) Code.abstract) ->
+       ('a, 'c) Code.abstract) *
+      (('d, Input.inp) Code.abstract ->
+       ([> `TDet of 'd Det.lstate
+         | `TPivot of 'd Output.P.lstate
+         | `TRan of 'd Output.R.lstate ]
+        as 'e)
+       list ->
+       ('e list -> ('d, Output.res) Code.abstract -> ('d, 'f) Code.abstract) ->
+       ('d, 'f) Code.abstract)
   end
 module GenIV4 :
   sig
@@ -11470,14 +11757,22 @@ module GenIV4 :
           'b -> ('b -> ('a, unit) Code.abstract -> 'f) -> 'f
       end
     val gen :
-      ('a, Input.inp) Code.abstract ->
-      ([> `TDet of 'a Det.lstate
-        | `TPivot of 'a Output.P.lstate
-        | `TRan of 'a Output.R.lstate ]
-       as 'b)
-      list ->
-      ('b list -> ('a, Output.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
+      (('a, Input.inp) Code.abstract ->
+       ([> `TDet of 'a Det.lstate
+         | `TPivot of 'a Output.P.lstate
+         | `TRan of 'a Output.R.lstate ]
+        as 'b)
+       list ->
+       ('b list -> ('a, Output.res) Code.abstract -> ('a, 'c) Code.abstract) ->
+       ('a, 'c) Code.abstract) *
+      (('d, Input.inp) Code.abstract ->
+       ([> `TDet of 'd Det.lstate
+         | `TPivot of 'd Output.P.lstate
+         | `TRan of 'd Output.R.lstate ]
+        as 'e)
+       list ->
+       ('e list -> ('d, Output.res) Code.abstract -> ('d, 'f) Code.abstract) ->
+       ('d, 'f) Code.abstract)
   end
 module GenIV5 :
   sig
@@ -11626,14 +11921,22 @@ module GenIV5 :
           'b -> ('b -> ('a, unit) Code.abstract -> 'f) -> 'f
       end
     val gen :
-      ('a, Input.inp) Code.abstract ->
-      ([> `TDet of 'a Det.lstate
-        | `TPivot of 'a Output.P.lstate
-        | `TRan of 'a Output.R.lstate ]
-       as 'b)
-      list ->
-      ('b list -> ('a, Output.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
+      (('a, Input.inp) Code.abstract ->
+       ([> `TDet of 'a Det.lstate
+         | `TPivot of 'a Output.P.lstate
+         | `TRan of 'a Output.R.lstate ]
+        as 'b)
+       list ->
+       ('b list -> ('a, Output.res) Code.abstract -> ('a, 'c) Code.abstract) ->
+       ('a, 'c) Code.abstract) *
+      (('d, Input.inp) Code.abstract ->
+       ([> `TDet of 'd Det.lstate
+         | `TPivot of 'd Output.P.lstate
+         | `TRan of 'd Output.R.lstate ]
+        as 'e)
+       list ->
+       ('e list -> ('d, Output.res) Code.abstract -> ('d, 'f) Code.abstract) ->
+       ('d, 'f) Code.abstract)
   end
 module GenRA1 :
   sig
@@ -11782,14 +12085,22 @@ module GenRA1 :
           'b -> ('b -> ('a, unit) Code.abstract -> 'f) -> 'f
       end
     val gen :
-      ('a, Input.inp) Code.abstract ->
-      ([> `TDet of 'a Det.lstate
-        | `TPivot of 'a Output.P.lstate
-        | `TRan of 'a Output.R.lstate ]
-       as 'b)
-      list ->
-      ('b list -> ('a, Output.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
+      (('a, Input.inp) Code.abstract ->
+       ([> `TDet of 'a Det.lstate
+         | `TPivot of 'a Output.P.lstate
+         | `TRan of 'a Output.R.lstate ]
+        as 'b)
+       list ->
+       ('b list -> ('a, Output.res) Code.abstract -> ('a, 'c) Code.abstract) ->
+       ('a, 'c) Code.abstract) *
+      (('d, Input.inp) Code.abstract ->
+       ([> `TDet of 'd Det.lstate
+         | `TPivot of 'd Output.P.lstate
+         | `TRan of 'd Output.R.lstate ]
+        as 'e)
+       list ->
+       ('e list -> ('d, Output.res) Code.abstract -> ('d, 'f) Code.abstract) ->
+       ('d, 'f) Code.abstract)
   end
 module GenRA2 :
   sig
@@ -11938,14 +12249,22 @@ module GenRA2 :
           'b -> ('b -> ('a, unit) Code.abstract -> 'f) -> 'f
       end
     val gen :
-      ('a, Input.inp) Code.abstract ->
-      ([> `TDet of 'a Det.lstate
-        | `TPivot of 'a Output.P.lstate
-        | `TRan of 'a Output.R.lstate ]
-       as 'b)
-      list ->
-      ('b list -> ('a, Output.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
+      (('a, Input.inp) Code.abstract ->
+       ([> `TDet of 'a Det.lstate
+         | `TPivot of 'a Output.P.lstate
+         | `TRan of 'a Output.R.lstate ]
+        as 'b)
+       list ->
+       ('b list -> ('a, Output.res) Code.abstract -> ('a, 'c) Code.abstract) ->
+       ('a, 'c) Code.abstract) *
+      (('d, Input.inp) Code.abstract ->
+       ([> `TDet of 'd Det.lstate
+         | `TPivot of 'd Output.P.lstate
+         | `TRan of 'd Output.R.lstate ]
+        as 'e)
+       list ->
+       ('e list -> ('d, Output.res) Code.abstract -> ('d, 'f) Code.abstract) ->
+       ('d, 'f) Code.abstract)
   end
 module GenRA3 :
   sig
@@ -12094,14 +12413,22 @@ module GenRA3 :
           'b -> ('b -> ('a, unit) Code.abstract -> 'f) -> 'f
       end
     val gen :
-      ('a, Input.inp) Code.abstract ->
-      ([> `TDet of 'a Det.lstate
-        | `TPivot of 'a Output.P.lstate
-        | `TRan of 'a Output.R.lstate ]
-       as 'b)
-      list ->
-      ('b list -> ('a, Output.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
+      (('a, Input.inp) Code.abstract ->
+       ([> `TDet of 'a Det.lstate
+         | `TPivot of 'a Output.P.lstate
+         | `TRan of 'a Output.R.lstate ]
+        as 'b)
+       list ->
+       ('b list -> ('a, Output.res) Code.abstract -> ('a, 'c) Code.abstract) ->
+       ('a, 'c) Code.abstract) *
+      (('d, Input.inp) Code.abstract ->
+       ([> `TDet of 'd Det.lstate
+         | `TPivot of 'd Output.P.lstate
+         | `TRan of 'd Output.R.lstate ]
+        as 'e)
+       list ->
+       ('e list -> ('d, Output.res) Code.abstract -> ('d, 'f) Code.abstract) ->
+       ('d, 'f) Code.abstract)
   end
 module GenRA4 :
   sig
@@ -12250,14 +12577,22 @@ module GenRA4 :
           'b -> ('b -> ('a, unit) Code.abstract -> 'f) -> 'f
       end
     val gen :
-      ('a, Input.inp) Code.abstract ->
-      ([> `TDet of 'a Det.lstate
-        | `TPivot of 'a Output.P.lstate
-        | `TRan of 'a Output.R.lstate ]
-       as 'b)
-      list ->
-      ('b list -> ('a, Output.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
+      (('a, Input.inp) Code.abstract ->
+       ([> `TDet of 'a Det.lstate
+         | `TPivot of 'a Output.P.lstate
+         | `TRan of 'a Output.R.lstate ]
+        as 'b)
+       list ->
+       ('b list -> ('a, Output.res) Code.abstract -> ('a, 'c) Code.abstract) ->
+       ('a, 'c) Code.abstract) *
+      (('d, Input.inp) Code.abstract ->
+       ([> `TDet of 'd Det.lstate
+         | `TPivot of 'd Output.P.lstate
+         | `TRan of 'd Output.R.lstate ]
+        as 'e)
+       list ->
+       ('e list -> ('d, Output.res) Code.abstract -> ('d, 'f) Code.abstract) ->
+       ('d, 'f) Code.abstract)
   end
 module GenZp3 :
   sig
@@ -12406,14 +12741,22 @@ module GenZp3 :
           'b -> ('b -> ('a, unit) Code.abstract -> 'f) -> 'f
       end
     val gen :
-      ('a, Input.inp) Code.abstract ->
-      ([> `TDet of 'a Det.lstate
-        | `TPivot of 'a Output.P.lstate
-        | `TRan of 'a Output.R.lstate ]
-       as 'b)
-      list ->
-      ('b list -> ('a, Output.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
+      (('a, Input.inp) Code.abstract ->
+       ([> `TDet of 'a Det.lstate
+         | `TPivot of 'a Output.P.lstate
+         | `TRan of 'a Output.R.lstate ]
+        as 'b)
+       list ->
+       ('b list -> ('a, Output.res) Code.abstract -> ('a, 'c) Code.abstract) ->
+       ('a, 'c) Code.abstract) *
+      (('d, Input.inp) Code.abstract ->
+       ([> `TDet of 'd Det.lstate
+         | `TPivot of 'd Output.P.lstate
+         | `TRan of 'd Output.R.lstate ]
+        as 'e)
+       list ->
+       ('e list -> ('d, Output.res) Code.abstract -> ('d, 'f) Code.abstract) ->
+       ('d, 'f) Code.abstract)
   end
 module GenZp19 :
   sig
@@ -12562,14 +12905,22 @@ module GenZp19 :
           'b -> ('b -> ('a, unit) Code.abstract -> 'f) -> 'f
       end
     val gen :
-      ('a, Input.inp) Code.abstract ->
-      ([> `TDet of 'a Det.lstate
-        | `TPivot of 'a Output.P.lstate
-        | `TRan of 'a Output.R.lstate ]
-       as 'b)
-      list ->
-      ('b list -> ('a, Output.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
+      (('a, Input.inp) Code.abstract ->
+       ([> `TDet of 'a Det.lstate
+         | `TPivot of 'a Output.P.lstate
+         | `TRan of 'a Output.R.lstate ]
+        as 'b)
+       list ->
+       ('b list -> ('a, Output.res) Code.abstract -> ('a, 'c) Code.abstract) ->
+       ('a, 'c) Code.abstract) *
+      (('d, Input.inp) Code.abstract ->
+       ([> `TDet of 'd Det.lstate
+         | `TPivot of 'd Output.P.lstate
+         | `TRan of 'd Output.R.lstate ]
+        as 'e)
+       list ->
+       ('e list -> ('d, Output.res) Code.abstract -> ('d, 'f) Code.abstract) ->
+       ('d, 'f) Code.abstract)
   end
 val resFA1 : ('a, GenFA1.Input.inp -> GenFA1.Output.res) code =
   .<fun a_1 ->
@@ -13101,7 +13452,7 @@ val resFV5 : ('a, GenFV5.Input.inp -> GenFV5.Output.res) code =
            (loop_22 t_10 (snd (fst i_12)));
            (t_8 := (~- (! t_8)))
           end else ();
-          if ((fst (fst i_12)) <> t_10) then begin
+          if ((fst (fst i_12)) <> t_9) then begin
            let a_13 = t_4.arr
            and m_14 = t_4.m in
            let i1_15 = (t_9 * m_14)
@@ -13686,7 +14037,7 @@ val resIV5 : ('a, GenIV5.Input.inp -> GenIV5.Output.res) code =
            (loop_22 t_10 (snd (fst i_12)));
            (t_8 := (~- (! t_8)))
           end else ();
-          if ((fst (fst i_12)) <> t_10) then begin
+          if ((fst (fst i_12)) <> t_9) then begin
            let a_13 = t_4.arr
            and m_14 = t_4.m in
            let i1_15 = (t_9 * m_14)
@@ -13760,7 +14111,7 @@ val resFA11 : ('a, GenFA11.Input.inp -> GenFA11.Output.res) code =
             (t_5.(r_13)).(snd (fst i_11)) <- t_14
            done
           else ();
-          if ((fst (fst i_11)) <> t_9) then
+          if ((fst (fst i_11)) <> t_8) then
            let t_12 = t_5.(t_8) in
            t_5.(t_8) <- t_5.(snd (fst i_11));
            t_5.(snd (fst i_11)) <- t_12
@@ -13826,7 +14177,7 @@ val resFA12 : ('a, GenFA12.Input.inp -> GenFA12.Output.res) code =
            done;
            (t_9 := (~- (! t_9)))
           end else ();
-          if ((fst (fst i_13)) <> t_11) then begin
+          if ((fst (fst i_13)) <> t_10) then begin
            let t_14 = t_5.(t_10) in
            t_5.(t_10) <- t_5.(snd (fst i_13));
            t_5.(snd (fst i_13)) <- t_14;
@@ -13893,7 +14244,7 @@ val resFA13 : ('a, GenFA13.Input.inp -> GenFA13.Output.res) code =
             (t_5.(r_13)).(snd (fst i_11)) <- t_14
            done
           else ();
-          if ((fst (fst i_11)) <> t_9) then
+          if ((fst (fst i_11)) <> t_8) then
            let t_12 = t_5.(t_8) in
            t_5.(t_8) <- t_5.(snd (fst i_11));
            t_5.(snd (fst i_11)) <- t_12
@@ -13959,7 +14310,7 @@ val resFA14 : ('a, GenFA14.Input.inp -> GenFA14.Output.res) code =
            done;
            (t_9 := (~- (! t_9)))
           end else ();
-          if ((fst (fst i_13)) <> t_11) then begin
+          if ((fst (fst i_13)) <> t_10) then begin
            let t_14 = t_5.(t_10) in
            t_5.(t_10) <- t_5.(snd (fst i_13));
            t_5.(snd (fst i_13)) <- t_14;

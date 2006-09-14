@@ -416,6 +416,22 @@ module OutDetRankPivot(Det : DETERMINANT) =
     ret (Tuple.tup4 b det rank pivmat)
 end
 
+(*
+module OutLU(Det : DETERMINANT) =
+  struct
+  type res = C.contr * C.contr * perm list
+  module D = Det
+  module R = Rank
+  module P = KeepPivot
+  let make_LU b = perform
+      let rmat = 
+      lmat <-- 
+  let make_result b = perform
+    pivmat <-- P.fin ();
+    ret (Tuple.tup3 pivmat)
+end
+*)
+
 
 module type PIVOT = 
       functor (D: DETF) -> 
@@ -522,7 +538,7 @@ struct
                            s2 <-- D.upd_sign ();
                            ret (optSeq s1 s2)))
                        (seqM
-                         (whenM (Logic.notequalL pr pos.colpos) (perform
+                         (whenM (Logic.notequalL pr pos.rowpos) (perform
                            s1 <-- ret (C.swap_rows_stmt mat.matrix pos.rowpos pc);
                            s2 <-- D.upd_sign ();
                            ret (optSeq s1 s2)))
@@ -566,7 +582,7 @@ module GenGE(PivotF: PIVOT)
         perform
               seqM (I.row_iter mat.matrix pos.p.colpos (Idx.succ pos.p.rowpos) (Idx.pred mat.numrow) innerbody) 
                    (U.update_det pos.curval Det.set Det.acc) in
-      let ge_gen input = perform
+      let init input = perform
           (a,rmar,augmented) <-- Input.get_input input;
           r <-- Output.R.decl ();
           c <-- retN (liftRef Idx.zero);
@@ -576,22 +592,32 @@ module GenGE(PivotF: PIVOT)
           n <-- if augmented then retN (C.dim2 a) else ret rmar;
           Det.decl ();
           Output.P.decl ();
+          let mat = {matrix=b; numrow=n; numcol=m} in
+          ret (mat, r, c, rmar)  in
+      let forward_elim (mat, r, c, rmar) = perform
+          whileM (Logic.andL (Idx.less (liftGet c) mat.numcol)
+                              (Idx.less (liftGet r) rmar) )
+             ( perform
+             rr <-- retN (liftGet r);
+             cc <-- retN (liftGet c);
+             let cp  = {rowpos=rr; colpos=cc} in
+             pivot <-- l1 retN (Pivot.findpivot mat cp);
+             seqM (matchM pivot (fun pv -> 
+                      seqM (zerobelow mat {p=cp; curval=pv} )
+                           (Output.R.succ ()) )
+                      (Det.zero_sign () ))
+                  (updateM c Idx.succ) ) in
+      let ge_gen input = perform
+          (mat, r, c, rmar) <-- init input;
           seqM 
-            (whileM (Logic.andL (Idx.less (liftGet c) m)
-                                (Idx.less (liftGet r) rmar) )
-               ( perform
-               rr <-- retN (liftGet r);
-               cc <-- retN (liftGet c);
-               let mat = {matrix=b; numrow=n; numcol=m} in
-               let cp  = {rowpos=rr; colpos=cc} in
-               pivot <-- l1 retN (Pivot.findpivot mat cp);
-               seqM (matchM pivot (fun pv -> 
-                        seqM (zerobelow mat {p=cp; curval=pv} )
-                             (Output.R.succ ()) )
-                        (Det.zero_sign () ))
-                    (updateM c Idx.succ) ))
-            (Output.make_result b)
-    in ge_gen
+            (forward_elim (mat, r, c, rmar))
+            (Output.make_result mat.matrix)
+        and lu_gen input = perform
+          (mat, r, c, rmar) <-- init input;
+          seqM 
+            (forward_elim (mat, r, c, rmar))
+            (Output.make_result mat.matrix)
+    in ge_gen, lu_gen
 end
 
 end
