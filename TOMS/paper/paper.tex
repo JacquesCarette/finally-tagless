@@ -1,0 +1,135 @@
+\documentclass[acmtoms]{acmtrans2m}
+
+%\acmVolume{V}
+%\acmNumber{N}
+%\acmYear{YY}
+%\acmMonth{M|
+
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{conjecture}[theorem]{Conjecture}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{lemma}[theorem]{Lemma}
+\newdef{definition}[theorem]{Definition}
+\newdef{remark}[theorem]{Remark}
+
+           
+\markboth{J. Carette and O. Kiselyov}{Our grand title}
+
+\title{So what will our title be?}
+            
+\author{JACQUES CARETTE\\ McMaster University
+    \and OLEG KISELYOV\\ FNMOC}
+            
+\begin{abstract} 
+We describe statically typed generative techniques that enable one to write
+generic yet highly efficient software.  We demonstrate the effectiveness
+of this for various common scientific and symbolic programming tasks.
+
+Furthermore, we also show how these techniques allow for significantly
+more modularization than previous work, at no loss of program efficiency.
+We are thus able to extract even more design aspects out of linear algebra
+codes than previous work.  We are thus able to seamlessly bridge the gap
+between numerical and symbolic linear algebra.  The end result is that
+the core abstract algorithm becomes the program text for generating all
+its specialization, and the various design decisions required to generate
+these are made completely explicit.
+\end{abstract}
+            
+\category{G.4}{Mathematical Software}{???}
+            
+\terms{Design,Performance,Languages}
+            
+\keywords{Abstraction, genericity, MetaOCaml, metaprogramming}
+            
+\begin{document}
+            
+\begin{bottomstuff} 
+To be filled in later
+\end{bottomstuff}
+            
+\maketitle
+
+\section{Introduction}
+
+Talk about how, at no loss of efficiency, one can pull out very abstract
+algorithms out of countless variants.  This even allows creating new
+variants at essentially no cost to the author of the code.  It can pull
+out the real core of an algorithm and make visible all the choices that
+can be made.  Generalizations then become significantly easier.
+
+In fact, in some cases efficiency can even be gained. 
+The easiest way is by taking out dynamic choices and making them static.
+Another is to allow more structure (like sparsity) to be taken advantage
+of in a higly modular manner; thus authors are more likely to have the
+time to code special versions.  Also, various optimization techniques
+(like loop unrolling) can be applied at no maintenance cost.
+
+The order of the sections in the paper is not fixed yet.
+
+\section{Related Work}
+Must mention Boost (and lots of other C++ work).  Revisit old emails to
+find more references.  Not clear if this goes here or towards the end.
+
+\section{Problem}
+Describe the problem solved.  Basically a highly typed way to extract
+all the design information from code variants into modular code generators
+that compose correctly \emph{by construction}.  Requires encoding as
+much information as possible in types.  But also, since MetaOCaml is
+stage, some information can be encoded in values available at
+``compile'' time, and this information can be checked (again at compile
+time) for correctness and consistency before any code is generated.
+This leads one down partway to dependent types, which will not be 
+explored in this particular work.
+
+There are multiple goals:
+\begin{itemize}
+\item Generate correct code
+\item Generate efficient code
+\item Modular generator
+\item Design-points discovery
+\end{itemize}
+
+\section{MetaOCaml}
+For TOMS people, an introduction to MetaOCaml will really be needed.  A
+comparison to meta-programming in other languages, especially C++, will
+also be necessary.
+
+\section{Methodology}
+Describe the tools and techniques.  Repeat some of the ideas from the 
+GPCE paper, add the new ones.
+
+\section{Case studies}
+Go through all our examples, in detail.  Different algorithms have 
+different numbers of easily identifiable design points that can be
+extracted.  But the same mechanism works accross them all.
+
+\subsection{Gaussian Elimination family}
+Describe the members of the family, all the various bits that can be
+extracted out.  Some pieces are incompatible --- show how one insures
+they cannot successfully be composed with each other (by construction).
+
+The family is much larger than just GE, as it also includes LU and
+in general GE-based linear solving.
+
+\subsection{Linear ODE solving family}
+Need to put more variants in the code to be able to talk about the 
+family some more.
+
+\subsection{Cholesky family}
+Obvious question: does this belong here or in GE?  We'll need to 
+actually code this to find out I think!
+
+
+\section{Conclusion}
+Always the last thing written?
+
+\bibliographystyle{acmtrans}
+\bibliography{paper} % rename this!
+
+\begin{received}
+Received Month Year; revised Month Year; accepted Month Year
+\end{received}
+\end{document}
+
+
