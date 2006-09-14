@@ -196,13 +196,17 @@ module type TRACKPIVOT = sig
     (('a, perm list) abstract ,[> 'a tag_lstate] list,'w) monad
 end
 
-module TrackPivot = 
+module PivotCommon = 
   struct
   type 'a lstate = ('a,  perm list ref) abstract
   type 'a tag_lstate = [`TPivot of 'a lstate ]
   type ('b,'v) lm = ('a,'v,'s,'w) cmonad
     constraint 's = [> 'a tag_lstate]
     constraint 'b = 'a * 's * 'w
+end
+
+module KeepPivot = struct
+  include PivotCommon
   let rec fetch_iter s =
     match (List.hd s) with
       `TPivot x -> x
@@ -217,21 +221,13 @@ module TrackPivot =
   let add v = perform
    p <-- pfetch ();
    ret (Some (assign p (CList.cons v (liftGet p))))
-end
-
-module KeepPivot = struct
-  include TrackPivot
   let fin () = perform
       p <-- pfetch ();
       ret (liftGet p)
 end
 
 module DiscardPivot = struct
-  type 'a lstate = ('a,  perm list ref) abstract
-  type 'a tag_lstate = [`TPivot of 'a lstate ]
-  type ('b,'v) lm = ('a,'v,'s,'w) cmonad
-    constraint 's = [> 'a tag_lstate]
-    constraint 'b = 'a * 's * 'w
+  include PivotCommon
   let decl () = unitL
   let add _ = ret None
   let fin () = ret CList.nil

@@ -277,28 +277,12 @@
           (('a, Code.perm list) Code.abstract, [> 'a tag_lstate ] list, 'b)
           StateCPSMonad.monad
       end
-    module TrackPivot :
+    module PivotCommon :
       sig
         type 'a lstate = ('a, Code.perm list ref) Code.abstract
         type 'a tag_lstate = [ `TPivot of 'a lstate ]
         type ('a, 'b) lm = ('c, 'b, 'd, 'e) cmonad
           constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-        val fetch_iter : [> `TPivot of 'a ] list -> 'a
-        val pfetch :
-          unit ->
-          ([> `TPivot of 'b ] as 'a) list -> ('a list -> 'b -> 'c) -> 'c
-        val pstore :
-          'a ->
-          ([> `TPivot of 'a ] as 'b) list -> ('b list -> unit -> 'c) -> 'c
-        val decl :
-          unit ->
-          ([> `TPivot of ('b, Code.perm list ref) Code.abstract ] as 'a) list ->
-          ('a list -> ('c, unit) Code.abstract -> ('b, 'd) Code.abstract) ->
-          ('b, 'd) Code.abstract
-        val add :
-          ('a, 'b) Code.abstract ->
-          ([> `TPivot of ('a, 'b list ref) Code.abstract ] as 'c) list ->
-          ('c list -> ('a, unit) Code.abstract option -> 'd) -> 'd
       end
     module KeepPivot :
       sig
