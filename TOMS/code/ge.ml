@@ -182,31 +182,70 @@ module AbstractDet(Dom: DOMAINL) =
           (ret (uminusL (liftGet det))))
 end
 
+module type PIVOTKIND = sig
+  type v
+  type 'b c
+  type 'a vc = ('a, v c) abstract
+  val add : ('a, v) abstract -> 'a vc -> 'a vc
+  val empty : unit -> 'a vc
+  val rowrep : ('a, int) abstract -> ('a, int) abstract -> ('a, v) abstract
+  val colrep : ('a, int) abstract -> ('a, int) abstract -> ('a, v) abstract
+end
+
+module PermList = struct
+  type v = perm
+  type 'b c = 'b list
+  type 'a vc = ('a, v c) abstract
+  let add x l = CList.cons x l
+  let empty () = (CList.nil : 'a vc)
+  let rowrep x y = liftRowSwap x y
+  let colrep x y = liftColSwap x y
+end
+
+(*
+module RowVectorPerm = struct
+  type v = int
+  type 'b c = int array
+  type 'a vc = ('a, v c) abstract
+  let add x l = CList.cons x l
+  let empty () = (CList.nil : 'a vc)
+  let rowrep x y = x
+  let colrep x y = x
+end
+*)
+
 module type TRACKPIVOT = sig
-  type 'a lstate
+  type pv
+  type 'b c
+  type 'a lstate = ('a, pv c ref) abstract
   type 'a tag_lstate = [`TPivot of 'a lstate ]
     (* Here, parameter 'b accounts for all the extra polymorphims *)
   type ('b,'v) lm = ('a,'v,'s,'w) cmonad
     constraint 's = [> 'a tag_lstate]
     constraint 'b = 'a * 's * 'w
+  val rowrep : ('a, int) abstract -> ('a, int) abstract -> ('a, pv) abstract
+  val colrep : ('a, int) abstract -> ('a, int) abstract -> ('a, pv) abstract
   val decl : unit -> ('b, unit) lm
-  val add : ('a, perm) abstract -> 
+  val add : ('a, pv) abstract -> 
     (('a,unit) abstract option,[> 'a tag_lstate] list,('a,'w) abstract) monad
-  val fin : unit -> 
-    (('a, perm list) abstract ,[> 'a tag_lstate] list,'w) monad
+  val fin : unit -> ('b, pv c) lm
 end
 
-module PivotCommon = 
+module PivotCommon(PK:PIVOTKIND) = 
   struct
-  type 'a lstate = ('a,  perm list ref) abstract
+  type pv = PK.v
+  type 'b c = 'b PK.c
+  type 'a lstate = ('a, pv c ref) abstract
   type 'a tag_lstate = [`TPivot of 'a lstate ]
   type ('b,'v) lm = ('a,'v,'s,'w) cmonad
     constraint 's = [> 'a tag_lstate]
     constraint 'b = 'a * 's * 'w
+  let rowrep = PK.rowrep
+  let colrep = PK.colrep
 end
 
-module KeepPivot = struct
-  include PivotCommon
+module KeepPivot(PK:PIVOTKIND) = struct
+  include PivotCommon(PK)
   let rec fetch_iter s =
     match (List.hd s) with
       `TPivot x -> x
@@ -215,22 +254,22 @@ module KeepPivot = struct
                         ret (fetch_iter s)
   let pstore v = store (`TPivot v)
   let decl () = perform
-      pdecl <-- retN (liftRef (CList.nil : ('a,  perm list) abstract));
+      pdecl <-- retN (liftRef (PK.empty ()));
       pstore pdecl;
       unitL
   let add v = perform
    p <-- pfetch ();
-   ret (Some (assign p (CList.cons v (liftGet p))))
+   ret (Some (assign p (PK.add v (liftGet p))))
   let fin () = perform
       p <-- pfetch ();
       ret (liftGet p)
 end
 
-module DiscardPivot = struct
-  include PivotCommon
+module DiscardPivot(PK:PIVOTKIND) = struct
+  include PivotCommon(PK)
   let decl () = unitL
   let add _ = ret None
-  let fin () = ret CList.nil
+  let fin () = ret (PK.empty ())
 end
 
 (* Not only do we need to "pass down" the kind (in type S), we also need
@@ -342,69 +381,74 @@ module InpMatrixMargin = struct
         ret (b, c, true)
 end
 
+(* The 'with type' below are not strictly needed, they just make the
+   printing of the types much nicer *)
 module OutProxy(Det0:DETF) = struct
-    module D = Det0(C.Dom)
+    module DD = Det0(C.Dom)
     module type S = 
-        functor(Det: DETERMINANT with type outdet = D.outdet) -> sig
+        functor(Det: DETERMINANT with type outdet = DD.outdet and
+           type 'a lstate = 'a DD.lstate) -> 
+          functor(PK: PIVOTKIND) -> sig
       type res
       module D : DETERMINANT
       module R : RANK
-      module P : TRACKPIVOT
+      module P : TRACKPIVOT with type pv = PK.v and type 'a c = 'a PK.c
+          and type 'a lstate = ('a, PK.v PK.c ref) abstract
       val make_result : ('a,C.contr) abstract -> 
         ('a,res,[> 'a Det.tag_lstate | 'a R.tag_lstate | 'a P.tag_lstate],'w) cmonad
     end
 end
 
 (* What to return *)
-module OutJustMatrix(Det : DETERMINANT) =
+module OutJustMatrix(Det : DETERMINANT)(PK : PIVOTKIND) =
   struct
   type res = C.contr
   module D = Det
   module R = NoRank
-  module P = DiscardPivot
+  module P = DiscardPivot(PK)
   let make_result b = ret b
 end
 
-module OutDet(Det : DETERMINANT) = 
+module OutDet(Det : DETERMINANT)(PK : PIVOTKIND) =
   struct
   type res = C.contr * Det.outdet
   module D = Det
   module R = NoRank
-  module P = DiscardPivot
+  module P = DiscardPivot(PK)
   let make_result b = perform
     det <-- D.fin ();
     ret (Tuple.tup2 b det)
 end
 
-module OutRank(Det: DETERMINANT) = 
+module OutRank(Det: DETERMINANT)(PK : PIVOTKIND) =
   struct
   type res = C.contr * int
   module D = Det
   module R = Rank
-  module P = DiscardPivot
+  module P = DiscardPivot(PK)
   let make_result b = perform
     rank <-- R.fin ();
     ret (Tuple.tup2 b rank)
 end
 
-module OutDetRank(Det : DETERMINANT) =
+module OutDetRank(Det : DETERMINANT)(PK : PIVOTKIND) =
   struct
   type res = C.contr * Det.outdet * int
   module D = Det
   module R = Rank
-  module P = DiscardPivot
+  module P = DiscardPivot(PK)
   let make_result b = perform
     det  <-- D.fin ();
     rank <-- R.fin ();
     ret (Tuple.tup3 b det rank)
 end
 
-module OutDetRankPivot(Det : DETERMINANT) =
+module OutDetRankPivot(Det : DETERMINANT)(PK : PIVOTKIND) =
   struct
-  type res = C.contr * Det.outdet * int *  perm list
+  type res = C.contr * Det.outdet * int *  (PK.v PK.c)
   module D = Det
   module R = Rank
-  module P = KeepPivot
+  module P = KeepPivot(PK)
   let make_result b = perform
     det  <-- D.fin ();
     rank <-- R.fin ();
@@ -490,7 +534,7 @@ struct
                             s1 <-- ret (C.swap_rows_stmt mat.matrix pos.rowpos i);
                             s2 <-- D.upd_sign ();
                             s3 <-- ret (optSeq s1 s2);
-                            s4 <-- P.add (liftRowSwap i pos.rowpos );
+                            s4 <-- P.add (P.rowrep i pos.rowpos );
                             ret (optSeq s3 s4)
                            ))
                           (ret (Maybe.just bic)))
@@ -532,12 +576,16 @@ struct
                          (whenM (Logic.notequalL pc pos.colpos) (perform
                            s1 <-- ret (C.swap_cols_stmt mat.matrix pos.colpos pc);
                            s2 <-- D.upd_sign ();
-                           ret (optSeq s1 s2)))
+                           s3 <-- ret (optSeq s1 s2);
+                           s4 <-- P.add (P.colrep pc pos.rowpos );
+                           ret (optSeq s3 s4)))
                        (seqM
                          (whenM (Logic.notequalL pr pos.rowpos) (perform
                            s1 <-- ret (C.swap_rows_stmt mat.matrix pos.rowpos pc);
                            s2 <-- D.upd_sign ();
-                           ret (optSeq s1 s2)))
+                           s3 <-- ret (optSeq s1 s2);
+                           s4 <-- P.add (P.rowrep pr pos.rowpos );
+                           ret (optSeq s3 s4)))
                          (ret (Maybe.just brc))))
                   (ret Maybe.none))
 end
@@ -552,6 +600,7 @@ struct
 end
 
 module GenGE(PivotF: PIVOT)
+          (PK:PIVOTKIND)
           (Detf:DETF)
           (Update: UpdateProxy(C)(Detf).S)
           (In: INPUT)
@@ -560,7 +609,7 @@ module GenGE(PivotF: PIVOT)
     module Det = Detf(C.Dom)
     module U = Update(C)(Detf)
     module Input = In
-    module Output = Out(Det)
+    module Output = Out(Det)(PK)
     module Pivot = PivotF(Detf)(Output.P)
     module I = Iters
 

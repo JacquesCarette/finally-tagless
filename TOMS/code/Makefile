@@ -34,10 +34,10 @@ all: test $(TEST)
 
 .PHONY: test 
 test: $(SYNTAX_EXTENSION) $(OBJ) $(BASE) $(BASE2) $(RES) $(TEST)
-	diff ge.out ge.res
-	diff ge_direct.out ge_direct.res
-	diff rkf45.out rkf45.res
-	diff fft.out fft.res
+	diff -B ge.out ge.res
+	diff -B ge_direct.out ge_direct.res
+	diff -B rkf45.out rkf45.res
+	diff -B fft.out fft.res
 
 mytop: 
 	ocamlmktop -o mytop nums.cma
@@ -72,7 +72,10 @@ $(OBJ2): $(INFRA) $(BASE) $(BASE2)
 #
 ########################################################################
 
-ge_direct.out: test-ge_direct.ml $(BASE2) mytop test-ge.ml
+ge.out: test-ge.ml $(BASE) ge.cmo mytop test-ge-common.ml
+	./mytop $(BASE) < $< > $@
+
+ge_direct.out: test-ge_direct.ml $(BASE2) ge.cmo mytop test-ge-common.ml
 	./mytop $(BASE) $(BASE2) < $< > $@
 
 

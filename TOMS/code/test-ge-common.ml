@@ -41,83 +41,83 @@ module G_GVC_Z19 = GenLA(GVC_Z19)
 
 open G_GAC_F
 module GenFA1 = GenGE
-                   (RowPivot)
+                   (RowPivot)(PermList)
                    (NoDet)
                    (DivisionUpdate)
                    (InpJustMatrix)
                    (OutJustMatrix)
 ;;
 module GenFA2 = GenGE
-                   (RowPivot)
+                   (RowPivot)(PermList)
                    (AbstractDet)
                    (DivisionUpdate)
                    (InpJustMatrix)
                    (OutDet)
 module GenFA3 = GenGE
-                   (RowPivot)
+                   (RowPivot)(PermList)
                    (NoDet)
                    (DivisionUpdate)
                    (InpJustMatrix)
                    (OutRank)
 module GenFA4 = GenGE
-                   (RowPivot)
+                   (RowPivot)(PermList)
                    (AbstractDet)
                    (DivisionUpdate)
                    (InpJustMatrix)
                    (OutDetRank)
 
 module GenFA11 = GenGE
-                   (FullPivot)
+                   (FullPivot)(PermList)
                    (NoDet)
                    (DivisionUpdate)
                    (InpJustMatrix)
                    (OutJustMatrix)
 module GenFA12 = GenGE
-                   (FullPivot)
+                   (FullPivot)(PermList)
                    (AbstractDet)
                    (DivisionUpdate)
                    (InpJustMatrix)
                    (OutDet)
 module GenFA13 = GenGE
-                   (FullPivot)
+                   (FullPivot)(PermList)
                    (NoDet)
                    (DivisionUpdate)
                    (InpJustMatrix)
                    (OutRank)
 module GenFA14 = GenGE
-                   (FullPivot)
+                   (FullPivot)(PermList)
                    (AbstractDet)
                    (DivisionUpdate)
                    (InpJustMatrix)
                    (OutDetRank)
 
 module GenFA24 = GenGE
-                    (RowPivot)
+                    (RowPivot)(PermList)
                     (AbstractDet)
                     (DivisionUpdate)
                     (InpJustMatrix)
                     (OutDetRankPivot)
 module GenFA5 = GenGE
-                   (RowPivot)
+                   (RowPivot)(PermList)
                    (NoDet)
                    (DivisionUpdate)
                    (InpMatrixMargin)
                    (OutJustMatrix)
 
 module GenFA6 = GenGE
-                   (RowPivot)
+                   (RowPivot)(PermList)
                    (AbstractDet)
                    (DivisionUpdate)
                    (InpMatrixMargin)
                    (OutDet)
 module GenFA7 = GenGE
-                   (RowPivot)
+                   (RowPivot)(PermList)
                    (NoDet)
                    (DivisionUpdate)
                    (InpMatrixMargin)
                    (OutRank)
 module GenFA8 = GenGE
-                   (RowPivot)
+                   (RowPivot)(PermList)
                    (NoDet)
                    (DivisionUpdate)
                    (InpMatrixMargin)
@@ -125,31 +125,31 @@ module GenFA8 = GenGE
 
 open G_GVC_F
 module GenFV1 = GenGE
-                   (RowPivot)
+                   (RowPivot)(PermList)
                    (NoDet)
                    (DivisionUpdate)
                    (InpJustMatrix)
                    (OutJustMatrix)
 module GenFV2 = GenGE
-                   (RowPivot)
+                   (RowPivot)(PermList)
                    (AbstractDet)
                    (DivisionUpdate)
                    (InpJustMatrix)
                    (OutDet)
 module GenFV3 = GenGE
-                   (RowPivot)
+                   (RowPivot)(PermList)
                    (NoDet)
                    (DivisionUpdate)
                    (InpJustMatrix)
                    (OutRank)
 module GenFV4 = GenGE
-                   (RowPivot)
+                   (RowPivot)(PermList)
                    (AbstractDet)
                    (DivisionUpdate)
                    (InpJustMatrix)
                    (OutDetRank)
 module GenFV5 = GenGE
-                   (FullPivot)
+                   (FullPivot)(PermList)
                    (AbstractDet)
                    (DivisionUpdate)
                    (InpJustMatrix)
@@ -157,7 +157,7 @@ module GenFV5 = GenGE
 
 (* But this is an error!
 module GenIA1 = G_GAC_I.GenGE
-                   (RowPivot)
+                   (RowPivot)(PermList)
                    (AbstractDet)
                    (DivisionUpdate)
                    (InpJustMatrix)
@@ -165,25 +165,25 @@ module GenIA1 = G_GAC_I.GenGE
 *)
 open G_GAC_I
 module GenIA1 = GenGE
-                   (RowPivot)
+                   (RowPivot)(PermList)
                    (AbstractDet)
                    (FractionFreeUpdate)
                    (InpJustMatrix)
                    (OutJustMatrix)
 module GenIA2 = GenGE
-                   (RowPivot)
+                   (RowPivot)(PermList)
                    (AbstractDet)
                    (FractionFreeUpdate)
                    (InpJustMatrix)
                    (OutDet)
 module GenIA3 = GenGE
-                   (RowPivot)
+                   (RowPivot)(PermList)
                    (AbstractDet)
                    (FractionFreeUpdate)
                    (InpJustMatrix)
                    (OutRank)
 module GenIA4 = GenGE
-                   (RowPivot)
+                   (RowPivot)(PermList)
                    (AbstractDet)
                    (FractionFreeUpdate)
                    (InpJustMatrix)
@@ -191,64 +191,70 @@ module GenIA4 = GenGE
 
 open G_GVC_I
 module GenIV1 = GenGE
-                   (RowPivot)
+                   (RowPivot)(PermList)
                    (AbstractDet)
                    (FractionFreeUpdate)
                    (InpJustMatrix)
                    (OutJustMatrix)
 module GenIV2 = GenGE
-                   (RowPivot)
+                   (RowPivot)(PermList)
                    (AbstractDet)
                    (FractionFreeUpdate)
                    (InpJustMatrix)
                    (OutDet)
 module GenIV3 = GenGE
-                   (RowPivot)
+                   (RowPivot)(PermList)
                    (AbstractDet)
                    (FractionFreeUpdate)
                    (InpJustMatrix)
                    (OutRank)
 module GenIV4 = GenGE
-                   (RowPivot)
+                   (RowPivot)(PermList)
                    (AbstractDet)
                    (FractionFreeUpdate)
                    (InpJustMatrix)
                    (OutDetRank)
 module GenIV5 = GenGE
-                   (FullPivot)
+                   (FullPivot)(PermList)
                    (AbstractDet)
                    (FractionFreeUpdate)
                    (InpJustMatrix)
                    (OutDetRank)
+module GenIV6 = GenGE
+                   (FullPivot)(PermList)
+                   (AbstractDet)
+                   (FractionFreeUpdate)
+                   (InpJustMatrix)
+                   (OutDetRankPivot)
 
 open G_GAC_R
 module GenRA1 = GenGE
-                   (RowPivot)
+                   (RowPivot)(PermList)
                    (AbstractDet)
                    (DivisionUpdate)
                    (InpJustMatrix)
                    (OutJustMatrix)
 module GenRA2 = GenGE
-                   (RowPivot)
+                   (RowPivot)(PermList)
                    (AbstractDet)
                    (DivisionUpdate)
                    (InpJustMatrix)
                    (OutDet)
 module GenRA3 = GenGE
-                   (RowPivot)
+                   (RowPivot)(PermList)
                    (AbstractDet)
                    (DivisionUpdate)
                    (InpJustMatrix)
                    (OutRank)
 module GenRA4 = GenGE
-                   (RowPivot)
+                   (RowPivot)(PermList)
                    (AbstractDet)
                    (DivisionUpdate)
                    (InpJustMatrix)
                    (OutDetRank)
 open G_GVC_Z3
 module GenZp3 = GenGE
-                   (RowPivot)
+                   (RowPivot)(PermList)
                    (AbstractDet)
                    (DivisionUpdate)
                    (InpJustMatrix)
@@ -256,7 +262,7 @@ module GenZp3 = GenGE
 
 open G_GVC_Z19
 module GenZp19 = GenGE
-                   (RowPivot)
+                   (RowPivot)(PermList)
                    (AbstractDet)
                    (FractionFreeUpdate)
                    (InpJustMatrix)
@@ -281,6 +287,7 @@ let resIV2 = instantiate GenIV2.gen ;;
 let resIV3 = instantiate GenIV3.gen ;;
 let resIV4 = instantiate GenIV4.gen ;;
 let resIV5 = instantiate GenIV5.gen ;;
+let resIV6 = instantiate GenIV6.gen ;;
 let resFA11 = instantiate GenFA11.gen ;;
 let resFA12 = instantiate GenFA12.gen ;;
 let resFA13 = instantiate GenFA13.gen ;;
@@ -315,6 +322,7 @@ let rIV2 = runit {pf =  resIV2 };;
 let rIV3 = runit {pf =  resIV3 };;
 let rIV4 = runit {pf =  resIV4 };;
 let rIV5 = runit {pf =  resIV5 };;
+let rIV6 = runit {pf =  resIV6 };;
 let rFA11 = runit {pf =  resFA11 };;
 let rFA12 = runit {pf =  resFA12 };;
 let rFA13 = runit {pf =  resFA13 };;
@@ -372,6 +380,7 @@ let resI22 = List.map rIV2 iv5;;
 let resI23 = List.map rIV3 iv5;;
 let resI24 = List.map rIV4 iv5;;
 let resI25 = List.map rIV5 iv5;;
+let resI26 = List.map rIV6 iv5;;
 
 let fa0 = Array.make 1 (Array.make 1 1.) ;;
 let fa1 = Array.of_list [
