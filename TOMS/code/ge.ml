@@ -329,6 +329,24 @@ module FractionFreeUpdate(Ctr:CONTAINER2D)(Det:DETF) = struct
   let update_det v set _ = set v
 end
 
+(* moved from Infra (now Domains) so that the former uses no monads.
+  The following code is generic over the containers anyway.
+  If container-specific iterators are needed, they can still be
+  coded as `exceptions'
+*)
+module Iters = struct
+  let row_iter b c low high get body = 
+    let newbody j = perform
+        bjc <-- retN (get b j c);
+        body j bjc
+    in  loopM low high newbody
+  let col_iter b r low high get body = 
+    let newbody k = perform
+        brk <-- ret (get b r k);
+        body k brk
+    in  loopM low high newbody
+end
+
 (* Given a container, we can generate a whole "Linear Algebra"
    set of modules and generators all based on that container.
    This layout makes sure the same container is shared (and thus
@@ -340,23 +358,6 @@ end
    2) some have explicit kind restrictions, which have to be kept!
 *)
 module GenLA(C:CONTAINER2D) = struct
-(* moved from Infra (now Domains) so that the former uses no monads.
-  The following code is generic over the containers anyway.
-  If container-specific iterators are needed, they can still be
-  coded as `exceptions'
-*)
-module Iters = struct
-  let row_iter b c low high body = 
-    let newbody j = perform
-        bjc <-- retN (C.getL b j c);
-        body j bjc
-    in  loopM low high newbody
-  let col_iter b j low high body = 
-    let newbody k = perform
-        bjk <-- ret (C.getL b j k);
-        body k bjk
-    in  loopM low high newbody
-end
 
 (* Bundle up some information, helps abstract some argument lists *)
 type 'a wmatrix = {matrix: 'a C.vc; numrow: ('a,int) abstract; 
@@ -504,7 +505,8 @@ struct
        seqM
         (match (C.Dom.better_thanL) with
          Some sel -> 
-              I.row_iter mat.matrix pos.colpos pos.rowpos (Idx.pred mat.numrow) (fun j bjc ->
+              I.row_iter mat.matrix pos.colpos pos.rowpos (Idx.pred mat.numrow)
+              C.getL (fun j bjc ->
               whenM (Logic.notequalL bjc C.Dom.zeroL )
                   (matchM (liftGet pivot)
                     (fun pv ->
@@ -622,7 +624,8 @@ module GenGE(PivotF: PIVOT)
       let zerobelow mat pos = 
         let innerbody j bjc = perform
             whenM (Logic.notequalL bjc C.Dom.zeroL )
-                (seqM (I.col_iter mat.matrix j (Idx.succ pos.p.colpos) (Idx.pred mat.numcol)
+                (seqM (I.col_iter mat.matrix j (Idx.succ pos.p.colpos) (Idx.pred
+                mat.numcol) C.getL
                           (fun k bjk -> perform
                           d <-- Det.get ();
                           brk <-- ret (C.getL mat.matrix pos.p.rowpos k);
@@ -630,7 +633,8 @@ module GenGE(PivotF: PIVOT)
                               (fun ov -> C.col_head_set mat.matrix j k ov) d) )
                       (ret (C.col_head_set mat.matrix j pos.p.colpos C.Dom.zeroL))) in 
         perform
-              seqM (I.row_iter mat.matrix pos.p.colpos (Idx.succ pos.p.rowpos) (Idx.pred mat.numrow) innerbody) 
+              seqM (I.row_iter mat.matrix pos.p.colpos (Idx.succ pos.p.rowpos)
+              (Idx.pred mat.numrow) C.getL innerbody) 
                    (U.update_det pos.curval Det.set Det.acc) in
       let init input = perform
           (a,rmar,augmented) <-- Input.get_input input;
