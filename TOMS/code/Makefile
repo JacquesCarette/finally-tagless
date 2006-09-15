@@ -14,7 +14,6 @@ INFRA := coderep.cmi
 BASE := stateCPSMonad.cmo kinds.cmo domains_sig.cmo domains_common.cmo \
 	domains_code.cmo \
 	code.cmo ge.cmo
-# infra.cmo code.cmo infra_code.cmo ge.cmo
 BASE2 := direct.cmo domains_direct.cmo
 OBJ  := rkf45.cmo fft.cmo
 OBJ2  := 
