@@ -266,7 +266,7 @@
         type 'a c
         type 'a vc = ('a, v c) Code.abstract
         val add : ('a, v) Code.abstract -> 'a vc -> 'a vc
-        val empty : unit -> 'a vc
+        val empty : ('a, int) Code.abstract -> 'a vc
         val rowrep :
           ('a, int) Code.abstract ->
           ('a, int) Code.abstract -> ('a, v) Code.abstract
@@ -282,7 +282,7 @@
         val add :
           ('a, 'b) Code.abstract ->
           ('a, 'b list) Code.abstract -> ('a, 'b list) Code.abstract
-        val empty : unit -> 'a vc
+        val empty : 'a -> 'b vc
         val rowrep :
           ('a, int) Code.abstract ->
           ('a, int) Code.abstract -> ('a, Code.perm) Code.abstract
@@ -304,13 +304,18 @@
         val colrep :
           ('a, int) Code.abstract ->
           ('a, int) Code.abstract -> ('a, pv) Code.abstract
-        val decl : unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
+        val decl :
+          ('a, int) Code.abstract -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
         val add :
           ('a, pv) Code.abstract ->
           (('a, unit) Code.abstract option, [> 'a tag_lstate ] list,
            ('a, 'b) Code.abstract)
           StateCPSMonad.monad
-        val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, pv c) lm
+        val fin :
+          unit ->
+          (('a, pv c) Code.abstract option, [> 'a tag_lstate ] list,
+           ('a, 'b) Code.abstract)
+          StateCPSMonad.monad
       end
     module PivotCommon :
       functor (PK : PIVOTKIND) ->
@@ -351,10 +356,10 @@
             'a ->
             ([> `TPivot of 'a ] as 'b) list -> ('b list -> unit -> 'c) -> 'c
           val decl :
-            unit ->
-            ([> `TPivot of ('b, PK.v PK.c ref) Code.abstract ] as 'a) list ->
-            ('a list -> ('c, unit) Code.abstract -> ('b, 'd) Code.abstract) ->
-            ('b, 'd) Code.abstract
+            ('a, int) Code.abstract ->
+            ([> `TPivot of ('a, PK.v PK.c ref) Code.abstract ] as 'b) list ->
+            ('b list -> ('c, unit) Code.abstract -> ('a, 'd) Code.abstract) ->
+            ('a, 'd) Code.abstract
           val add :
             ('a, PK.v) Code.abstract ->
             ([> `TPivot of ('a, PK.v PK.c ref) Code.abstract ] as 'b) list ->
@@ -362,7 +367,7 @@
           val fin :
             unit ->
             ([> `TPivot of ('b, 'c ref) Code.abstract ] as 'a) list ->
-            ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd
+            ('a list -> ('b, 'c) Code.abstract option -> 'd) -> 'd
         end
     module DiscardPivot :
       functor (PK : PIVOTKIND) ->
@@ -379,10 +384,9 @@
           val colrep :
             ('a, int) Code.abstract ->
             ('a, int) Code.abstract -> ('a, PK.v) Code.abstract
-          val decl :
-            unit -> 'a -> ('a -> ('b, unit) Code.abstract -> 'c) -> 'c
+          val decl : 'a -> 'b -> ('b -> ('c, unit) Code.abstract -> 'd) -> 'd
           val add : 'a -> 'b -> ('b -> 'c option -> 'd) -> 'd
-          val fin : unit -> 'a -> ('a -> 'b PK.vc -> 'c) -> 'c
+          val fin : unit -> 'a -> ('a -> 'b option -> 'c) -> 'c
         end
     module UpdateProxy :
       functor (C0 : D.CONTAINER2D) ->
@@ -778,7 +782,8 @@
                               ('a, int) Code.abstract ->
                               ('a, pv) Code.abstract
                             val decl :
-                              unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
+                              ('a, int) Code.abstract ->
+                              ('a * [> 'a tag_lstate ] * 'b, unit) lm
                             val add :
                               ('a, pv) Code.abstract ->
                               (('a, unit) Code.abstract option,
@@ -786,7 +791,11 @@
                                ('a, 'b) Code.abstract)
                               StateCPSMonad.monad
                             val fin :
-                              unit -> ('a * [> 'a tag_lstate ] * 'b, pv c) lm
+                              unit ->
+                              (('a, pv c) Code.abstract option,
+                               [> 'a tag_lstate ] list,
+                               ('a, 'b) Code.abstract)
+                              StateCPSMonad.monad
                           end
                         val make_result :
                           ('a, C.contr) Code.abstract ->
@@ -861,10 +870,10 @@
                         ('a, int) Code.abstract ->
                         ('a, int) Code.abstract -> ('a, PK.v) Code.abstract
                       val decl :
-                        unit ->
-                        'a -> ('a -> ('b, unit) Code.abstract -> 'c) -> 'c
+                        'a ->
+                        'b -> ('b -> ('c, unit) Code.abstract -> 'd) -> 'd
                       val add : 'a -> 'b -> ('b -> 'c option -> 'd) -> 'd
-                      val fin : unit -> 'a -> ('a -> 'b PK.vc -> 'c) -> 'c
+                      val fin : unit -> 'a -> ('a -> 'b option -> 'c) -> 'c
                     end
                   val make_result : 'a -> 'b -> ('b -> 'a -> 'c) -> 'c
                 end
@@ -931,10 +940,10 @@
                         ('a, int) Code.abstract ->
                         ('a, int) Code.abstract -> ('a, PK.v) Code.abstract
                       val decl :
-                        unit ->
-                        'a -> ('a -> ('b, unit) Code.abstract -> 'c) -> 'c
+                        'a ->
+                        'b -> ('b -> ('c, unit) Code.abstract -> 'd) -> 'd
                       val add : 'a -> 'b -> ('b -> 'c option -> 'd) -> 'd
-                      val fin : unit -> 'a -> ('a -> 'b PK.vc -> 'c) -> 'c
+                      val fin : unit -> 'a -> ('a -> 'b option -> 'c) -> 'c
                     end
                   val make_result :
                     ('a, 'b) Code.abstract ->
@@ -1007,10 +1016,10 @@
                         ('a, int) Code.abstract ->
                         ('a, int) Code.abstract -> ('a, PK.v) Code.abstract
                       val decl :
-                        unit ->
-                        'a -> ('a -> ('b, unit) Code.abstract -> 'c) -> 'c
+                        'a ->
+                        'b -> ('b -> ('c, unit) Code.abstract -> 'd) -> 'd
                       val add : 'a -> 'b -> ('b -> 'c option -> 'd) -> 'd
-                      val fin : unit -> 'a -> ('a -> 'b PK.vc -> 'c) -> 'c
+                      val fin : unit -> 'a -> ('a -> 'b option -> 'c) -> 'c
                     end
                   val make_result :
                     ('a, 'b) Code.abstract ->
@@ -1082,10 +1091,10 @@
                         ('a, int) Code.abstract ->
                         ('a, int) Code.abstract -> ('a, PK.v) Code.abstract
                       val decl :
-                        unit ->
-                        'a -> ('a -> ('b, unit) Code.abstract -> 'c) -> 'c
+                        'a ->
+                        'b -> ('b -> ('c, unit) Code.abstract -> 'd) -> 'd
                       val add : 'a -> 'b -> ('b -> 'c option -> 'd) -> 'd
-                      val fin : unit -> 'a -> ('a -> 'b PK.vc -> 'c) -> 'c
+                      val fin : unit -> 'a -> ('a -> 'b option -> 'c) -> 'c
                     end
                   val make_result :
                     ('a, 'b) Code.abstract ->
@@ -1168,13 +1177,13 @@
                         ([> `TPivot of 'a ] as 'b) list ->
                         ('b list -> unit -> 'c) -> 'c
                       val decl :
-                        unit ->
-                        ([> `TPivot of ('b, PK.v PK.c ref) Code.abstract ]
-                         as 'a)
+                        ('a, int) Code.abstract ->
+                        ([> `TPivot of ('a, PK.v PK.c ref) Code.abstract ]
+                         as 'b)
                         list ->
-                        ('a list ->
-                         ('c, unit) Code.abstract -> ('b, 'd) Code.abstract) ->
-                        ('b, 'd) Code.abstract
+                        ('b list ->
+                         ('c, unit) Code.abstract -> ('a, 'd) Code.abstract) ->
+                        ('a, 'd) Code.abstract
                       val add :
                         ('a, PK.v) Code.abstract ->
                         ([> `TPivot of ('a, PK.v PK.c ref) Code.abstract ]
@@ -1186,7 +1195,8 @@
                         unit ->
                         ([> `TPivot of ('b, 'c ref) Code.abstract ] as 'a)
                         list ->
-                        ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd
+                        ('a list -> ('b, 'c) Code.abstract option -> 'd) ->
+                        'd
                     end
                   val make_result :
                     ('a, 'b) Code.abstract ->
@@ -1507,7 +1517,7 @@
                                     ('a, int) Code.abstract ->
                                     ('a, pv) Code.abstract
                                   val decl :
-                                    unit ->
+                                    ('a, int) Code.abstract ->
                                     ('a * [> 'a tag_lstate ] * 'b, unit) lm
                                   val add :
                                     ('a, pv) Code.abstract ->
@@ -1517,7 +1527,10 @@
                                     StateCPSMonad.monad
                                   val fin :
                                     unit ->
-                                    ('a * [> 'a tag_lstate ] * 'b, pv c) lm
+                                    (('a, pv c) Code.abstract option,
+                                     [> 'a tag_lstate ] list,
+                                     ('a, 'b) Code.abstract)
+                                    StateCPSMonad.monad
                                 end
                               val make_result :
                                 ('a, C.contr) Code.abstract ->
@@ -2325,14 +2338,18 @@ module G_GAC_F :
                         ('a, int) Code.abstract ->
                         ('a, int) Code.abstract -> ('a, pv) Code.abstract
                       val decl :
-                        unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
+                        ('a, int) Code.abstract ->
+                        ('a * [> 'a tag_lstate ] * 'b, unit) lm
                       val add :
                         ('a, pv) Code.abstract ->
                         (('a, unit) Code.abstract option,
                          [> 'a tag_lstate ] list, ('a, 'b) Code.abstract)
                         StateCPSMonad.monad
                       val fin :
-                        unit -> ('a * [> 'a tag_lstate ] * 'b, pv c) lm
+                        unit ->
+                        (('a, pv c) Code.abstract option,
+                         [> 'a tag_lstate ] list, ('a, 'b) Code.abstract)
+                        StateCPSMonad.monad
                     end
                   val make_result :
                     ('a, GAC_F.contr) Code.abstract ->
@@ -2401,9 +2418,9 @@ module G_GAC_F :
                   ('a, int) Code.abstract ->
                   ('a, int) Code.abstract -> ('a, PK.v) Code.abstract
                 val decl :
-                  unit -> 'a -> ('a -> ('b, unit) Code.abstract -> 'c) -> 'c
+                  'a -> 'b -> ('b -> ('c, unit) Code.abstract -> 'd) -> 'd
                 val add : 'a -> 'b -> ('b -> 'c option -> 'd) -> 'd
-                val fin : unit -> 'a -> ('a -> 'b PK.vc -> 'c) -> 'c
+                val fin : unit -> 'a -> ('a -> 'b option -> 'c) -> 'c
               end
             val make_result : 'a -> 'b -> ('b -> 'a -> 'c) -> 'c
           end
@@ -2464,9 +2481,9 @@ module G_GAC_F :
                   ('a, int) Code.abstract ->
                   ('a, int) Code.abstract -> ('a, PK.v) Code.abstract
                 val decl :
-                  unit -> 'a -> ('a -> ('b, unit) Code.abstract -> 'c) -> 'c
+                  'a -> 'b -> ('b -> ('c, unit) Code.abstract -> 'd) -> 'd
                 val add : 'a -> 'b -> ('b -> 'c option -> 'd) -> 'd
-                val fin : unit -> 'a -> ('a -> 'b PK.vc -> 'c) -> 'c
+                val fin : unit -> 'a -> ('a -> 'b option -> 'c) -> 'c
               end
             val make_result :
               ('a, 'b) Code.abstract ->
@@ -2532,9 +2549,9 @@ module G_GAC_F :
                   ('a, int) Code.abstract ->
                   ('a, int) Code.abstract -> ('a, PK.v) Code.abstract
                 val decl :
-                  unit -> 'a -> ('a -> ('b, unit) Code.abstract -> 'c) -> 'c
+                  'a -> 'b -> ('b -> ('c, unit) Code.abstract -> 'd) -> 'd
                 val add : 'a -> 'b -> ('b -> 'c option -> 'd) -> 'd
-                val fin : unit -> 'a -> ('a -> 'b PK.vc -> 'c) -> 'c
+                val fin : unit -> 'a -> ('a -> 'b option -> 'c) -> 'c
               end
             val make_result :
               ('a, 'b) Code.abstract ->
@@ -2600,9 +2617,9 @@ module G_GAC_F :
                   ('a, int) Code.abstract ->
                   ('a, int) Code.abstract -> ('a, PK.v) Code.abstract
                 val decl :
-                  unit -> 'a -> ('a -> ('b, unit) Code.abstract -> 'c) -> 'c
+                  'a -> 'b -> ('b -> ('c, unit) Code.abstract -> 'd) -> 'd
                 val add : 'a -> 'b -> ('b -> 'c option -> 'd) -> 'd
-                val fin : unit -> 'a -> ('a -> 'b PK.vc -> 'c) -> 'c
+                val fin : unit -> 'a -> ('a -> 'b option -> 'c) -> 'c
               end
             val make_result :
               ('a, 'b) Code.abstract ->
@@ -2678,12 +2695,12 @@ module G_GAC_F :
                   ([> `TPivot of 'a ] as 'b) list ->
                   ('b list -> unit -> 'c) -> 'c
                 val decl :
-                  unit ->
-                  ([> `TPivot of ('b, PK.v PK.c ref) Code.abstract ] as 'a)
+                  ('a, int) Code.abstract ->
+                  ([> `TPivot of ('a, PK.v PK.c ref) Code.abstract ] as 'b)
                   list ->
-                  ('a list ->
-                   ('c, unit) Code.abstract -> ('b, 'd) Code.abstract) ->
-                  ('b, 'd) Code.abstract
+                  ('b list ->
+                   ('c, unit) Code.abstract -> ('a, 'd) Code.abstract) ->
+                  ('a, 'd) Code.abstract
                 val add :
                   ('a, PK.v) Code.abstract ->
                   ([> `TPivot of ('a, PK.v PK.c ref) Code.abstract ] as 'b)
@@ -2692,7 +2709,7 @@ module G_GAC_F :
                 val fin :
                   unit ->
                   ([> `TPivot of ('b, 'c ref) Code.abstract ] as 'a) list ->
-                  ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd
+                  ('a list -> ('b, 'c) Code.abstract option -> 'd) -> 'd
               end
             val make_result :
               ('a, 'b) Code.abstract ->
@@ -2987,7 +3004,8 @@ module G_GAC_F :
                               ('a, int) Code.abstract ->
                               ('a, pv) Code.abstract
                             val decl :
-                              unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
+                              ('a, int) Code.abstract ->
+                              ('a * [> 'a tag_lstate ] * 'b, unit) lm
                             val add :
                               ('a, pv) Code.abstract ->
                               (('a, unit) Code.abstract option,
@@ -2995,7 +3013,11 @@ module G_GAC_F :
                                ('a, 'b) Code.abstract)
                               StateCPSMonad.monad
                             val fin :
-                              unit -> ('a * [> 'a tag_lstate ] * 'b, pv c) lm
+                              unit ->
+                              (('a, pv c) Code.abstract option,
+                               [> 'a tag_lstate ] list,
+                               ('a, 'b) Code.abstract)
+                              StateCPSMonad.monad
                           end
                         val make_result :
                           ('a, GAC_F.contr) Code.abstract ->
@@ -3200,14 +3222,18 @@ module G_GVC_F :
                         ('a, int) Code.abstract ->
                         ('a, int) Code.abstract -> ('a, pv) Code.abstract
                       val decl :
-                        unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
+                        ('a, int) Code.abstract ->
+                        ('a * [> 'a tag_lstate ] * 'b, unit) lm
                       val add :
                         ('a, pv) Code.abstract ->
                         (('a, unit) Code.abstract option,
                          [> 'a tag_lstate ] list, ('a, 'b) Code.abstract)
                         StateCPSMonad.monad
                       val fin :
-                        unit -> ('a * [> 'a tag_lstate ] * 'b, pv c) lm
+                        unit ->
+                        (('a, pv c) Code.abstract option,
+                         [> 'a tag_lstate ] list, ('a, 'b) Code.abstract)
+                        StateCPSMonad.monad
                     end
                   val make_result :
                     ('a, GVC_F.contr) Code.abstract ->
@@ -3276,9 +3302,9 @@ module G_GVC_F :
                   ('a, int) Code.abstract ->
                   ('a, int) Code.abstract -> ('a, PK.v) Code.abstract
                 val decl :
-                  unit -> 'a -> ('a -> ('b, unit) Code.abstract -> 'c) -> 'c
+                  'a -> 'b -> ('b -> ('c, unit) Code.abstract -> 'd) -> 'd
                 val add : 'a -> 'b -> ('b -> 'c option -> 'd) -> 'd
-                val fin : unit -> 'a -> ('a -> 'b PK.vc -> 'c) -> 'c
+                val fin : unit -> 'a -> ('a -> 'b option -> 'c) -> 'c
               end
             val make_result : 'a -> 'b -> ('b -> 'a -> 'c) -> 'c
           end
@@ -3339,9 +3365,9 @@ module G_GVC_F :
                   ('a, int) Code.abstract ->
                   ('a, int) Code.abstract -> ('a, PK.v) Code.abstract
                 val decl :
-                  unit -> 'a -> ('a -> ('b, unit) Code.abstract -> 'c) -> 'c
+                  'a -> 'b -> ('b -> ('c, unit) Code.abstract -> 'd) -> 'd
                 val add : 'a -> 'b -> ('b -> 'c option -> 'd) -> 'd
-                val fin : unit -> 'a -> ('a -> 'b PK.vc -> 'c) -> 'c
+                val fin : unit -> 'a -> ('a -> 'b option -> 'c) -> 'c
               end
             val make_result :
               ('a, 'b) Code.abstract ->
@@ -3407,9 +3433,9 @@ module G_GVC_F :
                   ('a, int) Code.abstract ->
                   ('a, int) Code.abstract -> ('a, PK.v) Code.abstract
                 val decl :
-                  unit -> 'a -> ('a -> ('b, unit) Code.abstract -> 'c) -> 'c
+                  'a -> 'b -> ('b -> ('c, unit) Code.abstract -> 'd) -> 'd
                 val add : 'a -> 'b -> ('b -> 'c option -> 'd) -> 'd
-                val fin : unit -> 'a -> ('a -> 'b PK.vc -> 'c) -> 'c
+                val fin : unit -> 'a -> ('a -> 'b option -> 'c) -> 'c
               end
             val make_result :
               ('a, 'b) Code.abstract ->
@@ -3475,9 +3501,9 @@ module G_GVC_F :
                   ('a, int) Code.abstract ->
                   ('a, int) Code.abstract -> ('a, PK.v) Code.abstract
                 val decl :
-                  unit -> 'a -> ('a -> ('b, unit) Code.abstract -> 'c) -> 'c
+                  'a -> 'b -> ('b -> ('c, unit) Code.abstract -> 'd) -> 'd
                 val add : 'a -> 'b -> ('b -> 'c option -> 'd) -> 'd
-                val fin : unit -> 'a -> ('a -> 'b PK.vc -> 'c) -> 'c
+                val fin : unit -> 'a -> ('a -> 'b option -> 'c) -> 'c
               end
             val make_result :
               ('a, 'b) Code.abstract ->
@@ -3553,12 +3579,12 @@ module G_GVC_F :
                   ([> `TPivot of 'a ] as 'b) list ->
                   ('b list -> unit -> 'c) -> 'c
                 val decl :
-                  unit ->
-                  ([> `TPivot of ('b, PK.v PK.c ref) Code.abstract ] as 'a)
+                  ('a, int) Code.abstract ->
+                  ([> `TPivot of ('a, PK.v PK.c ref) Code.abstract ] as 'b)
                   list ->
-                  ('a list ->
-                   ('c, unit) Code.abstract -> ('b, 'd) Code.abstract) ->
-                  ('b, 'd) Code.abstract
+                  ('b list ->
+                   ('c, unit) Code.abstract -> ('a, 'd) Code.abstract) ->
+                  ('a, 'd) Code.abstract
                 val add :
                   ('a, PK.v) Code.abstract ->
                   ([> `TPivot of ('a, PK.v PK.c ref) Code.abstract ] as 'b)
@@ -3567,7 +3593,7 @@ module G_GVC_F :
                 val fin :
                   unit ->
                   ([> `TPivot of ('b, 'c ref) Code.abstract ] as 'a) list ->
-                  ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd
+                  ('a list -> ('b, 'c) Code.abstract option -> 'd) -> 'd
               end
             val make_result :
               ('a, 'b) Code.abstract ->
@@ -3862,7 +3888,8 @@ module G_GVC_F :
                               ('a, int) Code.abstract ->
                               ('a, pv) Code.abstract
                             val decl :
-                              unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
+                              ('a, int) Code.abstract ->
+                              ('a * [> 'a tag_lstate ] * 'b, unit) lm
                             val add :
                               ('a, pv) Code.abstract ->
                               (('a, unit) Code.abstract option,
@@ -3870,7 +3897,11 @@ module G_GVC_F :
                                ('a, 'b) Code.abstract)
                               StateCPSMonad.monad
                             val fin :
-                              unit -> ('a * [> 'a tag_lstate ] * 'b, pv c) lm
+                              unit ->
+                              (('a, pv c) Code.abstract option,
+                               [> 'a tag_lstate ] list,
+                               ('a, 'b) Code.abstract)
+                              StateCPSMonad.monad
                           end
                         val make_result :
                           ('a, GVC_F.contr) Code.abstract ->
@@ -4075,14 +4106,18 @@ module G_GAC_I :
                         ('a, int) Code.abstract ->
                         ('a, int) Code.abstract -> ('a, pv) Code.abstract
                       val decl :
-                        unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
+                        ('a, int) Code.abstract ->
+                        ('a * [> 'a tag_lstate ] * 'b, unit) lm
                       val add :
                         ('a, pv) Code.abstract ->
                         (('a, unit) Code.abstract option,
                          [> 'a tag_lstate ] list, ('a, 'b) Code.abstract)
                         StateCPSMonad.monad
                       val fin :
-                        unit -> ('a * [> 'a tag_lstate ] * 'b, pv c) lm
+                        unit ->
+                        (('a, pv c) Code.abstract option,
+                         [> 'a tag_lstate ] list, ('a, 'b) Code.abstract)
+                        StateCPSMonad.monad
                     end
                   val make_result :
                     ('a, GAC_I.contr) Code.abstract ->
@@ -4151,9 +4186,9 @@ module G_GAC_I :
                   ('a, int) Code.abstract ->
                   ('a, int) Code.abstract -> ('a, PK.v) Code.abstract
                 val decl :
-                  unit -> 'a -> ('a -> ('b, unit) Code.abstract -> 'c) -> 'c
+                  'a -> 'b -> ('b -> ('c, unit) Code.abstract -> 'd) -> 'd
                 val add : 'a -> 'b -> ('b -> 'c option -> 'd) -> 'd
-                val fin : unit -> 'a -> ('a -> 'b PK.vc -> 'c) -> 'c
+                val fin : unit -> 'a -> ('a -> 'b option -> 'c) -> 'c
               end
             val make_result : 'a -> 'b -> ('b -> 'a -> 'c) -> 'c
           end
@@ -4214,9 +4249,9 @@ module G_GAC_I :
                   ('a, int) Code.abstract ->
                   ('a, int) Code.abstract -> ('a, PK.v) Code.abstract
                 val decl :
-                  unit -> 'a -> ('a -> ('b, unit) Code.abstract -> 'c) -> 'c
+                  'a -> 'b -> ('b -> ('c, unit) Code.abstract -> 'd) -> 'd
                 val add : 'a -> 'b -> ('b -> 'c option -> 'd) -> 'd
-                val fin : unit -> 'a -> ('a -> 'b PK.vc -> 'c) -> 'c
+                val fin : unit -> 'a -> ('a -> 'b option -> 'c) -> 'c
               end
             val make_result :
               ('a, 'b) Code.abstract ->
@@ -4282,9 +4317,9 @@ module G_GAC_I :
                   ('a, int) Code.abstract ->
                   ('a, int) Code.abstract -> ('a, PK.v) Code.abstract
                 val decl :
-                  unit -> 'a -> ('a -> ('b, unit) Code.abstract -> 'c) -> 'c
+                  'a -> 'b -> ('b -> ('c, unit) Code.abstract -> 'd) -> 'd
                 val add : 'a -> 'b -> ('b -> 'c option -> 'd) -> 'd
-                val fin : unit -> 'a -> ('a -> 'b PK.vc -> 'c) -> 'c
+                val fin : unit -> 'a -> ('a -> 'b option -> 'c) -> 'c
               end
             val make_result :
               ('a, 'b) Code.abstract ->
@@ -4350,9 +4385,9 @@ module G_GAC_I :
                   ('a, int) Code.abstract ->
                   ('a, int) Code.abstract -> ('a, PK.v) Code.abstract
                 val decl :
-                  unit -> 'a -> ('a -> ('b, unit) Code.abstract -> 'c) -> 'c
+                  'a -> 'b -> ('b -> ('c, unit) Code.abstract -> 'd) -> 'd
                 val add : 'a -> 'b -> ('b -> 'c option -> 'd) -> 'd
-                val fin : unit -> 'a -> ('a -> 'b PK.vc -> 'c) -> 'c
+                val fin : unit -> 'a -> ('a -> 'b option -> 'c) -> 'c
               end
             val make_result :
               ('a, 'b) Code.abstract ->
@@ -4428,12 +4463,12 @@ module G_GAC_I :
                   ([> `TPivot of 'a ] as 'b) list ->
                   ('b list -> unit -> 'c) -> 'c
                 val decl :
-                  unit ->
-                  ([> `TPivot of ('b, PK.v PK.c ref) Code.abstract ] as 'a)
+                  ('a, int) Code.abstract ->
+                  ([> `TPivot of ('a, PK.v PK.c ref) Code.abstract ] as 'b)
                   list ->
-                  ('a list ->
-                   ('c, unit) Code.abstract -> ('b, 'd) Code.abstract) ->
-                  ('b, 'd) Code.abstract
+                  ('b list ->
+                   ('c, unit) Code.abstract -> ('a, 'd) Code.abstract) ->
+                  ('a, 'd) Code.abstract
                 val add :
                   ('a, PK.v) Code.abstract ->
                   ([> `TPivot of ('a, PK.v PK.c ref) Code.abstract ] as 'b)
@@ -4442,7 +4477,7 @@ module G_GAC_I :
                 val fin :
                   unit ->
                   ([> `TPivot of ('b, 'c ref) Code.abstract ] as 'a) list ->
-                  ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd
+                  ('a list -> ('b, 'c) Code.abstract option -> 'd) -> 'd
               end
             val make_result :
               ('a, 'b) Code.abstract ->
@@ -4737,7 +4772,8 @@ module G_GAC_I :
                               ('a, int) Code.abstract ->
                               ('a, pv) Code.abstract
                             val decl :
-                              unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
+                              ('a, int) Code.abstract ->
+                              ('a * [> 'a tag_lstate ] * 'b, unit) lm
                             val add :
                               ('a, pv) Code.abstract ->
                               (('a, unit) Code.abstract option,
@@ -4745,7 +4781,11 @@ module G_GAC_I :
                                ('a, 'b) Code.abstract)
                               StateCPSMonad.monad
                             val fin :
-                              unit -> ('a * [> 'a tag_lstate ] * 'b, pv c) lm
+                              unit ->
+                              (('a, pv c) Code.abstract option,
+                               [> 'a tag_lstate ] list,
+                               ('a, 'b) Code.abstract)
+                              StateCPSMonad.monad
                           end
                         val make_result :
                           ('a, GAC_I.contr) Code.abstract ->
@@ -4950,14 +4990,18 @@ module G_GVC_I :
                         ('a, int) Code.abstract ->
                         ('a, int) Code.abstract -> ('a, pv) Code.abstract
                       val decl :
-                        unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
+                        ('a, int) Code.abstract ->
+                        ('a * [> 'a tag_lstate ] * 'b, unit) lm
                       val add :
                         ('a, pv) Code.abstract ->
                         (('a, unit) Code.abstract option,
                          [> 'a tag_lstate ] list, ('a, 'b) Code.abstract)
                         StateCPSMonad.monad
                       val fin :
-                        unit -> ('a * [> 'a tag_lstate ] * 'b, pv c) lm
+                        unit ->
+                        (('a, pv c) Code.abstract option,
+                         [> 'a tag_lstate ] list, ('a, 'b) Code.abstract)
+                        StateCPSMonad.monad
                     end
                   val make_result :
                     ('a, GVC_I.contr) Code.abstract ->
@@ -5026,9 +5070,9 @@ module G_GVC_I :
                   ('a, int) Code.abstract ->
                   ('a, int) Code.abstract -> ('a, PK.v) Code.abstract
                 val decl :
-                  unit -> 'a -> ('a -> ('b, unit) Code.abstract -> 'c) -> 'c
+                  'a -> 'b -> ('b -> ('c, unit) Code.abstract -> 'd) -> 'd
                 val add : 'a -> 'b -> ('b -> 'c option -> 'd) -> 'd
-                val fin : unit -> 'a -> ('a -> 'b PK.vc -> 'c) -> 'c
+                val fin : unit -> 'a -> ('a -> 'b option -> 'c) -> 'c
               end
             val make_result : 'a -> 'b -> ('b -> 'a -> 'c) -> 'c
           end
@@ -5089,9 +5133,9 @@ module G_GVC_I :
                   ('a, int) Code.abstract ->
                   ('a, int) Code.abstract -> ('a, PK.v) Code.abstract
                 val decl :
-                  unit -> 'a -> ('a -> ('b, unit) Code.abstract -> 'c) -> 'c
+                  'a -> 'b -> ('b -> ('c, unit) Code.abstract -> 'd) -> 'd
                 val add : 'a -> 'b -> ('b -> 'c option -> 'd) -> 'd
-                val fin : unit -> 'a -> ('a -> 'b PK.vc -> 'c) -> 'c
+                val fin : unit -> 'a -> ('a -> 'b option -> 'c) -> 'c
               end
             val make_result :
               ('a, 'b) Code.abstract ->
@@ -5157,9 +5201,9 @@ module G_GVC_I :
                   ('a, int) Code.abstract ->
                   ('a, int) Code.abstract -> ('a, PK.v) Code.abstract
                 val decl :
-                  unit -> 'a -> ('a -> ('b, unit) Code.abstract -> 'c) -> 'c
+                  'a -> 'b -> ('b -> ('c, unit) Code.abstract -> 'd) -> 'd
                 val add : 'a -> 'b -> ('b -> 'c option -> 'd) -> 'd
-                val fin : unit -> 'a -> ('a -> 'b PK.vc -> 'c) -> 'c
+                val fin : unit -> 'a -> ('a -> 'b option -> 'c) -> 'c
               end
             val make_result :
               ('a, 'b) Code.abstract ->
@@ -5225,9 +5269,9 @@ module G_GVC_I :
                   ('a, int) Code.abstract ->
                   ('a, int) Code.abstract -> ('a, PK.v) Code.abstract
                 val decl :
-                  unit -> 'a -> ('a -> ('b, unit) Code.abstract -> 'c) -> 'c
+                  'a -> 'b -> ('b -> ('c, unit) Code.abstract -> 'd) -> 'd
                 val add : 'a -> 'b -> ('b -> 'c option -> 'd) -> 'd
-                val fin : unit -> 'a -> ('a -> 'b PK.vc -> 'c) -> 'c
+                val fin : unit -> 'a -> ('a -> 'b option -> 'c) -> 'c
               end
             val make_result :
               ('a, 'b) Code.abstract ->
@@ -5303,12 +5347,12 @@ module G_GVC_I :
                   ([> `TPivot of 'a ] as 'b) list ->
                   ('b list -> unit -> 'c) -> 'c
                 val decl :
-                  unit ->
-                  ([> `TPivot of ('b, PK.v PK.c ref) Code.abstract ] as 'a)
+                  ('a, int) Code.abstract ->
+                  ([> `TPivot of ('a, PK.v PK.c ref) Code.abstract ] as 'b)
                   list ->
-                  ('a list ->
-                   ('c, unit) Code.abstract -> ('b, 'd) Code.abstract) ->
-                  ('b, 'd) Code.abstract
+                  ('b list ->
+                   ('c, unit) Code.abstract -> ('a, 'd) Code.abstract) ->
+                  ('a, 'd) Code.abstract
                 val add :
                   ('a, PK.v) Code.abstract ->
                   ([> `TPivot of ('a, PK.v PK.c ref) Code.abstract ] as 'b)
@@ -5317,7 +5361,7 @@ module G_GVC_I :
                 val fin :
                   unit ->
                   ([> `TPivot of ('b, 'c ref) Code.abstract ] as 'a) list ->
-                  ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd
+                  ('a list -> ('b, 'c) Code.abstract option -> 'd) -> 'd
               end
             val make_result :
               ('a, 'b) Code.abstract ->
@@ -5612,7 +5656,8 @@ module G_GVC_I :
                               ('a, int) Code.abstract ->
                               ('a, pv) Code.abstract
                             val decl :
-                              unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
+                              ('a, int) Code.abstract ->
+                              ('a * [> 'a tag_lstate ] * 'b, unit) lm
                             val add :
                               ('a, pv) Code.abstract ->
                               (('a, unit) Code.abstract option,
@@ -5620,7 +5665,11 @@ module G_GVC_I :
                                ('a, 'b) Code.abstract)
                               StateCPSMonad.monad
                             val fin :
-                              unit -> ('a * [> 'a tag_lstate ] * 'b, pv c) lm
+                              unit ->
+                              (('a, pv c) Code.abstract option,
+                               [> 'a tag_lstate ] list,
+                               ('a, 'b) Code.abstract)
+                              StateCPSMonad.monad
                           end
                         val make_result :
                           ('a, GVC_I.contr) Code.abstract ->
@@ -5825,14 +5874,18 @@ module G_GAC_R :
                         ('a, int) Code.abstract ->
                         ('a, int) Code.abstract -> ('a, pv) Code.abstract
                       val decl :
-                        unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
+                        ('a, int) Code.abstract ->
+                        ('a * [> 'a tag_lstate ] * 'b, unit) lm
                       val add :
                         ('a, pv) Code.abstract ->
                         (('a, unit) Code.abstract option,
                          [> 'a tag_lstate ] list, ('a, 'b) Code.abstract)
                         StateCPSMonad.monad
                       val fin :
-                        unit -> ('a * [> 'a tag_lstate ] * 'b, pv c) lm
+                        unit ->
+                        (('a, pv c) Code.abstract option,
+                         [> 'a tag_lstate ] list, ('a, 'b) Code.abstract)
+                        StateCPSMonad.monad
                     end
                   val make_result :
                     ('a, GAC_R.contr) Code.abstract ->
@@ -5901,9 +5954,9 @@ module G_GAC_R :
                   ('a, int) Code.abstract ->
                   ('a, int) Code.abstract -> ('a, PK.v) Code.abstract
                 val decl :
-                  unit -> 'a -> ('a -> ('b, unit) Code.abstract -> 'c) -> 'c
+                  'a -> 'b -> ('b -> ('c, unit) Code.abstract -> 'd) -> 'd
                 val add : 'a -> 'b -> ('b -> 'c option -> 'd) -> 'd
-                val fin : unit -> 'a -> ('a -> 'b PK.vc -> 'c) -> 'c
+                val fin : unit -> 'a -> ('a -> 'b option -> 'c) -> 'c
               end
             val make_result : 'a -> 'b -> ('b -> 'a -> 'c) -> 'c
           end
@@ -5964,9 +6017,9 @@ module G_GAC_R :
                   ('a, int) Code.abstract ->
                   ('a, int) Code.abstract -> ('a, PK.v) Code.abstract
                 val decl :
-                  unit -> 'a -> ('a -> ('b, unit) Code.abstract -> 'c) -> 'c
+                  'a -> 'b -> ('b -> ('c, unit) Code.abstract -> 'd) -> 'd
                 val add : 'a -> 'b -> ('b -> 'c option -> 'd) -> 'd
-                val fin : unit -> 'a -> ('a -> 'b PK.vc -> 'c) -> 'c
+                val fin : unit -> 'a -> ('a -> 'b option -> 'c) -> 'c
               end
             val make_result :
               ('a, 'b) Code.abstract ->
@@ -6032,9 +6085,9 @@ module G_GAC_R :
                   ('a, int) Code.abstract ->
                   ('a, int) Code.abstract -> ('a, PK.v) Code.abstract
                 val decl :
-                  unit -> 'a -> ('a -> ('b, unit) Code.abstract -> 'c) -> 'c
+                  'a -> 'b -> ('b -> ('c, unit) Code.abstract -> 'd) -> 'd
                 val add : 'a -> 'b -> ('b -> 'c option -> 'd) -> 'd
-                val fin : unit -> 'a -> ('a -> 'b PK.vc -> 'c) -> 'c
+                val fin : unit -> 'a -> ('a -> 'b option -> 'c) -> 'c
               end
             val make_result :
               ('a, 'b) Code.abstract ->
@@ -6100,9 +6153,9 @@ module G_GAC_R :
                   ('a, int) Code.abstract ->
                   ('a, int) Code.abstract -> ('a, PK.v) Code.abstract
                 val decl :
-                  unit -> 'a -> ('a -> ('b, unit) Code.abstract -> 'c) -> 'c
+                  'a -> 'b -> ('b -> ('c, unit) Code.abstract -> 'd) -> 'd
                 val add : 'a -> 'b -> ('b -> 'c option -> 'd) -> 'd
-                val fin : unit -> 'a -> ('a -> 'b PK.vc -> 'c) -> 'c
+                val fin : unit -> 'a -> ('a -> 'b option -> 'c) -> 'c
               end
             val make_result :
               ('a, 'b) Code.abstract ->
@@ -6178,12 +6231,12 @@ module G_GAC_R :
                   ([> `TPivot of 'a ] as 'b) list ->
                   ('b list -> unit -> 'c) -> 'c
                 val decl :
-                  unit ->
-                  ([> `TPivot of ('b, PK.v PK.c ref) Code.abstract ] as 'a)
+                  ('a, int) Code.abstract ->
+                  ([> `TPivot of ('a, PK.v PK.c ref) Code.abstract ] as 'b)
                   list ->
-                  ('a list ->
-                   ('c, unit) Code.abstract -> ('b, 'd) Code.abstract) ->
-                  ('b, 'd) Code.abstract
+                  ('b list ->
+                   ('c, unit) Code.abstract -> ('a, 'd) Code.abstract) ->
+                  ('a, 'd) Code.abstract
                 val add :
                   ('a, PK.v) Code.abstract ->
                   ([> `TPivot of ('a, PK.v PK.c ref) Code.abstract ] as 'b)
@@ -6192,7 +6245,7 @@ module G_GAC_R :
                 val fin :
                   unit ->
                   ([> `TPivot of ('b, 'c ref) Code.abstract ] as 'a) list ->
-                  ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd
+                  ('a list -> ('b, 'c) Code.abstract option -> 'd) -> 'd
               end
             val make_result :
               ('a, 'b) Code.abstract ->
@@ -6487,7 +6540,8 @@ module G_GAC_R :
                               ('a, int) Code.abstract ->
                               ('a, pv) Code.abstract
                             val decl :
-                              unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
+                              ('a, int) Code.abstract ->
+                              ('a * [> 'a tag_lstate ] * 'b, unit) lm
                             val add :
                               ('a, pv) Code.abstract ->
                               (('a, unit) Code.abstract option,
@@ -6495,7 +6549,11 @@ module G_GAC_R :
                                ('a, 'b) Code.abstract)
                               StateCPSMonad.monad
                             val fin :
-                              unit -> ('a * [> 'a tag_lstate ] * 'b, pv c) lm
+                              unit ->
+                              (('a, pv c) Code.abstract option,
+                               [> 'a tag_lstate ] list,
+                               ('a, 'b) Code.abstract)
+                              StateCPSMonad.monad
                           end
                         val make_result :
                           ('a, GAC_R.contr) Code.abstract ->
@@ -6700,14 +6758,18 @@ module G_GVC_Z3 :
                         ('a, int) Code.abstract ->
                         ('a, int) Code.abstract -> ('a, pv) Code.abstract
                       val decl :
-                        unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
+                        ('a, int) Code.abstract ->
+                        ('a * [> 'a tag_lstate ] * 'b, unit) lm
                       val add :
                         ('a, pv) Code.abstract ->
                         (('a, unit) Code.abstract option,
                          [> 'a tag_lstate ] list, ('a, 'b) Code.abstract)
                         StateCPSMonad.monad
                       val fin :
-                        unit -> ('a * [> 'a tag_lstate ] * 'b, pv c) lm
+                        unit ->
+                        (('a, pv c) Code.abstract option,
+                         [> 'a tag_lstate ] list, ('a, 'b) Code.abstract)
+                        StateCPSMonad.monad
                     end
                   val make_result :
                     ('a, GVC_Z3.contr) Code.abstract ->
@@ -6776,9 +6838,9 @@ module G_GVC_Z3 :
                   ('a, int) Code.abstract ->
                   ('a, int) Code.abstract -> ('a, PK.v) Code.abstract
                 val decl :
-                  unit -> 'a -> ('a -> ('b, unit) Code.abstract -> 'c) -> 'c
+                  'a -> 'b -> ('b -> ('c, unit) Code.abstract -> 'd) -> 'd
                 val add : 'a -> 'b -> ('b -> 'c option -> 'd) -> 'd
-                val fin : unit -> 'a -> ('a -> 'b PK.vc -> 'c) -> 'c
+                val fin : unit -> 'a -> ('a -> 'b option -> 'c) -> 'c
               end
             val make_result : 'a -> 'b -> ('b -> 'a -> 'c) -> 'c
           end
@@ -6839,9 +6901,9 @@ module G_GVC_Z3 :
                   ('a, int) Code.abstract ->
                   ('a, int) Code.abstract -> ('a, PK.v) Code.abstract
                 val decl :
-                  unit -> 'a -> ('a -> ('b, unit) Code.abstract -> 'c) -> 'c
+                  'a -> 'b -> ('b -> ('c, unit) Code.abstract -> 'd) -> 'd
                 val add : 'a -> 'b -> ('b -> 'c option -> 'd) -> 'd
-                val fin : unit -> 'a -> ('a -> 'b PK.vc -> 'c) -> 'c
+                val fin : unit -> 'a -> ('a -> 'b option -> 'c) -> 'c
               end
             val make_result :
               ('a, 'b) Code.abstract ->
@@ -6907,9 +6969,9 @@ module G_GVC_Z3 :
                   ('a, int) Code.abstract ->
                   ('a, int) Code.abstract -> ('a, PK.v) Code.abstract
                 val decl :
-                  unit -> 'a -> ('a -> ('b, unit) Code.abstract -> 'c) -> 'c
+                  'a -> 'b -> ('b -> ('c, unit) Code.abstract -> 'd) -> 'd
                 val add : 'a -> 'b -> ('b -> 'c option -> 'd) -> 'd
-                val fin : unit -> 'a -> ('a -> 'b PK.vc -> 'c) -> 'c
+                val fin : unit -> 'a -> ('a -> 'b option -> 'c) -> 'c
               end
             val make_result :
               ('a, 'b) Code.abstract ->
@@ -6975,9 +7037,9 @@ module G_GVC_Z3 :
                   ('a, int) Code.abstract ->
                   ('a, int) Code.abstract -> ('a, PK.v) Code.abstract
                 val decl :
-                  unit -> 'a -> ('a -> ('b, unit) Code.abstract -> 'c) -> 'c
+                  'a -> 'b -> ('b -> ('c, unit) Code.abstract -> 'd) -> 'd
                 val add : 'a -> 'b -> ('b -> 'c option -> 'd) -> 'd
-                val fin : unit -> 'a -> ('a -> 'b PK.vc -> 'c) -> 'c
+                val fin : unit -> 'a -> ('a -> 'b option -> 'c) -> 'c
               end
             val make_result :
               ('a, 'b) Code.abstract ->
@@ -7053,12 +7115,12 @@ module G_GVC_Z3 :
                   ([> `TPivot of 'a ] as 'b) list ->
                   ('b list -> unit -> 'c) -> 'c
                 val decl :
-                  unit ->
-                  ([> `TPivot of ('b, PK.v PK.c ref) Code.abstract ] as 'a)
+                  ('a, int) Code.abstract ->
+                  ([> `TPivot of ('a, PK.v PK.c ref) Code.abstract ] as 'b)
                   list ->
-                  ('a list ->
-                   ('c, unit) Code.abstract -> ('b, 'd) Code.abstract) ->
-                  ('b, 'd) Code.abstract
+                  ('b list ->
+                   ('c, unit) Code.abstract -> ('a, 'd) Code.abstract) ->
+                  ('a, 'd) Code.abstract
                 val add :
                   ('a, PK.v) Code.abstract ->
                   ([> `TPivot of ('a, PK.v PK.c ref) Code.abstract ] as 'b)
@@ -7067,7 +7129,7 @@ module G_GVC_Z3 :
                 val fin :
                   unit ->
                   ([> `TPivot of ('b, 'c ref) Code.abstract ] as 'a) list ->
-                  ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd
+                  ('a list -> ('b, 'c) Code.abstract option -> 'd) -> 'd
               end
             val make_result :
               ('a, 'b) Code.abstract ->
@@ -7362,7 +7424,8 @@ module G_GVC_Z3 :
                               ('a, int) Code.abstract ->
                               ('a, pv) Code.abstract
                             val decl :
-                              unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
+                              ('a, int) Code.abstract ->
+                              ('a * [> 'a tag_lstate ] * 'b, unit) lm
                             val add :
                               ('a, pv) Code.abstract ->
                               (('a, unit) Code.abstract option,
@@ -7370,7 +7433,11 @@ module G_GVC_Z3 :
                                ('a, 'b) Code.abstract)
                               StateCPSMonad.monad
                             val fin :
-                              unit -> ('a * [> 'a tag_lstate ] * 'b, pv c) lm
+                              unit ->
+                              (('a, pv c) Code.abstract option,
+                               [> 'a tag_lstate ] list,
+                               ('a, 'b) Code.abstract)
+                              StateCPSMonad.monad
                           end
                         val make_result :
                           ('a, GVC_Z3.contr) Code.abstract ->
@@ -7575,14 +7642,18 @@ module G_GVC_Z19 :
                         ('a, int) Code.abstract ->
                         ('a, int) Code.abstract -> ('a, pv) Code.abstract
                       val decl :
-                        unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
+                        ('a, int) Code.abstract ->
+                        ('a * [> 'a tag_lstate ] * 'b, unit) lm
                       val add :
                         ('a, pv) Code.abstract ->
                         (('a, unit) Code.abstract option,
                          [> 'a tag_lstate ] list, ('a, 'b) Code.abstract)
                         StateCPSMonad.monad
                       val fin :
-                        unit -> ('a * [> 'a tag_lstate ] * 'b, pv c) lm
+                        unit ->
+                        (('a, pv c) Code.abstract option,
+                         [> 'a tag_lstate ] list, ('a, 'b) Code.abstract)
+                        StateCPSMonad.monad
                     end
                   val make_result :
                     ('a, GVC_Z19.contr) Code.abstract ->
@@ -7651,9 +7722,9 @@ module G_GVC_Z19 :
                   ('a, int) Code.abstract ->
                   ('a, int) Code.abstract -> ('a, PK.v) Code.abstract
                 val decl :
-                  unit -> 'a -> ('a -> ('b, unit) Code.abstract -> 'c) -> 'c
+                  'a -> 'b -> ('b -> ('c, unit) Code.abstract -> 'd) -> 'd
                 val add : 'a -> 'b -> ('b -> 'c option -> 'd) -> 'd
-                val fin : unit -> 'a -> ('a -> 'b PK.vc -> 'c) -> 'c
+                val fin : unit -> 'a -> ('a -> 'b option -> 'c) -> 'c
               end
             val make_result : 'a -> 'b -> ('b -> 'a -> 'c) -> 'c
           end
@@ -7714,9 +7785,9 @@ module G_GVC_Z19 :
                   ('a, int) Code.abstract ->
                   ('a, int) Code.abstract -> ('a, PK.v) Code.abstract
                 val decl :
-                  unit -> 'a -> ('a -> ('b, unit) Code.abstract -> 'c) -> 'c
+                  'a -> 'b -> ('b -> ('c, unit) Code.abstract -> 'd) -> 'd
                 val add : 'a -> 'b -> ('b -> 'c option -> 'd) -> 'd
-                val fin : unit -> 'a -> ('a -> 'b PK.vc -> 'c) -> 'c
+                val fin : unit -> 'a -> ('a -> 'b option -> 'c) -> 'c
               end
             val make_result :
               ('a, 'b) Code.abstract ->
@@ -7782,9 +7853,9 @@ module G_GVC_Z19 :
                   ('a, int) Code.abstract ->
                   ('a, int) Code.abstract -> ('a, PK.v) Code.abstract
                 val decl :
-                  unit -> 'a -> ('a -> ('b, unit) Code.abstract -> 'c) -> 'c
+                  'a -> 'b -> ('b -> ('c, unit) Code.abstract -> 'd) -> 'd
                 val add : 'a -> 'b -> ('b -> 'c option -> 'd) -> 'd
-                val fin : unit -> 'a -> ('a -> 'b PK.vc -> 'c) -> 'c
+                val fin : unit -> 'a -> ('a -> 'b option -> 'c) -> 'c
               end
             val make_result :
               ('a, 'b) Code.abstract ->
@@ -7850,9 +7921,9 @@ module G_GVC_Z19 :
                   ('a, int) Code.abstract ->
                   ('a, int) Code.abstract -> ('a, PK.v) Code.abstract
                 val decl :
-                  unit -> 'a -> ('a -> ('b, unit) Code.abstract -> 'c) -> 'c
+                  'a -> 'b -> ('b -> ('c, unit) Code.abstract -> 'd) -> 'd
                 val add : 'a -> 'b -> ('b -> 'c option -> 'd) -> 'd
-                val fin : unit -> 'a -> ('a -> 'b PK.vc -> 'c) -> 'c
+                val fin : unit -> 'a -> ('a -> 'b option -> 'c) -> 'c
               end
             val make_result :
               ('a, 'b) Code.abstract ->
@@ -7928,12 +7999,12 @@ module G_GVC_Z19 :
                   ([> `TPivot of 'a ] as 'b) list ->
                   ('b list -> unit -> 'c) -> 'c
                 val decl :
-                  unit ->
-                  ([> `TPivot of ('b, PK.v PK.c ref) Code.abstract ] as 'a)
+                  ('a, int) Code.abstract ->
+                  ([> `TPivot of ('a, PK.v PK.c ref) Code.abstract ] as 'b)
                   list ->
-                  ('a list ->
-                   ('c, unit) Code.abstract -> ('b, 'd) Code.abstract) ->
-                  ('b, 'd) Code.abstract
+                  ('b list ->
+                   ('c, unit) Code.abstract -> ('a, 'd) Code.abstract) ->
+                  ('a, 'd) Code.abstract
                 val add :
                   ('a, PK.v) Code.abstract ->
                   ([> `TPivot of ('a, PK.v PK.c ref) Code.abstract ] as 'b)
@@ -7942,7 +8013,7 @@ module G_GVC_Z19 :
                 val fin :
                   unit ->
                   ([> `TPivot of ('b, 'c ref) Code.abstract ] as 'a) list ->
-                  ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd
+                  ('a list -> ('b, 'c) Code.abstract option -> 'd) -> 'd
               end
             val make_result :
               ('a, 'b) Code.abstract ->
@@ -8237,7 +8308,8 @@ module G_GVC_Z19 :
                               ('a, int) Code.abstract ->
                               ('a, pv) Code.abstract
                             val decl :
-                              unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
+                              ('a, int) Code.abstract ->
+                              ('a * [> 'a tag_lstate ] * 'b, unit) lm
                             val add :
                               ('a, pv) Code.abstract ->
                               (('a, unit) Code.abstract option,
@@ -8245,7 +8317,11 @@ module G_GVC_Z19 :
                                ('a, 'b) Code.abstract)
                               StateCPSMonad.monad
                             val fin :
-                              unit -> ('a * [> 'a tag_lstate ] * 'b, pv c) lm
+                              unit ->
+                              (('a, pv c) Code.abstract option,
+                               [> 'a tag_lstate ] list,
+                               ('a, 'b) Code.abstract)
+                              StateCPSMonad.monad
                           end
                         val make_result :
                           ('a, GVC_Z19.contr) Code.abstract ->
@@ -8415,13 +8491,19 @@ module GenFA1 :
             val colrep :
               ('a, int) Code.abstract ->
               ('a, int) Code.abstract -> ('a, pv) Code.abstract
-            val decl : unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
+            val decl :
+              ('a, int) Code.abstract ->
+              ('a * [> 'a tag_lstate ] * 'b, unit) lm
             val add :
               ('a, pv) Code.abstract ->
               (('a, unit) Code.abstract option, [> 'a tag_lstate ] list,
                ('a, 'b) Code.abstract)
               StateCPSMonad.monad
-            val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, pv c) lm
+            val fin :
+              unit ->
+              (('a, pv c) Code.abstract option, [> 'a tag_lstate ] list,
+               ('a, 'b) Code.abstract)
+              StateCPSMonad.monad
           end
         val make_result :
           ('a, GAC_F.contr) Code.abstract ->
@@ -8584,13 +8666,19 @@ module GenFA2 :
             val colrep :
               ('a, int) Code.abstract ->
               ('a, int) Code.abstract -> ('a, pv) Code.abstract
-            val decl : unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
+            val decl :
+              ('a, int) Code.abstract ->
+              ('a * [> 'a tag_lstate ] * 'b, unit) lm
             val add :
               ('a, pv) Code.abstract ->
               (('a, unit) Code.abstract option, [> 'a tag_lstate ] list,
                ('a, 'b) Code.abstract)
               StateCPSMonad.monad
-            val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, pv c) lm
+            val fin :
+              unit ->
+              (('a, pv c) Code.abstract option, [> 'a tag_lstate ] list,
+               ('a, 'b) Code.abstract)
+              StateCPSMonad.monad
           end
         val make_result :
           ('a, GAC_F.contr) Code.abstract ->
@@ -8753,13 +8841,19 @@ module GenFA3 :
             val colrep :
               ('a, int) Code.abstract ->
               ('a, int) Code.abstract -> ('a, pv) Code.abstract
-            val decl : unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
+            val decl :
+              ('a, int) Code.abstract ->
+              ('a * [> 'a tag_lstate ] * 'b, unit) lm
             val add :
               ('a, pv) Code.abstract ->
               (('a, unit) Code.abstract option, [> 'a tag_lstate ] list,
                ('a, 'b) Code.abstract)
               StateCPSMonad.monad
-            val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, pv c) lm
+            val fin :
+              unit ->
+              (('a, pv c) Code.abstract option, [> 'a tag_lstate ] list,
+               ('a, 'b) Code.abstract)
+              StateCPSMonad.monad
           end
         val make_result :
           ('a, GAC_F.contr) Code.abstract ->
@@ -8923,13 +9017,19 @@ module GenFA4 :
             val colrep :
               ('a, int) Code.abstract ->
               ('a, int) Code.abstract -> ('a, pv) Code.abstract
-            val decl : unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
+            val decl :
+              ('a, int) Code.abstract ->
+              ('a * [> 'a tag_lstate ] * 'b, unit) lm
             val add :
               ('a, pv) Code.abstract ->
               (('a, unit) Code.abstract option, [> 'a tag_lstate ] list,
                ('a, 'b) Code.abstract)
               StateCPSMonad.monad
-            val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, pv c) lm
+            val fin :
+              unit ->
+              (('a, pv c) Code.abstract option, [> 'a tag_lstate ] list,
+               ('a, 'b) Code.abstract)
+              StateCPSMonad.monad
           end
         val make_result :
           ('a, GAC_F.contr) Code.abstract ->
@@ -9093,13 +9193,19 @@ module GenFA11 :
             val colrep :
               ('a, int) Code.abstract ->
               ('a, int) Code.abstract -> ('a, pv) Code.abstract
-            val decl : unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
+            val decl :
+              ('a, int) Code.abstract ->
+              ('a * [> 'a tag_lstate ] * 'b, unit) lm
             val add :
               ('a, pv) Code.abstract ->
               (('a, unit) Code.abstract option, [> 'a tag_lstate ] list,
                ('a, 'b) Code.abstract)
               StateCPSMonad.monad
-            val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, pv c) lm
+            val fin :
+              unit ->
+              (('a, pv c) Code.abstract option, [> 'a tag_lstate ] list,
+               ('a, 'b) Code.abstract)
+              StateCPSMonad.monad
           end
         val make_result :
           ('a, GAC_F.contr) Code.abstract ->
@@ -9262,13 +9368,19 @@ module GenFA12 :
             val colrep :
               ('a, int) Code.abstract ->
               ('a, int) Code.abstract -> ('a, pv) Code.abstract
-            val decl : unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
+            val decl :
+              ('a, int) Code.abstract ->
+              ('a * [> 'a tag_lstate ] * 'b, unit) lm
             val add :
               ('a, pv) Code.abstract ->
               (('a, unit) Code.abstract option, [> 'a tag_lstate ] list,
                ('a, 'b) Code.abstract)
               StateCPSMonad.monad
-            val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, pv c) lm
+            val fin :
+              unit ->
+              (('a, pv c) Code.abstract option, [> 'a tag_lstate ] list,
+               ('a, 'b) Code.abstract)
+              StateCPSMonad.monad
           end
         val make_result :
           ('a, GAC_F.contr) Code.abstract ->
@@ -9431,13 +9543,19 @@ module GenFA13 :
             val colrep :
               ('a, int) Code.abstract ->
               ('a, int) Code.abstract -> ('a, pv) Code.abstract
-            val decl : unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
+            val decl :
+              ('a, int) Code.abstract ->
+              ('a * [> 'a tag_lstate ] * 'b, unit) lm
             val add :
               ('a, pv) Code.abstract ->
               (('a, unit) Code.abstract option, [> 'a tag_lstate ] list,
                ('a, 'b) Code.abstract)
               StateCPSMonad.monad
-            val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, pv c) lm
+            val fin :
+              unit ->
+              (('a, pv c) Code.abstract option, [> 'a tag_lstate ] list,
+               ('a, 'b) Code.abstract)
+              StateCPSMonad.monad
           end
         val make_result :
           ('a, GAC_F.contr) Code.abstract ->
@@ -9601,13 +9719,19 @@ module GenFA14 :
             val colrep :
               ('a, int) Code.abstract ->
               ('a, int) Code.abstract -> ('a, pv) Code.abstract
-            val decl : unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
+            val decl :
+              ('a, int) Code.abstract ->
+              ('a * [> 'a tag_lstate ] * 'b, unit) lm
             val add :
               ('a, pv) Code.abstract ->
               (('a, unit) Code.abstract option, [> 'a tag_lstate ] list,
                ('a, 'b) Code.abstract)
               StateCPSMonad.monad
-            val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, pv c) lm
+            val fin :
+              unit ->
+              (('a, pv c) Code.abstract option, [> 'a tag_lstate ] list,
+               ('a, 'b) Code.abstract)
+              StateCPSMonad.monad
           end
         val make_result :
           ('a, GAC_F.contr) Code.abstract ->
@@ -9771,13 +9895,19 @@ module GenFA24 :
             val colrep :
               ('a, int) Code.abstract ->
               ('a, int) Code.abstract -> ('a, pv) Code.abstract
-            val decl : unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
+            val decl :
+              ('a, int) Code.abstract ->
+              ('a * [> 'a tag_lstate ] * 'b, unit) lm
             val add :
               ('a, pv) Code.abstract ->
               (('a, unit) Code.abstract option, [> 'a tag_lstate ] list,
                ('a, 'b) Code.abstract)
               StateCPSMonad.monad
-            val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, pv c) lm
+            val fin :
+              unit ->
+              (('a, pv c) Code.abstract option, [> 'a tag_lstate ] list,
+               ('a, 'b) Code.abstract)
+              StateCPSMonad.monad
           end
         val make_result :
           ('a, GAC_F.contr) Code.abstract ->
@@ -9941,13 +10071,19 @@ module GenFA5 :
             val colrep :
               ('a, int) Code.abstract ->
               ('a, int) Code.abstract -> ('a, pv) Code.abstract
-            val decl : unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
+            val decl :
+              ('a, int) Code.abstract ->
+              ('a * [> 'a tag_lstate ] * 'b, unit) lm
             val add :
               ('a, pv) Code.abstract ->
               (('a, unit) Code.abstract option, [> 'a tag_lstate ] list,
                ('a, 'b) Code.abstract)
               StateCPSMonad.monad
-            val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, pv c) lm
+            val fin :
+              unit ->
+              (('a, pv c) Code.abstract option, [> 'a tag_lstate ] list,
+               ('a, 'b) Code.abstract)
+              StateCPSMonad.monad
           end
         val make_result :
           ('a, GAC_F.contr) Code.abstract ->
@@ -10110,13 +10246,19 @@ module GenFA6 :
             val colrep :
               ('a, int) Code.abstract ->
               ('a, int) Code.abstract -> ('a, pv) Code.abstract
-            val decl : unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
+            val decl :
+              ('a, int) Code.abstract ->
+              ('a * [> 'a tag_lstate ] * 'b, unit) lm
             val add :
               ('a, pv) Code.abstract ->
               (('a, unit) Code.abstract option, [> 'a tag_lstate ] list,
                ('a, 'b) Code.abstract)
               StateCPSMonad.monad
-            val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, pv c) lm
+            val fin :
+              unit ->
+              (('a, pv c) Code.abstract option, [> 'a tag_lstate ] list,
+               ('a, 'b) Code.abstract)
+              StateCPSMonad.monad
           end
         val make_result :
           ('a, GAC_F.contr) Code.abstract ->
@@ -10279,13 +10421,19 @@ module GenFA7 :
             val colrep :
               ('a, int) Code.abstract ->
               ('a, int) Code.abstract -> ('a, pv) Code.abstract
-            val decl : unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
+            val decl :
+              ('a, int) Code.abstract ->
+              ('a * [> 'a tag_lstate ] * 'b, unit) lm
             val add :
               ('a, pv) Code.abstract ->
               (('a, unit) Code.abstract option, [> 'a tag_lstate ] list,
                ('a, 'b) Code.abstract)
               StateCPSMonad.monad
-            val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, pv c) lm
+            val fin :
+              unit ->
+              (('a, pv c) Code.abstract option, [> 'a tag_lstate ] list,
+               ('a, 'b) Code.abstract)
+              StateCPSMonad.monad
           end
         val make_result :
           ('a, GAC_F.contr) Code.abstract ->
@@ -10449,13 +10597,19 @@ module GenFA8 :
             val colrep :
               ('a, int) Code.abstract ->
               ('a, int) Code.abstract -> ('a, pv) Code.abstract
-            val decl : unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
+            val decl :
+              ('a, int) Code.abstract ->
+              ('a * [> 'a tag_lstate ] * 'b, unit) lm
             val add :
               ('a, pv) Code.abstract ->
               (('a, unit) Code.abstract option, [> 'a tag_lstate ] list,
                ('a, 'b) Code.abstract)
               StateCPSMonad.monad
-            val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, pv c) lm
+            val fin :
+              unit ->
+              (('a, pv c) Code.abstract option, [> 'a tag_lstate ] list,
+               ('a, 'b) Code.abstract)
+              StateCPSMonad.monad
           end
         val make_result :
           ('a, GAC_F.contr) Code.abstract ->
@@ -10619,13 +10773,19 @@ module GenFV1 :
             val colrep :
               ('a, int) Code.abstract ->
               ('a, int) Code.abstract -> ('a, pv) Code.abstract
-            val decl : unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
+            val decl :
+              ('a, int) Code.abstract ->
+              ('a * [> 'a tag_lstate ] * 'b, unit) lm
             val add :
               ('a, pv) Code.abstract ->
               (('a, unit) Code.abstract option, [> 'a tag_lstate ] list,
                ('a, 'b) Code.abstract)
               StateCPSMonad.monad
-            val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, pv c) lm
+            val fin :
+              unit ->
+              (('a, pv c) Code.abstract option, [> 'a tag_lstate ] list,
+               ('a, 'b) Code.abstract)
+              StateCPSMonad.monad
           end
         val make_result :
           ('a, GVC_F.contr) Code.abstract ->
@@ -10788,13 +10948,19 @@ module GenFV2 :
             val colrep :
               ('a, int) Code.abstract ->
               ('a, int) Code.abstract -> ('a, pv) Code.abstract
-            val decl : unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
+            val decl :
+              ('a, int) Code.abstract ->
+              ('a * [> 'a tag_lstate ] * 'b, unit) lm
             val add :
               ('a, pv) Code.abstract ->
               (('a, unit) Code.abstract option, [> 'a tag_lstate ] list,
                ('a, 'b) Code.abstract)
               StateCPSMonad.monad
-            val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, pv c) lm
+            val fin :
+              unit ->
+              (('a, pv c) Code.abstract option, [> 'a tag_lstate ] list,
+               ('a, 'b) Code.abstract)
+              StateCPSMonad.monad
           end
         val make_result :
           ('a, GVC_F.contr) Code.abstract ->
@@ -10957,13 +11123,19 @@ module GenFV3 :
             val colrep :
               ('a, int) Code.abstract ->
               ('a, int) Code.abstract -> ('a, pv) Code.abstract
-            val decl : unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
+            val decl :
+              ('a, int) Code.abstract ->
+              ('a * [> 'a tag_lstate ] * 'b, unit) lm
             val add :
               ('a, pv) Code.abstract ->
               (('a, unit) Code.abstract option, [> 'a tag_lstate ] list,
                ('a, 'b) Code.abstract)
               StateCPSMonad.monad
-            val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, pv c) lm
+            val fin :
+              unit ->
+              (('a, pv c) Code.abstract option, [> 'a tag_lstate ] list,
+               ('a, 'b) Code.abstract)
+              StateCPSMonad.monad
           end
         val make_result :
           ('a, GVC_F.contr) Code.abstract ->
@@ -11127,13 +11299,19 @@ module GenFV4 :
             val colrep :
               ('a, int) Code.abstract ->
               ('a, int) Code.abstract -> ('a, pv) Code.abstract
-            val decl : unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
+            val decl :
+              ('a, int) Code.abstract ->
+              ('a * [> 'a tag_lstate ] * 'b, unit) lm
             val add :
               ('a, pv) Code.abstract ->
               (('a, unit) Code.abstract option, [> 'a tag_lstate ] list,
                ('a, 'b) Code.abstract)
               StateCPSMonad.monad
-            val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, pv c) lm
+            val fin :
+              unit ->
+              (('a, pv c) Code.abstract option, [> 'a tag_lstate ] list,
+               ('a, 'b) Code.abstract)
+              StateCPSMonad.monad
           end
         val make_result :
           ('a, GVC_F.contr) Code.abstract ->
@@ -11297,13 +11475,19 @@ module GenFV5 :
             val colrep :
               ('a, int) Code.abstract ->
               ('a, int) Code.abstract -> ('a, pv) Code.abstract
-            val decl : unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
+            val decl :
+              ('a, int) Code.abstract ->
+              ('a * [> 'a tag_lstate ] * 'b, unit) lm
             val add :
               ('a, pv) Code.abstract ->
               (('a, unit) Code.abstract option, [> 'a tag_lstate ] list,
                ('a, 'b) Code.abstract)
               StateCPSMonad.monad
-            val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, pv c) lm
+            val fin :
+              unit ->
+              (('a, pv c) Code.abstract option, [> 'a tag_lstate ] list,
+               ('a, 'b) Code.abstract)
+              StateCPSMonad.monad
           end
         val make_result :
           ('a, GVC_F.contr) Code.abstract ->
@@ -11467,13 +11651,19 @@ module GenIA1 :
             val colrep :
               ('a, int) Code.abstract ->
               ('a, int) Code.abstract -> ('a, pv) Code.abstract
-            val decl : unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
+            val decl :
+              ('a, int) Code.abstract ->
+              ('a * [> 'a tag_lstate ] * 'b, unit) lm
             val add :
               ('a, pv) Code.abstract ->
               (('a, unit) Code.abstract option, [> 'a tag_lstate ] list,
                ('a, 'b) Code.abstract)
               StateCPSMonad.monad
-            val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, pv c) lm
+            val fin :
+              unit ->
+              (('a, pv c) Code.abstract option, [> 'a tag_lstate ] list,
+               ('a, 'b) Code.abstract)
+              StateCPSMonad.monad
           end
         val make_result :
           ('a, GAC_I.contr) Code.abstract ->
@@ -11636,13 +11826,19 @@ module GenIA2 :
             val colrep :
               ('a, int) Code.abstract ->
               ('a, int) Code.abstract -> ('a, pv) Code.abstract
-            val decl : unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
+            val decl :
+              ('a, int) Code.abstract ->
+              ('a * [> 'a tag_lstate ] * 'b, unit) lm
             val add :
               ('a, pv) Code.abstract ->
               (('a, unit) Code.abstract option, [> 'a tag_lstate ] list,
                ('a, 'b) Code.abstract)
               StateCPSMonad.monad
-            val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, pv c) lm
+            val fin :
+              unit ->
+              (('a, pv c) Code.abstract option, [> 'a tag_lstate ] list,
+               ('a, 'b) Code.abstract)
+              StateCPSMonad.monad
           end
         val make_result :
           ('a, GAC_I.contr) Code.abstract ->
@@ -11805,13 +12001,19 @@ module GenIA3 :
             val colrep :
               ('a, int) Code.abstract ->
               ('a, int) Code.abstract -> ('a, pv) Code.abstract
-            val decl : unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
+            val decl :
+              ('a, int) Code.abstract ->
+              ('a * [> 'a tag_lstate ] * 'b, unit) lm
             val add :
               ('a, pv) Code.abstract ->
               (('a, unit) Code.abstract option, [> 'a tag_lstate ] list,
                ('a, 'b) Code.abstract)
               StateCPSMonad.monad
-            val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, pv c) lm
+            val fin :
+              unit ->
+              (('a, pv c) Code.abstract option, [> 'a tag_lstate ] list,
+               ('a, 'b) Code.abstract)
+              StateCPSMonad.monad
           end
         val make_result :
           ('a, GAC_I.contr) Code.abstract ->
@@ -11975,13 +12177,19 @@ module GenIA4 :
             val colrep :
               ('a, int) Code.abstract ->
               ('a, int) Code.abstract -> ('a, pv) Code.abstract
-            val decl : unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
+            val decl :
+              ('a, int) Code.abstract ->
+              ('a * [> 'a tag_lstate ] * 'b, unit) lm
             val add :
               ('a, pv) Code.abstract ->
               (('a, unit) Code.abstract option, [> 'a tag_lstate ] list,
                ('a, 'b) Code.abstract)
               StateCPSMonad.monad
-            val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, pv c) lm
+            val fin :
+              unit ->
+              (('a, pv c) Code.abstract option, [> 'a tag_lstate ] list,
+               ('a, 'b) Code.abstract)
+              StateCPSMonad.monad
           end
         val make_result :
           ('a, GAC_I.contr) Code.abstract ->
@@ -12145,13 +12353,19 @@ module GenIV1 :
             val colrep :
               ('a, int) Code.abstract ->
               ('a, int) Code.abstract -> ('a, pv) Code.abstract
-            val decl : unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
+            val decl :
+              ('a, int) Code.abstract ->
+              ('a * [> 'a tag_lstate ] * 'b, unit) lm
             val add :
               ('a, pv) Code.abstract ->
               (('a, unit) Code.abstract option, [> 'a tag_lstate ] list,
                ('a, 'b) Code.abstract)
               StateCPSMonad.monad
-            val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, pv c) lm
+            val fin :
+              unit ->
+              (('a, pv c) Code.abstract option, [> 'a tag_lstate ] list,
+               ('a, 'b) Code.abstract)
+              StateCPSMonad.monad
           end
         val make_result :
           ('a, GVC_I.contr) Code.abstract ->
@@ -12314,13 +12528,19 @@ module GenIV2 :
             val colrep :
               ('a, int) Code.abstract ->
               ('a, int) Code.abstract -> ('a, pv) Code.abstract
-            val decl : unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
+            val decl :
+              ('a, int) Code.abstract ->
+              ('a * [> 'a tag_lstate ] * 'b, unit) lm
             val add :
               ('a, pv) Code.abstract ->
               (('a, unit) Code.abstract option, [> 'a tag_lstate ] list,
                ('a, 'b) Code.abstract)
               StateCPSMonad.monad
-            val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, pv c) lm
+            val fin :
+              unit ->
+              (('a, pv c) Code.abstract option, [> 'a tag_lstate ] list,
+               ('a, 'b) Code.abstract)
+              StateCPSMonad.monad
           end
         val make_result :
           ('a, GVC_I.contr) Code.abstract ->
@@ -12483,13 +12703,19 @@ module GenIV3 :
             val colrep :
               ('a, int) Code.abstract ->
               ('a, int) Code.abstract -> ('a, pv) Code.abstract
-            val decl : unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
+            val decl :
+              ('a, int) Code.abstract ->
+              ('a * [> 'a tag_lstate ] * 'b, unit) lm
             val add :
               ('a, pv) Code.abstract ->
               (('a, unit) Code.abstract option, [> 'a tag_lstate ] list,
                ('a, 'b) Code.abstract)
               StateCPSMonad.monad
-            val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, pv c) lm
+            val fin :
+              unit ->
+              (('a, pv c) Code.abstract option, [> 'a tag_lstate ] list,
+               ('a, 'b) Code.abstract)
+              StateCPSMonad.monad
           end
         val make_result :
           ('a, GVC_I.contr) Code.abstract ->
@@ -12653,13 +12879,19 @@ module GenIV4 :
             val colrep :
               ('a, int) Code.abstract ->
               ('a, int) Code.abstract -> ('a, pv) Code.abstract
-            val decl : unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
+            val decl :
+              ('a, int) Code.abstract ->
+              ('a * [> 'a tag_lstate ] * 'b, unit) lm
             val add :
               ('a, pv) Code.abstract ->
               (('a, unit) Code.abstract option, [> 'a tag_lstate ] list,
                ('a, 'b) Code.abstract)
               StateCPSMonad.monad
-            val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, pv c) lm
+            val fin :
+              unit ->
+              (('a, pv c) Code.abstract option, [> 'a tag_lstate ] list,
+               ('a, 'b) Code.abstract)
+              StateCPSMonad.monad
           end
         val make_result :
           ('a, GVC_I.contr) Code.abstract ->
@@ -12823,13 +13055,19 @@ module GenIV5 :
             val colrep :
               ('a, int) Code.abstract ->
               ('a, int) Code.abstract -> ('a, pv) Code.abstract
-            val decl : unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
+            val decl :
+              ('a, int) Code.abstract ->
+              ('a * [> 'a tag_lstate ] * 'b, unit) lm
             val add :
               ('a, pv) Code.abstract ->
               (('a, unit) Code.abstract option, [> 'a tag_lstate ] list,
                ('a, 'b) Code.abstract)
               StateCPSMonad.monad
-            val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, pv c) lm
+            val fin :
+              unit ->
+              (('a, pv c) Code.abstract option, [> 'a tag_lstate ] list,
+               ('a, 'b) Code.abstract)
+              StateCPSMonad.monad
           end
         val make_result :
           ('a, GVC_I.contr) Code.abstract ->
@@ -12993,13 +13231,19 @@ module GenIV6 :
             val colrep :
               ('a, int) Code.abstract ->
               ('a, int) Code.abstract -> ('a, pv) Code.abstract
-            val decl : unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
+            val decl :
+              ('a, int) Code.abstract ->
+              ('a * [> 'a tag_lstate ] * 'b, unit) lm
             val add :
               ('a, pv) Code.abstract ->
               (('a, unit) Code.abstract option, [> 'a tag_lstate ] list,
                ('a, 'b) Code.abstract)
               StateCPSMonad.monad
-            val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, pv c) lm
+            val fin :
+              unit ->
+              (('a, pv c) Code.abstract option, [> 'a tag_lstate ] list,
+               ('a, 'b) Code.abstract)
+              StateCPSMonad.monad
           end
         val make_result :
           ('a, GVC_I.contr) Code.abstract ->
@@ -13163,13 +13407,19 @@ module GenRA1 :
             val colrep :
               ('a, int) Code.abstract ->
               ('a, int) Code.abstract -> ('a, pv) Code.abstract
-            val decl : unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
+            val decl :
+              ('a, int) Code.abstract ->
+              ('a * [> 'a tag_lstate ] * 'b, unit) lm
             val add :
               ('a, pv) Code.abstract ->
               (('a, unit) Code.abstract option, [> 'a tag_lstate ] list,
                ('a, 'b) Code.abstract)
               StateCPSMonad.monad
-            val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, pv c) lm
+            val fin :
+              unit ->
+              (('a, pv c) Code.abstract option, [> 'a tag_lstate ] list,
+               ('a, 'b) Code.abstract)
+              StateCPSMonad.monad
           end
         val make_result :
           ('a, GAC_R.contr) Code.abstract ->
@@ -13332,13 +13582,19 @@ module GenRA2 :
             val colrep :
               ('a, int) Code.abstract ->
               ('a, int) Code.abstract -> ('a, pv) Code.abstract
-            val decl : unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
+            val decl :
+              ('a, int) Code.abstract ->
+              ('a * [> 'a tag_lstate ] * 'b, unit) lm
             val add :
               ('a, pv) Code.abstract ->
               (('a, unit) Code.abstract option, [> 'a tag_lstate ] list,
                ('a, 'b) Code.abstract)
               StateCPSMonad.monad
-            val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, pv c) lm
+            val fin :
+              unit ->
+              (('a, pv c) Code.abstract option, [> 'a tag_lstate ] list,
+               ('a, 'b) Code.abstract)
+              StateCPSMonad.monad
           end
         val make_result :
           ('a, GAC_R.contr) Code.abstract ->
@@ -13501,13 +13757,19 @@ module GenRA3 :
             val colrep :
               ('a, int) Code.abstract ->
               ('a, int) Code.abstract -> ('a, pv) Code.abstract
-            val decl : unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
+            val decl :
+              ('a, int) Code.abstract ->
+              ('a * [> 'a tag_lstate ] * 'b, unit) lm
             val add :
               ('a, pv) Code.abstract ->
               (('a, unit) Code.abstract option, [> 'a tag_lstate ] list,
                ('a, 'b) Code.abstract)
               StateCPSMonad.monad
-            val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, pv c) lm
+            val fin :
+              unit ->
+              (('a, pv c) Code.abstract option, [> 'a tag_lstate ] list,
+               ('a, 'b) Code.abstract)
+              StateCPSMonad.monad
           end
         val make_result :
           ('a, GAC_R.contr) Code.abstract ->
@@ -13671,13 +13933,19 @@ module GenRA4 :
             val colrep :
               ('a, int) Code.abstract ->
               ('a, int) Code.abstract -> ('a, pv) Code.abstract
-            val decl : unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
+            val decl :
+              ('a, int) Code.abstract ->
+              ('a * [> 'a tag_lstate ] * 'b, unit) lm
             val add :
               ('a, pv) Code.abstract ->
               (('a, unit) Code.abstract option, [> 'a tag_lstate ] list,
                ('a, 'b) Code.abstract)
               StateCPSMonad.monad
-            val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, pv c) lm
+            val fin :
+              unit ->
+              (('a, pv c) Code.abstract option, [> 'a tag_lstate ] list,
+               ('a, 'b) Code.abstract)
+              StateCPSMonad.monad
           end
         val make_result :
           ('a, GAC_R.contr) Code.abstract ->
@@ -13842,13 +14110,19 @@ module GenZp3 :
             val colrep :
               ('a, int) Code.abstract ->
               ('a, int) Code.abstract -> ('a, pv) Code.abstract
-            val decl : unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
+            val decl :
+              ('a, int) Code.abstract ->
+              ('a * [> 'a tag_lstate ] * 'b, unit) lm
             val add :
               ('a, pv) Code.abstract ->
               (('a, unit) Code.abstract option, [> 'a tag_lstate ] list,
                ('a, 'b) Code.abstract)
               StateCPSMonad.monad
-            val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, pv c) lm
+            val fin :
+              unit ->
+              (('a, pv c) Code.abstract option, [> 'a tag_lstate ] list,
+               ('a, 'b) Code.abstract)
+              StateCPSMonad.monad
           end
         val make_result :
           ('a, GVC_Z3.contr) Code.abstract ->
@@ -14013,13 +14287,19 @@ module GenZp19 :
             val colrep :
               ('a, int) Code.abstract ->
               ('a, int) Code.abstract -> ('a, pv) Code.abstract
-            val decl : unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
+            val decl :
+              ('a, int) Code.abstract ->
+              ('a * [> 'a tag_lstate ] * 'b, unit) lm
             val add :
               ('a, pv) Code.abstract ->
               (('a, unit) Code.abstract option, [> 'a tag_lstate ] list,
                ('a, 'b) Code.abstract)
               StateCPSMonad.monad
-            val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, pv c) lm
+            val fin :
+              unit ->
+              (('a, pv c) Code.abstract option, [> 'a tag_lstate ] list,
+               ('a, 'b) Code.abstract)
+              StateCPSMonad.monad
           end
         val make_result :
           ('a, GVC_Z19.contr) Code.abstract ->

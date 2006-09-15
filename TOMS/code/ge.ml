@@ -1,5 +1,7 @@
 open StateCPSMonad
 
+exception CannotHappen
+
 module GEMake(CODE: Coderep.T) = struct
 
 module D = Domains_sig.S(
@@ -187,7 +189,7 @@ module type PIVOTKIND = sig
   type 'b c
   type 'a vc = ('a, v c) abstract
   val add : ('a, v) abstract -> 'a vc -> 'a vc
-  val empty : unit -> 'a vc
+  val empty : ('a, int) abstract -> 'a vc
   val rowrep : ('a, int) abstract -> ('a, int) abstract -> ('a, v) abstract
   val colrep : ('a, int) abstract -> ('a, int) abstract -> ('a, v) abstract
 end
@@ -197,7 +199,7 @@ module PermList = struct
   type 'b c = 'b list
   type 'a vc = ('a, v c) abstract
   let add x l = CList.cons x l
-  let empty () = (CList.nil : 'a vc)
+  let empty _ = (CList.nil : 'a vc)
   let rowrep x y = liftRowSwap x y
   let colrep x y = liftColSwap x y
 end
@@ -208,7 +210,7 @@ module RowVectorPerm = struct
   type 'b c = int array
   type 'a vc = ('a, v c) abstract
   let add x l = CList.cons x l
-  let empty () = (CList.nil : 'a vc)
+  let empty () = Array1D.init n
   let rowrep x y = x
   let colrep x y = x
 end
@@ -225,10 +227,11 @@ module type TRACKPIVOT = sig
     constraint 'b = 'a * 's * 'w
   val rowrep : ('a, int) abstract -> ('a, int) abstract -> ('a, pv) abstract
   val colrep : ('a, int) abstract -> ('a, int) abstract -> ('a, pv) abstract
-  val decl : unit -> ('b, unit) lm
+  val decl : ('a, int) abstract -> ('a*'s*'w, unit) lm
   val add : ('a, pv) abstract -> 
     (('a,unit) abstract option,[> 'a tag_lstate] list,('a,'w) abstract) monad
-  val fin : unit -> ('b, pv c) lm
+  val fin : unit -> 
+    (('a,pv c) abstract option,[> 'a tag_lstate] list,('a,'w) abstract) monad
 end
 
 module PivotCommon(PK:PIVOTKIND) = 
@@ -253,8 +256,8 @@ module KeepPivot(PK:PIVOTKIND) = struct
   let pfetch () = perform s <-- fetch; (* unit for monomorphism restriction *)
                         ret (fetch_iter s)
   let pstore v = store (`TPivot v)
-  let decl () = perform
-      pdecl <-- retN (liftRef (PK.empty ()));
+  let decl n = perform
+      pdecl <-- retN (liftRef (PK.empty n));
       pstore pdecl;
       unitL
   let add v = perform
@@ -262,14 +265,14 @@ module KeepPivot(PK:PIVOTKIND) = struct
    ret (Some (assign p (PK.add v (liftGet p))))
   let fin () = perform
       p <-- pfetch ();
-      ret (liftGet p)
+      ret (Some (liftGet p))
 end
 
 module DiscardPivot(PK:PIVOTKIND) = struct
   include PivotCommon(PK)
-  let decl () = unitL
+  let decl _ = unitL
   let add _ = ret None
-  let fin () = ret (PK.empty ())
+  let fin () = ret None
 end
 
 (* Not only do we need to "pass down" the kind (in type S), we also need
@@ -453,7 +456,9 @@ module OutDetRankPivot(Det : DETERMINANT)(PK : PIVOTKIND) =
     det  <-- D.fin ();
     rank <-- R.fin ();
     pivmat <-- P.fin ();
-    ret (Tuple.tup4 b det rank pivmat)
+    match pivmat with
+    | Some p -> ret (Tuple.tup4 b det rank p)
+    | None   -> raise CannotHappen
 end
 
 (*
@@ -636,7 +641,7 @@ module GenGE(PivotF: PIVOT)
           rmar <-- retN rmar;
           n <-- if augmented then retN (C.dim2 a) else ret rmar;
           Det.decl ();
-          Output.P.decl ();
+          Output.P.decl rmar;
           let mat = {matrix=b; numrow=n; numcol=m} in
           ret (mat, r, c, rmar)  in
       let forward_elim (mat, r, c, rmar) = perform

@@ -224,9 +224,10 @@ end
 (* Matrix layed out row after row, in a C fashion *)
 module Array1D =
   struct
-  let getL x n = .< x.(.~n) >.
-  let setL x n y = .< x.(.~n) <- .~y >.
-  let dim1 x = .< Array.length x >.
+  let initL f n = .< Array.init .~n .~f >.
+  let getL x n = .< (.~x).(.~n) >.
+  let setL x n y = .< (.~x).(.~n) <- .~y >.
+  let dim1 x = .< Array.length .~x >.
   let mapper g a = match g with
       | Some f -> .< (fun x -> Array.map .~f x) .~a >.
       | None   -> a
