@@ -185,60 +185,75 @@ module AbstractDet(Dom: DOMAINL) =
 end
 
 module type PIVOTKIND = sig
-  type v
-  type 'b c
-  type 'a vc = ('a, v c) abstract
-  val add : ('a, v) abstract -> 'a vc -> 'a vc
-  val empty : ('a, int) abstract -> 'a vc
-  val rowrep : ('a, int) abstract -> ('a, int) abstract -> ('a, v) abstract
-  val colrep : ('a, int) abstract -> ('a, int) abstract -> ('a, v) abstract
+  type idx_rep = int
+  type flip_rep
+  type perm_rep
+  type 'a ira = ('a, idx_rep) abstract
+  type 'a fra = ('a, flip_rep) abstract
+  type 'a pra = ('a, perm_rep) abstract
+  val add : 'a fra -> 'a pra -> 'a pra
+  val empty : 'a ira -> 'a pra
+  val rowrep : 'a ira -> 'a ira -> 'a fra
+  val colrep : 'a ira -> 'a ira -> 'a fra
 end
 
 module PermList = struct
-  type v = perm
-  type 'b c = 'b list
-  type 'a vc = ('a, v c) abstract
+  type idx_rep = int
+  type flip_rep = perm
+  type perm_rep = perm list
+  type 'a ira = ('a, idx_rep) abstract
+  type 'a fra = ('a, flip_rep) abstract
+  type 'a pra = ('a, perm_rep) abstract
   let add x l = CList.cons x l
-  let empty _ = (CList.nil : 'a vc)
+  let empty _ = (CList.nil : 'a pra)
   let rowrep x y = liftRowSwap x y
   let colrep x y = liftColSwap x y
 end
 
-(*
 module RowVectorPerm = struct
-  type v = int
-  type 'b c = int array
-  type 'a vc = ('a, v c) abstract
-  let add x l = CList.cons x l
-  let empty () = Array1D.init n
-  let rowrep x y = x
-  let colrep x y = x
+  type idx_rep = int
+  type flip_rep = int*int
+  type perm_rep = int array
+  type 'a ira = ('a, idx_rep) abstract
+  type 'a fra = ('a, flip_rep) abstract
+  type 'a pra = ('a, perm_rep) abstract
+  let add x l = Array1Dim.setL l x
+  let empty n = Array1Dim.init n
+  let rowrep x y = Tuple.tup2 x y
+  let colrep x y = Tuple.tup2 x y
 end
-*)
 
 module type TRACKPIVOT = sig
-  type pv
-  type 'b c
-  type 'a lstate = ('a, pv c ref) abstract
+  type idx_rep = int
+  type flip_rep
+  type perm_rep
+  type 'a ira = ('a, idx_rep) abstract
+  type 'a fra = ('a, flip_rep) abstract
+  type 'a pra = ('a, perm_rep) abstract
+  type 'a lstate = ('a, perm_rep ref) abstract
   type 'a tag_lstate = [`TPivot of 'a lstate ]
     (* Here, parameter 'b accounts for all the extra polymorphims *)
   type ('b,'v) lm = ('a,'v,'s,'w) cmonad
     constraint 's = [> 'a tag_lstate]
     constraint 'b = 'a * 's * 'w
-  val rowrep : ('a, int) abstract -> ('a, int) abstract -> ('a, pv) abstract
-  val colrep : ('a, int) abstract -> ('a, int) abstract -> ('a, pv) abstract
+  val rowrep : 'a ira -> 'a ira -> 'a fra
+  val colrep : 'a ira -> 'a ira -> 'a fra
   val decl : ('a, int) abstract -> ('a*'s*'w, unit) lm
-  val add : ('a, pv) abstract -> 
+  val add : 'a fra ->
     (('a,unit) abstract option,[> 'a tag_lstate] list,('a,'w) abstract) monad
   val fin : unit -> 
-    (('a,pv c) abstract option,[> 'a tag_lstate] list,('a,'w) abstract) monad
+    ('a pra option,[> 'a tag_lstate] list,('a,'w) abstract) monad
 end
 
 module PivotCommon(PK:PIVOTKIND) = 
   struct
-  type pv = PK.v
-  type 'b c = 'b PK.c
-  type 'a lstate = ('a, pv c ref) abstract
+  type idx_rep = PK.idx_rep
+  type flip_rep = PK.flip_rep
+  type perm_rep = PK.perm_rep
+  type 'a ira = ('a, idx_rep) abstract
+  type 'a fra = ('a, flip_rep) abstract
+  type 'a pra = ('a, perm_rep) abstract
+  type 'a lstate = ('a, PK.perm_rep ref) abstract
   type 'a tag_lstate = [`TPivot of 'a lstate ]
   type ('b,'v) lm = ('a,'v,'s,'w) cmonad
     constraint 's = [> 'a tag_lstate]
@@ -396,8 +411,9 @@ module OutProxy(Det0:DETF) = struct
       type res
       module D : DETERMINANT
       module R : RANK
-      module P : TRACKPIVOT with type pv = PK.v and type 'a c = 'a PK.c
-          and type 'a lstate = ('a, PK.v PK.c ref) abstract
+      module P : TRACKPIVOT with type flip_rep = PK.flip_rep and 
+                                 type perm_rep = PK.perm_rep
+          (* and type 'a lstate = ('a, (int,int) PK.c ref) abstract *)
       val make_result : ('a,C.contr) abstract -> 
         ('a,res,[> 'a Det.tag_lstate | 'a R.tag_lstate | 'a P.tag_lstate],'w) cmonad
     end
@@ -449,7 +465,7 @@ end
 
 module OutDetRankPivot(Det : DETERMINANT)(PK : PIVOTKIND) =
   struct
-  type res = C.contr * Det.outdet * int *  (PK.v PK.c)
+  type res = C.contr * Det.outdet * int *  PK.perm_rep
   module D = Det
   module R = Rank
   module P = KeepPivot(PK)

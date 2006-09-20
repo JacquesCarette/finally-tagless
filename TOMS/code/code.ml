@@ -159,3 +159,13 @@ module Transformers = struct
         else .< begin .~(body lb); .~(full_unroll (lb+1) ub body) end >.
 end
 
+module Array1Dim = struct
+  let init n = .< Array.init .~n (fun i -> i) >.
+  let setL a v = .< let (x,y)= .~v in
+                    let b = .~a and t=(.~a).(x) in
+                    begin
+                        b.(x) <- b.(y);
+                        b.(y) <- t;
+                        b
+                    end >.
+end

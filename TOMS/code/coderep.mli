@@ -114,6 +114,11 @@ module Transformers :
       int -> int -> (int -> ('a, unit) abstract) -> ('a, unit) abstract
   end
 
+module Array1Dim : sig
+  val init : ('a,int) abstract -> ('a, int array) abstract
+  val setL : ('a,int array) abstract -> ('a,int*int) abstract -> ('a,int array) abstract
+end
+
 (* This type is needed for the output, and is tracked during pivoting. *)
 type perm = RowSwap of (int * int) | ColSwap of (int*int)
 val liftRowSwap : 

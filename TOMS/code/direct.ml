@@ -164,3 +164,13 @@ module Transformers = struct
             begin body lb (); full_unroll (lb+1) ub body () end
 end
 
+module Array1Dim = struct
+  let init n = fun() -> Array.init (n ()) (fun i -> i)
+  let setL a v = fun () -> let (x,y)= v () in
+                    let b = a () and t=(a ()).(x) in
+                    begin
+                        b.(x) <- b.(y);
+                        b.(y) <- t;
+                        b
+                    end
+end

@@ -97,6 +97,18 @@ module GenFA24 = GenGE
                     (DivisionUpdate)
                     (InpJustMatrix)
                     (OutDetRankPivot)
+module GenFA25 = GenGE
+                    (RowPivot)(RowVectorPerm)
+                    (AbstractDet)
+                    (DivisionUpdate)
+                    (InpJustMatrix)
+                    (OutDetRankPivot)
+module GenFA26 = GenGE
+                    (RowPivot)(RowVectorPerm)
+                    (AbstractDet)
+                    (DivisionUpdate)
+                    (InpJustMatrix)
+                    (OutJustMatrix)
 module GenFA5 = GenGE
                    (RowPivot)(PermList)
                    (NoDet)
@@ -293,6 +305,8 @@ let resFA12 = instantiate GenFA12.gen ;;
 let resFA13 = instantiate GenFA13.gen ;;
 let resFA14 = instantiate GenFA14.gen ;;
 let resFA24 = instantiate GenFA24.gen ;;
+let resFA25 = instantiate GenFA25.gen ;;
+let resFA26 = instantiate GenFA26.gen ;;
 let resRA1 = instantiate GenRA1.gen ;;
 let resRA2 = instantiate GenRA2.gen ;;
 let resRA3 = instantiate GenRA3.gen ;;
@@ -328,6 +342,8 @@ let rFA12 = runit {pf =  resFA12 };;
 let rFA13 = runit {pf =  resFA13 };;
 let rFA14 = runit {pf =  resFA14 };;
 let rFA24 = runit {pf =  resFA24 };;
+let rFA25 = runit {pf =  resFA25 };;
+let rFA26 = runit {pf =  resFA26 };;
 let rRA1 = runit {pf =  resRA1 };;
 let rRA2 = runit {pf =  resRA2 };;
 let rRA3 = runit {pf =  resRA3 };;
@@ -500,6 +516,8 @@ let resF12 = List.map rFA12 fa5;;
 let resF13 = List.map rFA13 fa5;;
 let resF14 = List.map rFA14 fa5;;
 let resF24 = List.map rFA24 fa5;;
+let resF25 = List.map rFA25 fa5;;
+let resF26 = List.map rFA26 fa5;;
 
 (*
 let _ = assert (List.map rFA24 fa5 =
