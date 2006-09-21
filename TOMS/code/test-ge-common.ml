@@ -200,6 +200,12 @@ module GenIA4 = GenGE
                    (FractionFreeUpdate)
                    (InpJustMatrix)
                    (OutDetRank)
+module GenIA5 = GenGE
+                   (RowPivot)(PermList)
+                   (AbstractDet)
+                   (FractionFreeUpdate)
+                   (InpJustMatrix)
+                   (Out_L_U)
 
 open G_GVC_I
 module GenIV1 = GenGE
@@ -294,6 +300,7 @@ let resIA1 = instantiate GenIA1.gen ;;
 let resIA2 = instantiate GenIA2.gen ;;
 let resIA3 = instantiate GenIA3.gen ;;
 let resIA4 = instantiate GenIA4.gen ;;
+let resIA5 = instantiate GenIA5.gen ;;
 let resIV1 = instantiate GenIV1.gen ;;
 let resIV2 = instantiate GenIV2.gen ;;
 let resIV3 = instantiate GenIV3.gen ;;
@@ -331,6 +338,7 @@ let rIA1 = runit {pf =  resIA1 };;
 let rIA2 = runit {pf =  resIA2 };;
 let rIA3 = runit {pf =  resIA3 };;
 let rIA4 = runit {pf =  resIA4 };;
+let rIA5 = runit {pf =  resIA5 };;
 let rIV1 = runit {pf =  resIV1 };;
 let rIV2 = runit {pf =  resIV2 };;
 let rIV3 = runit {pf =  resIV3 };;
@@ -383,6 +391,7 @@ let resI11 = List.map rIA1 ia5;;
 let resI12 = List.map rIA2 ia5;;
 let resI13 = List.map rIA3 ia5;;
 let resI14 = List.map rIA4 ia5;;
+let resI15 = List.map rIA5 ia5;;
 
 let iv0 = {arr=Array.make 1 1; n=1; m=1}
 let iv1 = {arr=Array.of_list [ 1; 2; 3; 4; 13; 5; (-1); 3; 0]; n=3; m=3}

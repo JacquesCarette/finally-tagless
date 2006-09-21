@@ -2,6 +2,11 @@ open StateCPSMonad
 
 exception CannotHappen
 
+type algo_requirements = {
+    get_lower  : bool;
+    back_elim  : bool
+}
+
 module GEMake(CODE: Coderep.T) = struct
 
 module D = Domains_sig.S(
@@ -89,14 +94,14 @@ module TrackRank =
    assignM r (Idx.succ (liftGet r))
 end
 
-module Rank:RANK = struct
+module Rank = struct
   include TrackRank
   let fin () = perform
       r <-- rfetch ();
       ret (liftGet r)
 end
 
-module NoRank:RANK = struct
+module NoRank = struct
   include TrackRank
   let fin () = Idx.minusoneL
 end
@@ -380,6 +385,61 @@ type 'a wmatrix = {matrix: 'a C.vc; numrow: ('a,int) abstract;
 type 'a curpos  = {rowpos: ('a, int) abstract; colpos: ('a, int) abstract}
 type 'a curposval = {p: 'a curpos; curval: ('a, C.Dom.v) abstract}
 
+(* This is for tracking L, as in LU decomposition.
+   Naturally, when doing only GE, this is not needed at all, and should
+   not generate any code *)
+module type LOWER = sig
+  type 'a lstate = ('a, C.contr) abstract
+  type 'a tag_lstate = [`TLower of 'a lstate ]
+  type ('b,'v) lm = ('a,'v,'s,'w) cmonad
+    constraint 's = [> 'a tag_lstate]
+    constraint 'b = 'a * 's * 'w
+  type ('b,'v) om = ('a,'v,'s,'w) omonad
+    constraint 's = [> 'a tag_lstate]
+    constraint 'b = 'a * 's * 'w
+  val mfetch : unit -> ('b, C.contr) lm
+  val decl   : ('a, C.contr) abstract -> bool -> ('a*'s*'w, C.contr) lm
+  val fin    : unit -> ('a,  C.contr) om
+end
+
+(* Do we keep the lower part? *)
+module TrackLower = 
+  struct
+  type 'a lstate = ('a, C.contr) abstract
+  type 'a tag_lstate = [`TLower of 'a lstate ]
+  type ('b,'v) lm = ('a,'v,'s,'w) cmonad
+    constraint 's = [> 'a tag_lstate]
+    constraint 'b = 'a * 's * 'w
+  type ('b,'v) om = ('a,'v,'s,'w) omonad
+    constraint 's = [> 'a tag_lstate]
+    constraint 'b = 'a * 's * 'w
+  (* In 3.09, no need for any coercion at all, type inference works! *)
+  let rec fetch_iter s =
+    match (List.hd s) with
+      `TLower x -> x
+    |  _ -> fetch_iter (List.tl s)
+  let mfetch () = perform s <-- fetch; (* unit for monomorphism restriction *)
+                          ret (fetch_iter s)
+  let mstore v = store (`TLower v)
+end
+
+module Lower:LOWER = struct
+  include TrackLower
+  let decl c named = perform
+      udecl <-- (if named then retN else ret) c;
+      mstore udecl;
+      ret udecl
+  let fin () = perform
+      m <-- mfetch ();
+      ret (Some m)
+end
+
+module NoLower:LOWER = struct
+  include TrackLower
+  let decl c _ = ret c
+  let fin () = ret None
+end
+
 module type INPUT = sig
     type inp
     val get_input : ('a, inp) abstract ->
@@ -409,13 +469,15 @@ module OutProxy(Det0:DETF) = struct
            type 'a lstate = 'a DD.lstate) -> 
           functor(PK: PIVOTKIND) -> sig
       type res
-      module D : DETERMINANT
+      (* module D : DETERMINANT *)
       module R : RANK
       module P : TRACKPIVOT with type flip_rep = PK.flip_rep and 
                                  type perm_rep = PK.perm_rep
-          (* and type 'a lstate = ('a, (int,int) PK.c ref) abstract *)
-      val make_result : ('a,C.contr) abstract -> 
-        ('a,res,[> 'a Det.tag_lstate | 'a R.tag_lstate | 'a P.tag_lstate],'w) cmonad
+      module L : LOWER
+      val need_lower : bool
+      val make_result : 'a wmatrix ->
+        ('a,res,[> 'a Det.tag_lstate | 'a R.tag_lstate 
+                 | 'a P.tag_lstate   | 'a L.tag_lstate],'w) cmonad
     end
 end
 
@@ -423,76 +485,86 @@ end
 module OutJustMatrix(Det : DETERMINANT)(PK : PIVOTKIND) =
   struct
   type res = C.contr
-  module D = Det
+  (* module D = Det *)
   module R = NoRank
   module P = DiscardPivot(PK)
-  let make_result b = ret b
+  module L = NoLower
+  let need_lower = false
+  let make_result m = ret m.matrix
 end
 
 module OutDet(Det : DETERMINANT)(PK : PIVOTKIND) =
   struct
   type res = C.contr * Det.outdet
-  module D = Det
+  (* module D = Det *)
   module R = NoRank
   module P = DiscardPivot(PK)
-  let make_result b = perform
-    det <-- D.fin ();
-    ret (Tuple.tup2 b det)
+  module L = NoLower
+  let need_lower = false
+  let make_result m = perform
+    det <-- Det.fin ();
+    ret (Tuple.tup2 m.matrix det)
 end
 
 module OutRank(Det: DETERMINANT)(PK : PIVOTKIND) =
   struct
   type res = C.contr * int
-  module D = Det
+  (* module D = Det *)
   module R = Rank
   module P = DiscardPivot(PK)
-  let make_result b = perform
+  module L = NoLower
+  let need_lower = false
+  let make_result m = perform
     rank <-- R.fin ();
-    ret (Tuple.tup2 b rank)
+    ret (Tuple.tup2 m.matrix rank)
 end
 
 module OutDetRank(Det : DETERMINANT)(PK : PIVOTKIND) =
   struct
   type res = C.contr * Det.outdet * int
-  module D = Det
+  (* module D = Det *)
   module R = Rank
   module P = DiscardPivot(PK)
-  let make_result b = perform
-    det  <-- D.fin ();
+  module L = NoLower
+  let need_lower = false
+  let make_result m = perform
+    det  <-- Det.fin ();
     rank <-- R.fin ();
-    ret (Tuple.tup3 b det rank)
+    ret (Tuple.tup3 m.matrix det rank)
 end
 
 module OutDetRankPivot(Det : DETERMINANT)(PK : PIVOTKIND) =
   struct
   type res = C.contr * Det.outdet * int *  PK.perm_rep
-  module D = Det
+  (* module D = Det *)
   module R = Rank
   module P = KeepPivot(PK)
-  let make_result b = perform
-    det  <-- D.fin ();
+  module L = NoLower
+  let need_lower = false
+  let make_result m = perform
+    det  <-- Det.fin ();
     rank <-- R.fin ();
     pivmat <-- P.fin ();
     match pivmat with
-    | Some p -> ret (Tuple.tup4 b det rank p)
+    | Some p -> ret (Tuple.tup4 m.matrix det rank p)
     | None   -> raise CannotHappen
 end
 
-(*
-module OutLU(Det : DETERMINANT) =
+module Out_L_U(Det : DETERMINANT)(PK: PIVOTKIND) =
   struct
-  type res = C.contr * C.contr * perm list
-  module D = Det
+  type res = C.contr * C.contr * PK.perm_rep
+  (* module D = Det *)
   module R = Rank
-  module P = KeepPivot
-  let make_LU b = perform
-      let rmat = 
-      lmat <-- 
-  let make_result b = perform
+  module P = KeepPivot(PK)
+  module L = Lower
+  let need_lower = true
+  let make_result m = perform
     pivmat <-- P.fin ();
-    ret (Tuple.tup3 pivmat)
+    upper <-- L.fin ();
+    match (pivmat,upper) with
+    | (Some p, Some u) -> ret (Tuple.tup3 m.matrix u p)
+    | _                -> raise CannotHappen
 end
-*)
 
 
 module type PIVOT = 
@@ -636,18 +708,24 @@ module GenGE(PivotF: PIVOT)
     module Pivot = PivotF(Detf)(Output.P)
     module I = Iters
 
+    (* default options, will be over-ridden as necessary *)
     let gen =
+      let opt = {get_lower=false;back_elim=false} in
       let zerobelow mat pos = 
         let innerbody j bjc = perform
             whenM (Logic.notequalL bjc C.Dom.zeroL )
-                (seqM (I.col_iter mat.matrix j (Idx.succ pos.p.colpos) (Idx.pred
+                (optSeqM (I.col_iter mat.matrix j (Idx.succ pos.p.colpos) (Idx.pred
                 mat.numcol) C.getL
                           (fun k bjk -> perform
                           d <-- Det.get ();
                           brk <-- ret (C.getL mat.matrix pos.p.rowpos k);
                           U.update bjc pos.curval brk bjk 
                               (fun ov -> C.col_head_set mat.matrix j k ov) d) )
-                      (ret (C.col_head_set mat.matrix j pos.p.colpos C.Dom.zeroL))) in 
+                      (if Output.need_lower then
+                          None
+                      else
+                          (Some (ret (C.col_head_set mat.matrix j pos.p.colpos
+                          C.Dom.zeroL))))) in 
         perform
               seqM (I.row_iter mat.matrix pos.p.colpos (Idx.succ pos.p.rowpos)
               (Idx.pred mat.numrow) C.getL innerbody) 
@@ -659,6 +737,8 @@ module GenGE(PivotF: PIVOT)
           b <-- retN (C.mapper C.Dom.normalizerL (C.copy a));
           m <-- retN (C.dim1 a);
           rmar <-- retN rmar;
+          (* This is only valid for in-place tracking of l *)
+          l <-- Output.L.decl b false;
           n <-- if augmented then retN (C.dim2 a) else ret rmar;
           Det.decl ();
           Output.P.decl rmar;
@@ -677,17 +757,19 @@ module GenGE(PivotF: PIVOT)
                            (Output.R.succ ()) )
                       (Det.zero_sign () ))
                   (updateM c Idx.succ) ) in
+      let backward_elim opt =
+          if opt.back_elim then
+              Some unitL
+          else
+              None in
       let ge_gen input = perform
           (mat, r, c, rmar) <-- init input;
           seqM 
-            (forward_elim (mat, r, c, rmar))
-            (Output.make_result mat.matrix)
-        and lu_gen input = perform
-          (mat, r, c, rmar) <-- init input;
-          seqM 
-            (forward_elim (mat, r, c, rmar))
-            (Output.make_result mat.matrix)
-    in ge_gen, lu_gen
+            (optSeqM
+                (forward_elim (mat, r, c, rmar))
+                (backward_elim opt))
+            (Output.make_result mat)
+    in ge_gen
 end
 
 end

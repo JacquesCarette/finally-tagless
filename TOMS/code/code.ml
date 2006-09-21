@@ -27,6 +27,10 @@ let optSeq a = function
     | Some c -> seq a c
     | None   -> a
 
+let optSeqM a = function
+    | Some c -> seqM a c
+    | None   -> a
+
 (* conditional *)
 (* Note the implicit `reset'.  Also note how the condition does not
    involve a `reset' *)

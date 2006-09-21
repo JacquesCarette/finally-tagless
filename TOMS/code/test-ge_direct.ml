@@ -5,8 +5,8 @@ module GEF = Ge.GEMake(Direct)
 open GEF
 open Domains_direct
 
-let instantiate (ge,lu) = 
-    fun a -> runM (ge (fun () -> a)) () ;;
+let instantiate gen =
+    fun a -> runM (gen (fun () -> a)) () ;;
 
 type 'b pr = {pf : 'b};;
 let runit f = f.pf;;

@@ -13,7 +13,14 @@ val seqM :
   ('a -> ('b -> 'c -> 'c) -> ('d, 'e) abstract) ->
   ('a -> ('f -> 'g -> 'g) -> ('d, 'h) abstract) ->
   'a -> ('a -> ('d, 'h) abstract -> 'i) -> 'i
+
 val optSeq : ('a, 'b) abstract -> ('a, 'b) abstract option -> ('a, 'b) abstract
+
+val optSeqM : 
+  ('a -> ('a -> ('d,'e) abstract -> ('d,'e) abstract) -> ('d, 'e) abstract) ->
+  ('a -> ('a -> 'g -> 'g) -> ('d, 'e) abstract) option ->
+  'a -> ('a -> ('d, 'e) abstract -> ('d,'e) abstract) -> ('d,'e) abstract
+
 val ifM :
   ('a, bool) abstract ->
   ('b -> ('c -> 'd -> 'd) -> ('a, 'e) abstract) ->
