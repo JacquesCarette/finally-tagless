@@ -56,24 +56,15 @@ end
 module type DETF = functor(D:DOMAINL) -> DETERMINANT with type indet = D.v
 
 (* no need to make the type abstract here - just leads to other problems *)
-module type RANK = sig
-  type 'a lstate = ('a, int ref) abstract
-  type 'a tag_lstate = [`TRan of 'a lstate ]
-  type ('b,'v) lm = ('a,'v,'s,'w) cmonad
-    constraint 's = [> 'a tag_lstate]
-    constraint 'b = 'a * 's * 'w
-  val rfetch : unit -> ('b, int ref) lm
-  val decl   : unit -> ('b, int ref) lm
-  val succ   : unit -> ('b, unit) lm
-  val fin    : unit -> ('b, int) lm
-end
-
 (* Even if no rank is output, it needs to be tracked, as the rank
    is also the outer loop index! *)
+(* Note how this module contains its own signature *)
 module TrackRank = 
   struct
   type 'a lstate = ('a, int ref) abstract
-  type 'a tag_lstate = [`TRan of 'a lstate ]
+	(* some magic for the proper visibility of identifiers *)
+  type 'a tag_lstate_ = [`TRan of 'a lstate ]
+  type 'a tag_lstate = 'a tag_lstate_
   type ('b,'v) lm = ('a,'v,'s,'w) cmonad
     constraint 's = [> 'a tag_lstate]
     constraint 'b = 'a * 's * 'w
@@ -92,6 +83,15 @@ module TrackRank =
   let succ () = perform
    r <-- rfetch ();
    assignM r (Idx.succ (liftGet r))
+
+      (* The signature of the above *)
+  module type RANK = sig
+    type 'a tag_lstate = 'a tag_lstate_
+    val rfetch : unit -> ('b, int ref) lm
+    val decl   : unit -> ('b, int ref) lm
+    val succ   : unit -> ('b, unit) lm
+    val fin    : unit -> ('b, int) lm
+  end
 end
 
 module Rank = struct
@@ -189,26 +189,45 @@ module AbstractDet(Dom: DOMAINL) =
           (ret (uminusL (liftGet det))))
 end
 
-module type PIVOTKIND = sig
+(* Another module that is a collection of types, and which contains
+   its own signature
+*)
+
+module PivotKind(S : sig type flip_rep type perm_rep end) = struct
   type idx_rep = int
-  type flip_rep
-  type perm_rep
   type 'a ira = ('a, idx_rep) abstract
-  type 'a fra = ('a, flip_rep) abstract
-  type 'a pra = ('a, perm_rep) abstract
-  val add : 'a fra -> 'a pra -> 'a pra
-  val empty : 'a ira -> 'a pra
-  val rowrep : 'a ira -> 'a ira -> 'a fra
-  val colrep : 'a ira -> 'a ira -> 'a fra
+  type 'a fra = ('a, S.flip_rep) abstract
+  type 'a pra = ('a, S.perm_rep) abstract
+  type flip_rep = S.flip_rep
+  type perm_rep = S.perm_rep
+  module type SIG = sig
+    type idx_rep = int
+    type flip_rep
+    type perm_rep
+    val add : 'a fra -> 'a pra -> 'a pra
+    val empty : 'a ira -> 'a pra
+    val rowrep : 'a ira -> 'a ira -> 'a fra
+    val colrep : 'a ira -> 'a ira -> 'a fra
+  end
 end
 
+(* Fully abstract representations flip_rep and perm_rep *)
+module PivotKindA = struct
+  type flip_rep_ (* abstract *)
+  type perm_rep_ (* abstract *)
+  include PivotKind(struct
+                          type flip_rep = flip_rep_
+                          type perm_rep = perm_rep_
+		       end)
+end
+
+module type PIVOTKIND = PivotKindA.SIG
+
 module PermList = struct
-  type idx_rep = int
-  type flip_rep = perm
-  type perm_rep = perm list
-  type 'a ira = ('a, idx_rep) abstract
-  type 'a fra = ('a, flip_rep) abstract
-  type 'a pra = ('a, perm_rep) abstract
+  include PivotKind(struct 
+                          type flip_rep = perm
+                          type perm_rep = perm list
+		       end)
   let add x l = CList.cons x l
   let empty _ = (CList.nil : 'a pra)
   let rowrep x y = liftRowSwap x y
@@ -216,63 +235,56 @@ module PermList = struct
 end
 
 module RowVectorPerm = struct
-  type idx_rep = int
-  type flip_rep = int*int
-  type perm_rep = int array
-  type 'a ira = ('a, idx_rep) abstract
-  type 'a fra = ('a, flip_rep) abstract
-  type 'a pra = ('a, perm_rep) abstract
+  include PivotKind(struct 
+                          type flip_rep = int*int
+                          type perm_rep = int array
+		       end)
   let add x l = Array1Dim.setL l x
   let empty n = Array1Dim.init n
   let rowrep x y = Tuple.tup2 x y
   let colrep x y = Tuple.tup2 x y
 end
 
-module type TRACKPIVOT = sig
-  type idx_rep = int
-  type flip_rep
-  type perm_rep
-  type 'a ira = ('a, idx_rep) abstract
-  type 'a fra = ('a, flip_rep) abstract
-  type 'a pra = ('a, perm_rep) abstract
+
+module TrackPivot(PK : sig type flip_rep type perm_rep end) = struct
+  include PivotKind(PK)
+
   type 'a lstate = ('a, perm_rep ref) abstract
-  type 'a tag_lstate = [`TPivot of 'a lstate ]
+  type 'a tag_lstate_ = [`TPivot of 'a lstate ]
+  type 'a tag_lstate  = 'a tag_lstate_
     (* Here, parameter 'b accounts for all the extra polymorphims *)
   type ('b,'v) lm = ('a,'v,'s,'w) cmonad
     constraint 's = [> 'a tag_lstate]
     constraint 'b = 'a * 's * 'w
-  val rowrep : 'a ira -> 'a ira -> 'a fra
-  val colrep : 'a ira -> 'a ira -> 'a fra
-  val decl : ('a, int) abstract -> ('a*'s*'w, unit) lm
-  val add : 'a fra ->
-    (('a,unit) abstract option,[> 'a tag_lstate] list,('a,'w) abstract) monad
-  val fin : unit -> 
-    ('a pra option,[> 'a tag_lstate] list,('a,'w) abstract) monad
-end
 
-module PivotCommon(PK:PIVOTKIND) = 
-  struct
-  type idx_rep = PK.idx_rep
-  type flip_rep = PK.flip_rep
-  type perm_rep = PK.perm_rep
-  type 'a ira = ('a, idx_rep) abstract
-  type 'a fra = ('a, flip_rep) abstract
-  type 'a pra = ('a, perm_rep) abstract
-  type 'a lstate = ('a, PK.perm_rep ref) abstract
-  type 'a tag_lstate = [`TPivot of 'a lstate ]
-  type ('b,'v) lm = ('a,'v,'s,'w) cmonad
-    constraint 's = [> 'a tag_lstate]
-    constraint 'b = 'a * 's * 'w
-  let rowrep = PK.rowrep
-  let colrep = PK.colrep
-end
-
-module KeepPivot(PK:PIVOTKIND) = struct
-  include PivotCommon(PK)
   let rec fetch_iter s =
     match (List.hd s) with
       `TPivot x -> x
     |  _ -> fetch_iter (List.tl s)
+
+  module type TSIG = sig
+    type idx_rep = int
+    type flip_rep (* = PK.flip_rep *)
+    type perm_rep (* = PK.perm_rep *)
+    type 'a tag_lstate  = 'a tag_lstate_
+    val rowrep : 'a ira -> 'a ira -> 'a fra
+    val colrep : 'a ira -> 'a ira -> 'a fra
+    val decl : ('a, int) abstract -> ('a*'s*'w, unit) lm
+    val add : 'a fra ->
+      (('a,unit) abstract option,[> 'a tag_lstate] list,('a,'w) abstract) monad
+    val fin : unit -> 
+      ('a pra option,[> 'a tag_lstate] list,('a,'w) abstract) monad
+  end
+end
+
+(* Abtract TRackPivot *)
+module TrackPivotA = struct
+  include TrackPivot(PivotKindA)
+end
+module type TRACKPIVOT = TrackPivotA.TSIG
+
+module KeepPivot(PK:PIVOTKIND) = struct
+  include TrackPivot(PK)
   let pfetch () = perform s <-- fetch; (* unit for monomorphism restriction *)
                         ret (fetch_iter s)
   let pstore v = store (`TPivot v)
@@ -286,13 +298,17 @@ module KeepPivot(PK:PIVOTKIND) = struct
   let fin () = perform
       p <-- pfetch ();
       ret (Some (liftGet p))
+  let rowrep = PK.rowrep
+  let colrep = PK.colrep
 end
 
 module DiscardPivot(PK:PIVOTKIND) = struct
-  include PivotCommon(PK)
+  include TrackPivot(PK)
   let decl _ = unitL
   let add _ = ret None
   let fin () = ret None
+  let rowrep = PK.rowrep
+  let colrep = PK.colrep
 end
 
 (* Not only do we need to "pass down" the kind (in type S), we also need
@@ -470,9 +486,9 @@ module OutProxy(Det0:DETF) = struct
           functor(PK: PIVOTKIND) -> sig
       type res
       (* module D : DETERMINANT *)
-      module R : RANK
-      module P : TRACKPIVOT with type flip_rep = PK.flip_rep and 
-                                 type perm_rep = PK.perm_rep
+      module R : TrackRank.RANK
+      module P : TrackPivot(PK).TSIG with type flip_rep = PK.flip_rep
+	                             and type perm_rep = PK.perm_rep
       module L : LOWER
       val need_lower : bool
       val make_result : 'a wmatrix ->
