@@ -3,9 +3,12 @@ open StateCPSMonad
 exception CannotHappen
 
 type algo_requirements = {
-    get_lower  : bool;
-    back_elim  : bool
+    wants_pack  : bool;
+    back_elim   : bool;
+    can_pack    : bool
 }
+
+type update_kind = FractionFree | DivisionBased
 
 module GEMake(CODE: Coderep.T) = struct
 
@@ -317,6 +320,7 @@ module UpdateProxy(C0:CONTAINER2D)(D0:DETF) = struct
           ('a in_val -> ('a, unit, 's, 'w) cmonad) ->
           ('a in_val -> ('a, unit, 's, 'w) cmonad) ->
           ('a, unit, 's, 'w) cmonad
+        val upd_kind : update_kind
         end
 end
 
@@ -334,6 +338,7 @@ module DivisionUpdate
       y <-- ret (bik -^ ((divL bic brc) *^ brk));
       ret (setter (applyMaybe normalizerL y))
   let update_det v _ acc = acc v
+  let upd_kind = DivisionBased
 end
 
 module FractionFreeUpdate(Ctr:CONTAINER2D)(Det:DETF) = struct
@@ -347,6 +352,7 @@ module FractionFreeUpdate(Ctr:CONTAINER2D)(Det:DETF) = struct
       ov <-- ret (divL t (liftGet d));
       ret (setter ov)
   let update_det v set _ = set v
+  let upd_kind = FractionFree
 end
 
 (* moved from Infra (now Domains) so that the former uses no monads.
@@ -398,8 +404,14 @@ module type LOWER = sig
     constraint 's = [> 'a tag_lstate]
     constraint 'b = 'a * 's * 'w
   val mfetch : unit -> ('b, C.contr) lm
-  val decl   : ('a, C.contr) abstract -> bool -> ('a*'s*'w, C.contr) lm
+  val decl   : ('a, C.contr) abstract -> ('a*'s*'w, C.contr) lm
+  val updt   : 
+      ( 'a C.vc -> ('a,int) abstract -> ('a,int) abstract -> 'a C.vo ->
+          ('a,unit) abstract) -> 
+        'a C.vc -> ('a,int) abstract -> ('a,int) abstract -> 'a C.vo -> 
+            ('a*'s*'w, unit) lm option
   val fin    : unit -> ('a,  C.contr) om
+  val wants_pack : bool
 end
 
 (* Do we keep the lower part? *)
@@ -423,21 +435,41 @@ module TrackLower =
   let mstore v = store (`TLower v)
 end
 
-module Lower:LOWER = struct
+module SeparateLower:LOWER = struct
   include TrackLower
-  let decl c named = perform
-      udecl <-- (if named then retN else ret) c;
+  let decl c = perform
+      udecl <-- retN c;
       mstore udecl;
       ret udecl
+      (* also need to 'set' lower! *)
+  let updt setter mat row col defval =
+      Some (ret (setter mat row col defval))
   let fin () = perform
       m <-- mfetch ();
       ret (Some m)
+  let wants_pack = false
+end
+
+module PackedLower:LOWER = struct
+  include TrackLower
+  let decl c = perform
+      udecl <-- ret c;
+      mstore udecl;
+      ret udecl
+  let updt _ _ _ _ _ = None
+  let fin () = perform
+      m <-- mfetch ();
+      ret (Some m)
+  let wants_pack = true
 end
 
 module NoLower:LOWER = struct
   include TrackLower
-  let decl c _ = ret c
+  let decl c = ret c
+  let updt setter mat row col defval = 
+      Some (ret (setter mat row col defval))
   let fin () = ret None
+  let wants_pack = false
 end
 
 module type INPUT = sig
@@ -474,7 +506,6 @@ module OutProxy(Det0:DETF) = struct
       module P : TRACKPIVOT with type flip_rep = PK.flip_rep and 
                                  type perm_rep = PK.perm_rep
       module L : LOWER
-      val need_lower : bool
       val make_result : 'a wmatrix ->
         ('a,res,[> 'a Det.tag_lstate | 'a R.tag_lstate 
                  | 'a P.tag_lstate   | 'a L.tag_lstate],'w) cmonad
@@ -489,7 +520,6 @@ module OutJustMatrix(Det : DETERMINANT)(PK : PIVOTKIND) =
   module R = NoRank
   module P = DiscardPivot(PK)
   module L = NoLower
-  let need_lower = false
   let make_result m = ret m.matrix
 end
 
@@ -500,7 +530,6 @@ module OutDet(Det : DETERMINANT)(PK : PIVOTKIND) =
   module R = NoRank
   module P = DiscardPivot(PK)
   module L = NoLower
-  let need_lower = false
   let make_result m = perform
     det <-- Det.fin ();
     ret (Tuple.tup2 m.matrix det)
@@ -513,7 +542,6 @@ module OutRank(Det: DETERMINANT)(PK : PIVOTKIND) =
   module R = Rank
   module P = DiscardPivot(PK)
   module L = NoLower
-  let need_lower = false
   let make_result m = perform
     rank <-- R.fin ();
     ret (Tuple.tup2 m.matrix rank)
@@ -526,7 +554,6 @@ module OutDetRank(Det : DETERMINANT)(PK : PIVOTKIND) =
   module R = Rank
   module P = DiscardPivot(PK)
   module L = NoLower
-  let need_lower = false
   let make_result m = perform
     det  <-- Det.fin ();
     rank <-- R.fin ();
@@ -540,7 +567,6 @@ module OutDetRankPivot(Det : DETERMINANT)(PK : PIVOTKIND) =
   module R = Rank
   module P = KeepPivot(PK)
   module L = NoLower
-  let need_lower = false
   let make_result m = perform
     det  <-- Det.fin ();
     rank <-- R.fin ();
@@ -556,13 +582,30 @@ module Out_L_U(Det : DETERMINANT)(PK: PIVOTKIND) =
   (* module D = Det *)
   module R = Rank
   module P = KeepPivot(PK)
-  module L = Lower
-  let need_lower = true
+  module L = SeparateLower
   let make_result m = perform
     pivmat <-- P.fin ();
-    upper <-- L.fin ();
-    match (pivmat,upper) with
-    | (Some p, Some u) -> ret (Tuple.tup3 m.matrix u p)
+    lower <-- L.fin ();
+    match (pivmat,lower) with
+    | (Some p, Some l) -> ret (Tuple.tup3 m.matrix l p)
+    | _                -> raise CannotHappen
+end
+
+module Out_LU_Packed(Det : DETERMINANT)(PK: PIVOTKIND) =
+  struct
+  type res = C.contr * PK.perm_rep
+  (* module D = Det *)
+  module R = Rank
+  module P = KeepPivot(PK)
+  module L = PackedLower
+  let make_result m = perform
+    pivmat <-- P.fin ();
+    lower <-- L.fin ();
+    (* we really should be able to assert that lower == m.matrix
+    here, but can't because the representation of lower/m.matrix
+    could be 'functional' !*)
+    match (pivmat,lower) with
+    | (Some p, Some l) -> ret (Tuple.tup2 l p)
     | _                -> raise CannotHappen
 end
 
@@ -699,8 +742,7 @@ module GenGE(PivotF: PIVOT)
           (Detf:DETF)
           (Update: UpdateProxy(C)(Detf).S)
           (In: INPUT)
-          (Out: OutProxy(Detf).S) = 
-   struct
+          (Out: OutProxy(Detf).S) = struct
     module Det = Detf(C.Dom)
     module U = Update(C)(Detf)
     module Input = In
@@ -708,40 +750,39 @@ module GenGE(PivotF: PIVOT)
     module Pivot = PivotF(Detf)(Output.P)
     module I = Iters
 
-    (* default options, will be over-ridden as necessary *)
     let gen =
-      let opt = {get_lower=false;back_elim=false} in
+      let opt () = {wants_pack = Output.L.wants_pack;
+                    back_elim  = false;
+                    can_pack   = (U.upd_kind = DivisionBased) } in
       let zerobelow mat pos = 
         let innerbody j bjc = perform
             whenM (Logic.notequalL bjc C.Dom.zeroL )
-                (optSeqM (I.col_iter mat.matrix j (Idx.succ pos.p.colpos) (Idx.pred
-                mat.numcol) C.getL
-                          (fun k bjk -> perform
-                          d <-- Det.get ();
-                          brk <-- ret (C.getL mat.matrix pos.p.rowpos k);
-                          U.update bjc pos.curval brk bjk 
-                              (fun ov -> C.col_head_set mat.matrix j k ov) d) )
-                      (if Output.need_lower then
-                          None
-                      else
-                          (Some (ret (C.col_head_set mat.matrix j pos.p.colpos
-                          C.Dom.zeroL))))) in 
+                (optSeqM (I.col_iter mat.matrix j (Idx.succ pos.p.colpos) (Idx.pred mat.numcol) C.getL
+                      (fun k bjk -> perform
+                      d <-- Det.get ();
+                      brk <-- ret (C.getL mat.matrix pos.p.rowpos k);
+                      U.update bjc pos.curval brk bjk 
+                          (fun ov -> C.col_head_set mat.matrix j k ov) d) )
+                      (Output.L.updt C.col_head_set mat.matrix j pos.p.colpos
+                      C.Dom.zeroL)) in
         perform
               seqM (I.row_iter mat.matrix pos.p.colpos (Idx.succ pos.p.rowpos)
               (Idx.pred mat.numrow) C.getL innerbody) 
                    (U.update_det pos.curval Det.set Det.acc) in
-      let init input = perform
+      let init input = 
+          let opt = opt () in 
+          let _ = assert ((not opt.wants_pack) || opt.can_pack) in
+          perform
           (a,rmar,augmented) <-- Input.get_input input;
           r <-- Output.R.decl ();
           c <-- retN (liftRef Idx.zero);
           b <-- retN (C.mapper C.Dom.normalizerL (C.copy a));
           m <-- retN (C.dim1 a);
           rmar <-- retN rmar;
-          (* This is only valid for in-place tracking of l *)
-          l <-- Output.L.decl b false;
           n <-- if augmented then retN (C.dim2 a) else ret rmar;
           Det.decl ();
           Output.P.decl rmar;
+          _ <-- Output.L.decl (if opt.can_pack then b else C.init rmar n);
           let mat = {matrix=b; numrow=n; numcol=m} in
           ret (mat, r, c, rmar)  in
       let forward_elim (mat, r, c, rmar) = perform
@@ -757,7 +798,8 @@ module GenGE(PivotF: PIVOT)
                            (Output.R.succ ()) )
                       (Det.zero_sign () ))
                   (updateM c Idx.succ) ) in
-      let backward_elim opt =
+      let backward_elim () =
+          let opt = opt () in
           if opt.back_elim then
               Some unitL
           else
@@ -767,7 +809,7 @@ module GenGE(PivotF: PIVOT)
           seqM 
             (optSeqM
                 (forward_elim (mat, r, c, rmar))
-                (backward_elim opt))
+                (backward_elim ()))
             (Output.make_result mat)
     in ge_gen
 end

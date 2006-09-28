@@ -15,7 +15,7 @@ module RDet = AbstractDet(RationalDomainL)
 module Z3 = ZpMakeL(struct let p = 3 end)
 module Z19 = ZpMakeL(struct let p = 19 end)
 
-(* That should fail, and we should check this. 9 is not the prime number *)
+(* That should fail, and we should check this. 9 is not a prime number *)
 let () = assert (
           try
             let module Z9 = ZpMakeL(struct let p = 9 end)
@@ -135,6 +135,13 @@ module GenFA8 = GenGE
                    (InpMatrixMargin)
                    (OutDetRank)
 
+module GenFA9 = GenGE
+                   (RowPivot)(PermList)
+                   (NoDet)
+                   (DivisionUpdate)
+                   (InpJustMatrix)
+                   (Out_LU_Packed)
+
 open G_GVC_F
 module GenFV1 = GenGE
                    (RowPivot)(PermList)
@@ -206,6 +213,17 @@ module GenIA5 = GenGE
                    (FractionFreeUpdate)
                    (InpJustMatrix)
                    (Out_L_U)
+(* This, unfortunately, "works", in that it does generate code.
+   However, it will fail whenever it is instantiated because there
+   is a check that fails before code is output.  The problem is
+   that with fraction-free you can't pack the answer back into a
+   matrix *)
+module GenIA6 = GenGE
+                   (RowPivot)(PermList)
+                   (AbstractDet)
+                   (FractionFreeUpdate)
+                   (InpJustMatrix)
+                   (Out_LU_Packed)
 
 open G_GVC_I
 module GenIV1 = GenGE
@@ -301,6 +319,19 @@ let resIA2 = instantiate GenIA2.gen ;;
 let resIA3 = instantiate GenIA3.gen ;;
 let resIA4 = instantiate GenIA4.gen ;;
 let resIA5 = instantiate GenIA5.gen ;;
+(* instantiating GenIA6 should fail -- test for it
+   One difficulty is that it will fail early in code-generation mode
+   and somewhat later in direct mode.  So this is jury-rigged to test
+   for both *)
+let () = assert (
+        try
+            (* the instantiate will fail for codegen *)
+            let r = runit {pf = instantiate GenIA6.gen } in 
+            begin
+                r [| [| 17 |] |]; (* this will fail for direct *)
+                false
+            end
+	  with Assert_failure _ -> true);;
 let resIV1 = instantiate GenIV1.gen ;;
 let resIV2 = instantiate GenIV2.gen ;;
 let resIV3 = instantiate GenIV3.gen ;;
@@ -322,6 +353,7 @@ let resFA5 = instantiate GenFA5.gen ;;
 let resFA6 = instantiate GenFA6.gen ;;
 let resFA7 = instantiate GenFA7.gen ;;
 let resFA8 = instantiate GenFA8.gen ;;
+let resFA9 = instantiate GenFA9.gen ;;
 let resZp3 = instantiate GenZp3.gen ;;
 let resZp19 = instantiate GenZp19.gen ;;
 
@@ -360,6 +392,7 @@ let rFA5 = runit {pf =  resFA5 };;
 let rFA6 = runit {pf =  resFA6 };;
 let rFA7 = runit {pf =  resFA7 };;
 let rFA8 = runit {pf =  resFA8 };;
+let rFA9 = runit {pf =  resFA9 };;
 let rZp3 = runit {pf =  resZp3 };;
 let rZp19 = runit {pf =  resZp19 };;
 
@@ -456,6 +489,8 @@ let _ = assert (rFA1 fa4 =
 		  )
 
 let _ = assert( rFA5 (fa6,1) = [|[|1.0; 1.0|]|] )
+
+let resFA9 = rFA9 fa1;;
 
 (* should also test more of these
 *)

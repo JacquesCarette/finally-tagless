@@ -98,6 +98,7 @@ module GenericArrayContainer(Dom:DOMAINL) =
       | None   -> a
   let copy = (fun a -> .<Array.map (fun x -> Array.copy x) 
                        (Array.copy .~a) >. )
+  let init n m = .< Array.make .~n (Array.make .~m .~(Dom.zeroL)) >.
   (* this can be optimized with a swap_rows_from if it is known that
      everything before that is already = Dom.zero *)
   let swap_rows_stmt a r1 r2 =
@@ -116,22 +117,8 @@ module GenericArrayContainer(Dom:DOMAINL) =
       done  >.
   (* this is list an iterator's start *)
   let row_head = getL
-(*  No monads here
-  let row_iter b c low high body = 
-    let newbody j = perform
-        bjc <-- retN (getL b j c);
-        body j bjc
-    in  S.loopM low high newbody
-*)
   (* only set the head of the current column *)
   let col_head_set x n m y = .< (.~x).(.~n).(.~m) <- .~y >.
-(* Let's avoid monads here
-  let col_iter b j low high body = 
-    let newbody k = perform
-        bjk <-- ret (getL b j k);
-        body k bjk
-    in  S.loopM low high newbody
-*)
 end
 
 (* Matrix layed out row after row, in a C fashion *)
@@ -150,6 +137,7 @@ module GenericVectorContainer(Dom:DOMAINL) =
       | Some f -> .< { (.~a) with arr = Array.map (fun z -> .~(f .<z>.)) (.~a).arr} >.
       | None   -> a
   let copy a = .< { (.~a) with arr = Array.copy (.~a).arr} >.
+  let init n m = .< {arr=Array.make (.~n* .~m) .~(Dom.zeroL); n = .~n; m = .~m} >.
   let swap_rows_stmt b r1 r2 = .<
       let a = (.~b).arr and m = (.~b).m in
       let i1 = .~r1*m and i2 = .~r2*m in

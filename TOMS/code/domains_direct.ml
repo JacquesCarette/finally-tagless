@@ -105,6 +105,7 @@ module GenericArrayContainer(Dom:DOMAINL) =
       | None   -> a
   let copy a = fun () -> Array.map (fun x -> Array.copy x) 
                        (Array.copy (a ()))
+  let init n m = fun () -> Array.make (n ()) (Array.make (m ()) Dom.zero)
   (* this can be optimized with a swap_rows_from if it is known that
      everything before that is already = Dom.zero *)
   let swap_rows_stmt a r1 r2 = fun () ->
@@ -144,6 +145,8 @@ module GenericVectorContainer(Dom:DOMAINL) =
       -> z) ())) (a ()).arr}
       | None   -> a
   let copy a = fun () -> { (a ()) with arr = Array.copy (a ()).arr}
+  let init n m = fun () -> {arr=Array.make (n () * m ()) Dom.zero; n = n (); m =
+      m ()}
   let swap_rows_stmt b r1 r2 = fun () ->
       let a = (b ()).arr and m = (b ()).m in
       let i1 = (r1 ())*m and i2 = (r2 ())*m in
