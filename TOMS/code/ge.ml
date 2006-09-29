@@ -320,6 +320,12 @@ module UpdateProxy(C0:CONTAINER2D)(D0:DETF) = struct
           ('a in_val -> ('a, unit, 's, 'w) cmonad) ->
           ('a in_val -> ('a, unit, 's, 'w) cmonad) ->
           ('a, unit, 's, 'w) cmonad
+(* this is only needed if we try to deal with FractionFree LU,
+   which is really tough, especially since the L Matrix still has
+   to be over the fraction field, which we don't have available.
+        val update_lower : 
+            'a in_val -> 'a in_val -> 'a in_val -> 'a in_val -> 
+          ('a, out_val ref) abstract -> ('a, C.Dom.v, 's, 'w) cmonad *)
         val upd_kind : update_kind
         end
 end
@@ -338,6 +344,9 @@ module DivisionUpdate
       y <-- ret (bik -^ ((divL bic brc) *^ brk));
       ret (setter (applyMaybe normalizerL y))
   let update_det v _ acc = acc v
+(*let update_lower bic brc _ _ _ = perform
+      y <-- ret (divL bic brc);
+      ret (applyMaybe normalizerL y) *)
   let upd_kind = DivisionBased
 end
 
@@ -352,6 +361,11 @@ module FractionFreeUpdate(Ctr:CONTAINER2D)(Det:DETF) = struct
       ov <-- ret (divL t (liftGet d));
       ret (setter ov)
   let update_det v set _ = set v
+(*let update_lower bic brc lrk lik d = perform
+      rat <-- ret (liftGet d);
+      z <-- ret (divL ((rat *^ lik) +^ (bic *^ lrk)) brc);
+      t <-- ret (applyMaybe normalizerL z);
+      ret t *)
   let upd_kind = FractionFree
 end
 
@@ -405,11 +419,8 @@ module type LOWER = sig
     constraint 'b = 'a * 's * 'w
   val mfetch : unit -> ('b, C.contr) lm
   val decl   : ('a, C.contr) abstract -> ('a*'s*'w, C.contr) lm
-  val updt   : 
-      ( 'a C.vc -> ('a,int) abstract -> ('a,int) abstract -> 'a C.vo ->
-          ('a,unit) abstract) -> 
-        'a C.vc -> ('a,int) abstract -> ('a,int) abstract -> 'a C.vo -> 
-            ('a*'s*'w, unit) lm option
+  val updt   : 'a C.vc -> ('a,int) abstract -> ('a,int) abstract -> 'a C.vo -> 
+            'a C.Dom.vc -> ('a*'s*'w, unit) lm option
   val fin    : unit -> ('a,  C.contr) om
   val wants_pack : bool
 end
@@ -435,28 +446,37 @@ module TrackLower =
   let mstore v = store (`TLower v)
 end
 
+(* Even this form cannot be done with FractionFree, because in
+   general the L matrix will be over the fraction field, even
+   if the U is not.  So we won't even try to deal with it
+   for now *)
 module SeparateLower:LOWER = struct
   include TrackLower
   let decl c = perform
       udecl <-- retN c;
       mstore udecl;
       ret udecl
-      (* also need to 'set' lower! *)
-  let updt setter mat row col defval =
-      Some (ret (setter mat row col defval))
+  (* also need to 'set' lower! *)
+  let updt mat row col defval nv = Some( perform
+      lower <-- mfetch ();
+      l1 <-- ret (C.col_head_set lower row col nv);
+      l2 <-- ret (C.col_head_set mat row col defval);
+      ret (seq l1 l2) )
   let fin () = perform
       m <-- mfetch ();
       ret (Some m)
   let wants_pack = false
 end
 
+(* Packed form cannot be done with FractionFree, so things
+   are considerably simpler *)
 module PackedLower:LOWER = struct
   include TrackLower
   let decl c = perform
       udecl <-- ret c;
       mstore udecl;
       ret udecl
-  let updt _ _ _ _ _ = None
+  let updt  _ _ _ _ _ = None
   let fin () = perform
       m <-- mfetch ();
       ret (Some m)
@@ -466,8 +486,8 @@ end
 module NoLower:LOWER = struct
   include TrackLower
   let decl c = ret c
-  let updt setter mat row col defval = 
-      Some (ret (setter mat row col defval))
+  let updt mat row col defval _ = 
+      Some (ret (C.col_head_set mat row col defval))
   let fin () = ret None
   let wants_pack = false
 end
@@ -494,9 +514,10 @@ end
 
 (* The 'with type' below are not strictly needed, they just make the
    printing of the types much nicer *)
-module OutProxy(Det0:DETF) = struct
-    module DD = Det0(C.Dom)
+module OutProxy(C0:CONTAINER2D)(Det0:DETF) = struct
+    module DD = Det0(C0.Dom)
     module type S = 
+      functor(C1:CONTAINER2D with type Dom.kind = C0.Dom.kind) ->
         functor(Det: DETERMINANT with type outdet = DD.outdet and
            type 'a lstate = 'a DD.lstate) -> 
           functor(PK: PIVOTKIND) -> sig
@@ -513,7 +534,7 @@ module OutProxy(Det0:DETF) = struct
 end
 
 (* What to return *)
-module OutJustMatrix(Det : DETERMINANT)(PK : PIVOTKIND) =
+module OutJustMatrix(C0:CONTAINER2D)(Det : DETERMINANT)(PK : PIVOTKIND) =
   struct
   type res = C.contr
   (* module D = Det *)
@@ -523,7 +544,7 @@ module OutJustMatrix(Det : DETERMINANT)(PK : PIVOTKIND) =
   let make_result m = ret m.matrix
 end
 
-module OutDet(Det : DETERMINANT)(PK : PIVOTKIND) =
+module OutDet(C0:CONTAINER2D)(Det : DETERMINANT)(PK : PIVOTKIND) =
   struct
   type res = C.contr * Det.outdet
   (* module D = Det *)
@@ -535,7 +556,7 @@ module OutDet(Det : DETERMINANT)(PK : PIVOTKIND) =
     ret (Tuple.tup2 m.matrix det)
 end
 
-module OutRank(Det: DETERMINANT)(PK : PIVOTKIND) =
+module OutRank(C0:CONTAINER2D)(Det: DETERMINANT)(PK : PIVOTKIND) =
   struct
   type res = C.contr * int
   (* module D = Det *)
@@ -547,7 +568,7 @@ module OutRank(Det: DETERMINANT)(PK : PIVOTKIND) =
     ret (Tuple.tup2 m.matrix rank)
 end
 
-module OutDetRank(Det : DETERMINANT)(PK : PIVOTKIND) =
+module OutDetRank(C0:CONTAINER2D)(Det : DETERMINANT)(PK : PIVOTKIND) =
   struct
   type res = C.contr * Det.outdet * int
   (* module D = Det *)
@@ -560,7 +581,7 @@ module OutDetRank(Det : DETERMINANT)(PK : PIVOTKIND) =
     ret (Tuple.tup3 m.matrix det rank)
 end
 
-module OutDetRankPivot(Det : DETERMINANT)(PK : PIVOTKIND) =
+module OutDetRankPivot(C0:CONTAINER2D)(Det : DETERMINANT)(PK : PIVOTKIND) =
   struct
   type res = C.contr * Det.outdet * int *  PK.perm_rep
   (* module D = Det *)
@@ -576,7 +597,8 @@ module OutDetRankPivot(Det : DETERMINANT)(PK : PIVOTKIND) =
     | None   -> raise CannotHappen
 end
 
-module Out_L_U(Det : DETERMINANT)(PK: PIVOTKIND) =
+(* The restriction is because we can't extract the L in a non-field *)
+module Out_L_U(C0:CONTAINER2D with type Dom.kind = domain_is_field)(Det : DETERMINANT)(PK: PIVOTKIND) =
   struct
   type res = C.contr * C.contr * PK.perm_rep
   (* module D = Det *)
@@ -591,14 +613,15 @@ module Out_L_U(Det : DETERMINANT)(PK: PIVOTKIND) =
     | _                -> raise CannotHappen
 end
 
-module Out_LU_Packed(Det : DETERMINANT)(PK: PIVOTKIND) =
+(* The restriction is because we can't extract the L in a non-field *)
+module Out_LU_Packed(C0:CONTAINER2D with type Dom.kind = domain_is_field)(Det : DETERMINANT)(PK: PIVOTKIND) =
   struct
   type res = C.contr * PK.perm_rep
   (* module D = Det *)
   module R = Rank
   module P = KeepPivot(PK)
   module L = PackedLower
-  let make_result m = perform
+  let make_result _ = perform
     pivmat <-- P.fin ();
     lower <-- L.fin ();
     (* we really should be able to assert that lower == m.matrix
@@ -742,11 +765,11 @@ module GenGE(PivotF: PIVOT)
           (Detf:DETF)
           (Update: UpdateProxy(C)(Detf).S)
           (In: INPUT)
-          (Out: OutProxy(Detf).S) = struct
+          (Out: OutProxy(C)(Detf).S) = struct
     module Det = Detf(C.Dom)
     module U = Update(C)(Detf)
     module Input = In
-    module Output = Out(Det)(PK)
+    module Output = Out(C)(Det)(PK)
     module Pivot = PivotF(Detf)(Output.P)
     module I = Iters
 
@@ -756,15 +779,16 @@ module GenGE(PivotF: PIVOT)
                     can_pack   = (U.upd_kind = DivisionBased) } in
       let zerobelow mat pos = 
         let innerbody j bjc = perform
-            whenM (Logic.notequalL bjc C.Dom.zeroL )
-                (optSeqM (I.col_iter mat.matrix j (Idx.succ pos.p.colpos) (Idx.pred mat.numcol) C.getL
+            whenM (Logic.notequalL bjc C.Dom.zeroL ) (perform
+                det <-- Det.get ();
+                optSeqM (I.col_iter mat.matrix j (Idx.succ pos.p.colpos) (Idx.pred mat.numcol) C.getL
                       (fun k bjk -> perform
-                      d <-- Det.get ();
                       brk <-- ret (C.getL mat.matrix pos.p.rowpos k);
                       U.update bjc pos.curval brk bjk 
-                          (fun ov -> C.col_head_set mat.matrix j k ov) d) )
-                      (Output.L.updt C.col_head_set mat.matrix j pos.p.colpos
-                      C.Dom.zeroL)) in
+                          (fun ov -> C.col_head_set mat.matrix j k ov) det) )
+                      (Output.L.updt mat.matrix j pos.p.colpos C.Dom.zeroL 
+                          (* this makes no sense outside a field! *)
+                          (C.Dom.divL bjc pos.curval))) in
         perform
               seqM (I.row_iter mat.matrix pos.p.colpos (Idx.succ pos.p.rowpos)
               (Idx.pred mat.numrow) C.getL innerbody) 
@@ -782,7 +806,7 @@ module GenGE(PivotF: PIVOT)
           n <-- if augmented then retN (C.dim2 a) else ret rmar;
           Det.decl ();
           Output.P.decl rmar;
-          _ <-- Output.L.decl (if opt.can_pack then b else C.init rmar n);
+          _ <-- Output.L.decl (if opt.wants_pack then b else C.identity rmar m);
           let mat = {matrix=b; numrow=n; numcol=m} in
           ret (mat, r, c, rmar)  in
       let forward_elim (mat, r, c, rmar) = perform

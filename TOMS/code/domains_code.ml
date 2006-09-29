@@ -98,7 +98,9 @@ module GenericArrayContainer(Dom:DOMAINL) =
       | None   -> a
   let copy = (fun a -> .<Array.map (fun x -> Array.copy x) 
                        (Array.copy .~a) >. )
-  let init n m = .< Array.make .~n (Array.make .~m .~(Dom.zeroL)) >.
+  let init n m = .< Array.init .~n (fun i -> Array.make .~m .~(Dom.zeroL)) >.
+  let identity n m = .< Array.init .~n (fun i -> Array.init .~m 
+      (fun j -> if (i=j) then .~(Dom.oneL) else .~(Dom.zeroL))) >.
   (* this can be optimized with a swap_rows_from if it is known that
      everything before that is already = Dom.zero *)
   let swap_rows_stmt a r1 r2 =
@@ -138,6 +140,9 @@ module GenericVectorContainer(Dom:DOMAINL) =
       | None   -> a
   let copy a = .< { (.~a) with arr = Array.copy (.~a).arr} >.
   let init n m = .< {arr=Array.make (.~n* .~m) .~(Dom.zeroL); n = .~n; m = .~m} >.
+  let identity n m = .< {arr=Array.init (.~n* .~m) 
+      (fun k -> if ((k mod .~n)* .~m + .~m = k) then .~(Dom.oneL) else
+          .~(Dom.zeroL)); n = .~n; m = .~m} >.
   let swap_rows_stmt b r1 r2 = .<
       let a = (.~b).arr and m = (.~b).m in
       let i1 = .~r1*m and i2 = .~r2*m in

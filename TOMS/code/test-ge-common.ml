@@ -174,6 +174,18 @@ module GenFV5 = GenGE
                    (InpJustMatrix)
                    (OutDetRank)
 
+module GenFV6 = GenGE
+                   (RowPivot)(PermList)
+                   (AbstractDet)
+                   (DivisionUpdate)
+                   (InpJustMatrix)
+                   (Out_L_U)
+module GenFV7 = GenGE
+                   (RowPivot)(PermList)
+                   (AbstractDet)
+                   (DivisionUpdate)
+                   (InpJustMatrix)
+                   (Out_LU_Packed)
 (* But this is an error!
 module GenIA1 = G_GAC_I.GenGE
                    (RowPivot)(PermList)
@@ -207,24 +219,21 @@ module GenIA4 = GenGE
                    (FractionFreeUpdate)
                    (InpJustMatrix)
                    (OutDetRank)
+(* Neither of these two 'work' as one cannot output the L matrix
+   while FractionFree !
 module GenIA5 = GenGE
                    (RowPivot)(PermList)
                    (AbstractDet)
                    (FractionFreeUpdate)
                    (InpJustMatrix)
                    (Out_L_U)
-(* This, unfortunately, "works", in that it does generate code.
-   However, it will fail whenever it is instantiated because there
-   is a check that fails before code is output.  The problem is
-   that with fraction-free you can't pack the answer back into a
-   matrix *)
 module GenIA6 = GenGE
                    (RowPivot)(PermList)
                    (AbstractDet)
                    (FractionFreeUpdate)
                    (InpJustMatrix)
                    (Out_LU_Packed)
-
+*)
 open G_GVC_I
 module GenIV1 = GenGE
                    (RowPivot)(PermList)
@@ -314,24 +323,12 @@ let resFV2 = instantiate GenFV2.gen ;;
 let resFV3 = instantiate GenFV3.gen ;;
 let resFV4 = instantiate GenFV4.gen ;;
 let resFV5 = instantiate GenFV5.gen ;;
+let resFV6 = instantiate GenFV6.gen ;;
+let resFV7 = instantiate GenFV7.gen ;;
 let resIA1 = instantiate GenIA1.gen ;;
 let resIA2 = instantiate GenIA2.gen ;;
 let resIA3 = instantiate GenIA3.gen ;;
 let resIA4 = instantiate GenIA4.gen ;;
-let resIA5 = instantiate GenIA5.gen ;;
-(* instantiating GenIA6 should fail -- test for it
-   One difficulty is that it will fail early in code-generation mode
-   and somewhat later in direct mode.  So this is jury-rigged to test
-   for both *)
-let () = assert (
-        try
-            (* the instantiate will fail for codegen *)
-            let r = runit {pf = instantiate GenIA6.gen } in 
-            begin
-                r [| [| 17 |] |]; (* this will fail for direct *)
-                false
-            end
-	  with Assert_failure _ -> true);;
 let resIV1 = instantiate GenIV1.gen ;;
 let resIV2 = instantiate GenIV2.gen ;;
 let resIV3 = instantiate GenIV3.gen ;;
@@ -366,11 +363,12 @@ let rFV2 = runit {pf =  resFV2 };;
 let rFV3 = runit {pf =  resFV3 };;
 let rFV4 = runit {pf =  resFV4 };;
 let rFV5 = runit {pf =  resFV5 };;
+let rFV6 = runit {pf =  resFV6 };;
+let rFV7 = runit {pf =  resFV7 };;
 let rIA1 = runit {pf =  resIA1 };;
 let rIA2 = runit {pf =  resIA2 };;
 let rIA3 = runit {pf =  resIA3 };;
 let rIA4 = runit {pf =  resIA4 };;
-let rIA5 = runit {pf =  resIA5 };;
 let rIV1 = runit {pf =  resIV1 };;
 let rIV2 = runit {pf =  resIV2 };;
 let rIV3 = runit {pf =  resIV3 };;
@@ -424,7 +422,6 @@ let resI11 = List.map rIA1 ia5;;
 let resI12 = List.map rIA2 ia5;;
 let resI13 = List.map rIA3 ia5;;
 let resI14 = List.map rIA4 ia5;;
-let resI15 = List.map rIA5 ia5;;
 
 let iv0 = {arr=Array.make 1 1; n=1; m=1}
 let iv1 = {arr=Array.of_list [ 1; 2; 3; 4; 13; 5; (-1); 3; 0]; n=3; m=3}
@@ -553,6 +550,8 @@ let _ = assert (List.map (fun arr -> rFV4 (a2v arr)) fa5 =
    ({arr = [|0.; 10.; 5.; 0.; 0.; 2.; 0.; 0.; 0.|]; n = 3; m = 3}, 0., 2)])
 
 let resFV5 = List.map (fun arr -> rFV5 (a2v arr)) fa5
+let resFV6 = List.map (fun arr -> rFV6 (a2v arr)) fa5
+let resFV7 = List.map (fun arr -> rFV7 (a2v arr)) fa5
 
 
 let resF11 = List.map rFA11 fa5;;
