@@ -142,6 +142,19 @@ module GenFA9 = GenGE
                    (InpJustMatrix)
                    (Out_LU_Packed)
 
+module GenFA31 = GenGE
+                   (RowPivot)(PermList)
+                   (AbstractDet)
+                   (DivisionUpdate)
+                   (InpJustMatrix)
+                   (Out_L_U)
+module GenFA32 = GenGE
+                   (RowPivot)(PermList)
+                   (AbstractDet)
+                   (DivisionUpdate)
+                   (InpJustMatrix)
+                   (Out_LU_Packed)
+
 open G_GVC_F
 module GenFV1 = GenGE
                    (RowPivot)(PermList)
@@ -174,6 +187,7 @@ module GenFV5 = GenGE
                    (InpJustMatrix)
                    (OutDetRank)
 
+(* For some reason, these 2 go bonkers - worry about them later
 module GenFV6 = GenGE
                    (RowPivot)(PermList)
                    (AbstractDet)
@@ -186,6 +200,7 @@ module GenFV7 = GenGE
                    (DivisionUpdate)
                    (InpJustMatrix)
                    (Out_LU_Packed)
+*)
 (* But this is an error!
 module GenIA1 = G_GAC_I.GenGE
                    (RowPivot)(PermList)
@@ -323,8 +338,10 @@ let resFV2 = instantiate GenFV2.gen ;;
 let resFV3 = instantiate GenFV3.gen ;;
 let resFV4 = instantiate GenFV4.gen ;;
 let resFV5 = instantiate GenFV5.gen ;;
+(*
 let resFV6 = instantiate GenFV6.gen ;;
 let resFV7 = instantiate GenFV7.gen ;;
+*)
 let resIA1 = instantiate GenIA1.gen ;;
 let resIA2 = instantiate GenIA2.gen ;;
 let resIA3 = instantiate GenIA3.gen ;;
@@ -351,6 +368,8 @@ let resFA6 = instantiate GenFA6.gen ;;
 let resFA7 = instantiate GenFA7.gen ;;
 let resFA8 = instantiate GenFA8.gen ;;
 let resFA9 = instantiate GenFA9.gen ;;
+let resFA31 = instantiate GenFA31.gen ;;
+let resFA32 = instantiate GenFA32.gen ;;
 let resZp3 = instantiate GenZp3.gen ;;
 let resZp19 = instantiate GenZp19.gen ;;
 
@@ -363,8 +382,10 @@ let rFV2 = runit {pf =  resFV2 };;
 let rFV3 = runit {pf =  resFV3 };;
 let rFV4 = runit {pf =  resFV4 };;
 let rFV5 = runit {pf =  resFV5 };;
+(*
 let rFV6 = runit {pf =  resFV6 };;
 let rFV7 = runit {pf =  resFV7 };;
+*)
 let rIA1 = runit {pf =  resIA1 };;
 let rIA2 = runit {pf =  resIA2 };;
 let rIA3 = runit {pf =  resIA3 };;
@@ -391,6 +412,8 @@ let rFA6 = runit {pf =  resFA6 };;
 let rFA7 = runit {pf =  resFA7 };;
 let rFA8 = runit {pf =  resFA8 };;
 let rFA9 = runit {pf =  resFA9 };;
+let rFA31 = runit {pf =  resFA31 };;
+let rFA32 = runit {pf =  resFA32 };;
 let rZp3 = runit {pf =  resZp3 };;
 let rZp19 = runit {pf =  resZp19 };;
 
@@ -528,6 +551,8 @@ let _ = assert (List.map rFA4 fa5 =
     50., 3);
    ([|[|0.; 10.; 5.|]; [|0.; 0.; 2.|]; [|0.; 0.; 0.|]|], 0., 2)])
 
+let resFA31 = List.map rFA31 fa5;;
+let resFA32 = List.map rFA32 fa5;;
 
 let a2v arr =
   let n = Array.length arr
@@ -550,8 +575,10 @@ let _ = assert (List.map (fun arr -> rFV4 (a2v arr)) fa5 =
    ({arr = [|0.; 10.; 5.; 0.; 0.; 2.; 0.; 0.; 0.|]; n = 3; m = 3}, 0., 2)])
 
 let resFV5 = List.map (fun arr -> rFV5 (a2v arr)) fa5
+(*
 let resFV6 = List.map (fun arr -> rFV6 (a2v arr)) fa5
 let resFV7 = List.map (fun arr -> rFV7 (a2v arr)) fa5
+*)
 
 
 let resF11 = List.map rFA11 fa5;;

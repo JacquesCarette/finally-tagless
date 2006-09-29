@@ -796,17 +796,33 @@
                 constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
               type ('a, 'b) om = ('c, 'b, 'd, 'e) omonad
                 constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-              val mfetch : unit -> ('a * [> 'a tag_lstate ] * 'b, C.contr) lm
+              val fetch_iter : [> `TLower of 'a ] list -> 'a
+              val mfetch :
+                unit ->
+                ([> `TLower of 'b ] as 'a) list ->
+                ('a list -> 'b -> 'c) -> 'c
+              val mstore :
+                'a ->
+                ([> `TLower of 'a ] as 'b) list ->
+                ('b list -> unit -> 'c) -> 'c
               val decl :
-                ('a, C.contr) Code.abstract ->
-                ('a * [> 'a tag_lstate ] * 'b, C.contr) lm
+                ('a, 'b) Code.abstract ->
+                ([> `TLower of ('a, 'b) Code.abstract ] as 'c) list ->
+                ('c list -> ('a, 'b) Code.abstract -> ('a, 'd) Code.abstract) ->
+                ('a, 'd) Code.abstract
               val updt :
                 'a C.vc ->
                 ('a, int) Code.abstract ->
                 ('a, int) Code.abstract ->
                 'a C.vo ->
-                'a C.Dom.vc -> ('a * [> 'a tag_lstate ] * 'b, unit) lm option
-              val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, C.contr) om
+                'a C.vo ->
+                (([> `TLower of 'a C.vc ] as 'b) list ->
+                 ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c)
+                option
+              val fin :
+                unit ->
+                ([> `TLower of 'b ] as 'a) list ->
+                ('a list -> 'b option -> 'c) -> 'c
               val wants_pack : bool
             end
           module PackedLower :
@@ -817,17 +833,24 @@
                 constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
               type ('a, 'b) om = ('c, 'b, 'd, 'e) omonad
                 constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-              val mfetch : unit -> ('a * [> 'a tag_lstate ] * 'b, C.contr) lm
+              val fetch_iter : [> `TLower of 'a ] list -> 'a
+              val mfetch :
+                unit ->
+                ([> `TLower of 'b ] as 'a) list ->
+                ('a list -> 'b -> 'c) -> 'c
+              val mstore :
+                'a ->
+                ([> `TLower of 'a ] as 'b) list ->
+                ('b list -> unit -> 'c) -> 'c
               val decl :
-                ('a, C.contr) Code.abstract ->
-                ('a * [> 'a tag_lstate ] * 'b, C.contr) lm
-              val updt :
-                'a C.vc ->
-                ('a, int) Code.abstract ->
-                ('a, int) Code.abstract ->
-                'a C.vo ->
-                'a C.Dom.vc -> ('a * [> 'a tag_lstate ] * 'b, unit) lm option
-              val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, C.contr) om
+                'a ->
+                ([> `TLower of 'a ] as 'b) list ->
+                ('b list -> 'a -> 'c) -> 'c
+              val updt : 'a -> 'b -> 'c -> 'd -> 'e -> 'f option
+              val fin :
+                unit ->
+                ([> `TLower of 'b ] as 'a) list ->
+                ('a list -> 'b option -> 'c) -> 'c
               val wants_pack : bool
             end
           module NoLower :
@@ -838,17 +861,24 @@
                 constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
               type ('a, 'b) om = ('c, 'b, 'd, 'e) omonad
                 constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-              val mfetch : unit -> ('a * [> 'a tag_lstate ] * 'b, C.contr) lm
-              val decl :
-                ('a, C.contr) Code.abstract ->
-                ('a * [> 'a tag_lstate ] * 'b, C.contr) lm
+              val fetch_iter : [> `TLower of 'a ] list -> 'a
+              val mfetch :
+                unit ->
+                ([> `TLower of 'b ] as 'a) list ->
+                ('a list -> 'b -> 'c) -> 'c
+              val mstore :
+                'a ->
+                ([> `TLower of 'a ] as 'b) list ->
+                ('b list -> unit -> 'c) -> 'c
+              val decl : 'a -> 'b -> ('b -> 'a -> 'c) -> 'c
               val updt :
                 'a C.vc ->
                 ('a, int) Code.abstract ->
                 ('a, int) Code.abstract ->
                 'a C.vo ->
-                'a C.Dom.vc -> ('a * [> 'a tag_lstate ] * 'b, unit) lm option
-              val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, C.contr) om
+                'b ->
+                ('c -> ('c -> ('a, unit) Code.abstract -> 'd) -> 'd) option
+              val fin : unit -> 'a -> ('a -> 'b option -> 'c) -> 'c
               val wants_pack : bool
             end
           module type INPUT =
@@ -1145,20 +1175,25 @@
                         type ('a, 'b) om = ('c, 'b, 'd, 'e) omonad
                           constraint 'a =
                             'c * ([> 'c tag_lstate ] as 'd) * 'e
+                        val fetch_iter : [> `TLower of 'a ] list -> 'a
                         val mfetch :
-                          unit -> ('a * [> 'a tag_lstate ] * 'b, C.contr) lm
-                        val decl :
-                          ('a, C.contr) Code.abstract ->
-                          ('a * [> 'a tag_lstate ] * 'b, C.contr) lm
+                          unit ->
+                          ([> `TLower of 'b ] as 'a) list ->
+                          ('a list -> 'b -> 'c) -> 'c
+                        val mstore :
+                          'a ->
+                          ([> `TLower of 'a ] as 'b) list ->
+                          ('b list -> unit -> 'c) -> 'c
+                        val decl : 'a -> 'b -> ('b -> 'a -> 'c) -> 'c
                         val updt :
                           'a C.vc ->
                           ('a, int) Code.abstract ->
                           ('a, int) Code.abstract ->
                           'a C.vo ->
-                          'a C.Dom.vc ->
-                          ('a * [> 'a tag_lstate ] * 'b, unit) lm option
-                        val fin :
-                          unit -> ('a * [> 'a tag_lstate ] * 'b, C.contr) om
+                          'b ->
+                          ('c -> ('c -> ('a, unit) Code.abstract -> 'd) -> 'd)
+                          option
+                        val fin : unit -> 'a -> ('a -> 'b option -> 'c) -> 'c
                         val wants_pack : bool
                       end
                     val make_result :
@@ -1249,20 +1284,25 @@
                         type ('a, 'b) om = ('c, 'b, 'd, 'e) omonad
                           constraint 'a =
                             'c * ([> 'c tag_lstate ] as 'd) * 'e
+                        val fetch_iter : [> `TLower of 'a ] list -> 'a
                         val mfetch :
-                          unit -> ('a * [> 'a tag_lstate ] * 'b, C.contr) lm
-                        val decl :
-                          ('a, C.contr) Code.abstract ->
-                          ('a * [> 'a tag_lstate ] * 'b, C.contr) lm
+                          unit ->
+                          ([> `TLower of 'b ] as 'a) list ->
+                          ('a list -> 'b -> 'c) -> 'c
+                        val mstore :
+                          'a ->
+                          ([> `TLower of 'a ] as 'b) list ->
+                          ('b list -> unit -> 'c) -> 'c
+                        val decl : 'a -> 'b -> ('b -> 'a -> 'c) -> 'c
                         val updt :
                           'a C.vc ->
                           ('a, int) Code.abstract ->
                           ('a, int) Code.abstract ->
                           'a C.vo ->
-                          'a C.Dom.vc ->
-                          ('a * [> 'a tag_lstate ] * 'b, unit) lm option
-                        val fin :
-                          unit -> ('a * [> 'a tag_lstate ] * 'b, C.contr) om
+                          'b ->
+                          ('c -> ('c -> ('a, unit) Code.abstract -> 'd) -> 'd)
+                          option
+                        val fin : unit -> 'a -> ('a -> 'b option -> 'c) -> 'c
                         val wants_pack : bool
                       end
                     val make_result :
@@ -1360,20 +1400,25 @@
                         type ('a, 'b) om = ('c, 'b, 'd, 'e) omonad
                           constraint 'a =
                             'c * ([> 'c tag_lstate ] as 'd) * 'e
+                        val fetch_iter : [> `TLower of 'a ] list -> 'a
                         val mfetch :
-                          unit -> ('a * [> 'a tag_lstate ] * 'b, C.contr) lm
-                        val decl :
-                          ('a, C.contr) Code.abstract ->
-                          ('a * [> 'a tag_lstate ] * 'b, C.contr) lm
+                          unit ->
+                          ([> `TLower of 'b ] as 'a) list ->
+                          ('a list -> 'b -> 'c) -> 'c
+                        val mstore :
+                          'a ->
+                          ([> `TLower of 'a ] as 'b) list ->
+                          ('b list -> unit -> 'c) -> 'c
+                        val decl : 'a -> 'b -> ('b -> 'a -> 'c) -> 'c
                         val updt :
                           'a C.vc ->
                           ('a, int) Code.abstract ->
                           ('a, int) Code.abstract ->
                           'a C.vo ->
-                          'a C.Dom.vc ->
-                          ('a * [> 'a tag_lstate ] * 'b, unit) lm option
-                        val fin :
-                          unit -> ('a * [> 'a tag_lstate ] * 'b, C.contr) om
+                          'b ->
+                          ('c -> ('c -> ('a, unit) Code.abstract -> 'd) -> 'd)
+                          option
+                        val fin : unit -> 'a -> ('a -> 'b option -> 'c) -> 'c
                         val wants_pack : bool
                       end
                     val make_result :
@@ -1469,20 +1514,25 @@
                         type ('a, 'b) om = ('c, 'b, 'd, 'e) omonad
                           constraint 'a =
                             'c * ([> 'c tag_lstate ] as 'd) * 'e
+                        val fetch_iter : [> `TLower of 'a ] list -> 'a
                         val mfetch :
-                          unit -> ('a * [> 'a tag_lstate ] * 'b, C.contr) lm
-                        val decl :
-                          ('a, C.contr) Code.abstract ->
-                          ('a * [> 'a tag_lstate ] * 'b, C.contr) lm
+                          unit ->
+                          ([> `TLower of 'b ] as 'a) list ->
+                          ('a list -> 'b -> 'c) -> 'c
+                        val mstore :
+                          'a ->
+                          ([> `TLower of 'a ] as 'b) list ->
+                          ('b list -> unit -> 'c) -> 'c
+                        val decl : 'a -> 'b -> ('b -> 'a -> 'c) -> 'c
                         val updt :
                           'a C.vc ->
                           ('a, int) Code.abstract ->
                           ('a, int) Code.abstract ->
                           'a C.vo ->
-                          'a C.Dom.vc ->
-                          ('a * [> 'a tag_lstate ] * 'b, unit) lm option
-                        val fin :
-                          unit -> ('a * [> 'a tag_lstate ] * 'b, C.contr) om
+                          'b ->
+                          ('c -> ('c -> ('a, unit) Code.abstract -> 'd) -> 'd)
+                          option
+                        val fin : unit -> 'a -> ('a -> 'b option -> 'c) -> 'c
                         val wants_pack : bool
                       end
                     val make_result :
@@ -1608,20 +1658,25 @@
                         type ('a, 'b) om = ('c, 'b, 'd, 'e) omonad
                           constraint 'a =
                             'c * ([> 'c tag_lstate ] as 'd) * 'e
+                        val fetch_iter : [> `TLower of 'a ] list -> 'a
                         val mfetch :
-                          unit -> ('a * [> 'a tag_lstate ] * 'b, C.contr) lm
-                        val decl :
-                          ('a, C.contr) Code.abstract ->
-                          ('a * [> 'a tag_lstate ] * 'b, C.contr) lm
+                          unit ->
+                          ([> `TLower of 'b ] as 'a) list ->
+                          ('a list -> 'b -> 'c) -> 'c
+                        val mstore :
+                          'a ->
+                          ([> `TLower of 'a ] as 'b) list ->
+                          ('b list -> unit -> 'c) -> 'c
+                        val decl : 'a -> 'b -> ('b -> 'a -> 'c) -> 'c
                         val updt :
                           'a C.vc ->
                           ('a, int) Code.abstract ->
                           ('a, int) Code.abstract ->
                           'a C.vo ->
-                          'a C.Dom.vc ->
-                          ('a * [> 'a tag_lstate ] * 'b, unit) lm option
-                        val fin :
-                          unit -> ('a * [> 'a tag_lstate ] * 'b, C.contr) om
+                          'b ->
+                          ('c -> ('c -> ('a, unit) Code.abstract -> 'd) -> 'd)
+                          option
+                        val fin : unit -> 'a -> ('a -> 'b option -> 'c) -> 'c
                         val wants_pack : bool
                       end
                     val make_result :
@@ -1810,32 +1865,44 @@
                         type ('a, 'b) om = ('c, 'b, 'd, 'e) omonad
                           constraint 'a =
                             'c * ([> 'c tag_lstate ] as 'd) * 'e
+                        val fetch_iter : [> `TLower of 'a ] list -> 'a
                         val mfetch :
-                          unit -> ('a * [> 'a tag_lstate ] * 'b, C.contr) lm
+                          unit ->
+                          ([> `TLower of 'b ] as 'a) list ->
+                          ('a list -> 'b -> 'c) -> 'c
+                        val mstore :
+                          'a ->
+                          ([> `TLower of 'a ] as 'b) list ->
+                          ('b list -> unit -> 'c) -> 'c
                         val decl :
-                          ('a, C.contr) Code.abstract ->
-                          ('a * [> 'a tag_lstate ] * 'b, C.contr) lm
+                          ('a, 'b) Code.abstract ->
+                          ([> `TLower of ('a, 'b) Code.abstract ] as 'c) list ->
+                          ('c list ->
+                           ('a, 'b) Code.abstract -> ('a, 'd) Code.abstract) ->
+                          ('a, 'd) Code.abstract
                         val updt :
                           'a C.vc ->
                           ('a, int) Code.abstract ->
                           ('a, int) Code.abstract ->
                           'a C.vo ->
-                          'a C.Dom.vc ->
-                          ('a * [> 'a tag_lstate ] * 'b, unit) lm option
+                          'a C.vo ->
+                          (([> `TLower of 'a C.vc ] as 'b) list ->
+                           ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c)
+                          option
                         val fin :
-                          unit -> ('a * [> 'a tag_lstate ] * 'b, C.contr) om
+                          unit ->
+                          ([> `TLower of 'b ] as 'a) list ->
+                          ('a list -> 'b option -> 'c) -> 'c
                         val wants_pack : bool
                       end
                     val make_result :
                       'a wmatrix ->
-                      ([> `TLower of 'a L.lstate
-                        | `TPivot of ('a, 'c ref) Code.abstract ]
+                      ([> `TLower of ('a, 'c) Code.abstract
+                        | `TPivot of ('a, 'd ref) Code.abstract ]
                        as 'b)
                       list ->
-                      ('b list ->
-                       ('a, C.contr * C.contr * 'c) Code.abstract ->
-                       ('a, 'd) Code.abstract) ->
-                      ('a, 'd) Code.abstract
+                      ('b list -> ('a, C.contr * 'c * 'd) Code.abstract -> 'e) ->
+                      'e
                   end
           module Out_LU_Packed :
             functor
@@ -2011,32 +2078,33 @@
                         type ('a, 'b) om = ('c, 'b, 'd, 'e) omonad
                           constraint 'a =
                             'c * ([> 'c tag_lstate ] as 'd) * 'e
+                        val fetch_iter : [> `TLower of 'a ] list -> 'a
                         val mfetch :
-                          unit -> ('a * [> 'a tag_lstate ] * 'b, C.contr) lm
+                          unit ->
+                          ([> `TLower of 'b ] as 'a) list ->
+                          ('a list -> 'b -> 'c) -> 'c
+                        val mstore :
+                          'a ->
+                          ([> `TLower of 'a ] as 'b) list ->
+                          ('b list -> unit -> 'c) -> 'c
                         val decl :
-                          ('a, C.contr) Code.abstract ->
-                          ('a * [> 'a tag_lstate ] * 'b, C.contr) lm
-                        val updt :
-                          'a C.vc ->
-                          ('a, int) Code.abstract ->
-                          ('a, int) Code.abstract ->
-                          'a C.vo ->
-                          'a C.Dom.vc ->
-                          ('a * [> 'a tag_lstate ] * 'b, unit) lm option
+                          'a ->
+                          ([> `TLower of 'a ] as 'b) list ->
+                          ('b list -> 'a -> 'c) -> 'c
+                        val updt : 'a -> 'b -> 'c -> 'd -> 'e -> 'f option
                         val fin :
-                          unit -> ('a * [> 'a tag_lstate ] * 'b, C.contr) om
+                          unit ->
+                          ([> `TLower of 'b ] as 'a) list ->
+                          ('a list -> 'b option -> 'c) -> 'c
                         val wants_pack : bool
                       end
                     val make_result :
                       'a ->
-                      ([> `TLower of 'c L.lstate
-                        | `TPivot of ('c, 'd ref) Code.abstract ]
+                      ([> `TLower of ('c, 'd) Code.abstract
+                        | `TPivot of ('c, 'e ref) Code.abstract ]
                        as 'b)
                       list ->
-                      ('b list ->
-                       ('c, C.contr * 'd) Code.abstract ->
-                       ('c, 'e) Code.abstract) ->
-                      ('c, 'e) Code.abstract
+                      ('b list -> ('c, 'd * 'e) Code.abstract -> 'f) -> 'f
                   end
           module type PIVOT =
             functor (D : DETF) ->
@@ -3125,17 +3193,31 @@ module G_GAC_F :
           constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
         type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
           constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-        val mfetch : unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_F.contr) lm
+        val fetch_iter : [> `TLower of 'a ] list -> 'a
+        val mfetch :
+          unit ->
+          ([> `TLower of 'b ] as 'a) list -> ('a list -> 'b -> 'c) -> 'c
+        val mstore :
+          'a ->
+          ([> `TLower of 'a ] as 'b) list -> ('b list -> unit -> 'c) -> 'c
         val decl :
-          ('a, GAC_F.contr) Code.abstract ->
-          ('a * [> 'a tag_lstate ] * 'b, GAC_F.contr) lm
+          ('a, 'b) Code.abstract ->
+          ([> `TLower of ('a, 'b) Code.abstract ] as 'c) list ->
+          ('c list -> ('a, 'b) Code.abstract -> ('a, 'd) Code.abstract) ->
+          ('a, 'd) Code.abstract
         val updt :
           'a GAC_F.vc ->
           ('a, int) Code.abstract ->
           ('a, int) Code.abstract ->
           'a GAC_F.vo ->
-          'a GAC_F.Dom.vc -> ('a * [> 'a tag_lstate ] * 'b, unit) lm option
-        val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_F.contr) om
+          'a GAC_F.vo ->
+          (([> `TLower of 'a GAC_F.vc ] as 'b) list ->
+           ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c)
+          option
+        val fin :
+          unit ->
+          ([> `TLower of 'b ] as 'a) list ->
+          ('a list -> 'b option -> 'c) -> 'c
         val wants_pack : bool
       end
     module PackedLower :
@@ -3146,17 +3228,21 @@ module G_GAC_F :
           constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
         type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
           constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-        val mfetch : unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_F.contr) lm
+        val fetch_iter : [> `TLower of 'a ] list -> 'a
+        val mfetch :
+          unit ->
+          ([> `TLower of 'b ] as 'a) list -> ('a list -> 'b -> 'c) -> 'c
+        val mstore :
+          'a ->
+          ([> `TLower of 'a ] as 'b) list -> ('b list -> unit -> 'c) -> 'c
         val decl :
-          ('a, GAC_F.contr) Code.abstract ->
-          ('a * [> 'a tag_lstate ] * 'b, GAC_F.contr) lm
-        val updt :
-          'a GAC_F.vc ->
-          ('a, int) Code.abstract ->
-          ('a, int) Code.abstract ->
-          'a GAC_F.vo ->
-          'a GAC_F.Dom.vc -> ('a * [> 'a tag_lstate ] * 'b, unit) lm option
-        val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_F.contr) om
+          'a ->
+          ([> `TLower of 'a ] as 'b) list -> ('b list -> 'a -> 'c) -> 'c
+        val updt : 'a -> 'b -> 'c -> 'd -> 'e -> 'f option
+        val fin :
+          unit ->
+          ([> `TLower of 'b ] as 'a) list ->
+          ('a list -> 'b option -> 'c) -> 'c
         val wants_pack : bool
       end
     module NoLower :
@@ -3167,17 +3253,21 @@ module G_GAC_F :
           constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
         type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
           constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-        val mfetch : unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_F.contr) lm
-        val decl :
-          ('a, GAC_F.contr) Code.abstract ->
-          ('a * [> 'a tag_lstate ] * 'b, GAC_F.contr) lm
+        val fetch_iter : [> `TLower of 'a ] list -> 'a
+        val mfetch :
+          unit ->
+          ([> `TLower of 'b ] as 'a) list -> ('a list -> 'b -> 'c) -> 'c
+        val mstore :
+          'a ->
+          ([> `TLower of 'a ] as 'b) list -> ('b list -> unit -> 'c) -> 'c
+        val decl : 'a -> 'b -> ('b -> 'a -> 'c) -> 'c
         val updt :
           'a GAC_F.vc ->
           ('a, int) Code.abstract ->
           ('a, int) Code.abstract ->
           'a GAC_F.vo ->
-          'a GAC_F.Dom.vc -> ('a * [> 'a tag_lstate ] * 'b, unit) lm option
-        val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_F.contr) om
+          'b -> ('c -> ('c -> ('a, unit) Code.abstract -> 'd) -> 'd) option
+        val fin : unit -> 'a -> ('a -> 'b option -> 'c) -> 'c
         val wants_pack : bool
       end
     module type INPUT =
@@ -3450,20 +3540,25 @@ module G_GAC_F :
                     constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                   type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
                     constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
+                  val fetch_iter : [> `TLower of 'a ] list -> 'a
                   val mfetch :
-                    unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_F.contr) lm
-                  val decl :
-                    ('a, GAC_F.contr) Code.abstract ->
-                    ('a * [> 'a tag_lstate ] * 'b, GAC_F.contr) lm
+                    unit ->
+                    ([> `TLower of 'b ] as 'a) list ->
+                    ('a list -> 'b -> 'c) -> 'c
+                  val mstore :
+                    'a ->
+                    ([> `TLower of 'a ] as 'b) list ->
+                    ('b list -> unit -> 'c) -> 'c
+                  val decl : 'a -> 'b -> ('b -> 'a -> 'c) -> 'c
                   val updt :
                     'a GAC_F.vc ->
                     ('a, int) Code.abstract ->
                     ('a, int) Code.abstract ->
                     'a GAC_F.vo ->
-                    'a GAC_F.Dom.vc ->
-                    ('a * [> 'a tag_lstate ] * 'b, unit) lm option
-                  val fin :
-                    unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_F.contr) om
+                    'b ->
+                    ('c -> ('c -> ('a, unit) Code.abstract -> 'd) -> 'd)
+                    option
+                  val fin : unit -> 'a -> ('a -> 'b option -> 'c) -> 'c
                   val wants_pack : bool
                 end
               val make_result :
@@ -3543,20 +3638,25 @@ module G_GAC_F :
                     constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                   type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
                     constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
+                  val fetch_iter : [> `TLower of 'a ] list -> 'a
                   val mfetch :
-                    unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_F.contr) lm
-                  val decl :
-                    ('a, GAC_F.contr) Code.abstract ->
-                    ('a * [> 'a tag_lstate ] * 'b, GAC_F.contr) lm
+                    unit ->
+                    ([> `TLower of 'b ] as 'a) list ->
+                    ('a list -> 'b -> 'c) -> 'c
+                  val mstore :
+                    'a ->
+                    ([> `TLower of 'a ] as 'b) list ->
+                    ('b list -> unit -> 'c) -> 'c
+                  val decl : 'a -> 'b -> ('b -> 'a -> 'c) -> 'c
                   val updt :
                     'a GAC_F.vc ->
                     ('a, int) Code.abstract ->
                     ('a, int) Code.abstract ->
                     'a GAC_F.vo ->
-                    'a GAC_F.Dom.vc ->
-                    ('a * [> 'a tag_lstate ] * 'b, unit) lm option
-                  val fin :
-                    unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_F.contr) om
+                    'b ->
+                    ('c -> ('c -> ('a, unit) Code.abstract -> 'd) -> 'd)
+                    option
+                  val fin : unit -> 'a -> ('a -> 'b option -> 'c) -> 'c
                   val wants_pack : bool
                 end
               val make_result :
@@ -3643,20 +3743,25 @@ module G_GAC_F :
                     constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                   type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
                     constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
+                  val fetch_iter : [> `TLower of 'a ] list -> 'a
                   val mfetch :
-                    unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_F.contr) lm
-                  val decl :
-                    ('a, GAC_F.contr) Code.abstract ->
-                    ('a * [> 'a tag_lstate ] * 'b, GAC_F.contr) lm
+                    unit ->
+                    ([> `TLower of 'b ] as 'a) list ->
+                    ('a list -> 'b -> 'c) -> 'c
+                  val mstore :
+                    'a ->
+                    ([> `TLower of 'a ] as 'b) list ->
+                    ('b list -> unit -> 'c) -> 'c
+                  val decl : 'a -> 'b -> ('b -> 'a -> 'c) -> 'c
                   val updt :
                     'a GAC_F.vc ->
                     ('a, int) Code.abstract ->
                     ('a, int) Code.abstract ->
                     'a GAC_F.vo ->
-                    'a GAC_F.Dom.vc ->
-                    ('a * [> 'a tag_lstate ] * 'b, unit) lm option
-                  val fin :
-                    unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_F.contr) om
+                    'b ->
+                    ('c -> ('c -> ('a, unit) Code.abstract -> 'd) -> 'd)
+                    option
+                  val fin : unit -> 'a -> ('a -> 'b option -> 'c) -> 'c
                   val wants_pack : bool
                 end
               val make_result :
@@ -3740,20 +3845,25 @@ module G_GAC_F :
                     constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                   type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
                     constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
+                  val fetch_iter : [> `TLower of 'a ] list -> 'a
                   val mfetch :
-                    unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_F.contr) lm
-                  val decl :
-                    ('a, GAC_F.contr) Code.abstract ->
-                    ('a * [> 'a tag_lstate ] * 'b, GAC_F.contr) lm
+                    unit ->
+                    ([> `TLower of 'b ] as 'a) list ->
+                    ('a list -> 'b -> 'c) -> 'c
+                  val mstore :
+                    'a ->
+                    ([> `TLower of 'a ] as 'b) list ->
+                    ('b list -> unit -> 'c) -> 'c
+                  val decl : 'a -> 'b -> ('b -> 'a -> 'c) -> 'c
                   val updt :
                     'a GAC_F.vc ->
                     ('a, int) Code.abstract ->
                     ('a, int) Code.abstract ->
                     'a GAC_F.vo ->
-                    'a GAC_F.Dom.vc ->
-                    ('a * [> 'a tag_lstate ] * 'b, unit) lm option
-                  val fin :
-                    unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_F.contr) om
+                    'b ->
+                    ('c -> ('c -> ('a, unit) Code.abstract -> 'd) -> 'd)
+                    option
+                  val fin : unit -> 'a -> ('a -> 'b option -> 'c) -> 'c
                   val wants_pack : bool
                 end
               val make_result :
@@ -3866,20 +3976,25 @@ module G_GAC_F :
                     constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                   type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
                     constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
+                  val fetch_iter : [> `TLower of 'a ] list -> 'a
                   val mfetch :
-                    unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_F.contr) lm
-                  val decl :
-                    ('a, GAC_F.contr) Code.abstract ->
-                    ('a * [> 'a tag_lstate ] * 'b, GAC_F.contr) lm
+                    unit ->
+                    ([> `TLower of 'b ] as 'a) list ->
+                    ('a list -> 'b -> 'c) -> 'c
+                  val mstore :
+                    'a ->
+                    ([> `TLower of 'a ] as 'b) list ->
+                    ('b list -> unit -> 'c) -> 'c
+                  val decl : 'a -> 'b -> ('b -> 'a -> 'c) -> 'c
                   val updt :
                     'a GAC_F.vc ->
                     ('a, int) Code.abstract ->
                     ('a, int) Code.abstract ->
                     'a GAC_F.vo ->
-                    'a GAC_F.Dom.vc ->
-                    ('a * [> 'a tag_lstate ] * 'b, unit) lm option
-                  val fin :
-                    unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_F.contr) om
+                    'b ->
+                    ('c -> ('c -> ('a, unit) Code.abstract -> 'd) -> 'd)
+                    option
+                  val fin : unit -> 'a -> ('a -> 'b option -> 'c) -> 'c
                   val wants_pack : bool
                 end
               val make_result :
@@ -4050,32 +4165,44 @@ module G_GAC_F :
                     constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                   type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
                     constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
+                  val fetch_iter : [> `TLower of 'a ] list -> 'a
                   val mfetch :
-                    unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_F.contr) lm
+                    unit ->
+                    ([> `TLower of 'b ] as 'a) list ->
+                    ('a list -> 'b -> 'c) -> 'c
+                  val mstore :
+                    'a ->
+                    ([> `TLower of 'a ] as 'b) list ->
+                    ('b list -> unit -> 'c) -> 'c
                   val decl :
-                    ('a, GAC_F.contr) Code.abstract ->
-                    ('a * [> 'a tag_lstate ] * 'b, GAC_F.contr) lm
+                    ('a, 'b) Code.abstract ->
+                    ([> `TLower of ('a, 'b) Code.abstract ] as 'c) list ->
+                    ('c list ->
+                     ('a, 'b) Code.abstract -> ('a, 'd) Code.abstract) ->
+                    ('a, 'd) Code.abstract
                   val updt :
                     'a GAC_F.vc ->
                     ('a, int) Code.abstract ->
                     ('a, int) Code.abstract ->
                     'a GAC_F.vo ->
-                    'a GAC_F.Dom.vc ->
-                    ('a * [> 'a tag_lstate ] * 'b, unit) lm option
+                    'a GAC_F.vo ->
+                    (([> `TLower of 'a GAC_F.vc ] as 'b) list ->
+                     ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c)
+                    option
                   val fin :
-                    unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_F.contr) om
+                    unit ->
+                    ([> `TLower of 'b ] as 'a) list ->
+                    ('a list -> 'b option -> 'c) -> 'c
                   val wants_pack : bool
                 end
               val make_result :
                 'a wmatrix ->
-                ([> `TLower of 'a L.lstate
-                  | `TPivot of ('a, 'c ref) Code.abstract ]
+                ([> `TLower of ('a, 'c) Code.abstract
+                  | `TPivot of ('a, 'd ref) Code.abstract ]
                  as 'b)
                 list ->
-                ('b list ->
-                 ('a, GAC_F.contr * GAC_F.contr * 'c) Code.abstract ->
-                 ('a, 'd) Code.abstract) ->
-                ('a, 'd) Code.abstract
+                ('b list -> ('a, GAC_F.contr * 'c * 'd) Code.abstract -> 'e) ->
+                'e
             end
     module Out_LU_Packed :
       functor
@@ -4233,32 +4360,32 @@ module G_GAC_F :
                     constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                   type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
                     constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
+                  val fetch_iter : [> `TLower of 'a ] list -> 'a
                   val mfetch :
-                    unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_F.contr) lm
+                    unit ->
+                    ([> `TLower of 'b ] as 'a) list ->
+                    ('a list -> 'b -> 'c) -> 'c
+                  val mstore :
+                    'a ->
+                    ([> `TLower of 'a ] as 'b) list ->
+                    ('b list -> unit -> 'c) -> 'c
                   val decl :
-                    ('a, GAC_F.contr) Code.abstract ->
-                    ('a * [> 'a tag_lstate ] * 'b, GAC_F.contr) lm
-                  val updt :
-                    'a GAC_F.vc ->
-                    ('a, int) Code.abstract ->
-                    ('a, int) Code.abstract ->
-                    'a GAC_F.vo ->
-                    'a GAC_F.Dom.vc ->
-                    ('a * [> 'a tag_lstate ] * 'b, unit) lm option
+                    'a ->
+                    ([> `TLower of 'a ] as 'b) list ->
+                    ('b list -> 'a -> 'c) -> 'c
+                  val updt : 'a -> 'b -> 'c -> 'd -> 'e -> 'f option
                   val fin :
-                    unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_F.contr) om
+                    unit ->
+                    ([> `TLower of 'b ] as 'a) list ->
+                    ('a list -> 'b option -> 'c) -> 'c
                   val wants_pack : bool
                 end
               val make_result :
                 'a ->
-                ([> `TLower of 'c L.lstate
-                  | `TPivot of ('c, 'd ref) Code.abstract ]
+                ([> `TLower of ('c, 'd) Code.abstract
+                  | `TPivot of ('c, 'e ref) Code.abstract ]
                  as 'b)
-                list ->
-                ('b list ->
-                 ('c, GAC_F.contr * 'd) Code.abstract ->
-                 ('c, 'e) Code.abstract) ->
-                ('c, 'e) Code.abstract
+                list -> ('b list -> ('c, 'd * 'e) Code.abstract -> 'f) -> 'f
             end
     module type PIVOT =
       functor (D : GEF.DETF) ->
@@ -4681,17 +4808,31 @@ module G_GVC_F :
           constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
         type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
           constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-        val mfetch : unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_F.contr) lm
+        val fetch_iter : [> `TLower of 'a ] list -> 'a
+        val mfetch :
+          unit ->
+          ([> `TLower of 'b ] as 'a) list -> ('a list -> 'b -> 'c) -> 'c
+        val mstore :
+          'a ->
+          ([> `TLower of 'a ] as 'b) list -> ('b list -> unit -> 'c) -> 'c
         val decl :
-          ('a, GVC_F.contr) Code.abstract ->
-          ('a * [> 'a tag_lstate ] * 'b, GVC_F.contr) lm
+          ('a, 'b) Code.abstract ->
+          ([> `TLower of ('a, 'b) Code.abstract ] as 'c) list ->
+          ('c list -> ('a, 'b) Code.abstract -> ('a, 'd) Code.abstract) ->
+          ('a, 'd) Code.abstract
         val updt :
           'a GVC_F.vc ->
           ('a, int) Code.abstract ->
           ('a, int) Code.abstract ->
           'a GVC_F.vo ->
-          'a GVC_F.Dom.vc -> ('a * [> 'a tag_lstate ] * 'b, unit) lm option
-        val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_F.contr) om
+          'a GVC_F.vo ->
+          (([> `TLower of 'a GVC_F.vc ] as 'b) list ->
+           ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c)
+          option
+        val fin :
+          unit ->
+          ([> `TLower of 'b ] as 'a) list ->
+          ('a list -> 'b option -> 'c) -> 'c
         val wants_pack : bool
       end
     module PackedLower :
@@ -4702,17 +4843,21 @@ module G_GVC_F :
           constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
         type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
           constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-        val mfetch : unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_F.contr) lm
+        val fetch_iter : [> `TLower of 'a ] list -> 'a
+        val mfetch :
+          unit ->
+          ([> `TLower of 'b ] as 'a) list -> ('a list -> 'b -> 'c) -> 'c
+        val mstore :
+          'a ->
+          ([> `TLower of 'a ] as 'b) list -> ('b list -> unit -> 'c) -> 'c
         val decl :
-          ('a, GVC_F.contr) Code.abstract ->
-          ('a * [> 'a tag_lstate ] * 'b, GVC_F.contr) lm
-        val updt :
-          'a GVC_F.vc ->
-          ('a, int) Code.abstract ->
-          ('a, int) Code.abstract ->
-          'a GVC_F.vo ->
-          'a GVC_F.Dom.vc -> ('a * [> 'a tag_lstate ] * 'b, unit) lm option
-        val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_F.contr) om
+          'a ->
+          ([> `TLower of 'a ] as 'b) list -> ('b list -> 'a -> 'c) -> 'c
+        val updt : 'a -> 'b -> 'c -> 'd -> 'e -> 'f option
+        val fin :
+          unit ->
+          ([> `TLower of 'b ] as 'a) list ->
+          ('a list -> 'b option -> 'c) -> 'c
         val wants_pack : bool
       end
     module NoLower :
@@ -4723,17 +4868,21 @@ module G_GVC_F :
           constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
         type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
           constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-        val mfetch : unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_F.contr) lm
-        val decl :
-          ('a, GVC_F.contr) Code.abstract ->
-          ('a * [> 'a tag_lstate ] * 'b, GVC_F.contr) lm
+        val fetch_iter : [> `TLower of 'a ] list -> 'a
+        val mfetch :
+          unit ->
+          ([> `TLower of 'b ] as 'a) list -> ('a list -> 'b -> 'c) -> 'c
+        val mstore :
+          'a ->
+          ([> `TLower of 'a ] as 'b) list -> ('b list -> unit -> 'c) -> 'c
+        val decl : 'a -> 'b -> ('b -> 'a -> 'c) -> 'c
         val updt :
           'a GVC_F.vc ->
           ('a, int) Code.abstract ->
           ('a, int) Code.abstract ->
           'a GVC_F.vo ->
-          'a GVC_F.Dom.vc -> ('a * [> 'a tag_lstate ] * 'b, unit) lm option
-        val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_F.contr) om
+          'b -> ('c -> ('c -> ('a, unit) Code.abstract -> 'd) -> 'd) option
+        val fin : unit -> 'a -> ('a -> 'b option -> 'c) -> 'c
         val wants_pack : bool
       end
     module type INPUT =
@@ -5006,20 +5155,25 @@ module G_GVC_F :
                     constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                   type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
                     constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
+                  val fetch_iter : [> `TLower of 'a ] list -> 'a
                   val mfetch :
-                    unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_F.contr) lm
-                  val decl :
-                    ('a, GVC_F.contr) Code.abstract ->
-                    ('a * [> 'a tag_lstate ] * 'b, GVC_F.contr) lm
+                    unit ->
+                    ([> `TLower of 'b ] as 'a) list ->
+                    ('a list -> 'b -> 'c) -> 'c
+                  val mstore :
+                    'a ->
+                    ([> `TLower of 'a ] as 'b) list ->
+                    ('b list -> unit -> 'c) -> 'c
+                  val decl : 'a -> 'b -> ('b -> 'a -> 'c) -> 'c
                   val updt :
                     'a GVC_F.vc ->
                     ('a, int) Code.abstract ->
                     ('a, int) Code.abstract ->
                     'a GVC_F.vo ->
-                    'a GVC_F.Dom.vc ->
-                    ('a * [> 'a tag_lstate ] * 'b, unit) lm option
-                  val fin :
-                    unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_F.contr) om
+                    'b ->
+                    ('c -> ('c -> ('a, unit) Code.abstract -> 'd) -> 'd)
+                    option
+                  val fin : unit -> 'a -> ('a -> 'b option -> 'c) -> 'c
                   val wants_pack : bool
                 end
               val make_result :
@@ -5099,20 +5253,25 @@ module G_GVC_F :
                     constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                   type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
                     constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
+                  val fetch_iter : [> `TLower of 'a ] list -> 'a
                   val mfetch :
-                    unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_F.contr) lm
-                  val decl :
-                    ('a, GVC_F.contr) Code.abstract ->
-                    ('a * [> 'a tag_lstate ] * 'b, GVC_F.contr) lm
+                    unit ->
+                    ([> `TLower of 'b ] as 'a) list ->
+                    ('a list -> 'b -> 'c) -> 'c
+                  val mstore :
+                    'a ->
+                    ([> `TLower of 'a ] as 'b) list ->
+                    ('b list -> unit -> 'c) -> 'c
+                  val decl : 'a -> 'b -> ('b -> 'a -> 'c) -> 'c
                   val updt :
                     'a GVC_F.vc ->
                     ('a, int) Code.abstract ->
                     ('a, int) Code.abstract ->
                     'a GVC_F.vo ->
-                    'a GVC_F.Dom.vc ->
-                    ('a * [> 'a tag_lstate ] * 'b, unit) lm option
-                  val fin :
-                    unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_F.contr) om
+                    'b ->
+                    ('c -> ('c -> ('a, unit) Code.abstract -> 'd) -> 'd)
+                    option
+                  val fin : unit -> 'a -> ('a -> 'b option -> 'c) -> 'c
                   val wants_pack : bool
                 end
               val make_result :
@@ -5199,20 +5358,25 @@ module G_GVC_F :
                     constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                   type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
                     constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
+                  val fetch_iter : [> `TLower of 'a ] list -> 'a
                   val mfetch :
-                    unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_F.contr) lm
-                  val decl :
-                    ('a, GVC_F.contr) Code.abstract ->
-                    ('a * [> 'a tag_lstate ] * 'b, GVC_F.contr) lm
+                    unit ->
+                    ([> `TLower of 'b ] as 'a) list ->
+                    ('a list -> 'b -> 'c) -> 'c
+                  val mstore :
+                    'a ->
+                    ([> `TLower of 'a ] as 'b) list ->
+                    ('b list -> unit -> 'c) -> 'c
+                  val decl : 'a -> 'b -> ('b -> 'a -> 'c) -> 'c
                   val updt :
                     'a GVC_F.vc ->
                     ('a, int) Code.abstract ->
                     ('a, int) Code.abstract ->
                     'a GVC_F.vo ->
-                    'a GVC_F.Dom.vc ->
-                    ('a * [> 'a tag_lstate ] * 'b, unit) lm option
-                  val fin :
-                    unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_F.contr) om
+                    'b ->
+                    ('c -> ('c -> ('a, unit) Code.abstract -> 'd) -> 'd)
+                    option
+                  val fin : unit -> 'a -> ('a -> 'b option -> 'c) -> 'c
                   val wants_pack : bool
                 end
               val make_result :
@@ -5296,20 +5460,25 @@ module G_GVC_F :
                     constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                   type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
                     constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
+                  val fetch_iter : [> `TLower of 'a ] list -> 'a
                   val mfetch :
-                    unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_F.contr) lm
-                  val decl :
-                    ('a, GVC_F.contr) Code.abstract ->
-                    ('a * [> 'a tag_lstate ] * 'b, GVC_F.contr) lm
+                    unit ->
+                    ([> `TLower of 'b ] as 'a) list ->
+                    ('a list -> 'b -> 'c) -> 'c
+                  val mstore :
+                    'a ->
+                    ([> `TLower of 'a ] as 'b) list ->
+                    ('b list -> unit -> 'c) -> 'c
+                  val decl : 'a -> 'b -> ('b -> 'a -> 'c) -> 'c
                   val updt :
                     'a GVC_F.vc ->
                     ('a, int) Code.abstract ->
                     ('a, int) Code.abstract ->
                     'a GVC_F.vo ->
-                    'a GVC_F.Dom.vc ->
-                    ('a * [> 'a tag_lstate ] * 'b, unit) lm option
-                  val fin :
-                    unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_F.contr) om
+                    'b ->
+                    ('c -> ('c -> ('a, unit) Code.abstract -> 'd) -> 'd)
+                    option
+                  val fin : unit -> 'a -> ('a -> 'b option -> 'c) -> 'c
                   val wants_pack : bool
                 end
               val make_result :
@@ -5422,20 +5591,25 @@ module G_GVC_F :
                     constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                   type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
                     constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
+                  val fetch_iter : [> `TLower of 'a ] list -> 'a
                   val mfetch :
-                    unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_F.contr) lm
-                  val decl :
-                    ('a, GVC_F.contr) Code.abstract ->
-                    ('a * [> 'a tag_lstate ] * 'b, GVC_F.contr) lm
+                    unit ->
+                    ([> `TLower of 'b ] as 'a) list ->
+                    ('a list -> 'b -> 'c) -> 'c
+                  val mstore :
+                    'a ->
+                    ([> `TLower of 'a ] as 'b) list ->
+                    ('b list -> unit -> 'c) -> 'c
+                  val decl : 'a -> 'b -> ('b -> 'a -> 'c) -> 'c
                   val updt :
                     'a GVC_F.vc ->
                     ('a, int) Code.abstract ->
                     ('a, int) Code.abstract ->
                     'a GVC_F.vo ->
-                    'a GVC_F.Dom.vc ->
-                    ('a * [> 'a tag_lstate ] * 'b, unit) lm option
-                  val fin :
-                    unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_F.contr) om
+                    'b ->
+                    ('c -> ('c -> ('a, unit) Code.abstract -> 'd) -> 'd)
+                    option
+                  val fin : unit -> 'a -> ('a -> 'b option -> 'c) -> 'c
                   val wants_pack : bool
                 end
               val make_result :
@@ -5606,32 +5780,44 @@ module G_GVC_F :
                     constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                   type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
                     constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
+                  val fetch_iter : [> `TLower of 'a ] list -> 'a
                   val mfetch :
-                    unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_F.contr) lm
+                    unit ->
+                    ([> `TLower of 'b ] as 'a) list ->
+                    ('a list -> 'b -> 'c) -> 'c
+                  val mstore :
+                    'a ->
+                    ([> `TLower of 'a ] as 'b) list ->
+                    ('b list -> unit -> 'c) -> 'c
                   val decl :
-                    ('a, GVC_F.contr) Code.abstract ->
-                    ('a * [> 'a tag_lstate ] * 'b, GVC_F.contr) lm
+                    ('a, 'b) Code.abstract ->
+                    ([> `TLower of ('a, 'b) Code.abstract ] as 'c) list ->
+                    ('c list ->
+                     ('a, 'b) Code.abstract -> ('a, 'd) Code.abstract) ->
+                    ('a, 'd) Code.abstract
                   val updt :
                     'a GVC_F.vc ->
                     ('a, int) Code.abstract ->
                     ('a, int) Code.abstract ->
                     'a GVC_F.vo ->
-                    'a GVC_F.Dom.vc ->
-                    ('a * [> 'a tag_lstate ] * 'b, unit) lm option
+                    'a GVC_F.vo ->
+                    (([> `TLower of 'a GVC_F.vc ] as 'b) list ->
+                     ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c)
+                    option
                   val fin :
-                    unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_F.contr) om
+                    unit ->
+                    ([> `TLower of 'b ] as 'a) list ->
+                    ('a list -> 'b option -> 'c) -> 'c
                   val wants_pack : bool
                 end
               val make_result :
                 'a wmatrix ->
-                ([> `TLower of 'a L.lstate
-                  | `TPivot of ('a, 'c ref) Code.abstract ]
+                ([> `TLower of ('a, 'c) Code.abstract
+                  | `TPivot of ('a, 'd ref) Code.abstract ]
                  as 'b)
                 list ->
-                ('b list ->
-                 ('a, GVC_F.contr * GVC_F.contr * 'c) Code.abstract ->
-                 ('a, 'd) Code.abstract) ->
-                ('a, 'd) Code.abstract
+                ('b list -> ('a, GVC_F.contr * 'c * 'd) Code.abstract -> 'e) ->
+                'e
             end
     module Out_LU_Packed :
       functor
@@ -5789,32 +5975,32 @@ module G_GVC_F :
                     constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                   type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
                     constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
+                  val fetch_iter : [> `TLower of 'a ] list -> 'a
                   val mfetch :
-                    unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_F.contr) lm
+                    unit ->
+                    ([> `TLower of 'b ] as 'a) list ->
+                    ('a list -> 'b -> 'c) -> 'c
+                  val mstore :
+                    'a ->
+                    ([> `TLower of 'a ] as 'b) list ->
+                    ('b list -> unit -> 'c) -> 'c
                   val decl :
-                    ('a, GVC_F.contr) Code.abstract ->
-                    ('a * [> 'a tag_lstate ] * 'b, GVC_F.contr) lm
-                  val updt :
-                    'a GVC_F.vc ->
-                    ('a, int) Code.abstract ->
-                    ('a, int) Code.abstract ->
-                    'a GVC_F.vo ->
-                    'a GVC_F.Dom.vc ->
-                    ('a * [> 'a tag_lstate ] * 'b, unit) lm option
+                    'a ->
+                    ([> `TLower of 'a ] as 'b) list ->
+                    ('b list -> 'a -> 'c) -> 'c
+                  val updt : 'a -> 'b -> 'c -> 'd -> 'e -> 'f option
                   val fin :
-                    unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_F.contr) om
+                    unit ->
+                    ([> `TLower of 'b ] as 'a) list ->
+                    ('a list -> 'b option -> 'c) -> 'c
                   val wants_pack : bool
                 end
               val make_result :
                 'a ->
-                ([> `TLower of 'c L.lstate
-                  | `TPivot of ('c, 'd ref) Code.abstract ]
+                ([> `TLower of ('c, 'd) Code.abstract
+                  | `TPivot of ('c, 'e ref) Code.abstract ]
                  as 'b)
-                list ->
-                ('b list ->
-                 ('c, GVC_F.contr * 'd) Code.abstract ->
-                 ('c, 'e) Code.abstract) ->
-                ('c, 'e) Code.abstract
+                list -> ('b list -> ('c, 'd * 'e) Code.abstract -> 'f) -> 'f
             end
     module type PIVOT =
       functor (D : GEF.DETF) ->
@@ -6237,17 +6423,31 @@ module G_GAC_I :
           constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
         type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
           constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-        val mfetch : unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_I.contr) lm
+        val fetch_iter : [> `TLower of 'a ] list -> 'a
+        val mfetch :
+          unit ->
+          ([> `TLower of 'b ] as 'a) list -> ('a list -> 'b -> 'c) -> 'c
+        val mstore :
+          'a ->
+          ([> `TLower of 'a ] as 'b) list -> ('b list -> unit -> 'c) -> 'c
         val decl :
-          ('a, GAC_I.contr) Code.abstract ->
-          ('a * [> 'a tag_lstate ] * 'b, GAC_I.contr) lm
+          ('a, 'b) Code.abstract ->
+          ([> `TLower of ('a, 'b) Code.abstract ] as 'c) list ->
+          ('c list -> ('a, 'b) Code.abstract -> ('a, 'd) Code.abstract) ->
+          ('a, 'd) Code.abstract
         val updt :
           'a GAC_I.vc ->
           ('a, int) Code.abstract ->
           ('a, int) Code.abstract ->
           'a GAC_I.vo ->
-          'a GAC_I.Dom.vc -> ('a * [> 'a tag_lstate ] * 'b, unit) lm option
-        val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_I.contr) om
+          'a GAC_I.vo ->
+          (([> `TLower of 'a GAC_I.vc ] as 'b) list ->
+           ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c)
+          option
+        val fin :
+          unit ->
+          ([> `TLower of 'b ] as 'a) list ->
+          ('a list -> 'b option -> 'c) -> 'c
         val wants_pack : bool
       end
     module PackedLower :
@@ -6258,17 +6458,21 @@ module G_GAC_I :
           constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
         type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
           constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-        val mfetch : unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_I.contr) lm
+        val fetch_iter : [> `TLower of 'a ] list -> 'a
+        val mfetch :
+          unit ->
+          ([> `TLower of 'b ] as 'a) list -> ('a list -> 'b -> 'c) -> 'c
+        val mstore :
+          'a ->
+          ([> `TLower of 'a ] as 'b) list -> ('b list -> unit -> 'c) -> 'c
         val decl :
-          ('a, GAC_I.contr) Code.abstract ->
-          ('a * [> 'a tag_lstate ] * 'b, GAC_I.contr) lm
-        val updt :
-          'a GAC_I.vc ->
-          ('a, int) Code.abstract ->
-          ('a, int) Code.abstract ->
-          'a GAC_I.vo ->
-          'a GAC_I.Dom.vc -> ('a * [> 'a tag_lstate ] * 'b, unit) lm option
-        val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_I.contr) om
+          'a ->
+          ([> `TLower of 'a ] as 'b) list -> ('b list -> 'a -> 'c) -> 'c
+        val updt : 'a -> 'b -> 'c -> 'd -> 'e -> 'f option
+        val fin :
+          unit ->
+          ([> `TLower of 'b ] as 'a) list ->
+          ('a list -> 'b option -> 'c) -> 'c
         val wants_pack : bool
       end
     module NoLower :
@@ -6279,17 +6483,21 @@ module G_GAC_I :
           constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
         type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
           constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-        val mfetch : unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_I.contr) lm
-        val decl :
-          ('a, GAC_I.contr) Code.abstract ->
-          ('a * [> 'a tag_lstate ] * 'b, GAC_I.contr) lm
+        val fetch_iter : [> `TLower of 'a ] list -> 'a
+        val mfetch :
+          unit ->
+          ([> `TLower of 'b ] as 'a) list -> ('a list -> 'b -> 'c) -> 'c
+        val mstore :
+          'a ->
+          ([> `TLower of 'a ] as 'b) list -> ('b list -> unit -> 'c) -> 'c
+        val decl : 'a -> 'b -> ('b -> 'a -> 'c) -> 'c
         val updt :
           'a GAC_I.vc ->
           ('a, int) Code.abstract ->
           ('a, int) Code.abstract ->
           'a GAC_I.vo ->
-          'a GAC_I.Dom.vc -> ('a * [> 'a tag_lstate ] * 'b, unit) lm option
-        val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_I.contr) om
+          'b -> ('c -> ('c -> ('a, unit) Code.abstract -> 'd) -> 'd) option
+        val fin : unit -> 'a -> ('a -> 'b option -> 'c) -> 'c
         val wants_pack : bool
       end
     module type INPUT =
@@ -6562,20 +6770,25 @@ module G_GAC_I :
                     constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                   type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
                     constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
+                  val fetch_iter : [> `TLower of 'a ] list -> 'a
                   val mfetch :
-                    unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_I.contr) lm
-                  val decl :
-                    ('a, GAC_I.contr) Code.abstract ->
-                    ('a * [> 'a tag_lstate ] * 'b, GAC_I.contr) lm
+                    unit ->
+                    ([> `TLower of 'b ] as 'a) list ->
+                    ('a list -> 'b -> 'c) -> 'c
+                  val mstore :
+                    'a ->
+                    ([> `TLower of 'a ] as 'b) list ->
+                    ('b list -> unit -> 'c) -> 'c
+                  val decl : 'a -> 'b -> ('b -> 'a -> 'c) -> 'c
                   val updt :
                     'a GAC_I.vc ->
                     ('a, int) Code.abstract ->
                     ('a, int) Code.abstract ->
                     'a GAC_I.vo ->
-                    'a GAC_I.Dom.vc ->
-                    ('a * [> 'a tag_lstate ] * 'b, unit) lm option
-                  val fin :
-                    unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_I.contr) om
+                    'b ->
+                    ('c -> ('c -> ('a, unit) Code.abstract -> 'd) -> 'd)
+                    option
+                  val fin : unit -> 'a -> ('a -> 'b option -> 'c) -> 'c
                   val wants_pack : bool
                 end
               val make_result :
@@ -6655,20 +6868,25 @@ module G_GAC_I :
                     constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                   type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
                     constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
+                  val fetch_iter : [> `TLower of 'a ] list -> 'a
                   val mfetch :
-                    unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_I.contr) lm
-                  val decl :
-                    ('a, GAC_I.contr) Code.abstract ->
-                    ('a * [> 'a tag_lstate ] * 'b, GAC_I.contr) lm
+                    unit ->
+                    ([> `TLower of 'b ] as 'a) list ->
+                    ('a list -> 'b -> 'c) -> 'c
+                  val mstore :
+                    'a ->
+                    ([> `TLower of 'a ] as 'b) list ->
+                    ('b list -> unit -> 'c) -> 'c
+                  val decl : 'a -> 'b -> ('b -> 'a -> 'c) -> 'c
                   val updt :
                     'a GAC_I.vc ->
                     ('a, int) Code.abstract ->
                     ('a, int) Code.abstract ->
                     'a GAC_I.vo ->
-                    'a GAC_I.Dom.vc ->
-                    ('a * [> 'a tag_lstate ] * 'b, unit) lm option
-                  val fin :
-                    unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_I.contr) om
+                    'b ->
+                    ('c -> ('c -> ('a, unit) Code.abstract -> 'd) -> 'd)
+                    option
+                  val fin : unit -> 'a -> ('a -> 'b option -> 'c) -> 'c
                   val wants_pack : bool
                 end
               val make_result :
@@ -6755,20 +6973,25 @@ module G_GAC_I :
                     constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                   type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
                     constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
+                  val fetch_iter : [> `TLower of 'a ] list -> 'a
                   val mfetch :
-                    unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_I.contr) lm
-                  val decl :
-                    ('a, GAC_I.contr) Code.abstract ->
-                    ('a * [> 'a tag_lstate ] * 'b, GAC_I.contr) lm
+                    unit ->
+                    ([> `TLower of 'b ] as 'a) list ->
+                    ('a list -> 'b -> 'c) -> 'c
+                  val mstore :
+                    'a ->
+                    ([> `TLower of 'a ] as 'b) list ->
+                    ('b list -> unit -> 'c) -> 'c
+                  val decl : 'a -> 'b -> ('b -> 'a -> 'c) -> 'c
                   val updt :
                     'a GAC_I.vc ->
                     ('a, int) Code.abstract ->
                     ('a, int) Code.abstract ->
                     'a GAC_I.vo ->
-                    'a GAC_I.Dom.vc ->
-                    ('a * [> 'a tag_lstate ] * 'b, unit) lm option
-                  val fin :
-                    unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_I.contr) om
+                    'b ->
+                    ('c -> ('c -> ('a, unit) Code.abstract -> 'd) -> 'd)
+                    option
+                  val fin : unit -> 'a -> ('a -> 'b option -> 'c) -> 'c
                   val wants_pack : bool
                 end
               val make_result :
@@ -6852,20 +7075,25 @@ module G_GAC_I :
                     constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                   type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
                     constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
+                  val fetch_iter : [> `TLower of 'a ] list -> 'a
                   val mfetch :
-                    unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_I.contr) lm
-                  val decl :
-                    ('a, GAC_I.contr) Code.abstract ->
-                    ('a * [> 'a tag_lstate ] * 'b, GAC_I.contr) lm
+                    unit ->
+                    ([> `TLower of 'b ] as 'a) list ->
+                    ('a list -> 'b -> 'c) -> 'c
+                  val mstore :
+                    'a ->
+                    ([> `TLower of 'a ] as 'b) list ->
+                    ('b list -> unit -> 'c) -> 'c
+                  val decl : 'a -> 'b -> ('b -> 'a -> 'c) -> 'c
                   val updt :
                     'a GAC_I.vc ->
                     ('a, int) Code.abstract ->
                     ('a, int) Code.abstract ->
                     'a GAC_I.vo ->
-                    'a GAC_I.Dom.vc ->
-                    ('a * [> 'a tag_lstate ] * 'b, unit) lm option
-                  val fin :
-                    unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_I.contr) om
+                    'b ->
+                    ('c -> ('c -> ('a, unit) Code.abstract -> 'd) -> 'd)
+                    option
+                  val fin : unit -> 'a -> ('a -> 'b option -> 'c) -> 'c
                   val wants_pack : bool
                 end
               val make_result :
@@ -6978,20 +7206,25 @@ module G_GAC_I :
                     constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                   type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
                     constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
+                  val fetch_iter : [> `TLower of 'a ] list -> 'a
                   val mfetch :
-                    unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_I.contr) lm
-                  val decl :
-                    ('a, GAC_I.contr) Code.abstract ->
-                    ('a * [> 'a tag_lstate ] * 'b, GAC_I.contr) lm
+                    unit ->
+                    ([> `TLower of 'b ] as 'a) list ->
+                    ('a list -> 'b -> 'c) -> 'c
+                  val mstore :
+                    'a ->
+                    ([> `TLower of 'a ] as 'b) list ->
+                    ('b list -> unit -> 'c) -> 'c
+                  val decl : 'a -> 'b -> ('b -> 'a -> 'c) -> 'c
                   val updt :
                     'a GAC_I.vc ->
                     ('a, int) Code.abstract ->
                     ('a, int) Code.abstract ->
                     'a GAC_I.vo ->
-                    'a GAC_I.Dom.vc ->
-                    ('a * [> 'a tag_lstate ] * 'b, unit) lm option
-                  val fin :
-                    unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_I.contr) om
+                    'b ->
+                    ('c -> ('c -> ('a, unit) Code.abstract -> 'd) -> 'd)
+                    option
+                  val fin : unit -> 'a -> ('a -> 'b option -> 'c) -> 'c
                   val wants_pack : bool
                 end
               val make_result :
@@ -7162,32 +7395,44 @@ module G_GAC_I :
                     constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                   type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
                     constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
+                  val fetch_iter : [> `TLower of 'a ] list -> 'a
                   val mfetch :
-                    unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_I.contr) lm
+                    unit ->
+                    ([> `TLower of 'b ] as 'a) list ->
+                    ('a list -> 'b -> 'c) -> 'c
+                  val mstore :
+                    'a ->
+                    ([> `TLower of 'a ] as 'b) list ->
+                    ('b list -> unit -> 'c) -> 'c
                   val decl :
-                    ('a, GAC_I.contr) Code.abstract ->
-                    ('a * [> 'a tag_lstate ] * 'b, GAC_I.contr) lm
+                    ('a, 'b) Code.abstract ->
+                    ([> `TLower of ('a, 'b) Code.abstract ] as 'c) list ->
+                    ('c list ->
+                     ('a, 'b) Code.abstract -> ('a, 'd) Code.abstract) ->
+                    ('a, 'd) Code.abstract
                   val updt :
                     'a GAC_I.vc ->
                     ('a, int) Code.abstract ->
                     ('a, int) Code.abstract ->
                     'a GAC_I.vo ->
-                    'a GAC_I.Dom.vc ->
-                    ('a * [> 'a tag_lstate ] * 'b, unit) lm option
+                    'a GAC_I.vo ->
+                    (([> `TLower of 'a GAC_I.vc ] as 'b) list ->
+                     ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c)
+                    option
                   val fin :
-                    unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_I.contr) om
+                    unit ->
+                    ([> `TLower of 'b ] as 'a) list ->
+                    ('a list -> 'b option -> 'c) -> 'c
                   val wants_pack : bool
                 end
               val make_result :
                 'a wmatrix ->
-                ([> `TLower of 'a L.lstate
-                  | `TPivot of ('a, 'c ref) Code.abstract ]
+                ([> `TLower of ('a, 'c) Code.abstract
+                  | `TPivot of ('a, 'd ref) Code.abstract ]
                  as 'b)
                 list ->
-                ('b list ->
-                 ('a, GAC_I.contr * GAC_I.contr * 'c) Code.abstract ->
-                 ('a, 'd) Code.abstract) ->
-                ('a, 'd) Code.abstract
+                ('b list -> ('a, GAC_I.contr * 'c * 'd) Code.abstract -> 'e) ->
+                'e
             end
     module Out_LU_Packed :
       functor
@@ -7345,32 +7590,32 @@ module G_GAC_I :
                     constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                   type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
                     constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
+                  val fetch_iter : [> `TLower of 'a ] list -> 'a
                   val mfetch :
-                    unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_I.contr) lm
+                    unit ->
+                    ([> `TLower of 'b ] as 'a) list ->
+                    ('a list -> 'b -> 'c) -> 'c
+                  val mstore :
+                    'a ->
+                    ([> `TLower of 'a ] as 'b) list ->
+                    ('b list -> unit -> 'c) -> 'c
                   val decl :
-                    ('a, GAC_I.contr) Code.abstract ->
-                    ('a * [> 'a tag_lstate ] * 'b, GAC_I.contr) lm
-                  val updt :
-                    'a GAC_I.vc ->
-                    ('a, int) Code.abstract ->
-                    ('a, int) Code.abstract ->
-                    'a GAC_I.vo ->
-                    'a GAC_I.Dom.vc ->
-                    ('a * [> 'a tag_lstate ] * 'b, unit) lm option
+                    'a ->
+                    ([> `TLower of 'a ] as 'b) list ->
+                    ('b list -> 'a -> 'c) -> 'c
+                  val updt : 'a -> 'b -> 'c -> 'd -> 'e -> 'f option
                   val fin :
-                    unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_I.contr) om
+                    unit ->
+                    ([> `TLower of 'b ] as 'a) list ->
+                    ('a list -> 'b option -> 'c) -> 'c
                   val wants_pack : bool
                 end
               val make_result :
                 'a ->
-                ([> `TLower of 'c L.lstate
-                  | `TPivot of ('c, 'd ref) Code.abstract ]
+                ([> `TLower of ('c, 'd) Code.abstract
+                  | `TPivot of ('c, 'e ref) Code.abstract ]
                  as 'b)
-                list ->
-                ('b list ->
-                 ('c, GAC_I.contr * 'd) Code.abstract ->
-                 ('c, 'e) Code.abstract) ->
-                ('c, 'e) Code.abstract
+                list -> ('b list -> ('c, 'd * 'e) Code.abstract -> 'f) -> 'f
             end
     module type PIVOT =
       functor (D : GEF.DETF) ->
@@ -7793,17 +8038,31 @@ module G_GVC_I :
           constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
         type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
           constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-        val mfetch : unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_I.contr) lm
+        val fetch_iter : [> `TLower of 'a ] list -> 'a
+        val mfetch :
+          unit ->
+          ([> `TLower of 'b ] as 'a) list -> ('a list -> 'b -> 'c) -> 'c
+        val mstore :
+          'a ->
+          ([> `TLower of 'a ] as 'b) list -> ('b list -> unit -> 'c) -> 'c
         val decl :
-          ('a, GVC_I.contr) Code.abstract ->
-          ('a * [> 'a tag_lstate ] * 'b, GVC_I.contr) lm
+          ('a, 'b) Code.abstract ->
+          ([> `TLower of ('a, 'b) Code.abstract ] as 'c) list ->
+          ('c list -> ('a, 'b) Code.abstract -> ('a, 'd) Code.abstract) ->
+          ('a, 'd) Code.abstract
         val updt :
           'a GVC_I.vc ->
           ('a, int) Code.abstract ->
           ('a, int) Code.abstract ->
           'a GVC_I.vo ->
-          'a GVC_I.Dom.vc -> ('a * [> 'a tag_lstate ] * 'b, unit) lm option
-        val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_I.contr) om
+          'a GVC_I.vo ->
+          (([> `TLower of 'a GVC_I.vc ] as 'b) list ->
+           ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c)
+          option
+        val fin :
+          unit ->
+          ([> `TLower of 'b ] as 'a) list ->
+          ('a list -> 'b option -> 'c) -> 'c
         val wants_pack : bool
       end
     module PackedLower :
@@ -7814,17 +8073,21 @@ module G_GVC_I :
           constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
         type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
           constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-        val mfetch : unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_I.contr) lm
+        val fetch_iter : [> `TLower of 'a ] list -> 'a
+        val mfetch :
+          unit ->
+          ([> `TLower of 'b ] as 'a) list -> ('a list -> 'b -> 'c) -> 'c
+        val mstore :
+          'a ->
+          ([> `TLower of 'a ] as 'b) list -> ('b list -> unit -> 'c) -> 'c
         val decl :
-          ('a, GVC_I.contr) Code.abstract ->
-          ('a * [> 'a tag_lstate ] * 'b, GVC_I.contr) lm
-        val updt :
-          'a GVC_I.vc ->
-          ('a, int) Code.abstract ->
-          ('a, int) Code.abstract ->
-          'a GVC_I.vo ->
-          'a GVC_I.Dom.vc -> ('a * [> 'a tag_lstate ] * 'b, unit) lm option
-        val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_I.contr) om
+          'a ->
+          ([> `TLower of 'a ] as 'b) list -> ('b list -> 'a -> 'c) -> 'c
+        val updt : 'a -> 'b -> 'c -> 'd -> 'e -> 'f option
+        val fin :
+          unit ->
+          ([> `TLower of 'b ] as 'a) list ->
+          ('a list -> 'b option -> 'c) -> 'c
         val wants_pack : bool
       end
     module NoLower :
@@ -7835,17 +8098,21 @@ module G_GVC_I :
           constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
         type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
           constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-        val mfetch : unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_I.contr) lm
-        val decl :
-          ('a, GVC_I.contr) Code.abstract ->
-          ('a * [> 'a tag_lstate ] * 'b, GVC_I.contr) lm
+        val fetch_iter : [> `TLower of 'a ] list -> 'a
+        val mfetch :
+          unit ->
+          ([> `TLower of 'b ] as 'a) list -> ('a list -> 'b -> 'c) -> 'c
+        val mstore :
+          'a ->
+          ([> `TLower of 'a ] as 'b) list -> ('b list -> unit -> 'c) -> 'c
+        val decl : 'a -> 'b -> ('b -> 'a -> 'c) -> 'c
         val updt :
           'a GVC_I.vc ->
           ('a, int) Code.abstract ->
           ('a, int) Code.abstract ->
           'a GVC_I.vo ->
-          'a GVC_I.Dom.vc -> ('a * [> 'a tag_lstate ] * 'b, unit) lm option
-        val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_I.contr) om
+          'b -> ('c -> ('c -> ('a, unit) Code.abstract -> 'd) -> 'd) option
+        val fin : unit -> 'a -> ('a -> 'b option -> 'c) -> 'c
         val wants_pack : bool
       end
     module type INPUT =
@@ -8118,20 +8385,25 @@ module G_GVC_I :
                     constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                   type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
                     constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
+                  val fetch_iter : [> `TLower of 'a ] list -> 'a
                   val mfetch :
-                    unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_I.contr) lm
-                  val decl :
-                    ('a, GVC_I.contr) Code.abstract ->
-                    ('a * [> 'a tag_lstate ] * 'b, GVC_I.contr) lm
+                    unit ->
+                    ([> `TLower of 'b ] as 'a) list ->
+                    ('a list -> 'b -> 'c) -> 'c
+                  val mstore :
+                    'a ->
+                    ([> `TLower of 'a ] as 'b) list ->
+                    ('b list -> unit -> 'c) -> 'c
+                  val decl : 'a -> 'b -> ('b -> 'a -> 'c) -> 'c
                   val updt :
                     'a GVC_I.vc ->
                     ('a, int) Code.abstract ->
                     ('a, int) Code.abstract ->
                     'a GVC_I.vo ->
-                    'a GVC_I.Dom.vc ->
-                    ('a * [> 'a tag_lstate ] * 'b, unit) lm option
-                  val fin :
-                    unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_I.contr) om
+                    'b ->
+                    ('c -> ('c -> ('a, unit) Code.abstract -> 'd) -> 'd)
+                    option
+                  val fin : unit -> 'a -> ('a -> 'b option -> 'c) -> 'c
                   val wants_pack : bool
                 end
               val make_result :
@@ -8211,20 +8483,25 @@ module G_GVC_I :
                     constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                   type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
                     constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
+                  val fetch_iter : [> `TLower of 'a ] list -> 'a
                   val mfetch :
-                    unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_I.contr) lm
-                  val decl :
-                    ('a, GVC_I.contr) Code.abstract ->
-                    ('a * [> 'a tag_lstate ] * 'b, GVC_I.contr) lm
+                    unit ->
+                    ([> `TLower of 'b ] as 'a) list ->
+                    ('a list -> 'b -> 'c) -> 'c
+                  val mstore :
+                    'a ->
+                    ([> `TLower of 'a ] as 'b) list ->
+                    ('b list -> unit -> 'c) -> 'c
+                  val decl : 'a -> 'b -> ('b -> 'a -> 'c) -> 'c
                   val updt :
                     'a GVC_I.vc ->
                     ('a, int) Code.abstract ->
                     ('a, int) Code.abstract ->
                     'a GVC_I.vo ->
-                    'a GVC_I.Dom.vc ->
-                    ('a * [> 'a tag_lstate ] * 'b, unit) lm option
-                  val fin :
-                    unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_I.contr) om
+                    'b ->
+                    ('c -> ('c -> ('a, unit) Code.abstract -> 'd) -> 'd)
+                    option
+                  val fin : unit -> 'a -> ('a -> 'b option -> 'c) -> 'c
                   val wants_pack : bool
                 end
               val make_result :
@@ -8311,20 +8588,25 @@ module G_GVC_I :
                     constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                   type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
                     constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
+                  val fetch_iter : [> `TLower of 'a ] list -> 'a
                   val mfetch :
-                    unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_I.contr) lm
-                  val decl :
-                    ('a, GVC_I.contr) Code.abstract ->
-                    ('a * [> 'a tag_lstate ] * 'b, GVC_I.contr) lm
+                    unit ->
+                    ([> `TLower of 'b ] as 'a) list ->
+                    ('a list -> 'b -> 'c) -> 'c
+                  val mstore :
+                    'a ->
+                    ([> `TLower of 'a ] as 'b) list ->
+                    ('b list -> unit -> 'c) -> 'c
+                  val decl : 'a -> 'b -> ('b -> 'a -> 'c) -> 'c
                   val updt :
                     'a GVC_I.vc ->
                     ('a, int) Code.abstract ->
                     ('a, int) Code.abstract ->
                     'a GVC_I.vo ->
-                    'a GVC_I.Dom.vc ->
-                    ('a * [> 'a tag_lstate ] * 'b, unit) lm option
-                  val fin :
-                    unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_I.contr) om
+                    'b ->
+                    ('c -> ('c -> ('a, unit) Code.abstract -> 'd) -> 'd)
+                    option
+                  val fin : unit -> 'a -> ('a -> 'b option -> 'c) -> 'c
                   val wants_pack : bool
                 end
               val make_result :
@@ -8408,20 +8690,25 @@ module G_GVC_I :
                     constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                   type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
                     constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
+                  val fetch_iter : [> `TLower of 'a ] list -> 'a
                   val mfetch :
-                    unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_I.contr) lm
-                  val decl :
-                    ('a, GVC_I.contr) Code.abstract ->
-                    ('a * [> 'a tag_lstate ] * 'b, GVC_I.contr) lm
+                    unit ->
+                    ([> `TLower of 'b ] as 'a) list ->
+                    ('a list -> 'b -> 'c) -> 'c
+                  val mstore :
+                    'a ->
+                    ([> `TLower of 'a ] as 'b) list ->
+                    ('b list -> unit -> 'c) -> 'c
+                  val decl : 'a -> 'b -> ('b -> 'a -> 'c) -> 'c
                   val updt :
                     'a GVC_I.vc ->
                     ('a, int) Code.abstract ->
                     ('a, int) Code.abstract ->
                     'a GVC_I.vo ->
-                    'a GVC_I.Dom.vc ->
-                    ('a * [> 'a tag_lstate ] * 'b, unit) lm option
-                  val fin :
-                    unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_I.contr) om
+                    'b ->
+                    ('c -> ('c -> ('a, unit) Code.abstract -> 'd) -> 'd)
+                    option
+                  val fin : unit -> 'a -> ('a -> 'b option -> 'c) -> 'c
                   val wants_pack : bool
                 end
               val make_result :
@@ -8534,20 +8821,25 @@ module G_GVC_I :
                     constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                   type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
                     constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
+                  val fetch_iter : [> `TLower of 'a ] list -> 'a
                   val mfetch :
-                    unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_I.contr) lm
-                  val decl :
-                    ('a, GVC_I.contr) Code.abstract ->
-                    ('a * [> 'a tag_lstate ] * 'b, GVC_I.contr) lm
+                    unit ->
+                    ([> `TLower of 'b ] as 'a) list ->
+                    ('a list -> 'b -> 'c) -> 'c
+                  val mstore :
+                    'a ->
+                    ([> `TLower of 'a ] as 'b) list ->
+                    ('b list -> unit -> 'c) -> 'c
+                  val decl : 'a -> 'b -> ('b -> 'a -> 'c) -> 'c
                   val updt :
                     'a GVC_I.vc ->
                     ('a, int) Code.abstract ->
                     ('a, int) Code.abstract ->
                     'a GVC_I.vo ->
-                    'a GVC_I.Dom.vc ->
-                    ('a * [> 'a tag_lstate ] * 'b, unit) lm option
-                  val fin :
-                    unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_I.contr) om
+                    'b ->
+                    ('c -> ('c -> ('a, unit) Code.abstract -> 'd) -> 'd)
+                    option
+                  val fin : unit -> 'a -> ('a -> 'b option -> 'c) -> 'c
                   val wants_pack : bool
                 end
               val make_result :
@@ -8718,32 +9010,44 @@ module G_GVC_I :
                     constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                   type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
                     constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
+                  val fetch_iter : [> `TLower of 'a ] list -> 'a
                   val mfetch :
-                    unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_I.contr) lm
+                    unit ->
+                    ([> `TLower of 'b ] as 'a) list ->
+                    ('a list -> 'b -> 'c) -> 'c
+                  val mstore :
+                    'a ->
+                    ([> `TLower of 'a ] as 'b) list ->
+                    ('b list -> unit -> 'c) -> 'c
                   val decl :
-                    ('a, GVC_I.contr) Code.abstract ->
-                    ('a * [> 'a tag_lstate ] * 'b, GVC_I.contr) lm
+                    ('a, 'b) Code.abstract ->
+                    ([> `TLower of ('a, 'b) Code.abstract ] as 'c) list ->
+                    ('c list ->
+                     ('a, 'b) Code.abstract -> ('a, 'd) Code.abstract) ->
+                    ('a, 'd) Code.abstract
                   val updt :
                     'a GVC_I.vc ->
                     ('a, int) Code.abstract ->
                     ('a, int) Code.abstract ->
                     'a GVC_I.vo ->
-                    'a GVC_I.Dom.vc ->
-                    ('a * [> 'a tag_lstate ] * 'b, unit) lm option
+                    'a GVC_I.vo ->
+                    (([> `TLower of 'a GVC_I.vc ] as 'b) list ->
+                     ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c)
+                    option
                   val fin :
-                    unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_I.contr) om
+                    unit ->
+                    ([> `TLower of 'b ] as 'a) list ->
+                    ('a list -> 'b option -> 'c) -> 'c
                   val wants_pack : bool
                 end
               val make_result :
                 'a wmatrix ->
-                ([> `TLower of 'a L.lstate
-                  | `TPivot of ('a, 'c ref) Code.abstract ]
+                ([> `TLower of ('a, 'c) Code.abstract
+                  | `TPivot of ('a, 'd ref) Code.abstract ]
                  as 'b)
                 list ->
-                ('b list ->
-                 ('a, GVC_I.contr * GVC_I.contr * 'c) Code.abstract ->
-                 ('a, 'd) Code.abstract) ->
-                ('a, 'd) Code.abstract
+                ('b list -> ('a, GVC_I.contr * 'c * 'd) Code.abstract -> 'e) ->
+                'e
             end
     module Out_LU_Packed :
       functor
@@ -8901,32 +9205,32 @@ module G_GVC_I :
                     constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                   type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
                     constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
+                  val fetch_iter : [> `TLower of 'a ] list -> 'a
                   val mfetch :
-                    unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_I.contr) lm
+                    unit ->
+                    ([> `TLower of 'b ] as 'a) list ->
+                    ('a list -> 'b -> 'c) -> 'c
+                  val mstore :
+                    'a ->
+                    ([> `TLower of 'a ] as 'b) list ->
+                    ('b list -> unit -> 'c) -> 'c
                   val decl :
-                    ('a, GVC_I.contr) Code.abstract ->
-                    ('a * [> 'a tag_lstate ] * 'b, GVC_I.contr) lm
-                  val updt :
-                    'a GVC_I.vc ->
-                    ('a, int) Code.abstract ->
-                    ('a, int) Code.abstract ->
-                    'a GVC_I.vo ->
-                    'a GVC_I.Dom.vc ->
-                    ('a * [> 'a tag_lstate ] * 'b, unit) lm option
+                    'a ->
+                    ([> `TLower of 'a ] as 'b) list ->
+                    ('b list -> 'a -> 'c) -> 'c
+                  val updt : 'a -> 'b -> 'c -> 'd -> 'e -> 'f option
                   val fin :
-                    unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_I.contr) om
+                    unit ->
+                    ([> `TLower of 'b ] as 'a) list ->
+                    ('a list -> 'b option -> 'c) -> 'c
                   val wants_pack : bool
                 end
               val make_result :
                 'a ->
-                ([> `TLower of 'c L.lstate
-                  | `TPivot of ('c, 'd ref) Code.abstract ]
+                ([> `TLower of ('c, 'd) Code.abstract
+                  | `TPivot of ('c, 'e ref) Code.abstract ]
                  as 'b)
-                list ->
-                ('b list ->
-                 ('c, GVC_I.contr * 'd) Code.abstract ->
-                 ('c, 'e) Code.abstract) ->
-                ('c, 'e) Code.abstract
+                list -> ('b list -> ('c, 'd * 'e) Code.abstract -> 'f) -> 'f
             end
     module type PIVOT =
       functor (D : GEF.DETF) ->
@@ -9349,17 +9653,31 @@ module G_GAC_R :
           constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
         type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
           constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-        val mfetch : unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_R.contr) lm
+        val fetch_iter : [> `TLower of 'a ] list -> 'a
+        val mfetch :
+          unit ->
+          ([> `TLower of 'b ] as 'a) list -> ('a list -> 'b -> 'c) -> 'c
+        val mstore :
+          'a ->
+          ([> `TLower of 'a ] as 'b) list -> ('b list -> unit -> 'c) -> 'c
         val decl :
-          ('a, GAC_R.contr) Code.abstract ->
-          ('a * [> 'a tag_lstate ] * 'b, GAC_R.contr) lm
+          ('a, 'b) Code.abstract ->
+          ([> `TLower of ('a, 'b) Code.abstract ] as 'c) list ->
+          ('c list -> ('a, 'b) Code.abstract -> ('a, 'd) Code.abstract) ->
+          ('a, 'd) Code.abstract
         val updt :
           'a GAC_R.vc ->
           ('a, int) Code.abstract ->
           ('a, int) Code.abstract ->
           'a GAC_R.vo ->
-          'a GAC_R.Dom.vc -> ('a * [> 'a tag_lstate ] * 'b, unit) lm option
-        val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_R.contr) om
+          'a GAC_R.vo ->
+          (([> `TLower of 'a GAC_R.vc ] as 'b) list ->
+           ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c)
+          option
+        val fin :
+          unit ->
+          ([> `TLower of 'b ] as 'a) list ->
+          ('a list -> 'b option -> 'c) -> 'c
         val wants_pack : bool
       end
     module PackedLower :
@@ -9370,17 +9688,21 @@ module G_GAC_R :
           constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
         type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
           constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-        val mfetch : unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_R.contr) lm
+        val fetch_iter : [> `TLower of 'a ] list -> 'a
+        val mfetch :
+          unit ->
+          ([> `TLower of 'b ] as 'a) list -> ('a list -> 'b -> 'c) -> 'c
+        val mstore :
+          'a ->
+          ([> `TLower of 'a ] as 'b) list -> ('b list -> unit -> 'c) -> 'c
         val decl :
-          ('a, GAC_R.contr) Code.abstract ->
-          ('a * [> 'a tag_lstate ] * 'b, GAC_R.contr) lm
-        val updt :
-          'a GAC_R.vc ->
-          ('a, int) Code.abstract ->
-          ('a, int) Code.abstract ->
-          'a GAC_R.vo ->
-          'a GAC_R.Dom.vc -> ('a * [> 'a tag_lstate ] * 'b, unit) lm option
-        val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_R.contr) om
+          'a ->
+          ([> `TLower of 'a ] as 'b) list -> ('b list -> 'a -> 'c) -> 'c
+        val updt : 'a -> 'b -> 'c -> 'd -> 'e -> 'f option
+        val fin :
+          unit ->
+          ([> `TLower of 'b ] as 'a) list ->
+          ('a list -> 'b option -> 'c) -> 'c
         val wants_pack : bool
       end
     module NoLower :
@@ -9391,17 +9713,21 @@ module G_GAC_R :
           constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
         type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
           constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-        val mfetch : unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_R.contr) lm
-        val decl :
-          ('a, GAC_R.contr) Code.abstract ->
-          ('a * [> 'a tag_lstate ] * 'b, GAC_R.contr) lm
+        val fetch_iter : [> `TLower of 'a ] list -> 'a
+        val mfetch :
+          unit ->
+          ([> `TLower of 'b ] as 'a) list -> ('a list -> 'b -> 'c) -> 'c
+        val mstore :
+          'a ->
+          ([> `TLower of 'a ] as 'b) list -> ('b list -> unit -> 'c) -> 'c
+        val decl : 'a -> 'b -> ('b -> 'a -> 'c) -> 'c
         val updt :
           'a GAC_R.vc ->
           ('a, int) Code.abstract ->
           ('a, int) Code.abstract ->
           'a GAC_R.vo ->
-          'a GAC_R.Dom.vc -> ('a * [> 'a tag_lstate ] * 'b, unit) lm option
-        val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_R.contr) om
+          'b -> ('c -> ('c -> ('a, unit) Code.abstract -> 'd) -> 'd) option
+        val fin : unit -> 'a -> ('a -> 'b option -> 'c) -> 'c
         val wants_pack : bool
       end
     module type INPUT =
@@ -9674,20 +10000,25 @@ module G_GAC_R :
                     constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                   type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
                     constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
+                  val fetch_iter : [> `TLower of 'a ] list -> 'a
                   val mfetch :
-                    unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_R.contr) lm
-                  val decl :
-                    ('a, GAC_R.contr) Code.abstract ->
-                    ('a * [> 'a tag_lstate ] * 'b, GAC_R.contr) lm
+                    unit ->
+                    ([> `TLower of 'b ] as 'a) list ->
+                    ('a list -> 'b -> 'c) -> 'c
+                  val mstore :
+                    'a ->
+                    ([> `TLower of 'a ] as 'b) list ->
+                    ('b list -> unit -> 'c) -> 'c
+                  val decl : 'a -> 'b -> ('b -> 'a -> 'c) -> 'c
                   val updt :
                     'a GAC_R.vc ->
                     ('a, int) Code.abstract ->
                     ('a, int) Code.abstract ->
                     'a GAC_R.vo ->
-                    'a GAC_R.Dom.vc ->
-                    ('a * [> 'a tag_lstate ] * 'b, unit) lm option
-                  val fin :
-                    unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_R.contr) om
+                    'b ->
+                    ('c -> ('c -> ('a, unit) Code.abstract -> 'd) -> 'd)
+                    option
+                  val fin : unit -> 'a -> ('a -> 'b option -> 'c) -> 'c
                   val wants_pack : bool
                 end
               val make_result :
@@ -9767,20 +10098,25 @@ module G_GAC_R :
                     constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                   type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
                     constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
+                  val fetch_iter : [> `TLower of 'a ] list -> 'a
                   val mfetch :
-                    unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_R.contr) lm
-                  val decl :
-                    ('a, GAC_R.contr) Code.abstract ->
-                    ('a * [> 'a tag_lstate ] * 'b, GAC_R.contr) lm
+                    unit ->
+                    ([> `TLower of 'b ] as 'a) list ->
+                    ('a list -> 'b -> 'c) -> 'c
+                  val mstore :
+                    'a ->
+                    ([> `TLower of 'a ] as 'b) list ->
+                    ('b list -> unit -> 'c) -> 'c
+                  val decl : 'a -> 'b -> ('b -> 'a -> 'c) -> 'c
                   val updt :
                     'a GAC_R.vc ->
                     ('a, int) Code.abstract ->
                     ('a, int) Code.abstract ->
                     'a GAC_R.vo ->
-                    'a GAC_R.Dom.vc ->
-                    ('a * [> 'a tag_lstate ] * 'b, unit) lm option
-                  val fin :
-                    unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_R.contr) om
+                    'b ->
+                    ('c -> ('c -> ('a, unit) Code.abstract -> 'd) -> 'd)
+                    option
+                  val fin : unit -> 'a -> ('a -> 'b option -> 'c) -> 'c
                   val wants_pack : bool
                 end
               val make_result :
@@ -9867,20 +10203,25 @@ module G_GAC_R :
                     constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                   type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
                     constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
+                  val fetch_iter : [> `TLower of 'a ] list -> 'a
                   val mfetch :
-                    unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_R.contr) lm
-                  val decl :
-                    ('a, GAC_R.contr) Code.abstract ->
-                    ('a * [> 'a tag_lstate ] * 'b, GAC_R.contr) lm
+                    unit ->
+                    ([> `TLower of 'b ] as 'a) list ->
+                    ('a list -> 'b -> 'c) -> 'c
+                  val mstore :
+                    'a ->
+                    ([> `TLower of 'a ] as 'b) list ->
+                    ('b list -> unit -> 'c) -> 'c
+                  val decl : 'a -> 'b -> ('b -> 'a -> 'c) -> 'c
                   val updt :
                     'a GAC_R.vc ->
                     ('a, int) Code.abstract ->
                     ('a, int) Code.abstract ->
                     'a GAC_R.vo ->
-                    'a GAC_R.Dom.vc ->
-                    ('a * [> 'a tag_lstate ] * 'b, unit) lm option
-                  val fin :
-                    unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_R.contr) om
+                    'b ->
+                    ('c -> ('c -> ('a, unit) Code.abstract -> 'd) -> 'd)
+                    option
+                  val fin : unit -> 'a -> ('a -> 'b option -> 'c) -> 'c
                   val wants_pack : bool
                 end
               val make_result :
@@ -9964,20 +10305,25 @@ module G_GAC_R :
                     constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                   type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
                     constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
+                  val fetch_iter : [> `TLower of 'a ] list -> 'a
                   val mfetch :
-                    unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_R.contr) lm
-                  val decl :
-                    ('a, GAC_R.contr) Code.abstract ->
-                    ('a * [> 'a tag_lstate ] * 'b, GAC_R.contr) lm
+                    unit ->
+                    ([> `TLower of 'b ] as 'a) list ->
+                    ('a list -> 'b -> 'c) -> 'c
+                  val mstore :
+                    'a ->
+                    ([> `TLower of 'a ] as 'b) list ->
+                    ('b list -> unit -> 'c) -> 'c
+                  val decl : 'a -> 'b -> ('b -> 'a -> 'c) -> 'c
                   val updt :
                     'a GAC_R.vc ->
                     ('a, int) Code.abstract ->
                     ('a, int) Code.abstract ->
                     'a GAC_R.vo ->
-                    'a GAC_R.Dom.vc ->
-                    ('a * [> 'a tag_lstate ] * 'b, unit) lm option
-                  val fin :
-                    unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_R.contr) om
+                    'b ->
+                    ('c -> ('c -> ('a, unit) Code.abstract -> 'd) -> 'd)
+                    option
+                  val fin : unit -> 'a -> ('a -> 'b option -> 'c) -> 'c
                   val wants_pack : bool
                 end
               val make_result :
@@ -10090,20 +10436,25 @@ module G_GAC_R :
                     constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                   type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
                     constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
+                  val fetch_iter : [> `TLower of 'a ] list -> 'a
                   val mfetch :
-                    unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_R.contr) lm
-                  val decl :
-                    ('a, GAC_R.contr) Code.abstract ->
-                    ('a * [> 'a tag_lstate ] * 'b, GAC_R.contr) lm
+                    unit ->
+                    ([> `TLower of 'b ] as 'a) list ->
+                    ('a list -> 'b -> 'c) -> 'c
+                  val mstore :
+                    'a ->
+                    ([> `TLower of 'a ] as 'b) list ->
+                    ('b list -> unit -> 'c) -> 'c
+                  val decl : 'a -> 'b -> ('b -> 'a -> 'c) -> 'c
                   val updt :
                     'a GAC_R.vc ->
                     ('a, int) Code.abstract ->
                     ('a, int) Code.abstract ->
                     'a GAC_R.vo ->
-                    'a GAC_R.Dom.vc ->
-                    ('a * [> 'a tag_lstate ] * 'b, unit) lm option
-                  val fin :
-                    unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_R.contr) om
+                    'b ->
+                    ('c -> ('c -> ('a, unit) Code.abstract -> 'd) -> 'd)
+                    option
+                  val fin : unit -> 'a -> ('a -> 'b option -> 'c) -> 'c
                   val wants_pack : bool
                 end
               val make_result :
@@ -10274,32 +10625,44 @@ module G_GAC_R :
                     constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                   type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
                     constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
+                  val fetch_iter : [> `TLower of 'a ] list -> 'a
                   val mfetch :
-                    unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_R.contr) lm
+                    unit ->
+                    ([> `TLower of 'b ] as 'a) list ->
+                    ('a list -> 'b -> 'c) -> 'c
+                  val mstore :
+                    'a ->
+                    ([> `TLower of 'a ] as 'b) list ->
+                    ('b list -> unit -> 'c) -> 'c
                   val decl :
-                    ('a, GAC_R.contr) Code.abstract ->
-                    ('a * [> 'a tag_lstate ] * 'b, GAC_R.contr) lm
+                    ('a, 'b) Code.abstract ->
+                    ([> `TLower of ('a, 'b) Code.abstract ] as 'c) list ->
+                    ('c list ->
+                     ('a, 'b) Code.abstract -> ('a, 'd) Code.abstract) ->
+                    ('a, 'd) Code.abstract
                   val updt :
                     'a GAC_R.vc ->
                     ('a, int) Code.abstract ->
                     ('a, int) Code.abstract ->
                     'a GAC_R.vo ->
-                    'a GAC_R.Dom.vc ->
-                    ('a * [> 'a tag_lstate ] * 'b, unit) lm option
+                    'a GAC_R.vo ->
+                    (([> `TLower of 'a GAC_R.vc ] as 'b) list ->
+                     ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c)
+                    option
                   val fin :
-                    unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_R.contr) om
+                    unit ->
+                    ([> `TLower of 'b ] as 'a) list ->
+                    ('a list -> 'b option -> 'c) -> 'c
                   val wants_pack : bool
                 end
               val make_result :
                 'a wmatrix ->
-                ([> `TLower of 'a L.lstate
-                  | `TPivot of ('a, 'c ref) Code.abstract ]
+                ([> `TLower of ('a, 'c) Code.abstract
+                  | `TPivot of ('a, 'd ref) Code.abstract ]
                  as 'b)
                 list ->
-                ('b list ->
-                 ('a, GAC_R.contr * GAC_R.contr * 'c) Code.abstract ->
-                 ('a, 'd) Code.abstract) ->
-                ('a, 'd) Code.abstract
+                ('b list -> ('a, GAC_R.contr * 'c * 'd) Code.abstract -> 'e) ->
+                'e
             end
     module Out_LU_Packed :
       functor
@@ -10457,32 +10820,32 @@ module G_GAC_R :
                     constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                   type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
                     constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
+                  val fetch_iter : [> `TLower of 'a ] list -> 'a
                   val mfetch :
-                    unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_R.contr) lm
+                    unit ->
+                    ([> `TLower of 'b ] as 'a) list ->
+                    ('a list -> 'b -> 'c) -> 'c
+                  val mstore :
+                    'a ->
+                    ([> `TLower of 'a ] as 'b) list ->
+                    ('b list -> unit -> 'c) -> 'c
                   val decl :
-                    ('a, GAC_R.contr) Code.abstract ->
-                    ('a * [> 'a tag_lstate ] * 'b, GAC_R.contr) lm
-                  val updt :
-                    'a GAC_R.vc ->
-                    ('a, int) Code.abstract ->
-                    ('a, int) Code.abstract ->
-                    'a GAC_R.vo ->
-                    'a GAC_R.Dom.vc ->
-                    ('a * [> 'a tag_lstate ] * 'b, unit) lm option
+                    'a ->
+                    ([> `TLower of 'a ] as 'b) list ->
+                    ('b list -> 'a -> 'c) -> 'c
+                  val updt : 'a -> 'b -> 'c -> 'd -> 'e -> 'f option
                   val fin :
-                    unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_R.contr) om
+                    unit ->
+                    ([> `TLower of 'b ] as 'a) list ->
+                    ('a list -> 'b option -> 'c) -> 'c
                   val wants_pack : bool
                 end
               val make_result :
                 'a ->
-                ([> `TLower of 'c L.lstate
-                  | `TPivot of ('c, 'd ref) Code.abstract ]
+                ([> `TLower of ('c, 'd) Code.abstract
+                  | `TPivot of ('c, 'e ref) Code.abstract ]
                  as 'b)
-                list ->
-                ('b list ->
-                 ('c, GAC_R.contr * 'd) Code.abstract ->
-                 ('c, 'e) Code.abstract) ->
-                ('c, 'e) Code.abstract
+                list -> ('b list -> ('c, 'd * 'e) Code.abstract -> 'f) -> 'f
             end
     module type PIVOT =
       functor (D : GEF.DETF) ->
@@ -10905,17 +11268,31 @@ module G_GVC_Z3 :
           constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
         type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
           constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-        val mfetch : unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_Z3.contr) lm
+        val fetch_iter : [> `TLower of 'a ] list -> 'a
+        val mfetch :
+          unit ->
+          ([> `TLower of 'b ] as 'a) list -> ('a list -> 'b -> 'c) -> 'c
+        val mstore :
+          'a ->
+          ([> `TLower of 'a ] as 'b) list -> ('b list -> unit -> 'c) -> 'c
         val decl :
-          ('a, GVC_Z3.contr) Code.abstract ->
-          ('a * [> 'a tag_lstate ] * 'b, GVC_Z3.contr) lm
+          ('a, 'b) Code.abstract ->
+          ([> `TLower of ('a, 'b) Code.abstract ] as 'c) list ->
+          ('c list -> ('a, 'b) Code.abstract -> ('a, 'd) Code.abstract) ->
+          ('a, 'd) Code.abstract
         val updt :
           'a GVC_Z3.vc ->
           ('a, int) Code.abstract ->
           ('a, int) Code.abstract ->
           'a GVC_Z3.vo ->
-          'a GVC_Z3.Dom.vc -> ('a * [> 'a tag_lstate ] * 'b, unit) lm option
-        val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_Z3.contr) om
+          'a GVC_Z3.vo ->
+          (([> `TLower of 'a GVC_Z3.vc ] as 'b) list ->
+           ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c)
+          option
+        val fin :
+          unit ->
+          ([> `TLower of 'b ] as 'a) list ->
+          ('a list -> 'b option -> 'c) -> 'c
         val wants_pack : bool
       end
     module PackedLower :
@@ -10926,17 +11303,21 @@ module G_GVC_Z3 :
           constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
         type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
           constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-        val mfetch : unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_Z3.contr) lm
+        val fetch_iter : [> `TLower of 'a ] list -> 'a
+        val mfetch :
+          unit ->
+          ([> `TLower of 'b ] as 'a) list -> ('a list -> 'b -> 'c) -> 'c
+        val mstore :
+          'a ->
+          ([> `TLower of 'a ] as 'b) list -> ('b list -> unit -> 'c) -> 'c
         val decl :
-          ('a, GVC_Z3.contr) Code.abstract ->
-          ('a * [> 'a tag_lstate ] * 'b, GVC_Z3.contr) lm
-        val updt :
-          'a GVC_Z3.vc ->
-          ('a, int) Code.abstract ->
-          ('a, int) Code.abstract ->
-          'a GVC_Z3.vo ->
-          'a GVC_Z3.Dom.vc -> ('a * [> 'a tag_lstate ] * 'b, unit) lm option
-        val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_Z3.contr) om
+          'a ->
+          ([> `TLower of 'a ] as 'b) list -> ('b list -> 'a -> 'c) -> 'c
+        val updt : 'a -> 'b -> 'c -> 'd -> 'e -> 'f option
+        val fin :
+          unit ->
+          ([> `TLower of 'b ] as 'a) list ->
+          ('a list -> 'b option -> 'c) -> 'c
         val wants_pack : bool
       end
     module NoLower :
@@ -10947,17 +11328,21 @@ module G_GVC_Z3 :
           constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
         type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
           constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-        val mfetch : unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_Z3.contr) lm
-        val decl :
-          ('a, GVC_Z3.contr) Code.abstract ->
-          ('a * [> 'a tag_lstate ] * 'b, GVC_Z3.contr) lm
+        val fetch_iter : [> `TLower of 'a ] list -> 'a
+        val mfetch :
+          unit ->
+          ([> `TLower of 'b ] as 'a) list -> ('a list -> 'b -> 'c) -> 'c
+        val mstore :
+          'a ->
+          ([> `TLower of 'a ] as 'b) list -> ('b list -> unit -> 'c) -> 'c
+        val decl : 'a -> 'b -> ('b -> 'a -> 'c) -> 'c
         val updt :
           'a GVC_Z3.vc ->
           ('a, int) Code.abstract ->
           ('a, int) Code.abstract ->
           'a GVC_Z3.vo ->
-          'a GVC_Z3.Dom.vc -> ('a * [> 'a tag_lstate ] * 'b, unit) lm option
-        val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_Z3.contr) om
+          'b -> ('c -> ('c -> ('a, unit) Code.abstract -> 'd) -> 'd) option
+        val fin : unit -> 'a -> ('a -> 'b option -> 'c) -> 'c
         val wants_pack : bool
       end
     module type INPUT =
@@ -11230,20 +11615,25 @@ module G_GVC_Z3 :
                     constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                   type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
                     constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
+                  val fetch_iter : [> `TLower of 'a ] list -> 'a
                   val mfetch :
-                    unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_Z3.contr) lm
-                  val decl :
-                    ('a, GVC_Z3.contr) Code.abstract ->
-                    ('a * [> 'a tag_lstate ] * 'b, GVC_Z3.contr) lm
+                    unit ->
+                    ([> `TLower of 'b ] as 'a) list ->
+                    ('a list -> 'b -> 'c) -> 'c
+                  val mstore :
+                    'a ->
+                    ([> `TLower of 'a ] as 'b) list ->
+                    ('b list -> unit -> 'c) -> 'c
+                  val decl : 'a -> 'b -> ('b -> 'a -> 'c) -> 'c
                   val updt :
                     'a GVC_Z3.vc ->
                     ('a, int) Code.abstract ->
                     ('a, int) Code.abstract ->
                     'a GVC_Z3.vo ->
-                    'a GVC_Z3.Dom.vc ->
-                    ('a * [> 'a tag_lstate ] * 'b, unit) lm option
-                  val fin :
-                    unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_Z3.contr) om
+                    'b ->
+                    ('c -> ('c -> ('a, unit) Code.abstract -> 'd) -> 'd)
+                    option
+                  val fin : unit -> 'a -> ('a -> 'b option -> 'c) -> 'c
                   val wants_pack : bool
                 end
               val make_result :
@@ -11323,20 +11713,25 @@ module G_GVC_Z3 :
                     constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                   type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
                     constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
+                  val fetch_iter : [> `TLower of 'a ] list -> 'a
                   val mfetch :
-                    unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_Z3.contr) lm
-                  val decl :
-                    ('a, GVC_Z3.contr) Code.abstract ->
-                    ('a * [> 'a tag_lstate ] * 'b, GVC_Z3.contr) lm
+                    unit ->
+                    ([> `TLower of 'b ] as 'a) list ->
+                    ('a list -> 'b -> 'c) -> 'c
+                  val mstore :
+                    'a ->
+                    ([> `TLower of 'a ] as 'b) list ->
+                    ('b list -> unit -> 'c) -> 'c
+                  val decl : 'a -> 'b -> ('b -> 'a -> 'c) -> 'c
                   val updt :
                     'a GVC_Z3.vc ->
                     ('a, int) Code.abstract ->
                     ('a, int) Code.abstract ->
                     'a GVC_Z3.vo ->
-                    'a GVC_Z3.Dom.vc ->
-                    ('a * [> 'a tag_lstate ] * 'b, unit) lm option
-                  val fin :
-                    unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_Z3.contr) om
+                    'b ->
+                    ('c -> ('c -> ('a, unit) Code.abstract -> 'd) -> 'd)
+                    option
+                  val fin : unit -> 'a -> ('a -> 'b option -> 'c) -> 'c
                   val wants_pack : bool
                 end
               val make_result :
@@ -11423,20 +11818,25 @@ module G_GVC_Z3 :
                     constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                   type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
                     constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
+                  val fetch_iter : [> `TLower of 'a ] list -> 'a
                   val mfetch :
-                    unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_Z3.contr) lm
-                  val decl :
-                    ('a, GVC_Z3.contr) Code.abstract ->
-                    ('a * [> 'a tag_lstate ] * 'b, GVC_Z3.contr) lm
+                    unit ->
+                    ([> `TLower of 'b ] as 'a) list ->
+                    ('a list -> 'b -> 'c) -> 'c
+                  val mstore :
+                    'a ->
+                    ([> `TLower of 'a ] as 'b) list ->
+                    ('b list -> unit -> 'c) -> 'c
+                  val decl : 'a -> 'b -> ('b -> 'a -> 'c) -> 'c
                   val updt :
                     'a GVC_Z3.vc ->
                     ('a, int) Code.abstract ->
                     ('a, int) Code.abstract ->
                     'a GVC_Z3.vo ->
-                    'a GVC_Z3.Dom.vc ->
-                    ('a * [> 'a tag_lstate ] * 'b, unit) lm option
-                  val fin :
-                    unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_Z3.contr) om
+                    'b ->
+                    ('c -> ('c -> ('a, unit) Code.abstract -> 'd) -> 'd)
+                    option
+                  val fin : unit -> 'a -> ('a -> 'b option -> 'c) -> 'c
                   val wants_pack : bool
                 end
               val make_result :
@@ -11521,20 +11921,25 @@ module G_GVC_Z3 :
                     constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                   type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
                     constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
+                  val fetch_iter : [> `TLower of 'a ] list -> 'a
                   val mfetch :
-                    unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_Z3.contr) lm
-                  val decl :
-                    ('a, GVC_Z3.contr) Code.abstract ->
-                    ('a * [> 'a tag_lstate ] * 'b, GVC_Z3.contr) lm
+                    unit ->
+                    ([> `TLower of 'b ] as 'a) list ->
+                    ('a list -> 'b -> 'c) -> 'c
+                  val mstore :
+                    'a ->
+                    ([> `TLower of 'a ] as 'b) list ->
+                    ('b list -> unit -> 'c) -> 'c
+                  val decl : 'a -> 'b -> ('b -> 'a -> 'c) -> 'c
                   val updt :
                     'a GVC_Z3.vc ->
                     ('a, int) Code.abstract ->
                     ('a, int) Code.abstract ->
                     'a GVC_Z3.vo ->
-                    'a GVC_Z3.Dom.vc ->
-                    ('a * [> 'a tag_lstate ] * 'b, unit) lm option
-                  val fin :
-                    unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_Z3.contr) om
+                    'b ->
+                    ('c -> ('c -> ('a, unit) Code.abstract -> 'd) -> 'd)
+                    option
+                  val fin : unit -> 'a -> ('a -> 'b option -> 'c) -> 'c
                   val wants_pack : bool
                 end
               val make_result :
@@ -11647,20 +12052,25 @@ module G_GVC_Z3 :
                     constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                   type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
                     constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
+                  val fetch_iter : [> `TLower of 'a ] list -> 'a
                   val mfetch :
-                    unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_Z3.contr) lm
-                  val decl :
-                    ('a, GVC_Z3.contr) Code.abstract ->
-                    ('a * [> 'a tag_lstate ] * 'b, GVC_Z3.contr) lm
+                    unit ->
+                    ([> `TLower of 'b ] as 'a) list ->
+                    ('a list -> 'b -> 'c) -> 'c
+                  val mstore :
+                    'a ->
+                    ([> `TLower of 'a ] as 'b) list ->
+                    ('b list -> unit -> 'c) -> 'c
+                  val decl : 'a -> 'b -> ('b -> 'a -> 'c) -> 'c
                   val updt :
                     'a GVC_Z3.vc ->
                     ('a, int) Code.abstract ->
                     ('a, int) Code.abstract ->
                     'a GVC_Z3.vo ->
-                    'a GVC_Z3.Dom.vc ->
-                    ('a * [> 'a tag_lstate ] * 'b, unit) lm option
-                  val fin :
-                    unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_Z3.contr) om
+                    'b ->
+                    ('c -> ('c -> ('a, unit) Code.abstract -> 'd) -> 'd)
+                    option
+                  val fin : unit -> 'a -> ('a -> 'b option -> 'c) -> 'c
                   val wants_pack : bool
                 end
               val make_result :
@@ -11831,32 +12241,44 @@ module G_GVC_Z3 :
                     constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                   type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
                     constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
+                  val fetch_iter : [> `TLower of 'a ] list -> 'a
                   val mfetch :
-                    unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_Z3.contr) lm
+                    unit ->
+                    ([> `TLower of 'b ] as 'a) list ->
+                    ('a list -> 'b -> 'c) -> 'c
+                  val mstore :
+                    'a ->
+                    ([> `TLower of 'a ] as 'b) list ->
+                    ('b list -> unit -> 'c) -> 'c
                   val decl :
-                    ('a, GVC_Z3.contr) Code.abstract ->
-                    ('a * [> 'a tag_lstate ] * 'b, GVC_Z3.contr) lm
+                    ('a, 'b) Code.abstract ->
+                    ([> `TLower of ('a, 'b) Code.abstract ] as 'c) list ->
+                    ('c list ->
+                     ('a, 'b) Code.abstract -> ('a, 'd) Code.abstract) ->
+                    ('a, 'd) Code.abstract
                   val updt :
                     'a GVC_Z3.vc ->
                     ('a, int) Code.abstract ->
                     ('a, int) Code.abstract ->
                     'a GVC_Z3.vo ->
-                    'a GVC_Z3.Dom.vc ->
-                    ('a * [> 'a tag_lstate ] * 'b, unit) lm option
+                    'a GVC_Z3.vo ->
+                    (([> `TLower of 'a GVC_Z3.vc ] as 'b) list ->
+                     ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c)
+                    option
                   val fin :
-                    unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_Z3.contr) om
+                    unit ->
+                    ([> `TLower of 'b ] as 'a) list ->
+                    ('a list -> 'b option -> 'c) -> 'c
                   val wants_pack : bool
                 end
               val make_result :
                 'a wmatrix ->
-                ([> `TLower of 'a L.lstate
-                  | `TPivot of ('a, 'c ref) Code.abstract ]
+                ([> `TLower of ('a, 'c) Code.abstract
+                  | `TPivot of ('a, 'd ref) Code.abstract ]
                  as 'b)
                 list ->
-                ('b list ->
-                 ('a, GVC_Z3.contr * GVC_Z3.contr * 'c) Code.abstract ->
-                 ('a, 'd) Code.abstract) ->
-                ('a, 'd) Code.abstract
+                ('b list -> ('a, GVC_Z3.contr * 'c * 'd) Code.abstract -> 'e) ->
+                'e
             end
     module Out_LU_Packed :
       functor
@@ -12014,32 +12436,32 @@ module G_GVC_Z3 :
                     constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                   type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
                     constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
+                  val fetch_iter : [> `TLower of 'a ] list -> 'a
                   val mfetch :
-                    unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_Z3.contr) lm
+                    unit ->
+                    ([> `TLower of 'b ] as 'a) list ->
+                    ('a list -> 'b -> 'c) -> 'c
+                  val mstore :
+                    'a ->
+                    ([> `TLower of 'a ] as 'b) list ->
+                    ('b list -> unit -> 'c) -> 'c
                   val decl :
-                    ('a, GVC_Z3.contr) Code.abstract ->
-                    ('a * [> 'a tag_lstate ] * 'b, GVC_Z3.contr) lm
-                  val updt :
-                    'a GVC_Z3.vc ->
-                    ('a, int) Code.abstract ->
-                    ('a, int) Code.abstract ->
-                    'a GVC_Z3.vo ->
-                    'a GVC_Z3.Dom.vc ->
-                    ('a * [> 'a tag_lstate ] * 'b, unit) lm option
+                    'a ->
+                    ([> `TLower of 'a ] as 'b) list ->
+                    ('b list -> 'a -> 'c) -> 'c
+                  val updt : 'a -> 'b -> 'c -> 'd -> 'e -> 'f option
                   val fin :
-                    unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_Z3.contr) om
+                    unit ->
+                    ([> `TLower of 'b ] as 'a) list ->
+                    ('a list -> 'b option -> 'c) -> 'c
                   val wants_pack : bool
                 end
               val make_result :
                 'a ->
-                ([> `TLower of 'c L.lstate
-                  | `TPivot of ('c, 'd ref) Code.abstract ]
+                ([> `TLower of ('c, 'd) Code.abstract
+                  | `TPivot of ('c, 'e ref) Code.abstract ]
                  as 'b)
-                list ->
-                ('b list ->
-                 ('c, GVC_Z3.contr * 'd) Code.abstract ->
-                 ('c, 'e) Code.abstract) ->
-                ('c, 'e) Code.abstract
+                list -> ('b list -> ('c, 'd * 'e) Code.abstract -> 'f) -> 'f
             end
     module type PIVOT =
       functor (D : GEF.DETF) ->
@@ -12462,17 +12884,31 @@ module G_GVC_Z19 :
           constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
         type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
           constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-        val mfetch : unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_Z19.contr) lm
+        val fetch_iter : [> `TLower of 'a ] list -> 'a
+        val mfetch :
+          unit ->
+          ([> `TLower of 'b ] as 'a) list -> ('a list -> 'b -> 'c) -> 'c
+        val mstore :
+          'a ->
+          ([> `TLower of 'a ] as 'b) list -> ('b list -> unit -> 'c) -> 'c
         val decl :
-          ('a, GVC_Z19.contr) Code.abstract ->
-          ('a * [> 'a tag_lstate ] * 'b, GVC_Z19.contr) lm
+          ('a, 'b) Code.abstract ->
+          ([> `TLower of ('a, 'b) Code.abstract ] as 'c) list ->
+          ('c list -> ('a, 'b) Code.abstract -> ('a, 'd) Code.abstract) ->
+          ('a, 'd) Code.abstract
         val updt :
           'a GVC_Z19.vc ->
           ('a, int) Code.abstract ->
           ('a, int) Code.abstract ->
           'a GVC_Z19.vo ->
-          'a GVC_Z19.Dom.vc -> ('a * [> 'a tag_lstate ] * 'b, unit) lm option
-        val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_Z19.contr) om
+          'a GVC_Z19.vo ->
+          (([> `TLower of 'a GVC_Z19.vc ] as 'b) list ->
+           ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c)
+          option
+        val fin :
+          unit ->
+          ([> `TLower of 'b ] as 'a) list ->
+          ('a list -> 'b option -> 'c) -> 'c
         val wants_pack : bool
       end
     module PackedLower :
@@ -12483,17 +12919,21 @@ module G_GVC_Z19 :
           constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
         type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
           constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-        val mfetch : unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_Z19.contr) lm
+        val fetch_iter : [> `TLower of 'a ] list -> 'a
+        val mfetch :
+          unit ->
+          ([> `TLower of 'b ] as 'a) list -> ('a list -> 'b -> 'c) -> 'c
+        val mstore :
+          'a ->
+          ([> `TLower of 'a ] as 'b) list -> ('b list -> unit -> 'c) -> 'c
         val decl :
-          ('a, GVC_Z19.contr) Code.abstract ->
-          ('a * [> 'a tag_lstate ] * 'b, GVC_Z19.contr) lm
-        val updt :
-          'a GVC_Z19.vc ->
-          ('a, int) Code.abstract ->
-          ('a, int) Code.abstract ->
-          'a GVC_Z19.vo ->
-          'a GVC_Z19.Dom.vc -> ('a * [> 'a tag_lstate ] * 'b, unit) lm option
-        val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_Z19.contr) om
+          'a ->
+          ([> `TLower of 'a ] as 'b) list -> ('b list -> 'a -> 'c) -> 'c
+        val updt : 'a -> 'b -> 'c -> 'd -> 'e -> 'f option
+        val fin :
+          unit ->
+          ([> `TLower of 'b ] as 'a) list ->
+          ('a list -> 'b option -> 'c) -> 'c
         val wants_pack : bool
       end
     module NoLower :
@@ -12504,17 +12944,21 @@ module G_GVC_Z19 :
           constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
         type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
           constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-        val mfetch : unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_Z19.contr) lm
-        val decl :
-          ('a, GVC_Z19.contr) Code.abstract ->
-          ('a * [> 'a tag_lstate ] * 'b, GVC_Z19.contr) lm
+        val fetch_iter : [> `TLower of 'a ] list -> 'a
+        val mfetch :
+          unit ->
+          ([> `TLower of 'b ] as 'a) list -> ('a list -> 'b -> 'c) -> 'c
+        val mstore :
+          'a ->
+          ([> `TLower of 'a ] as 'b) list -> ('b list -> unit -> 'c) -> 'c
+        val decl : 'a -> 'b -> ('b -> 'a -> 'c) -> 'c
         val updt :
           'a GVC_Z19.vc ->
           ('a, int) Code.abstract ->
           ('a, int) Code.abstract ->
           'a GVC_Z19.vo ->
-          'a GVC_Z19.Dom.vc -> ('a * [> 'a tag_lstate ] * 'b, unit) lm option
-        val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_Z19.contr) om
+          'b -> ('c -> ('c -> ('a, unit) Code.abstract -> 'd) -> 'd) option
+        val fin : unit -> 'a -> ('a -> 'b option -> 'c) -> 'c
         val wants_pack : bool
       end
     module type INPUT =
@@ -12787,20 +13231,25 @@ module G_GVC_Z19 :
                     constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                   type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
                     constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
+                  val fetch_iter : [> `TLower of 'a ] list -> 'a
                   val mfetch :
-                    unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_Z19.contr) lm
-                  val decl :
-                    ('a, GVC_Z19.contr) Code.abstract ->
-                    ('a * [> 'a tag_lstate ] * 'b, GVC_Z19.contr) lm
+                    unit ->
+                    ([> `TLower of 'b ] as 'a) list ->
+                    ('a list -> 'b -> 'c) -> 'c
+                  val mstore :
+                    'a ->
+                    ([> `TLower of 'a ] as 'b) list ->
+                    ('b list -> unit -> 'c) -> 'c
+                  val decl : 'a -> 'b -> ('b -> 'a -> 'c) -> 'c
                   val updt :
                     'a GVC_Z19.vc ->
                     ('a, int) Code.abstract ->
                     ('a, int) Code.abstract ->
                     'a GVC_Z19.vo ->
-                    'a GVC_Z19.Dom.vc ->
-                    ('a * [> 'a tag_lstate ] * 'b, unit) lm option
-                  val fin :
-                    unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_Z19.contr) om
+                    'b ->
+                    ('c -> ('c -> ('a, unit) Code.abstract -> 'd) -> 'd)
+                    option
+                  val fin : unit -> 'a -> ('a -> 'b option -> 'c) -> 'c
                   val wants_pack : bool
                 end
               val make_result :
@@ -12880,20 +13329,25 @@ module G_GVC_Z19 :
                     constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                   type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
                     constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
+                  val fetch_iter : [> `TLower of 'a ] list -> 'a
                   val mfetch :
-                    unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_Z19.contr) lm
-                  val decl :
-                    ('a, GVC_Z19.contr) Code.abstract ->
-                    ('a * [> 'a tag_lstate ] * 'b, GVC_Z19.contr) lm
+                    unit ->
+                    ([> `TLower of 'b ] as 'a) list ->
+                    ('a list -> 'b -> 'c) -> 'c
+                  val mstore :
+                    'a ->
+                    ([> `TLower of 'a ] as 'b) list ->
+                    ('b list -> unit -> 'c) -> 'c
+                  val decl : 'a -> 'b -> ('b -> 'a -> 'c) -> 'c
                   val updt :
                     'a GVC_Z19.vc ->
                     ('a, int) Code.abstract ->
                     ('a, int) Code.abstract ->
                     'a GVC_Z19.vo ->
-                    'a GVC_Z19.Dom.vc ->
-                    ('a * [> 'a tag_lstate ] * 'b, unit) lm option
-                  val fin :
-                    unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_Z19.contr) om
+                    'b ->
+                    ('c -> ('c -> ('a, unit) Code.abstract -> 'd) -> 'd)
+                    option
+                  val fin : unit -> 'a -> ('a -> 'b option -> 'c) -> 'c
                   val wants_pack : bool
                 end
               val make_result :
@@ -12980,20 +13434,25 @@ module G_GVC_Z19 :
                     constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                   type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
                     constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
+                  val fetch_iter : [> `TLower of 'a ] list -> 'a
                   val mfetch :
-                    unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_Z19.contr) lm
-                  val decl :
-                    ('a, GVC_Z19.contr) Code.abstract ->
-                    ('a * [> 'a tag_lstate ] * 'b, GVC_Z19.contr) lm
+                    unit ->
+                    ([> `TLower of 'b ] as 'a) list ->
+                    ('a list -> 'b -> 'c) -> 'c
+                  val mstore :
+                    'a ->
+                    ([> `TLower of 'a ] as 'b) list ->
+                    ('b list -> unit -> 'c) -> 'c
+                  val decl : 'a -> 'b -> ('b -> 'a -> 'c) -> 'c
                   val updt :
                     'a GVC_Z19.vc ->
                     ('a, int) Code.abstract ->
                     ('a, int) Code.abstract ->
                     'a GVC_Z19.vo ->
-                    'a GVC_Z19.Dom.vc ->
-                    ('a * [> 'a tag_lstate ] * 'b, unit) lm option
-                  val fin :
-                    unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_Z19.contr) om
+                    'b ->
+                    ('c -> ('c -> ('a, unit) Code.abstract -> 'd) -> 'd)
+                    option
+                  val fin : unit -> 'a -> ('a -> 'b option -> 'c) -> 'c
                   val wants_pack : bool
                 end
               val make_result :
@@ -13078,20 +13537,25 @@ module G_GVC_Z19 :
                     constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                   type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
                     constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
+                  val fetch_iter : [> `TLower of 'a ] list -> 'a
                   val mfetch :
-                    unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_Z19.contr) lm
-                  val decl :
-                    ('a, GVC_Z19.contr) Code.abstract ->
-                    ('a * [> 'a tag_lstate ] * 'b, GVC_Z19.contr) lm
+                    unit ->
+                    ([> `TLower of 'b ] as 'a) list ->
+                    ('a list -> 'b -> 'c) -> 'c
+                  val mstore :
+                    'a ->
+                    ([> `TLower of 'a ] as 'b) list ->
+                    ('b list -> unit -> 'c) -> 'c
+                  val decl : 'a -> 'b -> ('b -> 'a -> 'c) -> 'c
                   val updt :
                     'a GVC_Z19.vc ->
                     ('a, int) Code.abstract ->
                     ('a, int) Code.abstract ->
                     'a GVC_Z19.vo ->
-                    'a GVC_Z19.Dom.vc ->
-                    ('a * [> 'a tag_lstate ] * 'b, unit) lm option
-                  val fin :
-                    unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_Z19.contr) om
+                    'b ->
+                    ('c -> ('c -> ('a, unit) Code.abstract -> 'd) -> 'd)
+                    option
+                  val fin : unit -> 'a -> ('a -> 'b option -> 'c) -> 'c
                   val wants_pack : bool
                 end
               val make_result :
@@ -13204,20 +13668,25 @@ module G_GVC_Z19 :
                     constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                   type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
                     constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
+                  val fetch_iter : [> `TLower of 'a ] list -> 'a
                   val mfetch :
-                    unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_Z19.contr) lm
-                  val decl :
-                    ('a, GVC_Z19.contr) Code.abstract ->
-                    ('a * [> 'a tag_lstate ] * 'b, GVC_Z19.contr) lm
+                    unit ->
+                    ([> `TLower of 'b ] as 'a) list ->
+                    ('a list -> 'b -> 'c) -> 'c
+                  val mstore :
+                    'a ->
+                    ([> `TLower of 'a ] as 'b) list ->
+                    ('b list -> unit -> 'c) -> 'c
+                  val decl : 'a -> 'b -> ('b -> 'a -> 'c) -> 'c
                   val updt :
                     'a GVC_Z19.vc ->
                     ('a, int) Code.abstract ->
                     ('a, int) Code.abstract ->
                     'a GVC_Z19.vo ->
-                    'a GVC_Z19.Dom.vc ->
-                    ('a * [> 'a tag_lstate ] * 'b, unit) lm option
-                  val fin :
-                    unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_Z19.contr) om
+                    'b ->
+                    ('c -> ('c -> ('a, unit) Code.abstract -> 'd) -> 'd)
+                    option
+                  val fin : unit -> 'a -> ('a -> 'b option -> 'c) -> 'c
                   val wants_pack : bool
                 end
               val make_result :
@@ -13388,32 +13857,44 @@ module G_GVC_Z19 :
                     constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                   type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
                     constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
+                  val fetch_iter : [> `TLower of 'a ] list -> 'a
                   val mfetch :
-                    unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_Z19.contr) lm
+                    unit ->
+                    ([> `TLower of 'b ] as 'a) list ->
+                    ('a list -> 'b -> 'c) -> 'c
+                  val mstore :
+                    'a ->
+                    ([> `TLower of 'a ] as 'b) list ->
+                    ('b list -> unit -> 'c) -> 'c
                   val decl :
-                    ('a, GVC_Z19.contr) Code.abstract ->
-                    ('a * [> 'a tag_lstate ] * 'b, GVC_Z19.contr) lm
+                    ('a, 'b) Code.abstract ->
+                    ([> `TLower of ('a, 'b) Code.abstract ] as 'c) list ->
+                    ('c list ->
+                     ('a, 'b) Code.abstract -> ('a, 'd) Code.abstract) ->
+                    ('a, 'd) Code.abstract
                   val updt :
                     'a GVC_Z19.vc ->
                     ('a, int) Code.abstract ->
                     ('a, int) Code.abstract ->
                     'a GVC_Z19.vo ->
-                    'a GVC_Z19.Dom.vc ->
-                    ('a * [> 'a tag_lstate ] * 'b, unit) lm option
+                    'a GVC_Z19.vo ->
+                    (([> `TLower of 'a GVC_Z19.vc ] as 'b) list ->
+                     ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c)
+                    option
                   val fin :
-                    unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_Z19.contr) om
+                    unit ->
+                    ([> `TLower of 'b ] as 'a) list ->
+                    ('a list -> 'b option -> 'c) -> 'c
                   val wants_pack : bool
                 end
               val make_result :
                 'a wmatrix ->
-                ([> `TLower of 'a L.lstate
-                  | `TPivot of ('a, 'c ref) Code.abstract ]
+                ([> `TLower of ('a, 'c) Code.abstract
+                  | `TPivot of ('a, 'd ref) Code.abstract ]
                  as 'b)
                 list ->
-                ('b list ->
-                 ('a, GVC_Z19.contr * GVC_Z19.contr * 'c) Code.abstract ->
-                 ('a, 'd) Code.abstract) ->
-                ('a, 'd) Code.abstract
+                ('b list -> ('a, GVC_Z19.contr * 'c * 'd) Code.abstract -> 'e) ->
+                'e
             end
     module Out_LU_Packed :
       functor
@@ -13571,32 +14052,32 @@ module G_GVC_Z19 :
                     constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                   type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
                     constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
+                  val fetch_iter : [> `TLower of 'a ] list -> 'a
                   val mfetch :
-                    unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_Z19.contr) lm
+                    unit ->
+                    ([> `TLower of 'b ] as 'a) list ->
+                    ('a list -> 'b -> 'c) -> 'c
+                  val mstore :
+                    'a ->
+                    ([> `TLower of 'a ] as 'b) list ->
+                    ('b list -> unit -> 'c) -> 'c
                   val decl :
-                    ('a, GVC_Z19.contr) Code.abstract ->
-                    ('a * [> 'a tag_lstate ] * 'b, GVC_Z19.contr) lm
-                  val updt :
-                    'a GVC_Z19.vc ->
-                    ('a, int) Code.abstract ->
-                    ('a, int) Code.abstract ->
-                    'a GVC_Z19.vo ->
-                    'a GVC_Z19.Dom.vc ->
-                    ('a * [> 'a tag_lstate ] * 'b, unit) lm option
+                    'a ->
+                    ([> `TLower of 'a ] as 'b) list ->
+                    ('b list -> 'a -> 'c) -> 'c
+                  val updt : 'a -> 'b -> 'c -> 'd -> 'e -> 'f option
                   val fin :
-                    unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_Z19.contr) om
+                    unit ->
+                    ([> `TLower of 'b ] as 'a) list ->
+                    ('a list -> 'b option -> 'c) -> 'c
                   val wants_pack : bool
                 end
               val make_result :
                 'a ->
-                ([> `TLower of 'c L.lstate
-                  | `TPivot of ('c, 'd ref) Code.abstract ]
+                ([> `TLower of ('c, 'd) Code.abstract
+                  | `TPivot of ('c, 'e ref) Code.abstract ]
                  as 'b)
-                list ->
-                ('b list ->
-                 ('c, GVC_Z19.contr * 'd) Code.abstract ->
-                 ('c, 'e) Code.abstract) ->
-                ('c, 'e) Code.abstract
+                list -> ('b list -> ('c, 'd * 'e) Code.abstract -> 'f) -> 'f
             end
     module type PIVOT =
       functor (D : GEF.DETF) ->
@@ -16840,6 +17321,366 @@ module GenFA9 :
       ('b list -> ('a, Output.res) Code.abstract -> ('a, 'c) Code.abstract) ->
       ('a, 'c) Code.abstract
   end
+module GenFA31 :
+  sig
+    module Det :
+      sig
+        type indet = GAC_F.Dom.v
+        type outdet = GEF.AbstractDet(GAC_F.Dom).outdet
+        type tdet = outdet ref
+        type 'a lstate = 'a GEF.AbstractDet(GAC_F.Dom).lstate
+        type 'a tag_lstate = [ `TDet of 'a lstate ]
+        type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
+          constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
+        type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
+          constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
+        val decl : unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
+        val upd_sign : unit -> ('a * [> 'a tag_lstate ] * 'b, unit) om
+        val zero_sign : unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
+        val acc :
+          ('a, indet) Code.abstract ->
+          ('a * [> 'a tag_lstate ] * 'b, unit) lm
+        val get : unit -> ('a * [> 'a tag_lstate ] * 'b, tdet) lm
+        val set :
+          ('a, indet) Code.abstract ->
+          ('a * [> 'a tag_lstate ] * 'b, unit) lm
+        val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, outdet) lm
+      end
+    module U :
+      sig
+        type 'a in_val = 'a GAC_F.Dom.vc
+        type out_val = GEF.AbstractDet(GAC_F.Dom).outdet
+        val update :
+          'a in_val ->
+          'a in_val ->
+          'a in_val ->
+          'a in_val ->
+          ('a in_val -> ('a, unit) Code.abstract) ->
+          ('a, out_val ref) Code.abstract -> ('a, unit, 'b, 'c) GEF.cmonad
+        val update_det :
+          'a in_val ->
+          ('a in_val -> ('a, unit, 'b, 'c) GEF.cmonad) ->
+          ('a in_val -> ('a, unit, 'b, 'c) GEF.cmonad) ->
+          ('a, unit, 'b, 'c) GEF.cmonad
+        val upd_kind : Ge.update_kind
+      end
+    module Input :
+      sig
+        type inp = G_GAC_F.InpJustMatrix.inp
+        val get_input :
+          ('a, inp) Code.abstract ->
+          (('a, GAC_F.contr) Code.abstract * ('a, int) Code.abstract * bool,
+           'b, ('a, 'c) Code.abstract)
+          StateCPSMonad.monad
+      end
+    module Output :
+      sig
+        type res = G_GAC_F.Out_L_U(GAC_F)(Det)(GEF.PermList).res
+        module R :
+          sig
+            type 'a tag_lstate = 'a GEF.TrackRank.tag_lstate_
+            val rfetch :
+              unit ->
+              ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, int ref)
+              GEF.TrackRank.lm
+            val decl :
+              unit ->
+              ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, int ref)
+              GEF.TrackRank.lm
+            val succ :
+              unit ->
+              ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, unit)
+              GEF.TrackRank.lm
+            val fin :
+              unit ->
+              ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, int)
+              GEF.TrackRank.lm
+          end
+        module P :
+          sig
+            type idx_rep = int
+            type flip_rep = GEF.PermList.flip_rep
+            type perm_rep = GEF.PermList.perm_rep
+            type 'a ira = ('a, idx_rep) Code.abstract
+            type 'a fra = ('a, flip_rep) Code.abstract
+            type 'a pra = ('a, perm_rep) Code.abstract
+            type 'a lstate = ('a, perm_rep ref) Code.abstract
+            type 'a tag_lstate = [ `TPivot of 'a lstate ]
+            type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
+              constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
+            val rowrep : 'a ira -> 'a ira -> 'a fra
+            val colrep : 'a ira -> 'a ira -> 'a fra
+            val decl :
+              ('a, int) Code.abstract ->
+              ('a * [> 'a tag_lstate ] * 'b, unit) lm
+            val add :
+              'a fra ->
+              (('a, unit) Code.abstract option, [> 'a tag_lstate ] list,
+               ('a, 'b) Code.abstract)
+              StateCPSMonad.monad
+            val fin :
+              unit ->
+              ('a pra option, [> 'a tag_lstate ] list,
+               ('a, 'b) Code.abstract)
+              StateCPSMonad.monad
+          end
+        module L :
+          sig
+            type 'a lstate = ('a, GAC_F.contr) Code.abstract
+            type 'a tag_lstate = [ `TLower of 'a lstate ]
+            type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
+              constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
+            type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
+              constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
+            val mfetch :
+              unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_F.contr) lm
+            val decl :
+              ('a, GAC_F.contr) Code.abstract ->
+              ('a * [> 'a tag_lstate ] * 'b, GAC_F.contr) lm
+            val updt :
+              'a GAC_F.vc ->
+              ('a, int) Code.abstract ->
+              ('a, int) Code.abstract ->
+              'a GAC_F.vo ->
+              'a GAC_F.Dom.vc ->
+              ('a * [> 'a tag_lstate ] * 'b, unit) lm option
+            val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_F.contr) om
+            val wants_pack : bool
+          end
+        val make_result :
+          'a G_GAC_F.wmatrix ->
+          ('a, res,
+           [> `TDet of 'a Det.lstate
+            | `TLower of 'a L.lstate
+            | `TPivot of 'a P.lstate
+            | `TRan of 'a GEF.TrackRank.lstate ],
+           'b)
+          GEF.cmonad
+      end
+    module Pivot :
+      sig
+        val findpivot :
+          'a G_GAC_F.wmatrix ->
+          'a G_GAC_F.curpos ->
+          ('a, GAC_F.Dom.v option,
+           [> `TDet of 'a GEF.AbstractDet(GAC_F.Dom).lstate
+            | `TPivot of 'a Output.P.lstate ],
+           'b)
+          GEF.cmonad
+      end
+    module I :
+      sig
+        val row_iter :
+          'a ->
+          'b ->
+          ('c, int) Code.abstract ->
+          ('c, int) Code.abstract ->
+          ('a -> ('c, int) Code.abstract -> 'b -> ('c, 'd) Code.abstract) ->
+          (('c, int) Code.abstract ->
+           ('c, 'd) Code.abstract ->
+           'e -> ('f -> 'g -> 'g) -> ('c, 'h) Code.abstract) ->
+          'e -> ('e -> ('c, unit) Code.abstract -> 'i) -> 'i
+        val col_iter :
+          'a ->
+          'b ->
+          ('c, int) Code.abstract ->
+          ('c, int) Code.abstract ->
+          ('a -> 'b -> ('c, int) Code.abstract -> 'd) ->
+          (('c, int) Code.abstract ->
+           'd -> 'e -> ('f -> 'g -> 'g) -> ('c, 'h) Code.abstract) ->
+          'e -> ('e -> ('c, unit) Code.abstract -> 'i) -> 'i
+      end
+    val gen :
+      ('a, Input.inp) Code.abstract ->
+      ([> `TDet of 'a Det.lstate
+        | `TLower of 'a Output.L.lstate
+        | `TPivot of 'a Output.P.lstate
+        | `TRan of 'a GEF.TrackRank.lstate ]
+       as 'b)
+      list ->
+      ('b list -> ('a, Output.res) Code.abstract -> ('a, 'c) Code.abstract) ->
+      ('a, 'c) Code.abstract
+  end
+module GenFA32 :
+  sig
+    module Det :
+      sig
+        type indet = GAC_F.Dom.v
+        type outdet = GEF.AbstractDet(GAC_F.Dom).outdet
+        type tdet = outdet ref
+        type 'a lstate = 'a GEF.AbstractDet(GAC_F.Dom).lstate
+        type 'a tag_lstate = [ `TDet of 'a lstate ]
+        type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
+          constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
+        type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
+          constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
+        val decl : unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
+        val upd_sign : unit -> ('a * [> 'a tag_lstate ] * 'b, unit) om
+        val zero_sign : unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
+        val acc :
+          ('a, indet) Code.abstract ->
+          ('a * [> 'a tag_lstate ] * 'b, unit) lm
+        val get : unit -> ('a * [> 'a tag_lstate ] * 'b, tdet) lm
+        val set :
+          ('a, indet) Code.abstract ->
+          ('a * [> 'a tag_lstate ] * 'b, unit) lm
+        val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, outdet) lm
+      end
+    module U :
+      sig
+        type 'a in_val = 'a GAC_F.Dom.vc
+        type out_val = GEF.AbstractDet(GAC_F.Dom).outdet
+        val update :
+          'a in_val ->
+          'a in_val ->
+          'a in_val ->
+          'a in_val ->
+          ('a in_val -> ('a, unit) Code.abstract) ->
+          ('a, out_val ref) Code.abstract -> ('a, unit, 'b, 'c) GEF.cmonad
+        val update_det :
+          'a in_val ->
+          ('a in_val -> ('a, unit, 'b, 'c) GEF.cmonad) ->
+          ('a in_val -> ('a, unit, 'b, 'c) GEF.cmonad) ->
+          ('a, unit, 'b, 'c) GEF.cmonad
+        val upd_kind : Ge.update_kind
+      end
+    module Input :
+      sig
+        type inp = G_GAC_F.InpJustMatrix.inp
+        val get_input :
+          ('a, inp) Code.abstract ->
+          (('a, GAC_F.contr) Code.abstract * ('a, int) Code.abstract * bool,
+           'b, ('a, 'c) Code.abstract)
+          StateCPSMonad.monad
+      end
+    module Output :
+      sig
+        type res = G_GAC_F.Out_LU_Packed(GAC_F)(Det)(GEF.PermList).res
+        module R :
+          sig
+            type 'a tag_lstate = 'a GEF.TrackRank.tag_lstate_
+            val rfetch :
+              unit ->
+              ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, int ref)
+              GEF.TrackRank.lm
+            val decl :
+              unit ->
+              ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, int ref)
+              GEF.TrackRank.lm
+            val succ :
+              unit ->
+              ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, unit)
+              GEF.TrackRank.lm
+            val fin :
+              unit ->
+              ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, int)
+              GEF.TrackRank.lm
+          end
+        module P :
+          sig
+            type idx_rep = int
+            type flip_rep = GEF.PermList.flip_rep
+            type perm_rep = GEF.PermList.perm_rep
+            type 'a ira = ('a, idx_rep) Code.abstract
+            type 'a fra = ('a, flip_rep) Code.abstract
+            type 'a pra = ('a, perm_rep) Code.abstract
+            type 'a lstate = ('a, perm_rep ref) Code.abstract
+            type 'a tag_lstate = [ `TPivot of 'a lstate ]
+            type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
+              constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
+            val rowrep : 'a ira -> 'a ira -> 'a fra
+            val colrep : 'a ira -> 'a ira -> 'a fra
+            val decl :
+              ('a, int) Code.abstract ->
+              ('a * [> 'a tag_lstate ] * 'b, unit) lm
+            val add :
+              'a fra ->
+              (('a, unit) Code.abstract option, [> 'a tag_lstate ] list,
+               ('a, 'b) Code.abstract)
+              StateCPSMonad.monad
+            val fin :
+              unit ->
+              ('a pra option, [> 'a tag_lstate ] list,
+               ('a, 'b) Code.abstract)
+              StateCPSMonad.monad
+          end
+        module L :
+          sig
+            type 'a lstate = ('a, GAC_F.contr) Code.abstract
+            type 'a tag_lstate = [ `TLower of 'a lstate ]
+            type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
+              constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
+            type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
+              constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
+            val mfetch :
+              unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_F.contr) lm
+            val decl :
+              ('a, GAC_F.contr) Code.abstract ->
+              ('a * [> 'a tag_lstate ] * 'b, GAC_F.contr) lm
+            val updt :
+              'a GAC_F.vc ->
+              ('a, int) Code.abstract ->
+              ('a, int) Code.abstract ->
+              'a GAC_F.vo ->
+              'a GAC_F.Dom.vc ->
+              ('a * [> 'a tag_lstate ] * 'b, unit) lm option
+            val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_F.contr) om
+            val wants_pack : bool
+          end
+        val make_result :
+          'a G_GAC_F.wmatrix ->
+          ('a, res,
+           [> `TDet of 'a Det.lstate
+            | `TLower of 'a L.lstate
+            | `TPivot of 'a P.lstate
+            | `TRan of 'a GEF.TrackRank.lstate ],
+           'b)
+          GEF.cmonad
+      end
+    module Pivot :
+      sig
+        val findpivot :
+          'a G_GAC_F.wmatrix ->
+          'a G_GAC_F.curpos ->
+          ('a, GAC_F.Dom.v option,
+           [> `TDet of 'a GEF.AbstractDet(GAC_F.Dom).lstate
+            | `TPivot of 'a Output.P.lstate ],
+           'b)
+          GEF.cmonad
+      end
+    module I :
+      sig
+        val row_iter :
+          'a ->
+          'b ->
+          ('c, int) Code.abstract ->
+          ('c, int) Code.abstract ->
+          ('a -> ('c, int) Code.abstract -> 'b -> ('c, 'd) Code.abstract) ->
+          (('c, int) Code.abstract ->
+           ('c, 'd) Code.abstract ->
+           'e -> ('f -> 'g -> 'g) -> ('c, 'h) Code.abstract) ->
+          'e -> ('e -> ('c, unit) Code.abstract -> 'i) -> 'i
+        val col_iter :
+          'a ->
+          'b ->
+          ('c, int) Code.abstract ->
+          ('c, int) Code.abstract ->
+          ('a -> 'b -> ('c, int) Code.abstract -> 'd) ->
+          (('c, int) Code.abstract ->
+           'd -> 'e -> ('f -> 'g -> 'g) -> ('c, 'h) Code.abstract) ->
+          'e -> ('e -> ('c, unit) Code.abstract -> 'i) -> 'i
+      end
+    val gen :
+      ('a, Input.inp) Code.abstract ->
+      ([> `TDet of 'a Det.lstate
+        | `TLower of 'a Output.L.lstate
+        | `TPivot of 'a Output.P.lstate
+        | `TRan of 'a GEF.TrackRank.lstate ]
+       as 'b)
+      list ->
+      ('b list -> ('a, Output.res) Code.abstract -> ('a, 'c) Code.abstract) ->
+      ('a, 'c) Code.abstract
+  end
 module GenFV1 :
   sig
     module Det :
@@ -17615,366 +18456,6 @@ module GenFV5 :
     module Output :
       sig
         type res = G_GVC_F.OutDetRank(GVC_F)(Det)(GEF.PermList).res
-        module R :
-          sig
-            type 'a tag_lstate = 'a GEF.TrackRank.tag_lstate_
-            val rfetch :
-              unit ->
-              ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, int ref)
-              GEF.TrackRank.lm
-            val decl :
-              unit ->
-              ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, int ref)
-              GEF.TrackRank.lm
-            val succ :
-              unit ->
-              ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, unit)
-              GEF.TrackRank.lm
-            val fin :
-              unit ->
-              ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, int)
-              GEF.TrackRank.lm
-          end
-        module P :
-          sig
-            type idx_rep = int
-            type flip_rep = GEF.PermList.flip_rep
-            type perm_rep = GEF.PermList.perm_rep
-            type 'a ira = ('a, idx_rep) Code.abstract
-            type 'a fra = ('a, flip_rep) Code.abstract
-            type 'a pra = ('a, perm_rep) Code.abstract
-            type 'a lstate = ('a, perm_rep ref) Code.abstract
-            type 'a tag_lstate = [ `TPivot of 'a lstate ]
-            type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
-              constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-            val rowrep : 'a ira -> 'a ira -> 'a fra
-            val colrep : 'a ira -> 'a ira -> 'a fra
-            val decl :
-              ('a, int) Code.abstract ->
-              ('a * [> 'a tag_lstate ] * 'b, unit) lm
-            val add :
-              'a fra ->
-              (('a, unit) Code.abstract option, [> 'a tag_lstate ] list,
-               ('a, 'b) Code.abstract)
-              StateCPSMonad.monad
-            val fin :
-              unit ->
-              ('a pra option, [> 'a tag_lstate ] list,
-               ('a, 'b) Code.abstract)
-              StateCPSMonad.monad
-          end
-        module L :
-          sig
-            type 'a lstate = ('a, GVC_F.contr) Code.abstract
-            type 'a tag_lstate = [ `TLower of 'a lstate ]
-            type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
-              constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-            type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
-              constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-            val mfetch :
-              unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_F.contr) lm
-            val decl :
-              ('a, GVC_F.contr) Code.abstract ->
-              ('a * [> 'a tag_lstate ] * 'b, GVC_F.contr) lm
-            val updt :
-              'a GVC_F.vc ->
-              ('a, int) Code.abstract ->
-              ('a, int) Code.abstract ->
-              'a GVC_F.vo ->
-              'a GVC_F.Dom.vc ->
-              ('a * [> 'a tag_lstate ] * 'b, unit) lm option
-            val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_F.contr) om
-            val wants_pack : bool
-          end
-        val make_result :
-          'a G_GVC_F.wmatrix ->
-          ('a, res,
-           [> `TDet of 'a Det.lstate
-            | `TLower of 'a L.lstate
-            | `TPivot of 'a P.lstate
-            | `TRan of 'a GEF.TrackRank.lstate ],
-           'b)
-          GEF.cmonad
-      end
-    module Pivot :
-      sig
-        val findpivot :
-          'a G_GVC_F.wmatrix ->
-          'a G_GVC_F.curpos ->
-          ('a, GVC_F.Dom.v option,
-           [> `TDet of 'a GEF.AbstractDet(GVC_F.Dom).lstate
-            | `TPivot of 'a Output.P.lstate ],
-           'b)
-          GEF.cmonad
-      end
-    module I :
-      sig
-        val row_iter :
-          'a ->
-          'b ->
-          ('c, int) Code.abstract ->
-          ('c, int) Code.abstract ->
-          ('a -> ('c, int) Code.abstract -> 'b -> ('c, 'd) Code.abstract) ->
-          (('c, int) Code.abstract ->
-           ('c, 'd) Code.abstract ->
-           'e -> ('f -> 'g -> 'g) -> ('c, 'h) Code.abstract) ->
-          'e -> ('e -> ('c, unit) Code.abstract -> 'i) -> 'i
-        val col_iter :
-          'a ->
-          'b ->
-          ('c, int) Code.abstract ->
-          ('c, int) Code.abstract ->
-          ('a -> 'b -> ('c, int) Code.abstract -> 'd) ->
-          (('c, int) Code.abstract ->
-           'd -> 'e -> ('f -> 'g -> 'g) -> ('c, 'h) Code.abstract) ->
-          'e -> ('e -> ('c, unit) Code.abstract -> 'i) -> 'i
-      end
-    val gen :
-      ('a, Input.inp) Code.abstract ->
-      ([> `TDet of 'a Det.lstate
-        | `TLower of 'a Output.L.lstate
-        | `TPivot of 'a Output.P.lstate
-        | `TRan of 'a GEF.TrackRank.lstate ]
-       as 'b)
-      list ->
-      ('b list -> ('a, Output.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
-  end
-module GenFV6 :
-  sig
-    module Det :
-      sig
-        type indet = GVC_F.Dom.v
-        type outdet = GEF.AbstractDet(GVC_F.Dom).outdet
-        type tdet = outdet ref
-        type 'a lstate = 'a GEF.AbstractDet(GVC_F.Dom).lstate
-        type 'a tag_lstate = [ `TDet of 'a lstate ]
-        type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
-          constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-        type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
-          constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-        val decl : unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
-        val upd_sign : unit -> ('a * [> 'a tag_lstate ] * 'b, unit) om
-        val zero_sign : unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
-        val acc :
-          ('a, indet) Code.abstract ->
-          ('a * [> 'a tag_lstate ] * 'b, unit) lm
-        val get : unit -> ('a * [> 'a tag_lstate ] * 'b, tdet) lm
-        val set :
-          ('a, indet) Code.abstract ->
-          ('a * [> 'a tag_lstate ] * 'b, unit) lm
-        val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, outdet) lm
-      end
-    module U :
-      sig
-        type 'a in_val = 'a GVC_F.Dom.vc
-        type out_val = GEF.AbstractDet(GVC_F.Dom).outdet
-        val update :
-          'a in_val ->
-          'a in_val ->
-          'a in_val ->
-          'a in_val ->
-          ('a in_val -> ('a, unit) Code.abstract) ->
-          ('a, out_val ref) Code.abstract -> ('a, unit, 'b, 'c) GEF.cmonad
-        val update_det :
-          'a in_val ->
-          ('a in_val -> ('a, unit, 'b, 'c) GEF.cmonad) ->
-          ('a in_val -> ('a, unit, 'b, 'c) GEF.cmonad) ->
-          ('a, unit, 'b, 'c) GEF.cmonad
-        val upd_kind : Ge.update_kind
-      end
-    module Input :
-      sig
-        type inp = G_GVC_F.InpJustMatrix.inp
-        val get_input :
-          ('a, inp) Code.abstract ->
-          (('a, GVC_F.contr) Code.abstract * ('a, int) Code.abstract * bool,
-           'b, ('a, 'c) Code.abstract)
-          StateCPSMonad.monad
-      end
-    module Output :
-      sig
-        type res = G_GVC_F.Out_L_U(GVC_F)(Det)(GEF.PermList).res
-        module R :
-          sig
-            type 'a tag_lstate = 'a GEF.TrackRank.tag_lstate_
-            val rfetch :
-              unit ->
-              ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, int ref)
-              GEF.TrackRank.lm
-            val decl :
-              unit ->
-              ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, int ref)
-              GEF.TrackRank.lm
-            val succ :
-              unit ->
-              ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, unit)
-              GEF.TrackRank.lm
-            val fin :
-              unit ->
-              ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, int)
-              GEF.TrackRank.lm
-          end
-        module P :
-          sig
-            type idx_rep = int
-            type flip_rep = GEF.PermList.flip_rep
-            type perm_rep = GEF.PermList.perm_rep
-            type 'a ira = ('a, idx_rep) Code.abstract
-            type 'a fra = ('a, flip_rep) Code.abstract
-            type 'a pra = ('a, perm_rep) Code.abstract
-            type 'a lstate = ('a, perm_rep ref) Code.abstract
-            type 'a tag_lstate = [ `TPivot of 'a lstate ]
-            type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
-              constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-            val rowrep : 'a ira -> 'a ira -> 'a fra
-            val colrep : 'a ira -> 'a ira -> 'a fra
-            val decl :
-              ('a, int) Code.abstract ->
-              ('a * [> 'a tag_lstate ] * 'b, unit) lm
-            val add :
-              'a fra ->
-              (('a, unit) Code.abstract option, [> 'a tag_lstate ] list,
-               ('a, 'b) Code.abstract)
-              StateCPSMonad.monad
-            val fin :
-              unit ->
-              ('a pra option, [> 'a tag_lstate ] list,
-               ('a, 'b) Code.abstract)
-              StateCPSMonad.monad
-          end
-        module L :
-          sig
-            type 'a lstate = ('a, GVC_F.contr) Code.abstract
-            type 'a tag_lstate = [ `TLower of 'a lstate ]
-            type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
-              constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-            type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
-              constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-            val mfetch :
-              unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_F.contr) lm
-            val decl :
-              ('a, GVC_F.contr) Code.abstract ->
-              ('a * [> 'a tag_lstate ] * 'b, GVC_F.contr) lm
-            val updt :
-              'a GVC_F.vc ->
-              ('a, int) Code.abstract ->
-              ('a, int) Code.abstract ->
-              'a GVC_F.vo ->
-              'a GVC_F.Dom.vc ->
-              ('a * [> 'a tag_lstate ] * 'b, unit) lm option
-            val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_F.contr) om
-            val wants_pack : bool
-          end
-        val make_result :
-          'a G_GVC_F.wmatrix ->
-          ('a, res,
-           [> `TDet of 'a Det.lstate
-            | `TLower of 'a L.lstate
-            | `TPivot of 'a P.lstate
-            | `TRan of 'a GEF.TrackRank.lstate ],
-           'b)
-          GEF.cmonad
-      end
-    module Pivot :
-      sig
-        val findpivot :
-          'a G_GVC_F.wmatrix ->
-          'a G_GVC_F.curpos ->
-          ('a, GVC_F.Dom.v option,
-           [> `TDet of 'a GEF.AbstractDet(GVC_F.Dom).lstate
-            | `TPivot of 'a Output.P.lstate ],
-           'b)
-          GEF.cmonad
-      end
-    module I :
-      sig
-        val row_iter :
-          'a ->
-          'b ->
-          ('c, int) Code.abstract ->
-          ('c, int) Code.abstract ->
-          ('a -> ('c, int) Code.abstract -> 'b -> ('c, 'd) Code.abstract) ->
-          (('c, int) Code.abstract ->
-           ('c, 'd) Code.abstract ->
-           'e -> ('f -> 'g -> 'g) -> ('c, 'h) Code.abstract) ->
-          'e -> ('e -> ('c, unit) Code.abstract -> 'i) -> 'i
-        val col_iter :
-          'a ->
-          'b ->
-          ('c, int) Code.abstract ->
-          ('c, int) Code.abstract ->
-          ('a -> 'b -> ('c, int) Code.abstract -> 'd) ->
-          (('c, int) Code.abstract ->
-           'd -> 'e -> ('f -> 'g -> 'g) -> ('c, 'h) Code.abstract) ->
-          'e -> ('e -> ('c, unit) Code.abstract -> 'i) -> 'i
-      end
-    val gen :
-      ('a, Input.inp) Code.abstract ->
-      ([> `TDet of 'a Det.lstate
-        | `TLower of 'a Output.L.lstate
-        | `TPivot of 'a Output.P.lstate
-        | `TRan of 'a GEF.TrackRank.lstate ]
-       as 'b)
-      list ->
-      ('b list -> ('a, Output.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
-  end
-module GenFV7 :
-  sig
-    module Det :
-      sig
-        type indet = GVC_F.Dom.v
-        type outdet = GEF.AbstractDet(GVC_F.Dom).outdet
-        type tdet = outdet ref
-        type 'a lstate = 'a GEF.AbstractDet(GVC_F.Dom).lstate
-        type 'a tag_lstate = [ `TDet of 'a lstate ]
-        type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
-          constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-        type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
-          constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-        val decl : unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
-        val upd_sign : unit -> ('a * [> 'a tag_lstate ] * 'b, unit) om
-        val zero_sign : unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
-        val acc :
-          ('a, indet) Code.abstract ->
-          ('a * [> 'a tag_lstate ] * 'b, unit) lm
-        val get : unit -> ('a * [> 'a tag_lstate ] * 'b, tdet) lm
-        val set :
-          ('a, indet) Code.abstract ->
-          ('a * [> 'a tag_lstate ] * 'b, unit) lm
-        val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, outdet) lm
-      end
-    module U :
-      sig
-        type 'a in_val = 'a GVC_F.Dom.vc
-        type out_val = GEF.AbstractDet(GVC_F.Dom).outdet
-        val update :
-          'a in_val ->
-          'a in_val ->
-          'a in_val ->
-          'a in_val ->
-          ('a in_val -> ('a, unit) Code.abstract) ->
-          ('a, out_val ref) Code.abstract -> ('a, unit, 'b, 'c) GEF.cmonad
-        val update_det :
-          'a in_val ->
-          ('a in_val -> ('a, unit, 'b, 'c) GEF.cmonad) ->
-          ('a in_val -> ('a, unit, 'b, 'c) GEF.cmonad) ->
-          ('a, unit, 'b, 'c) GEF.cmonad
-        val upd_kind : Ge.update_kind
-      end
-    module Input :
-      sig
-        type inp = G_GVC_F.InpJustMatrix.inp
-        val get_input :
-          ('a, inp) Code.abstract ->
-          (('a, GVC_F.contr) Code.abstract * ('a, int) Code.abstract * bool,
-           'b, ('a, 'c) Code.abstract)
-          StateCPSMonad.monad
-      end
-    module Output :
-      sig
-        type res = G_GVC_F.Out_LU_Packed(GVC_F)(Det)(GEF.PermList).res
         module R :
           sig
             type 'a tag_lstate = 'a GEF.TrackRank.tag_lstate_
@@ -20989,43 +21470,43 @@ val resFA1 : ('a, GenFA1.Input.inp -> GenFA1.Output.res) code =
    let t_6 = (Array.length a_1.(0)) in
    let t_7 = (Array.length a_1) in
    while (((! t_3) < t_6) && ((! t_2) < t_7)) do
-    let t_8 = (! t_2) in
-    let t_9 = (! t_3) in
-    let t_10 = (ref (None)) in
-    let t_16 =
+    let t_10 = (! t_2) in
+    let t_11 = (! t_3) in
+    let t_12 = (ref (None)) in
+    let t_18 =
      begin
-      for j_13 = t_8 to (t_7 - 1) do
-       let t_14 = (t_5.(j_13)).(t_9) in
-       if (t_14 <> 0.) then
-        (match (! t_10) with
-         | Some (i_15) ->
-            if ((abs_float (snd i_15)) < (abs_float t_14)) then
-             (t_10 := (Some (j_13, t_14)))
+      for j_15 = t_10 to (t_7 - 1) do
+       let t_16 = (t_5.(j_15)).(t_11) in
+       if (t_16 <> 0.) then
+        (match (! t_12) with
+         | Some (i_17) ->
+            if ((abs_float (snd i_17)) < (abs_float t_16)) then
+             (t_12 := (Some (j_15, t_16)))
             else ()
-         | None -> (t_10 := (Some (j_13, t_14))))
+         | None -> (t_12 := (Some (j_15, t_16))))
        else ()
       done;
-      (match (! t_10) with
-       | Some (i_11) ->
-          if ((fst i_11) <> t_8) then
-           let t_12 = t_5.(t_8) in
-           t_5.(t_8) <- t_5.(fst i_11);
-           t_5.(fst i_11) <- t_12
+      (match (! t_12) with
+       | Some (i_13) ->
+          if ((fst i_13) <> t_10) then
+           let t_14 = t_5.(t_10) in
+           t_5.(t_10) <- t_5.(fst i_13);
+           t_5.(fst i_13) <- t_14
           else ();
-          (Some (snd i_11))
+          (Some (snd i_13))
        | None -> (None))
      end in
-    (match t_16 with
-     | Some (i_17) ->
+    (match t_18 with
+     | Some (i_19) ->
         begin
-         for j_18 = (t_8 + 1) to (t_7 - 1) do
-          let t_19 = (t_5.(j_18)).(t_9) in
-          if (t_19 <> 0.) then begin
-           for j_20 = (t_9 + 1) to (t_6 - 1) do
-            (t_5.(j_18)).(j_20) <-
-             ((t_5.(j_18)).(j_20) -. ((t_19 /. i_17) *. (t_5.(t_8)).(j_20)))
+         for j_20 = (t_10 + 1) to (t_7 - 1) do
+          let t_21 = (t_5.(j_20)).(t_11) in
+          if (t_21 <> 0.) then begin
+           for j_22 = (t_11 + 1) to (t_6 - 1) do
+            (t_5.(j_20)).(j_22) <-
+             ((t_5.(j_20)).(j_22) -. ((t_21 /. i_19) *. (t_5.(t_10)).(j_22)))
            done;
-           (t_5.(j_18)).(t_9) <- 0.
+           (t_5.(j_20)).(t_11) <- 0.
           end else ()
          done;
          ()
@@ -21045,6 +21526,64 @@ val resFA2 : ('a, GenFA2.Input.inp -> GenFA2.Output.res) code =
    let t_8 = (ref 1.) in
    let t_9 = (ref 1) in
    while (((! t_3) < t_6) && ((! t_2) < t_7)) do
+    let t_12 = (! t_2) in
+    let t_13 = (! t_3) in
+    let t_14 = (ref (None)) in
+    let t_20 =
+     begin
+      for j_17 = t_12 to (t_7 - 1) do
+       let t_18 = (t_5.(j_17)).(t_13) in
+       if (t_18 <> 0.) then
+        (match (! t_14) with
+         | Some (i_19) ->
+            if ((abs_float (snd i_19)) < (abs_float t_18)) then
+             (t_14 := (Some (j_17, t_18)))
+            else ()
+         | None -> (t_14 := (Some (j_17, t_18))))
+       else ()
+      done;
+      (match (! t_14) with
+       | Some (i_15) ->
+          if ((fst i_15) <> t_12) then begin
+           let t_16 = t_5.(t_12) in
+           t_5.(t_12) <- t_5.(fst i_15);
+           t_5.(fst i_15) <- t_16;
+           (t_9 := (~- (! t_9)))
+          end else ();
+          (Some (snd i_15))
+       | None -> (None))
+     end in
+    (match t_20 with
+     | Some (i_21) ->
+        begin
+         for j_22 = (t_12 + 1) to (t_7 - 1) do
+          let t_23 = (t_5.(j_22)).(t_13) in
+          if (t_23 <> 0.) then begin
+           for j_24 = (t_13 + 1) to (t_6 - 1) do
+            (t_5.(j_22)).(j_24) <-
+             ((t_5.(j_22)).(j_24) -. ((t_23 /. i_21) *. (t_5.(t_12)).(j_24)))
+           done;
+           (t_5.(j_22)).(t_13) <- 0.
+          end else ()
+         done;
+         (t_8 := ((! t_8) *. i_21))
+        end;
+        (t_2 := ((! t_2) + 1))
+     | None -> (t_9 := 0));
+    (t_3 := ((! t_3) + 1))
+   done;
+   (t_5,
+    if ((! t_9) = 0) then 0.
+    else if ((! t_9) = 1) then (! t_8)
+    else (~-. (! t_8)))>.
+val resFA3 : ('a, GenFA3.Input.inp -> GenFA3.Output.res) code =
+  .<fun a_1 ->
+   let t_2 = (ref 0) in
+   let t_3 = (ref 0) in
+   let t_5 = (Array.map (fun x_4 -> (Array.copy x_4)) (Array.copy a_1)) in
+   let t_6 = (Array.length a_1.(0)) in
+   let t_7 = (Array.length a_1) in
+   while (((! t_3) < t_6) && ((! t_2) < t_7)) do
     let t_10 = (! t_2) in
     let t_11 = (! t_3) in
     let t_12 = (ref (None)) in
@@ -21063,12 +21602,11 @@ val resFA2 : ('a, GenFA2.Input.inp -> GenFA2.Output.res) code =
       done;
       (match (! t_12) with
        | Some (i_13) ->
-          if ((fst i_13) <> t_10) then begin
+          if ((fst i_13) <> t_10) then
            let t_14 = t_5.(t_10) in
            t_5.(t_10) <- t_5.(fst i_13);
-           t_5.(fst i_13) <- t_14;
-           (t_9 := (~- (! t_9)))
-          end else ();
+           t_5.(fst i_13) <- t_14
+          else ();
           (Some (snd i_13))
        | None -> (None))
      end in
@@ -21083,63 +21621,6 @@ val resFA2 : ('a, GenFA2.Input.inp -> GenFA2.Output.res) code =
              ((t_5.(j_20)).(j_22) -. ((t_21 /. i_19) *. (t_5.(t_10)).(j_22)))
            done;
            (t_5.(j_20)).(t_11) <- 0.
-          end else ()
-         done;
-         (t_8 := ((! t_8) *. i_19))
-        end;
-        (t_2 := ((! t_2) + 1))
-     | None -> (t_9 := 0));
-    (t_3 := ((! t_3) + 1))
-   done;
-   (t_5,
-    if ((! t_9) = 0) then 0.
-    else if ((! t_9) = 1) then (! t_8)
-    else (~-. (! t_8)))>.
-val resFA3 : ('a, GenFA3.Input.inp -> GenFA3.Output.res) code =
-  .<fun a_1 ->
-   let t_2 = (ref 0) in
-   let t_3 = (ref 0) in
-   let t_5 = (Array.map (fun x_4 -> (Array.copy x_4)) (Array.copy a_1)) in
-   let t_6 = (Array.length a_1.(0)) in
-   let t_7 = (Array.length a_1) in
-   while (((! t_3) < t_6) && ((! t_2) < t_7)) do
-    let t_8 = (! t_2) in
-    let t_9 = (! t_3) in
-    let t_10 = (ref (None)) in
-    let t_16 =
-     begin
-      for j_13 = t_8 to (t_7 - 1) do
-       let t_14 = (t_5.(j_13)).(t_9) in
-       if (t_14 <> 0.) then
-        (match (! t_10) with
-         | Some (i_15) ->
-            if ((abs_float (snd i_15)) < (abs_float t_14)) then
-             (t_10 := (Some (j_13, t_14)))
-            else ()
-         | None -> (t_10 := (Some (j_13, t_14))))
-       else ()
-      done;
-      (match (! t_10) with
-       | Some (i_11) ->
-          if ((fst i_11) <> t_8) then
-           let t_12 = t_5.(t_8) in
-           t_5.(t_8) <- t_5.(fst i_11);
-           t_5.(fst i_11) <- t_12
-          else ();
-          (Some (snd i_11))
-       | None -> (None))
-     end in
-    (match t_16 with
-     | Some (i_17) ->
-        begin
-         for j_18 = (t_8 + 1) to (t_7 - 1) do
-          let t_19 = (t_5.(j_18)).(t_9) in
-          if (t_19 <> 0.) then begin
-           for j_20 = (t_9 + 1) to (t_6 - 1) do
-            (t_5.(j_18)).(j_20) <-
-             ((t_5.(j_18)).(j_20) -. ((t_19 /. i_17) *. (t_5.(t_8)).(j_20)))
-           done;
-           (t_5.(j_18)).(t_9) <- 0.
           end else ()
          done;
          ()
@@ -21159,47 +21640,47 @@ val resFA4 : ('a, GenFA4.Input.inp -> GenFA4.Output.res) code =
    let t_8 = (ref 1.) in
    let t_9 = (ref 1) in
    while (((! t_3) < t_6) && ((! t_2) < t_7)) do
-    let t_10 = (! t_2) in
-    let t_11 = (! t_3) in
-    let t_12 = (ref (None)) in
-    let t_18 =
+    let t_12 = (! t_2) in
+    let t_13 = (! t_3) in
+    let t_14 = (ref (None)) in
+    let t_20 =
      begin
-      for j_15 = t_10 to (t_7 - 1) do
-       let t_16 = (t_5.(j_15)).(t_11) in
-       if (t_16 <> 0.) then
-        (match (! t_12) with
-         | Some (i_17) ->
-            if ((abs_float (snd i_17)) < (abs_float t_16)) then
-             (t_12 := (Some (j_15, t_16)))
+      for j_17 = t_12 to (t_7 - 1) do
+       let t_18 = (t_5.(j_17)).(t_13) in
+       if (t_18 <> 0.) then
+        (match (! t_14) with
+         | Some (i_19) ->
+            if ((abs_float (snd i_19)) < (abs_float t_18)) then
+             (t_14 := (Some (j_17, t_18)))
             else ()
-         | None -> (t_12 := (Some (j_15, t_16))))
+         | None -> (t_14 := (Some (j_17, t_18))))
        else ()
       done;
-      (match (! t_12) with
-       | Some (i_13) ->
-          if ((fst i_13) <> t_10) then begin
-           let t_14 = t_5.(t_10) in
-           t_5.(t_10) <- t_5.(fst i_13);
-           t_5.(fst i_13) <- t_14;
+      (match (! t_14) with
+       | Some (i_15) ->
+          if ((fst i_15) <> t_12) then begin
+           let t_16 = t_5.(t_12) in
+           t_5.(t_12) <- t_5.(fst i_15);
+           t_5.(fst i_15) <- t_16;
            (t_9 := (~- (! t_9)))
           end else ();
-          (Some (snd i_13))
+          (Some (snd i_15))
        | None -> (None))
      end in
-    (match t_18 with
-     | Some (i_19) ->
+    (match t_20 with
+     | Some (i_21) ->
         begin
-         for j_20 = (t_10 + 1) to (t_7 - 1) do
-          let t_21 = (t_5.(j_20)).(t_11) in
-          if (t_21 <> 0.) then begin
-           for j_22 = (t_11 + 1) to (t_6 - 1) do
-            (t_5.(j_20)).(j_22) <-
-             ((t_5.(j_20)).(j_22) -. ((t_21 /. i_19) *. (t_5.(t_10)).(j_22)))
+         for j_22 = (t_12 + 1) to (t_7 - 1) do
+          let t_23 = (t_5.(j_22)).(t_13) in
+          if (t_23 <> 0.) then begin
+           for j_24 = (t_13 + 1) to (t_6 - 1) do
+            (t_5.(j_22)).(j_24) <-
+             ((t_5.(j_22)).(j_24) -. ((t_23 /. i_21) *. (t_5.(t_12)).(j_24)))
            done;
-           (t_5.(j_20)).(t_11) <- 0.
+           (t_5.(j_22)).(t_13) <- 0.
           end else ()
          done;
-         (t_8 := ((! t_8) *. i_19))
+         (t_8 := ((! t_8) *. i_21))
         end;
         (t_2 := ((! t_2) + 1))
      | None -> (t_9 := 0));
@@ -21217,50 +21698,50 @@ val resFV1 : ('a, GenFV1.Input.inp -> GenFV1.Output.res) code =
    let t_5 = a_1.m in
    let t_6 = a_1.n in
    while (((! t_3) < t_5) && ((! t_2) < t_6)) do
-    let t_7 = (! t_2) in
-    let t_8 = (! t_3) in
-    let t_9 = (ref (None)) in
-    let t_20 =
+    let t_8 = (! t_2) in
+    let t_9 = (! t_3) in
+    let t_10 = (ref (None)) in
+    let t_21 =
      begin
-      for j_17 = t_7 to (t_6 - 1) do
-       let t_18 = (t_4.arr).((j_17 * t_4.m) + t_8) in
-       if (t_18 <> 0.) then
-        (match (! t_9) with
-         | Some (i_19) ->
-            if ((abs_float (snd i_19)) < (abs_float t_18)) then
-             (t_9 := (Some (j_17, t_18)))
+      for j_18 = t_8 to (t_6 - 1) do
+       let t_19 = (t_4.arr).((j_18 * t_4.m) + t_9) in
+       if (t_19 <> 0.) then
+        (match (! t_10) with
+         | Some (i_20) ->
+            if ((abs_float (snd i_20)) < (abs_float t_19)) then
+             (t_10 := (Some (j_18, t_19)))
             else ()
-         | None -> (t_9 := (Some (j_17, t_18))))
+         | None -> (t_10 := (Some (j_18, t_19))))
        else ()
       done;
-      (match (! t_9) with
-       | Some (i_10) ->
-          if ((fst i_10) <> t_7) then
-           let a_11 = t_4.arr
-           and m_12 = t_4.m in
-           let i1_13 = (t_7 * m_12)
-           and i2_14 = ((fst i_10) * m_12) in
-           for i_15 = 0 to (m_12 - 1) do
-            let t_16 = a_11.(i1_13 + i_15) in
-            a_11.(i1_13 + i_15) <- a_11.(i2_14 + i_15);
-            a_11.(i2_14 + i_15) <- t_16
+      (match (! t_10) with
+       | Some (i_11) ->
+          if ((fst i_11) <> t_8) then
+           let a_12 = t_4.arr
+           and m_13 = t_4.m in
+           let i1_14 = (t_8 * m_13)
+           and i2_15 = ((fst i_11) * m_13) in
+           for i_16 = 0 to (m_13 - 1) do
+            let t_17 = a_12.(i1_14 + i_16) in
+            a_12.(i1_14 + i_16) <- a_12.(i2_15 + i_16);
+            a_12.(i2_15 + i_16) <- t_17
            done
           else ();
-          (Some (snd i_10))
+          (Some (snd i_11))
        | None -> (None))
      end in
-    (match t_20 with
-     | Some (i_21) ->
+    (match t_21 with
+     | Some (i_22) ->
         begin
-         for j_22 = (t_7 + 1) to (t_6 - 1) do
-          let t_23 = (t_4.arr).((j_22 * t_4.m) + t_8) in
-          if (t_23 <> 0.) then begin
-           for j_24 = (t_8 + 1) to (t_5 - 1) do
-            (t_4.arr).((j_22 * t_4.m) + j_24) <-
-             ((t_4.arr).((j_22 * t_4.m) + j_24) -.
-               ((t_23 /. i_21) *. (t_4.arr).((t_7 * t_4.m) + j_24)))
+         for j_23 = (t_8 + 1) to (t_6 - 1) do
+          let t_24 = (t_4.arr).((j_23 * t_4.m) + t_9) in
+          if (t_24 <> 0.) then begin
+           for j_25 = (t_9 + 1) to (t_5 - 1) do
+            (t_4.arr).((j_23 * t_4.m) + j_25) <-
+             ((t_4.arr).((j_23 * t_4.m) + j_25) -.
+               ((t_24 /. i_22) *. (t_4.arr).((t_8 * t_4.m) + j_25)))
            done;
-           (t_4.arr).((j_22 * t_4.m) + t_8) <- 0.
+           (t_4.arr).((j_23 * t_4.m) + t_9) <- 0.
           end else ()
          done;
          ()
@@ -21279,357 +21760,6 @@ val resFV2 : ('a, GenFV2.Input.inp -> GenFV2.Output.res) code =
    let t_6 = a_1.n in
    let t_7 = (ref 1.) in
    let t_8 = (ref 1) in
-   while (((! t_3) < t_5) && ((! t_2) < t_6)) do
-    let t_9 = (! t_2) in
-    let t_10 = (! t_3) in
-    let t_11 = (ref (None)) in
-    let t_22 =
-     begin
-      for j_19 = t_9 to (t_6 - 1) do
-       let t_20 = (t_4.arr).((j_19 * t_4.m) + t_10) in
-       if (t_20 <> 0.) then
-        (match (! t_11) with
-         | Some (i_21) ->
-            if ((abs_float (snd i_21)) < (abs_float t_20)) then
-             (t_11 := (Some (j_19, t_20)))
-            else ()
-         | None -> (t_11 := (Some (j_19, t_20))))
-       else ()
-      done;
-      (match (! t_11) with
-       | Some (i_12) ->
-          if ((fst i_12) <> t_9) then begin
-           let a_13 = t_4.arr
-           and m_14 = t_4.m in
-           let i1_15 = (t_9 * m_14)
-           and i2_16 = ((fst i_12) * m_14) in
-           for i_17 = 0 to (m_14 - 1) do
-            let t_18 = a_13.(i1_15 + i_17) in
-            a_13.(i1_15 + i_17) <- a_13.(i2_16 + i_17);
-            a_13.(i2_16 + i_17) <- t_18
-           done;
-           (t_8 := (~- (! t_8)))
-          end else ();
-          (Some (snd i_12))
-       | None -> (None))
-     end in
-    (match t_22 with
-     | Some (i_23) ->
-        begin
-         for j_24 = (t_9 + 1) to (t_6 - 1) do
-          let t_25 = (t_4.arr).((j_24 * t_4.m) + t_10) in
-          if (t_25 <> 0.) then begin
-           for j_26 = (t_10 + 1) to (t_5 - 1) do
-            (t_4.arr).((j_24 * t_4.m) + j_26) <-
-             ((t_4.arr).((j_24 * t_4.m) + j_26) -.
-               ((t_25 /. i_23) *. (t_4.arr).((t_9 * t_4.m) + j_26)))
-           done;
-           (t_4.arr).((j_24 * t_4.m) + t_10) <- 0.
-          end else ()
-         done;
-         (t_7 := ((! t_7) *. i_23))
-        end;
-        (t_2 := ((! t_2) + 1))
-     | None -> (t_8 := 0));
-    (t_3 := ((! t_3) + 1))
-   done;
-   (t_4,
-    if ((! t_8) = 0) then 0.
-    else if ((! t_8) = 1) then (! t_7)
-    else (~-. (! t_7)))>.
-val resFV3 : ('a, GenFV3.Input.inp -> GenFV3.Output.res) code =
-  .<fun a_1 ->
-   let t_2 = (ref 0) in
-   let t_3 = (ref 0) in
-   let t_4 = {arr = (Array.copy a_1.arr)} (a_1) in
-   let t_5 = a_1.m in
-   let t_6 = a_1.n in
-   while (((! t_3) < t_5) && ((! t_2) < t_6)) do
-    let t_7 = (! t_2) in
-    let t_8 = (! t_3) in
-    let t_9 = (ref (None)) in
-    let t_20 =
-     begin
-      for j_17 = t_7 to (t_6 - 1) do
-       let t_18 = (t_4.arr).((j_17 * t_4.m) + t_8) in
-       if (t_18 <> 0.) then
-        (match (! t_9) with
-         | Some (i_19) ->
-            if ((abs_float (snd i_19)) < (abs_float t_18)) then
-             (t_9 := (Some (j_17, t_18)))
-            else ()
-         | None -> (t_9 := (Some (j_17, t_18))))
-       else ()
-      done;
-      (match (! t_9) with
-       | Some (i_10) ->
-          if ((fst i_10) <> t_7) then
-           let a_11 = t_4.arr
-           and m_12 = t_4.m in
-           let i1_13 = (t_7 * m_12)
-           and i2_14 = ((fst i_10) * m_12) in
-           for i_15 = 0 to (m_12 - 1) do
-            let t_16 = a_11.(i1_13 + i_15) in
-            a_11.(i1_13 + i_15) <- a_11.(i2_14 + i_15);
-            a_11.(i2_14 + i_15) <- t_16
-           done
-          else ();
-          (Some (snd i_10))
-       | None -> (None))
-     end in
-    (match t_20 with
-     | Some (i_21) ->
-        begin
-         for j_22 = (t_7 + 1) to (t_6 - 1) do
-          let t_23 = (t_4.arr).((j_22 * t_4.m) + t_8) in
-          if (t_23 <> 0.) then begin
-           for j_24 = (t_8 + 1) to (t_5 - 1) do
-            (t_4.arr).((j_22 * t_4.m) + j_24) <-
-             ((t_4.arr).((j_22 * t_4.m) + j_24) -.
-               ((t_23 /. i_21) *. (t_4.arr).((t_7 * t_4.m) + j_24)))
-           done;
-           (t_4.arr).((j_22 * t_4.m) + t_8) <- 0.
-          end else ()
-         done;
-         ()
-        end;
-        (t_2 := ((! t_2) + 1))
-     | None -> ());
-    (t_3 := ((! t_3) + 1))
-   done;
-   (t_4, (! t_2))>.
-val resFV4 : ('a, GenFV4.Input.inp -> GenFV4.Output.res) code =
-  .<fun a_1 ->
-   let t_2 = (ref 0) in
-   let t_3 = (ref 0) in
-   let t_4 = {arr = (Array.copy a_1.arr)} (a_1) in
-   let t_5 = a_1.m in
-   let t_6 = a_1.n in
-   let t_7 = (ref 1.) in
-   let t_8 = (ref 1) in
-   while (((! t_3) < t_5) && ((! t_2) < t_6)) do
-    let t_9 = (! t_2) in
-    let t_10 = (! t_3) in
-    let t_11 = (ref (None)) in
-    let t_22 =
-     begin
-      for j_19 = t_9 to (t_6 - 1) do
-       let t_20 = (t_4.arr).((j_19 * t_4.m) + t_10) in
-       if (t_20 <> 0.) then
-        (match (! t_11) with
-         | Some (i_21) ->
-            if ((abs_float (snd i_21)) < (abs_float t_20)) then
-             (t_11 := (Some (j_19, t_20)))
-            else ()
-         | None -> (t_11 := (Some (j_19, t_20))))
-       else ()
-      done;
-      (match (! t_11) with
-       | Some (i_12) ->
-          if ((fst i_12) <> t_9) then begin
-           let a_13 = t_4.arr
-           and m_14 = t_4.m in
-           let i1_15 = (t_9 * m_14)
-           and i2_16 = ((fst i_12) * m_14) in
-           for i_17 = 0 to (m_14 - 1) do
-            let t_18 = a_13.(i1_15 + i_17) in
-            a_13.(i1_15 + i_17) <- a_13.(i2_16 + i_17);
-            a_13.(i2_16 + i_17) <- t_18
-           done;
-           (t_8 := (~- (! t_8)))
-          end else ();
-          (Some (snd i_12))
-       | None -> (None))
-     end in
-    (match t_22 with
-     | Some (i_23) ->
-        begin
-         for j_24 = (t_9 + 1) to (t_6 - 1) do
-          let t_25 = (t_4.arr).((j_24 * t_4.m) + t_10) in
-          if (t_25 <> 0.) then begin
-           for j_26 = (t_10 + 1) to (t_5 - 1) do
-            (t_4.arr).((j_24 * t_4.m) + j_26) <-
-             ((t_4.arr).((j_24 * t_4.m) + j_26) -.
-               ((t_25 /. i_23) *. (t_4.arr).((t_9 * t_4.m) + j_26)))
-           done;
-           (t_4.arr).((j_24 * t_4.m) + t_10) <- 0.
-          end else ()
-         done;
-         (t_7 := ((! t_7) *. i_23))
-        end;
-        (t_2 := ((! t_2) + 1))
-     | None -> (t_8 := 0));
-    (t_3 := ((! t_3) + 1))
-   done;
-   (t_4,
-    if ((! t_8) = 0) then 0.
-    else if ((! t_8) = 1) then (! t_7)
-    else (~-. (! t_7)), (! t_2))>.
-val resFV5 : ('a, GenFV5.Input.inp -> GenFV5.Output.res) code =
-  .<fun a_1 ->
-   let t_2 = (ref 0) in
-   let t_3 = (ref 0) in
-   let t_4 = {arr = (Array.copy a_1.arr)} (a_1) in
-   let t_5 = a_1.m in
-   let t_6 = a_1.n in
-   let t_7 = (ref 1.) in
-   let t_8 = (ref 1) in
-   while (((! t_3) < t_5) && ((! t_2) < t_6)) do
-    let t_9 = (! t_2) in
-    let t_10 = (! t_3) in
-    let t_11 = (ref (None)) in
-    let t_30 =
-     begin
-      for j_26 = t_9 to (t_6 - 1) do
-       for j_27 = t_10 to (t_5 - 1) do
-        let t_28 = (t_4.arr).((j_26 * t_4.m) + j_27) in
-        if (t_28 <> 0.) then
-         (match (! t_11) with
-          | Some (i_29) ->
-             if ((abs_float (snd i_29)) < (abs_float t_28)) then
-              (t_11 := (Some ((j_26, j_27), t_28)))
-             else ()
-          | None -> (t_11 := (Some ((j_26, j_27), t_28))))
-        else ()
-       done
-      done;
-      (match (! t_11) with
-       | Some (i_12) ->
-          if ((snd (fst i_12)) <> t_10) then begin
-           let a_19 = t_4.arr
-           and nm_20 = (t_4.n * t_4.m)
-           and m_21 = t_4.m in
-           let rec loop_22 =
-            fun i1_23 ->
-             fun i2_24 ->
-              if (i2_24 < nm_20) then
-               let t_25 = a_19.(i1_23) in
-               a_19.(i1_23) <- a_19.(i2_24);
-               a_19.(i2_24) <- t_25;
-               (loop_22 (i1_23 + m_21) (i2_24 + m_21))
-              else () in
-           (loop_22 t_10 (snd (fst i_12)));
-           (t_8 := (~- (! t_8)))
-          end else ();
-          if ((fst (fst i_12)) <> t_9) then begin
-           let a_13 = t_4.arr
-           and m_14 = t_4.m in
-           let i1_15 = (t_9 * m_14)
-           and i2_16 = ((snd (fst i_12)) * m_14) in
-           for i_17 = 0 to (m_14 - 1) do
-            let t_18 = a_13.(i1_15 + i_17) in
-            a_13.(i1_15 + i_17) <- a_13.(i2_16 + i_17);
-            a_13.(i2_16 + i_17) <- t_18
-           done;
-           (t_8 := (~- (! t_8)))
-          end else ();
-          (Some (snd i_12))
-       | None -> (None))
-     end in
-    (match t_30 with
-     | Some (i_31) ->
-        begin
-         for j_32 = (t_9 + 1) to (t_6 - 1) do
-          let t_33 = (t_4.arr).((j_32 * t_4.m) + t_10) in
-          if (t_33 <> 0.) then begin
-           for j_34 = (t_10 + 1) to (t_5 - 1) do
-            (t_4.arr).((j_32 * t_4.m) + j_34) <-
-             ((t_4.arr).((j_32 * t_4.m) + j_34) -.
-               ((t_33 /. i_31) *. (t_4.arr).((t_9 * t_4.m) + j_34)))
-           done;
-           (t_4.arr).((j_32 * t_4.m) + t_10) <- 0.
-          end else ()
-         done;
-         (t_7 := ((! t_7) *. i_31))
-        end;
-        (t_2 := ((! t_2) + 1))
-     | None -> (t_8 := 0));
-    (t_3 := ((! t_3) + 1))
-   done;
-   (t_4,
-    if ((! t_8) = 0) then 0.
-    else if ((! t_8) = 1) then (! t_7)
-    else (~-. (! t_7)), (! t_2))>.
-val resFV6 : ('a, GenFV6.Input.inp -> GenFV6.Output.res) code =
-  .<fun a_1 ->
-   let t_2 = (ref 0) in
-   let t_3 = (ref 0) in
-   let t_4 = {arr = (Array.copy a_1.arr)} (a_1) in
-   let t_5 = a_1.m in
-   let t_6 = a_1.n in
-   let t_7 = (ref 1.) in
-   let t_8 = (ref 1) in
-   let t_9 = (ref ([])) in
-   let t_10 = t_4 in
-   while (((! t_3) < t_5) && ((! t_2) < t_6)) do
-    let t_11 = (! t_2) in
-    let t_12 = (! t_3) in
-    let t_13 = (ref (None)) in
-    let t_24 =
-     begin
-      for j_21 = t_11 to (t_6 - 1) do
-       let t_22 = (t_4.arr).((j_21 * t_4.m) + t_12) in
-       if (t_22 <> 0.) then
-        (match (! t_13) with
-         | Some (i_23) ->
-            if ((abs_float (snd i_23)) < (abs_float t_22)) then
-             (t_13 := (Some (j_21, t_22)))
-            else ()
-         | None -> (t_13 := (Some (j_21, t_22))))
-       else ()
-      done;
-      (match (! t_13) with
-       | Some (i_14) ->
-          if ((fst i_14) <> t_11) then begin
-           begin
-            let a_15 = t_4.arr
-            and m_16 = t_4.m in
-            let i1_17 = (t_11 * m_16)
-            and i2_18 = ((fst i_14) * m_16) in
-            for i_19 = 0 to (m_16 - 1) do
-             let t_20 = a_15.(i1_17 + i_19) in
-             a_15.(i1_17 + i_19) <- a_15.(i2_18 + i_19);
-             a_15.(i2_18 + i_19) <- t_20
-            done;
-            (t_8 := (~- (! t_8)))
-           end;
-           (t_9 := ((RowSwap ((fst i_14), t_11)) :: (! t_9)))
-          end else ();
-          (Some (snd i_14))
-       | None -> (None))
-     end in
-    (match t_24 with
-     | Some (i_25) ->
-        begin
-         for j_26 = (t_11 + 1) to (t_6 - 1) do
-          let t_27 = (t_4.arr).((j_26 * t_4.m) + t_12) in
-          if (t_27 <> 0.) then begin
-           for j_28 = (t_12 + 1) to (t_5 - 1) do
-            (t_4.arr).((j_26 * t_4.m) + j_28) <-
-             ((t_4.arr).((j_26 * t_4.m) + j_28) -.
-               ((t_27 /. i_25) *. (t_4.arr).((t_11 * t_4.m) + j_28)))
-           done;
-           (t_10.arr).((j_26 * t_10.m) + t_12) <- (t_27 /. i_25);
-           (t_4.arr).((j_26 * t_4.m) + t_12) <- 0.
-          end else ()
-         done;
-         (t_7 := ((! t_7) *. i_25))
-        end;
-        (t_2 := ((! t_2) + 1))
-     | None -> (t_8 := 0));
-    (t_3 := ((! t_3) + 1))
-   done;
-   (t_4, t_10, (! t_9))>.
-val resFV7 : ('a, GenFV7.Input.inp -> GenFV7.Output.res) code =
-  .<fun a_1 ->
-   let t_2 = (ref 0) in
-   let t_3 = (ref 0) in
-   let t_4 = {arr = (Array.copy a_1.arr)} (a_1) in
-   let t_5 = a_1.m in
-   let t_6 = a_1.n in
-   let t_7 = (ref 1.) in
-   let t_8 = (ref 1) in
-   let t_9 = (ref ([])) in
    while (((! t_3) < t_5) && ((! t_2) < t_6)) do
     let t_10 = (! t_2) in
     let t_11 = (! t_3) in
@@ -21650,19 +21780,16 @@ val resFV7 : ('a, GenFV7.Input.inp -> GenFV7.Output.res) code =
       (match (! t_12) with
        | Some (i_13) ->
           if ((fst i_13) <> t_10) then begin
-           begin
-            let a_14 = t_4.arr
-            and m_15 = t_4.m in
-            let i1_16 = (t_10 * m_15)
-            and i2_17 = ((fst i_13) * m_15) in
-            for i_18 = 0 to (m_15 - 1) do
-             let t_19 = a_14.(i1_16 + i_18) in
-             a_14.(i1_16 + i_18) <- a_14.(i2_17 + i_18);
-             a_14.(i2_17 + i_18) <- t_19
-            done;
-            (t_8 := (~- (! t_8)))
-           end;
-           (t_9 := ((RowSwap ((fst i_13), t_10)) :: (! t_9)))
+           let a_14 = t_4.arr
+           and m_15 = t_4.m in
+           let i1_16 = (t_10 * m_15)
+           and i2_17 = ((fst i_13) * m_15) in
+           for i_18 = 0 to (m_15 - 1) do
+            let t_19 = a_14.(i1_16 + i_18) in
+            a_14.(i1_16 + i_18) <- a_14.(i2_17 + i_18);
+            a_14.(i2_17 + i_18) <- t_19
+           done;
+           (t_8 := (~- (! t_8)))
           end else ();
           (Some (snd i_13))
        | None -> (None))
@@ -21672,13 +21799,14 @@ val resFV7 : ('a, GenFV7.Input.inp -> GenFV7.Output.res) code =
         begin
          for j_25 = (t_10 + 1) to (t_6 - 1) do
           let t_26 = (t_4.arr).((j_25 * t_4.m) + t_11) in
-          if (t_26 <> 0.) then
+          if (t_26 <> 0.) then begin
            for j_27 = (t_11 + 1) to (t_5 - 1) do
             (t_4.arr).((j_25 * t_4.m) + j_27) <-
              ((t_4.arr).((j_25 * t_4.m) + j_27) -.
                ((t_26 /. i_24) *. (t_4.arr).((t_10 * t_4.m) + j_27)))
-           done
-          else ()
+           done;
+           (t_4.arr).((j_25 * t_4.m) + t_11) <- 0.
+          end else ()
          done;
          (t_7 := ((! t_7) *. i_24))
         end;
@@ -21686,7 +21814,223 @@ val resFV7 : ('a, GenFV7.Input.inp -> GenFV7.Output.res) code =
      | None -> (t_8 := 0));
     (t_3 := ((! t_3) + 1))
    done;
-   (t_4, (! t_9))>.
+   (t_4,
+    if ((! t_8) = 0) then 0.
+    else if ((! t_8) = 1) then (! t_7)
+    else (~-. (! t_7)))>.
+val resFV3 : ('a, GenFV3.Input.inp -> GenFV3.Output.res) code =
+  .<fun a_1 ->
+   let t_2 = (ref 0) in
+   let t_3 = (ref 0) in
+   let t_4 = {arr = (Array.copy a_1.arr)} (a_1) in
+   let t_5 = a_1.m in
+   let t_6 = a_1.n in
+   while (((! t_3) < t_5) && ((! t_2) < t_6)) do
+    let t_8 = (! t_2) in
+    let t_9 = (! t_3) in
+    let t_10 = (ref (None)) in
+    let t_21 =
+     begin
+      for j_18 = t_8 to (t_6 - 1) do
+       let t_19 = (t_4.arr).((j_18 * t_4.m) + t_9) in
+       if (t_19 <> 0.) then
+        (match (! t_10) with
+         | Some (i_20) ->
+            if ((abs_float (snd i_20)) < (abs_float t_19)) then
+             (t_10 := (Some (j_18, t_19)))
+            else ()
+         | None -> (t_10 := (Some (j_18, t_19))))
+       else ()
+      done;
+      (match (! t_10) with
+       | Some (i_11) ->
+          if ((fst i_11) <> t_8) then
+           let a_12 = t_4.arr
+           and m_13 = t_4.m in
+           let i1_14 = (t_8 * m_13)
+           and i2_15 = ((fst i_11) * m_13) in
+           for i_16 = 0 to (m_13 - 1) do
+            let t_17 = a_12.(i1_14 + i_16) in
+            a_12.(i1_14 + i_16) <- a_12.(i2_15 + i_16);
+            a_12.(i2_15 + i_16) <- t_17
+           done
+          else ();
+          (Some (snd i_11))
+       | None -> (None))
+     end in
+    (match t_21 with
+     | Some (i_22) ->
+        begin
+         for j_23 = (t_8 + 1) to (t_6 - 1) do
+          let t_24 = (t_4.arr).((j_23 * t_4.m) + t_9) in
+          if (t_24 <> 0.) then begin
+           for j_25 = (t_9 + 1) to (t_5 - 1) do
+            (t_4.arr).((j_23 * t_4.m) + j_25) <-
+             ((t_4.arr).((j_23 * t_4.m) + j_25) -.
+               ((t_24 /. i_22) *. (t_4.arr).((t_8 * t_4.m) + j_25)))
+           done;
+           (t_4.arr).((j_23 * t_4.m) + t_9) <- 0.
+          end else ()
+         done;
+         ()
+        end;
+        (t_2 := ((! t_2) + 1))
+     | None -> ());
+    (t_3 := ((! t_3) + 1))
+   done;
+   (t_4, (! t_2))>.
+val resFV4 : ('a, GenFV4.Input.inp -> GenFV4.Output.res) code =
+  .<fun a_1 ->
+   let t_2 = (ref 0) in
+   let t_3 = (ref 0) in
+   let t_4 = {arr = (Array.copy a_1.arr)} (a_1) in
+   let t_5 = a_1.m in
+   let t_6 = a_1.n in
+   let t_7 = (ref 1.) in
+   let t_8 = (ref 1) in
+   while (((! t_3) < t_5) && ((! t_2) < t_6)) do
+    let t_10 = (! t_2) in
+    let t_11 = (! t_3) in
+    let t_12 = (ref (None)) in
+    let t_23 =
+     begin
+      for j_20 = t_10 to (t_6 - 1) do
+       let t_21 = (t_4.arr).((j_20 * t_4.m) + t_11) in
+       if (t_21 <> 0.) then
+        (match (! t_12) with
+         | Some (i_22) ->
+            if ((abs_float (snd i_22)) < (abs_float t_21)) then
+             (t_12 := (Some (j_20, t_21)))
+            else ()
+         | None -> (t_12 := (Some (j_20, t_21))))
+       else ()
+      done;
+      (match (! t_12) with
+       | Some (i_13) ->
+          if ((fst i_13) <> t_10) then begin
+           let a_14 = t_4.arr
+           and m_15 = t_4.m in
+           let i1_16 = (t_10 * m_15)
+           and i2_17 = ((fst i_13) * m_15) in
+           for i_18 = 0 to (m_15 - 1) do
+            let t_19 = a_14.(i1_16 + i_18) in
+            a_14.(i1_16 + i_18) <- a_14.(i2_17 + i_18);
+            a_14.(i2_17 + i_18) <- t_19
+           done;
+           (t_8 := (~- (! t_8)))
+          end else ();
+          (Some (snd i_13))
+       | None -> (None))
+     end in
+    (match t_23 with
+     | Some (i_24) ->
+        begin
+         for j_25 = (t_10 + 1) to (t_6 - 1) do
+          let t_26 = (t_4.arr).((j_25 * t_4.m) + t_11) in
+          if (t_26 <> 0.) then begin
+           for j_27 = (t_11 + 1) to (t_5 - 1) do
+            (t_4.arr).((j_25 * t_4.m) + j_27) <-
+             ((t_4.arr).((j_25 * t_4.m) + j_27) -.
+               ((t_26 /. i_24) *. (t_4.arr).((t_10 * t_4.m) + j_27)))
+           done;
+           (t_4.arr).((j_25 * t_4.m) + t_11) <- 0.
+          end else ()
+         done;
+         (t_7 := ((! t_7) *. i_24))
+        end;
+        (t_2 := ((! t_2) + 1))
+     | None -> (t_8 := 0));
+    (t_3 := ((! t_3) + 1))
+   done;
+   (t_4,
+    if ((! t_8) = 0) then 0.
+    else if ((! t_8) = 1) then (! t_7)
+    else (~-. (! t_7)), (! t_2))>.
+val resFV5 : ('a, GenFV5.Input.inp -> GenFV5.Output.res) code =
+  .<fun a_1 ->
+   let t_2 = (ref 0) in
+   let t_3 = (ref 0) in
+   let t_4 = {arr = (Array.copy a_1.arr)} (a_1) in
+   let t_5 = a_1.m in
+   let t_6 = a_1.n in
+   let t_7 = (ref 1.) in
+   let t_8 = (ref 1) in
+   while (((! t_3) < t_5) && ((! t_2) < t_6)) do
+    let t_10 = (! t_2) in
+    let t_11 = (! t_3) in
+    let t_12 = (ref (None)) in
+    let t_31 =
+     begin
+      for j_27 = t_10 to (t_6 - 1) do
+       for j_28 = t_11 to (t_5 - 1) do
+        let t_29 = (t_4.arr).((j_27 * t_4.m) + j_28) in
+        if (t_29 <> 0.) then
+         (match (! t_12) with
+          | Some (i_30) ->
+             if ((abs_float (snd i_30)) < (abs_float t_29)) then
+              (t_12 := (Some ((j_27, j_28), t_29)))
+             else ()
+          | None -> (t_12 := (Some ((j_27, j_28), t_29))))
+        else ()
+       done
+      done;
+      (match (! t_12) with
+       | Some (i_13) ->
+          if ((snd (fst i_13)) <> t_11) then begin
+           let a_20 = t_4.arr
+           and nm_21 = (t_4.n * t_4.m)
+           and m_22 = t_4.m in
+           let rec loop_23 =
+            fun i1_24 ->
+             fun i2_25 ->
+              if (i2_25 < nm_21) then
+               let t_26 = a_20.(i1_24) in
+               a_20.(i1_24) <- a_20.(i2_25);
+               a_20.(i2_25) <- t_26;
+               (loop_23 (i1_24 + m_22) (i2_25 + m_22))
+              else () in
+           (loop_23 t_11 (snd (fst i_13)));
+           (t_8 := (~- (! t_8)))
+          end else ();
+          if ((fst (fst i_13)) <> t_10) then begin
+           let a_14 = t_4.arr
+           and m_15 = t_4.m in
+           let i1_16 = (t_10 * m_15)
+           and i2_17 = ((snd (fst i_13)) * m_15) in
+           for i_18 = 0 to (m_15 - 1) do
+            let t_19 = a_14.(i1_16 + i_18) in
+            a_14.(i1_16 + i_18) <- a_14.(i2_17 + i_18);
+            a_14.(i2_17 + i_18) <- t_19
+           done;
+           (t_8 := (~- (! t_8)))
+          end else ();
+          (Some (snd i_13))
+       | None -> (None))
+     end in
+    (match t_31 with
+     | Some (i_32) ->
+        begin
+         for j_33 = (t_10 + 1) to (t_6 - 1) do
+          let t_34 = (t_4.arr).((j_33 * t_4.m) + t_11) in
+          if (t_34 <> 0.) then begin
+           for j_35 = (t_11 + 1) to (t_5 - 1) do
+            (t_4.arr).((j_33 * t_4.m) + j_35) <-
+             ((t_4.arr).((j_33 * t_4.m) + j_35) -.
+               ((t_34 /. i_32) *. (t_4.arr).((t_10 * t_4.m) + j_35)))
+           done;
+           (t_4.arr).((j_33 * t_4.m) + t_11) <- 0.
+          end else ()
+         done;
+         (t_7 := ((! t_7) *. i_32))
+        end;
+        (t_2 := ((! t_2) + 1))
+     | None -> (t_8 := 0));
+    (t_3 := ((! t_3) + 1))
+   done;
+   (t_4,
+    if ((! t_8) = 0) then 0.
+    else if ((! t_8) = 1) then (! t_7)
+    else (~-. (! t_7)), (! t_2))>.
 val resIA1 : ('a, GenIA1.Input.inp -> GenIA1.Output.res) code =
   .<fun a_1 ->
    let t_2 = (ref 0) in
@@ -22372,52 +22716,52 @@ val resFA11 : ('a, GenFA11.Input.inp -> GenFA11.Output.res) code =
    let t_6 = (Array.length a_1.(0)) in
    let t_7 = (Array.length a_1) in
    while (((! t_3) < t_6) && ((! t_2) < t_7)) do
-    let t_8 = (! t_2) in
-    let t_9 = (! t_3) in
-    let t_10 = (ref (None)) in
-    let t_19 =
+    let t_10 = (! t_2) in
+    let t_11 = (! t_3) in
+    let t_12 = (ref (None)) in
+    let t_21 =
      begin
-      for j_15 = t_8 to (t_7 - 1) do
-       for j_16 = t_9 to (t_6 - 1) do
-        let t_17 = (t_5.(j_15)).(j_16) in
-        if (t_17 <> 0.) then
-         (match (! t_10) with
-          | Some (i_18) ->
-             if ((abs_float (snd i_18)) < (abs_float t_17)) then
-              (t_10 := (Some ((j_15, j_16), t_17)))
+      for j_17 = t_10 to (t_7 - 1) do
+       for j_18 = t_11 to (t_6 - 1) do
+        let t_19 = (t_5.(j_17)).(j_18) in
+        if (t_19 <> 0.) then
+         (match (! t_12) with
+          | Some (i_20) ->
+             if ((abs_float (snd i_20)) < (abs_float t_19)) then
+              (t_12 := (Some ((j_17, j_18), t_19)))
              else ()
-          | None -> (t_10 := (Some ((j_15, j_16), t_17))))
+          | None -> (t_12 := (Some ((j_17, j_18), t_19))))
         else ()
        done
       done;
-      (match (! t_10) with
-       | Some (i_11) ->
-          if ((snd (fst i_11)) <> t_9) then
-           for r_13 = 0 to ((Array.length t_5) - 1) do
-            let t_14 = (t_5.(r_13)).(t_9) in
-            (t_5.(r_13)).(t_9) <- (t_5.(r_13)).(snd (fst i_11));
-            (t_5.(r_13)).(snd (fst i_11)) <- t_14
+      (match (! t_12) with
+       | Some (i_13) ->
+          if ((snd (fst i_13)) <> t_11) then
+           for r_15 = 0 to ((Array.length t_5) - 1) do
+            let t_16 = (t_5.(r_15)).(t_11) in
+            (t_5.(r_15)).(t_11) <- (t_5.(r_15)).(snd (fst i_13));
+            (t_5.(r_15)).(snd (fst i_13)) <- t_16
            done
           else ();
-          if ((fst (fst i_11)) <> t_8) then
-           let t_12 = t_5.(t_8) in
-           t_5.(t_8) <- t_5.(snd (fst i_11));
-           t_5.(snd (fst i_11)) <- t_12
+          if ((fst (fst i_13)) <> t_10) then
+           let t_14 = t_5.(t_10) in
+           t_5.(t_10) <- t_5.(snd (fst i_13));
+           t_5.(snd (fst i_13)) <- t_14
           else ();
-          (Some (snd i_11))
+          (Some (snd i_13))
        | None -> (None))
      end in
-    (match t_19 with
-     | Some (i_20) ->
+    (match t_21 with
+     | Some (i_22) ->
         begin
-         for j_21 = (t_8 + 1) to (t_7 - 1) do
-          let t_22 = (t_5.(j_21)).(t_9) in
-          if (t_22 <> 0.) then begin
-           for j_23 = (t_9 + 1) to (t_6 - 1) do
-            (t_5.(j_21)).(j_23) <-
-             ((t_5.(j_21)).(j_23) -. ((t_22 /. i_20) *. (t_5.(t_8)).(j_23)))
+         for j_23 = (t_10 + 1) to (t_7 - 1) do
+          let t_24 = (t_5.(j_23)).(t_11) in
+          if (t_24 <> 0.) then begin
+           for j_25 = (t_11 + 1) to (t_6 - 1) do
+            (t_5.(j_23)).(j_25) <-
+             ((t_5.(j_23)).(j_25) -. ((t_24 /. i_22) *. (t_5.(t_10)).(j_25)))
            done;
-           (t_5.(j_21)).(t_9) <- 0.
+           (t_5.(j_23)).(t_11) <- 0.
           end else ()
          done;
          ()
@@ -22437,6 +22781,74 @@ val resFA12 : ('a, GenFA12.Input.inp -> GenFA12.Output.res) code =
    let t_8 = (ref 1.) in
    let t_9 = (ref 1) in
    while (((! t_3) < t_6) && ((! t_2) < t_7)) do
+    let t_12 = (! t_2) in
+    let t_13 = (! t_3) in
+    let t_14 = (ref (None)) in
+    let t_23 =
+     begin
+      for j_19 = t_12 to (t_7 - 1) do
+       for j_20 = t_13 to (t_6 - 1) do
+        let t_21 = (t_5.(j_19)).(j_20) in
+        if (t_21 <> 0.) then
+         (match (! t_14) with
+          | Some (i_22) ->
+             if ((abs_float (snd i_22)) < (abs_float t_21)) then
+              (t_14 := (Some ((j_19, j_20), t_21)))
+             else ()
+          | None -> (t_14 := (Some ((j_19, j_20), t_21))))
+        else ()
+       done
+      done;
+      (match (! t_14) with
+       | Some (i_15) ->
+          if ((snd (fst i_15)) <> t_13) then begin
+           for r_17 = 0 to ((Array.length t_5) - 1) do
+            let t_18 = (t_5.(r_17)).(t_13) in
+            (t_5.(r_17)).(t_13) <- (t_5.(r_17)).(snd (fst i_15));
+            (t_5.(r_17)).(snd (fst i_15)) <- t_18
+           done;
+           (t_9 := (~- (! t_9)))
+          end else ();
+          if ((fst (fst i_15)) <> t_12) then begin
+           let t_16 = t_5.(t_12) in
+           t_5.(t_12) <- t_5.(snd (fst i_15));
+           t_5.(snd (fst i_15)) <- t_16;
+           (t_9 := (~- (! t_9)))
+          end else ();
+          (Some (snd i_15))
+       | None -> (None))
+     end in
+    (match t_23 with
+     | Some (i_24) ->
+        begin
+         for j_25 = (t_12 + 1) to (t_7 - 1) do
+          let t_26 = (t_5.(j_25)).(t_13) in
+          if (t_26 <> 0.) then begin
+           for j_27 = (t_13 + 1) to (t_6 - 1) do
+            (t_5.(j_25)).(j_27) <-
+             ((t_5.(j_25)).(j_27) -. ((t_26 /. i_24) *. (t_5.(t_12)).(j_27)))
+           done;
+           (t_5.(j_25)).(t_13) <- 0.
+          end else ()
+         done;
+         (t_8 := ((! t_8) *. i_24))
+        end;
+        (t_2 := ((! t_2) + 1))
+     | None -> (t_9 := 0));
+    (t_3 := ((! t_3) + 1))
+   done;
+   (t_5,
+    if ((! t_9) = 0) then 0.
+    else if ((! t_9) = 1) then (! t_8)
+    else (~-. (! t_8)))>.
+val resFA13 : ('a, GenFA13.Input.inp -> GenFA13.Output.res) code =
+  .<fun a_1 ->
+   let t_2 = (ref 0) in
+   let t_3 = (ref 0) in
+   let t_5 = (Array.map (fun x_4 -> (Array.copy x_4)) (Array.copy a_1)) in
+   let t_6 = (Array.length a_1.(0)) in
+   let t_7 = (Array.length a_1) in
+   while (((! t_3) < t_6) && ((! t_2) < t_7)) do
     let t_10 = (! t_2) in
     let t_11 = (! t_3) in
     let t_12 = (ref (None)) in
@@ -22457,20 +22869,18 @@ val resFA12 : ('a, GenFA12.Input.inp -> GenFA12.Output.res) code =
       done;
       (match (! t_12) with
        | Some (i_13) ->
-          if ((snd (fst i_13)) <> t_11) then begin
+          if ((snd (fst i_13)) <> t_11) then
            for r_15 = 0 to ((Array.length t_5) - 1) do
             let t_16 = (t_5.(r_15)).(t_11) in
             (t_5.(r_15)).(t_11) <- (t_5.(r_15)).(snd (fst i_13));
             (t_5.(r_15)).(snd (fst i_13)) <- t_16
-           done;
-           (t_9 := (~- (! t_9)))
-          end else ();
-          if ((fst (fst i_13)) <> t_10) then begin
+           done
+          else ();
+          if ((fst (fst i_13)) <> t_10) then
            let t_14 = t_5.(t_10) in
            t_5.(t_10) <- t_5.(snd (fst i_13));
-           t_5.(snd (fst i_13)) <- t_14;
-           (t_9 := (~- (! t_9)))
-          end else ();
+           t_5.(snd (fst i_13)) <- t_14
+          else ();
           (Some (snd i_13))
        | None -> (None))
      end in
@@ -22485,72 +22895,6 @@ val resFA12 : ('a, GenFA12.Input.inp -> GenFA12.Output.res) code =
              ((t_5.(j_23)).(j_25) -. ((t_24 /. i_22) *. (t_5.(t_10)).(j_25)))
            done;
            (t_5.(j_23)).(t_11) <- 0.
-          end else ()
-         done;
-         (t_8 := ((! t_8) *. i_22))
-        end;
-        (t_2 := ((! t_2) + 1))
-     | None -> (t_9 := 0));
-    (t_3 := ((! t_3) + 1))
-   done;
-   (t_5,
-    if ((! t_9) = 0) then 0.
-    else if ((! t_9) = 1) then (! t_8)
-    else (~-. (! t_8)))>.
-val resFA13 : ('a, GenFA13.Input.inp -> GenFA13.Output.res) code =
-  .<fun a_1 ->
-   let t_2 = (ref 0) in
-   let t_3 = (ref 0) in
-   let t_5 = (Array.map (fun x_4 -> (Array.copy x_4)) (Array.copy a_1)) in
-   let t_6 = (Array.length a_1.(0)) in
-   let t_7 = (Array.length a_1) in
-   while (((! t_3) < t_6) && ((! t_2) < t_7)) do
-    let t_8 = (! t_2) in
-    let t_9 = (! t_3) in
-    let t_10 = (ref (None)) in
-    let t_19 =
-     begin
-      for j_15 = t_8 to (t_7 - 1) do
-       for j_16 = t_9 to (t_6 - 1) do
-        let t_17 = (t_5.(j_15)).(j_16) in
-        if (t_17 <> 0.) then
-         (match (! t_10) with
-          | Some (i_18) ->
-             if ((abs_float (snd i_18)) < (abs_float t_17)) then
-              (t_10 := (Some ((j_15, j_16), t_17)))
-             else ()
-          | None -> (t_10 := (Some ((j_15, j_16), t_17))))
-        else ()
-       done
-      done;
-      (match (! t_10) with
-       | Some (i_11) ->
-          if ((snd (fst i_11)) <> t_9) then
-           for r_13 = 0 to ((Array.length t_5) - 1) do
-            let t_14 = (t_5.(r_13)).(t_9) in
-            (t_5.(r_13)).(t_9) <- (t_5.(r_13)).(snd (fst i_11));
-            (t_5.(r_13)).(snd (fst i_11)) <- t_14
-           done
-          else ();
-          if ((fst (fst i_11)) <> t_8) then
-           let t_12 = t_5.(t_8) in
-           t_5.(t_8) <- t_5.(snd (fst i_11));
-           t_5.(snd (fst i_11)) <- t_12
-          else ();
-          (Some (snd i_11))
-       | None -> (None))
-     end in
-    (match t_19 with
-     | Some (i_20) ->
-        begin
-         for j_21 = (t_8 + 1) to (t_7 - 1) do
-          let t_22 = (t_5.(j_21)).(t_9) in
-          if (t_22 <> 0.) then begin
-           for j_23 = (t_9 + 1) to (t_6 - 1) do
-            (t_5.(j_21)).(j_23) <-
-             ((t_5.(j_21)).(j_23) -. ((t_22 /. i_20) *. (t_5.(t_8)).(j_23)))
-           done;
-           (t_5.(j_21)).(t_9) <- 0.
           end else ()
          done;
          ()
@@ -22570,57 +22914,57 @@ val resFA14 : ('a, GenFA14.Input.inp -> GenFA14.Output.res) code =
    let t_8 = (ref 1.) in
    let t_9 = (ref 1) in
    while (((! t_3) < t_6) && ((! t_2) < t_7)) do
-    let t_10 = (! t_2) in
-    let t_11 = (! t_3) in
-    let t_12 = (ref (None)) in
-    let t_21 =
+    let t_12 = (! t_2) in
+    let t_13 = (! t_3) in
+    let t_14 = (ref (None)) in
+    let t_23 =
      begin
-      for j_17 = t_10 to (t_7 - 1) do
-       for j_18 = t_11 to (t_6 - 1) do
-        let t_19 = (t_5.(j_17)).(j_18) in
-        if (t_19 <> 0.) then
-         (match (! t_12) with
-          | Some (i_20) ->
-             if ((abs_float (snd i_20)) < (abs_float t_19)) then
-              (t_12 := (Some ((j_17, j_18), t_19)))
+      for j_19 = t_12 to (t_7 - 1) do
+       for j_20 = t_13 to (t_6 - 1) do
+        let t_21 = (t_5.(j_19)).(j_20) in
+        if (t_21 <> 0.) then
+         (match (! t_14) with
+          | Some (i_22) ->
+             if ((abs_float (snd i_22)) < (abs_float t_21)) then
+              (t_14 := (Some ((j_19, j_20), t_21)))
              else ()
-          | None -> (t_12 := (Some ((j_17, j_18), t_19))))
+          | None -> (t_14 := (Some ((j_19, j_20), t_21))))
         else ()
        done
       done;
-      (match (! t_12) with
-       | Some (i_13) ->
-          if ((snd (fst i_13)) <> t_11) then begin
-           for r_15 = 0 to ((Array.length t_5) - 1) do
-            let t_16 = (t_5.(r_15)).(t_11) in
-            (t_5.(r_15)).(t_11) <- (t_5.(r_15)).(snd (fst i_13));
-            (t_5.(r_15)).(snd (fst i_13)) <- t_16
+      (match (! t_14) with
+       | Some (i_15) ->
+          if ((snd (fst i_15)) <> t_13) then begin
+           for r_17 = 0 to ((Array.length t_5) - 1) do
+            let t_18 = (t_5.(r_17)).(t_13) in
+            (t_5.(r_17)).(t_13) <- (t_5.(r_17)).(snd (fst i_15));
+            (t_5.(r_17)).(snd (fst i_15)) <- t_18
            done;
            (t_9 := (~- (! t_9)))
           end else ();
-          if ((fst (fst i_13)) <> t_10) then begin
-           let t_14 = t_5.(t_10) in
-           t_5.(t_10) <- t_5.(snd (fst i_13));
-           t_5.(snd (fst i_13)) <- t_14;
+          if ((fst (fst i_15)) <> t_12) then begin
+           let t_16 = t_5.(t_12) in
+           t_5.(t_12) <- t_5.(snd (fst i_15));
+           t_5.(snd (fst i_15)) <- t_16;
            (t_9 := (~- (! t_9)))
           end else ();
-          (Some (snd i_13))
+          (Some (snd i_15))
        | None -> (None))
      end in
-    (match t_21 with
-     | Some (i_22) ->
+    (match t_23 with
+     | Some (i_24) ->
         begin
-         for j_23 = (t_10 + 1) to (t_7 - 1) do
-          let t_24 = (t_5.(j_23)).(t_11) in
-          if (t_24 <> 0.) then begin
-           for j_25 = (t_11 + 1) to (t_6 - 1) do
-            (t_5.(j_23)).(j_25) <-
-             ((t_5.(j_23)).(j_25) -. ((t_24 /. i_22) *. (t_5.(t_10)).(j_25)))
+         for j_25 = (t_12 + 1) to (t_7 - 1) do
+          let t_26 = (t_5.(j_25)).(t_13) in
+          if (t_26 <> 0.) then begin
+           for j_27 = (t_13 + 1) to (t_6 - 1) do
+            (t_5.(j_25)).(j_27) <-
+             ((t_5.(j_25)).(j_27) -. ((t_26 /. i_24) *. (t_5.(t_12)).(j_27)))
            done;
-           (t_5.(j_23)).(t_11) <- 0.
+           (t_5.(j_25)).(t_13) <- 0.
           end else ()
          done;
-         (t_8 := ((! t_8) *. i_22))
+         (t_8 := ((! t_8) *. i_24))
         end;
         (t_2 := ((! t_2) + 1))
      | None -> (t_9 := 0));
@@ -22641,50 +22985,50 @@ val resFA24 : ('a, GenFA24.Input.inp -> GenFA24.Output.res) code =
    let t_9 = (ref 1) in
    let t_10 = (ref ([])) in
    while (((! t_3) < t_6) && ((! t_2) < t_7)) do
-    let t_11 = (! t_2) in
-    let t_12 = (! t_3) in
-    let t_13 = (ref (None)) in
-    let t_19 =
+    let t_13 = (! t_2) in
+    let t_14 = (! t_3) in
+    let t_15 = (ref (None)) in
+    let t_21 =
      begin
-      for j_16 = t_11 to (t_7 - 1) do
-       let t_17 = (t_5.(j_16)).(t_12) in
-       if (t_17 <> 0.) then
-        (match (! t_13) with
-         | Some (i_18) ->
-            if ((abs_float (snd i_18)) < (abs_float t_17)) then
-             (t_13 := (Some (j_16, t_17)))
+      for j_18 = t_13 to (t_7 - 1) do
+       let t_19 = (t_5.(j_18)).(t_14) in
+       if (t_19 <> 0.) then
+        (match (! t_15) with
+         | Some (i_20) ->
+            if ((abs_float (snd i_20)) < (abs_float t_19)) then
+             (t_15 := (Some (j_18, t_19)))
             else ()
-         | None -> (t_13 := (Some (j_16, t_17))))
+         | None -> (t_15 := (Some (j_18, t_19))))
        else ()
       done;
-      (match (! t_13) with
-       | Some (i_14) ->
-          if ((fst i_14) <> t_11) then begin
+      (match (! t_15) with
+       | Some (i_16) ->
+          if ((fst i_16) <> t_13) then begin
            begin
-            let t_15 = t_5.(t_11) in
-            t_5.(t_11) <- t_5.(fst i_14);
-            t_5.(fst i_14) <- t_15;
+            let t_17 = t_5.(t_13) in
+            t_5.(t_13) <- t_5.(fst i_16);
+            t_5.(fst i_16) <- t_17;
             (t_9 := (~- (! t_9)))
            end;
-           (t_10 := ((RowSwap ((fst i_14), t_11)) :: (! t_10)))
+           (t_10 := ((RowSwap ((fst i_16), t_13)) :: (! t_10)))
           end else ();
-          (Some (snd i_14))
+          (Some (snd i_16))
        | None -> (None))
      end in
-    (match t_19 with
-     | Some (i_20) ->
+    (match t_21 with
+     | Some (i_22) ->
         begin
-         for j_21 = (t_11 + 1) to (t_7 - 1) do
-          let t_22 = (t_5.(j_21)).(t_12) in
-          if (t_22 <> 0.) then begin
-           for j_23 = (t_12 + 1) to (t_6 - 1) do
-            (t_5.(j_21)).(j_23) <-
-             ((t_5.(j_21)).(j_23) -. ((t_22 /. i_20) *. (t_5.(t_11)).(j_23)))
+         for j_23 = (t_13 + 1) to (t_7 - 1) do
+          let t_24 = (t_5.(j_23)).(t_14) in
+          if (t_24 <> 0.) then begin
+           for j_25 = (t_14 + 1) to (t_6 - 1) do
+            (t_5.(j_23)).(j_25) <-
+             ((t_5.(j_23)).(j_25) -. ((t_24 /. i_22) *. (t_5.(t_13)).(j_25)))
            done;
-           (t_5.(j_21)).(t_12) <- 0.
+           (t_5.(j_23)).(t_14) <- 0.
           end else ()
          done;
-         (t_8 := ((! t_8) *. i_20))
+         (t_8 := ((! t_8) *. i_22))
         end;
         (t_2 := ((! t_2) + 1))
      | None -> (t_9 := 0));
@@ -22705,56 +23049,56 @@ val resFA25 : ('a, GenFA25.Input.inp -> GenFA25.Output.res) code =
    let t_9 = (ref 1) in
    let t_11 = (ref (Array.init t_7 (fun i_10 -> i_10))) in
    while (((! t_3) < t_6) && ((! t_2) < t_7)) do
-    let t_12 = (! t_2) in
-    let t_13 = (! t_3) in
-    let t_14 = (ref (None)) in
-    let t_24 =
+    let t_14 = (! t_2) in
+    let t_15 = (! t_3) in
+    let t_16 = (ref (None)) in
+    let t_26 =
      begin
-      for j_21 = t_12 to (t_7 - 1) do
-       let t_22 = (t_5.(j_21)).(t_13) in
-       if (t_22 <> 0.) then
-        (match (! t_14) with
-         | Some (i_23) ->
-            if ((abs_float (snd i_23)) < (abs_float t_22)) then
-             (t_14 := (Some (j_21, t_22)))
+      for j_23 = t_14 to (t_7 - 1) do
+       let t_24 = (t_5.(j_23)).(t_15) in
+       if (t_24 <> 0.) then
+        (match (! t_16) with
+         | Some (i_25) ->
+            if ((abs_float (snd i_25)) < (abs_float t_24)) then
+             (t_16 := (Some (j_23, t_24)))
             else ()
-         | None -> (t_14 := (Some (j_21, t_22))))
+         | None -> (t_16 := (Some (j_23, t_24))))
        else ()
       done;
-      (match (! t_14) with
-       | Some (i_15) ->
-          if ((fst i_15) <> t_12) then begin
+      (match (! t_16) with
+       | Some (i_17) ->
+          if ((fst i_17) <> t_14) then begin
            begin
-            let t_16 = t_5.(t_12) in
-            t_5.(t_12) <- t_5.(fst i_15);
-            t_5.(fst i_15) <- t_16;
+            let t_18 = t_5.(t_14) in
+            t_5.(t_14) <- t_5.(fst i_17);
+            t_5.(fst i_17) <- t_18;
             (t_9 := (~- (! t_9)))
            end;
            (t_11 :=
-             let (x_17, y_18) = ((fst i_15), t_12) in
-             let b_19 = (! t_11)
-             and t_20 = (! t_11).(x_17) in
-             b_19.(x_17) <- b_19.(y_18);
-             b_19.(y_18) <- t_20;
-             b_19)
+             let (x_19, y_20) = ((fst i_17), t_14) in
+             let b_21 = (! t_11)
+             and t_22 = (! t_11).(x_19) in
+             b_21.(x_19) <- b_21.(y_20);
+             b_21.(y_20) <- t_22;
+             b_21)
           end else ();
-          (Some (snd i_15))
+          (Some (snd i_17))
        | None -> (None))
      end in
-    (match t_24 with
-     | Some (i_25) ->
+    (match t_26 with
+     | Some (i_27) ->
         begin
-         for j_26 = (t_12 + 1) to (t_7 - 1) do
-          let t_27 = (t_5.(j_26)).(t_13) in
-          if (t_27 <> 0.) then begin
-           for j_28 = (t_13 + 1) to (t_6 - 1) do
-            (t_5.(j_26)).(j_28) <-
-             ((t_5.(j_26)).(j_28) -. ((t_27 /. i_25) *. (t_5.(t_12)).(j_28)))
+         for j_28 = (t_14 + 1) to (t_7 - 1) do
+          let t_29 = (t_5.(j_28)).(t_15) in
+          if (t_29 <> 0.) then begin
+           for j_30 = (t_15 + 1) to (t_6 - 1) do
+            (t_5.(j_28)).(j_30) <-
+             ((t_5.(j_28)).(j_30) -. ((t_29 /. i_27) *. (t_5.(t_14)).(j_30)))
            done;
-           (t_5.(j_26)).(t_13) <- 0.
+           (t_5.(j_28)).(t_15) <- 0.
           end else ()
          done;
-         (t_8 := ((! t_8) *. i_25))
+         (t_8 := ((! t_8) *. i_27))
         end;
         (t_2 := ((! t_2) + 1))
      | None -> (t_9 := 0));
@@ -22774,47 +23118,47 @@ val resFA26 : ('a, GenFA26.Input.inp -> GenFA26.Output.res) code =
    let t_8 = (ref 1.) in
    let t_9 = (ref 1) in
    while (((! t_3) < t_6) && ((! t_2) < t_7)) do
-    let t_10 = (! t_2) in
-    let t_11 = (! t_3) in
-    let t_12 = (ref (None)) in
-    let t_18 =
+    let t_12 = (! t_2) in
+    let t_13 = (! t_3) in
+    let t_14 = (ref (None)) in
+    let t_20 =
      begin
-      for j_15 = t_10 to (t_7 - 1) do
-       let t_16 = (t_5.(j_15)).(t_11) in
-       if (t_16 <> 0.) then
-        (match (! t_12) with
-         | Some (i_17) ->
-            if ((abs_float (snd i_17)) < (abs_float t_16)) then
-             (t_12 := (Some (j_15, t_16)))
+      for j_17 = t_12 to (t_7 - 1) do
+       let t_18 = (t_5.(j_17)).(t_13) in
+       if (t_18 <> 0.) then
+        (match (! t_14) with
+         | Some (i_19) ->
+            if ((abs_float (snd i_19)) < (abs_float t_18)) then
+             (t_14 := (Some (j_17, t_18)))
             else ()
-         | None -> (t_12 := (Some (j_15, t_16))))
+         | None -> (t_14 := (Some (j_17, t_18))))
        else ()
       done;
-      (match (! t_12) with
-       | Some (i_13) ->
-          if ((fst i_13) <> t_10) then begin
-           let t_14 = t_5.(t_10) in
-           t_5.(t_10) <- t_5.(fst i_13);
-           t_5.(fst i_13) <- t_14;
+      (match (! t_14) with
+       | Some (i_15) ->
+          if ((fst i_15) <> t_12) then begin
+           let t_16 = t_5.(t_12) in
+           t_5.(t_12) <- t_5.(fst i_15);
+           t_5.(fst i_15) <- t_16;
            (t_9 := (~- (! t_9)))
           end else ();
-          (Some (snd i_13))
+          (Some (snd i_15))
        | None -> (None))
      end in
-    (match t_18 with
-     | Some (i_19) ->
+    (match t_20 with
+     | Some (i_21) ->
         begin
-         for j_20 = (t_10 + 1) to (t_7 - 1) do
-          let t_21 = (t_5.(j_20)).(t_11) in
-          if (t_21 <> 0.) then begin
-           for j_22 = (t_11 + 1) to (t_6 - 1) do
-            (t_5.(j_20)).(j_22) <-
-             ((t_5.(j_20)).(j_22) -. ((t_21 /. i_19) *. (t_5.(t_10)).(j_22)))
+         for j_22 = (t_12 + 1) to (t_7 - 1) do
+          let t_23 = (t_5.(j_22)).(t_13) in
+          if (t_23 <> 0.) then begin
+           for j_24 = (t_13 + 1) to (t_6 - 1) do
+            (t_5.(j_22)).(j_24) <-
+             ((t_5.(j_22)).(j_24) -. ((t_23 /. i_21) *. (t_5.(t_12)).(j_24)))
            done;
-           (t_5.(j_20)).(t_11) <- 0.
+           (t_5.(j_22)).(t_13) <- 0.
           end else ()
          done;
-         (t_8 := ((! t_8) *. i_19))
+         (t_8 := ((! t_8) *. i_21))
         end;
         (t_2 := ((! t_2) + 1))
      | None -> (t_9 := 0));
@@ -22831,56 +23175,56 @@ val resRA1 : ('a, GenRA1.Input.inp -> GenRA1.Output.res) code =
    let t_8 = (ref (* cross-stage persistent value (as id: one) *)) in
    let t_9 = (ref 1) in
    while (((! t_3) < t_6) && ((! t_2) < t_7)) do
-    let t_10 = (! t_2) in
-    let t_11 = (! t_3) in
-    let t_12 = (ref (None)) in
-    let t_19 =
+    let t_12 = (! t_2) in
+    let t_13 = (! t_3) in
+    let t_14 = (ref (None)) in
+    let t_21 =
      begin
-      let t_15 = (t_5.(t_10)).(t_11) in
-      if (t_15 <> (* cross-stage persistent value (as id: zero) *)) then
-       (t_12 := (Some (t_10, t_15)))
+      let t_17 = (t_5.(t_12)).(t_13) in
+      if (t_17 <> (* cross-stage persistent value (as id: zero) *)) then
+       (t_14 := (Some (t_12, t_17)))
       else
-       let rec loop_16 =
-        fun j_17 ->
-         if (j_17 < t_7) then
-          let t_18 = (t_5.(j_17)).(t_11) in
-          if (t_18 = (* cross-stage persistent value (as id: zero) *)) then
-           (loop_16 (j_17 + 1))
-          else (t_12 := (Some (j_17, t_18)))
+       let rec loop_18 =
+        fun j_19 ->
+         if (j_19 < t_7) then
+          let t_20 = (t_5.(j_19)).(t_13) in
+          if (t_20 = (* cross-stage persistent value (as id: zero) *)) then
+           (loop_18 (j_19 + 1))
+          else (t_14 := (Some (j_19, t_20)))
          else () in
-       (loop_16 (t_10 + 1));
-      (match (! t_12) with
-       | Some (i_13) ->
-          if ((fst i_13) <> t_10) then begin
-           let t_14 = t_5.(t_10) in
-           t_5.(t_10) <- t_5.(fst i_13);
-           t_5.(fst i_13) <- t_14;
+       (loop_18 (t_12 + 1));
+      (match (! t_14) with
+       | Some (i_15) ->
+          if ((fst i_15) <> t_12) then begin
+           let t_16 = t_5.(t_12) in
+           t_5.(t_12) <- t_5.(fst i_15);
+           t_5.(fst i_15) <- t_16;
            (t_9 := (~- (! t_9)))
           end else ();
-          (Some (snd i_13))
+          (Some (snd i_15))
        | None -> (None))
      end in
-    (match t_19 with
-     | Some (i_20) ->
+    (match t_21 with
+     | Some (i_22) ->
         begin
-         for j_21 = (t_10 + 1) to (t_7 - 1) do
-          let t_22 = (t_5.(j_21)).(t_11) in
-          if (t_22 <> (* cross-stage persistent value (as id: zero) *)) then begin
-           for j_23 = (t_11 + 1) to (t_6 - 1) do
-            (t_5.(j_21)).(j_23) <-
+         for j_23 = (t_12 + 1) to (t_7 - 1) do
+          let t_24 = (t_5.(j_23)).(t_13) in
+          if (t_24 <> (* cross-stage persistent value (as id: zero) *)) then begin
+           for j_25 = (t_13 + 1) to (t_6 - 1) do
+            (t_5.(j_23)).(j_25) <-
              (((* cross-stage persistent value (as id: Num.sub_num) *))
-               (t_5.(j_21)).(j_23)
+               (t_5.(j_23)).(j_25)
                (((* cross-stage persistent value (as id: Num.mult_num) *))
                  (((* cross-stage persistent value (as id: Num.div_num) *))
-                   t_22 i_20) (t_5.(t_10)).(j_23)))
+                   t_24 i_22) (t_5.(t_12)).(j_25)))
            done;
-           (t_5.(j_21)).(t_11) <-
+           (t_5.(j_23)).(t_13) <-
             (* cross-stage persistent value (as id: zero) *)
           end else ()
          done;
          (t_8 :=
            (((* cross-stage persistent value (as id: Num.mult_num) *))
-             (! t_8) i_20))
+             (! t_8) i_22))
         end;
         (t_2 := ((! t_2) + 1))
      | None -> (t_9 := 0));
@@ -22897,56 +23241,56 @@ val resRA2 : ('a, GenRA2.Input.inp -> GenRA2.Output.res) code =
    let t_8 = (ref (* cross-stage persistent value (as id: one) *)) in
    let t_9 = (ref 1) in
    while (((! t_3) < t_6) && ((! t_2) < t_7)) do
-    let t_10 = (! t_2) in
-    let t_11 = (! t_3) in
-    let t_12 = (ref (None)) in
-    let t_19 =
+    let t_12 = (! t_2) in
+    let t_13 = (! t_3) in
+    let t_14 = (ref (None)) in
+    let t_21 =
      begin
-      let t_15 = (t_5.(t_10)).(t_11) in
-      if (t_15 <> (* cross-stage persistent value (as id: zero) *)) then
-       (t_12 := (Some (t_10, t_15)))
+      let t_17 = (t_5.(t_12)).(t_13) in
+      if (t_17 <> (* cross-stage persistent value (as id: zero) *)) then
+       (t_14 := (Some (t_12, t_17)))
       else
-       let rec loop_16 =
-        fun j_17 ->
-         if (j_17 < t_7) then
-          let t_18 = (t_5.(j_17)).(t_11) in
-          if (t_18 = (* cross-stage persistent value (as id: zero) *)) then
-           (loop_16 (j_17 + 1))
-          else (t_12 := (Some (j_17, t_18)))
+       let rec loop_18 =
+        fun j_19 ->
+         if (j_19 < t_7) then
+          let t_20 = (t_5.(j_19)).(t_13) in
+          if (t_20 = (* cross-stage persistent value (as id: zero) *)) then
+           (loop_18 (j_19 + 1))
+          else (t_14 := (Some (j_19, t_20)))
          else () in
-       (loop_16 (t_10 + 1));
-      (match (! t_12) with
-       | Some (i_13) ->
-          if ((fst i_13) <> t_10) then begin
-           let t_14 = t_5.(t_10) in
-           t_5.(t_10) <- t_5.(fst i_13);
-           t_5.(fst i_13) <- t_14;
+       (loop_18 (t_12 + 1));
+      (match (! t_14) with
+       | Some (i_15) ->
+          if ((fst i_15) <> t_12) then begin
+           let t_16 = t_5.(t_12) in
+           t_5.(t_12) <- t_5.(fst i_15);
+           t_5.(fst i_15) <- t_16;
            (t_9 := (~- (! t_9)))
           end else ();
-          (Some (snd i_13))
+          (Some (snd i_15))
        | None -> (None))
      end in
-    (match t_19 with
-     | Some (i_20) ->
+    (match t_21 with
+     | Some (i_22) ->
         begin
-         for j_21 = (t_10 + 1) to (t_7 - 1) do
-          let t_22 = (t_5.(j_21)).(t_11) in
-          if (t_22 <> (* cross-stage persistent value (as id: zero) *)) then begin
-           for j_23 = (t_11 + 1) to (t_6 - 1) do
-            (t_5.(j_21)).(j_23) <-
+         for j_23 = (t_12 + 1) to (t_7 - 1) do
+          let t_24 = (t_5.(j_23)).(t_13) in
+          if (t_24 <> (* cross-stage persistent value (as id: zero) *)) then begin
+           for j_25 = (t_13 + 1) to (t_6 - 1) do
+            (t_5.(j_23)).(j_25) <-
              (((* cross-stage persistent value (as id: Num.sub_num) *))
-               (t_5.(j_21)).(j_23)
+               (t_5.(j_23)).(j_25)
                (((* cross-stage persistent value (as id: Num.mult_num) *))
                  (((* cross-stage persistent value (as id: Num.div_num) *))
-                   t_22 i_20) (t_5.(t_10)).(j_23)))
+                   t_24 i_22) (t_5.(t_12)).(j_25)))
            done;
-           (t_5.(j_21)).(t_11) <-
+           (t_5.(j_23)).(t_13) <-
             (* cross-stage persistent value (as id: zero) *)
           end else ()
          done;
          (t_8 :=
            (((* cross-stage persistent value (as id: Num.mult_num) *))
-             (! t_8) i_20))
+             (! t_8) i_22))
         end;
         (t_2 := ((! t_2) + 1))
      | None -> (t_9 := 0));
@@ -22967,56 +23311,56 @@ val resRA3 : ('a, GenRA3.Input.inp -> GenRA3.Output.res) code =
    let t_8 = (ref (* cross-stage persistent value (as id: one) *)) in
    let t_9 = (ref 1) in
    while (((! t_3) < t_6) && ((! t_2) < t_7)) do
-    let t_10 = (! t_2) in
-    let t_11 = (! t_3) in
-    let t_12 = (ref (None)) in
-    let t_19 =
+    let t_12 = (! t_2) in
+    let t_13 = (! t_3) in
+    let t_14 = (ref (None)) in
+    let t_21 =
      begin
-      let t_15 = (t_5.(t_10)).(t_11) in
-      if (t_15 <> (* cross-stage persistent value (as id: zero) *)) then
-       (t_12 := (Some (t_10, t_15)))
+      let t_17 = (t_5.(t_12)).(t_13) in
+      if (t_17 <> (* cross-stage persistent value (as id: zero) *)) then
+       (t_14 := (Some (t_12, t_17)))
       else
-       let rec loop_16 =
-        fun j_17 ->
-         if (j_17 < t_7) then
-          let t_18 = (t_5.(j_17)).(t_11) in
-          if (t_18 = (* cross-stage persistent value (as id: zero) *)) then
-           (loop_16 (j_17 + 1))
-          else (t_12 := (Some (j_17, t_18)))
+       let rec loop_18 =
+        fun j_19 ->
+         if (j_19 < t_7) then
+          let t_20 = (t_5.(j_19)).(t_13) in
+          if (t_20 = (* cross-stage persistent value (as id: zero) *)) then
+           (loop_18 (j_19 + 1))
+          else (t_14 := (Some (j_19, t_20)))
          else () in
-       (loop_16 (t_10 + 1));
-      (match (! t_12) with
-       | Some (i_13) ->
-          if ((fst i_13) <> t_10) then begin
-           let t_14 = t_5.(t_10) in
-           t_5.(t_10) <- t_5.(fst i_13);
-           t_5.(fst i_13) <- t_14;
+       (loop_18 (t_12 + 1));
+      (match (! t_14) with
+       | Some (i_15) ->
+          if ((fst i_15) <> t_12) then begin
+           let t_16 = t_5.(t_12) in
+           t_5.(t_12) <- t_5.(fst i_15);
+           t_5.(fst i_15) <- t_16;
            (t_9 := (~- (! t_9)))
           end else ();
-          (Some (snd i_13))
+          (Some (snd i_15))
        | None -> (None))
      end in
-    (match t_19 with
-     | Some (i_20) ->
+    (match t_21 with
+     | Some (i_22) ->
         begin
-         for j_21 = (t_10 + 1) to (t_7 - 1) do
-          let t_22 = (t_5.(j_21)).(t_11) in
-          if (t_22 <> (* cross-stage persistent value (as id: zero) *)) then begin
-           for j_23 = (t_11 + 1) to (t_6 - 1) do
-            (t_5.(j_21)).(j_23) <-
+         for j_23 = (t_12 + 1) to (t_7 - 1) do
+          let t_24 = (t_5.(j_23)).(t_13) in
+          if (t_24 <> (* cross-stage persistent value (as id: zero) *)) then begin
+           for j_25 = (t_13 + 1) to (t_6 - 1) do
+            (t_5.(j_23)).(j_25) <-
              (((* cross-stage persistent value (as id: Num.sub_num) *))
-               (t_5.(j_21)).(j_23)
+               (t_5.(j_23)).(j_25)
                (((* cross-stage persistent value (as id: Num.mult_num) *))
                  (((* cross-stage persistent value (as id: Num.div_num) *))
-                   t_22 i_20) (t_5.(t_10)).(j_23)))
+                   t_24 i_22) (t_5.(t_12)).(j_25)))
            done;
-           (t_5.(j_21)).(t_11) <-
+           (t_5.(j_23)).(t_13) <-
             (* cross-stage persistent value (as id: zero) *)
           end else ()
          done;
          (t_8 :=
            (((* cross-stage persistent value (as id: Num.mult_num) *))
-             (! t_8) i_20))
+             (! t_8) i_22))
         end;
         (t_2 := ((! t_2) + 1))
      | None -> (t_9 := 0));
@@ -23033,56 +23377,56 @@ val resRA4 : ('a, GenRA4.Input.inp -> GenRA4.Output.res) code =
    let t_8 = (ref (* cross-stage persistent value (as id: one) *)) in
    let t_9 = (ref 1) in
    while (((! t_3) < t_6) && ((! t_2) < t_7)) do
-    let t_10 = (! t_2) in
-    let t_11 = (! t_3) in
-    let t_12 = (ref (None)) in
-    let t_19 =
+    let t_12 = (! t_2) in
+    let t_13 = (! t_3) in
+    let t_14 = (ref (None)) in
+    let t_21 =
      begin
-      let t_15 = (t_5.(t_10)).(t_11) in
-      if (t_15 <> (* cross-stage persistent value (as id: zero) *)) then
-       (t_12 := (Some (t_10, t_15)))
+      let t_17 = (t_5.(t_12)).(t_13) in
+      if (t_17 <> (* cross-stage persistent value (as id: zero) *)) then
+       (t_14 := (Some (t_12, t_17)))
       else
-       let rec loop_16 =
-        fun j_17 ->
-         if (j_17 < t_7) then
-          let t_18 = (t_5.(j_17)).(t_11) in
-          if (t_18 = (* cross-stage persistent value (as id: zero) *)) then
-           (loop_16 (j_17 + 1))
-          else (t_12 := (Some (j_17, t_18)))
+       let rec loop_18 =
+        fun j_19 ->
+         if (j_19 < t_7) then
+          let t_20 = (t_5.(j_19)).(t_13) in
+          if (t_20 = (* cross-stage persistent value (as id: zero) *)) then
+           (loop_18 (j_19 + 1))
+          else (t_14 := (Some (j_19, t_20)))
          else () in
-       (loop_16 (t_10 + 1));
-      (match (! t_12) with
-       | Some (i_13) ->
-          if ((fst i_13) <> t_10) then begin
-           let t_14 = t_5.(t_10) in
-           t_5.(t_10) <- t_5.(fst i_13);
-           t_5.(fst i_13) <- t_14;
+       (loop_18 (t_12 + 1));
+      (match (! t_14) with
+       | Some (i_15) ->
+          if ((fst i_15) <> t_12) then begin
+           let t_16 = t_5.(t_12) in
+           t_5.(t_12) <- t_5.(fst i_15);
+           t_5.(fst i_15) <- t_16;
            (t_9 := (~- (! t_9)))
           end else ();
-          (Some (snd i_13))
+          (Some (snd i_15))
        | None -> (None))
      end in
-    (match t_19 with
-     | Some (i_20) ->
+    (match t_21 with
+     | Some (i_22) ->
         begin
-         for j_21 = (t_10 + 1) to (t_7 - 1) do
-          let t_22 = (t_5.(j_21)).(t_11) in
-          if (t_22 <> (* cross-stage persistent value (as id: zero) *)) then begin
-           for j_23 = (t_11 + 1) to (t_6 - 1) do
-            (t_5.(j_21)).(j_23) <-
+         for j_23 = (t_12 + 1) to (t_7 - 1) do
+          let t_24 = (t_5.(j_23)).(t_13) in
+          if (t_24 <> (* cross-stage persistent value (as id: zero) *)) then begin
+           for j_25 = (t_13 + 1) to (t_6 - 1) do
+            (t_5.(j_23)).(j_25) <-
              (((* cross-stage persistent value (as id: Num.sub_num) *))
-               (t_5.(j_21)).(j_23)
+               (t_5.(j_23)).(j_25)
                (((* cross-stage persistent value (as id: Num.mult_num) *))
                  (((* cross-stage persistent value (as id: Num.div_num) *))
-                   t_22 i_20) (t_5.(t_10)).(j_23)))
+                   t_24 i_22) (t_5.(t_12)).(j_25)))
            done;
-           (t_5.(j_21)).(t_11) <-
+           (t_5.(j_23)).(t_13) <-
             (* cross-stage persistent value (as id: zero) *)
           end else ()
          done;
          (t_8 :=
            (((* cross-stage persistent value (as id: Num.mult_num) *))
-             (! t_8) i_20))
+             (! t_8) i_22))
         end;
         (t_2 := ((! t_2) + 1))
      | None -> (t_9 := 0));
@@ -23103,43 +23447,43 @@ val resFA5 : ('a, GenFA5.Input.inp -> GenFA5.Output.res) code =
    let t_7 = (snd a_1) in
    let t_8 = (Array.length (fst a_1)) in
    while (((! t_3) < t_6) && ((! t_2) < t_7)) do
-    let t_9 = (! t_2) in
-    let t_10 = (! t_3) in
-    let t_11 = (ref (None)) in
-    let t_17 =
+    let t_11 = (! t_2) in
+    let t_12 = (! t_3) in
+    let t_13 = (ref (None)) in
+    let t_19 =
      begin
-      for j_14 = t_9 to (t_8 - 1) do
-       let t_15 = (t_5.(j_14)).(t_10) in
-       if (t_15 <> 0.) then
-        (match (! t_11) with
-         | Some (i_16) ->
-            if ((abs_float (snd i_16)) < (abs_float t_15)) then
-             (t_11 := (Some (j_14, t_15)))
+      for j_16 = t_11 to (t_8 - 1) do
+       let t_17 = (t_5.(j_16)).(t_12) in
+       if (t_17 <> 0.) then
+        (match (! t_13) with
+         | Some (i_18) ->
+            if ((abs_float (snd i_18)) < (abs_float t_17)) then
+             (t_13 := (Some (j_16, t_17)))
             else ()
-         | None -> (t_11 := (Some (j_14, t_15))))
+         | None -> (t_13 := (Some (j_16, t_17))))
        else ()
       done;
-      (match (! t_11) with
-       | Some (i_12) ->
-          if ((fst i_12) <> t_9) then
-           let t_13 = t_5.(t_9) in
-           t_5.(t_9) <- t_5.(fst i_12);
-           t_5.(fst i_12) <- t_13
+      (match (! t_13) with
+       | Some (i_14) ->
+          if ((fst i_14) <> t_11) then
+           let t_15 = t_5.(t_11) in
+           t_5.(t_11) <- t_5.(fst i_14);
+           t_5.(fst i_14) <- t_15
           else ();
-          (Some (snd i_12))
+          (Some (snd i_14))
        | None -> (None))
      end in
-    (match t_17 with
-     | Some (i_18) ->
+    (match t_19 with
+     | Some (i_20) ->
         begin
-         for j_19 = (t_9 + 1) to (t_8 - 1) do
-          let t_20 = (t_5.(j_19)).(t_10) in
-          if (t_20 <> 0.) then begin
-           for j_21 = (t_10 + 1) to (t_6 - 1) do
-            (t_5.(j_19)).(j_21) <-
-             ((t_5.(j_19)).(j_21) -. ((t_20 /. i_18) *. (t_5.(t_9)).(j_21)))
+         for j_21 = (t_11 + 1) to (t_8 - 1) do
+          let t_22 = (t_5.(j_21)).(t_12) in
+          if (t_22 <> 0.) then begin
+           for j_23 = (t_12 + 1) to (t_6 - 1) do
+            (t_5.(j_21)).(j_23) <-
+             ((t_5.(j_21)).(j_23) -. ((t_22 /. i_20) *. (t_5.(t_11)).(j_23)))
            done;
-           (t_5.(j_19)).(t_10) <- 0.
+           (t_5.(j_21)).(t_12) <- 0.
           end else ()
          done;
          ()
@@ -23160,47 +23504,47 @@ val resFA6 : ('a, GenFA6.Input.inp -> GenFA6.Output.res) code =
    let t_9 = (ref 1.) in
    let t_10 = (ref 1) in
    while (((! t_3) < t_6) && ((! t_2) < t_7)) do
-    let t_11 = (! t_2) in
-    let t_12 = (! t_3) in
-    let t_13 = (ref (None)) in
-    let t_19 =
+    let t_13 = (! t_2) in
+    let t_14 = (! t_3) in
+    let t_15 = (ref (None)) in
+    let t_21 =
      begin
-      for j_16 = t_11 to (t_8 - 1) do
-       let t_17 = (t_5.(j_16)).(t_12) in
-       if (t_17 <> 0.) then
-        (match (! t_13) with
-         | Some (i_18) ->
-            if ((abs_float (snd i_18)) < (abs_float t_17)) then
-             (t_13 := (Some (j_16, t_17)))
+      for j_18 = t_13 to (t_8 - 1) do
+       let t_19 = (t_5.(j_18)).(t_14) in
+       if (t_19 <> 0.) then
+        (match (! t_15) with
+         | Some (i_20) ->
+            if ((abs_float (snd i_20)) < (abs_float t_19)) then
+             (t_15 := (Some (j_18, t_19)))
             else ()
-         | None -> (t_13 := (Some (j_16, t_17))))
+         | None -> (t_15 := (Some (j_18, t_19))))
        else ()
       done;
-      (match (! t_13) with
-       | Some (i_14) ->
-          if ((fst i_14) <> t_11) then begin
-           let t_15 = t_5.(t_11) in
-           t_5.(t_11) <- t_5.(fst i_14);
-           t_5.(fst i_14) <- t_15;
+      (match (! t_15) with
+       | Some (i_16) ->
+          if ((fst i_16) <> t_13) then begin
+           let t_17 = t_5.(t_13) in
+           t_5.(t_13) <- t_5.(fst i_16);
+           t_5.(fst i_16) <- t_17;
            (t_10 := (~- (! t_10)))
           end else ();
-          (Some (snd i_14))
+          (Some (snd i_16))
        | None -> (None))
      end in
-    (match t_19 with
-     | Some (i_20) ->
+    (match t_21 with
+     | Some (i_22) ->
         begin
-         for j_21 = (t_11 + 1) to (t_8 - 1) do
-          let t_22 = (t_5.(j_21)).(t_12) in
-          if (t_22 <> 0.) then begin
-           for j_23 = (t_12 + 1) to (t_6 - 1) do
-            (t_5.(j_21)).(j_23) <-
-             ((t_5.(j_21)).(j_23) -. ((t_22 /. i_20) *. (t_5.(t_11)).(j_23)))
+         for j_23 = (t_13 + 1) to (t_8 - 1) do
+          let t_24 = (t_5.(j_23)).(t_14) in
+          if (t_24 <> 0.) then begin
+           for j_25 = (t_14 + 1) to (t_6 - 1) do
+            (t_5.(j_23)).(j_25) <-
+             ((t_5.(j_23)).(j_25) -. ((t_24 /. i_22) *. (t_5.(t_13)).(j_25)))
            done;
-           (t_5.(j_21)).(t_12) <- 0.
+           (t_5.(j_23)).(t_14) <- 0.
           end else ()
          done;
-         (t_9 := ((! t_9) *. i_20))
+         (t_9 := ((! t_9) *. i_22))
         end;
         (t_2 := ((! t_2) + 1))
      | None -> (t_10 := 0));
@@ -23219,43 +23563,43 @@ val resFA7 : ('a, GenFA7.Input.inp -> GenFA7.Output.res) code =
    let t_7 = (snd a_1) in
    let t_8 = (Array.length (fst a_1)) in
    while (((! t_3) < t_6) && ((! t_2) < t_7)) do
-    let t_9 = (! t_2) in
-    let t_10 = (! t_3) in
-    let t_11 = (ref (None)) in
-    let t_17 =
+    let t_11 = (! t_2) in
+    let t_12 = (! t_3) in
+    let t_13 = (ref (None)) in
+    let t_19 =
      begin
-      for j_14 = t_9 to (t_8 - 1) do
-       let t_15 = (t_5.(j_14)).(t_10) in
-       if (t_15 <> 0.) then
-        (match (! t_11) with
-         | Some (i_16) ->
-            if ((abs_float (snd i_16)) < (abs_float t_15)) then
-             (t_11 := (Some (j_14, t_15)))
+      for j_16 = t_11 to (t_8 - 1) do
+       let t_17 = (t_5.(j_16)).(t_12) in
+       if (t_17 <> 0.) then
+        (match (! t_13) with
+         | Some (i_18) ->
+            if ((abs_float (snd i_18)) < (abs_float t_17)) then
+             (t_13 := (Some (j_16, t_17)))
             else ()
-         | None -> (t_11 := (Some (j_14, t_15))))
+         | None -> (t_13 := (Some (j_16, t_17))))
        else ()
       done;
-      (match (! t_11) with
-       | Some (i_12) ->
-          if ((fst i_12) <> t_9) then
-           let t_13 = t_5.(t_9) in
-           t_5.(t_9) <- t_5.(fst i_12);
-           t_5.(fst i_12) <- t_13
+      (match (! t_13) with
+       | Some (i_14) ->
+          if ((fst i_14) <> t_11) then
+           let t_15 = t_5.(t_11) in
+           t_5.(t_11) <- t_5.(fst i_14);
+           t_5.(fst i_14) <- t_15
           else ();
-          (Some (snd i_12))
+          (Some (snd i_14))
        | None -> (None))
      end in
-    (match t_17 with
-     | Some (i_18) ->
+    (match t_19 with
+     | Some (i_20) ->
         begin
-         for j_19 = (t_9 + 1) to (t_8 - 1) do
-          let t_20 = (t_5.(j_19)).(t_10) in
-          if (t_20 <> 0.) then begin
-           for j_21 = (t_10 + 1) to (t_6 - 1) do
-            (t_5.(j_19)).(j_21) <-
-             ((t_5.(j_19)).(j_21) -. ((t_20 /. i_18) *. (t_5.(t_9)).(j_21)))
+         for j_21 = (t_11 + 1) to (t_8 - 1) do
+          let t_22 = (t_5.(j_21)).(t_12) in
+          if (t_22 <> 0.) then begin
+           for j_23 = (t_12 + 1) to (t_6 - 1) do
+            (t_5.(j_21)).(j_23) <-
+             ((t_5.(j_21)).(j_23) -. ((t_22 /. i_20) *. (t_5.(t_11)).(j_23)))
            done;
-           (t_5.(j_19)).(t_10) <- 0.
+           (t_5.(j_21)).(t_12) <- 0.
           end else ()
          done;
          ()
@@ -23274,43 +23618,43 @@ val resFA8 : ('a, GenFA8.Input.inp -> GenFA8.Output.res) code =
    let t_7 = (snd a_1) in
    let t_8 = (Array.length (fst a_1)) in
    while (((! t_3) < t_6) && ((! t_2) < t_7)) do
-    let t_9 = (! t_2) in
-    let t_10 = (! t_3) in
-    let t_11 = (ref (None)) in
-    let t_17 =
+    let t_11 = (! t_2) in
+    let t_12 = (! t_3) in
+    let t_13 = (ref (None)) in
+    let t_19 =
      begin
-      for j_14 = t_9 to (t_8 - 1) do
-       let t_15 = (t_5.(j_14)).(t_10) in
-       if (t_15 <> 0.) then
-        (match (! t_11) with
-         | Some (i_16) ->
-            if ((abs_float (snd i_16)) < (abs_float t_15)) then
-             (t_11 := (Some (j_14, t_15)))
+      for j_16 = t_11 to (t_8 - 1) do
+       let t_17 = (t_5.(j_16)).(t_12) in
+       if (t_17 <> 0.) then
+        (match (! t_13) with
+         | Some (i_18) ->
+            if ((abs_float (snd i_18)) < (abs_float t_17)) then
+             (t_13 := (Some (j_16, t_17)))
             else ()
-         | None -> (t_11 := (Some (j_14, t_15))))
+         | None -> (t_13 := (Some (j_16, t_17))))
        else ()
       done;
-      (match (! t_11) with
-       | Some (i_12) ->
-          if ((fst i_12) <> t_9) then
-           let t_13 = t_5.(t_9) in
-           t_5.(t_9) <- t_5.(fst i_12);
-           t_5.(fst i_12) <- t_13
+      (match (! t_13) with
+       | Some (i_14) ->
+          if ((fst i_14) <> t_11) then
+           let t_15 = t_5.(t_11) in
+           t_5.(t_11) <- t_5.(fst i_14);
+           t_5.(fst i_14) <- t_15
           else ();
-          (Some (snd i_12))
+          (Some (snd i_14))
        | None -> (None))
      end in
-    (match t_17 with
-     | Some (i_18) ->
+    (match t_19 with
+     | Some (i_20) ->
         begin
-         for j_19 = (t_9 + 1) to (t_8 - 1) do
-          let t_20 = (t_5.(j_19)).(t_10) in
-          if (t_20 <> 0.) then begin
-           for j_21 = (t_10 + 1) to (t_6 - 1) do
-            (t_5.(j_19)).(j_21) <-
-             ((t_5.(j_19)).(j_21) -. ((t_20 /. i_18) *. (t_5.(t_9)).(j_21)))
+         for j_21 = (t_11 + 1) to (t_8 - 1) do
+          let t_22 = (t_5.(j_21)).(t_12) in
+          if (t_22 <> 0.) then begin
+           for j_23 = (t_12 + 1) to (t_6 - 1) do
+            (t_5.(j_21)).(j_23) <-
+             ((t_5.(j_21)).(j_23) -. ((t_22 /. i_20) *. (t_5.(t_11)).(j_23)))
            done;
-           (t_5.(j_19)).(t_10) <- 0.
+           (t_5.(j_21)).(t_12) <- 0.
           end else ()
          done;
          ()
@@ -23386,61 +23730,61 @@ val resZp3 : ('a, GenZp3.Input.inp -> GenZp3.Output.res) code =
    let t_8 = (ref 1) in
    let t_9 = (ref ([])) in
    while (((! t_3) < t_5) && ((! t_2) < t_6)) do
-    let t_10 = (! t_2) in
-    let t_11 = (! t_3) in
-    let t_12 = (ref (None)) in
-    let t_24 =
+    let t_11 = (! t_2) in
+    let t_12 = (! t_3) in
+    let t_13 = (ref (None)) in
+    let t_25 =
      begin
-      let t_20 = (t_4.arr).((t_11 * t_4.m) + t_10) in
-      if (t_20 <> 0) then (t_12 := (Some (t_10, t_20)))
+      let t_21 = (t_4.arr).((t_12 * t_4.m) + t_11) in
+      if (t_21 <> 0) then (t_13 := (Some (t_11, t_21)))
       else
-       let rec loop_21 =
-        fun j_22 ->
-         if (j_22 < t_6) then
-          let t_23 = (t_4.arr).((j_22 * t_4.m) + t_11) in
-          if (t_23 = 0) then (loop_21 (j_22 + 1))
-          else (t_12 := (Some (j_22, t_23)))
+       let rec loop_22 =
+        fun j_23 ->
+         if (j_23 < t_6) then
+          let t_24 = (t_4.arr).((j_23 * t_4.m) + t_12) in
+          if (t_24 = 0) then (loop_22 (j_23 + 1))
+          else (t_13 := (Some (j_23, t_24)))
          else () in
-       (loop_21 (t_10 + 1));
-      (match (! t_12) with
-       | Some (i_13) ->
-          if ((fst i_13) <> t_10) then begin
+       (loop_22 (t_11 + 1));
+      (match (! t_13) with
+       | Some (i_14) ->
+          if ((fst i_14) <> t_11) then begin
            begin
-            let a_14 = t_4.arr
-            and m_15 = t_4.m in
-            let i1_16 = (t_10 * m_15)
-            and i2_17 = ((fst i_13) * m_15) in
-            for i_18 = 0 to (m_15 - 1) do
-             let t_19 = a_14.(i1_16 + i_18) in
-             a_14.(i1_16 + i_18) <- a_14.(i2_17 + i_18);
-             a_14.(i2_17 + i_18) <- t_19
+            let a_15 = t_4.arr
+            and m_16 = t_4.m in
+            let i1_17 = (t_11 * m_16)
+            and i2_18 = ((fst i_14) * m_16) in
+            for i_19 = 0 to (m_16 - 1) do
+             let t_20 = a_15.(i1_17 + i_19) in
+             a_15.(i1_17 + i_19) <- a_15.(i2_18 + i_19);
+             a_15.(i2_18 + i_19) <- t_20
             done;
             (t_8 := (~- (! t_8)))
            end;
-           (t_9 := ((RowSwap ((fst i_13), t_10)) :: (! t_9)))
+           (t_9 := ((RowSwap ((fst i_14), t_11)) :: (! t_9)))
           end else ();
-          (Some (snd i_13))
+          (Some (snd i_14))
        | None -> (None))
      end in
-    (match t_24 with
-     | Some (i_25) ->
+    (match t_25 with
+     | Some (i_26) ->
         begin
-         for j_26 = (t_10 + 1) to (t_6 - 1) do
-          let t_27 = (t_4.arr).((j_26 * t_4.m) + t_11) in
-          if (t_27 <> 0) then begin
-           for j_28 = (t_11 + 1) to (t_5 - 1) do
-            (t_4.arr).((j_26 * t_4.m) + j_28) <-
+         for j_27 = (t_11 + 1) to (t_6 - 1) do
+          let t_28 = (t_4.arr).((j_27 * t_4.m) + t_12) in
+          if (t_28 <> 0) then begin
+           for j_29 = (t_12 + 1) to (t_5 - 1) do
+            (t_4.arr).((j_27 * t_4.m) + j_29) <-
              (((* cross-stage persistent value (as id: minus) *))
-               (t_4.arr).((j_26 * t_4.m) + j_28)
+               (t_4.arr).((j_27 * t_4.m) + j_29)
                (((* cross-stage persistent value (as id: times) *))
-                 (((* cross-stage persistent value (as id: div) *)) t_27
-                   i_25) (t_4.arr).((t_10 * t_4.m) + j_28)))
+                 (((* cross-stage persistent value (as id: div) *)) t_28
+                   i_26) (t_4.arr).((t_11 * t_4.m) + j_29)))
            done;
-           (t_4.arr).((j_26 * t_4.m) + t_11) <- 0
+           (t_4.arr).((j_27 * t_4.m) + t_12) <- 0
           end else ()
          done;
          (t_7 :=
-           (((* cross-stage persistent value (as id: times) *)) (! t_7) i_25))
+           (((* cross-stage persistent value (as id: times) *)) (! t_7) i_26))
         end;
         (t_2 := ((! t_2) + 1))
      | None -> (t_8 := 0));
@@ -23546,12 +23890,6 @@ val rFV4 :
 val rFV5 :
   float Domains_code.container2dfromvector ->
   float Domains_code.container2dfromvector * float * int = <fun>
-val rFV6 :
-  GVC_F.Dom.v Domains_code.container2dfromvector ->
-  GVC_F.contr * GVC_F.contr * GEF.PermList.perm_rep = <fun>
-val rFV7 :
-  GVC_F.Dom.v Domains_code.container2dfromvector ->
-  GVC_F.contr * GEF.PermList.perm_rep = <fun>
 val rIA1 : GAC_I.Dom.v array array -> GAC_I.Dom.v array array = <fun>
 val rIA2 : GAC_I.Dom.v array array -> GAC_I.contr * int = <fun>
 val rIA3 : GAC_I.Dom.v array array -> GAC_I.contr * int = <fun>
@@ -23741,36 +24079,6 @@ val resFV5 : (float Domains_code.container2dfromvector * float * int) list =
      n = 4; m = 3},
     50., 3);
    ({arr = [|10.; 5.; 0.; 0.; 2.; 0.; 0.; 0.; 0.|]; n = 3; m = 3}, 0., 2)]
-val resFV6 : (GVC_F.contr * GVC_F.contr * GEF.PermList.perm_rep) list =
-  [({arr = [|1.|]; n = 1; m = 1}, {arr = [|1.|]; n = 1; m = 1}, []);
-   ({arr = [|4.; 13.; 5.; 0.; 6.25; 1.25; 0.; 0.; 2.|]; n = 3; m = 3},
-    {arr = [|4.; 13.; 5.; 0.; 6.25; 1.25; 0.; 0.; 2.|]; n = 3; m = 3},
-    [Code.RowSwap (2, 1); Code.RowSwap (1, 0)]);
-   ({arr = [|4.; 13.; 5.; 0.; 0.; 6.25; 1.25; 0.; 0.; 0.; 2.; 0.|]; n = 3;
-     m = 4},
-    {arr = [|4.; 13.; 5.; 0.; 0.; 6.25; 1.25; 0.; 0.; 0.; 2.; 0.|]; n = 3;
-     m = 4},
-    [Code.RowSwap (2, 1); Code.RowSwap (1, 0)]);
-   ({arr = [|4.; 13.; 5.; 0.; 6.25; 1.25; 0.; 0.; 2.; 0.; 0.; 0.|]; n = 4;
-     m = 3},
-    {arr = [|4.; 13.; 5.; 0.; 6.25; 1.25; 0.; 0.; 2.; 0.; 0.; 0.|]; n = 4;
-     m = 3},
-    [Code.RowSwap (2, 1); Code.RowSwap (1, 0)]);
-   ({arr = [|0.; 10.; 5.; 0.; 0.; 2.; 0.; 0.; 0.|]; n = 3; m = 3},
-    {arr = [|0.; 10.; 5.; 0.; 0.; 2.; 0.; 0.; 0.|]; n = 3; m = 3},
-    [Code.RowSwap (1, 0)])]
-val resFV7 : (GVC_F.contr * GEF.PermList.perm_rep) list =
-  [({arr = [|1.|]; n = 1; m = 1}, []);
-   ({arr = [|4.; 13.; 5.; -1.; 6.25; 1.25; 1.; -1.25; 2.|]; n = 3; m = 3},
-    [Code.RowSwap (2, 1); Code.RowSwap (1, 0)]);
-   ({arr = [|4.; 13.; 5.; 0.; -1.; 6.25; 1.25; 0.; 1.; -1.25; 2.; 0.|];
-     n = 3; m = 4},
-    [Code.RowSwap (2, 1); Code.RowSwap (1, 0)]);
-   ({arr = [|4.; 13.; 5.; -1.; 6.25; 1.25; 1.; -1.25; 2.; 0.; 0.; 0.|];
-     n = 4; m = 3},
-    [Code.RowSwap (2, 1); Code.RowSwap (1, 0)]);
-   ({arr = [|0.; 10.; 5.; 0.; 2.; 2.; 0.; 3.; -1.5|]; n = 3; m = 3},
-    [Code.RowSwap (1, 0)])]
 val resF11 : float array array list =
   [[|[|1.|]|];
    [|[|13.; 5.; 4.|]; [|0.; 2.23076923076923084; 0.384615384615384581|];

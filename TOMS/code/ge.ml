@@ -450,7 +450,7 @@ end
    general the L matrix will be over the fraction field, even
    if the U is not.  So we won't even try to deal with it
    for now *)
-module SeparateLower:LOWER = struct
+module SeparateLower = struct
   include TrackLower
   let decl c = perform
       udecl <-- retN c;
@@ -470,7 +470,7 @@ end
 
 (* Packed form cannot be done with FractionFree, so things
    are considerably simpler *)
-module PackedLower:LOWER = struct
+module PackedLower = struct
   include TrackLower
   let decl c = perform
       udecl <-- ret c;
@@ -483,7 +483,7 @@ module PackedLower:LOWER = struct
   let wants_pack = true
 end
 
-module NoLower:LOWER = struct
+module NoLower = struct
   include TrackLower
   let decl c = ret c
   let updt mat row col defval _ = 

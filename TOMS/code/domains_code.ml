@@ -98,7 +98,7 @@ module GenericArrayContainer(Dom:DOMAINL) =
       | None   -> a
   let copy = (fun a -> .<Array.map (fun x -> Array.copy x) 
                        (Array.copy .~a) >. )
-  let init n m = .< Array.init .~n (fun i -> Array.make .~m .~(Dom.zeroL)) >.
+  let init n m = .< Array.init .~n (fun _ -> Array.make .~m .~(Dom.zeroL)) >.
   let identity n m = .< Array.init .~n (fun i -> Array.init .~m 
       (fun j -> if (i=j) then .~(Dom.oneL) else .~(Dom.zeroL))) >.
   (* this can be optimized with a swap_rows_from if it is known that
