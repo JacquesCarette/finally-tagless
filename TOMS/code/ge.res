@@ -631,39 +631,14 @@
              end) ->
         functor (Det : DETF) ->
           sig
-            module Dom :
-              sig
-                type v = C.Dom.v
-                type kind = Kinds.domain_is_field
-                val zero : v
-                val one : v
-                val plus : v -> v -> v
-                val times : v -> v -> v
-                val minus : v -> v -> v
-                val uminus : v -> v
-                val div : v -> v -> v
-                val better_than : (v -> v -> bool) option
-                val normalizer : (v -> v) option
-                type 'a vc = ('a, v) Code.abstract
-                val zeroL : 'a vc
-                val oneL : 'a vc
-                val ( +^ ) : 'a vc -> 'a vc -> 'a vc
-                val ( *^ ) : 'a vc -> 'a vc -> 'a vc
-                val ( -^ ) : 'a vc -> 'a vc -> 'a vc
-                val uminusL : 'a vc -> 'a vc
-                val divL : 'a vc -> 'a vc -> 'a vc
-                val better_thanL :
-                  ('a vc -> 'a vc -> ('a, bool) Code.abstract) option
-                val normalizerL : ('a vc -> 'a vc) option
-              end
-            type 'a in_val = 'a Dom.vc
+            type 'a in_val = 'a C.Dom.vc
             type out_val = Det(C.Dom).outdet
             val update :
-              'a Dom.vc ->
-              'a Dom.vc ->
-              'a Dom.vc ->
-              'a Dom.vc ->
-              ('a Dom.vc -> 'b) -> 'c -> 'd -> ('d -> 'b -> 'e) -> 'e
+              'a C.Dom.vc ->
+              'a C.Dom.vc ->
+              'a C.Dom.vc ->
+              'a C.Dom.vc ->
+              ('a C.Dom.vc -> 'b) -> 'c -> 'd -> ('d -> 'b -> 'e) -> 'e
             val update_det : 'a -> 'b -> ('a -> 'c) -> 'c
             val upd_kind : Ge.update_kind
           end
@@ -671,40 +646,16 @@
       functor (Ctr : D.CONTAINER2D) ->
         functor (Det : DETF) ->
           sig
-            module Dom :
-              sig
-                type v = Ctr.Dom.v
-                type kind = Ctr.Dom.kind
-                val zero : v
-                val one : v
-                val plus : v -> v -> v
-                val times : v -> v -> v
-                val minus : v -> v -> v
-                val uminus : v -> v
-                val div : v -> v -> v
-                val better_than : (v -> v -> bool) option
-                val normalizer : (v -> v) option
-                type 'a vc = ('a, v) Code.abstract
-                val zeroL : 'a vc
-                val oneL : 'a vc
-                val ( +^ ) : 'a vc -> 'a vc -> 'a vc
-                val ( *^ ) : 'a vc -> 'a vc -> 'a vc
-                val ( -^ ) : 'a vc -> 'a vc -> 'a vc
-                val uminusL : 'a vc -> 'a vc
-                val divL : 'a vc -> 'a vc -> 'a vc
-                val better_thanL :
-                  ('a vc -> 'a vc -> ('a, bool) Code.abstract) option
-                val normalizerL : ('a vc -> 'a vc) option
-              end
-            type 'a in_val = ('a, Dom.v) Code.abstract
+            type 'a in_val = ('a, Ctr.Dom.v) Code.abstract
             type out_val = Det(Ctr.Dom).outdet
             val update :
-              'a Dom.vc ->
-              'a Dom.vc ->
-              'a Dom.vc ->
-              'a Dom.vc ->
-              ('a Dom.vc -> 'b) ->
-              ('a, Dom.v ref) Code.abstract -> 'c -> ('c -> 'b -> 'd) -> 'd
+              'a Ctr.Dom.vc ->
+              'a Ctr.Dom.vc ->
+              'a Ctr.Dom.vc ->
+              'a Ctr.Dom.vc ->
+              ('a Ctr.Dom.vc -> 'b) ->
+              ('a, Ctr.Dom.v ref) Code.abstract ->
+              'c -> ('c -> 'b -> 'd) -> 'd
             val update_det : 'a -> ('a -> 'b) -> 'c -> 'b
             val upd_kind : Ge.update_kind
           end
@@ -2122,63 +2073,12 @@
             functor (Det : DETF) ->
               functor (P : TRACKPIVOT) ->
                 sig
-                  module D :
-                    sig
-                      type indet = C.Dom.v
-                      type outdet = Det(C.Dom).outdet
-                      type tdet = outdet ref
-                      type 'a lstate = 'a Det(C.Dom).lstate
-                      type 'a tag_lstate = [ `TDet of 'a lstate ]
-                      type ('a, 'b) lm = ('c, 'b, 'd, 'e) cmonad
-                        constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                      type ('a, 'b) om = ('c, 'b, 'd, 'e) omonad
-                        constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                      val decl :
-                        unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                      val upd_sign :
-                        unit -> ('a * [> 'a tag_lstate ] * 'b, unit) om
-                      val zero_sign :
-                        unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                      val acc :
-                        ('a, indet) Code.abstract ->
-                        ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                      val get :
-                        unit -> ('a * [> 'a tag_lstate ] * 'b, tdet) lm
-                      val set :
-                        ('a, indet) Code.abstract ->
-                        ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                      val fin :
-                        unit -> ('a * [> 'a tag_lstate ] * 'b, outdet) lm
-                    end
-                  module I :
-                    sig
-                      val row_iter :
-                        'a ->
-                        'b ->
-                        ('c, int) Code.abstract ->
-                        ('c, int) Code.abstract ->
-                        ('a ->
-                         ('c, int) Code.abstract ->
-                         'b -> ('c, 'd) Code.abstract) ->
-                        (('c, int) Code.abstract ->
-                         ('c, 'd) Code.abstract ->
-                         'e -> ('f -> 'g -> 'g) -> ('c, 'h) Code.abstract) ->
-                        'e -> ('e -> ('c, unit) Code.abstract -> 'i) -> 'i
-                      val col_iter :
-                        'a ->
-                        'b ->
-                        ('c, int) Code.abstract ->
-                        ('c, int) Code.abstract ->
-                        ('a -> 'b -> ('c, int) Code.abstract -> 'd) ->
-                        (('c, int) Code.abstract ->
-                         'd ->
-                         'e -> ('f -> 'g -> 'g) -> ('c, 'h) Code.abstract) ->
-                        'e -> ('e -> ('c, unit) Code.abstract -> 'i) -> 'i
-                    end
                   val findpivot :
                     'a wmatrix ->
                     'a curpos ->
-                    ([> `TDet of 'a D.lstate | `TPivot of 'a P.lstate ] as 'b)
+                    ([> `TDet of 'a Det(C.Dom).lstate
+                      | `TPivot of 'a P.lstate ]
+                     as 'b)
                     list ->
                     ('b list ->
                      ('a, C.Dom.v option) Code.abstract ->
@@ -2189,38 +2089,12 @@
             functor (Det : DETF) ->
               functor (P : TRACKPIVOT) ->
                 sig
-                  module D :
-                    sig
-                      type indet = C.Dom.v
-                      type outdet = Det(C.Dom).outdet
-                      type tdet = outdet ref
-                      type 'a lstate = 'a Det(C.Dom).lstate
-                      type 'a tag_lstate = [ `TDet of 'a lstate ]
-                      type ('a, 'b) lm = ('c, 'b, 'd, 'e) cmonad
-                        constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                      type ('a, 'b) om = ('c, 'b, 'd, 'e) omonad
-                        constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                      val decl :
-                        unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                      val upd_sign :
-                        unit -> ('a * [> 'a tag_lstate ] * 'b, unit) om
-                      val zero_sign :
-                        unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                      val acc :
-                        ('a, indet) Code.abstract ->
-                        ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                      val get :
-                        unit -> ('a * [> 'a tag_lstate ] * 'b, tdet) lm
-                      val set :
-                        ('a, indet) Code.abstract ->
-                        ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                      val fin :
-                        unit -> ('a * [> 'a tag_lstate ] * 'b, outdet) lm
-                    end
                   val findpivot :
                     'a wmatrix ->
                     'a curpos ->
-                    ([> `TDet of 'a D.lstate | `TPivot of 'a P.lstate ] as 'b)
+                    ([> `TDet of 'a Det(C.Dom).lstate
+                      | `TPivot of 'a P.lstate ]
+                     as 'b)
                     list ->
                     ('b list ->
                      ('a, C.Dom.v option) Code.abstract ->
@@ -2231,34 +2105,6 @@
             functor (Det : DETF) ->
               functor (P : TRACKPIVOT) ->
                 sig
-                  module D :
-                    sig
-                      type indet = C.Dom.v
-                      type outdet = Det(C.Dom).outdet
-                      type tdet = outdet ref
-                      type 'a lstate = 'a Det(C.Dom).lstate
-                      type 'a tag_lstate = [ `TDet of 'a lstate ]
-                      type ('a, 'b) lm = ('c, 'b, 'd, 'e) cmonad
-                        constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                      type ('a, 'b) om = ('c, 'b, 'd, 'e) omonad
-                        constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                      val decl :
-                        unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                      val upd_sign :
-                        unit -> ('a * [> 'a tag_lstate ] * 'b, unit) om
-                      val zero_sign :
-                        unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                      val acc :
-                        ('a, indet) Code.abstract ->
-                        ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                      val get :
-                        unit -> ('a * [> 'a tag_lstate ] * 'b, tdet) lm
-                      val set :
-                        ('a, indet) Code.abstract ->
-                        ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                      val fin :
-                        unit -> ('a * [> 'a tag_lstate ] * 'b, outdet) lm
-                    end
                   val findpivot :
                     'a wmatrix ->
                     'a curpos ->
@@ -2270,7 +2116,7 @@
               functor (PK : PIVOTKIND) ->
                 functor (Detf : DETF) ->
                   functor (Update : UpdateProxy(C)(Detf).S) ->
-                    functor (In : INPUT) ->
+                    functor (Input : INPUT) ->
                       functor (Out : OutProxy(C)(Detf).S) ->
                         sig
                           module Det :
@@ -2326,16 +2172,6 @@
                                 ('a in_val -> ('a, unit, 'b, 'c) cmonad) ->
                                 ('a, unit, 'b, 'c) cmonad
                               val upd_kind : Ge.update_kind
-                            end
-                          module Input :
-                            sig
-                              type inp = In.inp
-                              val get_input :
-                                ('a, inp) Code.abstract ->
-                                (('a, C.contr) Code.abstract *
-                                 ('a, int) Code.abstract * bool, 'b,
-                                 ('a, 'c) Code.abstract)
-                                StateCPSMonad.monad
                             end
                           module Output :
                             sig
@@ -2451,35 +2287,6 @@
                                   | `TPivot of 'a Output.P.lstate ],
                                  'b)
                                 cmonad
-                            end
-                          module I :
-                            sig
-                              val row_iter :
-                                'a ->
-                                'b ->
-                                ('c, int) Code.abstract ->
-                                ('c, int) Code.abstract ->
-                                ('a ->
-                                 ('c, int) Code.abstract ->
-                                 'b -> ('c, 'd) Code.abstract) ->
-                                (('c, int) Code.abstract ->
-                                 ('c, 'd) Code.abstract ->
-                                 'e ->
-                                 ('f -> 'g -> 'g) -> ('c, 'h) Code.abstract) ->
-                                'e ->
-                                ('e -> ('c, unit) Code.abstract -> 'i) -> 'i
-                              val col_iter :
-                                'a ->
-                                'b ->
-                                ('c, int) Code.abstract ->
-                                ('c, int) Code.abstract ->
-                                ('a -> 'b -> ('c, int) Code.abstract -> 'd) ->
-                                (('c, int) Code.abstract ->
-                                 'd ->
-                                 'e ->
-                                 ('f -> 'g -> 'g) -> ('c, 'h) Code.abstract) ->
-                                'e ->
-                                ('e -> ('c, unit) Code.abstract -> 'i) -> 'i
                             end
                           val gen :
                             ('a, Input.inp) Code.abstract ->
@@ -4450,58 +4257,12 @@ module G_GAC_F :
       functor (Det : GEF.DETF) ->
         functor (P : GEF.TRACKPIVOT) ->
           sig
-            module D :
-              sig
-                type indet = GAC_F.Dom.v
-                type outdet = Det(GAC_F.Dom).outdet
-                type tdet = outdet ref
-                type 'a lstate = 'a Det(GAC_F.Dom).lstate
-                type 'a tag_lstate = [ `TDet of 'a lstate ]
-                type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
-                  constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
-                  constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                val decl : unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                val upd_sign :
-                  unit -> ('a * [> 'a tag_lstate ] * 'b, unit) om
-                val zero_sign :
-                  unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                val acc :
-                  ('a, indet) Code.abstract ->
-                  ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                val get : unit -> ('a * [> 'a tag_lstate ] * 'b, tdet) lm
-                val set :
-                  ('a, indet) Code.abstract ->
-                  ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, outdet) lm
-              end
-            module I :
-              sig
-                val row_iter :
-                  'a ->
-                  'b ->
-                  ('c, int) Code.abstract ->
-                  ('c, int) Code.abstract ->
-                  ('a ->
-                   ('c, int) Code.abstract -> 'b -> ('c, 'd) Code.abstract) ->
-                  (('c, int) Code.abstract ->
-                   ('c, 'd) Code.abstract ->
-                   'e -> ('f -> 'g -> 'g) -> ('c, 'h) Code.abstract) ->
-                  'e -> ('e -> ('c, unit) Code.abstract -> 'i) -> 'i
-                val col_iter :
-                  'a ->
-                  'b ->
-                  ('c, int) Code.abstract ->
-                  ('c, int) Code.abstract ->
-                  ('a -> 'b -> ('c, int) Code.abstract -> 'd) ->
-                  (('c, int) Code.abstract ->
-                   'd -> 'e -> ('f -> 'g -> 'g) -> ('c, 'h) Code.abstract) ->
-                  'e -> ('e -> ('c, unit) Code.abstract -> 'i) -> 'i
-              end
             val findpivot :
               'a wmatrix ->
               'a curpos ->
-              ([> `TDet of 'a D.lstate | `TPivot of 'a P.lstate ] as 'b) list ->
+              ([> `TDet of 'a Det(GAC_F.Dom).lstate | `TPivot of 'a P.lstate ]
+               as 'b)
+              list ->
               ('b list ->
                ('a, GAC_F.Dom.v option) Code.abstract ->
                ('a, 'c) Code.abstract) ->
@@ -4511,35 +4272,12 @@ module G_GAC_F :
       functor (Det : GEF.DETF) ->
         functor (P : GEF.TRACKPIVOT) ->
           sig
-            module D :
-              sig
-                type indet = GAC_F.Dom.v
-                type outdet = Det(GAC_F.Dom).outdet
-                type tdet = outdet ref
-                type 'a lstate = 'a Det(GAC_F.Dom).lstate
-                type 'a tag_lstate = [ `TDet of 'a lstate ]
-                type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
-                  constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
-                  constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                val decl : unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                val upd_sign :
-                  unit -> ('a * [> 'a tag_lstate ] * 'b, unit) om
-                val zero_sign :
-                  unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                val acc :
-                  ('a, indet) Code.abstract ->
-                  ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                val get : unit -> ('a * [> 'a tag_lstate ] * 'b, tdet) lm
-                val set :
-                  ('a, indet) Code.abstract ->
-                  ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, outdet) lm
-              end
             val findpivot :
               'a wmatrix ->
               'a curpos ->
-              ([> `TDet of 'a D.lstate | `TPivot of 'a P.lstate ] as 'b) list ->
+              ([> `TDet of 'a Det(GAC_F.Dom).lstate | `TPivot of 'a P.lstate ]
+               as 'b)
+              list ->
               ('b list ->
                ('a, GAC_F.Dom.v option) Code.abstract ->
                ('a, 'c) Code.abstract) ->
@@ -4549,31 +4287,6 @@ module G_GAC_F :
       functor (Det : GEF.DETF) ->
         functor (P : GEF.TRACKPIVOT) ->
           sig
-            module D :
-              sig
-                type indet = GAC_F.Dom.v
-                type outdet = Det(GAC_F.Dom).outdet
-                type tdet = outdet ref
-                type 'a lstate = 'a Det(GAC_F.Dom).lstate
-                type 'a tag_lstate = [ `TDet of 'a lstate ]
-                type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
-                  constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
-                  constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                val decl : unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                val upd_sign :
-                  unit -> ('a * [> 'a tag_lstate ] * 'b, unit) om
-                val zero_sign :
-                  unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                val acc :
-                  ('a, indet) Code.abstract ->
-                  ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                val get : unit -> ('a * [> 'a tag_lstate ] * 'b, tdet) lm
-                val set :
-                  ('a, indet) Code.abstract ->
-                  ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, outdet) lm
-              end
             val findpivot :
               'a wmatrix ->
               'a curpos ->
@@ -4585,7 +4298,7 @@ module G_GAC_F :
         functor (PK : GEF.PIVOTKIND) ->
           functor (Detf : GEF.DETF) ->
             functor (Update : GEF.UpdateProxy(GAC_F)(Detf).S) ->
-              functor (In : INPUT) ->
+              functor (Input : INPUT) ->
                 functor (Out : OutProxy(GAC_F)(Detf).S) ->
                   sig
                     module Det :
@@ -4636,16 +4349,6 @@ module G_GAC_F :
                           ('a in_val -> ('a, unit, 'b, 'c) GEF.cmonad) ->
                           ('a, unit, 'b, 'c) GEF.cmonad
                         val upd_kind : Ge.update_kind
-                      end
-                    module Input :
-                      sig
-                        type inp = In.inp
-                        val get_input :
-                          ('a, inp) Code.abstract ->
-                          (('a, GAC_F.contr) Code.abstract *
-                           ('a, int) Code.abstract * bool, 'b,
-                           ('a, 'c) Code.abstract)
-                          StateCPSMonad.monad
                       end
                     module Output :
                       sig
@@ -4752,31 +4455,6 @@ module G_GAC_F :
                             | `TPivot of 'a Output.P.lstate ],
                            'b)
                           GEF.cmonad
-                      end
-                    module I :
-                      sig
-                        val row_iter :
-                          'a ->
-                          'b ->
-                          ('c, int) Code.abstract ->
-                          ('c, int) Code.abstract ->
-                          ('a ->
-                           ('c, int) Code.abstract ->
-                           'b -> ('c, 'd) Code.abstract) ->
-                          (('c, int) Code.abstract ->
-                           ('c, 'd) Code.abstract ->
-                           'e -> ('f -> 'g -> 'g) -> ('c, 'h) Code.abstract) ->
-                          'e -> ('e -> ('c, unit) Code.abstract -> 'i) -> 'i
-                        val col_iter :
-                          'a ->
-                          'b ->
-                          ('c, int) Code.abstract ->
-                          ('c, int) Code.abstract ->
-                          ('a -> 'b -> ('c, int) Code.abstract -> 'd) ->
-                          (('c, int) Code.abstract ->
-                           'd ->
-                           'e -> ('f -> 'g -> 'g) -> ('c, 'h) Code.abstract) ->
-                          'e -> ('e -> ('c, unit) Code.abstract -> 'i) -> 'i
                       end
                     val gen :
                       ('a, Input.inp) Code.abstract ->
@@ -6065,58 +5743,12 @@ module G_GVC_F :
       functor (Det : GEF.DETF) ->
         functor (P : GEF.TRACKPIVOT) ->
           sig
-            module D :
-              sig
-                type indet = GVC_F.Dom.v
-                type outdet = Det(GVC_F.Dom).outdet
-                type tdet = outdet ref
-                type 'a lstate = 'a Det(GVC_F.Dom).lstate
-                type 'a tag_lstate = [ `TDet of 'a lstate ]
-                type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
-                  constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
-                  constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                val decl : unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                val upd_sign :
-                  unit -> ('a * [> 'a tag_lstate ] * 'b, unit) om
-                val zero_sign :
-                  unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                val acc :
-                  ('a, indet) Code.abstract ->
-                  ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                val get : unit -> ('a * [> 'a tag_lstate ] * 'b, tdet) lm
-                val set :
-                  ('a, indet) Code.abstract ->
-                  ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, outdet) lm
-              end
-            module I :
-              sig
-                val row_iter :
-                  'a ->
-                  'b ->
-                  ('c, int) Code.abstract ->
-                  ('c, int) Code.abstract ->
-                  ('a ->
-                   ('c, int) Code.abstract -> 'b -> ('c, 'd) Code.abstract) ->
-                  (('c, int) Code.abstract ->
-                   ('c, 'd) Code.abstract ->
-                   'e -> ('f -> 'g -> 'g) -> ('c, 'h) Code.abstract) ->
-                  'e -> ('e -> ('c, unit) Code.abstract -> 'i) -> 'i
-                val col_iter :
-                  'a ->
-                  'b ->
-                  ('c, int) Code.abstract ->
-                  ('c, int) Code.abstract ->
-                  ('a -> 'b -> ('c, int) Code.abstract -> 'd) ->
-                  (('c, int) Code.abstract ->
-                   'd -> 'e -> ('f -> 'g -> 'g) -> ('c, 'h) Code.abstract) ->
-                  'e -> ('e -> ('c, unit) Code.abstract -> 'i) -> 'i
-              end
             val findpivot :
               'a wmatrix ->
               'a curpos ->
-              ([> `TDet of 'a D.lstate | `TPivot of 'a P.lstate ] as 'b) list ->
+              ([> `TDet of 'a Det(GVC_F.Dom).lstate | `TPivot of 'a P.lstate ]
+               as 'b)
+              list ->
               ('b list ->
                ('a, GVC_F.Dom.v option) Code.abstract ->
                ('a, 'c) Code.abstract) ->
@@ -6126,35 +5758,12 @@ module G_GVC_F :
       functor (Det : GEF.DETF) ->
         functor (P : GEF.TRACKPIVOT) ->
           sig
-            module D :
-              sig
-                type indet = GVC_F.Dom.v
-                type outdet = Det(GVC_F.Dom).outdet
-                type tdet = outdet ref
-                type 'a lstate = 'a Det(GVC_F.Dom).lstate
-                type 'a tag_lstate = [ `TDet of 'a lstate ]
-                type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
-                  constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
-                  constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                val decl : unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                val upd_sign :
-                  unit -> ('a * [> 'a tag_lstate ] * 'b, unit) om
-                val zero_sign :
-                  unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                val acc :
-                  ('a, indet) Code.abstract ->
-                  ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                val get : unit -> ('a * [> 'a tag_lstate ] * 'b, tdet) lm
-                val set :
-                  ('a, indet) Code.abstract ->
-                  ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, outdet) lm
-              end
             val findpivot :
               'a wmatrix ->
               'a curpos ->
-              ([> `TDet of 'a D.lstate | `TPivot of 'a P.lstate ] as 'b) list ->
+              ([> `TDet of 'a Det(GVC_F.Dom).lstate | `TPivot of 'a P.lstate ]
+               as 'b)
+              list ->
               ('b list ->
                ('a, GVC_F.Dom.v option) Code.abstract ->
                ('a, 'c) Code.abstract) ->
@@ -6164,31 +5773,6 @@ module G_GVC_F :
       functor (Det : GEF.DETF) ->
         functor (P : GEF.TRACKPIVOT) ->
           sig
-            module D :
-              sig
-                type indet = GVC_F.Dom.v
-                type outdet = Det(GVC_F.Dom).outdet
-                type tdet = outdet ref
-                type 'a lstate = 'a Det(GVC_F.Dom).lstate
-                type 'a tag_lstate = [ `TDet of 'a lstate ]
-                type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
-                  constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
-                  constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                val decl : unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                val upd_sign :
-                  unit -> ('a * [> 'a tag_lstate ] * 'b, unit) om
-                val zero_sign :
-                  unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                val acc :
-                  ('a, indet) Code.abstract ->
-                  ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                val get : unit -> ('a * [> 'a tag_lstate ] * 'b, tdet) lm
-                val set :
-                  ('a, indet) Code.abstract ->
-                  ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, outdet) lm
-              end
             val findpivot :
               'a wmatrix ->
               'a curpos ->
@@ -6200,7 +5784,7 @@ module G_GVC_F :
         functor (PK : GEF.PIVOTKIND) ->
           functor (Detf : GEF.DETF) ->
             functor (Update : GEF.UpdateProxy(GVC_F)(Detf).S) ->
-              functor (In : INPUT) ->
+              functor (Input : INPUT) ->
                 functor (Out : OutProxy(GVC_F)(Detf).S) ->
                   sig
                     module Det :
@@ -6251,16 +5835,6 @@ module G_GVC_F :
                           ('a in_val -> ('a, unit, 'b, 'c) GEF.cmonad) ->
                           ('a, unit, 'b, 'c) GEF.cmonad
                         val upd_kind : Ge.update_kind
-                      end
-                    module Input :
-                      sig
-                        type inp = In.inp
-                        val get_input :
-                          ('a, inp) Code.abstract ->
-                          (('a, GVC_F.contr) Code.abstract *
-                           ('a, int) Code.abstract * bool, 'b,
-                           ('a, 'c) Code.abstract)
-                          StateCPSMonad.monad
                       end
                     module Output :
                       sig
@@ -6367,31 +5941,6 @@ module G_GVC_F :
                             | `TPivot of 'a Output.P.lstate ],
                            'b)
                           GEF.cmonad
-                      end
-                    module I :
-                      sig
-                        val row_iter :
-                          'a ->
-                          'b ->
-                          ('c, int) Code.abstract ->
-                          ('c, int) Code.abstract ->
-                          ('a ->
-                           ('c, int) Code.abstract ->
-                           'b -> ('c, 'd) Code.abstract) ->
-                          (('c, int) Code.abstract ->
-                           ('c, 'd) Code.abstract ->
-                           'e -> ('f -> 'g -> 'g) -> ('c, 'h) Code.abstract) ->
-                          'e -> ('e -> ('c, unit) Code.abstract -> 'i) -> 'i
-                        val col_iter :
-                          'a ->
-                          'b ->
-                          ('c, int) Code.abstract ->
-                          ('c, int) Code.abstract ->
-                          ('a -> 'b -> ('c, int) Code.abstract -> 'd) ->
-                          (('c, int) Code.abstract ->
-                           'd ->
-                           'e -> ('f -> 'g -> 'g) -> ('c, 'h) Code.abstract) ->
-                          'e -> ('e -> ('c, unit) Code.abstract -> 'i) -> 'i
                       end
                     val gen :
                       ('a, Input.inp) Code.abstract ->
@@ -7680,58 +7229,12 @@ module G_GAC_I :
       functor (Det : GEF.DETF) ->
         functor (P : GEF.TRACKPIVOT) ->
           sig
-            module D :
-              sig
-                type indet = GAC_I.Dom.v
-                type outdet = Det(GAC_I.Dom).outdet
-                type tdet = outdet ref
-                type 'a lstate = 'a Det(GAC_I.Dom).lstate
-                type 'a tag_lstate = [ `TDet of 'a lstate ]
-                type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
-                  constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
-                  constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                val decl : unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                val upd_sign :
-                  unit -> ('a * [> 'a tag_lstate ] * 'b, unit) om
-                val zero_sign :
-                  unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                val acc :
-                  ('a, indet) Code.abstract ->
-                  ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                val get : unit -> ('a * [> 'a tag_lstate ] * 'b, tdet) lm
-                val set :
-                  ('a, indet) Code.abstract ->
-                  ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, outdet) lm
-              end
-            module I :
-              sig
-                val row_iter :
-                  'a ->
-                  'b ->
-                  ('c, int) Code.abstract ->
-                  ('c, int) Code.abstract ->
-                  ('a ->
-                   ('c, int) Code.abstract -> 'b -> ('c, 'd) Code.abstract) ->
-                  (('c, int) Code.abstract ->
-                   ('c, 'd) Code.abstract ->
-                   'e -> ('f -> 'g -> 'g) -> ('c, 'h) Code.abstract) ->
-                  'e -> ('e -> ('c, unit) Code.abstract -> 'i) -> 'i
-                val col_iter :
-                  'a ->
-                  'b ->
-                  ('c, int) Code.abstract ->
-                  ('c, int) Code.abstract ->
-                  ('a -> 'b -> ('c, int) Code.abstract -> 'd) ->
-                  (('c, int) Code.abstract ->
-                   'd -> 'e -> ('f -> 'g -> 'g) -> ('c, 'h) Code.abstract) ->
-                  'e -> ('e -> ('c, unit) Code.abstract -> 'i) -> 'i
-              end
             val findpivot :
               'a wmatrix ->
               'a curpos ->
-              ([> `TDet of 'a D.lstate | `TPivot of 'a P.lstate ] as 'b) list ->
+              ([> `TDet of 'a Det(GAC_I.Dom).lstate | `TPivot of 'a P.lstate ]
+               as 'b)
+              list ->
               ('b list ->
                ('a, GAC_I.Dom.v option) Code.abstract ->
                ('a, 'c) Code.abstract) ->
@@ -7741,35 +7244,12 @@ module G_GAC_I :
       functor (Det : GEF.DETF) ->
         functor (P : GEF.TRACKPIVOT) ->
           sig
-            module D :
-              sig
-                type indet = GAC_I.Dom.v
-                type outdet = Det(GAC_I.Dom).outdet
-                type tdet = outdet ref
-                type 'a lstate = 'a Det(GAC_I.Dom).lstate
-                type 'a tag_lstate = [ `TDet of 'a lstate ]
-                type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
-                  constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
-                  constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                val decl : unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                val upd_sign :
-                  unit -> ('a * [> 'a tag_lstate ] * 'b, unit) om
-                val zero_sign :
-                  unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                val acc :
-                  ('a, indet) Code.abstract ->
-                  ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                val get : unit -> ('a * [> 'a tag_lstate ] * 'b, tdet) lm
-                val set :
-                  ('a, indet) Code.abstract ->
-                  ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, outdet) lm
-              end
             val findpivot :
               'a wmatrix ->
               'a curpos ->
-              ([> `TDet of 'a D.lstate | `TPivot of 'a P.lstate ] as 'b) list ->
+              ([> `TDet of 'a Det(GAC_I.Dom).lstate | `TPivot of 'a P.lstate ]
+               as 'b)
+              list ->
               ('b list ->
                ('a, GAC_I.Dom.v option) Code.abstract ->
                ('a, 'c) Code.abstract) ->
@@ -7779,31 +7259,6 @@ module G_GAC_I :
       functor (Det : GEF.DETF) ->
         functor (P : GEF.TRACKPIVOT) ->
           sig
-            module D :
-              sig
-                type indet = GAC_I.Dom.v
-                type outdet = Det(GAC_I.Dom).outdet
-                type tdet = outdet ref
-                type 'a lstate = 'a Det(GAC_I.Dom).lstate
-                type 'a tag_lstate = [ `TDet of 'a lstate ]
-                type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
-                  constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
-                  constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                val decl : unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                val upd_sign :
-                  unit -> ('a * [> 'a tag_lstate ] * 'b, unit) om
-                val zero_sign :
-                  unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                val acc :
-                  ('a, indet) Code.abstract ->
-                  ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                val get : unit -> ('a * [> 'a tag_lstate ] * 'b, tdet) lm
-                val set :
-                  ('a, indet) Code.abstract ->
-                  ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, outdet) lm
-              end
             val findpivot :
               'a wmatrix ->
               'a curpos ->
@@ -7815,7 +7270,7 @@ module G_GAC_I :
         functor (PK : GEF.PIVOTKIND) ->
           functor (Detf : GEF.DETF) ->
             functor (Update : GEF.UpdateProxy(GAC_I)(Detf).S) ->
-              functor (In : INPUT) ->
+              functor (Input : INPUT) ->
                 functor (Out : OutProxy(GAC_I)(Detf).S) ->
                   sig
                     module Det :
@@ -7866,16 +7321,6 @@ module G_GAC_I :
                           ('a in_val -> ('a, unit, 'b, 'c) GEF.cmonad) ->
                           ('a, unit, 'b, 'c) GEF.cmonad
                         val upd_kind : Ge.update_kind
-                      end
-                    module Input :
-                      sig
-                        type inp = In.inp
-                        val get_input :
-                          ('a, inp) Code.abstract ->
-                          (('a, GAC_I.contr) Code.abstract *
-                           ('a, int) Code.abstract * bool, 'b,
-                           ('a, 'c) Code.abstract)
-                          StateCPSMonad.monad
                       end
                     module Output :
                       sig
@@ -7982,31 +7427,6 @@ module G_GAC_I :
                             | `TPivot of 'a Output.P.lstate ],
                            'b)
                           GEF.cmonad
-                      end
-                    module I :
-                      sig
-                        val row_iter :
-                          'a ->
-                          'b ->
-                          ('c, int) Code.abstract ->
-                          ('c, int) Code.abstract ->
-                          ('a ->
-                           ('c, int) Code.abstract ->
-                           'b -> ('c, 'd) Code.abstract) ->
-                          (('c, int) Code.abstract ->
-                           ('c, 'd) Code.abstract ->
-                           'e -> ('f -> 'g -> 'g) -> ('c, 'h) Code.abstract) ->
-                          'e -> ('e -> ('c, unit) Code.abstract -> 'i) -> 'i
-                        val col_iter :
-                          'a ->
-                          'b ->
-                          ('c, int) Code.abstract ->
-                          ('c, int) Code.abstract ->
-                          ('a -> 'b -> ('c, int) Code.abstract -> 'd) ->
-                          (('c, int) Code.abstract ->
-                           'd ->
-                           'e -> ('f -> 'g -> 'g) -> ('c, 'h) Code.abstract) ->
-                          'e -> ('e -> ('c, unit) Code.abstract -> 'i) -> 'i
                       end
                     val gen :
                       ('a, Input.inp) Code.abstract ->
@@ -9295,58 +8715,12 @@ module G_GVC_I :
       functor (Det : GEF.DETF) ->
         functor (P : GEF.TRACKPIVOT) ->
           sig
-            module D :
-              sig
-                type indet = GVC_I.Dom.v
-                type outdet = Det(GVC_I.Dom).outdet
-                type tdet = outdet ref
-                type 'a lstate = 'a Det(GVC_I.Dom).lstate
-                type 'a tag_lstate = [ `TDet of 'a lstate ]
-                type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
-                  constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
-                  constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                val decl : unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                val upd_sign :
-                  unit -> ('a * [> 'a tag_lstate ] * 'b, unit) om
-                val zero_sign :
-                  unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                val acc :
-                  ('a, indet) Code.abstract ->
-                  ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                val get : unit -> ('a * [> 'a tag_lstate ] * 'b, tdet) lm
-                val set :
-                  ('a, indet) Code.abstract ->
-                  ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, outdet) lm
-              end
-            module I :
-              sig
-                val row_iter :
-                  'a ->
-                  'b ->
-                  ('c, int) Code.abstract ->
-                  ('c, int) Code.abstract ->
-                  ('a ->
-                   ('c, int) Code.abstract -> 'b -> ('c, 'd) Code.abstract) ->
-                  (('c, int) Code.abstract ->
-                   ('c, 'd) Code.abstract ->
-                   'e -> ('f -> 'g -> 'g) -> ('c, 'h) Code.abstract) ->
-                  'e -> ('e -> ('c, unit) Code.abstract -> 'i) -> 'i
-                val col_iter :
-                  'a ->
-                  'b ->
-                  ('c, int) Code.abstract ->
-                  ('c, int) Code.abstract ->
-                  ('a -> 'b -> ('c, int) Code.abstract -> 'd) ->
-                  (('c, int) Code.abstract ->
-                   'd -> 'e -> ('f -> 'g -> 'g) -> ('c, 'h) Code.abstract) ->
-                  'e -> ('e -> ('c, unit) Code.abstract -> 'i) -> 'i
-              end
             val findpivot :
               'a wmatrix ->
               'a curpos ->
-              ([> `TDet of 'a D.lstate | `TPivot of 'a P.lstate ] as 'b) list ->
+              ([> `TDet of 'a Det(GVC_I.Dom).lstate | `TPivot of 'a P.lstate ]
+               as 'b)
+              list ->
               ('b list ->
                ('a, GVC_I.Dom.v option) Code.abstract ->
                ('a, 'c) Code.abstract) ->
@@ -9356,35 +8730,12 @@ module G_GVC_I :
       functor (Det : GEF.DETF) ->
         functor (P : GEF.TRACKPIVOT) ->
           sig
-            module D :
-              sig
-                type indet = GVC_I.Dom.v
-                type outdet = Det(GVC_I.Dom).outdet
-                type tdet = outdet ref
-                type 'a lstate = 'a Det(GVC_I.Dom).lstate
-                type 'a tag_lstate = [ `TDet of 'a lstate ]
-                type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
-                  constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
-                  constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                val decl : unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                val upd_sign :
-                  unit -> ('a * [> 'a tag_lstate ] * 'b, unit) om
-                val zero_sign :
-                  unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                val acc :
-                  ('a, indet) Code.abstract ->
-                  ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                val get : unit -> ('a * [> 'a tag_lstate ] * 'b, tdet) lm
-                val set :
-                  ('a, indet) Code.abstract ->
-                  ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, outdet) lm
-              end
             val findpivot :
               'a wmatrix ->
               'a curpos ->
-              ([> `TDet of 'a D.lstate | `TPivot of 'a P.lstate ] as 'b) list ->
+              ([> `TDet of 'a Det(GVC_I.Dom).lstate | `TPivot of 'a P.lstate ]
+               as 'b)
+              list ->
               ('b list ->
                ('a, GVC_I.Dom.v option) Code.abstract ->
                ('a, 'c) Code.abstract) ->
@@ -9394,31 +8745,6 @@ module G_GVC_I :
       functor (Det : GEF.DETF) ->
         functor (P : GEF.TRACKPIVOT) ->
           sig
-            module D :
-              sig
-                type indet = GVC_I.Dom.v
-                type outdet = Det(GVC_I.Dom).outdet
-                type tdet = outdet ref
-                type 'a lstate = 'a Det(GVC_I.Dom).lstate
-                type 'a tag_lstate = [ `TDet of 'a lstate ]
-                type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
-                  constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
-                  constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                val decl : unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                val upd_sign :
-                  unit -> ('a * [> 'a tag_lstate ] * 'b, unit) om
-                val zero_sign :
-                  unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                val acc :
-                  ('a, indet) Code.abstract ->
-                  ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                val get : unit -> ('a * [> 'a tag_lstate ] * 'b, tdet) lm
-                val set :
-                  ('a, indet) Code.abstract ->
-                  ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, outdet) lm
-              end
             val findpivot :
               'a wmatrix ->
               'a curpos ->
@@ -9430,7 +8756,7 @@ module G_GVC_I :
         functor (PK : GEF.PIVOTKIND) ->
           functor (Detf : GEF.DETF) ->
             functor (Update : GEF.UpdateProxy(GVC_I)(Detf).S) ->
-              functor (In : INPUT) ->
+              functor (Input : INPUT) ->
                 functor (Out : OutProxy(GVC_I)(Detf).S) ->
                   sig
                     module Det :
@@ -9481,16 +8807,6 @@ module G_GVC_I :
                           ('a in_val -> ('a, unit, 'b, 'c) GEF.cmonad) ->
                           ('a, unit, 'b, 'c) GEF.cmonad
                         val upd_kind : Ge.update_kind
-                      end
-                    module Input :
-                      sig
-                        type inp = In.inp
-                        val get_input :
-                          ('a, inp) Code.abstract ->
-                          (('a, GVC_I.contr) Code.abstract *
-                           ('a, int) Code.abstract * bool, 'b,
-                           ('a, 'c) Code.abstract)
-                          StateCPSMonad.monad
                       end
                     module Output :
                       sig
@@ -9597,31 +8913,6 @@ module G_GVC_I :
                             | `TPivot of 'a Output.P.lstate ],
                            'b)
                           GEF.cmonad
-                      end
-                    module I :
-                      sig
-                        val row_iter :
-                          'a ->
-                          'b ->
-                          ('c, int) Code.abstract ->
-                          ('c, int) Code.abstract ->
-                          ('a ->
-                           ('c, int) Code.abstract ->
-                           'b -> ('c, 'd) Code.abstract) ->
-                          (('c, int) Code.abstract ->
-                           ('c, 'd) Code.abstract ->
-                           'e -> ('f -> 'g -> 'g) -> ('c, 'h) Code.abstract) ->
-                          'e -> ('e -> ('c, unit) Code.abstract -> 'i) -> 'i
-                        val col_iter :
-                          'a ->
-                          'b ->
-                          ('c, int) Code.abstract ->
-                          ('c, int) Code.abstract ->
-                          ('a -> 'b -> ('c, int) Code.abstract -> 'd) ->
-                          (('c, int) Code.abstract ->
-                           'd ->
-                           'e -> ('f -> 'g -> 'g) -> ('c, 'h) Code.abstract) ->
-                          'e -> ('e -> ('c, unit) Code.abstract -> 'i) -> 'i
                       end
                     val gen :
                       ('a, Input.inp) Code.abstract ->
@@ -10910,58 +10201,12 @@ module G_GAC_R :
       functor (Det : GEF.DETF) ->
         functor (P : GEF.TRACKPIVOT) ->
           sig
-            module D :
-              sig
-                type indet = GAC_R.Dom.v
-                type outdet = Det(GAC_R.Dom).outdet
-                type tdet = outdet ref
-                type 'a lstate = 'a Det(GAC_R.Dom).lstate
-                type 'a tag_lstate = [ `TDet of 'a lstate ]
-                type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
-                  constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
-                  constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                val decl : unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                val upd_sign :
-                  unit -> ('a * [> 'a tag_lstate ] * 'b, unit) om
-                val zero_sign :
-                  unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                val acc :
-                  ('a, indet) Code.abstract ->
-                  ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                val get : unit -> ('a * [> 'a tag_lstate ] * 'b, tdet) lm
-                val set :
-                  ('a, indet) Code.abstract ->
-                  ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, outdet) lm
-              end
-            module I :
-              sig
-                val row_iter :
-                  'a ->
-                  'b ->
-                  ('c, int) Code.abstract ->
-                  ('c, int) Code.abstract ->
-                  ('a ->
-                   ('c, int) Code.abstract -> 'b -> ('c, 'd) Code.abstract) ->
-                  (('c, int) Code.abstract ->
-                   ('c, 'd) Code.abstract ->
-                   'e -> ('f -> 'g -> 'g) -> ('c, 'h) Code.abstract) ->
-                  'e -> ('e -> ('c, unit) Code.abstract -> 'i) -> 'i
-                val col_iter :
-                  'a ->
-                  'b ->
-                  ('c, int) Code.abstract ->
-                  ('c, int) Code.abstract ->
-                  ('a -> 'b -> ('c, int) Code.abstract -> 'd) ->
-                  (('c, int) Code.abstract ->
-                   'd -> 'e -> ('f -> 'g -> 'g) -> ('c, 'h) Code.abstract) ->
-                  'e -> ('e -> ('c, unit) Code.abstract -> 'i) -> 'i
-              end
             val findpivot :
               'a wmatrix ->
               'a curpos ->
-              ([> `TDet of 'a D.lstate | `TPivot of 'a P.lstate ] as 'b) list ->
+              ([> `TDet of 'a Det(GAC_R.Dom).lstate | `TPivot of 'a P.lstate ]
+               as 'b)
+              list ->
               ('b list ->
                ('a, GAC_R.Dom.v option) Code.abstract ->
                ('a, 'c) Code.abstract) ->
@@ -10971,35 +10216,12 @@ module G_GAC_R :
       functor (Det : GEF.DETF) ->
         functor (P : GEF.TRACKPIVOT) ->
           sig
-            module D :
-              sig
-                type indet = GAC_R.Dom.v
-                type outdet = Det(GAC_R.Dom).outdet
-                type tdet = outdet ref
-                type 'a lstate = 'a Det(GAC_R.Dom).lstate
-                type 'a tag_lstate = [ `TDet of 'a lstate ]
-                type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
-                  constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
-                  constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                val decl : unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                val upd_sign :
-                  unit -> ('a * [> 'a tag_lstate ] * 'b, unit) om
-                val zero_sign :
-                  unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                val acc :
-                  ('a, indet) Code.abstract ->
-                  ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                val get : unit -> ('a * [> 'a tag_lstate ] * 'b, tdet) lm
-                val set :
-                  ('a, indet) Code.abstract ->
-                  ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, outdet) lm
-              end
             val findpivot :
               'a wmatrix ->
               'a curpos ->
-              ([> `TDet of 'a D.lstate | `TPivot of 'a P.lstate ] as 'b) list ->
+              ([> `TDet of 'a Det(GAC_R.Dom).lstate | `TPivot of 'a P.lstate ]
+               as 'b)
+              list ->
               ('b list ->
                ('a, GAC_R.Dom.v option) Code.abstract ->
                ('a, 'c) Code.abstract) ->
@@ -11009,31 +10231,6 @@ module G_GAC_R :
       functor (Det : GEF.DETF) ->
         functor (P : GEF.TRACKPIVOT) ->
           sig
-            module D :
-              sig
-                type indet = GAC_R.Dom.v
-                type outdet = Det(GAC_R.Dom).outdet
-                type tdet = outdet ref
-                type 'a lstate = 'a Det(GAC_R.Dom).lstate
-                type 'a tag_lstate = [ `TDet of 'a lstate ]
-                type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
-                  constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
-                  constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                val decl : unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                val upd_sign :
-                  unit -> ('a * [> 'a tag_lstate ] * 'b, unit) om
-                val zero_sign :
-                  unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                val acc :
-                  ('a, indet) Code.abstract ->
-                  ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                val get : unit -> ('a * [> 'a tag_lstate ] * 'b, tdet) lm
-                val set :
-                  ('a, indet) Code.abstract ->
-                  ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, outdet) lm
-              end
             val findpivot :
               'a wmatrix ->
               'a curpos ->
@@ -11045,7 +10242,7 @@ module G_GAC_R :
         functor (PK : GEF.PIVOTKIND) ->
           functor (Detf : GEF.DETF) ->
             functor (Update : GEF.UpdateProxy(GAC_R)(Detf).S) ->
-              functor (In : INPUT) ->
+              functor (Input : INPUT) ->
                 functor (Out : OutProxy(GAC_R)(Detf).S) ->
                   sig
                     module Det :
@@ -11096,16 +10293,6 @@ module G_GAC_R :
                           ('a in_val -> ('a, unit, 'b, 'c) GEF.cmonad) ->
                           ('a, unit, 'b, 'c) GEF.cmonad
                         val upd_kind : Ge.update_kind
-                      end
-                    module Input :
-                      sig
-                        type inp = In.inp
-                        val get_input :
-                          ('a, inp) Code.abstract ->
-                          (('a, GAC_R.contr) Code.abstract *
-                           ('a, int) Code.abstract * bool, 'b,
-                           ('a, 'c) Code.abstract)
-                          StateCPSMonad.monad
                       end
                     module Output :
                       sig
@@ -11212,31 +10399,6 @@ module G_GAC_R :
                             | `TPivot of 'a Output.P.lstate ],
                            'b)
                           GEF.cmonad
-                      end
-                    module I :
-                      sig
-                        val row_iter :
-                          'a ->
-                          'b ->
-                          ('c, int) Code.abstract ->
-                          ('c, int) Code.abstract ->
-                          ('a ->
-                           ('c, int) Code.abstract ->
-                           'b -> ('c, 'd) Code.abstract) ->
-                          (('c, int) Code.abstract ->
-                           ('c, 'd) Code.abstract ->
-                           'e -> ('f -> 'g -> 'g) -> ('c, 'h) Code.abstract) ->
-                          'e -> ('e -> ('c, unit) Code.abstract -> 'i) -> 'i
-                        val col_iter :
-                          'a ->
-                          'b ->
-                          ('c, int) Code.abstract ->
-                          ('c, int) Code.abstract ->
-                          ('a -> 'b -> ('c, int) Code.abstract -> 'd) ->
-                          (('c, int) Code.abstract ->
-                           'd ->
-                           'e -> ('f -> 'g -> 'g) -> ('c, 'h) Code.abstract) ->
-                          'e -> ('e -> ('c, unit) Code.abstract -> 'i) -> 'i
                       end
                     val gen :
                       ('a, Input.inp) Code.abstract ->
@@ -12526,58 +11688,12 @@ module G_GVC_Z3 :
       functor (Det : GEF.DETF) ->
         functor (P : GEF.TRACKPIVOT) ->
           sig
-            module D :
-              sig
-                type indet = GVC_Z3.Dom.v
-                type outdet = Det(GVC_Z3.Dom).outdet
-                type tdet = outdet ref
-                type 'a lstate = 'a Det(GVC_Z3.Dom).lstate
-                type 'a tag_lstate = [ `TDet of 'a lstate ]
-                type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
-                  constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
-                  constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                val decl : unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                val upd_sign :
-                  unit -> ('a * [> 'a tag_lstate ] * 'b, unit) om
-                val zero_sign :
-                  unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                val acc :
-                  ('a, indet) Code.abstract ->
-                  ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                val get : unit -> ('a * [> 'a tag_lstate ] * 'b, tdet) lm
-                val set :
-                  ('a, indet) Code.abstract ->
-                  ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, outdet) lm
-              end
-            module I :
-              sig
-                val row_iter :
-                  'a ->
-                  'b ->
-                  ('c, int) Code.abstract ->
-                  ('c, int) Code.abstract ->
-                  ('a ->
-                   ('c, int) Code.abstract -> 'b -> ('c, 'd) Code.abstract) ->
-                  (('c, int) Code.abstract ->
-                   ('c, 'd) Code.abstract ->
-                   'e -> ('f -> 'g -> 'g) -> ('c, 'h) Code.abstract) ->
-                  'e -> ('e -> ('c, unit) Code.abstract -> 'i) -> 'i
-                val col_iter :
-                  'a ->
-                  'b ->
-                  ('c, int) Code.abstract ->
-                  ('c, int) Code.abstract ->
-                  ('a -> 'b -> ('c, int) Code.abstract -> 'd) ->
-                  (('c, int) Code.abstract ->
-                   'd -> 'e -> ('f -> 'g -> 'g) -> ('c, 'h) Code.abstract) ->
-                  'e -> ('e -> ('c, unit) Code.abstract -> 'i) -> 'i
-              end
             val findpivot :
               'a wmatrix ->
               'a curpos ->
-              ([> `TDet of 'a D.lstate | `TPivot of 'a P.lstate ] as 'b) list ->
+              ([> `TDet of 'a Det(GVC_Z3.Dom).lstate | `TPivot of 'a P.lstate ]
+               as 'b)
+              list ->
               ('b list ->
                ('a, GVC_Z3.Dom.v option) Code.abstract ->
                ('a, 'c) Code.abstract) ->
@@ -12587,35 +11703,12 @@ module G_GVC_Z3 :
       functor (Det : GEF.DETF) ->
         functor (P : GEF.TRACKPIVOT) ->
           sig
-            module D :
-              sig
-                type indet = GVC_Z3.Dom.v
-                type outdet = Det(GVC_Z3.Dom).outdet
-                type tdet = outdet ref
-                type 'a lstate = 'a Det(GVC_Z3.Dom).lstate
-                type 'a tag_lstate = [ `TDet of 'a lstate ]
-                type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
-                  constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
-                  constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                val decl : unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                val upd_sign :
-                  unit -> ('a * [> 'a tag_lstate ] * 'b, unit) om
-                val zero_sign :
-                  unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                val acc :
-                  ('a, indet) Code.abstract ->
-                  ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                val get : unit -> ('a * [> 'a tag_lstate ] * 'b, tdet) lm
-                val set :
-                  ('a, indet) Code.abstract ->
-                  ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, outdet) lm
-              end
             val findpivot :
               'a wmatrix ->
               'a curpos ->
-              ([> `TDet of 'a D.lstate | `TPivot of 'a P.lstate ] as 'b) list ->
+              ([> `TDet of 'a Det(GVC_Z3.Dom).lstate | `TPivot of 'a P.lstate ]
+               as 'b)
+              list ->
               ('b list ->
                ('a, GVC_Z3.Dom.v option) Code.abstract ->
                ('a, 'c) Code.abstract) ->
@@ -12625,31 +11718,6 @@ module G_GVC_Z3 :
       functor (Det : GEF.DETF) ->
         functor (P : GEF.TRACKPIVOT) ->
           sig
-            module D :
-              sig
-                type indet = GVC_Z3.Dom.v
-                type outdet = Det(GVC_Z3.Dom).outdet
-                type tdet = outdet ref
-                type 'a lstate = 'a Det(GVC_Z3.Dom).lstate
-                type 'a tag_lstate = [ `TDet of 'a lstate ]
-                type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
-                  constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
-                  constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                val decl : unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                val upd_sign :
-                  unit -> ('a * [> 'a tag_lstate ] * 'b, unit) om
-                val zero_sign :
-                  unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                val acc :
-                  ('a, indet) Code.abstract ->
-                  ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                val get : unit -> ('a * [> 'a tag_lstate ] * 'b, tdet) lm
-                val set :
-                  ('a, indet) Code.abstract ->
-                  ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, outdet) lm
-              end
             val findpivot :
               'a wmatrix ->
               'a curpos ->
@@ -12661,7 +11729,7 @@ module G_GVC_Z3 :
         functor (PK : GEF.PIVOTKIND) ->
           functor (Detf : GEF.DETF) ->
             functor (Update : GEF.UpdateProxy(GVC_Z3)(Detf).S) ->
-              functor (In : INPUT) ->
+              functor (Input : INPUT) ->
                 functor (Out : OutProxy(GVC_Z3)(Detf).S) ->
                   sig
                     module Det :
@@ -12712,16 +11780,6 @@ module G_GVC_Z3 :
                           ('a in_val -> ('a, unit, 'b, 'c) GEF.cmonad) ->
                           ('a, unit, 'b, 'c) GEF.cmonad
                         val upd_kind : Ge.update_kind
-                      end
-                    module Input :
-                      sig
-                        type inp = In.inp
-                        val get_input :
-                          ('a, inp) Code.abstract ->
-                          (('a, GVC_Z3.contr) Code.abstract *
-                           ('a, int) Code.abstract * bool, 'b,
-                           ('a, 'c) Code.abstract)
-                          StateCPSMonad.monad
                       end
                     module Output :
                       sig
@@ -12828,31 +11886,6 @@ module G_GVC_Z3 :
                             | `TPivot of 'a Output.P.lstate ],
                            'b)
                           GEF.cmonad
-                      end
-                    module I :
-                      sig
-                        val row_iter :
-                          'a ->
-                          'b ->
-                          ('c, int) Code.abstract ->
-                          ('c, int) Code.abstract ->
-                          ('a ->
-                           ('c, int) Code.abstract ->
-                           'b -> ('c, 'd) Code.abstract) ->
-                          (('c, int) Code.abstract ->
-                           ('c, 'd) Code.abstract ->
-                           'e -> ('f -> 'g -> 'g) -> ('c, 'h) Code.abstract) ->
-                          'e -> ('e -> ('c, unit) Code.abstract -> 'i) -> 'i
-                        val col_iter :
-                          'a ->
-                          'b ->
-                          ('c, int) Code.abstract ->
-                          ('c, int) Code.abstract ->
-                          ('a -> 'b -> ('c, int) Code.abstract -> 'd) ->
-                          (('c, int) Code.abstract ->
-                           'd ->
-                           'e -> ('f -> 'g -> 'g) -> ('c, 'h) Code.abstract) ->
-                          'e -> ('e -> ('c, unit) Code.abstract -> 'i) -> 'i
                       end
                     val gen :
                       ('a, Input.inp) Code.abstract ->
@@ -14142,58 +13175,13 @@ module G_GVC_Z19 :
       functor (Det : GEF.DETF) ->
         functor (P : GEF.TRACKPIVOT) ->
           sig
-            module D :
-              sig
-                type indet = GVC_Z19.Dom.v
-                type outdet = Det(GVC_Z19.Dom).outdet
-                type tdet = outdet ref
-                type 'a lstate = 'a Det(GVC_Z19.Dom).lstate
-                type 'a tag_lstate = [ `TDet of 'a lstate ]
-                type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
-                  constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
-                  constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                val decl : unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                val upd_sign :
-                  unit -> ('a * [> 'a tag_lstate ] * 'b, unit) om
-                val zero_sign :
-                  unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                val acc :
-                  ('a, indet) Code.abstract ->
-                  ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                val get : unit -> ('a * [> 'a tag_lstate ] * 'b, tdet) lm
-                val set :
-                  ('a, indet) Code.abstract ->
-                  ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, outdet) lm
-              end
-            module I :
-              sig
-                val row_iter :
-                  'a ->
-                  'b ->
-                  ('c, int) Code.abstract ->
-                  ('c, int) Code.abstract ->
-                  ('a ->
-                   ('c, int) Code.abstract -> 'b -> ('c, 'd) Code.abstract) ->
-                  (('c, int) Code.abstract ->
-                   ('c, 'd) Code.abstract ->
-                   'e -> ('f -> 'g -> 'g) -> ('c, 'h) Code.abstract) ->
-                  'e -> ('e -> ('c, unit) Code.abstract -> 'i) -> 'i
-                val col_iter :
-                  'a ->
-                  'b ->
-                  ('c, int) Code.abstract ->
-                  ('c, int) Code.abstract ->
-                  ('a -> 'b -> ('c, int) Code.abstract -> 'd) ->
-                  (('c, int) Code.abstract ->
-                   'd -> 'e -> ('f -> 'g -> 'g) -> ('c, 'h) Code.abstract) ->
-                  'e -> ('e -> ('c, unit) Code.abstract -> 'i) -> 'i
-              end
             val findpivot :
               'a wmatrix ->
               'a curpos ->
-              ([> `TDet of 'a D.lstate | `TPivot of 'a P.lstate ] as 'b) list ->
+              ([> `TDet of 'a Det(GVC_Z19.Dom).lstate
+                | `TPivot of 'a P.lstate ]
+               as 'b)
+              list ->
               ('b list ->
                ('a, GVC_Z19.Dom.v option) Code.abstract ->
                ('a, 'c) Code.abstract) ->
@@ -14203,35 +13191,13 @@ module G_GVC_Z19 :
       functor (Det : GEF.DETF) ->
         functor (P : GEF.TRACKPIVOT) ->
           sig
-            module D :
-              sig
-                type indet = GVC_Z19.Dom.v
-                type outdet = Det(GVC_Z19.Dom).outdet
-                type tdet = outdet ref
-                type 'a lstate = 'a Det(GVC_Z19.Dom).lstate
-                type 'a tag_lstate = [ `TDet of 'a lstate ]
-                type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
-                  constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
-                  constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                val decl : unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                val upd_sign :
-                  unit -> ('a * [> 'a tag_lstate ] * 'b, unit) om
-                val zero_sign :
-                  unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                val acc :
-                  ('a, indet) Code.abstract ->
-                  ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                val get : unit -> ('a * [> 'a tag_lstate ] * 'b, tdet) lm
-                val set :
-                  ('a, indet) Code.abstract ->
-                  ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, outdet) lm
-              end
             val findpivot :
               'a wmatrix ->
               'a curpos ->
-              ([> `TDet of 'a D.lstate | `TPivot of 'a P.lstate ] as 'b) list ->
+              ([> `TDet of 'a Det(GVC_Z19.Dom).lstate
+                | `TPivot of 'a P.lstate ]
+               as 'b)
+              list ->
               ('b list ->
                ('a, GVC_Z19.Dom.v option) Code.abstract ->
                ('a, 'c) Code.abstract) ->
@@ -14241,31 +13207,6 @@ module G_GVC_Z19 :
       functor (Det : GEF.DETF) ->
         functor (P : GEF.TRACKPIVOT) ->
           sig
-            module D :
-              sig
-                type indet = GVC_Z19.Dom.v
-                type outdet = Det(GVC_Z19.Dom).outdet
-                type tdet = outdet ref
-                type 'a lstate = 'a Det(GVC_Z19.Dom).lstate
-                type 'a tag_lstate = [ `TDet of 'a lstate ]
-                type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
-                  constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
-                  constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                val decl : unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                val upd_sign :
-                  unit -> ('a * [> 'a tag_lstate ] * 'b, unit) om
-                val zero_sign :
-                  unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                val acc :
-                  ('a, indet) Code.abstract ->
-                  ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                val get : unit -> ('a * [> 'a tag_lstate ] * 'b, tdet) lm
-                val set :
-                  ('a, indet) Code.abstract ->
-                  ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, outdet) lm
-              end
             val findpivot :
               'a wmatrix ->
               'a curpos ->
@@ -14277,7 +13218,7 @@ module G_GVC_Z19 :
         functor (PK : GEF.PIVOTKIND) ->
           functor (Detf : GEF.DETF) ->
             functor (Update : GEF.UpdateProxy(GVC_Z19)(Detf).S) ->
-              functor (In : INPUT) ->
+              functor (Input : INPUT) ->
                 functor (Out : OutProxy(GVC_Z19)(Detf).S) ->
                   sig
                     module Det :
@@ -14328,16 +13269,6 @@ module G_GVC_Z19 :
                           ('a in_val -> ('a, unit, 'b, 'c) GEF.cmonad) ->
                           ('a, unit, 'b, 'c) GEF.cmonad
                         val upd_kind : Ge.update_kind
-                      end
-                    module Input :
-                      sig
-                        type inp = In.inp
-                        val get_input :
-                          ('a, inp) Code.abstract ->
-                          (('a, GVC_Z19.contr) Code.abstract *
-                           ('a, int) Code.abstract * bool, 'b,
-                           ('a, 'c) Code.abstract)
-                          StateCPSMonad.monad
                       end
                     module Output :
                       sig
@@ -14448,31 +13379,6 @@ module G_GVC_Z19 :
                             | `TPivot of 'a Output.P.lstate ],
                            'b)
                           GEF.cmonad
-                      end
-                    module I :
-                      sig
-                        val row_iter :
-                          'a ->
-                          'b ->
-                          ('c, int) Code.abstract ->
-                          ('c, int) Code.abstract ->
-                          ('a ->
-                           ('c, int) Code.abstract ->
-                           'b -> ('c, 'd) Code.abstract) ->
-                          (('c, int) Code.abstract ->
-                           ('c, 'd) Code.abstract ->
-                           'e -> ('f -> 'g -> 'g) -> ('c, 'h) Code.abstract) ->
-                          'e -> ('e -> ('c, unit) Code.abstract -> 'i) -> 'i
-                        val col_iter :
-                          'a ->
-                          'b ->
-                          ('c, int) Code.abstract ->
-                          ('c, int) Code.abstract ->
-                          ('a -> 'b -> ('c, int) Code.abstract -> 'd) ->
-                          (('c, int) Code.abstract ->
-                           'd ->
-                           'e -> ('f -> 'g -> 'g) -> ('c, 'h) Code.abstract) ->
-                          'e -> ('e -> ('c, unit) Code.abstract -> 'i) -> 'i
                       end
                     val gen :
                       ('a, Input.inp) Code.abstract ->
@@ -15761,58 +14667,12 @@ module G_GFC_F :
       functor (Det : GEF.DETF) ->
         functor (P : GEF.TRACKPIVOT) ->
           sig
-            module D :
-              sig
-                type indet = GFC_F.Dom.v
-                type outdet = Det(GFC_F.Dom).outdet
-                type tdet = outdet ref
-                type 'a lstate = 'a Det(GFC_F.Dom).lstate
-                type 'a tag_lstate = [ `TDet of 'a lstate ]
-                type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
-                  constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
-                  constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                val decl : unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                val upd_sign :
-                  unit -> ('a * [> 'a tag_lstate ] * 'b, unit) om
-                val zero_sign :
-                  unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                val acc :
-                  ('a, indet) Code.abstract ->
-                  ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                val get : unit -> ('a * [> 'a tag_lstate ] * 'b, tdet) lm
-                val set :
-                  ('a, indet) Code.abstract ->
-                  ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, outdet) lm
-              end
-            module I :
-              sig
-                val row_iter :
-                  'a ->
-                  'b ->
-                  ('c, int) Code.abstract ->
-                  ('c, int) Code.abstract ->
-                  ('a ->
-                   ('c, int) Code.abstract -> 'b -> ('c, 'd) Code.abstract) ->
-                  (('c, int) Code.abstract ->
-                   ('c, 'd) Code.abstract ->
-                   'e -> ('f -> 'g -> 'g) -> ('c, 'h) Code.abstract) ->
-                  'e -> ('e -> ('c, unit) Code.abstract -> 'i) -> 'i
-                val col_iter :
-                  'a ->
-                  'b ->
-                  ('c, int) Code.abstract ->
-                  ('c, int) Code.abstract ->
-                  ('a -> 'b -> ('c, int) Code.abstract -> 'd) ->
-                  (('c, int) Code.abstract ->
-                   'd -> 'e -> ('f -> 'g -> 'g) -> ('c, 'h) Code.abstract) ->
-                  'e -> ('e -> ('c, unit) Code.abstract -> 'i) -> 'i
-              end
             val findpivot :
               'a wmatrix ->
               'a curpos ->
-              ([> `TDet of 'a D.lstate | `TPivot of 'a P.lstate ] as 'b) list ->
+              ([> `TDet of 'a Det(GFC_F.Dom).lstate | `TPivot of 'a P.lstate ]
+               as 'b)
+              list ->
               ('b list ->
                ('a, GFC_F.Dom.v option) Code.abstract ->
                ('a, 'c) Code.abstract) ->
@@ -15822,35 +14682,12 @@ module G_GFC_F :
       functor (Det : GEF.DETF) ->
         functor (P : GEF.TRACKPIVOT) ->
           sig
-            module D :
-              sig
-                type indet = GFC_F.Dom.v
-                type outdet = Det(GFC_F.Dom).outdet
-                type tdet = outdet ref
-                type 'a lstate = 'a Det(GFC_F.Dom).lstate
-                type 'a tag_lstate = [ `TDet of 'a lstate ]
-                type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
-                  constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
-                  constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                val decl : unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                val upd_sign :
-                  unit -> ('a * [> 'a tag_lstate ] * 'b, unit) om
-                val zero_sign :
-                  unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                val acc :
-                  ('a, indet) Code.abstract ->
-                  ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                val get : unit -> ('a * [> 'a tag_lstate ] * 'b, tdet) lm
-                val set :
-                  ('a, indet) Code.abstract ->
-                  ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, outdet) lm
-              end
             val findpivot :
               'a wmatrix ->
               'a curpos ->
-              ([> `TDet of 'a D.lstate | `TPivot of 'a P.lstate ] as 'b) list ->
+              ([> `TDet of 'a Det(GFC_F.Dom).lstate | `TPivot of 'a P.lstate ]
+               as 'b)
+              list ->
               ('b list ->
                ('a, GFC_F.Dom.v option) Code.abstract ->
                ('a, 'c) Code.abstract) ->
@@ -15860,31 +14697,6 @@ module G_GFC_F :
       functor (Det : GEF.DETF) ->
         functor (P : GEF.TRACKPIVOT) ->
           sig
-            module D :
-              sig
-                type indet = GFC_F.Dom.v
-                type outdet = Det(GFC_F.Dom).outdet
-                type tdet = outdet ref
-                type 'a lstate = 'a Det(GFC_F.Dom).lstate
-                type 'a tag_lstate = [ `TDet of 'a lstate ]
-                type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
-                  constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
-                  constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                val decl : unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                val upd_sign :
-                  unit -> ('a * [> 'a tag_lstate ] * 'b, unit) om
-                val zero_sign :
-                  unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                val acc :
-                  ('a, indet) Code.abstract ->
-                  ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                val get : unit -> ('a * [> 'a tag_lstate ] * 'b, tdet) lm
-                val set :
-                  ('a, indet) Code.abstract ->
-                  ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, outdet) lm
-              end
             val findpivot :
               'a wmatrix ->
               'a curpos ->
@@ -15896,7 +14708,7 @@ module G_GFC_F :
         functor (PK : GEF.PIVOTKIND) ->
           functor (Detf : GEF.DETF) ->
             functor (Update : GEF.UpdateProxy(GFC_F)(Detf).S) ->
-              functor (In : INPUT) ->
+              functor (Input : INPUT) ->
                 functor (Out : OutProxy(GFC_F)(Detf).S) ->
                   sig
                     module Det :
@@ -15947,16 +14759,6 @@ module G_GFC_F :
                           ('a in_val -> ('a, unit, 'b, 'c) GEF.cmonad) ->
                           ('a, unit, 'b, 'c) GEF.cmonad
                         val upd_kind : Ge.update_kind
-                      end
-                    module Input :
-                      sig
-                        type inp = In.inp
-                        val get_input :
-                          ('a, inp) Code.abstract ->
-                          (('a, GFC_F.contr) Code.abstract *
-                           ('a, int) Code.abstract * bool, 'b,
-                           ('a, 'c) Code.abstract)
-                          StateCPSMonad.monad
                       end
                     module Output :
                       sig
@@ -16064,31 +14866,6 @@ module G_GFC_F :
                            'b)
                           GEF.cmonad
                       end
-                    module I :
-                      sig
-                        val row_iter :
-                          'a ->
-                          'b ->
-                          ('c, int) Code.abstract ->
-                          ('c, int) Code.abstract ->
-                          ('a ->
-                           ('c, int) Code.abstract ->
-                           'b -> ('c, 'd) Code.abstract) ->
-                          (('c, int) Code.abstract ->
-                           ('c, 'd) Code.abstract ->
-                           'e -> ('f -> 'g -> 'g) -> ('c, 'h) Code.abstract) ->
-                          'e -> ('e -> ('c, unit) Code.abstract -> 'i) -> 'i
-                        val col_iter :
-                          'a ->
-                          'b ->
-                          ('c, int) Code.abstract ->
-                          ('c, int) Code.abstract ->
-                          ('a -> 'b -> ('c, int) Code.abstract -> 'd) ->
-                          (('c, int) Code.abstract ->
-                           'd ->
-                           'e -> ('f -> 'g -> 'g) -> ('c, 'h) Code.abstract) ->
-                          'e -> ('e -> ('c, unit) Code.abstract -> 'i) -> 'i
-                      end
                     val gen :
                       ('a, Input.inp) Code.abstract ->
                       ([> `TDet of 'a Det.lstate
@@ -16146,15 +14923,6 @@ module GenFA1 :
           ('a, unit, 'b, 'c) GEF.cmonad
         val upd_kind : Ge.update_kind
       end
-    module Input :
-      sig
-        type inp = G_GAC_F.InpJustMatrix.inp
-        val get_input :
-          ('a, inp) Code.abstract ->
-          (('a, GAC_F.contr) Code.abstract * ('a, int) Code.abstract * bool,
-           'b, ('a, 'c) Code.abstract)
-          StateCPSMonad.monad
-      end
     module Output :
       sig
         type res = G_GAC_F.OutJustMatrix(GAC_F)(Det)(GEF.PermList).res
@@ -16250,30 +15018,8 @@ module GenFA1 :
            'b)
           GEF.cmonad
       end
-    module I :
-      sig
-        val row_iter :
-          'a ->
-          'b ->
-          ('c, int) Code.abstract ->
-          ('c, int) Code.abstract ->
-          ('a -> ('c, int) Code.abstract -> 'b -> ('c, 'd) Code.abstract) ->
-          (('c, int) Code.abstract ->
-           ('c, 'd) Code.abstract ->
-           'e -> ('f -> 'g -> 'g) -> ('c, 'h) Code.abstract) ->
-          'e -> ('e -> ('c, unit) Code.abstract -> 'i) -> 'i
-        val col_iter :
-          'a ->
-          'b ->
-          ('c, int) Code.abstract ->
-          ('c, int) Code.abstract ->
-          ('a -> 'b -> ('c, int) Code.abstract -> 'd) ->
-          (('c, int) Code.abstract ->
-           'd -> 'e -> ('f -> 'g -> 'g) -> ('c, 'h) Code.abstract) ->
-          'e -> ('e -> ('c, unit) Code.abstract -> 'i) -> 'i
-      end
     val gen :
-      ('a, Input.inp) Code.abstract ->
+      ('a, G_GAC_F.InpJustMatrix.inp) Code.abstract ->
       ([> `TDet of 'a Det.lstate
         | `TLower of 'a Output.L.lstate
         | `TPivot of 'a Output.P.lstate
@@ -16326,15 +15072,6 @@ module GenFA2 :
           ('a, unit, 'b, 'c) GEF.cmonad
         val upd_kind : Ge.update_kind
       end
-    module Input :
-      sig
-        type inp = G_GAC_F.InpJustMatrix.inp
-        val get_input :
-          ('a, inp) Code.abstract ->
-          (('a, GAC_F.contr) Code.abstract * ('a, int) Code.abstract * bool,
-           'b, ('a, 'c) Code.abstract)
-          StateCPSMonad.monad
-      end
     module Output :
       sig
         type res = G_GAC_F.OutDet(GAC_F)(Det)(GEF.PermList).res
@@ -16430,30 +15167,8 @@ module GenFA2 :
            'b)
           GEF.cmonad
       end
-    module I :
-      sig
-        val row_iter :
-          'a ->
-          'b ->
-          ('c, int) Code.abstract ->
-          ('c, int) Code.abstract ->
-          ('a -> ('c, int) Code.abstract -> 'b -> ('c, 'd) Code.abstract) ->
-          (('c, int) Code.abstract ->
-           ('c, 'd) Code.abstract ->
-           'e -> ('f -> 'g -> 'g) -> ('c, 'h) Code.abstract) ->
-          'e -> ('e -> ('c, unit) Code.abstract -> 'i) -> 'i
-        val col_iter :
-          'a ->
-          'b ->
-          ('c, int) Code.abstract ->
-          ('c, int) Code.abstract ->
-          ('a -> 'b -> ('c, int) Code.abstract -> 'd) ->
-          (('c, int) Code.abstract ->
-           'd -> 'e -> ('f -> 'g -> 'g) -> ('c, 'h) Code.abstract) ->
-          'e -> ('e -> ('c, unit) Code.abstract -> 'i) -> 'i
-      end
     val gen :
-      ('a, Input.inp) Code.abstract ->
+      ('a, G_GAC_F.InpJustMatrix.inp) Code.abstract ->
       ([> `TDet of 'a Det.lstate
         | `TLower of 'a Output.L.lstate
         | `TPivot of 'a Output.P.lstate
@@ -16505,15 +15220,6 @@ module GenFA3 :
           ('a in_val -> ('a, unit, 'b, 'c) GEF.cmonad) ->
           ('a, unit, 'b, 'c) GEF.cmonad
         val upd_kind : Ge.update_kind
-      end
-    module Input :
-      sig
-        type inp = G_GAC_F.InpJustMatrix.inp
-        val get_input :
-          ('a, inp) Code.abstract ->
-          (('a, GAC_F.contr) Code.abstract * ('a, int) Code.abstract * bool,
-           'b, ('a, 'c) Code.abstract)
-          StateCPSMonad.monad
       end
     module Output :
       sig
@@ -16610,30 +15316,8 @@ module GenFA3 :
            'b)
           GEF.cmonad
       end
-    module I :
-      sig
-        val row_iter :
-          'a ->
-          'b ->
-          ('c, int) Code.abstract ->
-          ('c, int) Code.abstract ->
-          ('a -> ('c, int) Code.abstract -> 'b -> ('c, 'd) Code.abstract) ->
-          (('c, int) Code.abstract ->
-           ('c, 'd) Code.abstract ->
-           'e -> ('f -> 'g -> 'g) -> ('c, 'h) Code.abstract) ->
-          'e -> ('e -> ('c, unit) Code.abstract -> 'i) -> 'i
-        val col_iter :
-          'a ->
-          'b ->
-          ('c, int) Code.abstract ->
-          ('c, int) Code.abstract ->
-          ('a -> 'b -> ('c, int) Code.abstract -> 'd) ->
-          (('c, int) Code.abstract ->
-           'd -> 'e -> ('f -> 'g -> 'g) -> ('c, 'h) Code.abstract) ->
-          'e -> ('e -> ('c, unit) Code.abstract -> 'i) -> 'i
-      end
     val gen :
-      ('a, Input.inp) Code.abstract ->
+      ('a, G_GAC_F.InpJustMatrix.inp) Code.abstract ->
       ([> `TDet of 'a Det.lstate
         | `TLower of 'a Output.L.lstate
         | `TPivot of 'a Output.P.lstate
@@ -16685,15 +15369,6 @@ module GenFA4 :
           ('a in_val -> ('a, unit, 'b, 'c) GEF.cmonad) ->
           ('a, unit, 'b, 'c) GEF.cmonad
         val upd_kind : Ge.update_kind
-      end
-    module Input :
-      sig
-        type inp = G_GAC_F.InpJustMatrix.inp
-        val get_input :
-          ('a, inp) Code.abstract ->
-          (('a, GAC_F.contr) Code.abstract * ('a, int) Code.abstract * bool,
-           'b, ('a, 'c) Code.abstract)
-          StateCPSMonad.monad
       end
     module Output :
       sig
@@ -16790,30 +15465,8 @@ module GenFA4 :
            'b)
           GEF.cmonad
       end
-    module I :
-      sig
-        val row_iter :
-          'a ->
-          'b ->
-          ('c, int) Code.abstract ->
-          ('c, int) Code.abstract ->
-          ('a -> ('c, int) Code.abstract -> 'b -> ('c, 'd) Code.abstract) ->
-          (('c, int) Code.abstract ->
-           ('c, 'd) Code.abstract ->
-           'e -> ('f -> 'g -> 'g) -> ('c, 'h) Code.abstract) ->
-          'e -> ('e -> ('c, unit) Code.abstract -> 'i) -> 'i
-        val col_iter :
-          'a ->
-          'b ->
-          ('c, int) Code.abstract ->
-          ('c, int) Code.abstract ->
-          ('a -> 'b -> ('c, int) Code.abstract -> 'd) ->
-          (('c, int) Code.abstract ->
-           'd -> 'e -> ('f -> 'g -> 'g) -> ('c, 'h) Code.abstract) ->
-          'e -> ('e -> ('c, unit) Code.abstract -> 'i) -> 'i
-      end
     val gen :
-      ('a, Input.inp) Code.abstract ->
+      ('a, G_GAC_F.InpJustMatrix.inp) Code.abstract ->
       ([> `TDet of 'a Det.lstate
         | `TLower of 'a Output.L.lstate
         | `TPivot of 'a Output.P.lstate
@@ -16865,15 +15518,6 @@ module GenFA11 :
           ('a in_val -> ('a, unit, 'b, 'c) GEF.cmonad) ->
           ('a, unit, 'b, 'c) GEF.cmonad
         val upd_kind : Ge.update_kind
-      end
-    module Input :
-      sig
-        type inp = G_GAC_F.InpJustMatrix.inp
-        val get_input :
-          ('a, inp) Code.abstract ->
-          (('a, GAC_F.contr) Code.abstract * ('a, int) Code.abstract * bool,
-           'b, ('a, 'c) Code.abstract)
-          StateCPSMonad.monad
       end
     module Output :
       sig
@@ -16970,30 +15614,8 @@ module GenFA11 :
            'b)
           GEF.cmonad
       end
-    module I :
-      sig
-        val row_iter :
-          'a ->
-          'b ->
-          ('c, int) Code.abstract ->
-          ('c, int) Code.abstract ->
-          ('a -> ('c, int) Code.abstract -> 'b -> ('c, 'd) Code.abstract) ->
-          (('c, int) Code.abstract ->
-           ('c, 'd) Code.abstract ->
-           'e -> ('f -> 'g -> 'g) -> ('c, 'h) Code.abstract) ->
-          'e -> ('e -> ('c, unit) Code.abstract -> 'i) -> 'i
-        val col_iter :
-          'a ->
-          'b ->
-          ('c, int) Code.abstract ->
-          ('c, int) Code.abstract ->
-          ('a -> 'b -> ('c, int) Code.abstract -> 'd) ->
-          (('c, int) Code.abstract ->
-           'd -> 'e -> ('f -> 'g -> 'g) -> ('c, 'h) Code.abstract) ->
-          'e -> ('e -> ('c, unit) Code.abstract -> 'i) -> 'i
-      end
     val gen :
-      ('a, Input.inp) Code.abstract ->
+      ('a, G_GAC_F.InpJustMatrix.inp) Code.abstract ->
       ([> `TDet of 'a Det.lstate
         | `TLower of 'a Output.L.lstate
         | `TPivot of 'a Output.P.lstate
@@ -17045,15 +15667,6 @@ module GenFA12 :
           ('a in_val -> ('a, unit, 'b, 'c) GEF.cmonad) ->
           ('a, unit, 'b, 'c) GEF.cmonad
         val upd_kind : Ge.update_kind
-      end
-    module Input :
-      sig
-        type inp = G_GAC_F.InpJustMatrix.inp
-        val get_input :
-          ('a, inp) Code.abstract ->
-          (('a, GAC_F.contr) Code.abstract * ('a, int) Code.abstract * bool,
-           'b, ('a, 'c) Code.abstract)
-          StateCPSMonad.monad
       end
     module Output :
       sig
@@ -17150,30 +15763,8 @@ module GenFA12 :
            'b)
           GEF.cmonad
       end
-    module I :
-      sig
-        val row_iter :
-          'a ->
-          'b ->
-          ('c, int) Code.abstract ->
-          ('c, int) Code.abstract ->
-          ('a -> ('c, int) Code.abstract -> 'b -> ('c, 'd) Code.abstract) ->
-          (('c, int) Code.abstract ->
-           ('c, 'd) Code.abstract ->
-           'e -> ('f -> 'g -> 'g) -> ('c, 'h) Code.abstract) ->
-          'e -> ('e -> ('c, unit) Code.abstract -> 'i) -> 'i
-        val col_iter :
-          'a ->
-          'b ->
-          ('c, int) Code.abstract ->
-          ('c, int) Code.abstract ->
-          ('a -> 'b -> ('c, int) Code.abstract -> 'd) ->
-          (('c, int) Code.abstract ->
-           'd -> 'e -> ('f -> 'g -> 'g) -> ('c, 'h) Code.abstract) ->
-          'e -> ('e -> ('c, unit) Code.abstract -> 'i) -> 'i
-      end
     val gen :
-      ('a, Input.inp) Code.abstract ->
+      ('a, G_GAC_F.InpJustMatrix.inp) Code.abstract ->
       ([> `TDet of 'a Det.lstate
         | `TLower of 'a Output.L.lstate
         | `TPivot of 'a Output.P.lstate
@@ -17225,15 +15816,6 @@ module GenFA13 :
           ('a in_val -> ('a, unit, 'b, 'c) GEF.cmonad) ->
           ('a, unit, 'b, 'c) GEF.cmonad
         val upd_kind : Ge.update_kind
-      end
-    module Input :
-      sig
-        type inp = G_GAC_F.InpJustMatrix.inp
-        val get_input :
-          ('a, inp) Code.abstract ->
-          (('a, GAC_F.contr) Code.abstract * ('a, int) Code.abstract * bool,
-           'b, ('a, 'c) Code.abstract)
-          StateCPSMonad.monad
       end
     module Output :
       sig
@@ -17330,30 +15912,8 @@ module GenFA13 :
            'b)
           GEF.cmonad
       end
-    module I :
-      sig
-        val row_iter :
-          'a ->
-          'b ->
-          ('c, int) Code.abstract ->
-          ('c, int) Code.abstract ->
-          ('a -> ('c, int) Code.abstract -> 'b -> ('c, 'd) Code.abstract) ->
-          (('c, int) Code.abstract ->
-           ('c, 'd) Code.abstract ->
-           'e -> ('f -> 'g -> 'g) -> ('c, 'h) Code.abstract) ->
-          'e -> ('e -> ('c, unit) Code.abstract -> 'i) -> 'i
-        val col_iter :
-          'a ->
-          'b ->
-          ('c, int) Code.abstract ->
-          ('c, int) Code.abstract ->
-          ('a -> 'b -> ('c, int) Code.abstract -> 'd) ->
-          (('c, int) Code.abstract ->
-           'd -> 'e -> ('f -> 'g -> 'g) -> ('c, 'h) Code.abstract) ->
-          'e -> ('e -> ('c, unit) Code.abstract -> 'i) -> 'i
-      end
     val gen :
-      ('a, Input.inp) Code.abstract ->
+      ('a, G_GAC_F.InpJustMatrix.inp) Code.abstract ->
       ([> `TDet of 'a Det.lstate
         | `TLower of 'a Output.L.lstate
         | `TPivot of 'a Output.P.lstate
@@ -17405,15 +15965,6 @@ module GenFA14 :
           ('a in_val -> ('a, unit, 'b, 'c) GEF.cmonad) ->
           ('a, unit, 'b, 'c) GEF.cmonad
         val upd_kind : Ge.update_kind
-      end
-    module Input :
-      sig
-        type inp = G_GAC_F.InpJustMatrix.inp
-        val get_input :
-          ('a, inp) Code.abstract ->
-          (('a, GAC_F.contr) Code.abstract * ('a, int) Code.abstract * bool,
-           'b, ('a, 'c) Code.abstract)
-          StateCPSMonad.monad
       end
     module Output :
       sig
@@ -17510,30 +16061,8 @@ module GenFA14 :
            'b)
           GEF.cmonad
       end
-    module I :
-      sig
-        val row_iter :
-          'a ->
-          'b ->
-          ('c, int) Code.abstract ->
-          ('c, int) Code.abstract ->
-          ('a -> ('c, int) Code.abstract -> 'b -> ('c, 'd) Code.abstract) ->
-          (('c, int) Code.abstract ->
-           ('c, 'd) Code.abstract ->
-           'e -> ('f -> 'g -> 'g) -> ('c, 'h) Code.abstract) ->
-          'e -> ('e -> ('c, unit) Code.abstract -> 'i) -> 'i
-        val col_iter :
-          'a ->
-          'b ->
-          ('c, int) Code.abstract ->
-          ('c, int) Code.abstract ->
-          ('a -> 'b -> ('c, int) Code.abstract -> 'd) ->
-          (('c, int) Code.abstract ->
-           'd -> 'e -> ('f -> 'g -> 'g) -> ('c, 'h) Code.abstract) ->
-          'e -> ('e -> ('c, unit) Code.abstract -> 'i) -> 'i
-      end
     val gen :
-      ('a, Input.inp) Code.abstract ->
+      ('a, G_GAC_F.InpJustMatrix.inp) Code.abstract ->
       ([> `TDet of 'a Det.lstate
         | `TLower of 'a Output.L.lstate
         | `TPivot of 'a Output.P.lstate
@@ -17585,15 +16114,6 @@ module GenFA24 :
           ('a in_val -> ('a, unit, 'b, 'c) GEF.cmonad) ->
           ('a, unit, 'b, 'c) GEF.cmonad
         val upd_kind : Ge.update_kind
-      end
-    module Input :
-      sig
-        type inp = G_GAC_F.InpJustMatrix.inp
-        val get_input :
-          ('a, inp) Code.abstract ->
-          (('a, GAC_F.contr) Code.abstract * ('a, int) Code.abstract * bool,
-           'b, ('a, 'c) Code.abstract)
-          StateCPSMonad.monad
       end
     module Output :
       sig
@@ -17690,30 +16210,8 @@ module GenFA24 :
            'b)
           GEF.cmonad
       end
-    module I :
-      sig
-        val row_iter :
-          'a ->
-          'b ->
-          ('c, int) Code.abstract ->
-          ('c, int) Code.abstract ->
-          ('a -> ('c, int) Code.abstract -> 'b -> ('c, 'd) Code.abstract) ->
-          (('c, int) Code.abstract ->
-           ('c, 'd) Code.abstract ->
-           'e -> ('f -> 'g -> 'g) -> ('c, 'h) Code.abstract) ->
-          'e -> ('e -> ('c, unit) Code.abstract -> 'i) -> 'i
-        val col_iter :
-          'a ->
-          'b ->
-          ('c, int) Code.abstract ->
-          ('c, int) Code.abstract ->
-          ('a -> 'b -> ('c, int) Code.abstract -> 'd) ->
-          (('c, int) Code.abstract ->
-           'd -> 'e -> ('f -> 'g -> 'g) -> ('c, 'h) Code.abstract) ->
-          'e -> ('e -> ('c, unit) Code.abstract -> 'i) -> 'i
-      end
     val gen :
-      ('a, Input.inp) Code.abstract ->
+      ('a, G_GAC_F.InpJustMatrix.inp) Code.abstract ->
       ([> `TDet of 'a Det.lstate
         | `TLower of 'a Output.L.lstate
         | `TPivot of 'a Output.P.lstate
@@ -17765,15 +16263,6 @@ module GenFA25 :
           ('a in_val -> ('a, unit, 'b, 'c) GEF.cmonad) ->
           ('a, unit, 'b, 'c) GEF.cmonad
         val upd_kind : Ge.update_kind
-      end
-    module Input :
-      sig
-        type inp = G_GAC_F.InpJustMatrix.inp
-        val get_input :
-          ('a, inp) Code.abstract ->
-          (('a, GAC_F.contr) Code.abstract * ('a, int) Code.abstract * bool,
-           'b, ('a, 'c) Code.abstract)
-          StateCPSMonad.monad
       end
     module Output :
       sig
@@ -17870,30 +16359,8 @@ module GenFA25 :
            'b)
           GEF.cmonad
       end
-    module I :
-      sig
-        val row_iter :
-          'a ->
-          'b ->
-          ('c, int) Code.abstract ->
-          ('c, int) Code.abstract ->
-          ('a -> ('c, int) Code.abstract -> 'b -> ('c, 'd) Code.abstract) ->
-          (('c, int) Code.abstract ->
-           ('c, 'd) Code.abstract ->
-           'e -> ('f -> 'g -> 'g) -> ('c, 'h) Code.abstract) ->
-          'e -> ('e -> ('c, unit) Code.abstract -> 'i) -> 'i
-        val col_iter :
-          'a ->
-          'b ->
-          ('c, int) Code.abstract ->
-          ('c, int) Code.abstract ->
-          ('a -> 'b -> ('c, int) Code.abstract -> 'd) ->
-          (('c, int) Code.abstract ->
-           'd -> 'e -> ('f -> 'g -> 'g) -> ('c, 'h) Code.abstract) ->
-          'e -> ('e -> ('c, unit) Code.abstract -> 'i) -> 'i
-      end
     val gen :
-      ('a, Input.inp) Code.abstract ->
+      ('a, G_GAC_F.InpJustMatrix.inp) Code.abstract ->
       ([> `TDet of 'a Det.lstate
         | `TLower of 'a Output.L.lstate
         | `TPivot of 'a Output.P.lstate
@@ -17945,15 +16412,6 @@ module GenFA26 :
           ('a in_val -> ('a, unit, 'b, 'c) GEF.cmonad) ->
           ('a, unit, 'b, 'c) GEF.cmonad
         val upd_kind : Ge.update_kind
-      end
-    module Input :
-      sig
-        type inp = G_GAC_F.InpJustMatrix.inp
-        val get_input :
-          ('a, inp) Code.abstract ->
-          (('a, GAC_F.contr) Code.abstract * ('a, int) Code.abstract * bool,
-           'b, ('a, 'c) Code.abstract)
-          StateCPSMonad.monad
       end
     module Output :
       sig
@@ -18050,30 +16508,8 @@ module GenFA26 :
            'b)
           GEF.cmonad
       end
-    module I :
-      sig
-        val row_iter :
-          'a ->
-          'b ->
-          ('c, int) Code.abstract ->
-          ('c, int) Code.abstract ->
-          ('a -> ('c, int) Code.abstract -> 'b -> ('c, 'd) Code.abstract) ->
-          (('c, int) Code.abstract ->
-           ('c, 'd) Code.abstract ->
-           'e -> ('f -> 'g -> 'g) -> ('c, 'h) Code.abstract) ->
-          'e -> ('e -> ('c, unit) Code.abstract -> 'i) -> 'i
-        val col_iter :
-          'a ->
-          'b ->
-          ('c, int) Code.abstract ->
-          ('c, int) Code.abstract ->
-          ('a -> 'b -> ('c, int) Code.abstract -> 'd) ->
-          (('c, int) Code.abstract ->
-           'd -> 'e -> ('f -> 'g -> 'g) -> ('c, 'h) Code.abstract) ->
-          'e -> ('e -> ('c, unit) Code.abstract -> 'i) -> 'i
-      end
     val gen :
-      ('a, Input.inp) Code.abstract ->
+      ('a, G_GAC_F.InpJustMatrix.inp) Code.abstract ->
       ([> `TDet of 'a Det.lstate
         | `TLower of 'a Output.L.lstate
         | `TPivot of 'a Output.P.lstate
@@ -18125,15 +16561,6 @@ module GenFA5 :
           ('a in_val -> ('a, unit, 'b, 'c) GEF.cmonad) ->
           ('a, unit, 'b, 'c) GEF.cmonad
         val upd_kind : Ge.update_kind
-      end
-    module Input :
-      sig
-        type inp = G_GAC_F.InpMatrixMargin.inp
-        val get_input :
-          ('a, inp) Code.abstract ->
-          (('a, GAC_F.contr) Code.abstract * ('a, int) Code.abstract * bool,
-           'b, ('a, 'c) Code.abstract)
-          StateCPSMonad.monad
       end
     module Output :
       sig
@@ -18230,30 +16657,8 @@ module GenFA5 :
            'b)
           GEF.cmonad
       end
-    module I :
-      sig
-        val row_iter :
-          'a ->
-          'b ->
-          ('c, int) Code.abstract ->
-          ('c, int) Code.abstract ->
-          ('a -> ('c, int) Code.abstract -> 'b -> ('c, 'd) Code.abstract) ->
-          (('c, int) Code.abstract ->
-           ('c, 'd) Code.abstract ->
-           'e -> ('f -> 'g -> 'g) -> ('c, 'h) Code.abstract) ->
-          'e -> ('e -> ('c, unit) Code.abstract -> 'i) -> 'i
-        val col_iter :
-          'a ->
-          'b ->
-          ('c, int) Code.abstract ->
-          ('c, int) Code.abstract ->
-          ('a -> 'b -> ('c, int) Code.abstract -> 'd) ->
-          (('c, int) Code.abstract ->
-           'd -> 'e -> ('f -> 'g -> 'g) -> ('c, 'h) Code.abstract) ->
-          'e -> ('e -> ('c, unit) Code.abstract -> 'i) -> 'i
-      end
     val gen :
-      ('a, Input.inp) Code.abstract ->
+      ('a, G_GAC_F.InpMatrixMargin.inp) Code.abstract ->
       ([> `TDet of 'a Det.lstate
         | `TLower of 'a Output.L.lstate
         | `TPivot of 'a Output.P.lstate
@@ -18305,15 +16710,6 @@ module GenFA6 :
           ('a in_val -> ('a, unit, 'b, 'c) GEF.cmonad) ->
           ('a, unit, 'b, 'c) GEF.cmonad
         val upd_kind : Ge.update_kind
-      end
-    module Input :
-      sig
-        type inp = G_GAC_F.InpMatrixMargin.inp
-        val get_input :
-          ('a, inp) Code.abstract ->
-          (('a, GAC_F.contr) Code.abstract * ('a, int) Code.abstract * bool,
-           'b, ('a, 'c) Code.abstract)
-          StateCPSMonad.monad
       end
     module Output :
       sig
@@ -18410,30 +16806,8 @@ module GenFA6 :
            'b)
           GEF.cmonad
       end
-    module I :
-      sig
-        val row_iter :
-          'a ->
-          'b ->
-          ('c, int) Code.abstract ->
-          ('c, int) Code.abstract ->
-          ('a -> ('c, int) Code.abstract -> 'b -> ('c, 'd) Code.abstract) ->
-          (('c, int) Code.abstract ->
-           ('c, 'd) Code.abstract ->
-           'e -> ('f -> 'g -> 'g) -> ('c, 'h) Code.abstract) ->
-          'e -> ('e -> ('c, unit) Code.abstract -> 'i) -> 'i
-        val col_iter :
-          'a ->
-          'b ->
-          ('c, int) Code.abstract ->
-          ('c, int) Code.abstract ->
-          ('a -> 'b -> ('c, int) Code.abstract -> 'd) ->
-          (('c, int) Code.abstract ->
-           'd -> 'e -> ('f -> 'g -> 'g) -> ('c, 'h) Code.abstract) ->
-          'e -> ('e -> ('c, unit) Code.abstract -> 'i) -> 'i
-      end
     val gen :
-      ('a, Input.inp) Code.abstract ->
+      ('a, G_GAC_F.InpMatrixMargin.inp) Code.abstract ->
       ([> `TDet of 'a Det.lstate
         | `TLower of 'a Output.L.lstate
         | `TPivot of 'a Output.P.lstate
@@ -18485,15 +16859,6 @@ module GenFA7 :
           ('a in_val -> ('a, unit, 'b, 'c) GEF.cmonad) ->
           ('a, unit, 'b, 'c) GEF.cmonad
         val upd_kind : Ge.update_kind
-      end
-    module Input :
-      sig
-        type inp = G_GAC_F.InpMatrixMargin.inp
-        val get_input :
-          ('a, inp) Code.abstract ->
-          (('a, GAC_F.contr) Code.abstract * ('a, int) Code.abstract * bool,
-           'b, ('a, 'c) Code.abstract)
-          StateCPSMonad.monad
       end
     module Output :
       sig
@@ -18590,30 +16955,8 @@ module GenFA7 :
            'b)
           GEF.cmonad
       end
-    module I :
-      sig
-        val row_iter :
-          'a ->
-          'b ->
-          ('c, int) Code.abstract ->
-          ('c, int) Code.abstract ->
-          ('a -> ('c, int) Code.abstract -> 'b -> ('c, 'd) Code.abstract) ->
-          (('c, int) Code.abstract ->
-           ('c, 'd) Code.abstract ->
-           'e -> ('f -> 'g -> 'g) -> ('c, 'h) Code.abstract) ->
-          'e -> ('e -> ('c, unit) Code.abstract -> 'i) -> 'i
-        val col_iter :
-          'a ->
-          'b ->
-          ('c, int) Code.abstract ->
-          ('c, int) Code.abstract ->
-          ('a -> 'b -> ('c, int) Code.abstract -> 'd) ->
-          (('c, int) Code.abstract ->
-           'd -> 'e -> ('f -> 'g -> 'g) -> ('c, 'h) Code.abstract) ->
-          'e -> ('e -> ('c, unit) Code.abstract -> 'i) -> 'i
-      end
     val gen :
-      ('a, Input.inp) Code.abstract ->
+      ('a, G_GAC_F.InpMatrixMargin.inp) Code.abstract ->
       ([> `TDet of 'a Det.lstate
         | `TLower of 'a Output.L.lstate
         | `TPivot of 'a Output.P.lstate
@@ -18665,15 +17008,6 @@ module GenFA8 :
           ('a in_val -> ('a, unit, 'b, 'c) GEF.cmonad) ->
           ('a, unit, 'b, 'c) GEF.cmonad
         val upd_kind : Ge.update_kind
-      end
-    module Input :
-      sig
-        type inp = G_GAC_F.InpMatrixMargin.inp
-        val get_input :
-          ('a, inp) Code.abstract ->
-          (('a, GAC_F.contr) Code.abstract * ('a, int) Code.abstract * bool,
-           'b, ('a, 'c) Code.abstract)
-          StateCPSMonad.monad
       end
     module Output :
       sig
@@ -18770,30 +17104,8 @@ module GenFA8 :
            'b)
           GEF.cmonad
       end
-    module I :
-      sig
-        val row_iter :
-          'a ->
-          'b ->
-          ('c, int) Code.abstract ->
-          ('c, int) Code.abstract ->
-          ('a -> ('c, int) Code.abstract -> 'b -> ('c, 'd) Code.abstract) ->
-          (('c, int) Code.abstract ->
-           ('c, 'd) Code.abstract ->
-           'e -> ('f -> 'g -> 'g) -> ('c, 'h) Code.abstract) ->
-          'e -> ('e -> ('c, unit) Code.abstract -> 'i) -> 'i
-        val col_iter :
-          'a ->
-          'b ->
-          ('c, int) Code.abstract ->
-          ('c, int) Code.abstract ->
-          ('a -> 'b -> ('c, int) Code.abstract -> 'd) ->
-          (('c, int) Code.abstract ->
-           'd -> 'e -> ('f -> 'g -> 'g) -> ('c, 'h) Code.abstract) ->
-          'e -> ('e -> ('c, unit) Code.abstract -> 'i) -> 'i
-      end
     val gen :
-      ('a, Input.inp) Code.abstract ->
+      ('a, G_GAC_F.InpMatrixMargin.inp) Code.abstract ->
       ([> `TDet of 'a Det.lstate
         | `TLower of 'a Output.L.lstate
         | `TPivot of 'a Output.P.lstate
@@ -18845,15 +17157,6 @@ module GenFA9 :
           ('a in_val -> ('a, unit, 'b, 'c) GEF.cmonad) ->
           ('a, unit, 'b, 'c) GEF.cmonad
         val upd_kind : Ge.update_kind
-      end
-    module Input :
-      sig
-        type inp = G_GAC_F.InpJustMatrix.inp
-        val get_input :
-          ('a, inp) Code.abstract ->
-          (('a, GAC_F.contr) Code.abstract * ('a, int) Code.abstract * bool,
-           'b, ('a, 'c) Code.abstract)
-          StateCPSMonad.monad
       end
     module Output :
       sig
@@ -18950,30 +17253,8 @@ module GenFA9 :
            'b)
           GEF.cmonad
       end
-    module I :
-      sig
-        val row_iter :
-          'a ->
-          'b ->
-          ('c, int) Code.abstract ->
-          ('c, int) Code.abstract ->
-          ('a -> ('c, int) Code.abstract -> 'b -> ('c, 'd) Code.abstract) ->
-          (('c, int) Code.abstract ->
-           ('c, 'd) Code.abstract ->
-           'e -> ('f -> 'g -> 'g) -> ('c, 'h) Code.abstract) ->
-          'e -> ('e -> ('c, unit) Code.abstract -> 'i) -> 'i
-        val col_iter :
-          'a ->
-          'b ->
-          ('c, int) Code.abstract ->
-          ('c, int) Code.abstract ->
-          ('a -> 'b -> ('c, int) Code.abstract -> 'd) ->
-          (('c, int) Code.abstract ->
-           'd -> 'e -> ('f -> 'g -> 'g) -> ('c, 'h) Code.abstract) ->
-          'e -> ('e -> ('c, unit) Code.abstract -> 'i) -> 'i
-      end
     val gen :
-      ('a, Input.inp) Code.abstract ->
+      ('a, G_GAC_F.InpJustMatrix.inp) Code.abstract ->
       ([> `TDet of 'a Det.lstate
         | `TLower of 'a Output.L.lstate
         | `TPivot of 'a Output.P.lstate
@@ -19025,15 +17306,6 @@ module GenFA31 :
           ('a in_val -> ('a, unit, 'b, 'c) GEF.cmonad) ->
           ('a, unit, 'b, 'c) GEF.cmonad
         val upd_kind : Ge.update_kind
-      end
-    module Input :
-      sig
-        type inp = G_GAC_F.InpJustMatrix.inp
-        val get_input :
-          ('a, inp) Code.abstract ->
-          (('a, GAC_F.contr) Code.abstract * ('a, int) Code.abstract * bool,
-           'b, ('a, 'c) Code.abstract)
-          StateCPSMonad.monad
       end
     module Output :
       sig
@@ -19130,30 +17402,8 @@ module GenFA31 :
            'b)
           GEF.cmonad
       end
-    module I :
-      sig
-        val row_iter :
-          'a ->
-          'b ->
-          ('c, int) Code.abstract ->
-          ('c, int) Code.abstract ->
-          ('a -> ('c, int) Code.abstract -> 'b -> ('c, 'd) Code.abstract) ->
-          (('c, int) Code.abstract ->
-           ('c, 'd) Code.abstract ->
-           'e -> ('f -> 'g -> 'g) -> ('c, 'h) Code.abstract) ->
-          'e -> ('e -> ('c, unit) Code.abstract -> 'i) -> 'i
-        val col_iter :
-          'a ->
-          'b ->
-          ('c, int) Code.abstract ->
-          ('c, int) Code.abstract ->
-          ('a -> 'b -> ('c, int) Code.abstract -> 'd) ->
-          (('c, int) Code.abstract ->
-           'd -> 'e -> ('f -> 'g -> 'g) -> ('c, 'h) Code.abstract) ->
-          'e -> ('e -> ('c, unit) Code.abstract -> 'i) -> 'i
-      end
     val gen :
-      ('a, Input.inp) Code.abstract ->
+      ('a, G_GAC_F.InpJustMatrix.inp) Code.abstract ->
       ([> `TDet of 'a Det.lstate
         | `TLower of 'a Output.L.lstate
         | `TPivot of 'a Output.P.lstate
@@ -19205,15 +17455,6 @@ module GenFA32 :
           ('a in_val -> ('a, unit, 'b, 'c) GEF.cmonad) ->
           ('a, unit, 'b, 'c) GEF.cmonad
         val upd_kind : Ge.update_kind
-      end
-    module Input :
-      sig
-        type inp = G_GAC_F.InpJustMatrix.inp
-        val get_input :
-          ('a, inp) Code.abstract ->
-          (('a, GAC_F.contr) Code.abstract * ('a, int) Code.abstract * bool,
-           'b, ('a, 'c) Code.abstract)
-          StateCPSMonad.monad
       end
     module Output :
       sig
@@ -19310,30 +17551,8 @@ module GenFA32 :
            'b)
           GEF.cmonad
       end
-    module I :
-      sig
-        val row_iter :
-          'a ->
-          'b ->
-          ('c, int) Code.abstract ->
-          ('c, int) Code.abstract ->
-          ('a -> ('c, int) Code.abstract -> 'b -> ('c, 'd) Code.abstract) ->
-          (('c, int) Code.abstract ->
-           ('c, 'd) Code.abstract ->
-           'e -> ('f -> 'g -> 'g) -> ('c, 'h) Code.abstract) ->
-          'e -> ('e -> ('c, unit) Code.abstract -> 'i) -> 'i
-        val col_iter :
-          'a ->
-          'b ->
-          ('c, int) Code.abstract ->
-          ('c, int) Code.abstract ->
-          ('a -> 'b -> ('c, int) Code.abstract -> 'd) ->
-          (('c, int) Code.abstract ->
-           'd -> 'e -> ('f -> 'g -> 'g) -> ('c, 'h) Code.abstract) ->
-          'e -> ('e -> ('c, unit) Code.abstract -> 'i) -> 'i
-      end
     val gen :
-      ('a, Input.inp) Code.abstract ->
+      ('a, G_GAC_F.InpJustMatrix.inp) Code.abstract ->
       ([> `TDet of 'a Det.lstate
         | `TLower of 'a Output.L.lstate
         | `TPivot of 'a Output.P.lstate
@@ -19385,15 +17604,6 @@ module GenFV1 :
           ('a in_val -> ('a, unit, 'b, 'c) GEF.cmonad) ->
           ('a, unit, 'b, 'c) GEF.cmonad
         val upd_kind : Ge.update_kind
-      end
-    module Input :
-      sig
-        type inp = G_GVC_F.InpJustMatrix.inp
-        val get_input :
-          ('a, inp) Code.abstract ->
-          (('a, GVC_F.contr) Code.abstract * ('a, int) Code.abstract * bool,
-           'b, ('a, 'c) Code.abstract)
-          StateCPSMonad.monad
       end
     module Output :
       sig
@@ -19490,30 +17700,8 @@ module GenFV1 :
            'b)
           GEF.cmonad
       end
-    module I :
-      sig
-        val row_iter :
-          'a ->
-          'b ->
-          ('c, int) Code.abstract ->
-          ('c, int) Code.abstract ->
-          ('a -> ('c, int) Code.abstract -> 'b -> ('c, 'd) Code.abstract) ->
-          (('c, int) Code.abstract ->
-           ('c, 'd) Code.abstract ->
-           'e -> ('f -> 'g -> 'g) -> ('c, 'h) Code.abstract) ->
-          'e -> ('e -> ('c, unit) Code.abstract -> 'i) -> 'i
-        val col_iter :
-          'a ->
-          'b ->
-          ('c, int) Code.abstract ->
-          ('c, int) Code.abstract ->
-          ('a -> 'b -> ('c, int) Code.abstract -> 'd) ->
-          (('c, int) Code.abstract ->
-           'd -> 'e -> ('f -> 'g -> 'g) -> ('c, 'h) Code.abstract) ->
-          'e -> ('e -> ('c, unit) Code.abstract -> 'i) -> 'i
-      end
     val gen :
-      ('a, Input.inp) Code.abstract ->
+      ('a, G_GVC_F.InpJustMatrix.inp) Code.abstract ->
       ([> `TDet of 'a Det.lstate
         | `TLower of 'a Output.L.lstate
         | `TPivot of 'a Output.P.lstate
@@ -19565,15 +17753,6 @@ module GenFV2 :
           ('a in_val -> ('a, unit, 'b, 'c) GEF.cmonad) ->
           ('a, unit, 'b, 'c) GEF.cmonad
         val upd_kind : Ge.update_kind
-      end
-    module Input :
-      sig
-        type inp = G_GVC_F.InpJustMatrix.inp
-        val get_input :
-          ('a, inp) Code.abstract ->
-          (('a, GVC_F.contr) Code.abstract * ('a, int) Code.abstract * bool,
-           'b, ('a, 'c) Code.abstract)
-          StateCPSMonad.monad
       end
     module Output :
       sig
@@ -19670,30 +17849,8 @@ module GenFV2 :
            'b)
           GEF.cmonad
       end
-    module I :
-      sig
-        val row_iter :
-          'a ->
-          'b ->
-          ('c, int) Code.abstract ->
-          ('c, int) Code.abstract ->
-          ('a -> ('c, int) Code.abstract -> 'b -> ('c, 'd) Code.abstract) ->
-          (('c, int) Code.abstract ->
-           ('c, 'd) Code.abstract ->
-           'e -> ('f -> 'g -> 'g) -> ('c, 'h) Code.abstract) ->
-          'e -> ('e -> ('c, unit) Code.abstract -> 'i) -> 'i
-        val col_iter :
-          'a ->
-          'b ->
-          ('c, int) Code.abstract ->
-          ('c, int) Code.abstract ->
-          ('a -> 'b -> ('c, int) Code.abstract -> 'd) ->
-          (('c, int) Code.abstract ->
-           'd -> 'e -> ('f -> 'g -> 'g) -> ('c, 'h) Code.abstract) ->
-          'e -> ('e -> ('c, unit) Code.abstract -> 'i) -> 'i
-      end
     val gen :
-      ('a, Input.inp) Code.abstract ->
+      ('a, G_GVC_F.InpJustMatrix.inp) Code.abstract ->
       ([> `TDet of 'a Det.lstate
         | `TLower of 'a Output.L.lstate
         | `TPivot of 'a Output.P.lstate
@@ -19745,15 +17902,6 @@ module GenFV3 :
           ('a in_val -> ('a, unit, 'b, 'c) GEF.cmonad) ->
           ('a, unit, 'b, 'c) GEF.cmonad
         val upd_kind : Ge.update_kind
-      end
-    module Input :
-      sig
-        type inp = G_GVC_F.InpJustMatrix.inp
-        val get_input :
-          ('a, inp) Code.abstract ->
-          (('a, GVC_F.contr) Code.abstract * ('a, int) Code.abstract * bool,
-           'b, ('a, 'c) Code.abstract)
-          StateCPSMonad.monad
       end
     module Output :
       sig
@@ -19850,30 +17998,8 @@ module GenFV3 :
            'b)
           GEF.cmonad
       end
-    module I :
-      sig
-        val row_iter :
-          'a ->
-          'b ->
-          ('c, int) Code.abstract ->
-          ('c, int) Code.abstract ->
-          ('a -> ('c, int) Code.abstract -> 'b -> ('c, 'd) Code.abstract) ->
-          (('c, int) Code.abstract ->
-           ('c, 'd) Code.abstract ->
-           'e -> ('f -> 'g -> 'g) -> ('c, 'h) Code.abstract) ->
-          'e -> ('e -> ('c, unit) Code.abstract -> 'i) -> 'i
-        val col_iter :
-          'a ->
-          'b ->
-          ('c, int) Code.abstract ->
-          ('c, int) Code.abstract ->
-          ('a -> 'b -> ('c, int) Code.abstract -> 'd) ->
-          (('c, int) Code.abstract ->
-           'd -> 'e -> ('f -> 'g -> 'g) -> ('c, 'h) Code.abstract) ->
-          'e -> ('e -> ('c, unit) Code.abstract -> 'i) -> 'i
-      end
     val gen :
-      ('a, Input.inp) Code.abstract ->
+      ('a, G_GVC_F.InpJustMatrix.inp) Code.abstract ->
       ([> `TDet of 'a Det.lstate
         | `TLower of 'a Output.L.lstate
         | `TPivot of 'a Output.P.lstate
@@ -19926,15 +18052,6 @@ module GenFV4 :
           ('a, unit, 'b, 'c) GEF.cmonad
         val upd_kind : Ge.update_kind
       end
-    module Input :
-      sig
-        type inp = G_GVC_F.InpJustMatrix.inp
-        val get_input :
-          ('a, inp) Code.abstract ->
-          (('a, GVC_F.contr) Code.abstract * ('a, int) Code.abstract * bool,
-           'b, ('a, 'c) Code.abstract)
-          StateCPSMonad.monad
-      end
     module Output :
       sig
         type res = G_GVC_F.OutDetRank(GVC_F)(Det)(GEF.PermList).res
@@ -20030,30 +18147,8 @@ module GenFV4 :
            'b)
           GEF.cmonad
       end
-    module I :
-      sig
-        val row_iter :
-          'a ->
-          'b ->
-          ('c, int) Code.abstract ->
-          ('c, int) Code.abstract ->
-          ('a -> ('c, int) Code.abstract -> 'b -> ('c, 'd) Code.abstract) ->
-          (('c, int) Code.abstract ->
-           ('c, 'd) Code.abstract ->
-           'e -> ('f -> 'g -> 'g) -> ('c, 'h) Code.abstract) ->
-          'e -> ('e -> ('c, unit) Code.abstract -> 'i) -> 'i
-        val col_iter :
-          'a ->
-          'b ->
-          ('c, int) Code.abstract ->
-          ('c, int) Code.abstract ->
-          ('a -> 'b -> ('c, int) Code.abstract -> 'd) ->
-          (('c, int) Code.abstract ->
-           'd -> 'e -> ('f -> 'g -> 'g) -> ('c, 'h) Code.abstract) ->
-          'e -> ('e -> ('c, unit) Code.abstract -> 'i) -> 'i
-      end
     val gen :
-      ('a, Input.inp) Code.abstract ->
+      ('a, G_GVC_F.InpJustMatrix.inp) Code.abstract ->
       ([> `TDet of 'a Det.lstate
         | `TLower of 'a Output.L.lstate
         | `TPivot of 'a Output.P.lstate
@@ -20106,15 +18201,6 @@ module GenFV5 :
           ('a, unit, 'b, 'c) GEF.cmonad
         val upd_kind : Ge.update_kind
       end
-    module Input :
-      sig
-        type inp = G_GVC_F.InpJustMatrix.inp
-        val get_input :
-          ('a, inp) Code.abstract ->
-          (('a, GVC_F.contr) Code.abstract * ('a, int) Code.abstract * bool,
-           'b, ('a, 'c) Code.abstract)
-          StateCPSMonad.monad
-      end
     module Output :
       sig
         type res = G_GVC_F.OutDetRank(GVC_F)(Det)(GEF.PermList).res
@@ -20210,30 +18296,8 @@ module GenFV5 :
            'b)
           GEF.cmonad
       end
-    module I :
-      sig
-        val row_iter :
-          'a ->
-          'b ->
-          ('c, int) Code.abstract ->
-          ('c, int) Code.abstract ->
-          ('a -> ('c, int) Code.abstract -> 'b -> ('c, 'd) Code.abstract) ->
-          (('c, int) Code.abstract ->
-           ('c, 'd) Code.abstract ->
-           'e -> ('f -> 'g -> 'g) -> ('c, 'h) Code.abstract) ->
-          'e -> ('e -> ('c, unit) Code.abstract -> 'i) -> 'i
-        val col_iter :
-          'a ->
-          'b ->
-          ('c, int) Code.abstract ->
-          ('c, int) Code.abstract ->
-          ('a -> 'b -> ('c, int) Code.abstract -> 'd) ->
-          (('c, int) Code.abstract ->
-           'd -> 'e -> ('f -> 'g -> 'g) -> ('c, 'h) Code.abstract) ->
-          'e -> ('e -> ('c, unit) Code.abstract -> 'i) -> 'i
-      end
     val gen :
-      ('a, Input.inp) Code.abstract ->
+      ('a, G_GVC_F.InpJustMatrix.inp) Code.abstract ->
       ([> `TDet of 'a Det.lstate
         | `TLower of 'a Output.L.lstate
         | `TPivot of 'a Output.P.lstate
@@ -20285,15 +18349,6 @@ module GenIA1 :
           ('a in_val -> ('a, unit, 'b, 'c) GEF.cmonad) ->
           ('a, unit, 'b, 'c) GEF.cmonad
         val upd_kind : Ge.update_kind
-      end
-    module Input :
-      sig
-        type inp = G_GAC_I.InpJustMatrix.inp
-        val get_input :
-          ('a, inp) Code.abstract ->
-          (('a, GAC_I.contr) Code.abstract * ('a, int) Code.abstract * bool,
-           'b, ('a, 'c) Code.abstract)
-          StateCPSMonad.monad
       end
     module Output :
       sig
@@ -20390,30 +18445,8 @@ module GenIA1 :
            'b)
           GEF.cmonad
       end
-    module I :
-      sig
-        val row_iter :
-          'a ->
-          'b ->
-          ('c, int) Code.abstract ->
-          ('c, int) Code.abstract ->
-          ('a -> ('c, int) Code.abstract -> 'b -> ('c, 'd) Code.abstract) ->
-          (('c, int) Code.abstract ->
-           ('c, 'd) Code.abstract ->
-           'e -> ('f -> 'g -> 'g) -> ('c, 'h) Code.abstract) ->
-          'e -> ('e -> ('c, unit) Code.abstract -> 'i) -> 'i
-        val col_iter :
-          'a ->
-          'b ->
-          ('c, int) Code.abstract ->
-          ('c, int) Code.abstract ->
-          ('a -> 'b -> ('c, int) Code.abstract -> 'd) ->
-          (('c, int) Code.abstract ->
-           'd -> 'e -> ('f -> 'g -> 'g) -> ('c, 'h) Code.abstract) ->
-          'e -> ('e -> ('c, unit) Code.abstract -> 'i) -> 'i
-      end
     val gen :
-      ('a, Input.inp) Code.abstract ->
+      ('a, G_GAC_I.InpJustMatrix.inp) Code.abstract ->
       ([> `TDet of 'a Det.lstate
         | `TLower of 'a Output.L.lstate
         | `TPivot of 'a Output.P.lstate
@@ -20465,15 +18498,6 @@ module GenIA2 :
           ('a in_val -> ('a, unit, 'b, 'c) GEF.cmonad) ->
           ('a, unit, 'b, 'c) GEF.cmonad
         val upd_kind : Ge.update_kind
-      end
-    module Input :
-      sig
-        type inp = G_GAC_I.InpJustMatrix.inp
-        val get_input :
-          ('a, inp) Code.abstract ->
-          (('a, GAC_I.contr) Code.abstract * ('a, int) Code.abstract * bool,
-           'b, ('a, 'c) Code.abstract)
-          StateCPSMonad.monad
       end
     module Output :
       sig
@@ -20570,30 +18594,8 @@ module GenIA2 :
            'b)
           GEF.cmonad
       end
-    module I :
-      sig
-        val row_iter :
-          'a ->
-          'b ->
-          ('c, int) Code.abstract ->
-          ('c, int) Code.abstract ->
-          ('a -> ('c, int) Code.abstract -> 'b -> ('c, 'd) Code.abstract) ->
-          (('c, int) Code.abstract ->
-           ('c, 'd) Code.abstract ->
-           'e -> ('f -> 'g -> 'g) -> ('c, 'h) Code.abstract) ->
-          'e -> ('e -> ('c, unit) Code.abstract -> 'i) -> 'i
-        val col_iter :
-          'a ->
-          'b ->
-          ('c, int) Code.abstract ->
-          ('c, int) Code.abstract ->
-          ('a -> 'b -> ('c, int) Code.abstract -> 'd) ->
-          (('c, int) Code.abstract ->
-           'd -> 'e -> ('f -> 'g -> 'g) -> ('c, 'h) Code.abstract) ->
-          'e -> ('e -> ('c, unit) Code.abstract -> 'i) -> 'i
-      end
     val gen :
-      ('a, Input.inp) Code.abstract ->
+      ('a, G_GAC_I.InpJustMatrix.inp) Code.abstract ->
       ([> `TDet of 'a Det.lstate
         | `TLower of 'a Output.L.lstate
         | `TPivot of 'a Output.P.lstate
@@ -20645,15 +18647,6 @@ module GenIA3 :
           ('a in_val -> ('a, unit, 'b, 'c) GEF.cmonad) ->
           ('a, unit, 'b, 'c) GEF.cmonad
         val upd_kind : Ge.update_kind
-      end
-    module Input :
-      sig
-        type inp = G_GAC_I.InpJustMatrix.inp
-        val get_input :
-          ('a, inp) Code.abstract ->
-          (('a, GAC_I.contr) Code.abstract * ('a, int) Code.abstract * bool,
-           'b, ('a, 'c) Code.abstract)
-          StateCPSMonad.monad
       end
     module Output :
       sig
@@ -20750,30 +18743,8 @@ module GenIA3 :
            'b)
           GEF.cmonad
       end
-    module I :
-      sig
-        val row_iter :
-          'a ->
-          'b ->
-          ('c, int) Code.abstract ->
-          ('c, int) Code.abstract ->
-          ('a -> ('c, int) Code.abstract -> 'b -> ('c, 'd) Code.abstract) ->
-          (('c, int) Code.abstract ->
-           ('c, 'd) Code.abstract ->
-           'e -> ('f -> 'g -> 'g) -> ('c, 'h) Code.abstract) ->
-          'e -> ('e -> ('c, unit) Code.abstract -> 'i) -> 'i
-        val col_iter :
-          'a ->
-          'b ->
-          ('c, int) Code.abstract ->
-          ('c, int) Code.abstract ->
-          ('a -> 'b -> ('c, int) Code.abstract -> 'd) ->
-          (('c, int) Code.abstract ->
-           'd -> 'e -> ('f -> 'g -> 'g) -> ('c, 'h) Code.abstract) ->
-          'e -> ('e -> ('c, unit) Code.abstract -> 'i) -> 'i
-      end
     val gen :
-      ('a, Input.inp) Code.abstract ->
+      ('a, G_GAC_I.InpJustMatrix.inp) Code.abstract ->
       ([> `TDet of 'a Det.lstate
         | `TLower of 'a Output.L.lstate
         | `TPivot of 'a Output.P.lstate
@@ -20825,15 +18796,6 @@ module GenIA4 :
           ('a in_val -> ('a, unit, 'b, 'c) GEF.cmonad) ->
           ('a, unit, 'b, 'c) GEF.cmonad
         val upd_kind : Ge.update_kind
-      end
-    module Input :
-      sig
-        type inp = G_GAC_I.InpJustMatrix.inp
-        val get_input :
-          ('a, inp) Code.abstract ->
-          (('a, GAC_I.contr) Code.abstract * ('a, int) Code.abstract * bool,
-           'b, ('a, 'c) Code.abstract)
-          StateCPSMonad.monad
       end
     module Output :
       sig
@@ -20930,30 +18892,8 @@ module GenIA4 :
            'b)
           GEF.cmonad
       end
-    module I :
-      sig
-        val row_iter :
-          'a ->
-          'b ->
-          ('c, int) Code.abstract ->
-          ('c, int) Code.abstract ->
-          ('a -> ('c, int) Code.abstract -> 'b -> ('c, 'd) Code.abstract) ->
-          (('c, int) Code.abstract ->
-           ('c, 'd) Code.abstract ->
-           'e -> ('f -> 'g -> 'g) -> ('c, 'h) Code.abstract) ->
-          'e -> ('e -> ('c, unit) Code.abstract -> 'i) -> 'i
-        val col_iter :
-          'a ->
-          'b ->
-          ('c, int) Code.abstract ->
-          ('c, int) Code.abstract ->
-          ('a -> 'b -> ('c, int) Code.abstract -> 'd) ->
-          (('c, int) Code.abstract ->
-           'd -> 'e -> ('f -> 'g -> 'g) -> ('c, 'h) Code.abstract) ->
-          'e -> ('e -> ('c, unit) Code.abstract -> 'i) -> 'i
-      end
     val gen :
-      ('a, Input.inp) Code.abstract ->
+      ('a, G_GAC_I.InpJustMatrix.inp) Code.abstract ->
       ([> `TDet of 'a Det.lstate
         | `TLower of 'a Output.L.lstate
         | `TPivot of 'a Output.P.lstate
@@ -21005,15 +18945,6 @@ module GenIV1 :
           ('a in_val -> ('a, unit, 'b, 'c) GEF.cmonad) ->
           ('a, unit, 'b, 'c) GEF.cmonad
         val upd_kind : Ge.update_kind
-      end
-    module Input :
-      sig
-        type inp = G_GVC_I.InpJustMatrix.inp
-        val get_input :
-          ('a, inp) Code.abstract ->
-          (('a, GVC_I.contr) Code.abstract * ('a, int) Code.abstract * bool,
-           'b, ('a, 'c) Code.abstract)
-          StateCPSMonad.monad
       end
     module Output :
       sig
@@ -21110,30 +19041,8 @@ module GenIV1 :
            'b)
           GEF.cmonad
       end
-    module I :
-      sig
-        val row_iter :
-          'a ->
-          'b ->
-          ('c, int) Code.abstract ->
-          ('c, int) Code.abstract ->
-          ('a -> ('c, int) Code.abstract -> 'b -> ('c, 'd) Code.abstract) ->
-          (('c, int) Code.abstract ->
-           ('c, 'd) Code.abstract ->
-           'e -> ('f -> 'g -> 'g) -> ('c, 'h) Code.abstract) ->
-          'e -> ('e -> ('c, unit) Code.abstract -> 'i) -> 'i
-        val col_iter :
-          'a ->
-          'b ->
-          ('c, int) Code.abstract ->
-          ('c, int) Code.abstract ->
-          ('a -> 'b -> ('c, int) Code.abstract -> 'd) ->
-          (('c, int) Code.abstract ->
-           'd -> 'e -> ('f -> 'g -> 'g) -> ('c, 'h) Code.abstract) ->
-          'e -> ('e -> ('c, unit) Code.abstract -> 'i) -> 'i
-      end
     val gen :
-      ('a, Input.inp) Code.abstract ->
+      ('a, G_GVC_I.InpJustMatrix.inp) Code.abstract ->
       ([> `TDet of 'a Det.lstate
         | `TLower of 'a Output.L.lstate
         | `TPivot of 'a Output.P.lstate
@@ -21185,15 +19094,6 @@ module GenIV2 :
           ('a in_val -> ('a, unit, 'b, 'c) GEF.cmonad) ->
           ('a, unit, 'b, 'c) GEF.cmonad
         val upd_kind : Ge.update_kind
-      end
-    module Input :
-      sig
-        type inp = G_GVC_I.InpJustMatrix.inp
-        val get_input :
-          ('a, inp) Code.abstract ->
-          (('a, GVC_I.contr) Code.abstract * ('a, int) Code.abstract * bool,
-           'b, ('a, 'c) Code.abstract)
-          StateCPSMonad.monad
       end
     module Output :
       sig
@@ -21290,30 +19190,8 @@ module GenIV2 :
            'b)
           GEF.cmonad
       end
-    module I :
-      sig
-        val row_iter :
-          'a ->
-          'b ->
-          ('c, int) Code.abstract ->
-          ('c, int) Code.abstract ->
-          ('a -> ('c, int) Code.abstract -> 'b -> ('c, 'd) Code.abstract) ->
-          (('c, int) Code.abstract ->
-           ('c, 'd) Code.abstract ->
-           'e -> ('f -> 'g -> 'g) -> ('c, 'h) Code.abstract) ->
-          'e -> ('e -> ('c, unit) Code.abstract -> 'i) -> 'i
-        val col_iter :
-          'a ->
-          'b ->
-          ('c, int) Code.abstract ->
-          ('c, int) Code.abstract ->
-          ('a -> 'b -> ('c, int) Code.abstract -> 'd) ->
-          (('c, int) Code.abstract ->
-           'd -> 'e -> ('f -> 'g -> 'g) -> ('c, 'h) Code.abstract) ->
-          'e -> ('e -> ('c, unit) Code.abstract -> 'i) -> 'i
-      end
     val gen :
-      ('a, Input.inp) Code.abstract ->
+      ('a, G_GVC_I.InpJustMatrix.inp) Code.abstract ->
       ([> `TDet of 'a Det.lstate
         | `TLower of 'a Output.L.lstate
         | `TPivot of 'a Output.P.lstate
@@ -21365,15 +19243,6 @@ module GenIV3 :
           ('a in_val -> ('a, unit, 'b, 'c) GEF.cmonad) ->
           ('a, unit, 'b, 'c) GEF.cmonad
         val upd_kind : Ge.update_kind
-      end
-    module Input :
-      sig
-        type inp = G_GVC_I.InpJustMatrix.inp
-        val get_input :
-          ('a, inp) Code.abstract ->
-          (('a, GVC_I.contr) Code.abstract * ('a, int) Code.abstract * bool,
-           'b, ('a, 'c) Code.abstract)
-          StateCPSMonad.monad
       end
     module Output :
       sig
@@ -21470,30 +19339,8 @@ module GenIV3 :
            'b)
           GEF.cmonad
       end
-    module I :
-      sig
-        val row_iter :
-          'a ->
-          'b ->
-          ('c, int) Code.abstract ->
-          ('c, int) Code.abstract ->
-          ('a -> ('c, int) Code.abstract -> 'b -> ('c, 'd) Code.abstract) ->
-          (('c, int) Code.abstract ->
-           ('c, 'd) Code.abstract ->
-           'e -> ('f -> 'g -> 'g) -> ('c, 'h) Code.abstract) ->
-          'e -> ('e -> ('c, unit) Code.abstract -> 'i) -> 'i
-        val col_iter :
-          'a ->
-          'b ->
-          ('c, int) Code.abstract ->
-          ('c, int) Code.abstract ->
-          ('a -> 'b -> ('c, int) Code.abstract -> 'd) ->
-          (('c, int) Code.abstract ->
-           'd -> 'e -> ('f -> 'g -> 'g) -> ('c, 'h) Code.abstract) ->
-          'e -> ('e -> ('c, unit) Code.abstract -> 'i) -> 'i
-      end
     val gen :
-      ('a, Input.inp) Code.abstract ->
+      ('a, G_GVC_I.InpJustMatrix.inp) Code.abstract ->
       ([> `TDet of 'a Det.lstate
         | `TLower of 'a Output.L.lstate
         | `TPivot of 'a Output.P.lstate
@@ -21546,15 +19393,6 @@ module GenIV4 :
           ('a, unit, 'b, 'c) GEF.cmonad
         val upd_kind : Ge.update_kind
       end
-    module Input :
-      sig
-        type inp = G_GVC_I.InpJustMatrix.inp
-        val get_input :
-          ('a, inp) Code.abstract ->
-          (('a, GVC_I.contr) Code.abstract * ('a, int) Code.abstract * bool,
-           'b, ('a, 'c) Code.abstract)
-          StateCPSMonad.monad
-      end
     module Output :
       sig
         type res = G_GVC_I.OutDetRank(GVC_I)(Det)(GEF.PermList).res
@@ -21650,30 +19488,8 @@ module GenIV4 :
            'b)
           GEF.cmonad
       end
-    module I :
-      sig
-        val row_iter :
-          'a ->
-          'b ->
-          ('c, int) Code.abstract ->
-          ('c, int) Code.abstract ->
-          ('a -> ('c, int) Code.abstract -> 'b -> ('c, 'd) Code.abstract) ->
-          (('c, int) Code.abstract ->
-           ('c, 'd) Code.abstract ->
-           'e -> ('f -> 'g -> 'g) -> ('c, 'h) Code.abstract) ->
-          'e -> ('e -> ('c, unit) Code.abstract -> 'i) -> 'i
-        val col_iter :
-          'a ->
-          'b ->
-          ('c, int) Code.abstract ->
-          ('c, int) Code.abstract ->
-          ('a -> 'b -> ('c, int) Code.abstract -> 'd) ->
-          (('c, int) Code.abstract ->
-           'd -> 'e -> ('f -> 'g -> 'g) -> ('c, 'h) Code.abstract) ->
-          'e -> ('e -> ('c, unit) Code.abstract -> 'i) -> 'i
-      end
     val gen :
-      ('a, Input.inp) Code.abstract ->
+      ('a, G_GVC_I.InpJustMatrix.inp) Code.abstract ->
       ([> `TDet of 'a Det.lstate
         | `TLower of 'a Output.L.lstate
         | `TPivot of 'a Output.P.lstate
@@ -21726,15 +19542,6 @@ module GenIV5 :
           ('a, unit, 'b, 'c) GEF.cmonad
         val upd_kind : Ge.update_kind
       end
-    module Input :
-      sig
-        type inp = G_GVC_I.InpJustMatrix.inp
-        val get_input :
-          ('a, inp) Code.abstract ->
-          (('a, GVC_I.contr) Code.abstract * ('a, int) Code.abstract * bool,
-           'b, ('a, 'c) Code.abstract)
-          StateCPSMonad.monad
-      end
     module Output :
       sig
         type res = G_GVC_I.OutDetRank(GVC_I)(Det)(GEF.PermList).res
@@ -21830,30 +19637,8 @@ module GenIV5 :
            'b)
           GEF.cmonad
       end
-    module I :
-      sig
-        val row_iter :
-          'a ->
-          'b ->
-          ('c, int) Code.abstract ->
-          ('c, int) Code.abstract ->
-          ('a -> ('c, int) Code.abstract -> 'b -> ('c, 'd) Code.abstract) ->
-          (('c, int) Code.abstract ->
-           ('c, 'd) Code.abstract ->
-           'e -> ('f -> 'g -> 'g) -> ('c, 'h) Code.abstract) ->
-          'e -> ('e -> ('c, unit) Code.abstract -> 'i) -> 'i
-        val col_iter :
-          'a ->
-          'b ->
-          ('c, int) Code.abstract ->
-          ('c, int) Code.abstract ->
-          ('a -> 'b -> ('c, int) Code.abstract -> 'd) ->
-          (('c, int) Code.abstract ->
-           'd -> 'e -> ('f -> 'g -> 'g) -> ('c, 'h) Code.abstract) ->
-          'e -> ('e -> ('c, unit) Code.abstract -> 'i) -> 'i
-      end
     val gen :
-      ('a, Input.inp) Code.abstract ->
+      ('a, G_GVC_I.InpJustMatrix.inp) Code.abstract ->
       ([> `TDet of 'a Det.lstate
         | `TLower of 'a Output.L.lstate
         | `TPivot of 'a Output.P.lstate
@@ -21905,15 +19690,6 @@ module GenIV6 :
           ('a in_val -> ('a, unit, 'b, 'c) GEF.cmonad) ->
           ('a, unit, 'b, 'c) GEF.cmonad
         val upd_kind : Ge.update_kind
-      end
-    module Input :
-      sig
-        type inp = G_GVC_I.InpJustMatrix.inp
-        val get_input :
-          ('a, inp) Code.abstract ->
-          (('a, GVC_I.contr) Code.abstract * ('a, int) Code.abstract * bool,
-           'b, ('a, 'c) Code.abstract)
-          StateCPSMonad.monad
       end
     module Output :
       sig
@@ -22010,30 +19786,8 @@ module GenIV6 :
            'b)
           GEF.cmonad
       end
-    module I :
-      sig
-        val row_iter :
-          'a ->
-          'b ->
-          ('c, int) Code.abstract ->
-          ('c, int) Code.abstract ->
-          ('a -> ('c, int) Code.abstract -> 'b -> ('c, 'd) Code.abstract) ->
-          (('c, int) Code.abstract ->
-           ('c, 'd) Code.abstract ->
-           'e -> ('f -> 'g -> 'g) -> ('c, 'h) Code.abstract) ->
-          'e -> ('e -> ('c, unit) Code.abstract -> 'i) -> 'i
-        val col_iter :
-          'a ->
-          'b ->
-          ('c, int) Code.abstract ->
-          ('c, int) Code.abstract ->
-          ('a -> 'b -> ('c, int) Code.abstract -> 'd) ->
-          (('c, int) Code.abstract ->
-           'd -> 'e -> ('f -> 'g -> 'g) -> ('c, 'h) Code.abstract) ->
-          'e -> ('e -> ('c, unit) Code.abstract -> 'i) -> 'i
-      end
     val gen :
-      ('a, Input.inp) Code.abstract ->
+      ('a, G_GVC_I.InpJustMatrix.inp) Code.abstract ->
       ([> `TDet of 'a Det.lstate
         | `TLower of 'a Output.L.lstate
         | `TPivot of 'a Output.P.lstate
@@ -22085,15 +19839,6 @@ module GenRA1 :
           ('a in_val -> ('a, unit, 'b, 'c) GEF.cmonad) ->
           ('a, unit, 'b, 'c) GEF.cmonad
         val upd_kind : Ge.update_kind
-      end
-    module Input :
-      sig
-        type inp = G_GAC_R.InpJustMatrix.inp
-        val get_input :
-          ('a, inp) Code.abstract ->
-          (('a, GAC_R.contr) Code.abstract * ('a, int) Code.abstract * bool,
-           'b, ('a, 'c) Code.abstract)
-          StateCPSMonad.monad
       end
     module Output :
       sig
@@ -22190,30 +19935,8 @@ module GenRA1 :
            'b)
           GEF.cmonad
       end
-    module I :
-      sig
-        val row_iter :
-          'a ->
-          'b ->
-          ('c, int) Code.abstract ->
-          ('c, int) Code.abstract ->
-          ('a -> ('c, int) Code.abstract -> 'b -> ('c, 'd) Code.abstract) ->
-          (('c, int) Code.abstract ->
-           ('c, 'd) Code.abstract ->
-           'e -> ('f -> 'g -> 'g) -> ('c, 'h) Code.abstract) ->
-          'e -> ('e -> ('c, unit) Code.abstract -> 'i) -> 'i
-        val col_iter :
-          'a ->
-          'b ->
-          ('c, int) Code.abstract ->
-          ('c, int) Code.abstract ->
-          ('a -> 'b -> ('c, int) Code.abstract -> 'd) ->
-          (('c, int) Code.abstract ->
-           'd -> 'e -> ('f -> 'g -> 'g) -> ('c, 'h) Code.abstract) ->
-          'e -> ('e -> ('c, unit) Code.abstract -> 'i) -> 'i
-      end
     val gen :
-      ('a, Input.inp) Code.abstract ->
+      ('a, G_GAC_R.InpJustMatrix.inp) Code.abstract ->
       ([> `TDet of 'a Det.lstate
         | `TLower of 'a Output.L.lstate
         | `TPivot of 'a Output.P.lstate
@@ -22265,15 +19988,6 @@ module GenRA2 :
           ('a in_val -> ('a, unit, 'b, 'c) GEF.cmonad) ->
           ('a, unit, 'b, 'c) GEF.cmonad
         val upd_kind : Ge.update_kind
-      end
-    module Input :
-      sig
-        type inp = G_GAC_R.InpJustMatrix.inp
-        val get_input :
-          ('a, inp) Code.abstract ->
-          (('a, GAC_R.contr) Code.abstract * ('a, int) Code.abstract * bool,
-           'b, ('a, 'c) Code.abstract)
-          StateCPSMonad.monad
       end
     module Output :
       sig
@@ -22370,30 +20084,8 @@ module GenRA2 :
            'b)
           GEF.cmonad
       end
-    module I :
-      sig
-        val row_iter :
-          'a ->
-          'b ->
-          ('c, int) Code.abstract ->
-          ('c, int) Code.abstract ->
-          ('a -> ('c, int) Code.abstract -> 'b -> ('c, 'd) Code.abstract) ->
-          (('c, int) Code.abstract ->
-           ('c, 'd) Code.abstract ->
-           'e -> ('f -> 'g -> 'g) -> ('c, 'h) Code.abstract) ->
-          'e -> ('e -> ('c, unit) Code.abstract -> 'i) -> 'i
-        val col_iter :
-          'a ->
-          'b ->
-          ('c, int) Code.abstract ->
-          ('c, int) Code.abstract ->
-          ('a -> 'b -> ('c, int) Code.abstract -> 'd) ->
-          (('c, int) Code.abstract ->
-           'd -> 'e -> ('f -> 'g -> 'g) -> ('c, 'h) Code.abstract) ->
-          'e -> ('e -> ('c, unit) Code.abstract -> 'i) -> 'i
-      end
     val gen :
-      ('a, Input.inp) Code.abstract ->
+      ('a, G_GAC_R.InpJustMatrix.inp) Code.abstract ->
       ([> `TDet of 'a Det.lstate
         | `TLower of 'a Output.L.lstate
         | `TPivot of 'a Output.P.lstate
@@ -22445,15 +20137,6 @@ module GenRA3 :
           ('a in_val -> ('a, unit, 'b, 'c) GEF.cmonad) ->
           ('a, unit, 'b, 'c) GEF.cmonad
         val upd_kind : Ge.update_kind
-      end
-    module Input :
-      sig
-        type inp = G_GAC_R.InpJustMatrix.inp
-        val get_input :
-          ('a, inp) Code.abstract ->
-          (('a, GAC_R.contr) Code.abstract * ('a, int) Code.abstract * bool,
-           'b, ('a, 'c) Code.abstract)
-          StateCPSMonad.monad
       end
     module Output :
       sig
@@ -22550,30 +20233,8 @@ module GenRA3 :
            'b)
           GEF.cmonad
       end
-    module I :
-      sig
-        val row_iter :
-          'a ->
-          'b ->
-          ('c, int) Code.abstract ->
-          ('c, int) Code.abstract ->
-          ('a -> ('c, int) Code.abstract -> 'b -> ('c, 'd) Code.abstract) ->
-          (('c, int) Code.abstract ->
-           ('c, 'd) Code.abstract ->
-           'e -> ('f -> 'g -> 'g) -> ('c, 'h) Code.abstract) ->
-          'e -> ('e -> ('c, unit) Code.abstract -> 'i) -> 'i
-        val col_iter :
-          'a ->
-          'b ->
-          ('c, int) Code.abstract ->
-          ('c, int) Code.abstract ->
-          ('a -> 'b -> ('c, int) Code.abstract -> 'd) ->
-          (('c, int) Code.abstract ->
-           'd -> 'e -> ('f -> 'g -> 'g) -> ('c, 'h) Code.abstract) ->
-          'e -> ('e -> ('c, unit) Code.abstract -> 'i) -> 'i
-      end
     val gen :
-      ('a, Input.inp) Code.abstract ->
+      ('a, G_GAC_R.InpJustMatrix.inp) Code.abstract ->
       ([> `TDet of 'a Det.lstate
         | `TLower of 'a Output.L.lstate
         | `TPivot of 'a Output.P.lstate
@@ -22625,15 +20286,6 @@ module GenRA4 :
           ('a in_val -> ('a, unit, 'b, 'c) GEF.cmonad) ->
           ('a, unit, 'b, 'c) GEF.cmonad
         val upd_kind : Ge.update_kind
-      end
-    module Input :
-      sig
-        type inp = G_GAC_R.InpJustMatrix.inp
-        val get_input :
-          ('a, inp) Code.abstract ->
-          (('a, GAC_R.contr) Code.abstract * ('a, int) Code.abstract * bool,
-           'b, ('a, 'c) Code.abstract)
-          StateCPSMonad.monad
       end
     module Output :
       sig
@@ -22730,30 +20382,8 @@ module GenRA4 :
            'b)
           GEF.cmonad
       end
-    module I :
-      sig
-        val row_iter :
-          'a ->
-          'b ->
-          ('c, int) Code.abstract ->
-          ('c, int) Code.abstract ->
-          ('a -> ('c, int) Code.abstract -> 'b -> ('c, 'd) Code.abstract) ->
-          (('c, int) Code.abstract ->
-           ('c, 'd) Code.abstract ->
-           'e -> ('f -> 'g -> 'g) -> ('c, 'h) Code.abstract) ->
-          'e -> ('e -> ('c, unit) Code.abstract -> 'i) -> 'i
-        val col_iter :
-          'a ->
-          'b ->
-          ('c, int) Code.abstract ->
-          ('c, int) Code.abstract ->
-          ('a -> 'b -> ('c, int) Code.abstract -> 'd) ->
-          (('c, int) Code.abstract ->
-           'd -> 'e -> ('f -> 'g -> 'g) -> ('c, 'h) Code.abstract) ->
-          'e -> ('e -> ('c, unit) Code.abstract -> 'i) -> 'i
-      end
     val gen :
-      ('a, Input.inp) Code.abstract ->
+      ('a, G_GAC_R.InpJustMatrix.inp) Code.abstract ->
       ([> `TDet of 'a Det.lstate
         | `TLower of 'a Output.L.lstate
         | `TPivot of 'a Output.P.lstate
@@ -22805,15 +20435,6 @@ module GenZp3 :
           ('a in_val -> ('a, unit, 'b, 'c) GEF.cmonad) ->
           ('a, unit, 'b, 'c) GEF.cmonad
         val upd_kind : Ge.update_kind
-      end
-    module Input :
-      sig
-        type inp = G_GVC_Z3.InpJustMatrix.inp
-        val get_input :
-          ('a, inp) Code.abstract ->
-          (('a, GVC_Z3.contr) Code.abstract * ('a, int) Code.abstract * bool,
-           'b, ('a, 'c) Code.abstract)
-          StateCPSMonad.monad
       end
     module Output :
       sig
@@ -22910,30 +20531,8 @@ module GenZp3 :
            'b)
           GEF.cmonad
       end
-    module I :
-      sig
-        val row_iter :
-          'a ->
-          'b ->
-          ('c, int) Code.abstract ->
-          ('c, int) Code.abstract ->
-          ('a -> ('c, int) Code.abstract -> 'b -> ('c, 'd) Code.abstract) ->
-          (('c, int) Code.abstract ->
-           ('c, 'd) Code.abstract ->
-           'e -> ('f -> 'g -> 'g) -> ('c, 'h) Code.abstract) ->
-          'e -> ('e -> ('c, unit) Code.abstract -> 'i) -> 'i
-        val col_iter :
-          'a ->
-          'b ->
-          ('c, int) Code.abstract ->
-          ('c, int) Code.abstract ->
-          ('a -> 'b -> ('c, int) Code.abstract -> 'd) ->
-          (('c, int) Code.abstract ->
-           'd -> 'e -> ('f -> 'g -> 'g) -> ('c, 'h) Code.abstract) ->
-          'e -> ('e -> ('c, unit) Code.abstract -> 'i) -> 'i
-      end
     val gen :
-      ('a, Input.inp) Code.abstract ->
+      ('a, G_GVC_Z3.InpJustMatrix.inp) Code.abstract ->
       ([> `TDet of 'a Det.lstate
         | `TLower of 'a Output.L.lstate
         | `TPivot of 'a Output.P.lstate
@@ -22985,15 +20584,6 @@ module GenZp19 :
           ('a in_val -> ('a, unit, 'b, 'c) GEF.cmonad) ->
           ('a, unit, 'b, 'c) GEF.cmonad
         val upd_kind : Ge.update_kind
-      end
-    module Input :
-      sig
-        type inp = G_GVC_Z19.InpJustMatrix.inp
-        val get_input :
-          ('a, inp) Code.abstract ->
-          (('a, GVC_Z19.contr) Code.abstract * ('a, int) Code.abstract * bool,
-           'b, ('a, 'c) Code.abstract)
-          StateCPSMonad.monad
       end
     module Output :
       sig
@@ -23091,30 +20681,8 @@ module GenZp19 :
            'b)
           GEF.cmonad
       end
-    module I :
-      sig
-        val row_iter :
-          'a ->
-          'b ->
-          ('c, int) Code.abstract ->
-          ('c, int) Code.abstract ->
-          ('a -> ('c, int) Code.abstract -> 'b -> ('c, 'd) Code.abstract) ->
-          (('c, int) Code.abstract ->
-           ('c, 'd) Code.abstract ->
-           'e -> ('f -> 'g -> 'g) -> ('c, 'h) Code.abstract) ->
-          'e -> ('e -> ('c, unit) Code.abstract -> 'i) -> 'i
-        val col_iter :
-          'a ->
-          'b ->
-          ('c, int) Code.abstract ->
-          ('c, int) Code.abstract ->
-          ('a -> 'b -> ('c, int) Code.abstract -> 'd) ->
-          (('c, int) Code.abstract ->
-           'd -> 'e -> ('f -> 'g -> 'g) -> ('c, 'h) Code.abstract) ->
-          'e -> ('e -> ('c, unit) Code.abstract -> 'i) -> 'i
-      end
     val gen :
-      ('a, Input.inp) Code.abstract ->
+      ('a, G_GVC_Z19.InpJustMatrix.inp) Code.abstract ->
       ([> `TDet of 'a Det.lstate
         | `TLower of 'a Output.L.lstate
         | `TPivot of 'a Output.P.lstate
@@ -23124,7 +20692,7 @@ module GenZp19 :
       ('b list -> ('a, Output.res) Code.abstract -> ('a, 'c) Code.abstract) ->
       ('a, 'c) Code.abstract
   end
-val resFA1 : ('a, GenFA1.Input.inp -> GenFA1.Output.res) code =
+val resFA1 : ('a, G_GAC_F.InpJustMatrix.inp -> GenFA1.Output.res) code =
   .<fun a_1 ->
    let t_2 = (ref 0) in
    let t_3 = (ref 0) in
@@ -23178,7 +20746,7 @@ val resFA1 : ('a, GenFA1.Input.inp -> GenFA1.Output.res) code =
     (t_3 := ((! t_3) + 1))
    done;
    t_5>.
-val resFA2 : ('a, GenFA2.Input.inp -> GenFA2.Output.res) code =
+val resFA2 : ('a, G_GAC_F.InpJustMatrix.inp -> GenFA2.Output.res) code =
   .<fun a_1 ->
    let t_2 = (ref 0) in
    let t_3 = (ref 0) in
@@ -23238,7 +20806,7 @@ val resFA2 : ('a, GenFA2.Input.inp -> GenFA2.Output.res) code =
     if ((! t_9) = 0) then 0.
     else if ((! t_9) = 1) then (! t_8)
     else (~-. (! t_8)))>.
-val resFA3 : ('a, GenFA3.Input.inp -> GenFA3.Output.res) code =
+val resFA3 : ('a, G_GAC_F.InpJustMatrix.inp -> GenFA3.Output.res) code =
   .<fun a_1 ->
    let t_2 = (ref 0) in
    let t_3 = (ref 0) in
@@ -23292,7 +20860,7 @@ val resFA3 : ('a, GenFA3.Input.inp -> GenFA3.Output.res) code =
     (t_3 := ((! t_3) + 1))
    done;
    (t_5, (! t_2))>.
-val resFA4 : ('a, GenFA4.Input.inp -> GenFA4.Output.res) code =
+val resFA4 : ('a, G_GAC_F.InpJustMatrix.inp -> GenFA4.Output.res) code =
   .<fun a_1 ->
    let t_2 = (ref 0) in
    let t_3 = (ref 0) in
@@ -23352,7 +20920,7 @@ val resFA4 : ('a, GenFA4.Input.inp -> GenFA4.Output.res) code =
     if ((! t_9) = 0) then 0.
     else if ((! t_9) = 1) then (! t_8)
     else (~-. (! t_8)), (! t_2))>.
-val resFV1 : ('a, GenFV1.Input.inp -> GenFV1.Output.res) code =
+val resFV1 : ('a, G_GVC_F.InpJustMatrix.inp -> GenFV1.Output.res) code =
   .<fun a_1 ->
    let t_2 = (ref 0) in
    let t_3 = (ref 0) in
@@ -23413,7 +20981,7 @@ val resFV1 : ('a, GenFV1.Input.inp -> GenFV1.Output.res) code =
     (t_3 := ((! t_3) + 1))
    done;
    t_4>.
-val resFV2 : ('a, GenFV2.Input.inp -> GenFV2.Output.res) code =
+val resFV2 : ('a, G_GVC_F.InpJustMatrix.inp -> GenFV2.Output.res) code =
   .<fun a_1 ->
    let t_2 = (ref 0) in
    let t_3 = (ref 0) in
@@ -23480,7 +21048,7 @@ val resFV2 : ('a, GenFV2.Input.inp -> GenFV2.Output.res) code =
     if ((! t_8) = 0) then 0.
     else if ((! t_8) = 1) then (! t_7)
     else (~-. (! t_7)))>.
-val resFV3 : ('a, GenFV3.Input.inp -> GenFV3.Output.res) code =
+val resFV3 : ('a, G_GVC_F.InpJustMatrix.inp -> GenFV3.Output.res) code =
   .<fun a_1 ->
    let t_2 = (ref 0) in
    let t_3 = (ref 0) in
@@ -23541,7 +21109,7 @@ val resFV3 : ('a, GenFV3.Input.inp -> GenFV3.Output.res) code =
     (t_3 := ((! t_3) + 1))
    done;
    (t_4, (! t_2))>.
-val resFV4 : ('a, GenFV4.Input.inp -> GenFV4.Output.res) code =
+val resFV4 : ('a, G_GVC_F.InpJustMatrix.inp -> GenFV4.Output.res) code =
   .<fun a_1 ->
    let t_2 = (ref 0) in
    let t_3 = (ref 0) in
@@ -23608,7 +21176,7 @@ val resFV4 : ('a, GenFV4.Input.inp -> GenFV4.Output.res) code =
     if ((! t_8) = 0) then 0.
     else if ((! t_8) = 1) then (! t_7)
     else (~-. (! t_7)), (! t_2))>.
-val resFV5 : ('a, GenFV5.Input.inp -> GenFV5.Output.res) code =
+val resFV5 : ('a, G_GVC_F.InpJustMatrix.inp -> GenFV5.Output.res) code =
   .<fun a_1 ->
    let t_2 = (ref 0) in
    let t_3 = (ref 0) in
@@ -23693,7 +21261,7 @@ val resFV5 : ('a, GenFV5.Input.inp -> GenFV5.Output.res) code =
     if ((! t_8) = 0) then 0.
     else if ((! t_8) = 1) then (! t_7)
     else (~-. (! t_7)), (! t_2))>.
-val resIA1 : ('a, GenIA1.Input.inp -> GenIA1.Output.res) code =
+val resIA1 : ('a, G_GAC_I.InpJustMatrix.inp -> GenIA1.Output.res) code =
   .<fun a_1 ->
    let t_2 = (ref 0) in
    let t_3 = (ref 0) in
@@ -23751,7 +21319,7 @@ val resIA1 : ('a, GenIA1.Input.inp -> GenIA1.Output.res) code =
     (t_3 := ((! t_3) + 1))
    done;
    t_5>.
-val resIA2 : ('a, GenIA2.Input.inp -> GenIA2.Output.res) code =
+val resIA2 : ('a, G_GAC_I.InpJustMatrix.inp -> GenIA2.Output.res) code =
   .<fun a_1 ->
    let t_2 = (ref 0) in
    let t_3 = (ref 0) in
@@ -23812,7 +21380,7 @@ val resIA2 : ('a, GenIA2.Input.inp -> GenIA2.Output.res) code =
     if ((! t_9) = 0) then 0
     else if ((! t_9) = 1) then (! t_8)
     else (~- (! t_8)))>.
-val resIA3 : ('a, GenIA3.Input.inp -> GenIA3.Output.res) code =
+val resIA3 : ('a, G_GAC_I.InpJustMatrix.inp -> GenIA3.Output.res) code =
   .<fun a_1 ->
    let t_2 = (ref 0) in
    let t_3 = (ref 0) in
@@ -23870,7 +21438,7 @@ val resIA3 : ('a, GenIA3.Input.inp -> GenIA3.Output.res) code =
     (t_3 := ((! t_3) + 1))
    done;
    (t_5, (! t_2))>.
-val resIA4 : ('a, GenIA4.Input.inp -> GenIA4.Output.res) code =
+val resIA4 : ('a, G_GAC_I.InpJustMatrix.inp -> GenIA4.Output.res) code =
   .<fun a_1 ->
    let t_2 = (ref 0) in
    let t_3 = (ref 0) in
@@ -23931,7 +21499,7 @@ val resIA4 : ('a, GenIA4.Input.inp -> GenIA4.Output.res) code =
     if ((! t_9) = 0) then 0
     else if ((! t_9) = 1) then (! t_8)
     else (~- (! t_8)), (! t_2))>.
-val resIV1 : ('a, GenIV1.Input.inp -> GenIV1.Output.res) code =
+val resIV1 : ('a, G_GVC_I.InpJustMatrix.inp -> GenIV1.Output.res) code =
   .<fun a_1 ->
    let t_2 = (ref 0) in
    let t_3 = (ref 0) in
@@ -23995,7 +21563,7 @@ val resIV1 : ('a, GenIV1.Input.inp -> GenIV1.Output.res) code =
     (t_3 := ((! t_3) + 1))
    done;
    t_4>.
-val resIV2 : ('a, GenIV2.Input.inp -> GenIV2.Output.res) code =
+val resIV2 : ('a, G_GVC_I.InpJustMatrix.inp -> GenIV2.Output.res) code =
   .<fun a_1 ->
    let t_2 = (ref 0) in
    let t_3 = (ref 0) in
@@ -24062,7 +21630,7 @@ val resIV2 : ('a, GenIV2.Input.inp -> GenIV2.Output.res) code =
     if ((! t_8) = 0) then 0
     else if ((! t_8) = 1) then (! t_7)
     else (~- (! t_7)))>.
-val resIV3 : ('a, GenIV3.Input.inp -> GenIV3.Output.res) code =
+val resIV3 : ('a, G_GVC_I.InpJustMatrix.inp -> GenIV3.Output.res) code =
   .<fun a_1 ->
    let t_2 = (ref 0) in
    let t_3 = (ref 0) in
@@ -24126,7 +21694,7 @@ val resIV3 : ('a, GenIV3.Input.inp -> GenIV3.Output.res) code =
     (t_3 := ((! t_3) + 1))
    done;
    (t_4, (! t_2))>.
-val resIV4 : ('a, GenIV4.Input.inp -> GenIV4.Output.res) code =
+val resIV4 : ('a, G_GVC_I.InpJustMatrix.inp -> GenIV4.Output.res) code =
   .<fun a_1 ->
    let t_2 = (ref 0) in
    let t_3 = (ref 0) in
@@ -24193,7 +21761,7 @@ val resIV4 : ('a, GenIV4.Input.inp -> GenIV4.Output.res) code =
     if ((! t_8) = 0) then 0
     else if ((! t_8) = 1) then (! t_7)
     else (~- (! t_7)), (! t_2))>.
-val resIV5 : ('a, GenIV5.Input.inp -> GenIV5.Output.res) code =
+val resIV5 : ('a, G_GVC_I.InpJustMatrix.inp -> GenIV5.Output.res) code =
   .<fun a_1 ->
    let t_2 = (ref 0) in
    let t_3 = (ref 0) in
@@ -24278,7 +21846,7 @@ val resIV5 : ('a, GenIV5.Input.inp -> GenIV5.Output.res) code =
     if ((! t_8) = 0) then 0
     else if ((! t_8) = 1) then (! t_7)
     else (~- (! t_7)), (! t_2))>.
-val resIV6 : ('a, GenIV6.Input.inp -> GenIV6.Output.res) code =
+val resIV6 : ('a, G_GVC_I.InpJustMatrix.inp -> GenIV6.Output.res) code =
   .<fun a_1 ->
    let t_2 = (ref 0) in
    let t_3 = (ref 0) in
@@ -24370,7 +21938,7 @@ val resIV6 : ('a, GenIV6.Input.inp -> GenIV6.Output.res) code =
     if ((! t_8) = 0) then 0
     else if ((! t_8) = 1) then (! t_7)
     else (~- (! t_7)), (! t_2), (! t_9))>.
-val resFA11 : ('a, GenFA11.Input.inp -> GenFA11.Output.res) code =
+val resFA11 : ('a, G_GAC_F.InpJustMatrix.inp -> GenFA11.Output.res) code =
   .<fun a_1 ->
    let t_2 = (ref 0) in
    let t_3 = (ref 0) in
@@ -24433,7 +22001,7 @@ val resFA11 : ('a, GenFA11.Input.inp -> GenFA11.Output.res) code =
     (t_3 := ((! t_3) + 1))
    done;
    t_5>.
-val resFA12 : ('a, GenFA12.Input.inp -> GenFA12.Output.res) code =
+val resFA12 : ('a, G_GAC_F.InpJustMatrix.inp -> GenFA12.Output.res) code =
   .<fun a_1 ->
    let t_2 = (ref 0) in
    let t_3 = (ref 0) in
@@ -24503,7 +22071,7 @@ val resFA12 : ('a, GenFA12.Input.inp -> GenFA12.Output.res) code =
     if ((! t_9) = 0) then 0.
     else if ((! t_9) = 1) then (! t_8)
     else (~-. (! t_8)))>.
-val resFA13 : ('a, GenFA13.Input.inp -> GenFA13.Output.res) code =
+val resFA13 : ('a, G_GAC_F.InpJustMatrix.inp -> GenFA13.Output.res) code =
   .<fun a_1 ->
    let t_2 = (ref 0) in
    let t_3 = (ref 0) in
@@ -24566,7 +22134,7 @@ val resFA13 : ('a, GenFA13.Input.inp -> GenFA13.Output.res) code =
     (t_3 := ((! t_3) + 1))
    done;
    (t_5, (! t_2))>.
-val resFA14 : ('a, GenFA14.Input.inp -> GenFA14.Output.res) code =
+val resFA14 : ('a, G_GAC_F.InpJustMatrix.inp -> GenFA14.Output.res) code =
   .<fun a_1 ->
    let t_2 = (ref 0) in
    let t_3 = (ref 0) in
@@ -24636,7 +22204,7 @@ val resFA14 : ('a, GenFA14.Input.inp -> GenFA14.Output.res) code =
     if ((! t_9) = 0) then 0.
     else if ((! t_9) = 1) then (! t_8)
     else (~-. (! t_8)), (! t_2))>.
-val resFA24 : ('a, GenFA24.Input.inp -> GenFA24.Output.res) code =
+val resFA24 : ('a, G_GAC_F.InpJustMatrix.inp -> GenFA24.Output.res) code =
   .<fun a_1 ->
    let t_2 = (ref 0) in
    let t_3 = (ref 0) in
@@ -24700,7 +22268,7 @@ val resFA24 : ('a, GenFA24.Input.inp -> GenFA24.Output.res) code =
     if ((! t_9) = 0) then 0.
     else if ((! t_9) = 1) then (! t_8)
     else (~-. (! t_8)), (! t_2), (! t_10))>.
-val resFA25 : ('a, GenFA25.Input.inp -> GenFA25.Output.res) code =
+val resFA25 : ('a, G_GAC_F.InpJustMatrix.inp -> GenFA25.Output.res) code =
   .<fun a_1 ->
    let t_2 = (ref 0) in
    let t_3 = (ref 0) in
@@ -24770,7 +22338,7 @@ val resFA25 : ('a, GenFA25.Input.inp -> GenFA25.Output.res) code =
     if ((! t_9) = 0) then 0.
     else if ((! t_9) = 1) then (! t_8)
     else (~-. (! t_8)), (! t_2), (! t_11))>.
-val resFA26 : ('a, GenFA26.Input.inp -> GenFA26.Output.res) code =
+val resFA26 : ('a, G_GAC_F.InpJustMatrix.inp -> GenFA26.Output.res) code =
   .<fun a_1 ->
    let t_2 = (ref 0) in
    let t_3 = (ref 0) in
@@ -24827,7 +22395,7 @@ val resFA26 : ('a, GenFA26.Input.inp -> GenFA26.Output.res) code =
     (t_3 := ((! t_3) + 1))
    done;
    t_5>.
-val resRA1 : ('a, GenRA1.Input.inp -> GenRA1.Output.res) code =
+val resRA1 : ('a, G_GAC_R.InpJustMatrix.inp -> GenRA1.Output.res) code =
   .<fun a_1 ->
    let t_2 = (ref 0) in
    let t_3 = (ref 0) in
@@ -24893,7 +22461,7 @@ val resRA1 : ('a, GenRA1.Input.inp -> GenRA1.Output.res) code =
     (t_3 := ((! t_3) + 1))
    done;
    t_5>.
-val resRA2 : ('a, GenRA2.Input.inp -> GenRA2.Output.res) code =
+val resRA2 : ('a, G_GAC_R.InpJustMatrix.inp -> GenRA2.Output.res) code =
   .<fun a_1 ->
    let t_2 = (ref 0) in
    let t_3 = (ref 0) in
@@ -24963,7 +22531,7 @@ val resRA2 : ('a, GenRA2.Input.inp -> GenRA2.Output.res) code =
     else if ((! t_9) = 1) then (! t_8)
     else
      (((* cross-stage persistent value (as id: Num.minus_num) *)) (! t_8)))>.
-val resRA3 : ('a, GenRA3.Input.inp -> GenRA3.Output.res) code =
+val resRA3 : ('a, G_GAC_R.InpJustMatrix.inp -> GenRA3.Output.res) code =
   .<fun a_1 ->
    let t_2 = (ref 0) in
    let t_3 = (ref 0) in
@@ -25029,7 +22597,7 @@ val resRA3 : ('a, GenRA3.Input.inp -> GenRA3.Output.res) code =
     (t_3 := ((! t_3) + 1))
    done;
    (t_5, (! t_2))>.
-val resRA4 : ('a, GenRA4.Input.inp -> GenRA4.Output.res) code =
+val resRA4 : ('a, G_GAC_R.InpJustMatrix.inp -> GenRA4.Output.res) code =
   .<fun a_1 ->
    let t_2 = (ref 0) in
    let t_3 = (ref 0) in
@@ -25100,7 +22668,7 @@ val resRA4 : ('a, GenRA4.Input.inp -> GenRA4.Output.res) code =
     else
      (((* cross-stage persistent value (as id: Num.minus_num) *)) (! t_8)),
     (! t_2))>.
-val resFA5 : ('a, GenFA5.Input.inp -> GenFA5.Output.res) code =
+val resFA5 : ('a, G_GAC_F.InpMatrixMargin.inp -> GenFA5.Output.res) code =
   .<fun a_1 ->
    let t_2 = (ref 0) in
    let t_3 = (ref 0) in
@@ -25155,7 +22723,7 @@ val resFA5 : ('a, GenFA5.Input.inp -> GenFA5.Output.res) code =
     (t_3 := ((! t_3) + 1))
    done;
    t_5>.
-val resFA6 : ('a, GenFA6.Input.inp -> GenFA6.Output.res) code =
+val resFA6 : ('a, G_GAC_F.InpMatrixMargin.inp -> GenFA6.Output.res) code =
   .<fun a_1 ->
    let t_2 = (ref 0) in
    let t_3 = (ref 0) in
@@ -25216,7 +22784,7 @@ val resFA6 : ('a, GenFA6.Input.inp -> GenFA6.Output.res) code =
     if ((! t_10) = 0) then 0.
     else if ((! t_10) = 1) then (! t_9)
     else (~-. (! t_9)))>.
-val resFA7 : ('a, GenFA7.Input.inp -> GenFA7.Output.res) code =
+val resFA7 : ('a, G_GAC_F.InpMatrixMargin.inp -> GenFA7.Output.res) code =
   .<fun a_1 ->
    let t_2 = (ref 0) in
    let t_3 = (ref 0) in
@@ -25271,7 +22839,7 @@ val resFA7 : ('a, GenFA7.Input.inp -> GenFA7.Output.res) code =
     (t_3 := ((! t_3) + 1))
    done;
    (t_5, (! t_2))>.
-val resFA8 : ('a, GenFA8.Input.inp -> GenFA8.Output.res) code =
+val resFA8 : ('a, G_GAC_F.InpMatrixMargin.inp -> GenFA8.Output.res) code =
   .<fun a_1 ->
    let t_2 = (ref 0) in
    let t_3 = (ref 0) in
@@ -25326,7 +22894,7 @@ val resFA8 : ('a, GenFA8.Input.inp -> GenFA8.Output.res) code =
     (t_3 := ((! t_3) + 1))
    done;
    (t_5, (), (! t_2))>.
-val resFA9 : ('a, GenFA9.Input.inp -> GenFA9.Output.res) code =
+val resFA9 : ('a, G_GAC_F.InpJustMatrix.inp -> GenFA9.Output.res) code =
   .<fun a_1 ->
    let t_2 = (ref 0) in
    let t_3 = (ref 0) in
@@ -25381,7 +22949,7 @@ val resFA9 : ('a, GenFA9.Input.inp -> GenFA9.Output.res) code =
     (t_3 := ((! t_3) + 1))
    done;
    (t_5, (! t_8))>.
-val resFA31 : ('a, GenFA31.Input.inp -> GenFA31.Output.res) code =
+val resFA31 : ('a, G_GAC_F.InpJustMatrix.inp -> GenFA31.Output.res) code =
   .<fun a_1 ->
    let t_2 = (ref 0) in
    let t_3 = (ref 0) in
@@ -25447,7 +23015,7 @@ val resFA31 : ('a, GenFA31.Input.inp -> GenFA31.Output.res) code =
     (t_3 := ((! t_3) + 1))
    done;
    (t_5, t_13, (! t_10))>.
-val resFA32 : ('a, GenFA32.Input.inp -> GenFA32.Output.res) code =
+val resFA32 : ('a, G_GAC_F.InpJustMatrix.inp -> GenFA32.Output.res) code =
   .<fun a_1 ->
    let t_2 = (ref 0) in
    let t_3 = (ref 0) in
@@ -25507,7 +23075,7 @@ val resFA32 : ('a, GenFA32.Input.inp -> GenFA32.Output.res) code =
     (t_3 := ((! t_3) + 1))
    done;
    (t_5, (! t_10))>.
-val resZp3 : ('a, GenZp3.Input.inp -> GenZp3.Output.res) code =
+val resZp3 : ('a, G_GVC_Z3.InpJustMatrix.inp -> GenZp3.Output.res) code =
   .<fun a_1 ->
    let t_2 = (ref 0) in
    let t_3 = (ref 0) in
@@ -25583,7 +23151,7 @@ val resZp3 : ('a, GenZp3.Input.inp -> GenZp3.Output.res) code =
     else if ((! t_8) = 1) then (! t_7)
     else (((* cross-stage persistent value (as id: uminus) *)) (! t_7)),
     (! t_2), (! t_9))>.
-val resZp19 : ('a, GenZp19.Input.inp -> GenZp19.Output.res) code =
+val resZp19 : ('a, G_GVC_Z19.InpJustMatrix.inp -> GenZp19.Output.res) code =
   .<fun a_1 ->
    let t_2 = (ref 0) in
    let t_3 = (ref 0) in
@@ -25659,7 +23227,7 @@ val resZp19 : ('a, GenZp19.Input.inp -> GenZp19.Output.res) code =
     else if ((! t_8) = 1) then (! t_7)
     else (((* cross-stage persistent value (as id: uminus) *)) (! t_7)),
     (! t_2), (! t_9))>.
-val rFA1 : GenFA1.Input.inp -> GenFA1.Output.res = <fun>
+val rFA1 : G_GAC_F.InpJustMatrix.inp -> GenFA1.Output.res = <fun>
 val rFA2 : float array array -> float array array * float = <fun>
 val rFA3 : float array array -> float array array * int = <fun>
 val rFA4 : float array array -> float array array * float * int = <fun>
@@ -25676,8 +23244,8 @@ val rFV4 :
   float Domains_code.container2dfromvector ->
   float Domains_code.container2dfromvector * float * int = <fun>
 val rFV5 :
-  float Domains_code.container2dfromvector ->
-  float Domains_code.container2dfromvector * float * int = <fun>
+  GVC_F.Dom.v Domains_code.container2dfromvector -> GVC_F.contr * float * int =
+  <fun>
 val rIA1 : GAC_I.Dom.v array array -> GAC_I.Dom.v array array = <fun>
 val rIA2 : GAC_I.Dom.v array array -> GAC_I.contr * int = <fun>
 val rIA3 : GAC_I.Dom.v array array -> GAC_I.contr * int = <fun>
@@ -25698,37 +23266,37 @@ val rIV5 :
 val rIV6 :
   GVC_I.Dom.v Domains_code.container2dfromvector ->
   GVC_I.contr * int * int * GEF.PermList.perm_rep = <fun>
-val rFA11 : GAC_F.Dom.v array array -> GAC_F.Dom.v array array = <fun>
-val rFA12 : GAC_F.Dom.v array array -> GAC_F.contr * float = <fun>
-val rFA13 : GAC_F.Dom.v array array -> GAC_F.contr * int = <fun>
-val rFA14 : GAC_F.Dom.v array array -> GAC_F.contr * float * int = <fun>
+val rFA11 : G_GAC_F.InpJustMatrix.inp -> GAC_F.Dom.v array array = <fun>
+val rFA12 : G_GAC_F.InpJustMatrix.inp -> GAC_F.contr * float = <fun>
+val rFA13 : G_GAC_F.InpJustMatrix.inp -> GAC_F.contr * int = <fun>
+val rFA14 : G_GAC_F.InpJustMatrix.inp -> GAC_F.contr * float * int = <fun>
 val rFA24 :
-  GAC_F.Dom.v array array ->
+  G_GAC_F.InpJustMatrix.inp ->
   GAC_F.contr * float * int * GEF.PermList.perm_rep = <fun>
 val rFA25 :
-  GAC_F.Dom.v array array ->
+  G_GAC_F.InpJustMatrix.inp ->
   GAC_F.contr * float * int * GEF.RowVectorPerm.perm_rep = <fun>
-val rFA26 : GAC_F.Dom.v array array -> GAC_F.Dom.v array array = <fun>
-val rRA1 : GAC_R.Dom.v array array -> GAC_R.Dom.v array array = <fun>
-val rRA2 : GAC_R.Dom.v array array -> GAC_R.contr * Num.num = <fun>
-val rRA3 : GAC_R.Dom.v array array -> GAC_R.contr * int = <fun>
-val rRA4 : GAC_R.Dom.v array array -> GAC_R.contr * Num.num * int = <fun>
-val rFA5 : GAC_F.contr * int -> GAC_F.Dom.v array array = <fun>
-val rFA6 : GAC_F.contr * int -> GAC_F.contr * float = <fun>
-val rFA7 : GAC_F.contr * int -> GAC_F.contr * int = <fun>
-val rFA8 : GAC_F.contr * int -> GAC_F.contr * unit * int = <fun>
-val rFA9 : GAC_F.Dom.v array array -> GAC_F.contr * GEF.PermList.perm_rep =
+val rFA26 : G_GAC_F.InpJustMatrix.inp -> GAC_F.Dom.v array array = <fun>
+val rRA1 : G_GAC_R.InpJustMatrix.inp -> GAC_R.Dom.v array array = <fun>
+val rRA2 : G_GAC_R.InpJustMatrix.inp -> GAC_R.contr * Num.num = <fun>
+val rRA3 : G_GAC_R.InpJustMatrix.inp -> GAC_R.contr * int = <fun>
+val rRA4 : G_GAC_R.InpJustMatrix.inp -> GAC_R.contr * Num.num * int = <fun>
+val rFA5 : G_GAC_F.InpMatrixMargin.inp -> GAC_F.Dom.v array array = <fun>
+val rFA6 : G_GAC_F.InpMatrixMargin.inp -> GAC_F.contr * float = <fun>
+val rFA7 : G_GAC_F.InpMatrixMargin.inp -> GAC_F.contr * int = <fun>
+val rFA8 : G_GAC_F.InpMatrixMargin.inp -> GAC_F.contr * unit * int = <fun>
+val rFA9 : G_GAC_F.InpJustMatrix.inp -> GAC_F.contr * GEF.PermList.perm_rep =
   <fun>
 val rFA31 :
-  GAC_F.Dom.v array array ->
+  G_GAC_F.InpJustMatrix.inp ->
   GAC_F.contr * GAC_F.contr * GEF.PermList.perm_rep = <fun>
-val rFA32 : GAC_F.Dom.v array array -> GAC_F.contr * GEF.PermList.perm_rep =
+val rFA32 : G_GAC_F.InpJustMatrix.inp -> GAC_F.contr * GEF.PermList.perm_rep =
   <fun>
 val rZp3 :
-  GVC_Z3.Dom.v Domains_code.container2dfromvector ->
+  G_GVC_Z3.InpJustMatrix.inp ->
   GVC_Z3.contr * int * int * GEF.PermList.perm_rep = <fun>
 val rZp19 :
-  GVC_Z19.Dom.v Domains_code.container2dfromvector ->
+  G_GVC_Z19.InpJustMatrix.inp ->
   GVC_Z19.contr * int * int * GEF.PermList.perm_rep = <fun>
 val ia0 : int array array = [|[|1|]|]
 val ia1 : int array array = [|[|1; 2; 3|]; [|4; 13; 5|]; [|-1; 3; 0|]|]
@@ -25879,7 +23447,7 @@ val xxx : float Domains_code.container2dfromvector list =
    {arr = [|1.; 2.; 3.; 4.; 13.; 5.; -1.; 3.; 0.; 0.; 0.; 0.|]; n = 4; m = 3};
    {arr = [|0.; 2.; 3.; 0.; 10.; 5.; 0.; 3.; 0.|]; n = 3; m = 3}]
 - : unit = ()
-val resFV5 : (float Domains_code.container2dfromvector * float * int) list =
+val resFV5 : (GVC_F.contr * float * int) list =
   [({arr = [|1.|]; n = 1; m = 1}, 1., 1);
    ({arr =
       [|13.; 5.; 4.; 0.; 2.23076923076923084; 0.384615384615384581; 0.; 0.;
@@ -25897,7 +23465,7 @@ val resFV5 : (float Domains_code.container2dfromvector * float * int) list =
      n = 4; m = 3},
     50., 3);
    ({arr = [|10.; 5.; 0.; 0.; 2.; 0.; 0.; 0.; 0.|]; n = 3; m = 3}, 0., 2)]
-val resF11 : float array array list =
+val resF11 : GAC_F.Dom.v array array list =
   [[|[|1.|]|];
    [|[|13.; 5.; 4.|]; [|0.; 2.23076923076923084; 0.384615384615384581|];
      [|0.; 0.; -1.72413793103448287|]|];
@@ -25965,7 +23533,7 @@ val resF25 : (GAC_F.contr * float * int * GEF.RowVectorPerm.perm_rep) list =
    ([|[|4.; 13.; 5.|]; [|0.; 6.25; 1.25|]; [|0.; 0.; 2.|]; [|0.; 0.; 0.|]|],
     50., 3, [|1; 2; 0; 3|]);
    ([|[|0.; 10.; 5.|]; [|0.; 0.; 2.|]; [|0.; 0.; 0.|]|], 0., 2, [|1; 0; 2|])]
-val resF26 : float array array list =
+val resF26 : GAC_F.Dom.v array array list =
   [[|[|1.|]|]; [|[|4.; 13.; 5.|]; [|0.; 6.25; 1.25|]; [|0.; 0.; 2.|]|];
    [|[|4.; 13.; 5.; 0.|]; [|0.; 6.25; 1.25; 0.|]; [|0.; 0.; 2.; 0.|]|];
    [|[|4.; 13.; 5.|]; [|0.; 6.25; 1.25|]; [|0.; 0.; 2.|]; [|0.; 0.; 0.|]|];
