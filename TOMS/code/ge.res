@@ -23719,6 +23719,132 @@ val resFA9 : ('a, GenFA9.Input.inp -> GenFA9.Output.res) code =
     (t_3 := ((! t_3) + 1))
    done;
    (t_5, (! t_8))>.
+val resFA31 : ('a, GenFA31.Input.inp -> GenFA31.Output.res) code =
+  .<fun a_1 ->
+   let t_2 = (ref 0) in
+   let t_3 = (ref 0) in
+   let t_5 = (Array.map (fun x_4 -> (Array.copy x_4)) (Array.copy a_1)) in
+   let t_6 = (Array.length a_1.(0)) in
+   let t_7 = (Array.length a_1) in
+   let t_8 = (ref 1.) in
+   let t_9 = (ref 1) in
+   let t_10 = (ref ([])) in
+   let t_13 =
+    (Array.init t_7
+      (fun i_11 ->
+        (Array.init t_6 (fun j_12 -> if (i_11 = j_12) then 1. else 0.)))) in
+   while (((! t_3) < t_6) && ((! t_2) < t_7)) do
+    let t_14 = (! t_2) in
+    let t_15 = (! t_3) in
+    let t_16 = (ref (None)) in
+    let t_22 =
+     begin
+      for j_19 = t_14 to (t_7 - 1) do
+       let t_20 = (t_5.(j_19)).(t_15) in
+       if (t_20 <> 0.) then
+        (match (! t_16) with
+         | Some (i_21) ->
+            if ((abs_float (snd i_21)) < (abs_float t_20)) then
+             (t_16 := (Some (j_19, t_20)))
+            else ()
+         | None -> (t_16 := (Some (j_19, t_20))))
+       else ()
+      done;
+      (match (! t_16) with
+       | Some (i_17) ->
+          if ((fst i_17) <> t_14) then begin
+           begin
+            let t_18 = t_5.(t_14) in
+            t_5.(t_14) <- t_5.(fst i_17);
+            t_5.(fst i_17) <- t_18;
+            (t_9 := (~- (! t_9)))
+           end;
+           (t_10 := ((RowSwap ((fst i_17), t_14)) :: (! t_10)))
+          end else ();
+          (Some (snd i_17))
+       | None -> (None))
+     end in
+    (match t_22 with
+     | Some (i_23) ->
+        begin
+         for j_24 = (t_14 + 1) to (t_7 - 1) do
+          let t_25 = (t_5.(j_24)).(t_15) in
+          if (t_25 <> 0.) then begin
+           for j_26 = (t_15 + 1) to (t_6 - 1) do
+            (t_5.(j_24)).(j_26) <-
+             ((t_5.(j_24)).(j_26) -. ((t_25 /. i_23) *. (t_5.(t_14)).(j_26)))
+           done;
+           (t_13.(j_24)).(t_15) <- (t_25 /. i_23);
+           (t_5.(j_24)).(t_15) <- 0.
+          end else ()
+         done;
+         (t_8 := ((! t_8) *. i_23))
+        end;
+        (t_2 := ((! t_2) + 1))
+     | None -> (t_9 := 0));
+    (t_3 := ((! t_3) + 1))
+   done;
+   (t_5, t_13, (! t_10))>.
+val resFA32 : ('a, GenFA32.Input.inp -> GenFA32.Output.res) code =
+  .<fun a_1 ->
+   let t_2 = (ref 0) in
+   let t_3 = (ref 0) in
+   let t_5 = (Array.map (fun x_4 -> (Array.copy x_4)) (Array.copy a_1)) in
+   let t_6 = (Array.length a_1.(0)) in
+   let t_7 = (Array.length a_1) in
+   let t_8 = (ref 1.) in
+   let t_9 = (ref 1) in
+   let t_10 = (ref ([])) in
+   while (((! t_3) < t_6) && ((! t_2) < t_7)) do
+    let t_11 = (! t_2) in
+    let t_12 = (! t_3) in
+    let t_13 = (ref (None)) in
+    let t_19 =
+     begin
+      for j_16 = t_11 to (t_7 - 1) do
+       let t_17 = (t_5.(j_16)).(t_12) in
+       if (t_17 <> 0.) then
+        (match (! t_13) with
+         | Some (i_18) ->
+            if ((abs_float (snd i_18)) < (abs_float t_17)) then
+             (t_13 := (Some (j_16, t_17)))
+            else ()
+         | None -> (t_13 := (Some (j_16, t_17))))
+       else ()
+      done;
+      (match (! t_13) with
+       | Some (i_14) ->
+          if ((fst i_14) <> t_11) then begin
+           begin
+            let t_15 = t_5.(t_11) in
+            t_5.(t_11) <- t_5.(fst i_14);
+            t_5.(fst i_14) <- t_15;
+            (t_9 := (~- (! t_9)))
+           end;
+           (t_10 := ((RowSwap ((fst i_14), t_11)) :: (! t_10)))
+          end else ();
+          (Some (snd i_14))
+       | None -> (None))
+     end in
+    (match t_19 with
+     | Some (i_20) ->
+        begin
+         for j_21 = (t_11 + 1) to (t_7 - 1) do
+          let t_22 = (t_5.(j_21)).(t_12) in
+          if (t_22 <> 0.) then
+           for j_23 = (t_12 + 1) to (t_6 - 1) do
+            (t_5.(j_21)).(j_23) <-
+             ((t_5.(j_21)).(j_23) -. ((t_22 /. i_20) *. (t_5.(t_11)).(j_23)))
+           done
+          else ()
+         done;
+         (t_8 := ((! t_8) *. i_20))
+        end;
+        (t_2 := ((! t_2) + 1))
+     | None -> (t_9 := 0));
+    (t_3 := ((! t_3) + 1))
+   done;
+   (t_5, (! t_10))>.
 val resZp3 : ('a, GenZp3.Input.inp -> GenZp3.Output.res) code =
   .<fun a_1 ->
    let t_2 = (ref 0) in
@@ -23931,6 +24057,11 @@ val rFA7 : GAC_F.contr * int -> GAC_F.contr * int = <fun>
 val rFA8 : GAC_F.contr * int -> GAC_F.contr * unit * int = <fun>
 val rFA9 : GAC_F.Dom.v array array -> GAC_F.contr * GEF.PermList.perm_rep =
   <fun>
+val rFA31 :
+  GAC_F.Dom.v array array ->
+  GAC_F.contr * GAC_F.contr * GEF.PermList.perm_rep = <fun>
+val rFA32 : GAC_F.Dom.v array array -> GAC_F.contr * GEF.PermList.perm_rep =
+  <fun>
 val rZp3 :
   GVC_Z3.Dom.v Domains_code.container2dfromvector ->
   GVC_Z3.contr * int * int * GEF.PermList.perm_rep = <fun>
@@ -24053,6 +24184,31 @@ val resF1 : GAC_F.Dom.v array array list =
 - : unit = ()
 - : unit = ()
 - : unit = ()
+val resFA31 : (GAC_F.contr * GAC_F.contr * GEF.PermList.perm_rep) list =
+  [([|[|1.|]|], [|[|1.|]|], []);
+   ([|[|4.; 13.; 5.|]; [|0.; 6.25; 1.25|]; [|0.; 0.; 2.|]|],
+    [|[|1.; 0.; 0.|]; [|0.25; 1.; 0.|]; [|-0.25; -0.2; 1.|]|],
+    [Code.RowSwap (2, 1); Code.RowSwap (1, 0)]);
+   ([|[|4.; 13.; 5.; 0.|]; [|0.; 6.25; 1.25; 0.|]; [|0.; 0.; 2.; 0.|]|],
+    [|[|1.; 0.; 0.; 0.|]; [|0.25; 1.; 0.; 0.|]; [|-0.25; -0.2; 1.; 0.|]|],
+    [Code.RowSwap (2, 1); Code.RowSwap (1, 0)]);
+   ([|[|4.; 13.; 5.|]; [|0.; 6.25; 1.25|]; [|0.; 0.; 2.|]; [|0.; 0.; 0.|]|],
+    [|[|1.; 0.; 0.|]; [|0.25; 1.; 0.|]; [|-0.25; -0.2; 1.|]; [|0.; 0.; 0.|]|],
+    [Code.RowSwap (2, 1); Code.RowSwap (1, 0)]);
+   ([|[|0.; 10.; 5.|]; [|0.; 0.; 2.|]; [|0.; 0.; 0.|]|],
+    [|[|1.; 0.; 0.|]; [|0.; 0.2; 0.|]; [|0.; 0.3; -0.75|]|],
+    [Code.RowSwap (1, 0)])]
+val resFA32 : (GAC_F.contr * GEF.PermList.perm_rep) list =
+  [([|[|1.|]|], []);
+   ([|[|4.; 13.; 5.|]; [|-1.; 6.25; 1.25|]; [|1.; -1.25; 2.|]|],
+    [Code.RowSwap (2, 1); Code.RowSwap (1, 0)]);
+   ([|[|4.; 13.; 5.; 0.|]; [|-1.; 6.25; 1.25; 0.|]; [|1.; -1.25; 2.; 0.|]|],
+    [Code.RowSwap (2, 1); Code.RowSwap (1, 0)]);
+   ([|[|4.; 13.; 5.|]; [|-1.; 6.25; 1.25|]; [|1.; -1.25; 2.|];
+      [|0.; 0.; 0.|]|],
+    [Code.RowSwap (2, 1); Code.RowSwap (1, 0)]);
+   ([|[|0.; 10.; 5.|]; [|0.; 2.; 2.|]; [|0.; 3.; -1.5|]|],
+    [Code.RowSwap (1, 0)])]
 val a2v : 'a array array -> 'a Domains_code.container2dfromvector = <fun>
 val xxx : float Domains_code.container2dfromvector list =
   [{arr = [|1.|]; n = 1; m = 1};

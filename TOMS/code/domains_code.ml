@@ -123,7 +123,8 @@ module GenericArrayContainer(Dom:DOMAINL) =
   let col_head_set x n m y = .< (.~x).(.~n).(.~m) <- .~y >.
 end
 
-(* Matrix layed out row after row, in a C fashion *)
+(* Matrix layed out row after row, in a C fashion, using a record
+   as intermediary *)
 type 'a container2dfromvector = {arr:('a array); n:int; m:int}
 
 module GenericVectorContainer(Dom:DOMAINL) =
@@ -168,6 +169,55 @@ module GenericVectorContainer(Dom:DOMAINL) =
   let row_head b c r = getL b r c
   (* only set the head of the current column *)
   let col_head_set x n m y = .< ((.~x).arr).(.~n* (.~x).m + .~m) <- .~y >.
+end
+
+(* Matrix layed out column after column, in a Fortran fashion, using an
+   algebraic type as intermediary *)
+type 'a container2dfromFvector = FortranVector of ('a array * int * int)
+
+module FortranVectorContainer(Dom:DOMAINL):CONTAINER2D =
+  struct
+  module Dom = Dom
+  type contr = Dom.v container2dfromFvector
+  type 'a vc = ('a,contr) code
+  type 'a vo = ('a,Dom.v) code
+  let unpack z f = .< match .~z with FortranVector(x,n,m) -> .~f x n m >.
+  let getL z i j = unpack z .< fun x n _ -> (x).(.~i * n + .~j) >.
+  let dim2 z = unpack z .< fun _ n _ -> n >.
+  let dim1 z = unpack z .< fun _ _ m -> m >.
+  let mapper g z = match g with
+      | Some f -> unpack z .< fun x n m -> FortranVector(Array.map (fun q ->
+              .~(f .<q>.)) x, n, m) >.
+      | None   -> z
+  let copy a = unpack a .< fun x n m -> FortranVector(Array.copy x, n, m) >.
+  let init n m = .< FortranVector(Array.make (.~n* .~m) .~(Dom.zeroL), .~n, .~m) >.
+  let identity n m = .< FortranVector(Array.init (.~n* .~m) 
+      (fun k -> if ((k mod .~n)* .~m + .~m = k) then .~(Dom.oneL) else
+          .~(Dom.zeroL)), .~n, .~m ) >.
+  let swap_rows_stmt b r1 r2 = unpack b .< fun a _ m ->
+      let i1 = .~r1*m and i2 = .~r2*m in
+      for i = 0 to m-1 do
+          let t = a.(i1 + i) in
+          begin 
+              a.(i1 + i) <- a.(i2 + i);
+              a.(i2 + i) <- t
+          end
+      done  >.
+  let swap_cols_stmt b c1 c2 = unpack b .< fun a n m ->
+      let nm = n * m in
+      let rec loop i1 i2 =
+    if i2 < nm then
+      let t = a.(i1) in
+      begin
+        a.(i1) <- a.(i2);
+        a.(i2) <- t;
+        loop (i1 + m) (i2 + m)
+      end
+      in loop .~c1 .~c2
+     >.
+  let row_head b c r = getL b r c
+  let col_head_set z n m y = unpack z 
+      .< fun x _ j -> (x).(.~n* j + .~m) <- .~y >.
 end
 
 (* we use an association list as the representation of a sparse vector.
