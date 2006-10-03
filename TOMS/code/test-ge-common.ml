@@ -19,8 +19,8 @@ module Z19 = ZpMakeL(struct let p = 19 end)
 let () = assert (
           try
             let module Z9 = ZpMakeL(struct let p = 9 end)
-	    in false
-	  with Assert_failure _ -> true)
+        in false
+      with Assert_failure _ -> true)
 
 
 module GAC_F = GenericArrayContainer(FloatDomainL)
@@ -30,6 +30,7 @@ module GVC_I = GenericVectorContainer(IntegerDomainL)
 module GAC_R = GenericArrayContainer(RationalDomainL)
 module GVC_Z3 = GenericVectorContainer(Z3)
 module GVC_Z19 = GenericVectorContainer(Z19)
+module GFC_F = FortranVectorContainer(FloatDomainL)
 
 module G_GAC_F = GenLA(GAC_F)
 module G_GVC_F = GenLA(GVC_F)
@@ -38,6 +39,7 @@ module G_GVC_I = GenLA(GVC_I)
 module G_GAC_R = GenLA(GAC_R)
 module G_GVC_Z3 = GenLA(GVC_Z3)
 module G_GVC_Z19 = GenLA(GVC_Z19)
+module G_GFC_F = GenLA(GFC_F)
 
 open G_GAC_F
 module GenFA1 = GenGE
@@ -495,18 +497,18 @@ let fa7 = Array.of_list [
 let _ = assert (rFA1 fa0 = [|[|1.0|]|])
 (* permutation: 1<->2, 2<->3. Det is 50 *)
 let _ = assert (rFA1 fa1 =
-	[|[|4.; 13.; 5.|]; [|0.; 6.25; 1.25|]; [|0.; 0.; 2.|]|]
-		  )
+    [|[|4.; 13.; 5.|]; [|0.; 6.25; 1.25|]; [|0.; 0.; 2.|]|]
+          )
 let _ = assert (rFA1 fa2 =
-	[|[|4.; 13.; 5.; 0.|]; [|0.; 6.25; 1.25; 0.|]; [|0.; 0.; 2.; 0.|]|]
-		  )
+    [|[|4.; 13.; 5.; 0.|]; [|0.; 6.25; 1.25; 0.|]; [|0.; 0.; 2.; 0.|]|]
+          )
 
 let _ = assert (rFA1 fa3 =
-	[|[|4.; 13.; 5.|]; [|0.; 6.25; 1.25|]; [|0.; 0.; 2.|]; [|0.; 0.; 0.|]|]
-		  )
+    [|[|4.; 13.; 5.|]; [|0.; 6.25; 1.25|]; [|0.; 0.; 2.|]; [|0.; 0.; 0.|]|]
+          )
 let _ = assert (rFA1 fa4 =
-	[|[|0.; 10.; 5.|]; [|0.; 0.; 2.|]; [|0.; 0.; -0.|]|]
-		  )
+    [|[|0.; 10.; 5.|]; [|0.; 0.; 2.|]; [|0.; 0.; -0.|]|]
+          )
 
 let _ = assert( rFA5 (fa6,1) = [|[|1.0; 1.0|]|] )
 
