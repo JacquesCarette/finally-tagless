@@ -336,8 +336,7 @@ module DivisionUpdate
 (*    (C:sig module Dom : DOMAINL with type kind = float end) *)
     (Det:DETF) =
   struct
-  module Dom = C.Dom
-  open Dom
+  open C.Dom
   type 'a in_val = 'a vc
   type out_val = Det(C.Dom).outdet
   let update bic brc brk bik setter _ = perform
@@ -351,8 +350,7 @@ module DivisionUpdate
 end
 
 module FractionFreeUpdate(Ctr:CONTAINER2D)(Det:DETF) = struct
-  module Dom = Ctr.Dom
-  open Dom
+  open Ctr.Dom
   type 'a in_val = ('a, v) abstract
   type out_val = Det(Ctr.Dom).outdet
   let update bic brc brk bik setter d = perform
@@ -649,8 +647,6 @@ end
 
 module RowPivot(Det: DETF)(P: TRACKPIVOT) =
 struct
-   module D = Det(C.Dom)
-   module I = Iters
    let findpivot mat pos = perform
        pivot <-- retN (liftRef Maybe.none );
        (* If no better_than procedure defined, we just search for
@@ -659,8 +655,8 @@ struct
        seqM
         (match (C.Dom.better_thanL) with
          Some sel -> 
-              I.row_iter mat.matrix pos.colpos pos.rowpos (Idx.pred mat.numrow)
-              C.getL (fun j bjc ->
+              Iters.row_iter mat.matrix pos.colpos pos.rowpos
+	      (Idx.pred mat.numrow) C.getL (fun j bjc ->
               whenM (Logic.notequalL bjc C.Dom.zeroL )
                   (matchM (liftGet pivot)
                     (fun pv ->
@@ -693,7 +689,8 @@ struct
                      (i,bic) <-- ret (liftPair pv);
                      seqM (whenM (Logic.notequalL i pos.rowpos) (perform
                             s1 <-- ret (C.swap_rows_stmt mat.matrix pos.rowpos i);
-                            s2 <-- D.upd_sign ();
+			    let module D = Det(C.Dom) in
+                            s2 <--  D.upd_sign ();
                             s3 <-- ret (optSeq s1 s2);
                             s4 <-- P.add (P.rowrep i pos.rowpos );
                             ret (optSeq s3 s4)
@@ -704,7 +701,6 @@ end
 
 module FullPivot(Det: DETF)(P: TRACKPIVOT) = 
 struct
-   module D = Det(C.Dom)
    let findpivot mat pos = perform
        pivot <-- retN (liftRef Maybe.none );
        (* this is not really a row/column iteration, this is a
@@ -733,6 +729,7 @@ struct
               (matchM (liftGet pivot)
                   (fun pv -> perform
                      (pr,pc,brc) <-- ret (liftPPair pv);
+		     let module D = Det(C.Dom) in
                      seqM
                          (whenM (Logic.notequalL pc pos.colpos) (perform
                            s1 <-- ret (C.swap_cols_stmt mat.matrix pos.colpos pc);
@@ -753,7 +750,6 @@ end
 
 module NoPivot(Det: DETF)(P: TRACKPIVOT) = 
 struct
-   module D = Det(C.Dom)
    (* In this case, we assume diagonal dominance, and so
       just take the diagonal as ``pivot'' *)
    let findpivot mat pos = perform 
@@ -764,14 +760,12 @@ module GenGE(PivotF: PIVOT)
           (PK:PIVOTKIND)
           (Detf:DETF)
           (Update: UpdateProxy(C)(Detf).S)
-          (In: INPUT)
+          (Input: INPUT)
           (Out: OutProxy(C)(Detf).S) = struct
     module Det = Detf(C.Dom)
     module U = Update(C)(Detf)
-    module Input = In
     module Output = Out(C)(Det)(PK)
     module Pivot = PivotF(Detf)(Output.P)
-    module I = Iters
 
     let gen =
       let opt () = {wants_pack = Output.L.wants_pack;
@@ -781,7 +775,7 @@ module GenGE(PivotF: PIVOT)
         let innerbody j bjc = perform
             whenM (Logic.notequalL bjc C.Dom.zeroL ) (perform
                 det <-- Det.get ();
-                optSeqM (I.col_iter mat.matrix j (Idx.succ pos.p.colpos) (Idx.pred mat.numcol) C.getL
+                optSeqM (Iters.col_iter mat.matrix j (Idx.succ pos.p.colpos) (Idx.pred mat.numcol) C.getL
                       (fun k bjk -> perform
                       brk <-- ret (C.getL mat.matrix pos.p.rowpos k);
                       U.update bjc pos.curval brk bjk 
@@ -790,7 +784,8 @@ module GenGE(PivotF: PIVOT)
                           (* this makes no sense outside a field! *)
                           (C.Dom.divL bjc pos.curval))) in
         perform
-              seqM (I.row_iter mat.matrix pos.p.colpos (Idx.succ pos.p.rowpos)
+              seqM (Iters.row_iter mat.matrix pos.p.colpos
+		      (Idx.succ pos.p.rowpos)
               (Idx.pred mat.numrow) C.getL innerbody) 
                    (U.update_det pos.curval Det.set Det.acc) in
       let init input = 
