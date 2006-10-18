@@ -9,6 +9,21 @@ module T1 = DivisionUpdate(GAC_F)(NoDet);;
 
 
 module FDet = AbstractDet(FloatDomainL)
+
+module GAC_F = GenericArrayContainer(FloatDomainL)
+module G_GAC_F = GenLA(GAC_F)
+open G_GAC_F
+module GenFA1 = GenGE
+                   (RowPivot)(PermList)
+                   (NoDet)
+                   (DivisionUpdate)
+                   (InpJustMatrix)
+                   (OutJustMatrix)
+;;
+let resFA1 = instantiate GenFA1.gen ;;
+let rFA1 = runit {pf =  resFA1 } ;;
+
+(*
 module IDet = AbstractDet(IntegerDomainL)
 module RDet = AbstractDet(RationalDomainL)
 
@@ -21,7 +36,6 @@ let () = assert (
             let module Z9 = ZpMakeL(struct let p = 9 end)
         in false
       with Assert_failure _ -> true)
-
 
 module GAC_F = GenericArrayContainer(FloatDomainL)
 module GVC_F = GenericVectorContainer(FloatDomainL)
@@ -634,3 +648,4 @@ let resR11 = List.map rRA1 ra5;;
 let resR12 = List.map rRA2 ra5;;
 let resR13 = List.map rRA3 ra5;;
 let resR14 = List.map rRA4 ra5;;
+*)
