@@ -8,7 +8,6 @@ module T1 = DivisionUpdate(GAC_F)(NoDet);;
 *)
 
 
-module FDet = AbstractDet(FloatDomainL)
 
 module GAC_F = GenericArrayContainer(FloatDomainL)
 module G_GAC_F = GenLA(GAC_F)

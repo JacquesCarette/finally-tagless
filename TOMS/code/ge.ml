@@ -31,30 +31,27 @@ type ('a,'v,'s,'w) cmonad = (('a,'v) abstract, 's list, ('a,'w) abstract) monad
 type ('a,'v,'s,'w) omonad = (('a,'v) abstract option, 
                  's list, ('a,'w) abstract) monad
 
-(* Here are the various design aspects of GE-type algorithms *)
-module type DETERMINANT = sig
-  type indet
-  type outdet
-  type tdet = outdet ref
-  type 'a lstate
-  type 'a tag_lstate = [`TDet of 'a lstate ]
-    (* Here, parameter 'b accounts for all the extra polymorphims *)
-  type ('b,'v) lm = ('a,'v,'s,'w) cmonad
-    constraint 's = [> 'a tag_lstate]
-    constraint 'b = 'a * 's * 'w
-  type ('b,'v) om = ('a,'v,'s,'w) omonad
-    constraint 's = [> 'a tag_lstate]
-    constraint 'b = 'a * 's * 'w
-  val decl : unit -> ('b,unit) lm (* could be unit rather than unit code...*)
-  val upd_sign  : unit -> ('b,unit) om
-  val zero_sign : unit -> ('b,unit) lm
-  val acc       : ('a,indet) abstract -> ('a * 's * 'w,unit) lm
-  val get       : unit -> ('b,tdet) lm
-  val set       : ('a,indet) abstract -> ('a * 's * 'w,unit) lm
-  val fin       : unit -> ('b,outdet) lm
+(* moved from Infra (now Domains) so that the former uses no monads.
+  The following code is generic over the containers anyway.
+  If container-specific iterators are needed, they can still be
+  coded as `exceptions'
+*)
+module Iters = struct
+  let row_iter b c low high get body = 
+    let newbody j = perform
+        bjc <-- retN (get b j c);
+        body j bjc
+    in  loopM low high newbody
+  let col_iter b r low high get body = 
+    let newbody k = perform
+        brk <-- ret (get b r k);
+        body k brk
+    in  loopM low high newbody
 end
 
-module type DETF = functor(D:DOMAINL) -> DETERMINANT with type indet = D.v
+(* Here are the various design aspects of GE-type algorithms *)
+
+(* Rank is container-independent *)
 
 (* no need to make the type abstract here - just leads to other problems *)
 (* Even if no rank is output, it needs to be tracked, as the rank
@@ -105,89 +102,6 @@ end
 module NoRank = struct
   include TrackRank
   let fin () = Idx.minusoneL
-end
-
-(* In the case of a non-fraction-free algorithm with no Det
-   output, it is possible to not track the determinant, but
-   in all other cases it is needed.
-*)
- 
-(* we need the domain anyways to get things to type properly *)
-module NoDet(Dom:DOMAINL) =
-  struct
-  type indet = Dom.v
-  type outdet = unit
-  type tdet = outdet ref
-  type 'a lstate = unit
-  let decl () = unitL
-  let upd_sign () = ret None
-  let zero_sign () = unitL
-  let acc _ = unitL
-  let get () = ret (liftRef cunit)
-  let set _ = unitL
-  let fin () = unitL
-  type 'a tag_lstate = [`TDet of 'a lstate ]
-  type ('b,'v) lm = ('a,'v,'s,'w) cmonad
-    constraint 's = [> 'a tag_lstate]
-    constraint 'b = 'a * 's * 'w
-  type ('b,'v) om = ('a,'v,'s,'w) omonad
-    constraint 's = [> 'a tag_lstate]
-    constraint 'b = 'a * 's * 'w
-end
-
-module AbstractDet(Dom: DOMAINL) =
-  struct
-  open Dom
-  type indet = v
-  type outdet = v
-  type tdet = outdet ref
-  (* the first part of the state is an integer: which is +1, 0, -1:
-     the sign of the determinant *)
-  type 'a lstate = ('a,int ref) abstract * ('a,tdet) abstract
-  type 'a tag_lstate = [`TDet of 'a lstate ]
-  type ('b,'v) lm = ('a,'v,'s,'w) cmonad
-    constraint 's = [> 'a tag_lstate]
-    constraint 'b = 'a * 's * 'w
-  type ('b,'v) om = ('a,'v,'s,'w) omonad
-    constraint 's = [> 'a tag_lstate]
-    constraint 'b = 'a * 's * 'w
-  let rec fetch_iter s =
-    match (List.hd s) with
-      `TDet x -> x
-    |  _ -> fetch_iter (List.tl s)
-  let dfetch () = perform s <-- fetch; (* unit for monomorphism restriction *)
-                     ret (fetch_iter s)
-  let dstore v = store (`TDet v)
-  let decl () = perform
-      ddecl <-- retN (liftRef oneL);
-      dsdecl <-- retN (liftRef Idx.one);
-      dstore (dsdecl,ddecl);
-      unitL
-  let upd_sign () = perform
-      det <-- dfetch ();
-      det1 <-- ret (fst det);
-      ret (Some (assign det1 (Idx.uminus (liftGet det1))))
-  let zero_sign () = perform
-      det <-- dfetch ();
-      det1 <-- ret (fst det);
-      assignM det1 Idx.zero
-  let acc v = perform
-      det <-- dfetch ();
-      det2 <-- ret (snd det);
-      r <-- ret ((liftGet det2) *^ v);
-      assignM det2 r
-  let get () = perform
-      det <-- dfetch ();
-      ret (snd det)
-  let set v = perform
-      det <-- dfetch ();
-      det2 <-- ret (snd det);
-      assignM det2 v
-  let fin () = perform
-      (det_sign,det) <-- dfetch ();
-      ifM (Logic.equalL (liftGet det_sign) Idx.zero) (ret zeroL)
-      (ifM (Logic.equalL (liftGet det_sign) Idx.one) (ret (liftGet det))
-          (ret (uminusL (liftGet det))))
 end
 
 module type PIVOTKIND = sig
@@ -296,20 +210,135 @@ module DiscardPivot(PK:PIVOTKIND) = struct
   let fin () = ret None
 end
 
+(* Given a container, we can generate a whole "Linear Algebra"
+   set of modules and generators all based on that container.
+   This layout makes sure the same container is shared (and thus
+   the same domain at the same time).
+
+   The main reason that some of the above modules are not contained
+   in this:
+   1) some of the are container-independent, so why put them in here?
+*)
+
+module GenLA(C:CONTAINER2D) = struct
+
+module type DETERMINANT = sig
+  type indet = C.Dom.v
+  type outdet
+  type tdet = outdet ref
+  type 'a lstate
+  type 'a tag_lstate = [`TDet of 'a lstate ]
+    (* Here, parameter 'b accounts for all the extra polymorphims *)
+  type ('b,'v) lm = ('a,'v,'s,'w) cmonad
+    constraint 's = [> 'a tag_lstate]
+    constraint 'b = 'a * 's * 'w
+  type ('b,'v) om = ('a,'v,'s,'w) omonad
+    constraint 's = [> 'a tag_lstate]
+    constraint 'b = 'a * 's * 'w
+  val decl : unit -> ('b,unit) lm (* could be unit rather than unit code...*)
+  val upd_sign  : unit -> ('b,unit) om
+  val zero_sign : unit -> ('b,unit) lm
+  val acc       : ('a,indet) abstract -> ('a * 's * 'w,unit) lm
+  val get       : unit -> ('b,tdet) lm
+  val set       : ('a,indet) abstract -> ('a * 's * 'w,unit) lm
+  val fin       : unit -> ('b,outdet) lm
+end
+
+
+
+(* In the case of a non-fraction-free algorithm with no Det
+   output, it is possible to not track the determinant, but
+   in all other cases it is needed.
+*)
+ 
+(* we need the domain anyways to get things to type properly *)
+module NoDet =
+  struct
+  type indet = C.Dom.v
+  type outdet = unit
+  type tdet = outdet ref
+  type 'a lstate = unit
+  let decl () = unitL
+  let upd_sign () = ret None
+  let zero_sign () = unitL
+  let acc _ = unitL
+  let get () = ret (liftRef cunit)
+  let set _ = unitL
+  let fin () = unitL
+  type 'a tag_lstate = [`TDet of 'a lstate ]
+  type ('b,'v) lm = ('a,'v,'s,'w) cmonad
+    constraint 's = [> 'a tag_lstate]
+    constraint 'b = 'a * 's * 'w
+  type ('b,'v) om = ('a,'v,'s,'w) omonad
+    constraint 's = [> 'a tag_lstate]
+    constraint 'b = 'a * 's * 'w
+end
+
+module AbstractDet =
+  struct
+  open C.Dom
+  type indet = v
+  type outdet = v
+  type tdet = outdet ref
+  (* the first part of the state is an integer: which is +1, 0, -1:
+     the sign of the determinant *)
+  type 'a lstate = ('a,int ref) abstract * ('a,tdet) abstract
+  type 'a tag_lstate = [`TDet of 'a lstate ]
+  type ('b,'v) lm = ('a,'v,'s,'w) cmonad
+    constraint 's = [> 'a tag_lstate]
+    constraint 'b = 'a * 's * 'w
+  type ('b,'v) om = ('a,'v,'s,'w) omonad
+    constraint 's = [> 'a tag_lstate]
+    constraint 'b = 'a * 's * 'w
+  let rec fetch_iter s =
+    match (List.hd s) with
+      `TDet x -> x
+    |  _ -> fetch_iter (List.tl s)
+  let dfetch () = perform s <-- fetch; (* unit for monomorphism restriction *)
+                     ret (fetch_iter s)
+  let dstore v = store (`TDet v)
+  let decl () = perform
+      ddecl <-- retN (liftRef oneL);
+      dsdecl <-- retN (liftRef Idx.one);
+      dstore (dsdecl,ddecl);
+      unitL
+  let upd_sign () = perform
+      det <-- dfetch ();
+      det1 <-- ret (fst det);
+      ret (Some (assign det1 (Idx.uminus (liftGet det1))))
+  let zero_sign () = perform
+      det <-- dfetch ();
+      det1 <-- ret (fst det);
+      assignM det1 Idx.zero
+  let acc v = perform
+      det <-- dfetch ();
+      det2 <-- ret (snd det);
+      r <-- ret ((liftGet det2) *^ v);
+      assignM det2 r
+  let get () = perform
+      det <-- dfetch ();
+      ret (snd det)
+  let set v = perform
+      det <-- dfetch ();
+      det2 <-- ret (snd det);
+      assignM det2 v
+  let fin () = perform
+      (det_sign,det) <-- dfetch ();
+      ifM (Logic.equalL (liftGet det_sign) Idx.zero) (ret zeroL)
+      (ifM (Logic.equalL (liftGet det_sign) Idx.one) (ret (liftGet det))
+          (ret (uminusL (liftGet det))))
+end
+
+
 (* Not only do we need to "pass down" the kind (in type S), we also need
    to ensure that the outdet type is properly visible when we need it.
    Type T ensure this.  It is essentially DETF but with an explicit
    leak of the outdet type.
 *)
-module UpdateProxy(C0:CONTAINER2D)(D0:DETF) = struct
-    module type T = functor(D1:DOMAINL) -> 
-        DETERMINANT with type indet = D1.v and type outdet = D0(D1).outdet
-    module type S =
-        functor(C:CONTAINER2D)  ->
-(*        functor(CD: sig type 'a vc end) -> *)
-        functor(D:T) -> sig
+module type UpdateProxy =
+        functor(D:DETERMINANT) -> sig
         type 'a in_val = 'a C.Dom.vc
-        type out_val = D(C.Dom).outdet
+        type out_val = D.outdet
         val update : 
             'a in_val -> 'a in_val -> 'a in_val -> 'a in_val -> 
           ('a in_val -> ('a, unit) abstract) ->
@@ -325,15 +354,14 @@ module UpdateProxy(C0:CONTAINER2D)(D0:DETF) = struct
             'a in_val -> 'a in_val -> 'a in_val -> 'a in_val -> 
           ('a, out_val ref) abstract -> ('a, C.Dom.v, 's, 'w) cmonad *)
         val upd_kind : update_kind
-        end
 end
 
 (* What is the update formula? *)
-module DivisionUpdate(C:CONTAINER2D)(Det:DETF) =
+module DivisionUpdate(Det:DETERMINANT) =
   struct
   open C.Dom
   type 'a in_val = 'a vc
-  type out_val = Det(C.Dom).outdet
+  type out_val = Det.outdet
   let update bic brc brk bik setter _ = perform
       y <-- ret (bik -^ ((divL bic brc) *^ brk));
       ret (setter (applyMaybe normalizerL y))
@@ -346,10 +374,10 @@ module DivisionUpdate(C:CONTAINER2D)(Det:DETF) =
   let _ = assert (C.Dom.kind = Domains_sig.Domain_is_Field)
 end
 
-module FractionFreeUpdate(Ctr:CONTAINER2D)(Det:DETF) = struct
-  open Ctr.Dom
+module FractionFreeUpdate(Det:DETERMINANT) = struct
+  open C.Dom
   type 'a in_val = ('a, v) abstract
-  type out_val = Det(Ctr.Dom).outdet
+  type out_val = Det.outdet
   let update bic brc brk bik setter d = perform
       z <-- ret ((bik *^ brc) -^ (brk *^ bic));
       t <-- ret (applyMaybe normalizerL z);
@@ -364,34 +392,7 @@ module FractionFreeUpdate(Ctr:CONTAINER2D)(Det:DETF) = struct
   let upd_kind = FractionFree
 end
 
-(* moved from Infra (now Domains) so that the former uses no monads.
-  The following code is generic over the containers anyway.
-  If container-specific iterators are needed, they can still be
-  coded as `exceptions'
-*)
-module Iters = struct
-  let row_iter b c low high get body = 
-    let newbody j = perform
-        bjc <-- retN (get b j c);
-        body j bjc
-    in  loopM low high newbody
-  let col_iter b r low high get body = 
-    let newbody k = perform
-        brk <-- ret (get b r k);
-        body k brk
-    in  loopM low high newbody
-end
 
-(* Given a container, we can generate a whole "Linear Algebra"
-   set of modules and generators all based on that container.
-   This layout makes sure the same container is shared (and thus
-   the same domain at the same time).
-
-   The main reason that some of the above modules are not contained
-   in this one are twofold:
-   1) some of the are container-independent, so why put them in here?
-*)
-module GenLA(C:CONTAINER2D) = struct
 
 (* Bundle up some information, helps abstract some argument lists *)
 type 'a wmatrix = {matrix: 'a C.vc; numrow: ('a,int) abstract; 
@@ -626,7 +627,7 @@ end
 
 
 module type PIVOT = 
-      functor (D: DETF) -> 
+      functor (D: DETERMINANT) -> 
         functor (P: TRACKPIVOT) -> sig
  (* Find the pivot within [r,m-1] rows and [c,(n-1)] columns
     of containrer b.
@@ -636,10 +637,10 @@ module type PIVOT =
     When we permute the rows of columns, we update the sign of the det.
  *)
  val findpivot : 'a wmatrix -> 'a curpos ->
-   ('a,C.Dom.v option,[> 'a D(C.Dom).tag_lstate | 'a P.tag_lstate],'w) cmonad
+   ('a,C.Dom.v option,[> 'a D.tag_lstate | 'a P.tag_lstate],'w) cmonad
 end
 
-module RowPivot(Det: DETF)(P: TRACKPIVOT) =
+module RowPivot(Det: DETERMINANT)(P: TRACKPIVOT) =
 struct
    let findpivot mat pos = perform
        pivot <-- retN (liftRef Maybe.none );
@@ -683,8 +684,7 @@ struct
                      (i,bic) <-- ret (liftPair pv);
                      seqM (whenM (Logic.notequalL i pos.rowpos) (perform
                             s1 <-- ret (C.swap_rows_stmt mat.matrix pos.rowpos i);
-			    let module D = Det(C.Dom) in
-                            s2 <--  D.upd_sign ();
+                            s2 <--  Det.upd_sign ();
                             s3 <-- ret (optSeq s1 s2);
                             s4 <-- P.add (P.rowrep i pos.rowpos );
                             ret (optSeq s3 s4)
@@ -693,7 +693,7 @@ struct
                 (ret Maybe.none))
 end
 
-module FullPivot(Det: DETF)(P: TRACKPIVOT) = 
+module FullPivot(Det: DETERMINANT)(P: TRACKPIVOT) = 
 struct
    let findpivot mat pos = perform
        pivot <-- retN (liftRef Maybe.none );
@@ -723,18 +723,17 @@ struct
               (matchM (liftGet pivot)
                   (fun pv -> perform
                      (pr,pc,brc) <-- ret (liftPPair pv);
-		     let module D = Det(C.Dom) in
                      seqM
                          (whenM (Logic.notequalL pc pos.colpos) (perform
                            s1 <-- ret (C.swap_cols_stmt mat.matrix pos.colpos pc);
-                           s2 <-- D.upd_sign ();
+                           s2 <-- Det.upd_sign ();
                            s3 <-- ret (optSeq s1 s2);
                            s4 <-- P.add (P.colrep pc pos.rowpos );
                            ret (optSeq s3 s4)))
                        (seqM
                          (whenM (Logic.notequalL pr pos.rowpos) (perform
                            s1 <-- ret (C.swap_rows_stmt mat.matrix pos.rowpos pc);
-                           s2 <-- D.upd_sign ();
+                           s2 <-- Det.upd_sign ();
                            s3 <-- ret (optSeq s1 s2);
                            s4 <-- P.add (P.rowrep pr pos.rowpos );
                            ret (optSeq s3 s4)))
@@ -742,7 +741,7 @@ struct
                   (ret Maybe.none))
 end
 
-module NoPivot(Det: DETF)(P: TRACKPIVOT) = 
+module NoPivot(Det: DETERMINANT)(P: TRACKPIVOT) = 
 struct
    (* In this case, we assume diagonal dominance, and so
       just take the diagonal as ``pivot'' *)
@@ -752,14 +751,13 @@ end
 
 module GenGE(PivotF: PIVOT)
           (PK:PIVOTKIND)
-          (Detf:DETF)
-          (Update: UpdateProxy(C)(Detf).S)
+          (Det:DETERMINANT)
+          (Update: UpdateProxy)
           (Input: INPUT)
           (Out: OutProxy) = struct
-    module Det = Detf(C.Dom)
-    module U = Update(C)(Detf)
+    module U = Update(Det)
     module Output = Out(Det)(PK)
-    module Pivot = PivotF(Detf)(Output.P)
+    module Pivot = PivotF(Det)(Output.P)
 
     let gen =
       let opt () = {wants_pack = Output.L.wants_pack;
