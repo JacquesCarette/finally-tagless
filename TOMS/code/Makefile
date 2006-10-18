@@ -74,6 +74,9 @@ $(OBJ2): $(INFRA) $(BASE) $(BASE2)
 ge.out: test-ge.ml $(BASE) ge.cmo mytop test-ge-common.ml
 	./mytop $(BASE) < $< > $@
 
+ge-small.out: test-ge-small.ml $(BASE) ge.cmo mytop test-ge-common-small.ml
+	./mytop $(BASE) < $< > $@
+
 ge_direct.out: test-ge_direct.ml $(BASE2) ge.cmo mytop test-ge-common.ml
 	./mytop $(BASE) $(BASE2) < $< > $@
 
@@ -87,5 +90,6 @@ ge.cmo :  stateCPSMonad.cmo coderep.cmi domains_sig.cmo
 domains_common.cmo : domains_sig.cmo
 domains_code.cmo : domains_sig.cmo domains_common.cmo
 test-ge.ml : ge.cmo code.cmo domains_code.cmo test-ge-common.ml
+test-ge-small.ml : ge.cmo code.cmo domains_code.cmo test-ge-common-small.ml
 test-ge_direct.ml : ge.cmo code.cmo domains_direct.cmo domains_direct.cmo \
 	test-ge-common.ml

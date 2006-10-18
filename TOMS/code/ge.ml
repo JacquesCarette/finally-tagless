@@ -253,7 +253,6 @@ end
    in all other cases it is needed.
 *)
  
-(* we need the domain anyways to get things to type properly *)
 module NoDet =
   struct
   type indet = C.Dom.v
