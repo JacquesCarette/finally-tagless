@@ -2,12 +2,6 @@ open StateCPSMonad
 
 exception CannotHappen
 
-type algo_requirements = {
-    wants_pack  : bool;
-    back_elim   : bool;
-    can_pack    : bool
-}
-
 type update_kind = FractionFree | DivisionBased
 
 module GEMake(CODE: Coderep.T) = struct
@@ -222,6 +216,14 @@ end
 
 module GenLA(C:CONTAINER2D) = struct
 
+
+(* Bundle up some information, helps abstract some argument lists *)
+type 'a wmatrix = {matrix: 'a C.vc; numrow: ('a,int) abstract; 
+                   numcol: ('a,int) abstract}
+type 'a curpos  = {rowpos: ('a, int) abstract; colpos: ('a, int) abstract}
+type 'a curposval = {p: 'a curpos; curval: ('a, C.Dom.v) abstract}
+
+
 module type DETERMINANT = sig
   type indet = C.Dom.v
   type outdet
@@ -330,12 +332,7 @@ module AbstractDet =
 end
 
 
-(* Not only do we need to "pass down" the kind (in type S), we also need
-   to ensure that the outdet type is properly visible when we need it.
-   Type T ensure this.  It is essentially DETF but with an explicit
-   leak of the outdet type.
-*)
-module type UpdateProxy =
+module type UPDATE =
         functor(D:DETERMINANT) -> sig
         type 'a in_val = 'a C.Dom.vc
         type out_val = D.outdet
@@ -343,10 +340,7 @@ module type UpdateProxy =
             'a in_val -> 'a in_val -> 'a in_val -> 'a in_val -> 
           ('a in_val -> ('a, unit) abstract) ->
           ('a, out_val ref) abstract -> ('a, unit, 's, 'w) cmonad
-        val update_det : 'a in_val -> 
-          ('a in_val -> ('a, unit, 's, 'w) cmonad) ->
-          ('a in_val -> ('a, unit, 's, 'w) cmonad) ->
-          ('a, unit, 's, 'w) cmonad
+        val update_det : 'a in_val -> ('a * 's * 'w,unit) D.lm
 (* this is only needed if we try to deal with FractionFree LU,
    which is really tough, especially since the L Matrix still has
    to be over the fraction field, which we don't have available.
@@ -365,12 +359,12 @@ module DivisionUpdate(Det:DETERMINANT) =
   let update bic brc brk bik setter _ = perform
       y <-- ret (bik -^ ((divL bic brc) *^ brk));
       ret (setter (applyMaybe normalizerL y))
-  let update_det v _ acc = acc v
+  let update_det v = Det.acc v
 (*let update_lower bic brc _ _ _ = perform
       y <-- ret (divL bic brc);
       ret (applyMaybe normalizerL y) *)
   let upd_kind = DivisionBased
-  (* Inittialization: check the preconditions of instantiation of this struct*)
+  (* Initialization: check the preconditions of instantiation of this struct*)
   let _ = assert (C.Dom.kind = Domains_sig.Domain_is_Field)
 end
 
@@ -383,7 +377,7 @@ module FractionFreeUpdate(Det:DETERMINANT) = struct
       t <-- ret (applyMaybe normalizerL z);
       ov <-- ret (divL t (liftGet d));
       ret (setter ov)
-  let update_det v set _ = set v
+  let update_det v = Det.set v
 (*let update_lower bic brc lrk lik d = perform
       rat <-- ret (liftGet d);
       z <-- ret (divL ((rat *^ lik) +^ (bic *^ lrk)) brc);
@@ -393,12 +387,6 @@ module FractionFreeUpdate(Det:DETERMINANT) = struct
 end
 
 
-
-(* Bundle up some information, helps abstract some argument lists *)
-type 'a wmatrix = {matrix: 'a C.vc; numrow: ('a,int) abstract; 
-                   numcol: ('a,int) abstract}
-type 'a curpos  = {rowpos: ('a, int) abstract; colpos: ('a, int) abstract}
-type 'a curposval = {p: 'a curpos; curval: ('a, C.Dom.v) abstract}
 
 (* This is for tracking L, as in LU decomposition.
    Naturally, when doing only GE, this is not needed at all, and should
@@ -507,9 +495,7 @@ module InpMatrixMargin = struct
         ret (b, c, true)
 end
 
-(* The 'with type' below are not strictly needed, they just make the
-   printing of the types much nicer *)
-module type OutProxy = 
+module type OUTPUT = 
         functor(Det: DETERMINANT) ->
           functor(PK: PIVOTKIND) -> sig
       type res
@@ -536,7 +522,6 @@ end
 module OutDet(Det : DETERMINANT)(PK : PIVOTKIND) =
   struct
   type res = C.contr * Det.outdet
-  (* module D = Det *)
   module R = NoRank
   module P = DiscardPivot(PK)
   module L = NoLower
@@ -548,7 +533,6 @@ end
 module OutRank(Det: DETERMINANT)(PK : PIVOTKIND) =
   struct
   type res = C.contr * int
-  (* module D = Det *)
   module R = Rank
   module P = DiscardPivot(PK)
   module L = NoLower
@@ -560,7 +544,6 @@ end
 module OutDetRank(Det : DETERMINANT)(PK : PIVOTKIND) =
   struct
   type res = C.contr * Det.outdet * int
-  (* module D = Det *)
   module R = Rank
   module P = DiscardPivot(PK)
   module L = NoLower
@@ -573,7 +556,6 @@ end
 module OutDetRankPivot(Det : DETERMINANT)(PK : PIVOTKIND) =
   struct
   type res = C.contr * Det.outdet * int *  PK.perm_rep
-  (* module D = Det *)
   module R = Rank
   module P = KeepPivot(PK)
   module L = NoLower
@@ -590,7 +572,6 @@ end
 module Out_L_U(Det : DETERMINANT)(PK: PIVOTKIND) =
   struct
   type res = C.contr * C.contr * PK.perm_rep
-  (* module D = Det *)
   module R = Rank
   module P = KeepPivot(PK)
   module L = SeparateLower
@@ -608,7 +589,6 @@ end
 module Out_LU_Packed(Det : DETERMINANT)(PK: PIVOTKIND) =
   struct
   type res = C.contr * PK.perm_rep
-  (* module D = Det *)
   module R = Rank
   module P = KeepPivot(PK)
   module L = PackedLower
@@ -752,18 +732,17 @@ end
 module GenGE(PivotF: PIVOT)
           (PK:PIVOTKIND)
           (Det:DETERMINANT)
-          (Update: UpdateProxy)
+          (Update: UPDATE)
           (Input: INPUT)
-          (Out: OutProxy) = struct
+          (Out: OUTPUT) = struct
     module U = Update(Det)
     module Output = Out(Det)(PK)
-    module Pivot = PivotF(Det)(Output.P)
 
-    let gen =
-      let opt () = {wants_pack = Output.L.wants_pack;
-                    back_elim  = false;
-                    can_pack   = (U.upd_kind = DivisionBased) } in
-      let zerobelow mat pos = 
+    let wants_pack = Output.L.wants_pack
+    let back_elim  = false
+    let can_pack   = (U.upd_kind = DivisionBased)
+
+    let zerobelow mat pos = 
         let innerbody j bjc = perform
             whenM (Logic.notequalL bjc C.Dom.zeroL ) (perform
                 det <-- Det.get ();
@@ -779,10 +758,10 @@ module GenGE(PivotF: PIVOT)
               seqM (Iters.row_iter mat.matrix pos.p.colpos
 		      (Idx.succ pos.p.rowpos)
               (Idx.pred mat.numrow) C.getL innerbody) 
-                   (U.update_det pos.curval Det.set Det.acc) in
-      let init input = 
-          let opt = opt () in 
-          let _ = assert ((not opt.wants_pack) || opt.can_pack) in
+                   (U.update_det pos.curval)
+
+   let init input = 
+          let _ = assert ((not wants_pack) || can_pack) in
           perform
           (a,rmar,augmented) <-- Input.get_input input;
           r <-- Output.R.decl ();
@@ -793,36 +772,40 @@ module GenGE(PivotF: PIVOT)
           n <-- if augmented then retN (C.dim2 a) else ret rmar;
           Det.decl ();
           Output.P.decl rmar;
-          _ <-- Output.L.decl (if opt.wants_pack then b else C.identity rmar m);
+          _ <-- Output.L.decl (if wants_pack then b else C.identity rmar m);
           let mat = {matrix=b; numrow=n; numcol=m} in
-          ret (mat, r, c, rmar)  in
-      let forward_elim (mat, r, c, rmar) = perform
+          ret (mat, r, c, rmar)
+
+   let forward_elim (mat, r, c, rmar) = perform
           whileM (Logic.andL (Idx.less (liftGet c) mat.numcol)
                               (Idx.less (liftGet r) rmar) )
              ( perform
              rr <-- retN (liftGet r);
              cc <-- retN (liftGet c);
              let cp  = {rowpos=rr; colpos=cc} in
+	     let module Pivot = PivotF(Det)(Output.P) in
              pivot <-- l1 retN (Pivot.findpivot mat cp);
              seqM (matchM pivot (fun pv -> 
                       seqM (zerobelow mat {p=cp; curval=pv} )
                            (Output.R.succ ()) )
                       (Det.zero_sign () ))
-                  (updateM c Idx.succ) ) in
-      let backward_elim () =
-          let opt = opt () in
-          if opt.back_elim then
+                  (updateM c Idx.succ) )
+
+   let backward_elim () =
+          if back_elim then
               Some unitL
           else
-              None in
-      let ge_gen input = perform
+              None
+
+   let ge_gen input = perform
           (mat, r, c, rmar) <-- init input;
           seqM 
             (optSeqM
                 (forward_elim (mat, r, c, rmar))
                 (backward_elim ()))
             (Output.make_result mat)
-    in ge_gen
+
+   let gen input = ge_gen input
 end
 
 end
