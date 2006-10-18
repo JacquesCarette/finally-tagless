@@ -17,8 +17,6 @@ module D = Domains_sig.S(
 open D
 open CODE
 
-open Kinds
-
 (* Was needed for debugging of the kind problem. Please keep it, just in case.
 module Foo(D:DOMAINL with type kind = domain_is_field) = (* debugging *)
 struct
@@ -307,7 +305,7 @@ module UpdateProxy(C0:CONTAINER2D)(D0:DETF) = struct
     module type T = functor(D1:DOMAINL) -> 
         DETERMINANT with type indet = D1.v and type outdet = D0(D1).outdet
     module type S =
-        functor(C:CONTAINER2D with type Dom.kind = C0.Dom.kind)  ->
+        functor(C:CONTAINER2D)  ->
 (*        functor(CD: sig type 'a vc end) -> *)
         functor(D:T) -> sig
         type 'a in_val = 'a C.Dom.vc
@@ -331,10 +329,7 @@ module UpdateProxy(C0:CONTAINER2D)(D0:DETF) = struct
 end
 
 (* What is the update formula? *)
-module DivisionUpdate
-    (C:CONTAINER2D with type Dom.kind = domain_is_field)
-(*    (C:sig module Dom : DOMAINL with type kind = float end) *)
-    (Det:DETF) =
+module DivisionUpdate(C:CONTAINER2D)(Det:DETF) =
   struct
   open C.Dom
   type 'a in_val = 'a vc
@@ -347,6 +342,8 @@ module DivisionUpdate
       y <-- ret (divL bic brc);
       ret (applyMaybe normalizerL y) *)
   let upd_kind = DivisionBased
+  (* Inittialization: check the preconditions of instantiation of this struct*)
+  let _ = assert (C.Dom.kind = Domains_sig.Domain_is_Field)
 end
 
 module FractionFreeUpdate(Ctr:CONTAINER2D)(Det:DETF) = struct
@@ -393,7 +390,6 @@ end
    The main reason that some of the above modules are not contained
    in this one are twofold:
    1) some of the are container-independent, so why put them in here?
-   2) some have explicit kind restrictions, which have to be kept!
 *)
 module GenLA(C:CONTAINER2D) = struct
 
@@ -515,7 +511,7 @@ end
 module OutProxy(C0:CONTAINER2D)(Det0:DETF) = struct
     module DD = Det0(C0.Dom)
     module type S = 
-      functor(C1:CONTAINER2D with type Dom.kind = C0.Dom.kind) ->
+      functor(C1:CONTAINER2D) ->
         functor(Det: DETERMINANT with type outdet = DD.outdet and
            type 'a lstate = 'a DD.lstate) -> 
           functor(PK: PIVOTKIND) -> sig
@@ -595,8 +591,8 @@ module OutDetRankPivot(C0:CONTAINER2D)(Det : DETERMINANT)(PK : PIVOTKIND) =
     | None   -> raise CannotHappen
 end
 
-(* The restriction is because we can't extract the L in a non-field *)
-module Out_L_U(C0:CONTAINER2D with type Dom.kind = domain_is_field)(Det : DETERMINANT)(PK: PIVOTKIND) =
+(* Only for Fields: because we can't extract the L in a non-field *)
+module Out_L_U(C0:CONTAINER2D)(Det : DETERMINANT)(PK: PIVOTKIND) =
   struct
   type res = C.contr * C.contr * PK.perm_rep
   (* module D = Det *)
@@ -609,10 +605,12 @@ module Out_L_U(C0:CONTAINER2D with type Dom.kind = domain_is_field)(Det : DETERM
     match (pivmat,lower) with
     | (Some p, Some l) -> ret (Tuple.tup3 m.matrix l p)
     | _                -> raise CannotHappen
+  (* Initialization: check the preconditions of instantiation of this struct*)
+  let _ = assert (C.Dom.kind = Domains_sig.Domain_is_Field)
 end
 
-(* The restriction is because we can't extract the L in a non-field *)
-module Out_LU_Packed(C0:CONTAINER2D with type Dom.kind = domain_is_field)(Det : DETERMINANT)(PK: PIVOTKIND) =
+(* Only for Fields: because we can't extract the L in a non-field *)
+module Out_LU_Packed(C0:CONTAINER2D)(Det : DETERMINANT)(PK: PIVOTKIND) =
   struct
   type res = C.contr * PK.perm_rep
   (* module D = Det *)
@@ -628,6 +626,8 @@ module Out_LU_Packed(C0:CONTAINER2D with type Dom.kind = domain_is_field)(Det : 
     match (pivmat,lower) with
     | (Some p, Some l) -> ret (Tuple.tup2 l p)
     | _                -> raise CannotHappen
+  (* Initialization: check the preconditions of instantiation of this struct*)
+  let _ = assert (C.Dom.kind = Domains_sig.Domain_is_Field)
 end
 
 

@@ -1,5 +1,7 @@
 (* Declarations of domains and containers *)
 
+type domain_kind = Domain_is_Ring | Domain_is_Field
+
 module S(T:
   sig
 	(* Representation type of values,  to be specified *)
@@ -10,7 +12,7 @@ open T
 
 module type DOMAIN = sig
   type v
-  type kind (* Field or Ring ? *)
+  val kind : domain_kind
   val zero : v
   val one : v
   val plus : v -> v -> v

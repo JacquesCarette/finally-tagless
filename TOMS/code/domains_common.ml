@@ -1,10 +1,10 @@
 (* Common code for various domains *)
 
-open Kinds
+open Domains_sig
 
 module FloatDomain = struct
     type v = float
-    type kind = domain_is_field
+    let kind = Domain_is_Field
     let zero = 0.
     let one = 1.
     let plus x y = x +. y
@@ -19,7 +19,7 @@ end
 
 module IntegerDomain = struct
     type v = int
-    type kind = domain_is_ring
+    let kind = Domain_is_Ring
     let zero = 0
     let one = 1
     let plus x y = x + y
@@ -34,7 +34,7 @@ end
 
 module RationalDomain = struct
     type v = Num.num
-    type kind = domain_is_field
+    let kind = Domain_is_Field
     let zero = Num.num_of_int 0
     let one = Num.num_of_int 1
     let plus x y = Num.add_num x y
@@ -57,7 +57,7 @@ let is_prime n =
 
 module ZpMake = functor(P:sig val p:int end) -> struct
     type v = int
-    type kind = domain_is_field
+    let kind = Domain_is_Field
     let zero = 0
     let one = 1
     let plus x y = (x + y) mod P.p
