@@ -197,8 +197,8 @@ module KeepPivot(PK:PIVOTKIND) = struct
       ret (Some (liftGet p))
 end
 
-module DiscardPivot(PK:PIVOTKIND) = struct
-  include PivotCommon(PK)
+module DiscardPivot = struct
+  include PivotCommon(PermList)
   let decl _ = unitL
   let add _ = ret None
   let fin () = ret None
@@ -496,12 +496,10 @@ module InpMatrixMargin = struct
 end
 
 module type OUTPUT = 
-        functor(Det: DETERMINANT) ->
-          functor(PK: PIVOTKIND) -> sig
+        functor(Det: DETERMINANT) -> sig
       type res
       module R : TrackRank.RANK
-      module P : TRACKPIVOT with type flip_rep = PK.flip_rep and 
-                                 type perm_rep = PK.perm_rep
+      module P : TRACKPIVOT
       module L : LOWER
       val make_result : 'a wmatrix ->
         ('a,res,[> 'a Det.tag_lstate | 'a R.tag_lstate 
@@ -509,43 +507,43 @@ module type OUTPUT =
     end
 
 (* What to return *)
-module OutJustMatrix(Det : DETERMINANT)(PK : PIVOTKIND) =
+module OutJustMatrix(Det : DETERMINANT) =
   struct
   type res = C.contr
   (* module D = Det *)
   module R = NoRank
-  module P = DiscardPivot(PK)
+  module P = DiscardPivot
   module L = NoLower
   let make_result m = ret m.matrix
 end
 
-module OutDet(Det : DETERMINANT)(PK : PIVOTKIND) =
+module OutDet(Det : DETERMINANT) =
   struct
   type res = C.contr * Det.outdet
   module R = NoRank
-  module P = DiscardPivot(PK)
+  module P = DiscardPivot
   module L = NoLower
   let make_result m = perform
     det <-- Det.fin ();
     ret (Tuple.tup2 m.matrix det)
 end
 
-module OutRank(Det: DETERMINANT)(PK : PIVOTKIND) =
+module OutRank(Det: DETERMINANT) =
   struct
   type res = C.contr * int
   module R = Rank
-  module P = DiscardPivot(PK)
+  module P = DiscardPivot
   module L = NoLower
   let make_result m = perform
     rank <-- R.fin ();
     ret (Tuple.tup2 m.matrix rank)
 end
 
-module OutDetRank(Det : DETERMINANT)(PK : PIVOTKIND) =
+module OutDetRank(Det : DETERMINANT) =
   struct
   type res = C.contr * Det.outdet * int
   module R = Rank
-  module P = DiscardPivot(PK)
+  module P = DiscardPivot
   module L = NoLower
   let make_result m = perform
     det  <-- Det.fin ();
@@ -553,7 +551,7 @@ module OutDetRank(Det : DETERMINANT)(PK : PIVOTKIND) =
     ret (Tuple.tup3 m.matrix det rank)
 end
 
-module OutDetRankPivot(Det : DETERMINANT)(PK : PIVOTKIND) =
+module OutDetRankPivot(PK : PIVOTKIND)(Det : DETERMINANT) =
   struct
   type res = C.contr * Det.outdet * int *  PK.perm_rep
   module R = Rank
@@ -569,7 +567,7 @@ module OutDetRankPivot(Det : DETERMINANT)(PK : PIVOTKIND) =
 end
 
 (* Only for Fields: because we can't extract the L in a non-field *)
-module Out_L_U(Det : DETERMINANT)(PK: PIVOTKIND) =
+module Out_L_U(PK: PIVOTKIND)(Det : DETERMINANT) =
   struct
   type res = C.contr * C.contr * PK.perm_rep
   module R = Rank
@@ -586,7 +584,7 @@ module Out_L_U(Det : DETERMINANT)(PK: PIVOTKIND) =
 end
 
 (* Only for Fields: because we can't extract the L in a non-field *)
-module Out_LU_Packed(Det : DETERMINANT)(PK: PIVOTKIND) =
+module Out_LU_Packed(PK: PIVOTKIND)(Det : DETERMINANT) =
   struct
   type res = C.contr * PK.perm_rep
   module R = Rank
@@ -730,13 +728,12 @@ struct
 end
 
 module GenGE(PivotF: PIVOT)
-          (PK:PIVOTKIND)
           (Det:DETERMINANT)
           (Update: UPDATE)
           (Input: INPUT)
           (Out: OUTPUT) = struct
     module U = Update(Det)
-    module Output = Out(Det)(PK)
+    module Output = Out(Det)
 
     let wants_pack = Output.L.wants_pack
     let back_elim  = false

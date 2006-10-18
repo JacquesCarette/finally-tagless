@@ -13,7 +13,7 @@ module GAC_F = GenericArrayContainer(FloatDomainL)
 module G_GAC_F = GenLA(GAC_F)
 open G_GAC_F
 module GenFA1 = GenGE
-                   (RowPivot)(PermList)
+                   (RowPivot)
                    (NoDet)
                    (DivisionUpdate)
                    (InpJustMatrix)
