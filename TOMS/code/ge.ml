@@ -99,11 +99,9 @@ module NoRank = struct
 end
 
 module type PIVOTKIND = sig
-  type idx_rep = int
-  type flip_rep
   type perm_rep
-  type 'a ira = ('a, idx_rep) abstract
-  type 'a fra = ('a, flip_rep) abstract
+  type 'a ira = ('a, int) abstract
+  type 'a fra
   type 'a pra = ('a, perm_rep) abstract
   val add : 'a fra -> 'a pra -> 'a pra
   val empty : 'a ira -> 'a pra
@@ -112,10 +110,9 @@ module type PIVOTKIND = sig
 end
 
 module PermList = struct
-  type idx_rep = int
   type flip_rep = perm
   type perm_rep = perm list
-  type 'a ira = ('a, idx_rep) abstract
+  type 'a ira = ('a, int) abstract
   type 'a fra = ('a, flip_rep) abstract
   type 'a pra = ('a, perm_rep) abstract
   let add x l = CList.cons x l
@@ -125,10 +122,9 @@ module PermList = struct
 end
 
 module RowVectorPerm = struct
-  type idx_rep = int
   type flip_rep = int*int
   type perm_rep = int array
-  type 'a ira = ('a, idx_rep) abstract
+  type 'a ira = ('a, int) abstract
   type 'a fra = ('a, flip_rep) abstract
   type 'a pra = ('a, perm_rep) abstract
   let add x l = Array1Dim.setL l x
@@ -138,13 +134,10 @@ module RowVectorPerm = struct
 end
 
 module type TRACKPIVOT = sig
-  type idx_rep = int
-  type flip_rep
-  type perm_rep
-  type 'a ira = ('a, idx_rep) abstract
-  type 'a fra = ('a, flip_rep) abstract
-  type 'a pra = ('a, perm_rep) abstract
-  type 'a lstate = ('a, perm_rep ref) abstract
+  type 'a ira = ('a, int) abstract
+  type 'a fra
+  type 'a pra
+  type 'a lstate
   type 'a tag_lstate = [`TPivot of 'a lstate ]
     (* Here, parameter 'b accounts for all the extra polymorphims *)
   type ('b,'v) lm = ('a,'v,'s,'w) cmonad
@@ -161,12 +154,9 @@ end
 
 module PivotCommon(PK:PIVOTKIND) = 
   struct
-  type idx_rep = PK.idx_rep
-  type flip_rep = PK.flip_rep
-  type perm_rep = PK.perm_rep
-  type 'a ira = ('a, idx_rep) abstract
-  type 'a fra = ('a, flip_rep) abstract
-  type 'a pra = ('a, perm_rep) abstract
+  type 'a ira = 'a PK.ira
+  type 'a fra = 'a PK.fra
+  type 'a pra = 'a PK.pra
   type 'a lstate = ('a, PK.perm_rep ref) abstract
   type 'a tag_lstate = [`TPivot of 'a lstate ]
   type ('b,'v) lm = ('a,'v,'s,'w) cmonad
@@ -225,7 +215,6 @@ type 'a curposval = {p: 'a curpos; curval: ('a, C.Dom.v) abstract}
 
 
 module type DETERMINANT = sig
-  type indet = C.Dom.v
   type outdet
   type tdet = outdet ref
   type 'a lstate
@@ -240,9 +229,9 @@ module type DETERMINANT = sig
   val decl : unit -> ('b,unit) lm (* could be unit rather than unit code...*)
   val upd_sign  : unit -> ('b,unit) om
   val zero_sign : unit -> ('b,unit) lm
-  val acc       : ('a,indet) abstract -> ('a * 's * 'w,unit) lm
+  val acc       : ('a,C.Dom.v) abstract -> ('a * 's * 'w,unit) lm
   val get       : unit -> ('b,tdet) lm
-  val set       : ('a,indet) abstract -> ('a * 's * 'w,unit) lm
+  val set       : ('a,C.Dom.v) abstract -> ('a * 's * 'w,unit) lm
   val fin       : unit -> ('b,outdet) lm
 end
 
@@ -255,7 +244,6 @@ end
  
 module NoDet =
   struct
-  type indet = C.Dom.v
   type outdet = unit
   type tdet = outdet ref
   type 'a lstate = unit
@@ -278,7 +266,6 @@ end
 module AbstractDet =
   struct
   open C.Dom
-  type indet = v
   type outdet = v
   type tdet = outdet ref
   (* the first part of the state is an integer: which is +1, 0, -1:
