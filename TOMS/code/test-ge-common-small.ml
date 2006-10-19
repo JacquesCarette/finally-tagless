@@ -36,6 +36,17 @@ let _ = assert (rFA1 fa2 =
     [|[|4.; 13.; 5.; 0.|]; [|0.; 6.25; 1.25; 0.|]; [|0.; 0.; 2.; 0.|]|]
           )
 
+(* Check the pre-fligh tests. The test should trigger before the generation
+   begins!
+*)
+let _ = assert (
+  try
+    let module Ilcomposed = GenGE(GenFA1_F)(OutDet) in
+    false
+  with Failure "Determinant is not computed here" -> true
+)
+;;
+
 module GenFA25_F = struct 
       module R = Rank
       module P = KeepPivot(RowVectorPerm)

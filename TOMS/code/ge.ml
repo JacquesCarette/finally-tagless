@@ -633,10 +633,13 @@ end
 module GenGE(F : FEATURES)
             (Out: OUTPUT) = struct
     module U = F.Update(F.Det)
+    module Output = Out(F)  (* that does the pre-flight test *)
 
     let wants_pack = F.L.wants_pack
     let back_elim  = false
     let can_pack   = (U.upd_kind = DivisionBased)
+	(* some more pre-flight tests *)
+    let _ = assert ((not wants_pack) || can_pack) 
 
     let zerobelow mat pos = 
         let innerbody j bjc = perform
@@ -657,9 +660,7 @@ module GenGE(F : FEATURES)
               (Idx.pred mat.numrow) C.getL innerbody) 
                    (U.update_det pos.curval)
 
-   let init input = 
-          let _ = assert ((not wants_pack) || can_pack) in
-          perform
+   let init input = perform
           (a,rmar,augmented) <-- F.Input.get_input input;
           r <-- F.R.decl ();
           c <-- retN (liftRef Idx.zero);
@@ -696,7 +697,6 @@ module GenGE(F : FEATURES)
 
    let ge_gen input = perform
           (mat, r, c, rmar) <-- init input;
-	  let module Output = Out(F) in
           seqM 
             (optSeqM
                 (forward_elim (mat, r, c, rmar))
