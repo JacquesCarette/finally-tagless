@@ -1,7 +1,7 @@
 (*module type T = functor(R: Abstractrep.T) -> sig *)
 module type T = sig
 (* Abstract Representation of ``code'' of ``code'' *)
-type ('a,'b) abstract (* = ('a, 'b) R.abstract *)
+type (+'a,'b) abstract (* = ('a, 'b) R.abstract *)
 
 val retN : ('a, 'b) abstract -> ('s -> ('s -> ('a, 'b) abstract -> ('a, 'w)
 abstract ) -> ('a, 'w) abstract)

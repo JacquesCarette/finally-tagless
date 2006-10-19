@@ -1,8 +1,9 @@
 open StateCPSMonad
 
-exception CannotHappen
-
 type update_kind = FractionFree | DivisionBased
+let fromJust = function Some x -> x | None -> failwith "Can't happen"
+let notNone v str = match v with None -> failwith str | Some _ -> ()
+
 
 module GEMake(CODE: Coderep.T) = struct
 
@@ -82,20 +83,20 @@ module TrackRank =
     val rfetch : unit -> ('b, int ref) lm
     val decl   : unit -> ('b, int ref) lm
     val succ   : unit -> ('b, unit) lm
-    val fin    : unit -> ('b, int) lm
+    val fin    : (unit -> ('b, int) lm) option
   end
 end
 
 module Rank = struct
   include TrackRank
-  let fin () = perform
+  let fin = Some (fun () -> perform
       r <-- rfetch ();
-      ret (liftGet r)
+      ret (liftGet r))
 end
 
 module NoRank = struct
   include TrackRank
-  let fin () = Idx.minusoneL
+  let fin = None
 end
 
 module type PIVOTKIND = sig
@@ -133,7 +134,11 @@ module RowVectorPerm = struct
   let colrep x y = Tuple.tup2 x y
 end
 
+
+
+
 module type TRACKPIVOT = sig
+  type perm_rep
   type 'a ira = ('a, int) abstract
   type 'a fra
   type 'a pra
@@ -148,12 +153,12 @@ module type TRACKPIVOT = sig
   val decl : ('a, int) abstract -> ('a*'s*'w, unit) lm
   val add : 'a fra ->
     (('a,unit) abstract option,[> 'a tag_lstate] list,('a,'w) abstract) monad
-  val fin : unit -> 
-    ('a pra option,[> 'a tag_lstate] list,('a,'w) abstract) monad
+  val fin : (unit -> ('b,perm_rep) lm) option
 end
 
 module PivotCommon(PK:PIVOTKIND) = 
   struct
+  type perm_rep = PK.perm_rep
   type 'a ira = 'a PK.ira
   type 'a fra = 'a PK.fra
   type 'a pra = 'a PK.pra
@@ -182,16 +187,16 @@ module KeepPivot(PK:PIVOTKIND) = struct
   let add v = perform
    p <-- pfetch ();
    ret (Some (assign p (PK.add v (liftGet p))))
-  let fin () = perform
+  let fin = Some (fun () -> perform
       p <-- pfetch ();
-      ret (Some (liftGet p))
+      ret (liftGet p))
 end
 
 module DiscardPivot = struct
   include PivotCommon(PermList)
   let decl _ = unitL
   let add _ = ret None
-  let fin () = ret None
+  let fin = None
 end
 
 (* Given a container, we can generate a whole "Linear Algebra"
@@ -521,8 +526,10 @@ module OutRank(Det: DETERMINANT) =
   module P = DiscardPivot
   module L = NoLower
   let make_result m = perform
-    rank <-- R.fin ();
+    rank <-- fromJust R.fin ();
     ret (Tuple.tup2 m.matrix rank)
+  (* Initialization: check the preconditions of instantiation of this struct*)
+  let () = notNone R.fin "Rank is not computed here"
 end
 
 module OutDetRank(Det : DETERMINANT) =
@@ -533,9 +540,12 @@ module OutDetRank(Det : DETERMINANT) =
   module L = NoLower
   let make_result m = perform
     det  <-- Det.fin ();
-    rank <-- R.fin ();
+    rank <-- fromJust R.fin ();
     ret (Tuple.tup3 m.matrix det rank)
+  (* Initialization: check the preconditions of instantiation of this struct*)
+  let () = notNone R.fin "Rank is not computed here"
 end
+
 
 module OutDetRankPivot(PK : PIVOTKIND)(Det : DETERMINANT) =
   struct
@@ -543,13 +553,18 @@ module OutDetRankPivot(PK : PIVOTKIND)(Det : DETERMINANT) =
   module R = Rank
   module P = KeepPivot(PK)
   module L = NoLower
+(* I wish to write that, but it can't be generalized!
+  let pivfin = match P.fin with Some fin -> fin
+  | None -> failwith "No Pivot computed provided"
+*)
   let make_result m = perform
     det  <-- Det.fin ();
-    rank <-- R.fin ();
-    pivmat <-- P.fin ();
-    match pivmat with
-    | Some p -> ret (Tuple.tup4 m.matrix det rank p)
-    | None   -> raise CannotHappen
+    rank <-- fromJust R.fin ();
+    pivmat <-- fromJust P.fin ();
+    ret (Tuple.tup4 m.matrix det rank pivmat)
+  (* Initialization: check the preconditions of instantiation of this struct*)
+  let () = notNone P.fin "Pivot is not computed here"
+  let () = notNone R.fin "Rank is not computed here"
 end
 
 (* Only for Fields: because we can't extract the L in a non-field *)
@@ -559,12 +574,14 @@ module Out_L_U(PK: PIVOTKIND)(Det : DETERMINANT) =
   module R = Rank
   module P = KeepPivot(PK)
   module L = SeparateLower
+(*
   let make_result m = perform
     pivmat <-- P.fin ();
     lower <-- L.fin ();
     match (pivmat,lower) with
     | (Some p, Some l) -> ret (Tuple.tup3 m.matrix l p)
     | _                -> raise CannotHappen
+*)
   (* Initialization: check the preconditions of instantiation of this struct*)
   let _ = assert (C.Dom.kind = Domains_sig.Domain_is_Field)
 end
@@ -576,6 +593,7 @@ module Out_LU_Packed(PK: PIVOTKIND)(Det : DETERMINANT) =
   module R = Rank
   module P = KeepPivot(PK)
   module L = PackedLower
+(*
   let make_result _ = perform
     pivmat <-- P.fin ();
     lower <-- L.fin ();
@@ -585,6 +603,7 @@ module Out_LU_Packed(PK: PIVOTKIND)(Det : DETERMINANT) =
     match (pivmat,lower) with
     | (Some p, Some l) -> ret (Tuple.tup2 l p)
     | _                -> raise CannotHappen
+*)
   (* Initialization: check the preconditions of instantiation of this struct*)
   let _ = assert (C.Dom.kind = Domains_sig.Domain_is_Field)
 end
