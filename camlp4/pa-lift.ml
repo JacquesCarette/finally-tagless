@@ -21,41 +21,41 @@ let distinguished_2op =
   ]
 ;;
 
-let lift1 loc m name e1 = 
+let lift1 _loc m name e1 = 
   <:expr< $uid:m$ . $lid:name$ $e1$ >>
 ;;
 
-let lift_simple loc m e = 
-  let e = MLast.ExBrk (loc, e) in
+let lift_simple _loc m e = 
+  let e = MLast.ExBrk (_loc, e) in
   <:expr< $uid:m$ . $lid:"retS"$ $e$ >>
 ;;
-let lift_lit loc m e = 
-  let e = MLast.ExBrk (loc, e) in
+let lift_lit _loc m e = 
+  let e = MLast.ExBrk (_loc, e) in
   <:expr< $uid:m$ . $lid:"retL"$ $e$ >>
 ;;
 
-let lift2 loc m name e1 e2 = 
+let lift2 _loc m name e1 e2 = 
   <:expr< $uid:m$ . $lid:name$ $e1$ $e2$  >>
 ;;
 
-let lift3 loc m name e1 e2 e3 = 
+let lift3 _loc m name e1 e2 e3 = 
   <:expr< $uid:m$ . $lid:name$ $e1$ $e2$ $e3$ >>
 ;;
 
-let rec lift_exp loc m e = 
+let rec lift_exp _loc m e = 
   match e with
-  | <:expr< $int:s$ >> as e -> lift_lit loc m e
-  | <:expr< $flo:s$ >> as e -> lift_lit loc m e
-  | <:expr< $str:s$ >> as e -> lift_lit loc m e
-  | <:expr< $chr:s$ >> as e -> lift_lit loc m e
-  | <:expr< () >> as e      -> lift_lit loc m e
-  | <:expr< [] >> as e      -> lift_lit loc m e
-  | <:expr< True >> as e    -> lift_lit loc m e
-  | <:expr< False >> as e   -> lift_lit loc m e
+  | <:expr< $int:s$ >> as e -> lift_lit _loc m e
+  | <:expr< $flo:s$ >> as e -> lift_lit _loc m e
+  | <:expr< $str:s$ >> as e -> lift_lit _loc m e
+  | <:expr< $chr:s$ >> as e -> lift_lit _loc m e
+  | <:expr< () >> as e      -> lift_lit _loc m e
+  | <:expr< [] >> as e      -> lift_lit _loc m e
+  | <:expr< True >> as e    -> lift_lit _loc m e
+  | <:expr< False >> as e   -> lift_lit _loc m e
 
   | <:expr< if $e1$ then $e2$ else $e3$ >> -> 
-      lift3 loc m "fif" 
-	(lift_exp loc m e1) (lift_exp loc m e2) (lift_exp loc m e3)
+      lift3 _loc m "fif" 
+	(lift_exp _loc m e1) (lift_exp _loc m e2) (lift_exp _loc m e3)
 
          (*
 	    We support only a subset of OCaml let: No "and" clauses.
@@ -69,14 +69,14 @@ let rec lift_exp loc m e =
       let do_bind p e x =
         let p' = gensym () in
         let pp' = <:patt< $lid:p'$ >> in
-        let l = [(p,(MLast.ExEsc (loc,<:expr< $lid:p'$ >>)))] in
-        let fbody = MLast.ExBrk (loc, 
-             <:expr< let $opt:false$ $list:l$ in $MLast.ExEsc (loc, x)$ >>) in
+        let l = [(p,(MLast.ExEsc (_loc,<:expr< $lid:p'$ >>)))] in
+        let fbody = MLast.ExBrk (_loc, 
+             <:expr< let $opt:false$ $list:l$ in $MLast.ExEsc (_loc, x)$ >>) in
         <:expr< $uid:m$ . $lid:"bind"$ 
                   $e$ 
                   (fun [ $pp'$ -> $fbody$ ])  >>
 	in (match l with
-	| [(p,e)] -> do_bind p (lift_exp loc m e) (lift_exp loc m body)
+	| [(p,e)] -> do_bind p (lift_exp _loc m e) (lift_exp _loc m body)
 	| _ -> failwith "only one binding is supported in let" )  
 
         (*
@@ -98,34 +98,34 @@ let rec lift_exp loc m e =
 	   (match e with
 	   | <:expr< fun [ $p$ -> $e$ ] >> -> 
 	       let e = esc_e e in <:expr< fun [ $p$ -> $e$ ] >> 
-	   | _ -> let e = lift_exp loc m e in
-	       <:expr< let $opt:false$ $list:l$ in $MLast.ExEsc(loc,e)$>>)
+	   | _ -> let e = lift_exp _loc m e in
+	       <:expr< let $opt:false$ $list:l$ in $MLast.ExEsc(_loc,e)$>>)
 	   in
          let ym_arg = 
-          MLast.ExBrk (loc, <:expr< fun [ $self'$ -> $esc_e e$] >>) in
+          MLast.ExBrk (_loc, <:expr< fun [ $self'$ -> $esc_e e$] >>) in
          let ym_app = <:expr< $uid:m$ . $lid:"ym"$ $ym_arg$ >> in
-         let l = [(p,<:expr< $MLast.ExEsc(loc,ym_app)$ >>)] in
-         MLast.ExBrk(loc,
-          <:expr< let $opt:false$ $list:l$ in $MLast.ExEsc(loc,body)$ >>)
+         let l = [(p,<:expr< $MLast.ExEsc(_loc,ym_app)$ >>)] in
+         MLast.ExBrk(_loc,
+          <:expr< let $opt:false$ $list:l$ in $MLast.ExEsc(_loc,body)$ >>)
 	in (match l with
-	| [(p,e)] -> do_openrec p e (lift_exp loc m body)
+	| [(p,e)] -> do_openrec p e (lift_exp _loc m body)
 	| _ -> failwith "only one binding is supported in let rec" )  
 
-  | <:expr< $e1$.val >> -> lift1 loc m "!" (lift_exp loc m e1)
+  | <:expr< $e1$.val >> -> lift1 _loc m "!" (lift_exp _loc m e1)
 
   | <:expr< $lid:op$ $e1$ >> when List.mem op distinguished_1op 
-    -> lift1 loc m op (lift_exp loc m e1)
+    -> lift1 _loc m op (lift_exp _loc m e1)
   | <:expr< $lid:op$ $e1$ $e2$ >> when List.mem op distinguished_2op 
-    -> lift2 loc m op (lift_exp loc m e1) (lift_exp loc m e2)
-  | <:expr< $lid:i$ >> as e -> lift_simple loc m e
+    -> lift2 _loc m op (lift_exp _loc m e1) (lift_exp _loc m e2)
+  | <:expr< $lid:i$ >> as e -> lift_simple _loc m e
 
   | <:expr< do { $list:el$ } >> -> 
       (match el with
       |	[]  -> failwith "cannot happen: empty el in `do' expr"
-      |	[e] -> lift_exp loc m e
-      |	[e1;e2] -> lift2 loc m "fseq" (lift_exp loc m e1) (lift_exp loc m e2)
-      |	(h::t) -> lift2 loc m "fseq" (lift_exp loc m h)
-	                   (lift_exp loc m  <:expr< do { $list:t$ } >>))
+      |	[e] -> lift_exp _loc m e
+      |	[e1;e2] -> lift2 _loc m "fseq" (lift_exp _loc m e1) (lift_exp _loc m e2)
+      |	(h::t) -> lift2 _loc m "fseq" (lift_exp _loc m h)
+	                   (lift_exp _loc m  <:expr< do { $list:t$ } >>))
 
 	(* for i = e1 to e2 in body
 	   ==>
@@ -134,24 +134,24 @@ let rec lift_exp loc m e =
   | <:expr< for $s$ = $e1$ $to:b$ $e2$ do { $list:el$ } >> ->
       let ni = gensym () in
       let ni' = <:patt< $lid:ni$ >> in
-      let l = [(<:patt< $lid:s$ >>, MLast.ExEsc(loc,<:expr< $lid:ni$ >>))] in
-      let body = MLast.ExEsc(loc,lift_exp loc m <:expr< do { $list:el$ } >>) in
-      let body = MLast.ExBrk(loc,
+      let l = [(<:patt< $lid:s$ >>, MLast.ExEsc(_loc,<:expr< $lid:ni$ >>))] in
+      let body = MLast.ExEsc(_loc,lift_exp _loc m <:expr< do { $list:el$ } >>) in
+      let body = MLast.ExBrk(_loc,
                              <:expr< let $opt:false$ $list:l$ in $body$ >>) in
       let b = if b then <:expr< True >> else <:expr< False >> in
       <:expr< $uid:m$ . $lid:"ffor"$ $b$
-                             $lift_exp loc m e1$
-                             $lift_exp loc m e2$
+                             $lift_exp _loc m e1$
+                             $lift_exp _loc m e2$
                              (fun [$ni'$ -> $body$]) >>
 
   | <:expr< $e1$.val := $e2$ >> ->
-      lift2 loc m "fass" (lift_exp loc m e1) (lift_exp loc m e2)
+      lift2 _loc m "fass" (lift_exp _loc m e1) (lift_exp _loc m e2)
 
   | <:expr< $e1$ .( $e2$ ) >> ->
-      lift2 loc m "aref" (lift_exp loc m e1) (lift_exp loc m e2)
+      lift2 _loc m "aref" (lift_exp _loc m e1) (lift_exp _loc m e2)
       
   | <:expr< $e1$ $e2$ >> -> 
-      lift2 loc m "app" (lift_exp loc m e1) (lift_exp loc m e2)
+      lift2 _loc m "app" (lift_exp _loc m e1) (lift_exp _loc m e2)
 
 
   | e -> e
@@ -167,9 +167,9 @@ EXTEND
 	    match e with
 	    | <:expr< fun [$p$ -> $e$] >> ->
 		let e = lift_body e in <:expr< fun [$p$ -> $e$] >>
-	    | _ -> MLast.ExEsc (loc,
-			 <:expr< $uid:m$ . $lid:"run"$ $lift_exp loc m e$ >>)
-	  in MLast.ExBrk (loc, lift_body <:expr< fun [$p$ -> $e$] >>)
+	    | _ -> MLast.ExEsc (_loc,
+			 <:expr< $uid:m$ . $lid:"run"$ $lift_exp _loc m e$ >>)
+	  in MLast.ExBrk (_loc, lift_body <:expr< fun [$p$ -> $e$] >>)
       ] 
     ] ;
 
