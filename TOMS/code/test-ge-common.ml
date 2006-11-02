@@ -7,25 +7,6 @@ module T0 = Foo(FloatDomainL);;
 module T1 = DivisionUpdate(GAC_F)(NoDet);;
 *)
 
-
-
-module GAC_F = GenericArrayContainer(FloatDomainL)
-module G_GAC_F = GenLA(GAC_F)
-open G_GAC_F
-module GenFA1 = GenGE
-                   (RowPivot)
-                   (NoDet)
-                   (DivisionUpdate)
-                   (InpJustMatrix)
-                   (OutJustMatrix)
-;;
-let resFA1 = instantiate GenFA1.gen ;;
-let rFA1 = runit {pf =  resFA1 } ;;
-
-(*
-module IDet = AbstractDet(IntegerDomainL)
-module RDet = AbstractDet(RationalDomainL)
-
 module Z3 = ZpMakeL(struct let p = 3 end)
 module Z19 = ZpMakeL(struct let p = 19 end)
 
@@ -55,293 +36,332 @@ module G_GVC_Z19 = GenLA(GVC_Z19)
 module G_GFC_F = GenLA(GFC_F)
 
 open G_GAC_F
-module GenFA1 = GenGE
-                   (RowPivot)(PermList)
-                   (NoDet)
-                   (DivisionUpdate)
-                   (InpJustMatrix)
-                   (OutJustMatrix)
-;;
-module GenFA2 = GenGE
-                   (RowPivot)(PermList)
-                   (AbstractDet)
-                   (DivisionUpdate)
-                   (InpJustMatrix)
-                   (OutDet)
-module GenFA3 = GenGE
-                   (RowPivot)(PermList)
-                   (NoDet)
-                   (DivisionUpdate)
-                   (InpJustMatrix)
-                   (OutRank)
-module GenFA4 = GenGE
-                   (RowPivot)(PermList)
-                   (AbstractDet)
-                   (DivisionUpdate)
-                   (InpJustMatrix)
-                   (OutDetRank)
 
-module GenFA11 = GenGE
-                   (FullPivot)(PermList)
-                   (NoDet)
-                   (DivisionUpdate)
-                   (InpJustMatrix)
-                   (OutJustMatrix)
-module GenFA12 = GenGE
-                   (FullPivot)(PermList)
-                   (AbstractDet)
-                   (DivisionUpdate)
-                   (InpJustMatrix)
-                   (OutDet)
-module GenFA13 = GenGE
-                   (FullPivot)(PermList)
-                   (NoDet)
-                   (DivisionUpdate)
-                   (InpJustMatrix)
-                   (OutRank)
-module GenFA14 = GenGE
-                   (FullPivot)(PermList)
-                   (AbstractDet)
-                   (DivisionUpdate)
-                   (InpJustMatrix)
-                   (OutDetRank)
-
-module GenFA24 = GenGE
-                    (RowPivot)(PermList)
-                    (AbstractDet)
-                    (DivisionUpdate)
-                    (InpJustMatrix)
-                    (OutDetRankPivot)
-module GenFA25 = GenGE
-                    (RowPivot)(RowVectorPerm)
-                    (AbstractDet)
-                    (DivisionUpdate)
-                    (InpJustMatrix)
-                    (OutDetRankPivot)
-module GenFA26 = GenGE
-                    (RowPivot)(RowVectorPerm)
-                    (AbstractDet)
-                    (DivisionUpdate)
-                    (InpJustMatrix)
-                    (OutJustMatrix)
-module GenFA5 = GenGE
-                   (RowPivot)(PermList)
-                   (NoDet)
-                   (DivisionUpdate)
-                   (InpMatrixMargin)
-                   (OutJustMatrix)
-
-module GenFA6 = GenGE
-                   (RowPivot)(PermList)
-                   (AbstractDet)
-                   (DivisionUpdate)
-                   (InpMatrixMargin)
-                   (OutDet)
-module GenFA7 = GenGE
-                   (RowPivot)(PermList)
-                   (NoDet)
-                   (DivisionUpdate)
-                   (InpMatrixMargin)
-                   (OutRank)
-module GenFA8 = GenGE
-                   (RowPivot)(PermList)
-                   (NoDet)
-                   (DivisionUpdate)
-                   (InpMatrixMargin)
-                   (OutDetRank)
-
-module GenFA9 = GenGE
-                   (RowPivot)(PermList)
-                   (NoDet)
-                   (DivisionUpdate)
-                   (InpJustMatrix)
-                   (Out_LU_Packed)
-
-module GenFA31 = GenGE
-                   (RowPivot)(PermList)
-                   (AbstractDet)
-                   (DivisionUpdate)
-                   (InpJustMatrix)
-                   (Out_L_U)
-module GenFA32 = GenGE
-                   (RowPivot)(PermList)
-                   (AbstractDet)
-                   (DivisionUpdate)
-                   (InpJustMatrix)
-                   (Out_LU_Packed)
+module GenFA1 = GenGE(struct
+    module Det = NoDet
+    module PivotF = RowPivot
+    module PivotRep = PermList
+    module Update = DivisionUpdate
+    module Input = InpJustMatrix 
+    module Output = OutJustMatrix end)
+module GenFA2 = GenGE(struct
+    module Det = AbstractDet
+    module PivotF = RowPivot
+    module PivotRep = PermList
+    module Update = DivisionUpdate
+    module Input = InpJustMatrix 
+    module Output = OutDet end)
+module GenFA3 = GenGE(struct 
+    module Det = NoDet
+    module PivotF = RowPivot
+    module PivotRep = PermList
+    module Update = DivisionUpdate
+    module Input = InpJustMatrix 
+    module Output = OutRank end)
+module GenFA4 = GenGE(struct 
+    module Det = AbstractDet
+    module PivotF = RowPivot
+    module PivotRep = PermList
+    module Update = DivisionUpdate
+    module Input = InpJustMatrix 
+    module Output = OutDetRank end)
+module GenFA11 = GenGE(struct
+    module Det = NoDet
+    module PivotF = FullPivot
+    module PivotRep = PermList
+    module Update = DivisionUpdate
+    module Input = InpJustMatrix 
+    module Output = OutJustMatrix end)
+module GenFA12 = GenGE(struct
+    module Det = AbstractDet
+    module PivotF = FullPivot
+    module PivotRep = PermList
+    module Update = DivisionUpdate
+    module Input = InpJustMatrix 
+    module Output = OutDet end)
+module GenFA13 = GenGE(struct 
+    module Det = NoDet
+    module PivotF = FullPivot
+    module PivotRep = PermList
+    module Update = DivisionUpdate
+    module Input = InpJustMatrix 
+    module Output = OutRank end)
+module GenFA14 = GenGE(struct 
+    module Det = AbstractDet
+    module PivotF = FullPivot
+    module PivotRep = PermList
+    module Update = DivisionUpdate
+    module Input = InpJustMatrix 
+    module Output = OutDetRank end)
+module GenFA24 = GenGE(struct 
+    module Det = AbstractDet
+    module PivotF = RowPivot
+    module PivotRep = PermList
+    module Update = DivisionUpdate
+    module Input = InpJustMatrix 
+    module Output = OutDetRankPivot end)
+module GenFA25 = GenGE(struct 
+    module Det = AbstractDet
+    module PivotF = RowPivot
+    module PivotRep = RowVectorPerm
+    module Update = DivisionUpdate
+    module Input = InpJustMatrix 
+    module Output = OutDetRankPivot end)
+module GenFA26 = GenGE(struct 
+    module Det = NoDet
+    module PivotF = RowPivot
+    module PivotRep = RowVectorPerm
+    module Update = DivisionUpdate
+    module Input = InpJustMatrix 
+    module Output = OutJustMatrix end)
+module GenFA5 = GenGE(struct 
+    module Det = NoDet
+    module PivotF = RowPivot
+    module PivotRep = PermList
+    module Update = DivisionUpdate
+    module Input = InpMatrixMargin
+    module Output = OutJustMatrix end)
+module GenFA6 = GenGE(struct 
+    module Det = AbstractDet
+    module PivotF = RowPivot
+    module PivotRep = PermList
+    module Update = DivisionUpdate
+    module Input = InpMatrixMargin
+    module Output = OutDet end)
+module GenFA7 = GenGE(struct 
+    module Det = NoDet
+    module PivotF = RowPivot
+    module PivotRep = PermList
+    module Update = DivisionUpdate
+    module Input = InpMatrixMargin
+    module Output = OutRank end)
+module GenFA8 = GenGE(struct 
+    module Det = AbstractDet
+    module PivotF = RowPivot
+    module PivotRep = PermList
+    module Update = DivisionUpdate
+    module Input = InpMatrixMargin
+    module Output = OutDetRank end)
+module GenFA9 = GenGE(struct 
+    module Det = NoDet
+    module PivotF = RowPivot
+    module PivotRep = PermList
+    module Update = DivisionUpdate
+    module Input = InpJustMatrix
+    module Output = Out_LU_Packed end)
+module GenFA31 = GenGE(struct 
+    module Det = NoDet
+    module PivotF = RowPivot
+    module PivotRep = PermList
+    module Update = DivisionUpdate
+    module Input = InpJustMatrix
+    module Output = Out_L_U end)
+module GenFA32 = GenGE(struct 
+    module Det = NoDet
+    module PivotF = RowPivot
+    module PivotRep = PermList
+    module Update = DivisionUpdate
+    module Input = InpJustMatrix
+    module Output = Out_LU_Packed end)
 
 open G_GVC_F
-module GenFV1 = GenGE
-                   (RowPivot)(PermList)
-                   (NoDet)
-                   (DivisionUpdate)
-                   (InpJustMatrix)
-                   (OutJustMatrix)
-module GenFV2 = GenGE
-                   (RowPivot)(PermList)
-                   (AbstractDet)
-                   (DivisionUpdate)
-                   (InpJustMatrix)
-                   (OutDet)
-module GenFV3 = GenGE
-                   (RowPivot)(PermList)
-                   (NoDet)
-                   (DivisionUpdate)
-                   (InpJustMatrix)
-                   (OutRank)
-module GenFV4 = GenGE
-                   (RowPivot)(PermList)
-                   (AbstractDet)
-                   (DivisionUpdate)
-                   (InpJustMatrix)
-                   (OutDetRank)
-module GenFV5 = GenGE
-                   (FullPivot)(PermList)
-                   (AbstractDet)
-                   (DivisionUpdate)
-                   (InpJustMatrix)
-                   (OutDetRank)
+module GenFV1 = GenGE(struct 
+    module Det = NoDet
+    module PivotF = RowPivot
+    module PivotRep = PermList
+    module Update = DivisionUpdate
+    module Input = InpJustMatrix
+    module Output = OutJustMatrix end)
+module GenFV2 = GenGE(struct 
+    module Det = AbstractDet
+    module PivotF = RowPivot
+    module PivotRep = PermList
+    module Update = DivisionUpdate
+    module Input = InpJustMatrix
+    module Output = OutDet end)
+module GenFV3 = GenGE(struct 
+    module Det = NoDet
+    module PivotF = RowPivot
+    module PivotRep = PermList
+    module Update = DivisionUpdate
+    module Input = InpJustMatrix
+    module Output = OutRank end)
+module GenFV4 = GenGE(struct 
+    module Det = AbstractDet
+    module PivotF = RowPivot
+    module PivotRep = PermList
+    module Update = DivisionUpdate
+    module Input = InpJustMatrix
+    module Output = OutDetRank end)
+module GenFV5 = GenGE(struct 
+    module Det = AbstractDet
+    module PivotF = FullPivot
+    module PivotRep = PermList
+    module Update = DivisionUpdate
+    module Input = InpJustMatrix
+    module Output = OutDetRank end)
 
 (* For some reason, these 2 go bonkers - worry about them later
-module GenFV6 = GenGE
-                   (RowPivot)(PermList)
-                   (AbstractDet)
-                   (DivisionUpdate)
-                   (InpJustMatrix)
-                   (Out_L_U)
-module GenFV7 = GenGE
-                   (RowPivot)(PermList)
-                   (AbstractDet)
-                   (DivisionUpdate)
-                   (InpJustMatrix)
-                   (Out_LU_Packed)
-*)
-(* But this is an error!
-module GenIA1 = G_GAC_I.GenGE
-                   (RowPivot)(PermList)
-                   (AbstractDet)
-                   (DivisionUpdate)
-                   (InpJustMatrix)
-                   (OutJustMatrix(GAC_I)(IDet))
+module GenFV6 = GenGE(struct 
+    module Det = NoDet
+    module PivotF = RowPivot
+    module PivotRep = PermList
+    module Update = DivisionUpdate
+    module Input = InpJustMatrix
+    module Output = Out_L_U end)
+module GenFV7 = GenGE(struct 
+    module Det = NoDet
+    module PivotF = RowPivot
+    module PivotRep = PermList
+    module Update = DivisionUpdate
+    module Input = InpJustMatrix
+    module Output = Out_LU_Packed end)
 *)
 open G_GAC_I
-module GenIA1 = GenGE
-                   (RowPivot)(PermList)
-                   (AbstractDet)
-                   (FractionFreeUpdate)
-                   (InpJustMatrix)
-                   (OutJustMatrix)
-module GenIA2 = GenGE
-                   (RowPivot)(PermList)
-                   (AbstractDet)
-                   (FractionFreeUpdate)
-                   (InpJustMatrix)
-                   (OutDet)
-module GenIA3 = GenGE
-                   (RowPivot)(PermList)
-                   (AbstractDet)
-                   (FractionFreeUpdate)
-                   (InpJustMatrix)
-                   (OutRank)
-module GenIA4 = GenGE
-                   (RowPivot)(PermList)
-                   (AbstractDet)
-                   (FractionFreeUpdate)
-                   (InpJustMatrix)
-                   (OutDetRank)
+module GenIA1 = GenGE(struct 
+    module Det = AbstractDet
+    module PivotF = RowPivot
+    module PivotRep = PermList
+    module Update = FractionFreeUpdate
+    module Input = InpJustMatrix
+    module Output = OutJustMatrix end)
+(* But this is an error!
+module GenIA1' = GenGE(struct 
+    module Det = AbstractDet
+    module PivotF = RowPivot
+    module PivotRep = PermList
+    module Update = DivisionUpdate
+    module Input = InpJustMatrix
+    module Output = OutJustMatrix end)
+*)
+module GenIA2 = GenGE(struct
+    module Det = AbstractDet
+    module PivotF = RowPivot
+    module PivotRep = PermList
+    module Update = FractionFreeUpdate
+    module Input = InpJustMatrix 
+    module Output = OutDet end)
+module GenIA3 = GenGE(struct 
+    module Det = AbstractDet
+    module PivotF = RowPivot
+    module PivotRep = PermList
+    module Update = FractionFreeUpdate
+    module Input = InpJustMatrix 
+    module Output = OutRank end)
+module GenIA4 = GenGE(struct 
+    module Det = AbstractDet
+    module PivotF = RowPivot
+    module PivotRep = PermList
+    module Update = FractionFreeUpdate
+    module Input = InpJustMatrix 
+    module Output = OutDetRank end)
 (* Neither of these two 'work' as one cannot output the L matrix
    while FractionFree !
-module GenIA5 = GenGE
-                   (RowPivot)(PermList)
-                   (AbstractDet)
-                   (FractionFreeUpdate)
-                   (InpJustMatrix)
-                   (Out_L_U)
-module GenIA6 = GenGE
-                   (RowPivot)(PermList)
-                   (AbstractDet)
-                   (FractionFreeUpdate)
-                   (InpJustMatrix)
-                   (Out_LU_Packed)
+module GenIA5 = GenGE(struct 
+    module Det = AbstractDet
+    module PivotF = RowPivot
+    module PivotRep = PermList
+    module Update = FractionFreeUpdate
+    module Input = InpJustMatrix
+    module Output = Out_L_U end)
+module GenIA6 = GenGE(struct 
+    module Det = AbstractDet
+    module PivotF = RowPivot
+    module PivotRep = PermList
+    module Update = FractionFreeUpdate
+    module Input = InpJustMatrix
+    module Output = Out_LU_Packed end)
 *)
 open G_GVC_I
-module GenIV1 = GenGE
-                   (RowPivot)(PermList)
-                   (AbstractDet)
-                   (FractionFreeUpdate)
-                   (InpJustMatrix)
-                   (OutJustMatrix)
-module GenIV2 = GenGE
-                   (RowPivot)(PermList)
-                   (AbstractDet)
-                   (FractionFreeUpdate)
-                   (InpJustMatrix)
-                   (OutDet)
-module GenIV3 = GenGE
-                   (RowPivot)(PermList)
-                   (AbstractDet)
-                   (FractionFreeUpdate)
-                   (InpJustMatrix)
-                   (OutRank)
-module GenIV4 = GenGE
-                   (RowPivot)(PermList)
-                   (AbstractDet)
-                   (FractionFreeUpdate)
-                   (InpJustMatrix)
-                   (OutDetRank)
-module GenIV5 = GenGE
-                   (FullPivot)(PermList)
-                   (AbstractDet)
-                   (FractionFreeUpdate)
-                   (InpJustMatrix)
-                   (OutDetRank)
-module GenIV6 = GenGE
-                   (FullPivot)(PermList)
-                   (AbstractDet)
-                   (FractionFreeUpdate)
-                   (InpJustMatrix)
-                   (OutDetRankPivot)
+module GenIV1 = GenGE(struct 
+    module Det = AbstractDet
+    module PivotF = RowPivot
+    module PivotRep = PermList
+    module Update = FractionFreeUpdate
+    module Input = InpJustMatrix
+    module Output = OutJustMatrix end)
+module GenIV2 = GenGE(struct
+    module Det = AbstractDet
+    module PivotF = RowPivot
+    module PivotRep = PermList
+    module Update = FractionFreeUpdate
+    module Input = InpJustMatrix 
+    module Output = OutDet end)
+module GenIV3 = GenGE(struct 
+    module Det = AbstractDet
+    module PivotF = RowPivot
+    module PivotRep = PermList
+    module Update = FractionFreeUpdate
+    module Input = InpJustMatrix 
+    module Output = OutRank end)
+module GenIV4 = GenGE(struct 
+    module Det = AbstractDet
+    module PivotF = RowPivot
+    module PivotRep = PermList
+    module Update = FractionFreeUpdate
+    module Input = InpJustMatrix 
+    module Output = OutDetRank end)
+module GenIV5 = GenGE(struct 
+    module Det = AbstractDet
+    module PivotF = FullPivot
+    module PivotRep = PermList
+    module Update = FractionFreeUpdate
+    module Input = InpJustMatrix
+    module Output = OutDetRank end)
+module GenIV6 = GenGE(struct 
+    module Det = AbstractDet
+    module PivotF = FullPivot
+    module PivotRep = PermList
+    module Update = FractionFreeUpdate
+    module Input = InpJustMatrix
+    module Output = OutDetRankPivot end)
 
 open G_GAC_R
-module GenRA1 = GenGE
-                   (RowPivot)(PermList)
-                   (AbstractDet)
-                   (DivisionUpdate)
-                   (InpJustMatrix)
-                   (OutJustMatrix)
-module GenRA2 = GenGE
-                   (RowPivot)(PermList)
-                   (AbstractDet)
-                   (DivisionUpdate)
-                   (InpJustMatrix)
-                   (OutDet)
-module GenRA3 = GenGE
-                   (RowPivot)(PermList)
-                   (AbstractDet)
-                   (DivisionUpdate)
-                   (InpJustMatrix)
-                   (OutRank)
-module GenRA4 = GenGE
-                   (RowPivot)(PermList)
-                   (AbstractDet)
-                   (DivisionUpdate)
-                   (InpJustMatrix)
-                   (OutDetRank)
+module GenRA1 = GenGE(struct 
+    module Det = NoDet
+    module PivotF = RowPivot
+    module PivotRep = PermList
+    module Update = DivisionUpdate
+    module Input = InpJustMatrix
+    module Output = OutJustMatrix end)
+module GenRA2 = GenGE(struct
+    module Det = AbstractDet
+    module PivotF = RowPivot
+    module PivotRep = PermList
+    module Update = DivisionUpdate
+    module Input = InpJustMatrix 
+    module Output = OutDet end)
+module GenRA3 = GenGE(struct 
+    module Det = NoDet
+    module PivotF = RowPivot
+    module PivotRep = PermList
+    module Update = DivisionUpdate
+    module Input = InpJustMatrix 
+    module Output = OutRank end)
+module GenRA4 = GenGE(struct 
+    module Det = AbstractDet
+    module PivotF = RowPivot
+    module PivotRep = PermList
+    module Update = DivisionUpdate
+    module Input = InpJustMatrix 
+    module Output = OutDetRank end)
 open G_GVC_Z3
-module GenZp3 = GenGE
-                   (RowPivot)(PermList)
-                   (AbstractDet)
-                   (DivisionUpdate)
-                   (InpJustMatrix)
-                   (OutDetRankPivot)
+module GenZp3 = GenGE(struct 
+    module Det = AbstractDet
+    module PivotF = RowPivot
+    module PivotRep = PermList
+    module Update = DivisionUpdate
+    module Input = InpJustMatrix
+    module Output = OutDetRankPivot end)
 
 open G_GVC_Z19
-module GenZp19 = GenGE
-                   (RowPivot)(PermList)
-                   (AbstractDet)
-                   (FractionFreeUpdate)
-                   (InpJustMatrix)
-                   (OutDetRankPivot)
+module GenZp19 = GenGE(struct 
+    module Det = AbstractDet
+    module PivotF = RowPivot
+    module PivotRep = PermList
+    module Update = FractionFreeUpdate
+    module Input = InpJustMatrix
+    module Output = OutDetRankPivot end)
 ;;
 
 let resFA1 = instantiate GenFA1.gen ;;
@@ -539,7 +559,7 @@ let _ = assert( rFA7 (fa7, 3) =
        [|0.; 0.; 2.; 1.; -0.2; 0.2|]|], 3) )
 let _ = assert( rFA8 (fa7, 3) =
     ([|[|4.; 13.; 5.; 0.; 1.; 0.|]; [|0.; 6.25; 1.25; 0.; 0.25; 1.|];
-     [|0.; 0.; 2.; 1.; -0.2; 0.2|]|], (), 3) )
+     [|0.; 0.; 2.; 1.; -0.2; 0.2|]|], 50., 3) )
 
 let resF1 = List.map rFA1 fa5;;
 let _ = assert (List.map rFA2 fa5 =
@@ -647,4 +667,3 @@ let resR11 = List.map rRA1 ra5;;
 let resR12 = List.map rRA2 ra5;;
 let resR13 = List.map rRA3 ra5;;
 let resR14 = List.map rRA4 ra5;;
-*)

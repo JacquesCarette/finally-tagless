@@ -3,7 +3,7 @@ open StateCPSMonad
 type update_kind = FractionFree | DivisionBased
 let fromJust = function Some x -> x | None -> failwith "Can't happen"
 let notNone v str = match v with None -> failwith str | Some _ -> ()
-
+let ensure cond str = if not cond then failwith str else ()
 
 module GEMake(CODE: Coderep.T) = struct
 
@@ -134,9 +134,6 @@ module RowVectorPerm = struct
   let colrep x y = Tuple.tup2 x y
 end
 
-
-
-
 module type TRACKPIVOT = sig
   type perm_rep
   type 'a ira = ('a, int) abstract
@@ -220,8 +217,7 @@ type 'a curposval = {p: 'a curpos; curval: ('a, C.Dom.v) abstract}
 
 
 module type DETERMINANT = sig
-  type outdet
-  type tdet = outdet ref
+  type tdet = C.Dom.v ref
   type 'a lstate
   type 'a tag_lstate = [`TDet of 'a lstate ]
     (* Here, parameter 'b accounts for all the extra polymorphims *)
@@ -237,7 +233,7 @@ module type DETERMINANT = sig
   val acc       : ('a,C.Dom.v) abstract -> ('a * 's * 'w,unit) lm
   val get       : unit -> ('b,tdet) lm
   val set       : ('a,C.Dom.v) abstract -> ('a * 's * 'w,unit) lm
-  val fin       : (unit -> ('b,outdet) lm) option
+  val fin       : (unit -> ('b,C.Dom.v) lm) option
 end
 
 
@@ -249,14 +245,13 @@ end
  
 module NoDet =
   struct
-  type outdet = unit
-  type tdet = outdet ref
+  type tdet = C.Dom.v ref
   type 'a lstate = unit
   let decl () = unitL
   let upd_sign () = ret None
   let zero_sign () = unitL
   let acc _ = unitL
-  let get () = ret (liftRef cunit)
+  let get () = ret (liftRef C.Dom.zeroL) (* hack alert! *)
   let set _ = unitL
   let fin = None
   type 'a tag_lstate = [`TDet of 'a lstate ]
@@ -271,8 +266,7 @@ end
 module AbstractDet =
   struct
   open C.Dom
-  type outdet = v
-  type tdet = outdet ref
+  type tdet = v ref
   (* the first part of the state is an integer: which is +1, 0, -1:
      the sign of the determinant *)
   type 'a lstate = ('a,int ref) abstract * ('a,tdet) abstract
@@ -326,18 +320,17 @@ end
 module type UPDATE =
         functor(D:DETERMINANT) -> sig
         type 'a in_val = 'a C.Dom.vc
-        type out_val = D.outdet
         val update : 
             'a in_val -> 'a in_val -> 'a in_val -> 'a in_val -> 
           ('a in_val -> ('a, unit) abstract) ->
-          ('a, out_val ref) abstract -> ('a, unit, 's, 'w) cmonad
+          ('a, C.Dom.v ref) abstract -> ('a, unit, 's, 'w) cmonad
         val update_det : 'a in_val -> ('a * 's * 'w,unit) D.lm
 (* this is only needed if we try to deal with FractionFree LU,
    which is really tough, especially since the L Matrix still has
    to be over the fraction field, which we don't have available.
         val update_lower : 
             'a in_val -> 'a in_val -> 'a in_val -> 'a in_val -> 
-          ('a, out_val ref) abstract -> ('a, C.Dom.v, 's, 'w) cmonad *)
+          ('a, C.Dom.v ref) abstract -> ('a, C.Dom.v, 's, 'w) cmonad *)
         val upd_kind : update_kind
 end
 
@@ -346,7 +339,6 @@ module DivisionUpdate(Det:DETERMINANT) =
   struct
   open C.Dom
   type 'a in_val = 'a vc
-  type out_val = Det.outdet
   let update bic brc brk bik setter _ = perform
       y <-- ret (bik -^ ((divL bic brc) *^ brk));
       ret (setter (applyMaybe normalizerL y))
@@ -356,13 +348,13 @@ module DivisionUpdate(Det:DETERMINANT) =
       ret (applyMaybe normalizerL y) *)
   let upd_kind = DivisionBased
   (* Initialization: check the preconditions of instantiation of this struct*)
-  let _ = assert (C.Dom.kind = Domains_sig.Domain_is_Field)
+  let _ = ensure (C.Dom.kind = Domains_sig.Domain_is_Field)
+      "Cannot do Division in a non-field"
 end
 
 module FractionFreeUpdate(Det:DETERMINANT) = struct
   open C.Dom
-  type 'a in_val = ('a, v) abstract
-  type out_val = Det.outdet
+  type 'a in_val = 'a vc
   let update bic brc brk bik setter d = perform
       z <-- ret ((bik *^ brc) -^ (brk *^ bic));
       t <-- ret (applyMaybe normalizerL z);
@@ -395,7 +387,7 @@ module type LOWER = sig
   val decl   : ('a, C.contr) abstract -> ('a*'s*'w, C.contr) lm
   val updt   : 'a C.vc -> ('a,int) abstract -> ('a,int) abstract -> 'a C.vo -> 
             'a C.Dom.vc -> ('a*'s*'w, unit) lm option
-  val fin    : unit -> ('a,  C.contr) om
+  val fin    : (unit -> ('a,  C.contr) lm) option
   val wants_pack : bool
 end
 
@@ -436,9 +428,9 @@ module SeparateLower = struct
       l1 <-- ret (C.col_head_set lower row col nv);
       l2 <-- ret (C.col_head_set mat row col defval);
       ret (seq l1 l2) )
-  let fin () = perform
+  let fin = Some (fun () -> perform
       m <-- mfetch ();
-      ret (Some m)
+      ret m)
   let wants_pack = false
 end
 
@@ -451,9 +443,9 @@ module PackedLower = struct
       mstore udecl;
       ret udecl
   let updt  _ _ _ _ _ = None
-  let fin () = perform
+  let fin = Some (fun () -> perform
       m <-- mfetch ();
-      ret (Some m)
+      ret m)
   let wants_pack = true
 end
 
@@ -462,7 +454,7 @@ module NoLower = struct
   let decl c = ret c
   let updt mat row col defval _ = 
       Some (ret (C.col_head_set mat row col defval))
-  let fin () = ret None
+  let fin = None
   let wants_pack = false
 end
 
@@ -610,38 +602,162 @@ struct
        ret (Maybe.just (C.row_head mat.matrix pos.rowpos pos.colpos));
 end
 
+module type OUTPUTDEP = sig 
+    module PivotRep : PIVOTKIND 
+    module Det      : DETERMINANT
+end
 
-(* The `keyword' list of all the present features *)
+(* What to return *)
+module OutJustMatrix(OD : OUTPUTDEP) = struct
+  module IF = struct
+      module R   = NoRank
+      module P   = DiscardPivot
+      module L   = NoLower end
+  type res = C.contr
+  let make_result m = ret m.matrix
+end
 
-module type FEATURES = sig
-  module PivotF : PIVOT
-  module Det    : DETERMINANT
-  module Update : UPDATE
-  module Input  : INPUT
+module OutDet(OD : OUTPUTDEP) = struct
+  module IF = struct
+      module R   = NoRank
+      module P   = DiscardPivot
+      module L   = NoLower end
+  type res = C.contr * C.Dom.v
+  let make_result m = perform
+    det <-- fromJust OD.Det.fin ();
+    ret (Tuple.tup2 m.matrix det)
+  (* Initialization: check the preconditions of instantiation of this struct*)
+  let () = notNone OD.Det.fin "Determinant is not computed here"
+end
+
+module OutRank(OD : OUTPUTDEP) = struct
+  module IF = struct
+      module R   = Rank
+      module P   = DiscardPivot
+      module L   = NoLower end
+  type res = C.contr * int
+  let make_result m = perform
+    rank <-- fromJust IF.R.fin ();
+    ret (Tuple.tup2 m.matrix rank)
+  (* Initialization: check the preconditions of instantiation of this struct*)
+  let () = notNone IF.R.fin "Rank is not computed here"
+end
+
+module OutDetRank(OD : OUTPUTDEP) = struct
+  module IF = struct
+      module R   = Rank
+      module P   = DiscardPivot
+      module L   = NoLower end
+  type res = C.contr * C.Dom.v * int
+  let make_result m = perform
+    det  <-- fromJust OD.Det.fin ();
+    rank <-- fromJust IF.R.fin ();
+    ret (Tuple.tup3 m.matrix det rank)
+  (* Initialization: check the preconditions of instantiation of this struct*)
+  let () = notNone OD.Det.fin "Determinant is not computed here"
+  let () = notNone IF.R.fin "Rank is not computed here"
+end
+
+
+module OutDetRankPivot(OD : OUTPUTDEP) = struct
+  module IF = struct
+      module R   = Rank
+      module P   = KeepPivot(OD.PivotRep)
+      module L   = NoLower end
+  type res = C.contr * C.Dom.v * int *  IF.P.perm_rep
+(* I wish to write that, but it can't be generalized!
+  let pivfin = match P.fin with Some fin -> fin
+  | None -> failwith "No Pivot computed provided"
+*)
+  let make_result m = perform
+    det  <-- fromJust OD.Det.fin ();
+    rank <-- fromJust IF.R.fin ();
+    pivmat <-- fromJust IF.P.fin ();
+    ret (Tuple.tup4 m.matrix det rank pivmat)
+  (* Initialization: check the preconditions of instantiation of this struct*)
+  let () = notNone OD.Det.fin "Determinant is not computed here"
+  let () = notNone IF.R.fin "Rank is not computed here"
+  let () = notNone IF.P.fin "Pivot is not computed here"
+end
+
+
+(* Only for Fields: because we can't extract the L in a non-field *)
+module Out_L_U(OD : OUTPUTDEP) = struct
+  module IF = struct
+      module R   = NoRank
+      module P   = KeepPivot(OD.PivotRep)
+      module L   = SeparateLower end
+  type res = C.contr * C.contr * IF.P.perm_rep
+  let make_result m = perform
+    pivmat <-- fromJust IF.P.fin ();
+    lower <-- fromJust IF.L.fin ();
+    ret (Tuple.tup3 m.matrix lower pivmat)
+  (* Initialization: check the preconditions of instantiation of this struct*)
+  let _ = assert (C.Dom.kind = Domains_sig.Domain_is_Field)
+  let () = notNone IF.P.fin "Pivot is not computed here"
+end
+
+(* Only for Fields: because we can't extract the L in a non-field *)
+module Out_LU_Packed(OD : OUTPUTDEP) = struct
+  module IF = struct
+      module R   = NoRank
+      module P   = KeepPivot(OD.PivotRep)
+      module L   = PackedLower end
+  type res = C.contr * IF.P.perm_rep
+  let make_result _ = perform
+    pivmat <-- fromJust IF.P.fin ();
+    lower <-- fromJust IF.L.fin ();
+    ret (Tuple.tup2 lower pivmat)
+    (* we really should be able to assert that lower == m.matrix
+    here, but can't because the representation of lower/m.matrix
+    could be 'functional' !*)
+  (* Initialization: check the preconditions of instantiation of this struct*)
+  let _ = assert (C.Dom.kind = Domains_sig.Domain_is_Field)
+  let () = notNone IF.P.fin "Pivot is not computed here"
+end
+
+(* The `keyword' list of all the present internal features *)
+module type INTERNAL_FEATURES = sig
   module R      : TrackRank.RANK
   module P      : TRACKPIVOT
   module L      : LOWER
 end
 
-module type OUTPUT = functor(F: FEATURES) -> sig
+module type OUTPUT = functor(OD : OUTPUTDEP) -> sig
+  module IF : INTERNAL_FEATURES
   type res
   val make_result : 'a wmatrix ->
-    ('a,res,[> 'a F.Det.tag_lstate | 'a F.R.tag_lstate 
-             | 'a F.P.tag_lstate   | 'a F.L.tag_lstate],'w) cmonad
+    ('a,res,[> 'a OD.Det.tag_lstate | 'a IF.R.tag_lstate 
+             | 'a IF.P.tag_lstate   | 'a IF.L.tag_lstate],'w) cmonad
 end
 
-module GenGE(F : FEATURES)
-            (Out: OUTPUT) = struct
-    module U = F.Update(F.Det)
-    module Output = Out(F)  (* that does the pre-flight test *)
+(* The `keyword' list of all the present external features *)
+module type FEATURES = sig
+  module Det       : DETERMINANT
+  module PivotF    : PIVOT
+  module PivotRep  : PIVOTKIND
+  module Update    : UPDATE
+  module Input     : INPUT
+  module Output    : OUTPUT
+end
 
-    let wants_pack = F.L.wants_pack
+module GenGE(F : FEATURES) = struct
+    module O = F.Output(F)
+    (* module U = F.Update(F.Det) *)
+    (* module Verify = Test(F)  that does the pre-flight test *)
+
+    let wants_pack = O.IF.L.wants_pack
     let back_elim  = false
-    let can_pack   = (U.upd_kind = DivisionBased)
+    let can_pack   = 
+        let module U = F.Update(F.Det) in
+        (U.upd_kind = DivisionBased)
 	(* some more pre-flight tests *)
-    let _ = assert ((not wants_pack) || can_pack) 
+    let _ = ensure ((not wants_pack) || can_pack) 
+           "Cannot return a packed L in this case"
 
     let zerobelow mat pos = 
+        let module IF = O.IF in
+        let module U = F.Update(F.Det) in
         let innerbody j bjc = perform
             whenM (Logic.notequalL bjc C.Dom.zeroL ) (perform
                 det <-- F.Det.get ();
@@ -651,7 +767,7 @@ module GenGE(F : FEATURES)
                       brk <-- ret (C.getL mat.matrix pos.p.rowpos k);
                       U.update bjc pos.curval brk bjk 
                           (fun ov -> C.col_head_set mat.matrix j k ov) det) )
-                      (F.L.updt mat.matrix j pos.p.colpos C.Dom.zeroL 
+                      (IF.L.updt mat.matrix j pos.p.colpos C.Dom.zeroL 
                           (* this makes no sense outside a field! *)
                           (C.Dom.divL bjc pos.curval))) in
         perform
@@ -661,31 +777,33 @@ module GenGE(F : FEATURES)
                    (U.update_det pos.curval)
 
    let init input = perform
+        let module IF = O.IF in
           (a,rmar,augmented) <-- F.Input.get_input input;
-          r <-- F.R.decl ();
+          r <-- IF.R.decl ();
           c <-- retN (liftRef Idx.zero);
           b <-- retN (C.mapper C.Dom.normalizerL (C.copy a));
           m <-- retN (C.dim1 a);
           rmar <-- retN rmar;
           n <-- if augmented then retN (C.dim2 a) else ret rmar;
           F.Det.decl ();
-          F.P.decl rmar;
-          _ <-- F.L.decl (if wants_pack then b else C.identity rmar m);
+          IF.P.decl rmar;
+          _ <-- IF.L.decl (if wants_pack then b else C.identity rmar m);
           let mat = {matrix=b; numrow=n; numcol=m} in
           ret (mat, r, c, rmar)
 
    let forward_elim (mat, r, c, rmar) = perform
+        let module IF = O.IF in
           whileM (Logic.andL (Idx.less (liftGet c) mat.numcol)
                               (Idx.less (liftGet r) rmar) )
              ( perform
              rr <-- retN (liftGet r);
              cc <-- retN (liftGet c);
              let cp  = {rowpos=rr; colpos=cc} in
-	     let module Pivot = F.PivotF(F.Det)(F.P) in
+	         let module Pivot = F.PivotF(F.Det)(IF.P) in
              pivot <-- l1 retN (Pivot.findpivot mat cp);
              seqM (matchM pivot (fun pv -> 
                       seqM (zerobelow mat {p=cp; curval=pv} )
-                           (F.R.succ ()) )
+                           (IF.R.succ ()) )
                       (F.Det.zero_sign () ))
                   (updateM c Idx.succ) )
 
@@ -701,109 +819,10 @@ module GenGE(F : FEATURES)
             (optSeqM
                 (forward_elim (mat, r, c, rmar))
                 (backward_elim ()))
-            (Output.make_result mat)
+            (O.make_result mat)
 
    let gen input = ge_gen input
 end
-
-
-
-(* What to return *)
-module OutJustMatrix(F : FEATURES) = struct
-  type res = C.contr
-  let make_result m = ret m.matrix
-end
-
-module OutDet(F : FEATURES) = struct
-  type res = C.contr * F.Det.outdet
-  let make_result m = perform
-    det <-- fromJust F.Det.fin ();
-    ret (Tuple.tup2 m.matrix det)
-  (* Initialization: check the preconditions of instantiation of this struct*)
-  let () = notNone F.Det.fin "Determinant is not computed here"
-end
-
-module OutRank(F : FEATURES) = struct
-  type res = C.contr * int
-  let make_result m = perform
-    rank <-- fromJust F.R.fin ();
-    ret (Tuple.tup2 m.matrix rank)
-  (* Initialization: check the preconditions of instantiation of this struct*)
-  let () = notNone F.R.fin "Rank is not computed here"
-end
-
-module OutDetRank(F : FEATURES) = struct
-  type res = C.contr * F.Det.outdet * int
-  let make_result m = perform
-    det  <-- fromJust F.Det.fin ();
-    rank <-- fromJust F.R.fin ();
-    ret (Tuple.tup3 m.matrix det rank)
-  (* Initialization: check the preconditions of instantiation of this struct*)
-  let () = notNone F.Det.fin "Determinant is not computed here"
-  let () = notNone F.R.fin "Rank is not computed here"
-end
-
-
-module OutDetRankPivot(F : FEATURES) = struct
-  type res = C.contr * F.Det.outdet * int *  F.P.perm_rep
-(* I wish to write that, but it can't be generalized!
-  let pivfin = match P.fin with Some fin -> fin
-  | None -> failwith "No Pivot computed provided"
-*)
-  let make_result m = perform
-    det  <-- fromJust F.Det.fin ();
-    rank <-- fromJust F.R.fin ();
-    pivmat <-- fromJust F.P.fin ();
-    ret (Tuple.tup4 m.matrix det rank pivmat)
-  (* Initialization: check the preconditions of instantiation of this struct*)
-  let () = notNone F.Det.fin "Determinant is not computed here"
-  let () = notNone F.R.fin "Rank is not computed here"
-  let () = notNone F.P.fin "Pivot is not computed here"
-end
-
-(*
-
-(* Only for Fields: because we can't extract the L in a non-field *)
-module Out_L_U(PK: PIVOTKIND)(Det : DETERMINANT) =
-  struct
-  type res = C.contr * C.contr * PK.perm_rep
-  module R = Rank
-  module P = KeepPivot(PK)
-  module L = SeparateLower
-(*
-  let make_result m = perform
-    pivmat <-- P.fin ();
-    lower <-- L.fin ();
-    match (pivmat,lower) with
-    | (Some p, Some l) -> ret (Tuple.tup3 m.matrix l p)
-    | _                -> raise CannotHappen
-*)
-  (* Initialization: check the preconditions of instantiation of this struct*)
-  let _ = assert (C.Dom.kind = Domains_sig.Domain_is_Field)
-end
-
-(* Only for Fields: because we can't extract the L in a non-field *)
-module Out_LU_Packed(PK: PIVOTKIND)(Det : DETERMINANT) =
-  struct
-  type res = C.contr * PK.perm_rep
-  module R = Rank
-  module P = KeepPivot(PK)
-  module L = PackedLower
-(*
-  let make_result _ = perform
-    pivmat <-- P.fin ();
-    lower <-- L.fin ();
-    (* we really should be able to assert that lower == m.matrix
-    here, but can't because the representation of lower/m.matrix
-    could be 'functional' !*)
-    match (pivmat,lower) with
-    | (Some p, Some l) -> ret (Tuple.tup2 l p)
-    | _                -> raise CannotHappen
-*)
-  (* Initialization: check the preconditions of instantiation of this struct*)
-  let _ = assert (C.Dom.kind = Domains_sig.Domain_is_Field)
-end
-*)
 
 end
 

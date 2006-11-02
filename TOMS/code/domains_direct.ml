@@ -179,6 +179,58 @@ module GenericVectorContainer(Dom:DOMAINL) =
     fun () -> ((x ()).arr).((n ())* (x ()).m + m ()) <- y ()
 end
 
+(* Matrix layed out column after column, in a Fortran fashion, using an
+   algebraic type as intermediary *)
+type 'a container2dfromFvector = FortranVector of ('a array * int * int)
+
+module FortranVectorContainer(Dom:DOMAINL):CONTAINER2D =
+  struct
+  module Dom = Dom
+  type contr = Dom.v container2dfromFvector
+  type 'a vc = ('a,contr) rep
+  type 'a vo = ('a,Dom.v) rep
+  let unpack z f = fun () -> match z () with 
+      FortranVector(x,n,m) -> (f (fun () -> x) (fun () -> n) (fun () -> m)) ()
+  let getL z i j = unpack z (fun x n _ -> fun () -> (x ()).((i ()) * (n ()) + (j ())) )
+  let dim2 z = unpack z (fun _ n _ -> fun () -> n ())
+  let dim1 z = unpack z (fun _ _ m -> fun () -> m ())
+  let mapper g z = match g with
+      | Some f -> unpack z (fun x n m -> fun () -> 
+              FortranVector(Array.map (fun q ->
+              (f (fun () -> q) () ) ) (x ()), (n ()), (m ())) )
+      | None   -> z
+  let copy a = unpack a (fun x n m -> fun () -> FortranVector(Array.copy (x ()),
+  (n ()), (m ())) )
+  let init n m = fun () -> FortranVector(Array.make ((n ())* (m ())) (Dom.zeroL
+  ()), (n ()), (m ()))
+  let identity n m = fun () -> FortranVector(Array.init ((n ())* (m ())) 
+      (fun k -> if ((k mod (n ()))* (m ()) + (m ()) = k) then Dom.oneL () else
+          Dom.zeroL ()), (n ()), (m ()) )
+  let swap_rows_stmt b r1 r2 = unpack b (fun a _ m -> fun () ->
+      let i1 = (r1 ())* (m ()) and i2 = (r2 ())* (m ()) in
+      for i = 0 to (m ())-1 do
+          let t = (a ()).(i1 + i) in
+          begin 
+              (a ()).(i1 + i) <- (a ()).(i2 + i);
+              (a ()).(i2 + i) <- t
+          end
+      done  )
+  let swap_cols_stmt b c1 c2 = unpack b ( fun a n m -> fun () ->
+      let nm = (n ()) * (m ()) in
+      let rec loop i1 i2 =
+        if i2 < nm then
+          let t = (a ()).(i1) in
+          begin
+            (a ()).(i1) <- (a ()).(i2);
+            (a ()).(i2) <- t;
+            loop (i1 + (m ())) (i2 + (m ()))
+          end
+          in loop (c1 ()) (c2 ()) )
+  let row_head b c r = getL b r c
+  let col_head_set z n m y = unpack z 
+      (fun x _ j -> fun () -> (x ()).((n ())* (j ()) + (m ())) <- (y ()) )
+end
+
 (* we use an association list as the representation of a sparse vector.
    It is assumed to be _sorted_ in increasing order of the index *)
 type 'a svect = (int*'a) list

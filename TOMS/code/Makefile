@@ -33,10 +33,10 @@ all: test $(TEST)
 
 .PHONY: test 
 test: $(SYNTAX_EXTENSION) $(OBJ) $(BASE) $(BASE2) $(RES) $(TEST)
-	diff -B ge.out ge.res
-	diff -B ge_direct.out ge_direct.res
-	diff -B rkf45.out rkf45.res
-	diff -B fft.out fft.res
+	diff -B -b ge.out ge.res
+	diff -B -b ge_direct.out ge_direct.res
+	diff -B -b rkf45.out rkf45.res
+	diff -B -b fft.out fft.res
 
 mytop: 
 	ocamlmktop -o mytop nums.cma
