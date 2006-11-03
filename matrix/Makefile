@@ -1,8 +1,5 @@
 # name:          Makefile
-# synopsis:      Construction rules for monadic "do" syntax extension
-# authors:       Chris L. Spiel (nifty stuff), Lydia E. van Dijk (boring rest)
-# last revision: Fri Jun 16 06:27:49 UTC 2006
-# ocaml version: 3.09.0
+# Stolen from other places, this thing is an awful mess!
 
 ########################################################################
 #
@@ -25,15 +22,18 @@ endef
 # Name of compiled syntax extension
 SYNTAX-EXTENSION := pa_monad.cmo
 
+# Name of code
+CODE := matrix.cmo
+
+TEST := matrix.out
+
 # Pre-Precessor-Pretty-Printer for OCaml
 CAMLP4 := camlp4o
-
 
 # Option to feed OCaml sources through the pre-processor. This
 # particular incantation is used to compile the test of our syntax
 # extensions.
 PP := -pp '$(CAMLP4) -I . $(SYNTAX-EXTENSION)'
-
 
 # Option to feed OCaml sources through the pre-processor.  This
 # particular incantation is used to compile a syntax extension for the
@@ -41,16 +41,16 @@ PP := -pp '$(CAMLP4) -I . $(SYNTAX-EXTENSION)'
 PP-EXT := -pp '$(CAMLP4) -I . pa_extend.cmo q_MLast.cmo'
 
 # OCaml interpreter
-OCAML := ocaml
+OCAML := metaocaml
 
 # OCaml byte-code compiler
 OCAMLC := metaocamlc
 
 # OCaml native code compiler
-OCAMLOPT := ocamlopt
+OCAMLOPT := metaocamlopt
 
 # Flags for both OCaml compilers
-OCAMLFLAGS := -warn-error AX -g -dtypes
+OCAMLFLAGS := -warn-error AX -g
 
 # Flags to compile a syntax extension
 OCAMLCFLAGS-PA := -I +camlp4 $(PP-EXT)
@@ -64,12 +64,6 @@ OCAMLOPTFLAGS := $(OCAMLFLAGS)
 # Flags to use when linking a byte-code or native executable
 OCAMLLINKFLAGS := -g
 
-# Flags for the documentation generator
-OCAMLDOCFLAGS := $(OCAMLCFLAGS-PA)
-
-# Flags for all findlib commands
-OCAMLFINDFLAGS :=
-
 ########################################################################
 #
 # Special Targets
@@ -78,15 +72,11 @@ OCAMLFINDFLAGS :=
 
 # Build all syntax extensions.
 .PHONY: all
-all: $(SYNTAX-EXTENSION)
+all: test
 
-# Check whether the project is ready for distribution:
-# (1) Remove all files that can be remade.
-# (2) Rebuild everything and run all tests.
-# (3) Generate documentation
-.PHONY: distcheck
-distcheck: distclean test doc
-
+.PHONE: test
+test: $(SYNTAX-EXTENSION) $(TEST)
+	diff -B -b matrix.out matrix.res 
 
 # Launch an OCaml interpreter enriched with all of our syntax
 # extensions.
@@ -100,20 +90,17 @@ top-level: $(SYNTAX-EXTENSION)
 clean:
 	rm -f *.cm[iox] *.annot
 	rm -f $(TESTS:.ml=) $(TESTS:.ml=.opt)
-	rm -f $(INTERACTIVE-TESTS:.ml=) $(INTERACTIVE-TESTS:.ml=.opt)
-
 
 # Remove all files that we can remake and all uninteresting ones, too.
 .PHONY: distclean
 distclean: clean
 	rm --force *.ml-pp *.mli-gen $(DISTNAME)-*.tar.gz *~
-	rm --force --recursive $(HTML-DOCUMENTATION)
-	rm --force META
-
 
 # Target for forced rule application
 .PHONY: FORCE
 
+mytop:
+	ocamlmktop -o mytop bigarray.cma
 
 ########################################################################
 #
@@ -125,32 +112,29 @@ distclean: clean
 pa_%.cmo: pa_%.ml
 	$(OCAMLC) $(OCAMLCFLAGS-PA) -c $<
 
-
 # Pretty-print an OCaml file.
 %.ml-pp: %.ml $(SYNTAX-EXTENSION) FORCE
 	$(CAMLP4) -I . $(SYNTAX-EXTENSION) pr_o.cmo $< > $@
-
 
 # Extract the interface definition from an OCaml implementation
 # module.
 %.mli-gen: %.ml FORCE
 	$(OCAMLC) $(OCAMLCFLAGS) -i $< > $@
 
-
 # Compile an OCaml interface definition.
 %.cmi: %.mli
 	$(OCAMLC) $(OCAMLCFLAGS) -c $<
-
 
 # Compile an OCaml implementation module to native code.
 %.cmx: %.ml
 	$(OCAMLOPT) $(OCAMLOPTFLAGS) -c $<
 
-
 # Compile an OCaml implementation module to byte-code.
 %.cmo: %.ml $(SYNTAX-EXTENSION)
 	$(OCAMLC) $(PP) $(OCAMLCFLAGS) -c $<
 
+%.out: test-%.ml %.cmo mytop
+	./mytop ./$*.cmo < $< > $@
 
 # Link byte-code executable.
 #
