@@ -74,7 +74,7 @@ OCAMLLINKFLAGS := -g
 .PHONY: all
 all: test
 
-.PHONE: test
+.PHONY: test
 test: $(SYNTAX-EXTENSION) $(TEST)
 	diff -B -b matrix.out matrix.res 
 
