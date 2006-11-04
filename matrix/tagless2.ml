@@ -19,35 +19,32 @@ let lam e env = .<fun x -> .~(e (.<x>.,env))>.;;
 (* extensions *)
 (* booleans *)
 let b (bv:bool) env = .<bv>.;;
-let band b1 b2 env = .<b1 && b2>. ;;
-let bor b1 b2 env = .<b1 || b2>. ;;
-let bnot b1 env = .<not b1 >. ;;
+let band b1 b2 env = .<.~(b1 env) && .~(b2 env)>. ;;
+let bor b1 b2 env = .<.~(b1 env) || .~(b2 env)>. ;;
+let bnot b1 env = .<not .~(b1 env)>. ;;
 
 (* integers *)
 let i (i:int) env = .<i>.;;
-let (++) i j env = .< i + j >. ;;
-let ( ** ) i j env = .< i * j >. ;;
-let ( -- ) i j env = .< i - j >. ;;
-let ( // ) i j env = .< i / j >. ;;
+let (++) i j env = .< .~(i env) + .~(j env) >. ;;
+let ( ** ) i j env = .< .~(i env) * .~(j env) >. ;;
+let ( -- ) i j env = .< .~(i env) - .~(j env) >. ;;
+let ( // ) i j env = .< .~(i env) / .~(j env) >. ;;
 
 (* pairs *)
-let p a b env = .< (a, b) >. ;;
-let pfst p env = .< fst p >. ;;
-let psnd p env = .< snd p >. ;;
+let p a b env = .< (.~(a env), .~(b env)) >. ;;
+let pfst p env = .< fst .~(p env) >. ;;
+let psnd p env = .< snd .~(p env) >. ;;
 
 (* references *)
-let rref a env = .< ref a>. ;;
-let (!!) a env = .< !a >. ;;
-let ( := ) aref b = .< aref := b >. ;;
+let rref a env = .< ref .~(a env)>. ;;
+let (!!) a env = .< !(.~(a env)) >. ;;
+let ( := ) aref b env = .< .~(aref env) := .~(b env) >. ;;
 
 (* sequencing *)
-let seq a b env = .< (a ; b) >. ;;
+let seq a b env = .< (.~(a env) ; .~(b env)) >. ;;
 
-(* even let ! However, note how the 2nd part is a code-to-code function
-    which kind of ruins the symmetry of things... *)
-let nlet v f env = .< let x = .~(v env) in .~(f .<x>.) >. ;;
-(* we can have this too, but it isn't much better! *)
-let nlet2 v f env = .< let x = .~(v env) in .~f x >. ;;
+(* even let! *)
+let nlet v f env = .< let x = .~(v env) in .~(f (.<x>.,env)) >. ;;
 
 (* tests *)
 let t1 = lam varZ;;
@@ -74,5 +71,5 @@ let t6 = (app
 let t6' = (lam (app varZ varZ)) ();; *)
 
 (* a few new tests *)
-let t7 = (5 ++ 6) () ;;
-let t8 = nlet ((5 ++ 6) ) (fun x -> .<.~x *3>. ) ();;
+let t7 = (i 5 ++ i 6) () ;;
+let t8 = nlet (i 5 ++ i 6) (varZ ** i 3) ();;
