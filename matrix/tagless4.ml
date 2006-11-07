@@ -8,8 +8,10 @@
               B of bool | I of int
 *)
 
+(* pure value representation *)
 type ('e,'d,'s) vrep
     = ('e,'d) code * 's option;;
+(* possibly effectful representation *)
 type ('e,'d,'s) crep
     = { eval: 'w. (('e,'d,'s) vrep -> ('e,'w) code) -> ('e,'w) code };;
 
