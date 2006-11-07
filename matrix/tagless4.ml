@@ -16,23 +16,27 @@ type ('e,'d,'s) crep
     = { eval: 'w. (('e,'d,'s) vrep -> ('e,'w) code) -> ('e,'w) code };;
 
 (* implementation *)
+let id x = x;;
 
 (* base *)
 (* literals and pure functions *)
-let pureZ (v: ('e,'d,'s) vrep) (env: 'r)
-    : ('e,'d,'s) crep
-    = { eval = fun k -> k v };;
-let pureS (pure: ('e,'b) code * 'b option -> 'r -> ('e,'d,'s) crep)
-          ((d: ('e, 'a -> 'b) code), (s: ('a -> 'b) option))
-          (env: 'r)
-    : ('e, 'a -> 'b, ('e,'a,'a) vrep -> ('e,'d,'s) crep) crep
-    = { eval = fun k -> k (d, Some (fun x -> match s, x with
-        | Some f, (_, Some x) -> let r = f x in pure (.<r>., Some r) env
-        | _, (x, _) -> pure (.<.~d .~x>., None) env)) };;
-let literal x = (.<x>., Some x);;
-let lit x = pureZ (literal x);;
-let unary f = pureS pureZ (literal f);;
-let binary f = pureS (pureS pureZ) (literal f);;
+let boolean (x:bool) env = { eval = fun k -> k (.<x>., Some x) };;
+let integer (x:int ) env = { eval = fun k -> k (.<x>., Some x) };;
+let pure d s =
+    { eval = fun k -> k ((match s with Some s -> .<s>. | None -> d), s) };;
+let impure d s =
+    { eval = fun k -> .<let r = .~d in .~(k (.<r>., None))>. };;
+let arg (fd, fs) =
+    let fd' od = .<fun xd -> .~(fd (od .<xd>.))>. in
+    let fs' od os = { eval = fun k -> k (fd' od, Some (fun (xd,xs) ->
+            fs (od xd)
+               (match os, xs with
+                | Some os, Some xs -> Some (os xs)
+                | _ -> None))) } in
+    (fd', fs');;
+let unary   purity d s env = snd           (arg (id, purity))   d s;;
+let binary  purity d s env = snd      (arg (arg (id, purity)))  d s;;
+let ternary purity d s env = snd (arg (arg (arg (id, purity)))) d s;;
 
 (* variables *)
 let varZ ((vc: ('e,'d,'s) vrep), _)
@@ -68,28 +72,30 @@ let iif (e0: 'r -> ('e,bool,bool) crep)
 
 (* extensions *)
 (* booleans *)
-let band b1 b2 = iif b1 b2 (lit false);;
-let bor  b1 b2 = iif b1 (lit true) b2 ;;
-let bnot env = unary not env;;
+let bfalse env = boolean false env;;
+let btrue  env = boolean true  env;;
+let band b1 b2 env = iif b1 b2 bfalse env;;
+let bor  b1 b2 env = iif b1 btrue b2  env;;
+let bnot env = unary pure (fun x -> .<not .~x>.) (Some not) env;;
 
 (* integers *)
-let ( ++ ) env = binary ( + ) env;;
-let ( ** ) env = binary ( * ) env;;
-let ( -- ) env = binary ( - ) env;;
-let ( // ) env = binary ( / ) env;;
+let add env = binary pure (fun x y -> .<.~x + .~y>.) (Some ( + )) env;;
+let mul env = binary pure (fun x y -> .<.~x * .~y>.) (Some ( * )) env;;
+let sub env = binary pure (fun x y -> .<.~x - .~y>.) (Some ( - )) env;;
+let div env = binary pure (fun x y -> .<.~x / .~y>.) (Some ( / )) env;;
 
 (* pairs *)
-let p env = binary (fun x y -> (x,y)) env;;
-let pfst env = unary fst env;;
-let psnd env = unary snd env;;
+let p env = binary pure (fun x y -> .<.~x,.~y>.) (Some (fun x y -> x,y)) env;;
+let pfst env = unary pure (fun x -> .<fst .~x>.) (Some fst) env;;
+let psnd env = unary pure (fun x -> .<snd .~x>.) (Some snd) env;;
 
 (* references *)
-let rref env = unary ref env;;
-let (!!) env = unary (fun r -> !r) env;;
-let (=:) env = binary (:=) env;;
+let rref env = unary impure (fun x -> .<ref .~x>.) None env;;
+let (!!) env = unary impure (fun x -> .<!(.~x)>.) None env;;
+let (=:) env = binary impure (fun x y -> .<.~x := .~y>.) None env;;
 
 (* sequencing *)
-let seq env = binary (fun a b -> b) env;;
+let seq env = binary pure (fun x y -> y) (Some (fun x y -> y)) env;;
 
 (* even let! *)
 let nlet v f = app (lam f) v;;
@@ -98,31 +104,34 @@ let nlet v f = app (lam f) v;;
 (* --to evaluate, say something like: .! ((t1 ()).eval fst) *)
 let t1 env = lam varZ env;;
 
-let t2 env = app (lam varZ) (lit true) env;;
+let t2 env = app (lam varZ) btrue env;;
 
 let t3 env = (lam (lam (varS varZ))) env;;
 
 let t4 env = app (lam (lam (varS varZ))) (lam varZ) env;;
 
-let t5 env = (app (app (lam (lam (app (app (varS varZ) (lit true)) varZ)))
+let t5 env = (app (app (lam (lam (app (app (varS varZ) btrue) varZ)))
                        (lam (lam varZ)))
-	          (lit false)) env;;
+	          bfalse) env;;
 
 (* the following are expected errors *)
 (* and are commented out for testing 
-let t6 env = (app (app (lam (lam (app (app (varS varZ) (lit true)) varZ)))
+let t6 env = (app (app (lam (lam (app (app (varS varZ) btrue) varZ)))
                        (lam varZ))
-	          (lit false)) env;;
+	          bfalse) env;;
 
 let t6' env = (lam (app varZ varZ)) env;; *)
 
 (* a few new tests *)
-let t7 env = app (app (++) (lit 5)) (lit 6) env;;
-let t8 env = nlet (app (app (++) (lit 5)) (lit 6))
-                  (app (app ( ** ) varZ) (lit 3)) env;;
+let t7 env = app (app add (integer 5)) (integer 6) env;;
+let t8 env = nlet (app (app add (integer 5)) (integer 6))
+                  (app (app mul varZ) (integer 3)) env;;
 
 (* test that side effects are not repeated *)
 let t9 env = lam (lam (nlet (app (varS varZ) varZ)
-                            (app (app (++) varZ) varZ))) env;;
+                            (app (app add varZ) varZ))) env;;
+(* test that side effects are repeated *)
+let t10 env = lam (lam (app (app add (app (varS varZ) varZ))
+                            (app (varS varZ) varZ))) env;;
 
 let t9' = (t9 ()).eval fst;;
