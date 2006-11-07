@@ -125,3 +125,4 @@ let t8 env = nlet (app (app (++) (lit 5)) (lit 6))
 let t9 env = lam (lam (nlet (app (varS varZ) varZ)
                             (app (app (++) varZ) varZ))) env;;
 
+let t9' = (t9 ()).eval fst;;
