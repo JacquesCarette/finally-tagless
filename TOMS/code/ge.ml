@@ -693,7 +693,8 @@ module Out_L_U(OD : OUTPUTDEP) = struct
     lower <-- fromJust IF.L.fin ();
     ret (Tuple.tup3 m.matrix lower pivmat)
   (* Initialization: check the preconditions of instantiation of this struct*)
-  let _ = assert (C.Dom.kind = Domains_sig.Domain_is_Field)
+  let _ = C.Dom.kind = Domains_sig.Domain_is_Field ||
+          failwith "Out_L_U: Can't extract the L in a non-field"
   let () = notNone IF.P.fin "Pivot is not computed here"
 end
 
@@ -712,7 +713,8 @@ module Out_LU_Packed(OD : OUTPUTDEP) = struct
     here, but can't because the representation of lower/m.matrix
     could be 'functional' !*)
   (* Initialization: check the preconditions of instantiation of this struct*)
-  let _ = assert (C.Dom.kind = Domains_sig.Domain_is_Field)
+  let _ = C.Dom.kind = Domains_sig.Domain_is_Field ||
+          failwith "Out_LU_Packed: Can't extract the L in a non-field"
   let () = notNone IF.P.fin "Pivot is not computed here"
 end
 
@@ -827,5 +829,3 @@ end
 end
 
 end
-
-

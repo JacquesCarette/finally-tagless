@@ -201,7 +201,8 @@ module GenFV5 = GenGE(struct
     module Input = InpJustMatrix
     module Output = OutDetRank end)
 
-(* For some reason, these 2 go bonkers - worry about them later
+(* For some reason, these 2 go bonkers - worry about them later *)
+(* Hmm, seem to work for me... *)
 module GenFV6 = GenGE(struct 
     module Det = NoDet
     module PivotF = RowPivot
@@ -209,6 +210,7 @@ module GenFV6 = GenGE(struct
     module Update = DivisionUpdate
     module Input = InpJustMatrix
     module Output = Out_L_U end)
+;;
 module GenFV7 = GenGE(struct 
     module Det = NoDet
     module PivotF = RowPivot
@@ -216,7 +218,9 @@ module GenFV7 = GenGE(struct
     module Update = DivisionUpdate
     module Input = InpJustMatrix
     module Output = Out_LU_Packed end)
-*)
+;;
+
+
 open G_GAC_I
 module GenIA1 = GenGE(struct 
     module Det = AbstractDet
@@ -225,15 +229,25 @@ module GenIA1 = GenGE(struct
     module Update = FractionFreeUpdate
     module Input = InpJustMatrix
     module Output = OutJustMatrix end)
-(* But this is an error!
-module GenIA1' = GenGE(struct 
+
+(* Check the pre-fligh tests. The test should trigger before the generation
+   begins!
+*)
+let _ = assert (
+  try
+    let module GenIA1' = GenGE(struct 
     module Det = AbstractDet
     module PivotF = RowPivot
     module PivotRep = PermList
     module Update = DivisionUpdate
     module Input = InpJustMatrix
     module Output = OutJustMatrix end)
-*)
+    in
+    false
+  with Failure "Cannot do Division in a non-field" -> true
+)
+;;
+
 module GenIA2 = GenGE(struct
     module Det = AbstractDet
     module PivotF = RowPivot
@@ -256,22 +270,38 @@ module GenIA4 = GenGE(struct
     module Input = InpJustMatrix 
     module Output = OutDetRank end)
 (* Neither of these two 'work' as one cannot output the L matrix
-   while FractionFree !
-module GenIA5 = GenGE(struct 
+   while FractionFree !*)
+
+let _ = assert (
+  try
+    let module GenIA5 = GenGE(struct 
     module Det = AbstractDet
     module PivotF = RowPivot
     module PivotRep = PermList
     module Update = FractionFreeUpdate
     module Input = InpJustMatrix
     module Output = Out_L_U end)
-module GenIA6 = GenGE(struct 
+    in
+    false
+  with Failure "Out_L_U: Can't extract the L in a non-field" -> true
+)
+;;
+
+let _ = assert (
+  try
+    let module GenIA6 = GenGE(struct 
     module Det = AbstractDet
     module PivotF = RowPivot
     module PivotRep = PermList
     module Update = FractionFreeUpdate
     module Input = InpJustMatrix
     module Output = Out_LU_Packed end)
-*)
+    in
+    false
+  with Failure "Out_LU_Packed: Can't extract the L in a non-field" -> true
+)
+;;
+
 open G_GVC_I
 module GenIV1 = GenGE(struct 
     module Det = AbstractDet
