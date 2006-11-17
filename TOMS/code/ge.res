@@ -134,7 +134,7 @@
             val rfetch : unit -> ('a * [> 'a tag_lstate ] * 'b, int ref) lm
             val decl : unit -> ('a * [> 'a tag_lstate ] * 'b, int ref) lm
             val succ : unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
-            val fin : (unit -> ('a * [> 'a tag_lstate ] * 'b, int) lm) option
+            val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, int) lm
           end
       end
     module Rank :
@@ -166,13 +166,12 @@
             val rfetch : unit -> ('a * [> 'a tag_lstate ] * 'b, int ref) lm
             val decl : unit -> ('a * [> 'a tag_lstate ] * 'b, int ref) lm
             val succ : unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
-            val fin : (unit -> ('a * [> 'a tag_lstate ] * 'b, int) lm) option
+            val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, int) lm
           end
         val fin :
-          (unit ->
-           ([> `TRan of ('b, 'c ref) Code.abstract ] as 'a) list ->
-           ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd)
-          option
+          unit ->
+          ([> `TRan of ('b, 'c ref) Code.abstract ] as 'a) list ->
+          ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd
       end
     module NoRank :
       sig
@@ -203,9 +202,9 @@
             val rfetch : unit -> ('a * [> 'a tag_lstate ] * 'b, int ref) lm
             val decl : unit -> ('a * [> 'a tag_lstate ] * 'b, int ref) lm
             val succ : unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
-            val fin : (unit -> ('a * [> 'a tag_lstate ] * 'b, int) lm) option
+            val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, int) lm
           end
-        val fin : 'a option
+        val fin : unit -> 'a
       end
     module type PIVOTKIND =
       sig
@@ -273,8 +272,7 @@
           (('a, unit) Code.abstract option, [> 'a tag_lstate ] list,
            ('a, 'b) Code.abstract)
           StateCPSMonad.monad
-        val fin :
-          (unit -> ('a * [> 'a tag_lstate ] * 'b, perm_rep) lm) option
+        val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, perm_rep) lm
       end
     module PivotCommon :
       functor (PK : PIVOTKIND) ->
@@ -320,10 +318,9 @@
             ([> `TPivot of ('a, PK.perm_rep ref) Code.abstract ] as 'b) list ->
             ('b list -> ('a, unit) Code.abstract option -> 'c) -> 'c
           val fin :
-            (unit ->
-             ([> `TPivot of ('b, 'c ref) Code.abstract ] as 'a) list ->
-             ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd)
-            option
+            unit ->
+            ([> `TPivot of ('b, 'c ref) Code.abstract ] as 'a) list ->
+            ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd
         end
     module DiscardPivot :
       sig
@@ -339,7 +336,7 @@
         val colrep : 'a PermList.ira -> 'a PermList.ira -> 'a PermList.fra
         val decl : 'a -> 'b -> ('b -> ('c, unit) Code.abstract -> 'd) -> 'd
         val add : 'a -> 'b -> ('b -> 'c option -> 'd) -> 'd
-        val fin : 'a option
+        val fin : unit -> 'a
       end
     module GenLA :
       functor (C : D.CONTAINER2D) ->
@@ -379,8 +376,7 @@
               val set :
                 ('a, C.Dom.v) Code.abstract ->
                 ('a * [> 'a tag_lstate ] * 'b, unit) lm
-              val fin :
-                (unit -> ('a * [> 'a tag_lstate ] * 'b, C.Dom.v) lm) option
+              val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, C.Dom.v) lm
             end
           module NoDet :
             sig
@@ -398,7 +394,7 @@
                 'a -> ('a -> ('b, C.Dom.v ref) Code.abstract -> 'c) -> 'c
               val set :
                 'a -> 'b -> ('b -> ('c, unit) Code.abstract -> 'd) -> 'd
-              val fin : 'a option
+              val fin : unit -> 'a
               type 'a tag_lstate = [ `TDet of 'a lstate ]
               type ('a, 'b) lm = ('c, 'b, 'd, 'e) cmonad
                 constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
@@ -454,13 +450,12 @@
                 ([> `TDet of 'd * ('a, 'b ref) Code.abstract ] as 'c) list ->
                 ('c list -> ('a, unit) Code.abstract -> 'e) -> 'e
               val fin :
-                (unit ->
-                 ([> `TDet of
-                       ('b, int ref) Code.abstract *
-                       ('b, C.Dom.v ref) Code.abstract ]
-                  as 'a)
-                 list -> ('a list -> ('b, C.Dom.v) Code.abstract -> 'c) -> 'c)
-                option
+                unit ->
+                ([> `TDet of
+                      ('b, int ref) Code.abstract *
+                      ('b, C.Dom.v ref) Code.abstract ]
+                 as 'a)
+                list -> ('a list -> ('b, C.Dom.v) Code.abstract -> 'c) -> 'c
             end
           module type UPDATE =
             functor (D : DETERMINANT) ->
@@ -528,8 +523,7 @@
                 ('a, int) Code.abstract ->
                 'a C.vo ->
                 'a C.Dom.vc -> ('a * [> 'a tag_lstate ] * 'b, unit) lm option
-              val fin :
-                (unit -> ('a * [> 'a tag_lstate ] * 'b, C.contr) lm) option
+              val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, C.contr) lm
               val wants_pack : bool
             end
           module TrackLower :
@@ -582,10 +576,9 @@
                  ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c)
                 option
               val fin :
-                (unit ->
-                 ([> `TLower of 'b ] as 'a) list ->
-                 ('a list -> 'b -> 'c) -> 'c)
-                option
+                unit ->
+                ([> `TLower of 'b ] as 'a) list ->
+                ('a list -> 'b -> 'c) -> 'c
               val wants_pack : bool
             end
           module PackedLower :
@@ -611,10 +604,9 @@
                 ('b list -> 'a -> 'c) -> 'c
               val updt : 'a -> 'b -> 'c -> 'd -> 'e -> 'f option
               val fin :
-                (unit ->
-                 ([> `TLower of 'b ] as 'a) list ->
-                 ('a list -> 'b -> 'c) -> 'c)
-                option
+                unit ->
+                ([> `TLower of 'b ] as 'a) list ->
+                ('a list -> 'b -> 'c) -> 'c
               val wants_pack : bool
             end
           module NoLower :
@@ -642,7 +634,7 @@
                 'a C.vo ->
                 'b ->
                 ('c -> ('c -> ('a, unit) Code.abstract -> 'd) -> 'd) option
-              val fin : 'a option
+              val fin : unit -> 'a
               val wants_pack : bool
             end
           module type INPUT =
@@ -772,10 +764,9 @@
                             val succ :
                               unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
                             val fin :
-                              (unit -> ('a * [> 'a tag_lstate ] * 'b, int) lm)
-                              option
+                              unit -> ('a * [> 'a tag_lstate ] * 'b, int) lm
                           end
-                        val fin : 'a option
+                        val fin : unit -> 'a
                       end
                     module P :
                       sig
@@ -799,7 +790,7 @@
                           'a ->
                           'b -> ('b -> ('c, unit) Code.abstract -> 'd) -> 'd
                         val add : 'a -> 'b -> ('b -> 'c option -> 'd) -> 'd
-                        val fin : 'a option
+                        val fin : unit -> 'a
                       end
                     module L :
                       sig
@@ -829,7 +820,7 @@
                           'b ->
                           ('c -> ('c -> ('a, unit) Code.abstract -> 'd) -> 'd)
                           option
-                        val fin : 'a option
+                        val fin : unit -> 'a
                         val wants_pack : bool
                       end
                   end
@@ -884,10 +875,9 @@
                             val succ :
                               unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
                             val fin :
-                              (unit -> ('a * [> 'a tag_lstate ] * 'b, int) lm)
-                              option
+                              unit -> ('a * [> 'a tag_lstate ] * 'b, int) lm
                           end
-                        val fin : 'a option
+                        val fin : unit -> 'a
                       end
                     module P :
                       sig
@@ -911,7 +901,7 @@
                           'a ->
                           'b -> ('b -> ('c, unit) Code.abstract -> 'd) -> 'd
                         val add : 'a -> 'b -> ('b -> 'c option -> 'd) -> 'd
-                        val fin : 'a option
+                        val fin : unit -> 'a
                       end
                     module L :
                       sig
@@ -941,7 +931,7 @@
                           'b ->
                           ('c -> ('c -> ('a, unit) Code.abstract -> 'd) -> 'd)
                           option
-                        val fin : 'a option
+                        val fin : unit -> 'a
                         val wants_pack : bool
                       end
                   end
@@ -1001,15 +991,13 @@
                             val succ :
                               unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
                             val fin :
-                              (unit -> ('a * [> 'a tag_lstate ] * 'b, int) lm)
-                              option
+                              unit -> ('a * [> 'a tag_lstate ] * 'b, int) lm
                           end
                         val fin :
-                          (unit ->
-                           ([> `TRan of ('b, 'c ref) Code.abstract ] as 'a)
-                           list ->
-                           ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd)
-                          option
+                          unit ->
+                          ([> `TRan of ('b, 'c ref) Code.abstract ] as 'a)
+                          list ->
+                          ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd
                       end
                     module P :
                       sig
@@ -1033,7 +1021,7 @@
                           'a ->
                           'b -> ('b -> ('c, unit) Code.abstract -> 'd) -> 'd
                         val add : 'a -> 'b -> ('b -> 'c option -> 'd) -> 'd
-                        val fin : 'a option
+                        val fin : unit -> 'a
                       end
                     module L :
                       sig
@@ -1063,7 +1051,7 @@
                           'b ->
                           ('c -> ('c -> ('a, unit) Code.abstract -> 'd) -> 'd)
                           option
-                        val fin : 'a option
+                        val fin : unit -> 'a
                         val wants_pack : bool
                       end
                   end
@@ -1120,15 +1108,13 @@
                             val succ :
                               unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
                             val fin :
-                              (unit -> ('a * [> 'a tag_lstate ] * 'b, int) lm)
-                              option
+                              unit -> ('a * [> 'a tag_lstate ] * 'b, int) lm
                           end
                         val fin :
-                          (unit ->
-                           ([> `TRan of ('b, 'c ref) Code.abstract ] as 'a)
-                           list ->
-                           ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd)
-                          option
+                          unit ->
+                          ([> `TRan of ('b, 'c ref) Code.abstract ] as 'a)
+                          list ->
+                          ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd
                       end
                     module P :
                       sig
@@ -1152,7 +1138,7 @@
                           'a ->
                           'b -> ('b -> ('c, unit) Code.abstract -> 'd) -> 'd
                         val add : 'a -> 'b -> ('b -> 'c option -> 'd) -> 'd
-                        val fin : 'a option
+                        val fin : unit -> 'a
                       end
                     module L :
                       sig
@@ -1182,7 +1168,7 @@
                           'b ->
                           ('c -> ('c -> ('a, unit) Code.abstract -> 'd) -> 'd)
                           option
-                        val fin : 'a option
+                        val fin : unit -> 'a
                         val wants_pack : bool
                       end
                   end
@@ -1245,15 +1231,13 @@
                             val succ :
                               unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
                             val fin :
-                              (unit -> ('a * [> 'a tag_lstate ] * 'b, int) lm)
-                              option
+                              unit -> ('a * [> 'a tag_lstate ] * 'b, int) lm
                           end
                         val fin :
-                          (unit ->
-                           ([> `TRan of ('b, 'c ref) Code.abstract ] as 'a)
-                           list ->
-                           ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd)
-                          option
+                          unit ->
+                          ([> `TRan of ('b, 'c ref) Code.abstract ] as 'a)
+                          list ->
+                          ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd
                       end
                     module P :
                       sig
@@ -1300,11 +1284,10 @@
                           ('b list -> ('a, unit) Code.abstract option -> 'c) ->
                           'c
                         val fin :
-                          (unit ->
-                           ([> `TPivot of ('b, 'c ref) Code.abstract ] as 'a)
-                           list ->
-                           ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd)
-                          option
+                          unit ->
+                          ([> `TPivot of ('b, 'c ref) Code.abstract ] as 'a)
+                          list ->
+                          ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd
                       end
                     module L :
                       sig
@@ -1334,7 +1317,7 @@
                           'b ->
                           ('c -> ('c -> ('a, unit) Code.abstract -> 'd) -> 'd)
                           option
-                        val fin : 'a option
+                        val fin : unit -> 'a
                         val wants_pack : bool
                       end
                   end
@@ -1398,10 +1381,9 @@
                             val succ :
                               unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
                             val fin :
-                              (unit -> ('a * [> 'a tag_lstate ] * 'b, int) lm)
-                              option
+                              unit -> ('a * [> 'a tag_lstate ] * 'b, int) lm
                           end
-                        val fin : 'a option
+                        val fin : unit -> 'a
                       end
                     module P :
                       sig
@@ -1448,11 +1430,10 @@
                           ('b list -> ('a, unit) Code.abstract option -> 'c) ->
                           'c
                         val fin :
-                          (unit ->
-                           ([> `TPivot of ('b, 'c ref) Code.abstract ] as 'a)
-                           list ->
-                           ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd)
-                          option
+                          unit ->
+                          ([> `TPivot of ('b, 'c ref) Code.abstract ] as 'a)
+                          list ->
+                          ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd
                       end
                     module L :
                       sig
@@ -1489,10 +1470,9 @@
                            ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c)
                           option
                         val fin :
-                          (unit ->
-                           ([> `TLower of 'b ] as 'a) list ->
-                           ('a list -> 'b -> 'c) -> 'c)
-                          option
+                          unit ->
+                          ([> `TLower of 'b ] as 'a) list ->
+                          ('a list -> 'b -> 'c) -> 'c
                         val wants_pack : bool
                       end
                   end
@@ -1553,10 +1533,9 @@
                             val succ :
                               unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
                             val fin :
-                              (unit -> ('a * [> 'a tag_lstate ] * 'b, int) lm)
-                              option
+                              unit -> ('a * [> 'a tag_lstate ] * 'b, int) lm
                           end
-                        val fin : 'a option
+                        val fin : unit -> 'a
                       end
                     module P :
                       sig
@@ -1603,11 +1582,10 @@
                           ('b list -> ('a, unit) Code.abstract option -> 'c) ->
                           'c
                         val fin :
-                          (unit ->
-                           ([> `TPivot of ('b, 'c ref) Code.abstract ] as 'a)
-                           list ->
-                           ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd)
-                          option
+                          unit ->
+                          ([> `TPivot of ('b, 'c ref) Code.abstract ] as 'a)
+                          list ->
+                          ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd
                       end
                     module L :
                       sig
@@ -1634,10 +1612,9 @@
                           ('b list -> 'a -> 'c) -> 'c
                         val updt : 'a -> 'b -> 'c -> 'd -> 'e -> 'f option
                         val fin :
-                          (unit ->
-                           ([> `TLower of 'b ] as 'a) list ->
-                           ('a list -> 'b -> 'c) -> 'c)
-                          option
+                          unit ->
+                          ([> `TLower of 'b ] as 'a) list ->
+                          ('a list -> 'b -> 'c) -> 'c
                         val wants_pack : bool
                       end
                   end
@@ -1705,10 +1682,9 @@
                               ('a * [> 'a TrackRank.tag_lstate ] * 'b, unit)
                               TrackRank.lm
                             val fin :
-                              (unit ->
-                               ('a * [> 'a TrackRank.tag_lstate ] * 'b, int)
-                               TrackRank.lm)
-                              option
+                              unit ->
+                              ('a * [> 'a TrackRank.tag_lstate ] * 'b, int)
+                              TrackRank.lm
                           end
                         module P :
                           sig
@@ -1733,9 +1709,8 @@
                                ('a, 'b) Code.abstract)
                               StateCPSMonad.monad
                             val fin :
-                              (unit ->
-                               ('a * [> 'a tag_lstate ] * 'b, perm_rep) lm)
-                              option
+                              unit ->
+                              ('a * [> 'a tag_lstate ] * 'b, perm_rep) lm
                           end
                         module L :
                           sig
@@ -1761,9 +1736,8 @@
                               'a C.Dom.vc ->
                               ('a * [> 'a tag_lstate ] * 'b, unit) lm option
                             val fin :
-                              (unit ->
-                               ('a * [> 'a tag_lstate ] * 'b, C.contr) lm)
-                              option
+                              unit ->
+                              ('a * [> 'a tag_lstate ] * 'b, C.contr) lm
                             val wants_pack : bool
                           end
                       end
@@ -2389,8 +2363,7 @@ module G_GAC_F :
         val set :
           ('a, GAC_F.Dom.v) Code.abstract ->
           ('a * [> 'a tag_lstate ] * 'b, unit) lm
-        val fin :
-          (unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_F.Dom.v) lm) option
+        val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_F.Dom.v) lm
       end
     module NoDet :
       sig
@@ -2405,7 +2378,7 @@ module G_GAC_F :
           unit ->
           'a -> ('a -> ('b, GAC_F.Dom.v ref) Code.abstract -> 'c) -> 'c
         val set : 'a -> 'b -> ('b -> ('c, unit) Code.abstract -> 'd) -> 'd
-        val fin : 'a option
+        val fin : unit -> 'a
         type 'a tag_lstate = [ `TDet of 'a lstate ]
         type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
           constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
@@ -2458,13 +2431,12 @@ module G_GAC_F :
           ([> `TDet of 'd * ('a, 'b ref) Code.abstract ] as 'c) list ->
           ('c list -> ('a, unit) Code.abstract -> 'e) -> 'e
         val fin :
-          (unit ->
-           ([> `TDet of
-                 ('b, int ref) Code.abstract *
-                 ('b, GAC_F.Dom.v ref) Code.abstract ]
-            as 'a)
-           list -> ('a list -> ('b, GAC_F.Dom.v) Code.abstract -> 'c) -> 'c)
-          option
+          unit ->
+          ([> `TDet of
+                ('b, int ref) Code.abstract *
+                ('b, GAC_F.Dom.v ref) Code.abstract ]
+           as 'a)
+          list -> ('a list -> ('b, GAC_F.Dom.v) Code.abstract -> 'c) -> 'c
       end
     module type UPDATE =
       functor (D : DETERMINANT) ->
@@ -2532,8 +2504,7 @@ module G_GAC_F :
           ('a, int) Code.abstract ->
           'a GAC_F.vo ->
           'a GAC_F.Dom.vc -> ('a * [> 'a tag_lstate ] * 'b, unit) lm option
-        val fin :
-          (unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_F.contr) lm) option
+        val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_F.contr) lm
         val wants_pack : bool
       end
     module TrackLower :
@@ -2582,9 +2553,8 @@ module G_GAC_F :
            ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c)
           option
         val fin :
-          (unit ->
-           ([> `TLower of 'b ] as 'a) list -> ('a list -> 'b -> 'c) -> 'c)
-          option
+          unit ->
+          ([> `TLower of 'b ] as 'a) list -> ('a list -> 'b -> 'c) -> 'c
         val wants_pack : bool
       end
     module PackedLower :
@@ -2607,9 +2577,8 @@ module G_GAC_F :
           ([> `TLower of 'a ] as 'b) list -> ('b list -> 'a -> 'c) -> 'c
         val updt : 'a -> 'b -> 'c -> 'd -> 'e -> 'f option
         val fin :
-          (unit ->
-           ([> `TLower of 'b ] as 'a) list -> ('a list -> 'b -> 'c) -> 'c)
-          option
+          unit ->
+          ([> `TLower of 'b ] as 'a) list -> ('a list -> 'b -> 'c) -> 'c
         val wants_pack : bool
       end
     module NoLower :
@@ -2634,7 +2603,7 @@ module G_GAC_F :
           ('a, int) Code.abstract ->
           'a GAC_F.vo ->
           'b -> ('c -> ('c -> ('a, unit) Code.abstract -> 'd) -> 'd) option
-        val fin : 'a option
+        val fin : unit -> 'a
         val wants_pack : bool
       end
     module type INPUT =
@@ -2755,10 +2724,9 @@ module G_GAC_F :
                       val succ :
                         unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
                       val fin :
-                        (unit -> ('a * [> 'a tag_lstate ] * 'b, int) lm)
-                        option
+                        unit -> ('a * [> 'a tag_lstate ] * 'b, int) lm
                     end
-                  val fin : 'a option
+                  val fin : unit -> 'a
                 end
               module P :
                 sig
@@ -2780,7 +2748,7 @@ module G_GAC_F :
                   val decl :
                     'a -> 'b -> ('b -> ('c, unit) Code.abstract -> 'd) -> 'd
                   val add : 'a -> 'b -> ('b -> 'c option -> 'd) -> 'd
-                  val fin : 'a option
+                  val fin : unit -> 'a
                 end
               module L :
                 sig
@@ -2808,7 +2776,7 @@ module G_GAC_F :
                     'b ->
                     ('c -> ('c -> ('a, unit) Code.abstract -> 'd) -> 'd)
                     option
-                  val fin : 'a option
+                  val fin : unit -> 'a
                   val wants_pack : bool
                 end
             end
@@ -2857,10 +2825,9 @@ module G_GAC_F :
                       val succ :
                         unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
                       val fin :
-                        (unit -> ('a * [> 'a tag_lstate ] * 'b, int) lm)
-                        option
+                        unit -> ('a * [> 'a tag_lstate ] * 'b, int) lm
                     end
-                  val fin : 'a option
+                  val fin : unit -> 'a
                 end
               module P :
                 sig
@@ -2882,7 +2849,7 @@ module G_GAC_F :
                   val decl :
                     'a -> 'b -> ('b -> ('c, unit) Code.abstract -> 'd) -> 'd
                   val add : 'a -> 'b -> ('b -> 'c option -> 'd) -> 'd
-                  val fin : 'a option
+                  val fin : unit -> 'a
                 end
               module L :
                 sig
@@ -2910,7 +2877,7 @@ module G_GAC_F :
                     'b ->
                     ('c -> ('c -> ('a, unit) Code.abstract -> 'd) -> 'd)
                     option
-                  val fin : 'a option
+                  val fin : unit -> 'a
                   val wants_pack : bool
                 end
             end
@@ -2964,14 +2931,12 @@ module G_GAC_F :
                       val succ :
                         unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
                       val fin :
-                        (unit -> ('a * [> 'a tag_lstate ] * 'b, int) lm)
-                        option
+                        unit -> ('a * [> 'a tag_lstate ] * 'b, int) lm
                     end
                   val fin :
-                    (unit ->
-                     ([> `TRan of ('b, 'c ref) Code.abstract ] as 'a) list ->
-                     ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd)
-                    option
+                    unit ->
+                    ([> `TRan of ('b, 'c ref) Code.abstract ] as 'a) list ->
+                    ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd
                 end
               module P :
                 sig
@@ -2993,7 +2958,7 @@ module G_GAC_F :
                   val decl :
                     'a -> 'b -> ('b -> ('c, unit) Code.abstract -> 'd) -> 'd
                   val add : 'a -> 'b -> ('b -> 'c option -> 'd) -> 'd
-                  val fin : 'a option
+                  val fin : unit -> 'a
                 end
               module L :
                 sig
@@ -3021,7 +2986,7 @@ module G_GAC_F :
                     'b ->
                     ('c -> ('c -> ('a, unit) Code.abstract -> 'd) -> 'd)
                     option
-                  val fin : 'a option
+                  val fin : unit -> 'a
                   val wants_pack : bool
                 end
             end
@@ -3072,14 +3037,12 @@ module G_GAC_F :
                       val succ :
                         unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
                       val fin :
-                        (unit -> ('a * [> 'a tag_lstate ] * 'b, int) lm)
-                        option
+                        unit -> ('a * [> 'a tag_lstate ] * 'b, int) lm
                     end
                   val fin :
-                    (unit ->
-                     ([> `TRan of ('b, 'c ref) Code.abstract ] as 'a) list ->
-                     ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd)
-                    option
+                    unit ->
+                    ([> `TRan of ('b, 'c ref) Code.abstract ] as 'a) list ->
+                    ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd
                 end
               module P :
                 sig
@@ -3101,7 +3064,7 @@ module G_GAC_F :
                   val decl :
                     'a -> 'b -> ('b -> ('c, unit) Code.abstract -> 'd) -> 'd
                   val add : 'a -> 'b -> ('b -> 'c option -> 'd) -> 'd
-                  val fin : 'a option
+                  val fin : unit -> 'a
                 end
               module L :
                 sig
@@ -3129,7 +3092,7 @@ module G_GAC_F :
                     'b ->
                     ('c -> ('c -> ('a, unit) Code.abstract -> 'd) -> 'd)
                     option
-                  val fin : 'a option
+                  val fin : unit -> 'a
                   val wants_pack : bool
                 end
             end
@@ -3186,14 +3149,12 @@ module G_GAC_F :
                       val succ :
                         unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
                       val fin :
-                        (unit -> ('a * [> 'a tag_lstate ] * 'b, int) lm)
-                        option
+                        unit -> ('a * [> 'a tag_lstate ] * 'b, int) lm
                     end
                   val fin :
-                    (unit ->
-                     ([> `TRan of ('b, 'c ref) Code.abstract ] as 'a) list ->
-                     ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd)
-                    option
+                    unit ->
+                    ([> `TRan of ('b, 'c ref) Code.abstract ] as 'a) list ->
+                    ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd
                 end
               module P :
                 sig
@@ -3238,10 +3199,9 @@ module G_GAC_F :
                     list ->
                     ('b list -> ('a, unit) Code.abstract option -> 'c) -> 'c
                   val fin :
-                    (unit ->
-                     ([> `TPivot of ('b, 'c ref) Code.abstract ] as 'a) list ->
-                     ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd)
-                    option
+                    unit ->
+                    ([> `TPivot of ('b, 'c ref) Code.abstract ] as 'a) list ->
+                    ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd
                 end
               module L :
                 sig
@@ -3269,7 +3229,7 @@ module G_GAC_F :
                     'b ->
                     ('c -> ('c -> ('a, unit) Code.abstract -> 'd) -> 'd)
                     option
-                  val fin : 'a option
+                  val fin : unit -> 'a
                   val wants_pack : bool
                 end
             end
@@ -3327,10 +3287,9 @@ module G_GAC_F :
                       val succ :
                         unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
                       val fin :
-                        (unit -> ('a * [> 'a tag_lstate ] * 'b, int) lm)
-                        option
+                        unit -> ('a * [> 'a tag_lstate ] * 'b, int) lm
                     end
-                  val fin : 'a option
+                  val fin : unit -> 'a
                 end
               module P :
                 sig
@@ -3375,10 +3334,9 @@ module G_GAC_F :
                     list ->
                     ('b list -> ('a, unit) Code.abstract option -> 'c) -> 'c
                   val fin :
-                    (unit ->
-                     ([> `TPivot of ('b, 'c ref) Code.abstract ] as 'a) list ->
-                     ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd)
-                    option
+                    unit ->
+                    ([> `TPivot of ('b, 'c ref) Code.abstract ] as 'a) list ->
+                    ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd
                 end
               module L :
                 sig
@@ -3413,10 +3371,9 @@ module G_GAC_F :
                      ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c)
                     option
                   val fin :
-                    (unit ->
-                     ([> `TLower of 'b ] as 'a) list ->
-                     ('a list -> 'b -> 'c) -> 'c)
-                    option
+                    unit ->
+                    ([> `TLower of 'b ] as 'a) list ->
+                    ('a list -> 'b -> 'c) -> 'c
                   val wants_pack : bool
                 end
             end
@@ -3471,10 +3428,9 @@ module G_GAC_F :
                       val succ :
                         unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
                       val fin :
-                        (unit -> ('a * [> 'a tag_lstate ] * 'b, int) lm)
-                        option
+                        unit -> ('a * [> 'a tag_lstate ] * 'b, int) lm
                     end
-                  val fin : 'a option
+                  val fin : unit -> 'a
                 end
               module P :
                 sig
@@ -3519,10 +3475,9 @@ module G_GAC_F :
                     list ->
                     ('b list -> ('a, unit) Code.abstract option -> 'c) -> 'c
                   val fin :
-                    (unit ->
-                     ([> `TPivot of ('b, 'c ref) Code.abstract ] as 'a) list ->
-                     ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd)
-                    option
+                    unit ->
+                    ([> `TPivot of ('b, 'c ref) Code.abstract ] as 'a) list ->
+                    ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd
                 end
               module L :
                 sig
@@ -3547,10 +3502,9 @@ module G_GAC_F :
                     ('b list -> 'a -> 'c) -> 'c
                   val updt : 'a -> 'b -> 'c -> 'd -> 'e -> 'f option
                   val fin :
-                    (unit ->
-                     ([> `TLower of 'b ] as 'a) list ->
-                     ('a list -> 'b -> 'c) -> 'c)
-                    option
+                    unit ->
+                    ([> `TLower of 'b ] as 'a) list ->
+                    ('a list -> 'b -> 'c) -> 'c
                   val wants_pack : bool
                 end
             end
@@ -3615,10 +3569,9 @@ module G_GAC_F :
                         ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, unit)
                         GEF.TrackRank.lm
                       val fin :
-                        (unit ->
-                         ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, int)
-                         GEF.TrackRank.lm)
-                        option
+                        unit ->
+                        ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, int)
+                        GEF.TrackRank.lm
                     end
                   module P :
                     sig
@@ -3641,8 +3594,7 @@ module G_GAC_F :
                          [> 'a tag_lstate ] list, ('a, 'b) Code.abstract)
                         StateCPSMonad.monad
                       val fin :
-                        (unit -> ('a * [> 'a tag_lstate ] * 'b, perm_rep) lm)
-                        option
+                        unit -> ('a * [> 'a tag_lstate ] * 'b, perm_rep) lm
                     end
                   module L :
                     sig
@@ -3666,9 +3618,8 @@ module G_GAC_F :
                         'a GAC_F.Dom.vc ->
                         ('a * [> 'a tag_lstate ] * 'b, unit) lm option
                       val fin :
-                        (unit ->
-                         ('a * [> 'a tag_lstate ] * 'b, GAC_F.contr) lm)
-                        option
+                        unit ->
+                        ('a * [> 'a tag_lstate ] * 'b, GAC_F.contr) lm
                       val wants_pack : bool
                     end
                 end
@@ -3777,8 +3728,7 @@ module G_GVC_F :
         val set :
           ('a, GVC_F.Dom.v) Code.abstract ->
           ('a * [> 'a tag_lstate ] * 'b, unit) lm
-        val fin :
-          (unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_F.Dom.v) lm) option
+        val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_F.Dom.v) lm
       end
     module NoDet :
       sig
@@ -3793,7 +3743,7 @@ module G_GVC_F :
           unit ->
           'a -> ('a -> ('b, GVC_F.Dom.v ref) Code.abstract -> 'c) -> 'c
         val set : 'a -> 'b -> ('b -> ('c, unit) Code.abstract -> 'd) -> 'd
-        val fin : 'a option
+        val fin : unit -> 'a
         type 'a tag_lstate = [ `TDet of 'a lstate ]
         type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
           constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
@@ -3846,13 +3796,12 @@ module G_GVC_F :
           ([> `TDet of 'd * ('a, 'b ref) Code.abstract ] as 'c) list ->
           ('c list -> ('a, unit) Code.abstract -> 'e) -> 'e
         val fin :
-          (unit ->
-           ([> `TDet of
-                 ('b, int ref) Code.abstract *
-                 ('b, GVC_F.Dom.v ref) Code.abstract ]
-            as 'a)
-           list -> ('a list -> ('b, GVC_F.Dom.v) Code.abstract -> 'c) -> 'c)
-          option
+          unit ->
+          ([> `TDet of
+                ('b, int ref) Code.abstract *
+                ('b, GVC_F.Dom.v ref) Code.abstract ]
+           as 'a)
+          list -> ('a list -> ('b, GVC_F.Dom.v) Code.abstract -> 'c) -> 'c
       end
     module type UPDATE =
       functor (D : DETERMINANT) ->
@@ -3920,8 +3869,7 @@ module G_GVC_F :
           ('a, int) Code.abstract ->
           'a GVC_F.vo ->
           'a GVC_F.Dom.vc -> ('a * [> 'a tag_lstate ] * 'b, unit) lm option
-        val fin :
-          (unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_F.contr) lm) option
+        val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_F.contr) lm
         val wants_pack : bool
       end
     module TrackLower :
@@ -3970,9 +3918,8 @@ module G_GVC_F :
            ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c)
           option
         val fin :
-          (unit ->
-           ([> `TLower of 'b ] as 'a) list -> ('a list -> 'b -> 'c) -> 'c)
-          option
+          unit ->
+          ([> `TLower of 'b ] as 'a) list -> ('a list -> 'b -> 'c) -> 'c
         val wants_pack : bool
       end
     module PackedLower :
@@ -3995,9 +3942,8 @@ module G_GVC_F :
           ([> `TLower of 'a ] as 'b) list -> ('b list -> 'a -> 'c) -> 'c
         val updt : 'a -> 'b -> 'c -> 'd -> 'e -> 'f option
         val fin :
-          (unit ->
-           ([> `TLower of 'b ] as 'a) list -> ('a list -> 'b -> 'c) -> 'c)
-          option
+          unit ->
+          ([> `TLower of 'b ] as 'a) list -> ('a list -> 'b -> 'c) -> 'c
         val wants_pack : bool
       end
     module NoLower :
@@ -4022,7 +3968,7 @@ module G_GVC_F :
           ('a, int) Code.abstract ->
           'a GVC_F.vo ->
           'b -> ('c -> ('c -> ('a, unit) Code.abstract -> 'd) -> 'd) option
-        val fin : 'a option
+        val fin : unit -> 'a
         val wants_pack : bool
       end
     module type INPUT =
@@ -4143,10 +4089,9 @@ module G_GVC_F :
                       val succ :
                         unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
                       val fin :
-                        (unit -> ('a * [> 'a tag_lstate ] * 'b, int) lm)
-                        option
+                        unit -> ('a * [> 'a tag_lstate ] * 'b, int) lm
                     end
-                  val fin : 'a option
+                  val fin : unit -> 'a
                 end
               module P :
                 sig
@@ -4168,7 +4113,7 @@ module G_GVC_F :
                   val decl :
                     'a -> 'b -> ('b -> ('c, unit) Code.abstract -> 'd) -> 'd
                   val add : 'a -> 'b -> ('b -> 'c option -> 'd) -> 'd
-                  val fin : 'a option
+                  val fin : unit -> 'a
                 end
               module L :
                 sig
@@ -4196,7 +4141,7 @@ module G_GVC_F :
                     'b ->
                     ('c -> ('c -> ('a, unit) Code.abstract -> 'd) -> 'd)
                     option
-                  val fin : 'a option
+                  val fin : unit -> 'a
                   val wants_pack : bool
                 end
             end
@@ -4245,10 +4190,9 @@ module G_GVC_F :
                       val succ :
                         unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
                       val fin :
-                        (unit -> ('a * [> 'a tag_lstate ] * 'b, int) lm)
-                        option
+                        unit -> ('a * [> 'a tag_lstate ] * 'b, int) lm
                     end
-                  val fin : 'a option
+                  val fin : unit -> 'a
                 end
               module P :
                 sig
@@ -4270,7 +4214,7 @@ module G_GVC_F :
                   val decl :
                     'a -> 'b -> ('b -> ('c, unit) Code.abstract -> 'd) -> 'd
                   val add : 'a -> 'b -> ('b -> 'c option -> 'd) -> 'd
-                  val fin : 'a option
+                  val fin : unit -> 'a
                 end
               module L :
                 sig
@@ -4298,7 +4242,7 @@ module G_GVC_F :
                     'b ->
                     ('c -> ('c -> ('a, unit) Code.abstract -> 'd) -> 'd)
                     option
-                  val fin : 'a option
+                  val fin : unit -> 'a
                   val wants_pack : bool
                 end
             end
@@ -4352,14 +4296,12 @@ module G_GVC_F :
                       val succ :
                         unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
                       val fin :
-                        (unit -> ('a * [> 'a tag_lstate ] * 'b, int) lm)
-                        option
+                        unit -> ('a * [> 'a tag_lstate ] * 'b, int) lm
                     end
                   val fin :
-                    (unit ->
-                     ([> `TRan of ('b, 'c ref) Code.abstract ] as 'a) list ->
-                     ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd)
-                    option
+                    unit ->
+                    ([> `TRan of ('b, 'c ref) Code.abstract ] as 'a) list ->
+                    ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd
                 end
               module P :
                 sig
@@ -4381,7 +4323,7 @@ module G_GVC_F :
                   val decl :
                     'a -> 'b -> ('b -> ('c, unit) Code.abstract -> 'd) -> 'd
                   val add : 'a -> 'b -> ('b -> 'c option -> 'd) -> 'd
-                  val fin : 'a option
+                  val fin : unit -> 'a
                 end
               module L :
                 sig
@@ -4409,7 +4351,7 @@ module G_GVC_F :
                     'b ->
                     ('c -> ('c -> ('a, unit) Code.abstract -> 'd) -> 'd)
                     option
-                  val fin : 'a option
+                  val fin : unit -> 'a
                   val wants_pack : bool
                 end
             end
@@ -4460,14 +4402,12 @@ module G_GVC_F :
                       val succ :
                         unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
                       val fin :
-                        (unit -> ('a * [> 'a tag_lstate ] * 'b, int) lm)
-                        option
+                        unit -> ('a * [> 'a tag_lstate ] * 'b, int) lm
                     end
                   val fin :
-                    (unit ->
-                     ([> `TRan of ('b, 'c ref) Code.abstract ] as 'a) list ->
-                     ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd)
-                    option
+                    unit ->
+                    ([> `TRan of ('b, 'c ref) Code.abstract ] as 'a) list ->
+                    ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd
                 end
               module P :
                 sig
@@ -4489,7 +4429,7 @@ module G_GVC_F :
                   val decl :
                     'a -> 'b -> ('b -> ('c, unit) Code.abstract -> 'd) -> 'd
                   val add : 'a -> 'b -> ('b -> 'c option -> 'd) -> 'd
-                  val fin : 'a option
+                  val fin : unit -> 'a
                 end
               module L :
                 sig
@@ -4517,7 +4457,7 @@ module G_GVC_F :
                     'b ->
                     ('c -> ('c -> ('a, unit) Code.abstract -> 'd) -> 'd)
                     option
-                  val fin : 'a option
+                  val fin : unit -> 'a
                   val wants_pack : bool
                 end
             end
@@ -4574,14 +4514,12 @@ module G_GVC_F :
                       val succ :
                         unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
                       val fin :
-                        (unit -> ('a * [> 'a tag_lstate ] * 'b, int) lm)
-                        option
+                        unit -> ('a * [> 'a tag_lstate ] * 'b, int) lm
                     end
                   val fin :
-                    (unit ->
-                     ([> `TRan of ('b, 'c ref) Code.abstract ] as 'a) list ->
-                     ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd)
-                    option
+                    unit ->
+                    ([> `TRan of ('b, 'c ref) Code.abstract ] as 'a) list ->
+                    ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd
                 end
               module P :
                 sig
@@ -4626,10 +4564,9 @@ module G_GVC_F :
                     list ->
                     ('b list -> ('a, unit) Code.abstract option -> 'c) -> 'c
                   val fin :
-                    (unit ->
-                     ([> `TPivot of ('b, 'c ref) Code.abstract ] as 'a) list ->
-                     ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd)
-                    option
+                    unit ->
+                    ([> `TPivot of ('b, 'c ref) Code.abstract ] as 'a) list ->
+                    ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd
                 end
               module L :
                 sig
@@ -4657,7 +4594,7 @@ module G_GVC_F :
                     'b ->
                     ('c -> ('c -> ('a, unit) Code.abstract -> 'd) -> 'd)
                     option
-                  val fin : 'a option
+                  val fin : unit -> 'a
                   val wants_pack : bool
                 end
             end
@@ -4715,10 +4652,9 @@ module G_GVC_F :
                       val succ :
                         unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
                       val fin :
-                        (unit -> ('a * [> 'a tag_lstate ] * 'b, int) lm)
-                        option
+                        unit -> ('a * [> 'a tag_lstate ] * 'b, int) lm
                     end
-                  val fin : 'a option
+                  val fin : unit -> 'a
                 end
               module P :
                 sig
@@ -4763,10 +4699,9 @@ module G_GVC_F :
                     list ->
                     ('b list -> ('a, unit) Code.abstract option -> 'c) -> 'c
                   val fin :
-                    (unit ->
-                     ([> `TPivot of ('b, 'c ref) Code.abstract ] as 'a) list ->
-                     ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd)
-                    option
+                    unit ->
+                    ([> `TPivot of ('b, 'c ref) Code.abstract ] as 'a) list ->
+                    ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd
                 end
               module L :
                 sig
@@ -4801,10 +4736,9 @@ module G_GVC_F :
                      ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c)
                     option
                   val fin :
-                    (unit ->
-                     ([> `TLower of 'b ] as 'a) list ->
-                     ('a list -> 'b -> 'c) -> 'c)
-                    option
+                    unit ->
+                    ([> `TLower of 'b ] as 'a) list ->
+                    ('a list -> 'b -> 'c) -> 'c
                   val wants_pack : bool
                 end
             end
@@ -4859,10 +4793,9 @@ module G_GVC_F :
                       val succ :
                         unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
                       val fin :
-                        (unit -> ('a * [> 'a tag_lstate ] * 'b, int) lm)
-                        option
+                        unit -> ('a * [> 'a tag_lstate ] * 'b, int) lm
                     end
-                  val fin : 'a option
+                  val fin : unit -> 'a
                 end
               module P :
                 sig
@@ -4907,10 +4840,9 @@ module G_GVC_F :
                     list ->
                     ('b list -> ('a, unit) Code.abstract option -> 'c) -> 'c
                   val fin :
-                    (unit ->
-                     ([> `TPivot of ('b, 'c ref) Code.abstract ] as 'a) list ->
-                     ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd)
-                    option
+                    unit ->
+                    ([> `TPivot of ('b, 'c ref) Code.abstract ] as 'a) list ->
+                    ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd
                 end
               module L :
                 sig
@@ -4935,10 +4867,9 @@ module G_GVC_F :
                     ('b list -> 'a -> 'c) -> 'c
                   val updt : 'a -> 'b -> 'c -> 'd -> 'e -> 'f option
                   val fin :
-                    (unit ->
-                     ([> `TLower of 'b ] as 'a) list ->
-                     ('a list -> 'b -> 'c) -> 'c)
-                    option
+                    unit ->
+                    ([> `TLower of 'b ] as 'a) list ->
+                    ('a list -> 'b -> 'c) -> 'c
                   val wants_pack : bool
                 end
             end
@@ -5003,10 +4934,9 @@ module G_GVC_F :
                         ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, unit)
                         GEF.TrackRank.lm
                       val fin :
-                        (unit ->
-                         ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, int)
-                         GEF.TrackRank.lm)
-                        option
+                        unit ->
+                        ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, int)
+                        GEF.TrackRank.lm
                     end
                   module P :
                     sig
@@ -5029,8 +4959,7 @@ module G_GVC_F :
                          [> 'a tag_lstate ] list, ('a, 'b) Code.abstract)
                         StateCPSMonad.monad
                       val fin :
-                        (unit -> ('a * [> 'a tag_lstate ] * 'b, perm_rep) lm)
-                        option
+                        unit -> ('a * [> 'a tag_lstate ] * 'b, perm_rep) lm
                     end
                   module L :
                     sig
@@ -5054,9 +4983,8 @@ module G_GVC_F :
                         'a GVC_F.Dom.vc ->
                         ('a * [> 'a tag_lstate ] * 'b, unit) lm option
                       val fin :
-                        (unit ->
-                         ('a * [> 'a tag_lstate ] * 'b, GVC_F.contr) lm)
-                        option
+                        unit ->
+                        ('a * [> 'a tag_lstate ] * 'b, GVC_F.contr) lm
                       val wants_pack : bool
                     end
                 end
@@ -5165,8 +5093,7 @@ module G_GAC_I :
         val set :
           ('a, GAC_I.Dom.v) Code.abstract ->
           ('a * [> 'a tag_lstate ] * 'b, unit) lm
-        val fin :
-          (unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_I.Dom.v) lm) option
+        val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_I.Dom.v) lm
       end
     module NoDet :
       sig
@@ -5181,7 +5108,7 @@ module G_GAC_I :
           unit ->
           'a -> ('a -> ('b, GAC_I.Dom.v ref) Code.abstract -> 'c) -> 'c
         val set : 'a -> 'b -> ('b -> ('c, unit) Code.abstract -> 'd) -> 'd
-        val fin : 'a option
+        val fin : unit -> 'a
         type 'a tag_lstate = [ `TDet of 'a lstate ]
         type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
           constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
@@ -5234,13 +5161,12 @@ module G_GAC_I :
           ([> `TDet of 'd * ('a, 'b ref) Code.abstract ] as 'c) list ->
           ('c list -> ('a, unit) Code.abstract -> 'e) -> 'e
         val fin :
-          (unit ->
-           ([> `TDet of
-                 ('b, int ref) Code.abstract *
-                 ('b, GAC_I.Dom.v ref) Code.abstract ]
-            as 'a)
-           list -> ('a list -> ('b, GAC_I.Dom.v) Code.abstract -> 'c) -> 'c)
-          option
+          unit ->
+          ([> `TDet of
+                ('b, int ref) Code.abstract *
+                ('b, GAC_I.Dom.v ref) Code.abstract ]
+           as 'a)
+          list -> ('a list -> ('b, GAC_I.Dom.v) Code.abstract -> 'c) -> 'c
       end
     module type UPDATE =
       functor (D : DETERMINANT) ->
@@ -5308,8 +5234,7 @@ module G_GAC_I :
           ('a, int) Code.abstract ->
           'a GAC_I.vo ->
           'a GAC_I.Dom.vc -> ('a * [> 'a tag_lstate ] * 'b, unit) lm option
-        val fin :
-          (unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_I.contr) lm) option
+        val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_I.contr) lm
         val wants_pack : bool
       end
     module TrackLower :
@@ -5358,9 +5283,8 @@ module G_GAC_I :
            ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c)
           option
         val fin :
-          (unit ->
-           ([> `TLower of 'b ] as 'a) list -> ('a list -> 'b -> 'c) -> 'c)
-          option
+          unit ->
+          ([> `TLower of 'b ] as 'a) list -> ('a list -> 'b -> 'c) -> 'c
         val wants_pack : bool
       end
     module PackedLower :
@@ -5383,9 +5307,8 @@ module G_GAC_I :
           ([> `TLower of 'a ] as 'b) list -> ('b list -> 'a -> 'c) -> 'c
         val updt : 'a -> 'b -> 'c -> 'd -> 'e -> 'f option
         val fin :
-          (unit ->
-           ([> `TLower of 'b ] as 'a) list -> ('a list -> 'b -> 'c) -> 'c)
-          option
+          unit ->
+          ([> `TLower of 'b ] as 'a) list -> ('a list -> 'b -> 'c) -> 'c
         val wants_pack : bool
       end
     module NoLower :
@@ -5410,7 +5333,7 @@ module G_GAC_I :
           ('a, int) Code.abstract ->
           'a GAC_I.vo ->
           'b -> ('c -> ('c -> ('a, unit) Code.abstract -> 'd) -> 'd) option
-        val fin : 'a option
+        val fin : unit -> 'a
         val wants_pack : bool
       end
     module type INPUT =
@@ -5531,10 +5454,9 @@ module G_GAC_I :
                       val succ :
                         unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
                       val fin :
-                        (unit -> ('a * [> 'a tag_lstate ] * 'b, int) lm)
-                        option
+                        unit -> ('a * [> 'a tag_lstate ] * 'b, int) lm
                     end
-                  val fin : 'a option
+                  val fin : unit -> 'a
                 end
               module P :
                 sig
@@ -5556,7 +5478,7 @@ module G_GAC_I :
                   val decl :
                     'a -> 'b -> ('b -> ('c, unit) Code.abstract -> 'd) -> 'd
                   val add : 'a -> 'b -> ('b -> 'c option -> 'd) -> 'd
-                  val fin : 'a option
+                  val fin : unit -> 'a
                 end
               module L :
                 sig
@@ -5584,7 +5506,7 @@ module G_GAC_I :
                     'b ->
                     ('c -> ('c -> ('a, unit) Code.abstract -> 'd) -> 'd)
                     option
-                  val fin : 'a option
+                  val fin : unit -> 'a
                   val wants_pack : bool
                 end
             end
@@ -5633,10 +5555,9 @@ module G_GAC_I :
                       val succ :
                         unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
                       val fin :
-                        (unit -> ('a * [> 'a tag_lstate ] * 'b, int) lm)
-                        option
+                        unit -> ('a * [> 'a tag_lstate ] * 'b, int) lm
                     end
-                  val fin : 'a option
+                  val fin : unit -> 'a
                 end
               module P :
                 sig
@@ -5658,7 +5579,7 @@ module G_GAC_I :
                   val decl :
                     'a -> 'b -> ('b -> ('c, unit) Code.abstract -> 'd) -> 'd
                   val add : 'a -> 'b -> ('b -> 'c option -> 'd) -> 'd
-                  val fin : 'a option
+                  val fin : unit -> 'a
                 end
               module L :
                 sig
@@ -5686,7 +5607,7 @@ module G_GAC_I :
                     'b ->
                     ('c -> ('c -> ('a, unit) Code.abstract -> 'd) -> 'd)
                     option
-                  val fin : 'a option
+                  val fin : unit -> 'a
                   val wants_pack : bool
                 end
             end
@@ -5740,14 +5661,12 @@ module G_GAC_I :
                       val succ :
                         unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
                       val fin :
-                        (unit -> ('a * [> 'a tag_lstate ] * 'b, int) lm)
-                        option
+                        unit -> ('a * [> 'a tag_lstate ] * 'b, int) lm
                     end
                   val fin :
-                    (unit ->
-                     ([> `TRan of ('b, 'c ref) Code.abstract ] as 'a) list ->
-                     ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd)
-                    option
+                    unit ->
+                    ([> `TRan of ('b, 'c ref) Code.abstract ] as 'a) list ->
+                    ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd
                 end
               module P :
                 sig
@@ -5769,7 +5688,7 @@ module G_GAC_I :
                   val decl :
                     'a -> 'b -> ('b -> ('c, unit) Code.abstract -> 'd) -> 'd
                   val add : 'a -> 'b -> ('b -> 'c option -> 'd) -> 'd
-                  val fin : 'a option
+                  val fin : unit -> 'a
                 end
               module L :
                 sig
@@ -5797,7 +5716,7 @@ module G_GAC_I :
                     'b ->
                     ('c -> ('c -> ('a, unit) Code.abstract -> 'd) -> 'd)
                     option
-                  val fin : 'a option
+                  val fin : unit -> 'a
                   val wants_pack : bool
                 end
             end
@@ -5848,14 +5767,12 @@ module G_GAC_I :
                       val succ :
                         unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
                       val fin :
-                        (unit -> ('a * [> 'a tag_lstate ] * 'b, int) lm)
-                        option
+                        unit -> ('a * [> 'a tag_lstate ] * 'b, int) lm
                     end
                   val fin :
-                    (unit ->
-                     ([> `TRan of ('b, 'c ref) Code.abstract ] as 'a) list ->
-                     ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd)
-                    option
+                    unit ->
+                    ([> `TRan of ('b, 'c ref) Code.abstract ] as 'a) list ->
+                    ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd
                 end
               module P :
                 sig
@@ -5877,7 +5794,7 @@ module G_GAC_I :
                   val decl :
                     'a -> 'b -> ('b -> ('c, unit) Code.abstract -> 'd) -> 'd
                   val add : 'a -> 'b -> ('b -> 'c option -> 'd) -> 'd
-                  val fin : 'a option
+                  val fin : unit -> 'a
                 end
               module L :
                 sig
@@ -5905,7 +5822,7 @@ module G_GAC_I :
                     'b ->
                     ('c -> ('c -> ('a, unit) Code.abstract -> 'd) -> 'd)
                     option
-                  val fin : 'a option
+                  val fin : unit -> 'a
                   val wants_pack : bool
                 end
             end
@@ -5962,14 +5879,12 @@ module G_GAC_I :
                       val succ :
                         unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
                       val fin :
-                        (unit -> ('a * [> 'a tag_lstate ] * 'b, int) lm)
-                        option
+                        unit -> ('a * [> 'a tag_lstate ] * 'b, int) lm
                     end
                   val fin :
-                    (unit ->
-                     ([> `TRan of ('b, 'c ref) Code.abstract ] as 'a) list ->
-                     ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd)
-                    option
+                    unit ->
+                    ([> `TRan of ('b, 'c ref) Code.abstract ] as 'a) list ->
+                    ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd
                 end
               module P :
                 sig
@@ -6014,10 +5929,9 @@ module G_GAC_I :
                     list ->
                     ('b list -> ('a, unit) Code.abstract option -> 'c) -> 'c
                   val fin :
-                    (unit ->
-                     ([> `TPivot of ('b, 'c ref) Code.abstract ] as 'a) list ->
-                     ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd)
-                    option
+                    unit ->
+                    ([> `TPivot of ('b, 'c ref) Code.abstract ] as 'a) list ->
+                    ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd
                 end
               module L :
                 sig
@@ -6045,7 +5959,7 @@ module G_GAC_I :
                     'b ->
                     ('c -> ('c -> ('a, unit) Code.abstract -> 'd) -> 'd)
                     option
-                  val fin : 'a option
+                  val fin : unit -> 'a
                   val wants_pack : bool
                 end
             end
@@ -6103,10 +6017,9 @@ module G_GAC_I :
                       val succ :
                         unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
                       val fin :
-                        (unit -> ('a * [> 'a tag_lstate ] * 'b, int) lm)
-                        option
+                        unit -> ('a * [> 'a tag_lstate ] * 'b, int) lm
                     end
-                  val fin : 'a option
+                  val fin : unit -> 'a
                 end
               module P :
                 sig
@@ -6151,10 +6064,9 @@ module G_GAC_I :
                     list ->
                     ('b list -> ('a, unit) Code.abstract option -> 'c) -> 'c
                   val fin :
-                    (unit ->
-                     ([> `TPivot of ('b, 'c ref) Code.abstract ] as 'a) list ->
-                     ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd)
-                    option
+                    unit ->
+                    ([> `TPivot of ('b, 'c ref) Code.abstract ] as 'a) list ->
+                    ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd
                 end
               module L :
                 sig
@@ -6189,10 +6101,9 @@ module G_GAC_I :
                      ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c)
                     option
                   val fin :
-                    (unit ->
-                     ([> `TLower of 'b ] as 'a) list ->
-                     ('a list -> 'b -> 'c) -> 'c)
-                    option
+                    unit ->
+                    ([> `TLower of 'b ] as 'a) list ->
+                    ('a list -> 'b -> 'c) -> 'c
                   val wants_pack : bool
                 end
             end
@@ -6247,10 +6158,9 @@ module G_GAC_I :
                       val succ :
                         unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
                       val fin :
-                        (unit -> ('a * [> 'a tag_lstate ] * 'b, int) lm)
-                        option
+                        unit -> ('a * [> 'a tag_lstate ] * 'b, int) lm
                     end
-                  val fin : 'a option
+                  val fin : unit -> 'a
                 end
               module P :
                 sig
@@ -6295,10 +6205,9 @@ module G_GAC_I :
                     list ->
                     ('b list -> ('a, unit) Code.abstract option -> 'c) -> 'c
                   val fin :
-                    (unit ->
-                     ([> `TPivot of ('b, 'c ref) Code.abstract ] as 'a) list ->
-                     ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd)
-                    option
+                    unit ->
+                    ([> `TPivot of ('b, 'c ref) Code.abstract ] as 'a) list ->
+                    ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd
                 end
               module L :
                 sig
@@ -6323,10 +6232,9 @@ module G_GAC_I :
                     ('b list -> 'a -> 'c) -> 'c
                   val updt : 'a -> 'b -> 'c -> 'd -> 'e -> 'f option
                   val fin :
-                    (unit ->
-                     ([> `TLower of 'b ] as 'a) list ->
-                     ('a list -> 'b -> 'c) -> 'c)
-                    option
+                    unit ->
+                    ([> `TLower of 'b ] as 'a) list ->
+                    ('a list -> 'b -> 'c) -> 'c
                   val wants_pack : bool
                 end
             end
@@ -6391,10 +6299,9 @@ module G_GAC_I :
                         ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, unit)
                         GEF.TrackRank.lm
                       val fin :
-                        (unit ->
-                         ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, int)
-                         GEF.TrackRank.lm)
-                        option
+                        unit ->
+                        ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, int)
+                        GEF.TrackRank.lm
                     end
                   module P :
                     sig
@@ -6417,8 +6324,7 @@ module G_GAC_I :
                          [> 'a tag_lstate ] list, ('a, 'b) Code.abstract)
                         StateCPSMonad.monad
                       val fin :
-                        (unit -> ('a * [> 'a tag_lstate ] * 'b, perm_rep) lm)
-                        option
+                        unit -> ('a * [> 'a tag_lstate ] * 'b, perm_rep) lm
                     end
                   module L :
                     sig
@@ -6442,9 +6348,8 @@ module G_GAC_I :
                         'a GAC_I.Dom.vc ->
                         ('a * [> 'a tag_lstate ] * 'b, unit) lm option
                       val fin :
-                        (unit ->
-                         ('a * [> 'a tag_lstate ] * 'b, GAC_I.contr) lm)
-                        option
+                        unit ->
+                        ('a * [> 'a tag_lstate ] * 'b, GAC_I.contr) lm
                       val wants_pack : bool
                     end
                 end
@@ -6553,8 +6458,7 @@ module G_GVC_I :
         val set :
           ('a, GVC_I.Dom.v) Code.abstract ->
           ('a * [> 'a tag_lstate ] * 'b, unit) lm
-        val fin :
-          (unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_I.Dom.v) lm) option
+        val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_I.Dom.v) lm
       end
     module NoDet :
       sig
@@ -6569,7 +6473,7 @@ module G_GVC_I :
           unit ->
           'a -> ('a -> ('b, GVC_I.Dom.v ref) Code.abstract -> 'c) -> 'c
         val set : 'a -> 'b -> ('b -> ('c, unit) Code.abstract -> 'd) -> 'd
-        val fin : 'a option
+        val fin : unit -> 'a
         type 'a tag_lstate = [ `TDet of 'a lstate ]
         type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
           constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
@@ -6622,13 +6526,12 @@ module G_GVC_I :
           ([> `TDet of 'd * ('a, 'b ref) Code.abstract ] as 'c) list ->
           ('c list -> ('a, unit) Code.abstract -> 'e) -> 'e
         val fin :
-          (unit ->
-           ([> `TDet of
-                 ('b, int ref) Code.abstract *
-                 ('b, GVC_I.Dom.v ref) Code.abstract ]
-            as 'a)
-           list -> ('a list -> ('b, GVC_I.Dom.v) Code.abstract -> 'c) -> 'c)
-          option
+          unit ->
+          ([> `TDet of
+                ('b, int ref) Code.abstract *
+                ('b, GVC_I.Dom.v ref) Code.abstract ]
+           as 'a)
+          list -> ('a list -> ('b, GVC_I.Dom.v) Code.abstract -> 'c) -> 'c
       end
     module type UPDATE =
       functor (D : DETERMINANT) ->
@@ -6696,8 +6599,7 @@ module G_GVC_I :
           ('a, int) Code.abstract ->
           'a GVC_I.vo ->
           'a GVC_I.Dom.vc -> ('a * [> 'a tag_lstate ] * 'b, unit) lm option
-        val fin :
-          (unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_I.contr) lm) option
+        val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_I.contr) lm
         val wants_pack : bool
       end
     module TrackLower :
@@ -6746,9 +6648,8 @@ module G_GVC_I :
            ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c)
           option
         val fin :
-          (unit ->
-           ([> `TLower of 'b ] as 'a) list -> ('a list -> 'b -> 'c) -> 'c)
-          option
+          unit ->
+          ([> `TLower of 'b ] as 'a) list -> ('a list -> 'b -> 'c) -> 'c
         val wants_pack : bool
       end
     module PackedLower :
@@ -6771,9 +6672,8 @@ module G_GVC_I :
           ([> `TLower of 'a ] as 'b) list -> ('b list -> 'a -> 'c) -> 'c
         val updt : 'a -> 'b -> 'c -> 'd -> 'e -> 'f option
         val fin :
-          (unit ->
-           ([> `TLower of 'b ] as 'a) list -> ('a list -> 'b -> 'c) -> 'c)
-          option
+          unit ->
+          ([> `TLower of 'b ] as 'a) list -> ('a list -> 'b -> 'c) -> 'c
         val wants_pack : bool
       end
     module NoLower :
@@ -6798,7 +6698,7 @@ module G_GVC_I :
           ('a, int) Code.abstract ->
           'a GVC_I.vo ->
           'b -> ('c -> ('c -> ('a, unit) Code.abstract -> 'd) -> 'd) option
-        val fin : 'a option
+        val fin : unit -> 'a
         val wants_pack : bool
       end
     module type INPUT =
@@ -6919,10 +6819,9 @@ module G_GVC_I :
                       val succ :
                         unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
                       val fin :
-                        (unit -> ('a * [> 'a tag_lstate ] * 'b, int) lm)
-                        option
+                        unit -> ('a * [> 'a tag_lstate ] * 'b, int) lm
                     end
-                  val fin : 'a option
+                  val fin : unit -> 'a
                 end
               module P :
                 sig
@@ -6944,7 +6843,7 @@ module G_GVC_I :
                   val decl :
                     'a -> 'b -> ('b -> ('c, unit) Code.abstract -> 'd) -> 'd
                   val add : 'a -> 'b -> ('b -> 'c option -> 'd) -> 'd
-                  val fin : 'a option
+                  val fin : unit -> 'a
                 end
               module L :
                 sig
@@ -6972,7 +6871,7 @@ module G_GVC_I :
                     'b ->
                     ('c -> ('c -> ('a, unit) Code.abstract -> 'd) -> 'd)
                     option
-                  val fin : 'a option
+                  val fin : unit -> 'a
                   val wants_pack : bool
                 end
             end
@@ -7021,10 +6920,9 @@ module G_GVC_I :
                       val succ :
                         unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
                       val fin :
-                        (unit -> ('a * [> 'a tag_lstate ] * 'b, int) lm)
-                        option
+                        unit -> ('a * [> 'a tag_lstate ] * 'b, int) lm
                     end
-                  val fin : 'a option
+                  val fin : unit -> 'a
                 end
               module P :
                 sig
@@ -7046,7 +6944,7 @@ module G_GVC_I :
                   val decl :
                     'a -> 'b -> ('b -> ('c, unit) Code.abstract -> 'd) -> 'd
                   val add : 'a -> 'b -> ('b -> 'c option -> 'd) -> 'd
-                  val fin : 'a option
+                  val fin : unit -> 'a
                 end
               module L :
                 sig
@@ -7074,7 +6972,7 @@ module G_GVC_I :
                     'b ->
                     ('c -> ('c -> ('a, unit) Code.abstract -> 'd) -> 'd)
                     option
-                  val fin : 'a option
+                  val fin : unit -> 'a
                   val wants_pack : bool
                 end
             end
@@ -7128,14 +7026,12 @@ module G_GVC_I :
                       val succ :
                         unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
                       val fin :
-                        (unit -> ('a * [> 'a tag_lstate ] * 'b, int) lm)
-                        option
+                        unit -> ('a * [> 'a tag_lstate ] * 'b, int) lm
                     end
                   val fin :
-                    (unit ->
-                     ([> `TRan of ('b, 'c ref) Code.abstract ] as 'a) list ->
-                     ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd)
-                    option
+                    unit ->
+                    ([> `TRan of ('b, 'c ref) Code.abstract ] as 'a) list ->
+                    ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd
                 end
               module P :
                 sig
@@ -7157,7 +7053,7 @@ module G_GVC_I :
                   val decl :
                     'a -> 'b -> ('b -> ('c, unit) Code.abstract -> 'd) -> 'd
                   val add : 'a -> 'b -> ('b -> 'c option -> 'd) -> 'd
-                  val fin : 'a option
+                  val fin : unit -> 'a
                 end
               module L :
                 sig
@@ -7185,7 +7081,7 @@ module G_GVC_I :
                     'b ->
                     ('c -> ('c -> ('a, unit) Code.abstract -> 'd) -> 'd)
                     option
-                  val fin : 'a option
+                  val fin : unit -> 'a
                   val wants_pack : bool
                 end
             end
@@ -7236,14 +7132,12 @@ module G_GVC_I :
                       val succ :
                         unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
                       val fin :
-                        (unit -> ('a * [> 'a tag_lstate ] * 'b, int) lm)
-                        option
+                        unit -> ('a * [> 'a tag_lstate ] * 'b, int) lm
                     end
                   val fin :
-                    (unit ->
-                     ([> `TRan of ('b, 'c ref) Code.abstract ] as 'a) list ->
-                     ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd)
-                    option
+                    unit ->
+                    ([> `TRan of ('b, 'c ref) Code.abstract ] as 'a) list ->
+                    ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd
                 end
               module P :
                 sig
@@ -7265,7 +7159,7 @@ module G_GVC_I :
                   val decl :
                     'a -> 'b -> ('b -> ('c, unit) Code.abstract -> 'd) -> 'd
                   val add : 'a -> 'b -> ('b -> 'c option -> 'd) -> 'd
-                  val fin : 'a option
+                  val fin : unit -> 'a
                 end
               module L :
                 sig
@@ -7293,7 +7187,7 @@ module G_GVC_I :
                     'b ->
                     ('c -> ('c -> ('a, unit) Code.abstract -> 'd) -> 'd)
                     option
-                  val fin : 'a option
+                  val fin : unit -> 'a
                   val wants_pack : bool
                 end
             end
@@ -7350,14 +7244,12 @@ module G_GVC_I :
                       val succ :
                         unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
                       val fin :
-                        (unit -> ('a * [> 'a tag_lstate ] * 'b, int) lm)
-                        option
+                        unit -> ('a * [> 'a tag_lstate ] * 'b, int) lm
                     end
                   val fin :
-                    (unit ->
-                     ([> `TRan of ('b, 'c ref) Code.abstract ] as 'a) list ->
-                     ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd)
-                    option
+                    unit ->
+                    ([> `TRan of ('b, 'c ref) Code.abstract ] as 'a) list ->
+                    ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd
                 end
               module P :
                 sig
@@ -7402,10 +7294,9 @@ module G_GVC_I :
                     list ->
                     ('b list -> ('a, unit) Code.abstract option -> 'c) -> 'c
                   val fin :
-                    (unit ->
-                     ([> `TPivot of ('b, 'c ref) Code.abstract ] as 'a) list ->
-                     ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd)
-                    option
+                    unit ->
+                    ([> `TPivot of ('b, 'c ref) Code.abstract ] as 'a) list ->
+                    ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd
                 end
               module L :
                 sig
@@ -7433,7 +7324,7 @@ module G_GVC_I :
                     'b ->
                     ('c -> ('c -> ('a, unit) Code.abstract -> 'd) -> 'd)
                     option
-                  val fin : 'a option
+                  val fin : unit -> 'a
                   val wants_pack : bool
                 end
             end
@@ -7491,10 +7382,9 @@ module G_GVC_I :
                       val succ :
                         unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
                       val fin :
-                        (unit -> ('a * [> 'a tag_lstate ] * 'b, int) lm)
-                        option
+                        unit -> ('a * [> 'a tag_lstate ] * 'b, int) lm
                     end
-                  val fin : 'a option
+                  val fin : unit -> 'a
                 end
               module P :
                 sig
@@ -7539,10 +7429,9 @@ module G_GVC_I :
                     list ->
                     ('b list -> ('a, unit) Code.abstract option -> 'c) -> 'c
                   val fin :
-                    (unit ->
-                     ([> `TPivot of ('b, 'c ref) Code.abstract ] as 'a) list ->
-                     ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd)
-                    option
+                    unit ->
+                    ([> `TPivot of ('b, 'c ref) Code.abstract ] as 'a) list ->
+                    ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd
                 end
               module L :
                 sig
@@ -7577,10 +7466,9 @@ module G_GVC_I :
                      ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c)
                     option
                   val fin :
-                    (unit ->
-                     ([> `TLower of 'b ] as 'a) list ->
-                     ('a list -> 'b -> 'c) -> 'c)
-                    option
+                    unit ->
+                    ([> `TLower of 'b ] as 'a) list ->
+                    ('a list -> 'b -> 'c) -> 'c
                   val wants_pack : bool
                 end
             end
@@ -7635,10 +7523,9 @@ module G_GVC_I :
                       val succ :
                         unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
                       val fin :
-                        (unit -> ('a * [> 'a tag_lstate ] * 'b, int) lm)
-                        option
+                        unit -> ('a * [> 'a tag_lstate ] * 'b, int) lm
                     end
-                  val fin : 'a option
+                  val fin : unit -> 'a
                 end
               module P :
                 sig
@@ -7683,10 +7570,9 @@ module G_GVC_I :
                     list ->
                     ('b list -> ('a, unit) Code.abstract option -> 'c) -> 'c
                   val fin :
-                    (unit ->
-                     ([> `TPivot of ('b, 'c ref) Code.abstract ] as 'a) list ->
-                     ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd)
-                    option
+                    unit ->
+                    ([> `TPivot of ('b, 'c ref) Code.abstract ] as 'a) list ->
+                    ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd
                 end
               module L :
                 sig
@@ -7711,10 +7597,9 @@ module G_GVC_I :
                     ('b list -> 'a -> 'c) -> 'c
                   val updt : 'a -> 'b -> 'c -> 'd -> 'e -> 'f option
                   val fin :
-                    (unit ->
-                     ([> `TLower of 'b ] as 'a) list ->
-                     ('a list -> 'b -> 'c) -> 'c)
-                    option
+                    unit ->
+                    ([> `TLower of 'b ] as 'a) list ->
+                    ('a list -> 'b -> 'c) -> 'c
                   val wants_pack : bool
                 end
             end
@@ -7779,10 +7664,9 @@ module G_GVC_I :
                         ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, unit)
                         GEF.TrackRank.lm
                       val fin :
-                        (unit ->
-                         ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, int)
-                         GEF.TrackRank.lm)
-                        option
+                        unit ->
+                        ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, int)
+                        GEF.TrackRank.lm
                     end
                   module P :
                     sig
@@ -7805,8 +7689,7 @@ module G_GVC_I :
                          [> 'a tag_lstate ] list, ('a, 'b) Code.abstract)
                         StateCPSMonad.monad
                       val fin :
-                        (unit -> ('a * [> 'a tag_lstate ] * 'b, perm_rep) lm)
-                        option
+                        unit -> ('a * [> 'a tag_lstate ] * 'b, perm_rep) lm
                     end
                   module L :
                     sig
@@ -7830,9 +7713,8 @@ module G_GVC_I :
                         'a GVC_I.Dom.vc ->
                         ('a * [> 'a tag_lstate ] * 'b, unit) lm option
                       val fin :
-                        (unit ->
-                         ('a * [> 'a tag_lstate ] * 'b, GVC_I.contr) lm)
-                        option
+                        unit ->
+                        ('a * [> 'a tag_lstate ] * 'b, GVC_I.contr) lm
                       val wants_pack : bool
                     end
                 end
@@ -7941,8 +7823,7 @@ module G_GAC_R :
         val set :
           ('a, GAC_R.Dom.v) Code.abstract ->
           ('a * [> 'a tag_lstate ] * 'b, unit) lm
-        val fin :
-          (unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_R.Dom.v) lm) option
+        val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_R.Dom.v) lm
       end
     module NoDet :
       sig
@@ -7957,7 +7838,7 @@ module G_GAC_R :
           unit ->
           'a -> ('a -> ('b, GAC_R.Dom.v ref) Code.abstract -> 'c) -> 'c
         val set : 'a -> 'b -> ('b -> ('c, unit) Code.abstract -> 'd) -> 'd
-        val fin : 'a option
+        val fin : unit -> 'a
         type 'a tag_lstate = [ `TDet of 'a lstate ]
         type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
           constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
@@ -8010,13 +7891,12 @@ module G_GAC_R :
           ([> `TDet of 'd * ('a, 'b ref) Code.abstract ] as 'c) list ->
           ('c list -> ('a, unit) Code.abstract -> 'e) -> 'e
         val fin :
-          (unit ->
-           ([> `TDet of
-                 ('b, int ref) Code.abstract *
-                 ('b, GAC_R.Dom.v ref) Code.abstract ]
-            as 'a)
-           list -> ('a list -> ('b, GAC_R.Dom.v) Code.abstract -> 'c) -> 'c)
-          option
+          unit ->
+          ([> `TDet of
+                ('b, int ref) Code.abstract *
+                ('b, GAC_R.Dom.v ref) Code.abstract ]
+           as 'a)
+          list -> ('a list -> ('b, GAC_R.Dom.v) Code.abstract -> 'c) -> 'c
       end
     module type UPDATE =
       functor (D : DETERMINANT) ->
@@ -8084,8 +7964,7 @@ module G_GAC_R :
           ('a, int) Code.abstract ->
           'a GAC_R.vo ->
           'a GAC_R.Dom.vc -> ('a * [> 'a tag_lstate ] * 'b, unit) lm option
-        val fin :
-          (unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_R.contr) lm) option
+        val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_R.contr) lm
         val wants_pack : bool
       end
     module TrackLower :
@@ -8134,9 +8013,8 @@ module G_GAC_R :
            ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c)
           option
         val fin :
-          (unit ->
-           ([> `TLower of 'b ] as 'a) list -> ('a list -> 'b -> 'c) -> 'c)
-          option
+          unit ->
+          ([> `TLower of 'b ] as 'a) list -> ('a list -> 'b -> 'c) -> 'c
         val wants_pack : bool
       end
     module PackedLower :
@@ -8159,9 +8037,8 @@ module G_GAC_R :
           ([> `TLower of 'a ] as 'b) list -> ('b list -> 'a -> 'c) -> 'c
         val updt : 'a -> 'b -> 'c -> 'd -> 'e -> 'f option
         val fin :
-          (unit ->
-           ([> `TLower of 'b ] as 'a) list -> ('a list -> 'b -> 'c) -> 'c)
-          option
+          unit ->
+          ([> `TLower of 'b ] as 'a) list -> ('a list -> 'b -> 'c) -> 'c
         val wants_pack : bool
       end
     module NoLower :
@@ -8186,7 +8063,7 @@ module G_GAC_R :
           ('a, int) Code.abstract ->
           'a GAC_R.vo ->
           'b -> ('c -> ('c -> ('a, unit) Code.abstract -> 'd) -> 'd) option
-        val fin : 'a option
+        val fin : unit -> 'a
         val wants_pack : bool
       end
     module type INPUT =
@@ -8307,10 +8184,9 @@ module G_GAC_R :
                       val succ :
                         unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
                       val fin :
-                        (unit -> ('a * [> 'a tag_lstate ] * 'b, int) lm)
-                        option
+                        unit -> ('a * [> 'a tag_lstate ] * 'b, int) lm
                     end
-                  val fin : 'a option
+                  val fin : unit -> 'a
                 end
               module P :
                 sig
@@ -8332,7 +8208,7 @@ module G_GAC_R :
                   val decl :
                     'a -> 'b -> ('b -> ('c, unit) Code.abstract -> 'd) -> 'd
                   val add : 'a -> 'b -> ('b -> 'c option -> 'd) -> 'd
-                  val fin : 'a option
+                  val fin : unit -> 'a
                 end
               module L :
                 sig
@@ -8360,7 +8236,7 @@ module G_GAC_R :
                     'b ->
                     ('c -> ('c -> ('a, unit) Code.abstract -> 'd) -> 'd)
                     option
-                  val fin : 'a option
+                  val fin : unit -> 'a
                   val wants_pack : bool
                 end
             end
@@ -8409,10 +8285,9 @@ module G_GAC_R :
                       val succ :
                         unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
                       val fin :
-                        (unit -> ('a * [> 'a tag_lstate ] * 'b, int) lm)
-                        option
+                        unit -> ('a * [> 'a tag_lstate ] * 'b, int) lm
                     end
-                  val fin : 'a option
+                  val fin : unit -> 'a
                 end
               module P :
                 sig
@@ -8434,7 +8309,7 @@ module G_GAC_R :
                   val decl :
                     'a -> 'b -> ('b -> ('c, unit) Code.abstract -> 'd) -> 'd
                   val add : 'a -> 'b -> ('b -> 'c option -> 'd) -> 'd
-                  val fin : 'a option
+                  val fin : unit -> 'a
                 end
               module L :
                 sig
@@ -8462,7 +8337,7 @@ module G_GAC_R :
                     'b ->
                     ('c -> ('c -> ('a, unit) Code.abstract -> 'd) -> 'd)
                     option
-                  val fin : 'a option
+                  val fin : unit -> 'a
                   val wants_pack : bool
                 end
             end
@@ -8516,14 +8391,12 @@ module G_GAC_R :
                       val succ :
                         unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
                       val fin :
-                        (unit -> ('a * [> 'a tag_lstate ] * 'b, int) lm)
-                        option
+                        unit -> ('a * [> 'a tag_lstate ] * 'b, int) lm
                     end
                   val fin :
-                    (unit ->
-                     ([> `TRan of ('b, 'c ref) Code.abstract ] as 'a) list ->
-                     ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd)
-                    option
+                    unit ->
+                    ([> `TRan of ('b, 'c ref) Code.abstract ] as 'a) list ->
+                    ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd
                 end
               module P :
                 sig
@@ -8545,7 +8418,7 @@ module G_GAC_R :
                   val decl :
                     'a -> 'b -> ('b -> ('c, unit) Code.abstract -> 'd) -> 'd
                   val add : 'a -> 'b -> ('b -> 'c option -> 'd) -> 'd
-                  val fin : 'a option
+                  val fin : unit -> 'a
                 end
               module L :
                 sig
@@ -8573,7 +8446,7 @@ module G_GAC_R :
                     'b ->
                     ('c -> ('c -> ('a, unit) Code.abstract -> 'd) -> 'd)
                     option
-                  val fin : 'a option
+                  val fin : unit -> 'a
                   val wants_pack : bool
                 end
             end
@@ -8624,14 +8497,12 @@ module G_GAC_R :
                       val succ :
                         unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
                       val fin :
-                        (unit -> ('a * [> 'a tag_lstate ] * 'b, int) lm)
-                        option
+                        unit -> ('a * [> 'a tag_lstate ] * 'b, int) lm
                     end
                   val fin :
-                    (unit ->
-                     ([> `TRan of ('b, 'c ref) Code.abstract ] as 'a) list ->
-                     ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd)
-                    option
+                    unit ->
+                    ([> `TRan of ('b, 'c ref) Code.abstract ] as 'a) list ->
+                    ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd
                 end
               module P :
                 sig
@@ -8653,7 +8524,7 @@ module G_GAC_R :
                   val decl :
                     'a -> 'b -> ('b -> ('c, unit) Code.abstract -> 'd) -> 'd
                   val add : 'a -> 'b -> ('b -> 'c option -> 'd) -> 'd
-                  val fin : 'a option
+                  val fin : unit -> 'a
                 end
               module L :
                 sig
@@ -8681,7 +8552,7 @@ module G_GAC_R :
                     'b ->
                     ('c -> ('c -> ('a, unit) Code.abstract -> 'd) -> 'd)
                     option
-                  val fin : 'a option
+                  val fin : unit -> 'a
                   val wants_pack : bool
                 end
             end
@@ -8738,14 +8609,12 @@ module G_GAC_R :
                       val succ :
                         unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
                       val fin :
-                        (unit -> ('a * [> 'a tag_lstate ] * 'b, int) lm)
-                        option
+                        unit -> ('a * [> 'a tag_lstate ] * 'b, int) lm
                     end
                   val fin :
-                    (unit ->
-                     ([> `TRan of ('b, 'c ref) Code.abstract ] as 'a) list ->
-                     ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd)
-                    option
+                    unit ->
+                    ([> `TRan of ('b, 'c ref) Code.abstract ] as 'a) list ->
+                    ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd
                 end
               module P :
                 sig
@@ -8790,10 +8659,9 @@ module G_GAC_R :
                     list ->
                     ('b list -> ('a, unit) Code.abstract option -> 'c) -> 'c
                   val fin :
-                    (unit ->
-                     ([> `TPivot of ('b, 'c ref) Code.abstract ] as 'a) list ->
-                     ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd)
-                    option
+                    unit ->
+                    ([> `TPivot of ('b, 'c ref) Code.abstract ] as 'a) list ->
+                    ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd
                 end
               module L :
                 sig
@@ -8821,7 +8689,7 @@ module G_GAC_R :
                     'b ->
                     ('c -> ('c -> ('a, unit) Code.abstract -> 'd) -> 'd)
                     option
-                  val fin : 'a option
+                  val fin : unit -> 'a
                   val wants_pack : bool
                 end
             end
@@ -8879,10 +8747,9 @@ module G_GAC_R :
                       val succ :
                         unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
                       val fin :
-                        (unit -> ('a * [> 'a tag_lstate ] * 'b, int) lm)
-                        option
+                        unit -> ('a * [> 'a tag_lstate ] * 'b, int) lm
                     end
-                  val fin : 'a option
+                  val fin : unit -> 'a
                 end
               module P :
                 sig
@@ -8927,10 +8794,9 @@ module G_GAC_R :
                     list ->
                     ('b list -> ('a, unit) Code.abstract option -> 'c) -> 'c
                   val fin :
-                    (unit ->
-                     ([> `TPivot of ('b, 'c ref) Code.abstract ] as 'a) list ->
-                     ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd)
-                    option
+                    unit ->
+                    ([> `TPivot of ('b, 'c ref) Code.abstract ] as 'a) list ->
+                    ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd
                 end
               module L :
                 sig
@@ -8965,10 +8831,9 @@ module G_GAC_R :
                      ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c)
                     option
                   val fin :
-                    (unit ->
-                     ([> `TLower of 'b ] as 'a) list ->
-                     ('a list -> 'b -> 'c) -> 'c)
-                    option
+                    unit ->
+                    ([> `TLower of 'b ] as 'a) list ->
+                    ('a list -> 'b -> 'c) -> 'c
                   val wants_pack : bool
                 end
             end
@@ -9023,10 +8888,9 @@ module G_GAC_R :
                       val succ :
                         unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
                       val fin :
-                        (unit -> ('a * [> 'a tag_lstate ] * 'b, int) lm)
-                        option
+                        unit -> ('a * [> 'a tag_lstate ] * 'b, int) lm
                     end
-                  val fin : 'a option
+                  val fin : unit -> 'a
                 end
               module P :
                 sig
@@ -9071,10 +8935,9 @@ module G_GAC_R :
                     list ->
                     ('b list -> ('a, unit) Code.abstract option -> 'c) -> 'c
                   val fin :
-                    (unit ->
-                     ([> `TPivot of ('b, 'c ref) Code.abstract ] as 'a) list ->
-                     ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd)
-                    option
+                    unit ->
+                    ([> `TPivot of ('b, 'c ref) Code.abstract ] as 'a) list ->
+                    ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd
                 end
               module L :
                 sig
@@ -9099,10 +8962,9 @@ module G_GAC_R :
                     ('b list -> 'a -> 'c) -> 'c
                   val updt : 'a -> 'b -> 'c -> 'd -> 'e -> 'f option
                   val fin :
-                    (unit ->
-                     ([> `TLower of 'b ] as 'a) list ->
-                     ('a list -> 'b -> 'c) -> 'c)
-                    option
+                    unit ->
+                    ([> `TLower of 'b ] as 'a) list ->
+                    ('a list -> 'b -> 'c) -> 'c
                   val wants_pack : bool
                 end
             end
@@ -9167,10 +9029,9 @@ module G_GAC_R :
                         ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, unit)
                         GEF.TrackRank.lm
                       val fin :
-                        (unit ->
-                         ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, int)
-                         GEF.TrackRank.lm)
-                        option
+                        unit ->
+                        ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, int)
+                        GEF.TrackRank.lm
                     end
                   module P :
                     sig
@@ -9193,8 +9054,7 @@ module G_GAC_R :
                          [> 'a tag_lstate ] list, ('a, 'b) Code.abstract)
                         StateCPSMonad.monad
                       val fin :
-                        (unit -> ('a * [> 'a tag_lstate ] * 'b, perm_rep) lm)
-                        option
+                        unit -> ('a * [> 'a tag_lstate ] * 'b, perm_rep) lm
                     end
                   module L :
                     sig
@@ -9218,9 +9078,8 @@ module G_GAC_R :
                         'a GAC_R.Dom.vc ->
                         ('a * [> 'a tag_lstate ] * 'b, unit) lm option
                       val fin :
-                        (unit ->
-                         ('a * [> 'a tag_lstate ] * 'b, GAC_R.contr) lm)
-                        option
+                        unit ->
+                        ('a * [> 'a tag_lstate ] * 'b, GAC_R.contr) lm
                       val wants_pack : bool
                     end
                 end
@@ -9329,8 +9188,7 @@ module G_GVC_Z3 :
         val set :
           ('a, GVC_Z3.Dom.v) Code.abstract ->
           ('a * [> 'a tag_lstate ] * 'b, unit) lm
-        val fin :
-          (unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_Z3.Dom.v) lm) option
+        val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_Z3.Dom.v) lm
       end
     module NoDet :
       sig
@@ -9345,7 +9203,7 @@ module G_GVC_Z3 :
           unit ->
           'a -> ('a -> ('b, GVC_Z3.Dom.v ref) Code.abstract -> 'c) -> 'c
         val set : 'a -> 'b -> ('b -> ('c, unit) Code.abstract -> 'd) -> 'd
-        val fin : 'a option
+        val fin : unit -> 'a
         type 'a tag_lstate = [ `TDet of 'a lstate ]
         type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
           constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
@@ -9398,13 +9256,12 @@ module G_GVC_Z3 :
           ([> `TDet of 'd * ('a, 'b ref) Code.abstract ] as 'c) list ->
           ('c list -> ('a, unit) Code.abstract -> 'e) -> 'e
         val fin :
-          (unit ->
-           ([> `TDet of
-                 ('b, int ref) Code.abstract *
-                 ('b, GVC_Z3.Dom.v ref) Code.abstract ]
-            as 'a)
-           list -> ('a list -> ('b, GVC_Z3.Dom.v) Code.abstract -> 'c) -> 'c)
-          option
+          unit ->
+          ([> `TDet of
+                ('b, int ref) Code.abstract *
+                ('b, GVC_Z3.Dom.v ref) Code.abstract ]
+           as 'a)
+          list -> ('a list -> ('b, GVC_Z3.Dom.v) Code.abstract -> 'c) -> 'c
       end
     module type UPDATE =
       functor (D : DETERMINANT) ->
@@ -9472,8 +9329,7 @@ module G_GVC_Z3 :
           ('a, int) Code.abstract ->
           'a GVC_Z3.vo ->
           'a GVC_Z3.Dom.vc -> ('a * [> 'a tag_lstate ] * 'b, unit) lm option
-        val fin :
-          (unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_Z3.contr) lm) option
+        val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_Z3.contr) lm
         val wants_pack : bool
       end
     module TrackLower :
@@ -9522,9 +9378,8 @@ module G_GVC_Z3 :
            ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c)
           option
         val fin :
-          (unit ->
-           ([> `TLower of 'b ] as 'a) list -> ('a list -> 'b -> 'c) -> 'c)
-          option
+          unit ->
+          ([> `TLower of 'b ] as 'a) list -> ('a list -> 'b -> 'c) -> 'c
         val wants_pack : bool
       end
     module PackedLower :
@@ -9547,9 +9402,8 @@ module G_GVC_Z3 :
           ([> `TLower of 'a ] as 'b) list -> ('b list -> 'a -> 'c) -> 'c
         val updt : 'a -> 'b -> 'c -> 'd -> 'e -> 'f option
         val fin :
-          (unit ->
-           ([> `TLower of 'b ] as 'a) list -> ('a list -> 'b -> 'c) -> 'c)
-          option
+          unit ->
+          ([> `TLower of 'b ] as 'a) list -> ('a list -> 'b -> 'c) -> 'c
         val wants_pack : bool
       end
     module NoLower :
@@ -9574,7 +9428,7 @@ module G_GVC_Z3 :
           ('a, int) Code.abstract ->
           'a GVC_Z3.vo ->
           'b -> ('c -> ('c -> ('a, unit) Code.abstract -> 'd) -> 'd) option
-        val fin : 'a option
+        val fin : unit -> 'a
         val wants_pack : bool
       end
     module type INPUT =
@@ -9695,10 +9549,9 @@ module G_GVC_Z3 :
                       val succ :
                         unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
                       val fin :
-                        (unit -> ('a * [> 'a tag_lstate ] * 'b, int) lm)
-                        option
+                        unit -> ('a * [> 'a tag_lstate ] * 'b, int) lm
                     end
-                  val fin : 'a option
+                  val fin : unit -> 'a
                 end
               module P :
                 sig
@@ -9720,7 +9573,7 @@ module G_GVC_Z3 :
                   val decl :
                     'a -> 'b -> ('b -> ('c, unit) Code.abstract -> 'd) -> 'd
                   val add : 'a -> 'b -> ('b -> 'c option -> 'd) -> 'd
-                  val fin : 'a option
+                  val fin : unit -> 'a
                 end
               module L :
                 sig
@@ -9748,7 +9601,7 @@ module G_GVC_Z3 :
                     'b ->
                     ('c -> ('c -> ('a, unit) Code.abstract -> 'd) -> 'd)
                     option
-                  val fin : 'a option
+                  val fin : unit -> 'a
                   val wants_pack : bool
                 end
             end
@@ -9797,10 +9650,9 @@ module G_GVC_Z3 :
                       val succ :
                         unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
                       val fin :
-                        (unit -> ('a * [> 'a tag_lstate ] * 'b, int) lm)
-                        option
+                        unit -> ('a * [> 'a tag_lstate ] * 'b, int) lm
                     end
-                  val fin : 'a option
+                  val fin : unit -> 'a
                 end
               module P :
                 sig
@@ -9822,7 +9674,7 @@ module G_GVC_Z3 :
                   val decl :
                     'a -> 'b -> ('b -> ('c, unit) Code.abstract -> 'd) -> 'd
                   val add : 'a -> 'b -> ('b -> 'c option -> 'd) -> 'd
-                  val fin : 'a option
+                  val fin : unit -> 'a
                 end
               module L :
                 sig
@@ -9850,7 +9702,7 @@ module G_GVC_Z3 :
                     'b ->
                     ('c -> ('c -> ('a, unit) Code.abstract -> 'd) -> 'd)
                     option
-                  val fin : 'a option
+                  val fin : unit -> 'a
                   val wants_pack : bool
                 end
             end
@@ -9904,14 +9756,12 @@ module G_GVC_Z3 :
                       val succ :
                         unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
                       val fin :
-                        (unit -> ('a * [> 'a tag_lstate ] * 'b, int) lm)
-                        option
+                        unit -> ('a * [> 'a tag_lstate ] * 'b, int) lm
                     end
                   val fin :
-                    (unit ->
-                     ([> `TRan of ('b, 'c ref) Code.abstract ] as 'a) list ->
-                     ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd)
-                    option
+                    unit ->
+                    ([> `TRan of ('b, 'c ref) Code.abstract ] as 'a) list ->
+                    ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd
                 end
               module P :
                 sig
@@ -9933,7 +9783,7 @@ module G_GVC_Z3 :
                   val decl :
                     'a -> 'b -> ('b -> ('c, unit) Code.abstract -> 'd) -> 'd
                   val add : 'a -> 'b -> ('b -> 'c option -> 'd) -> 'd
-                  val fin : 'a option
+                  val fin : unit -> 'a
                 end
               module L :
                 sig
@@ -9961,7 +9811,7 @@ module G_GVC_Z3 :
                     'b ->
                     ('c -> ('c -> ('a, unit) Code.abstract -> 'd) -> 'd)
                     option
-                  val fin : 'a option
+                  val fin : unit -> 'a
                   val wants_pack : bool
                 end
             end
@@ -10012,14 +9862,12 @@ module G_GVC_Z3 :
                       val succ :
                         unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
                       val fin :
-                        (unit -> ('a * [> 'a tag_lstate ] * 'b, int) lm)
-                        option
+                        unit -> ('a * [> 'a tag_lstate ] * 'b, int) lm
                     end
                   val fin :
-                    (unit ->
-                     ([> `TRan of ('b, 'c ref) Code.abstract ] as 'a) list ->
-                     ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd)
-                    option
+                    unit ->
+                    ([> `TRan of ('b, 'c ref) Code.abstract ] as 'a) list ->
+                    ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd
                 end
               module P :
                 sig
@@ -10041,7 +9889,7 @@ module G_GVC_Z3 :
                   val decl :
                     'a -> 'b -> ('b -> ('c, unit) Code.abstract -> 'd) -> 'd
                   val add : 'a -> 'b -> ('b -> 'c option -> 'd) -> 'd
-                  val fin : 'a option
+                  val fin : unit -> 'a
                 end
               module L :
                 sig
@@ -10069,7 +9917,7 @@ module G_GVC_Z3 :
                     'b ->
                     ('c -> ('c -> ('a, unit) Code.abstract -> 'd) -> 'd)
                     option
-                  val fin : 'a option
+                  val fin : unit -> 'a
                   val wants_pack : bool
                 end
             end
@@ -10126,14 +9974,12 @@ module G_GVC_Z3 :
                       val succ :
                         unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
                       val fin :
-                        (unit -> ('a * [> 'a tag_lstate ] * 'b, int) lm)
-                        option
+                        unit -> ('a * [> 'a tag_lstate ] * 'b, int) lm
                     end
                   val fin :
-                    (unit ->
-                     ([> `TRan of ('b, 'c ref) Code.abstract ] as 'a) list ->
-                     ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd)
-                    option
+                    unit ->
+                    ([> `TRan of ('b, 'c ref) Code.abstract ] as 'a) list ->
+                    ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd
                 end
               module P :
                 sig
@@ -10178,10 +10024,9 @@ module G_GVC_Z3 :
                     list ->
                     ('b list -> ('a, unit) Code.abstract option -> 'c) -> 'c
                   val fin :
-                    (unit ->
-                     ([> `TPivot of ('b, 'c ref) Code.abstract ] as 'a) list ->
-                     ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd)
-                    option
+                    unit ->
+                    ([> `TPivot of ('b, 'c ref) Code.abstract ] as 'a) list ->
+                    ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd
                 end
               module L :
                 sig
@@ -10209,7 +10054,7 @@ module G_GVC_Z3 :
                     'b ->
                     ('c -> ('c -> ('a, unit) Code.abstract -> 'd) -> 'd)
                     option
-                  val fin : 'a option
+                  val fin : unit -> 'a
                   val wants_pack : bool
                 end
             end
@@ -10267,10 +10112,9 @@ module G_GVC_Z3 :
                       val succ :
                         unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
                       val fin :
-                        (unit -> ('a * [> 'a tag_lstate ] * 'b, int) lm)
-                        option
+                        unit -> ('a * [> 'a tag_lstate ] * 'b, int) lm
                     end
-                  val fin : 'a option
+                  val fin : unit -> 'a
                 end
               module P :
                 sig
@@ -10315,10 +10159,9 @@ module G_GVC_Z3 :
                     list ->
                     ('b list -> ('a, unit) Code.abstract option -> 'c) -> 'c
                   val fin :
-                    (unit ->
-                     ([> `TPivot of ('b, 'c ref) Code.abstract ] as 'a) list ->
-                     ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd)
-                    option
+                    unit ->
+                    ([> `TPivot of ('b, 'c ref) Code.abstract ] as 'a) list ->
+                    ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd
                 end
               module L :
                 sig
@@ -10353,10 +10196,9 @@ module G_GVC_Z3 :
                      ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c)
                     option
                   val fin :
-                    (unit ->
-                     ([> `TLower of 'b ] as 'a) list ->
-                     ('a list -> 'b -> 'c) -> 'c)
-                    option
+                    unit ->
+                    ([> `TLower of 'b ] as 'a) list ->
+                    ('a list -> 'b -> 'c) -> 'c
                   val wants_pack : bool
                 end
             end
@@ -10411,10 +10253,9 @@ module G_GVC_Z3 :
                       val succ :
                         unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
                       val fin :
-                        (unit -> ('a * [> 'a tag_lstate ] * 'b, int) lm)
-                        option
+                        unit -> ('a * [> 'a tag_lstate ] * 'b, int) lm
                     end
-                  val fin : 'a option
+                  val fin : unit -> 'a
                 end
               module P :
                 sig
@@ -10459,10 +10300,9 @@ module G_GVC_Z3 :
                     list ->
                     ('b list -> ('a, unit) Code.abstract option -> 'c) -> 'c
                   val fin :
-                    (unit ->
-                     ([> `TPivot of ('b, 'c ref) Code.abstract ] as 'a) list ->
-                     ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd)
-                    option
+                    unit ->
+                    ([> `TPivot of ('b, 'c ref) Code.abstract ] as 'a) list ->
+                    ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd
                 end
               module L :
                 sig
@@ -10487,10 +10327,9 @@ module G_GVC_Z3 :
                     ('b list -> 'a -> 'c) -> 'c
                   val updt : 'a -> 'b -> 'c -> 'd -> 'e -> 'f option
                   val fin :
-                    (unit ->
-                     ([> `TLower of 'b ] as 'a) list ->
-                     ('a list -> 'b -> 'c) -> 'c)
-                    option
+                    unit ->
+                    ([> `TLower of 'b ] as 'a) list ->
+                    ('a list -> 'b -> 'c) -> 'c
                   val wants_pack : bool
                 end
             end
@@ -10555,10 +10394,9 @@ module G_GVC_Z3 :
                         ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, unit)
                         GEF.TrackRank.lm
                       val fin :
-                        (unit ->
-                         ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, int)
-                         GEF.TrackRank.lm)
-                        option
+                        unit ->
+                        ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, int)
+                        GEF.TrackRank.lm
                     end
                   module P :
                     sig
@@ -10581,8 +10419,7 @@ module G_GVC_Z3 :
                          [> 'a tag_lstate ] list, ('a, 'b) Code.abstract)
                         StateCPSMonad.monad
                       val fin :
-                        (unit -> ('a * [> 'a tag_lstate ] * 'b, perm_rep) lm)
-                        option
+                        unit -> ('a * [> 'a tag_lstate ] * 'b, perm_rep) lm
                     end
                   module L :
                     sig
@@ -10606,9 +10443,8 @@ module G_GVC_Z3 :
                         'a GVC_Z3.Dom.vc ->
                         ('a * [> 'a tag_lstate ] * 'b, unit) lm option
                       val fin :
-                        (unit ->
-                         ('a * [> 'a tag_lstate ] * 'b, GVC_Z3.contr) lm)
-                        option
+                        unit ->
+                        ('a * [> 'a tag_lstate ] * 'b, GVC_Z3.contr) lm
                       val wants_pack : bool
                     end
                 end
@@ -10717,8 +10553,7 @@ module G_GVC_Z19 :
         val set :
           ('a, GVC_Z19.Dom.v) Code.abstract ->
           ('a * [> 'a tag_lstate ] * 'b, unit) lm
-        val fin :
-          (unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_Z19.Dom.v) lm) option
+        val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_Z19.Dom.v) lm
       end
     module NoDet :
       sig
@@ -10733,7 +10568,7 @@ module G_GVC_Z19 :
           unit ->
           'a -> ('a -> ('b, GVC_Z19.Dom.v ref) Code.abstract -> 'c) -> 'c
         val set : 'a -> 'b -> ('b -> ('c, unit) Code.abstract -> 'd) -> 'd
-        val fin : 'a option
+        val fin : unit -> 'a
         type 'a tag_lstate = [ `TDet of 'a lstate ]
         type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
           constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
@@ -10786,13 +10621,12 @@ module G_GVC_Z19 :
           ([> `TDet of 'd * ('a, 'b ref) Code.abstract ] as 'c) list ->
           ('c list -> ('a, unit) Code.abstract -> 'e) -> 'e
         val fin :
-          (unit ->
-           ([> `TDet of
-                 ('b, int ref) Code.abstract *
-                 ('b, GVC_Z19.Dom.v ref) Code.abstract ]
-            as 'a)
-           list -> ('a list -> ('b, GVC_Z19.Dom.v) Code.abstract -> 'c) -> 'c)
-          option
+          unit ->
+          ([> `TDet of
+                ('b, int ref) Code.abstract *
+                ('b, GVC_Z19.Dom.v ref) Code.abstract ]
+           as 'a)
+          list -> ('a list -> ('b, GVC_Z19.Dom.v) Code.abstract -> 'c) -> 'c
       end
     module type UPDATE =
       functor (D : DETERMINANT) ->
@@ -10860,8 +10694,7 @@ module G_GVC_Z19 :
           ('a, int) Code.abstract ->
           'a GVC_Z19.vo ->
           'a GVC_Z19.Dom.vc -> ('a * [> 'a tag_lstate ] * 'b, unit) lm option
-        val fin :
-          (unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_Z19.contr) lm) option
+        val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_Z19.contr) lm
         val wants_pack : bool
       end
     module TrackLower :
@@ -10910,9 +10743,8 @@ module G_GVC_Z19 :
            ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c)
           option
         val fin :
-          (unit ->
-           ([> `TLower of 'b ] as 'a) list -> ('a list -> 'b -> 'c) -> 'c)
-          option
+          unit ->
+          ([> `TLower of 'b ] as 'a) list -> ('a list -> 'b -> 'c) -> 'c
         val wants_pack : bool
       end
     module PackedLower :
@@ -10935,9 +10767,8 @@ module G_GVC_Z19 :
           ([> `TLower of 'a ] as 'b) list -> ('b list -> 'a -> 'c) -> 'c
         val updt : 'a -> 'b -> 'c -> 'd -> 'e -> 'f option
         val fin :
-          (unit ->
-           ([> `TLower of 'b ] as 'a) list -> ('a list -> 'b -> 'c) -> 'c)
-          option
+          unit ->
+          ([> `TLower of 'b ] as 'a) list -> ('a list -> 'b -> 'c) -> 'c
         val wants_pack : bool
       end
     module NoLower :
@@ -10962,7 +10793,7 @@ module G_GVC_Z19 :
           ('a, int) Code.abstract ->
           'a GVC_Z19.vo ->
           'b -> ('c -> ('c -> ('a, unit) Code.abstract -> 'd) -> 'd) option
-        val fin : 'a option
+        val fin : unit -> 'a
         val wants_pack : bool
       end
     module type INPUT =
@@ -11083,10 +10914,9 @@ module G_GVC_Z19 :
                       val succ :
                         unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
                       val fin :
-                        (unit -> ('a * [> 'a tag_lstate ] * 'b, int) lm)
-                        option
+                        unit -> ('a * [> 'a tag_lstate ] * 'b, int) lm
                     end
-                  val fin : 'a option
+                  val fin : unit -> 'a
                 end
               module P :
                 sig
@@ -11108,7 +10938,7 @@ module G_GVC_Z19 :
                   val decl :
                     'a -> 'b -> ('b -> ('c, unit) Code.abstract -> 'd) -> 'd
                   val add : 'a -> 'b -> ('b -> 'c option -> 'd) -> 'd
-                  val fin : 'a option
+                  val fin : unit -> 'a
                 end
               module L :
                 sig
@@ -11136,7 +10966,7 @@ module G_GVC_Z19 :
                     'b ->
                     ('c -> ('c -> ('a, unit) Code.abstract -> 'd) -> 'd)
                     option
-                  val fin : 'a option
+                  val fin : unit -> 'a
                   val wants_pack : bool
                 end
             end
@@ -11185,10 +11015,9 @@ module G_GVC_Z19 :
                       val succ :
                         unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
                       val fin :
-                        (unit -> ('a * [> 'a tag_lstate ] * 'b, int) lm)
-                        option
+                        unit -> ('a * [> 'a tag_lstate ] * 'b, int) lm
                     end
-                  val fin : 'a option
+                  val fin : unit -> 'a
                 end
               module P :
                 sig
@@ -11210,7 +11039,7 @@ module G_GVC_Z19 :
                   val decl :
                     'a -> 'b -> ('b -> ('c, unit) Code.abstract -> 'd) -> 'd
                   val add : 'a -> 'b -> ('b -> 'c option -> 'd) -> 'd
-                  val fin : 'a option
+                  val fin : unit -> 'a
                 end
               module L :
                 sig
@@ -11238,7 +11067,7 @@ module G_GVC_Z19 :
                     'b ->
                     ('c -> ('c -> ('a, unit) Code.abstract -> 'd) -> 'd)
                     option
-                  val fin : 'a option
+                  val fin : unit -> 'a
                   val wants_pack : bool
                 end
             end
@@ -11292,14 +11121,12 @@ module G_GVC_Z19 :
                       val succ :
                         unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
                       val fin :
-                        (unit -> ('a * [> 'a tag_lstate ] * 'b, int) lm)
-                        option
+                        unit -> ('a * [> 'a tag_lstate ] * 'b, int) lm
                     end
                   val fin :
-                    (unit ->
-                     ([> `TRan of ('b, 'c ref) Code.abstract ] as 'a) list ->
-                     ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd)
-                    option
+                    unit ->
+                    ([> `TRan of ('b, 'c ref) Code.abstract ] as 'a) list ->
+                    ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd
                 end
               module P :
                 sig
@@ -11321,7 +11148,7 @@ module G_GVC_Z19 :
                   val decl :
                     'a -> 'b -> ('b -> ('c, unit) Code.abstract -> 'd) -> 'd
                   val add : 'a -> 'b -> ('b -> 'c option -> 'd) -> 'd
-                  val fin : 'a option
+                  val fin : unit -> 'a
                 end
               module L :
                 sig
@@ -11349,7 +11176,7 @@ module G_GVC_Z19 :
                     'b ->
                     ('c -> ('c -> ('a, unit) Code.abstract -> 'd) -> 'd)
                     option
-                  val fin : 'a option
+                  val fin : unit -> 'a
                   val wants_pack : bool
                 end
             end
@@ -11400,14 +11227,12 @@ module G_GVC_Z19 :
                       val succ :
                         unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
                       val fin :
-                        (unit -> ('a * [> 'a tag_lstate ] * 'b, int) lm)
-                        option
+                        unit -> ('a * [> 'a tag_lstate ] * 'b, int) lm
                     end
                   val fin :
-                    (unit ->
-                     ([> `TRan of ('b, 'c ref) Code.abstract ] as 'a) list ->
-                     ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd)
-                    option
+                    unit ->
+                    ([> `TRan of ('b, 'c ref) Code.abstract ] as 'a) list ->
+                    ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd
                 end
               module P :
                 sig
@@ -11429,7 +11254,7 @@ module G_GVC_Z19 :
                   val decl :
                     'a -> 'b -> ('b -> ('c, unit) Code.abstract -> 'd) -> 'd
                   val add : 'a -> 'b -> ('b -> 'c option -> 'd) -> 'd
-                  val fin : 'a option
+                  val fin : unit -> 'a
                 end
               module L :
                 sig
@@ -11457,7 +11282,7 @@ module G_GVC_Z19 :
                     'b ->
                     ('c -> ('c -> ('a, unit) Code.abstract -> 'd) -> 'd)
                     option
-                  val fin : 'a option
+                  val fin : unit -> 'a
                   val wants_pack : bool
                 end
             end
@@ -11514,14 +11339,12 @@ module G_GVC_Z19 :
                       val succ :
                         unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
                       val fin :
-                        (unit -> ('a * [> 'a tag_lstate ] * 'b, int) lm)
-                        option
+                        unit -> ('a * [> 'a tag_lstate ] * 'b, int) lm
                     end
                   val fin :
-                    (unit ->
-                     ([> `TRan of ('b, 'c ref) Code.abstract ] as 'a) list ->
-                     ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd)
-                    option
+                    unit ->
+                    ([> `TRan of ('b, 'c ref) Code.abstract ] as 'a) list ->
+                    ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd
                 end
               module P :
                 sig
@@ -11566,10 +11389,9 @@ module G_GVC_Z19 :
                     list ->
                     ('b list -> ('a, unit) Code.abstract option -> 'c) -> 'c
                   val fin :
-                    (unit ->
-                     ([> `TPivot of ('b, 'c ref) Code.abstract ] as 'a) list ->
-                     ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd)
-                    option
+                    unit ->
+                    ([> `TPivot of ('b, 'c ref) Code.abstract ] as 'a) list ->
+                    ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd
                 end
               module L :
                 sig
@@ -11597,7 +11419,7 @@ module G_GVC_Z19 :
                     'b ->
                     ('c -> ('c -> ('a, unit) Code.abstract -> 'd) -> 'd)
                     option
-                  val fin : 'a option
+                  val fin : unit -> 'a
                   val wants_pack : bool
                 end
             end
@@ -11655,10 +11477,9 @@ module G_GVC_Z19 :
                       val succ :
                         unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
                       val fin :
-                        (unit -> ('a * [> 'a tag_lstate ] * 'b, int) lm)
-                        option
+                        unit -> ('a * [> 'a tag_lstate ] * 'b, int) lm
                     end
-                  val fin : 'a option
+                  val fin : unit -> 'a
                 end
               module P :
                 sig
@@ -11703,10 +11524,9 @@ module G_GVC_Z19 :
                     list ->
                     ('b list -> ('a, unit) Code.abstract option -> 'c) -> 'c
                   val fin :
-                    (unit ->
-                     ([> `TPivot of ('b, 'c ref) Code.abstract ] as 'a) list ->
-                     ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd)
-                    option
+                    unit ->
+                    ([> `TPivot of ('b, 'c ref) Code.abstract ] as 'a) list ->
+                    ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd
                 end
               module L :
                 sig
@@ -11741,10 +11561,9 @@ module G_GVC_Z19 :
                      ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c)
                     option
                   val fin :
-                    (unit ->
-                     ([> `TLower of 'b ] as 'a) list ->
-                     ('a list -> 'b -> 'c) -> 'c)
-                    option
+                    unit ->
+                    ([> `TLower of 'b ] as 'a) list ->
+                    ('a list -> 'b -> 'c) -> 'c
                   val wants_pack : bool
                 end
             end
@@ -11799,10 +11618,9 @@ module G_GVC_Z19 :
                       val succ :
                         unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
                       val fin :
-                        (unit -> ('a * [> 'a tag_lstate ] * 'b, int) lm)
-                        option
+                        unit -> ('a * [> 'a tag_lstate ] * 'b, int) lm
                     end
-                  val fin : 'a option
+                  val fin : unit -> 'a
                 end
               module P :
                 sig
@@ -11847,10 +11665,9 @@ module G_GVC_Z19 :
                     list ->
                     ('b list -> ('a, unit) Code.abstract option -> 'c) -> 'c
                   val fin :
-                    (unit ->
-                     ([> `TPivot of ('b, 'c ref) Code.abstract ] as 'a) list ->
-                     ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd)
-                    option
+                    unit ->
+                    ([> `TPivot of ('b, 'c ref) Code.abstract ] as 'a) list ->
+                    ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd
                 end
               module L :
                 sig
@@ -11875,10 +11692,9 @@ module G_GVC_Z19 :
                     ('b list -> 'a -> 'c) -> 'c
                   val updt : 'a -> 'b -> 'c -> 'd -> 'e -> 'f option
                   val fin :
-                    (unit ->
-                     ([> `TLower of 'b ] as 'a) list ->
-                     ('a list -> 'b -> 'c) -> 'c)
-                    option
+                    unit ->
+                    ([> `TLower of 'b ] as 'a) list ->
+                    ('a list -> 'b -> 'c) -> 'c
                   val wants_pack : bool
                 end
             end
@@ -11943,10 +11759,9 @@ module G_GVC_Z19 :
                         ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, unit)
                         GEF.TrackRank.lm
                       val fin :
-                        (unit ->
-                         ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, int)
-                         GEF.TrackRank.lm)
-                        option
+                        unit ->
+                        ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, int)
+                        GEF.TrackRank.lm
                     end
                   module P :
                     sig
@@ -11969,8 +11784,7 @@ module G_GVC_Z19 :
                          [> 'a tag_lstate ] list, ('a, 'b) Code.abstract)
                         StateCPSMonad.monad
                       val fin :
-                        (unit -> ('a * [> 'a tag_lstate ] * 'b, perm_rep) lm)
-                        option
+                        unit -> ('a * [> 'a tag_lstate ] * 'b, perm_rep) lm
                     end
                   module L :
                     sig
@@ -11994,9 +11808,8 @@ module G_GVC_Z19 :
                         'a GVC_Z19.Dom.vc ->
                         ('a * [> 'a tag_lstate ] * 'b, unit) lm option
                       val fin :
-                        (unit ->
-                         ('a * [> 'a tag_lstate ] * 'b, GVC_Z19.contr) lm)
-                        option
+                        unit ->
+                        ('a * [> 'a tag_lstate ] * 'b, GVC_Z19.contr) lm
                       val wants_pack : bool
                     end
                 end
@@ -12105,8 +11918,7 @@ module G_GFC_F :
         val set :
           ('a, GFC_F.Dom.v) Code.abstract ->
           ('a * [> 'a tag_lstate ] * 'b, unit) lm
-        val fin :
-          (unit -> ('a * [> 'a tag_lstate ] * 'b, GFC_F.Dom.v) lm) option
+        val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, GFC_F.Dom.v) lm
       end
     module NoDet :
       sig
@@ -12121,7 +11933,7 @@ module G_GFC_F :
           unit ->
           'a -> ('a -> ('b, GFC_F.Dom.v ref) Code.abstract -> 'c) -> 'c
         val set : 'a -> 'b -> ('b -> ('c, unit) Code.abstract -> 'd) -> 'd
-        val fin : 'a option
+        val fin : unit -> 'a
         type 'a tag_lstate = [ `TDet of 'a lstate ]
         type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
           constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
@@ -12174,13 +11986,12 @@ module G_GFC_F :
           ([> `TDet of 'd * ('a, 'b ref) Code.abstract ] as 'c) list ->
           ('c list -> ('a, unit) Code.abstract -> 'e) -> 'e
         val fin :
-          (unit ->
-           ([> `TDet of
-                 ('b, int ref) Code.abstract *
-                 ('b, GFC_F.Dom.v ref) Code.abstract ]
-            as 'a)
-           list -> ('a list -> ('b, GFC_F.Dom.v) Code.abstract -> 'c) -> 'c)
-          option
+          unit ->
+          ([> `TDet of
+                ('b, int ref) Code.abstract *
+                ('b, GFC_F.Dom.v ref) Code.abstract ]
+           as 'a)
+          list -> ('a list -> ('b, GFC_F.Dom.v) Code.abstract -> 'c) -> 'c
       end
     module type UPDATE =
       functor (D : DETERMINANT) ->
@@ -12248,8 +12059,7 @@ module G_GFC_F :
           ('a, int) Code.abstract ->
           'a GFC_F.vo ->
           'a GFC_F.Dom.vc -> ('a * [> 'a tag_lstate ] * 'b, unit) lm option
-        val fin :
-          (unit -> ('a * [> 'a tag_lstate ] * 'b, GFC_F.contr) lm) option
+        val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, GFC_F.contr) lm
         val wants_pack : bool
       end
     module TrackLower :
@@ -12298,9 +12108,8 @@ module G_GFC_F :
            ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c)
           option
         val fin :
-          (unit ->
-           ([> `TLower of 'b ] as 'a) list -> ('a list -> 'b -> 'c) -> 'c)
-          option
+          unit ->
+          ([> `TLower of 'b ] as 'a) list -> ('a list -> 'b -> 'c) -> 'c
         val wants_pack : bool
       end
     module PackedLower :
@@ -12323,9 +12132,8 @@ module G_GFC_F :
           ([> `TLower of 'a ] as 'b) list -> ('b list -> 'a -> 'c) -> 'c
         val updt : 'a -> 'b -> 'c -> 'd -> 'e -> 'f option
         val fin :
-          (unit ->
-           ([> `TLower of 'b ] as 'a) list -> ('a list -> 'b -> 'c) -> 'c)
-          option
+          unit ->
+          ([> `TLower of 'b ] as 'a) list -> ('a list -> 'b -> 'c) -> 'c
         val wants_pack : bool
       end
     module NoLower :
@@ -12350,7 +12158,7 @@ module G_GFC_F :
           ('a, int) Code.abstract ->
           'a GFC_F.vo ->
           'b -> ('c -> ('c -> ('a, unit) Code.abstract -> 'd) -> 'd) option
-        val fin : 'a option
+        val fin : unit -> 'a
         val wants_pack : bool
       end
     module type INPUT =
@@ -12471,10 +12279,9 @@ module G_GFC_F :
                       val succ :
                         unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
                       val fin :
-                        (unit -> ('a * [> 'a tag_lstate ] * 'b, int) lm)
-                        option
+                        unit -> ('a * [> 'a tag_lstate ] * 'b, int) lm
                     end
-                  val fin : 'a option
+                  val fin : unit -> 'a
                 end
               module P :
                 sig
@@ -12496,7 +12303,7 @@ module G_GFC_F :
                   val decl :
                     'a -> 'b -> ('b -> ('c, unit) Code.abstract -> 'd) -> 'd
                   val add : 'a -> 'b -> ('b -> 'c option -> 'd) -> 'd
-                  val fin : 'a option
+                  val fin : unit -> 'a
                 end
               module L :
                 sig
@@ -12524,7 +12331,7 @@ module G_GFC_F :
                     'b ->
                     ('c -> ('c -> ('a, unit) Code.abstract -> 'd) -> 'd)
                     option
-                  val fin : 'a option
+                  val fin : unit -> 'a
                   val wants_pack : bool
                 end
             end
@@ -12573,10 +12380,9 @@ module G_GFC_F :
                       val succ :
                         unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
                       val fin :
-                        (unit -> ('a * [> 'a tag_lstate ] * 'b, int) lm)
-                        option
+                        unit -> ('a * [> 'a tag_lstate ] * 'b, int) lm
                     end
-                  val fin : 'a option
+                  val fin : unit -> 'a
                 end
               module P :
                 sig
@@ -12598,7 +12404,7 @@ module G_GFC_F :
                   val decl :
                     'a -> 'b -> ('b -> ('c, unit) Code.abstract -> 'd) -> 'd
                   val add : 'a -> 'b -> ('b -> 'c option -> 'd) -> 'd
-                  val fin : 'a option
+                  val fin : unit -> 'a
                 end
               module L :
                 sig
@@ -12626,7 +12432,7 @@ module G_GFC_F :
                     'b ->
                     ('c -> ('c -> ('a, unit) Code.abstract -> 'd) -> 'd)
                     option
-                  val fin : 'a option
+                  val fin : unit -> 'a
                   val wants_pack : bool
                 end
             end
@@ -12680,14 +12486,12 @@ module G_GFC_F :
                       val succ :
                         unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
                       val fin :
-                        (unit -> ('a * [> 'a tag_lstate ] * 'b, int) lm)
-                        option
+                        unit -> ('a * [> 'a tag_lstate ] * 'b, int) lm
                     end
                   val fin :
-                    (unit ->
-                     ([> `TRan of ('b, 'c ref) Code.abstract ] as 'a) list ->
-                     ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd)
-                    option
+                    unit ->
+                    ([> `TRan of ('b, 'c ref) Code.abstract ] as 'a) list ->
+                    ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd
                 end
               module P :
                 sig
@@ -12709,7 +12513,7 @@ module G_GFC_F :
                   val decl :
                     'a -> 'b -> ('b -> ('c, unit) Code.abstract -> 'd) -> 'd
                   val add : 'a -> 'b -> ('b -> 'c option -> 'd) -> 'd
-                  val fin : 'a option
+                  val fin : unit -> 'a
                 end
               module L :
                 sig
@@ -12737,7 +12541,7 @@ module G_GFC_F :
                     'b ->
                     ('c -> ('c -> ('a, unit) Code.abstract -> 'd) -> 'd)
                     option
-                  val fin : 'a option
+                  val fin : unit -> 'a
                   val wants_pack : bool
                 end
             end
@@ -12788,14 +12592,12 @@ module G_GFC_F :
                       val succ :
                         unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
                       val fin :
-                        (unit -> ('a * [> 'a tag_lstate ] * 'b, int) lm)
-                        option
+                        unit -> ('a * [> 'a tag_lstate ] * 'b, int) lm
                     end
                   val fin :
-                    (unit ->
-                     ([> `TRan of ('b, 'c ref) Code.abstract ] as 'a) list ->
-                     ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd)
-                    option
+                    unit ->
+                    ([> `TRan of ('b, 'c ref) Code.abstract ] as 'a) list ->
+                    ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd
                 end
               module P :
                 sig
@@ -12817,7 +12619,7 @@ module G_GFC_F :
                   val decl :
                     'a -> 'b -> ('b -> ('c, unit) Code.abstract -> 'd) -> 'd
                   val add : 'a -> 'b -> ('b -> 'c option -> 'd) -> 'd
-                  val fin : 'a option
+                  val fin : unit -> 'a
                 end
               module L :
                 sig
@@ -12845,7 +12647,7 @@ module G_GFC_F :
                     'b ->
                     ('c -> ('c -> ('a, unit) Code.abstract -> 'd) -> 'd)
                     option
-                  val fin : 'a option
+                  val fin : unit -> 'a
                   val wants_pack : bool
                 end
             end
@@ -12902,14 +12704,12 @@ module G_GFC_F :
                       val succ :
                         unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
                       val fin :
-                        (unit -> ('a * [> 'a tag_lstate ] * 'b, int) lm)
-                        option
+                        unit -> ('a * [> 'a tag_lstate ] * 'b, int) lm
                     end
                   val fin :
-                    (unit ->
-                     ([> `TRan of ('b, 'c ref) Code.abstract ] as 'a) list ->
-                     ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd)
-                    option
+                    unit ->
+                    ([> `TRan of ('b, 'c ref) Code.abstract ] as 'a) list ->
+                    ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd
                 end
               module P :
                 sig
@@ -12954,10 +12754,9 @@ module G_GFC_F :
                     list ->
                     ('b list -> ('a, unit) Code.abstract option -> 'c) -> 'c
                   val fin :
-                    (unit ->
-                     ([> `TPivot of ('b, 'c ref) Code.abstract ] as 'a) list ->
-                     ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd)
-                    option
+                    unit ->
+                    ([> `TPivot of ('b, 'c ref) Code.abstract ] as 'a) list ->
+                    ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd
                 end
               module L :
                 sig
@@ -12985,7 +12784,7 @@ module G_GFC_F :
                     'b ->
                     ('c -> ('c -> ('a, unit) Code.abstract -> 'd) -> 'd)
                     option
-                  val fin : 'a option
+                  val fin : unit -> 'a
                   val wants_pack : bool
                 end
             end
@@ -13043,10 +12842,9 @@ module G_GFC_F :
                       val succ :
                         unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
                       val fin :
-                        (unit -> ('a * [> 'a tag_lstate ] * 'b, int) lm)
-                        option
+                        unit -> ('a * [> 'a tag_lstate ] * 'b, int) lm
                     end
-                  val fin : 'a option
+                  val fin : unit -> 'a
                 end
               module P :
                 sig
@@ -13091,10 +12889,9 @@ module G_GFC_F :
                     list ->
                     ('b list -> ('a, unit) Code.abstract option -> 'c) -> 'c
                   val fin :
-                    (unit ->
-                     ([> `TPivot of ('b, 'c ref) Code.abstract ] as 'a) list ->
-                     ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd)
-                    option
+                    unit ->
+                    ([> `TPivot of ('b, 'c ref) Code.abstract ] as 'a) list ->
+                    ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd
                 end
               module L :
                 sig
@@ -13129,10 +12926,9 @@ module G_GFC_F :
                      ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c)
                     option
                   val fin :
-                    (unit ->
-                     ([> `TLower of 'b ] as 'a) list ->
-                     ('a list -> 'b -> 'c) -> 'c)
-                    option
+                    unit ->
+                    ([> `TLower of 'b ] as 'a) list ->
+                    ('a list -> 'b -> 'c) -> 'c
                   val wants_pack : bool
                 end
             end
@@ -13187,10 +12983,9 @@ module G_GFC_F :
                       val succ :
                         unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
                       val fin :
-                        (unit -> ('a * [> 'a tag_lstate ] * 'b, int) lm)
-                        option
+                        unit -> ('a * [> 'a tag_lstate ] * 'b, int) lm
                     end
-                  val fin : 'a option
+                  val fin : unit -> 'a
                 end
               module P :
                 sig
@@ -13235,10 +13030,9 @@ module G_GFC_F :
                     list ->
                     ('b list -> ('a, unit) Code.abstract option -> 'c) -> 'c
                   val fin :
-                    (unit ->
-                     ([> `TPivot of ('b, 'c ref) Code.abstract ] as 'a) list ->
-                     ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd)
-                    option
+                    unit ->
+                    ([> `TPivot of ('b, 'c ref) Code.abstract ] as 'a) list ->
+                    ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd
                 end
               module L :
                 sig
@@ -13263,10 +13057,9 @@ module G_GFC_F :
                     ('b list -> 'a -> 'c) -> 'c
                   val updt : 'a -> 'b -> 'c -> 'd -> 'e -> 'f option
                   val fin :
-                    (unit ->
-                     ([> `TLower of 'b ] as 'a) list ->
-                     ('a list -> 'b -> 'c) -> 'c)
-                    option
+                    unit ->
+                    ([> `TLower of 'b ] as 'a) list ->
+                    ('a list -> 'b -> 'c) -> 'c
                   val wants_pack : bool
                 end
             end
@@ -13331,10 +13124,9 @@ module G_GFC_F :
                         ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, unit)
                         GEF.TrackRank.lm
                       val fin :
-                        (unit ->
-                         ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, int)
-                         GEF.TrackRank.lm)
-                        option
+                        unit ->
+                        ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, int)
+                        GEF.TrackRank.lm
                     end
                   module P :
                     sig
@@ -13357,8 +13149,7 @@ module G_GFC_F :
                          [> 'a tag_lstate ] list, ('a, 'b) Code.abstract)
                         StateCPSMonad.monad
                       val fin :
-                        (unit -> ('a * [> 'a tag_lstate ] * 'b, perm_rep) lm)
-                        option
+                        unit -> ('a * [> 'a tag_lstate ] * 'b, perm_rep) lm
                     end
                   module L :
                     sig
@@ -13382,9 +13173,8 @@ module G_GFC_F :
                         'a GFC_F.Dom.vc ->
                         ('a * [> 'a tag_lstate ] * 'b, unit) lm option
                       val fin :
-                        (unit ->
-                         ('a * [> 'a tag_lstate ] * 'b, GFC_F.contr) lm)
-                        option
+                        unit ->
+                        ('a * [> 'a tag_lstate ] * 'b, GFC_F.contr) lm
                       val wants_pack : bool
                     end
                 end
@@ -13478,10 +13268,9 @@ module GenFA1 :
                   ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, unit)
                   GEF.TrackRank.lm
                 val fin :
-                  (unit ->
-                   ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, int)
-                   GEF.TrackRank.lm)
-                  option
+                  unit ->
+                  ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, int)
+                  GEF.TrackRank.lm
               end
             module P :
               sig
@@ -13504,9 +13293,7 @@ module GenFA1 :
                   (('a, unit) Code.abstract option, [> 'a tag_lstate ] list,
                    ('a, 'b) Code.abstract)
                   StateCPSMonad.monad
-                val fin :
-                  (unit -> ('a * [> 'a tag_lstate ] * 'b, perm_rep) lm)
-                  option
+                val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, perm_rep) lm
               end
             module L :
               sig
@@ -13529,8 +13316,7 @@ module GenFA1 :
                   'a GAC_F.Dom.vc ->
                   ('a * [> 'a tag_lstate ] * 'b, unit) lm option
                 val fin :
-                  (unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_F.contr) lm)
-                  option
+                  unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_F.contr) lm
                 val wants_pack : bool
               end
           end
@@ -13620,10 +13406,9 @@ module GenFA2 :
                   ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, unit)
                   GEF.TrackRank.lm
                 val fin :
-                  (unit ->
-                   ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, int)
-                   GEF.TrackRank.lm)
-                  option
+                  unit ->
+                  ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, int)
+                  GEF.TrackRank.lm
               end
             module P :
               sig
@@ -13646,9 +13431,7 @@ module GenFA2 :
                   (('a, unit) Code.abstract option, [> 'a tag_lstate ] list,
                    ('a, 'b) Code.abstract)
                   StateCPSMonad.monad
-                val fin :
-                  (unit -> ('a * [> 'a tag_lstate ] * 'b, perm_rep) lm)
-                  option
+                val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, perm_rep) lm
               end
             module L :
               sig
@@ -13671,8 +13454,7 @@ module GenFA2 :
                   'a GAC_F.Dom.vc ->
                   ('a * [> 'a tag_lstate ] * 'b, unit) lm option
                 val fin :
-                  (unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_F.contr) lm)
-                  option
+                  unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_F.contr) lm
                 val wants_pack : bool
               end
           end
@@ -13771,10 +13553,9 @@ module GenFA3 :
                   ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, unit)
                   GEF.TrackRank.lm
                 val fin :
-                  (unit ->
-                   ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, int)
-                   GEF.TrackRank.lm)
-                  option
+                  unit ->
+                  ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, int)
+                  GEF.TrackRank.lm
               end
             module P :
               sig
@@ -13797,9 +13578,7 @@ module GenFA3 :
                   (('a, unit) Code.abstract option, [> 'a tag_lstate ] list,
                    ('a, 'b) Code.abstract)
                   StateCPSMonad.monad
-                val fin :
-                  (unit -> ('a * [> 'a tag_lstate ] * 'b, perm_rep) lm)
-                  option
+                val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, perm_rep) lm
               end
             module L :
               sig
@@ -13822,8 +13601,7 @@ module GenFA3 :
                   'a GAC_F.Dom.vc ->
                   ('a * [> 'a tag_lstate ] * 'b, unit) lm option
                 val fin :
-                  (unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_F.contr) lm)
-                  option
+                  unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_F.contr) lm
                 val wants_pack : bool
               end
           end
@@ -13913,10 +13691,9 @@ module GenFA4 :
                   ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, unit)
                   GEF.TrackRank.lm
                 val fin :
-                  (unit ->
-                   ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, int)
-                   GEF.TrackRank.lm)
-                  option
+                  unit ->
+                  ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, int)
+                  GEF.TrackRank.lm
               end
             module P :
               sig
@@ -13939,9 +13716,7 @@ module GenFA4 :
                   (('a, unit) Code.abstract option, [> 'a tag_lstate ] list,
                    ('a, 'b) Code.abstract)
                   StateCPSMonad.monad
-                val fin :
-                  (unit -> ('a * [> 'a tag_lstate ] * 'b, perm_rep) lm)
-                  option
+                val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, perm_rep) lm
               end
             module L :
               sig
@@ -13964,8 +13739,7 @@ module GenFA4 :
                   'a GAC_F.Dom.vc ->
                   ('a * [> 'a tag_lstate ] * 'b, unit) lm option
                 val fin :
-                  (unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_F.contr) lm)
-                  option
+                  unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_F.contr) lm
                 val wants_pack : bool
               end
           end
@@ -14064,10 +13838,9 @@ module GenFA11 :
                   ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, unit)
                   GEF.TrackRank.lm
                 val fin :
-                  (unit ->
-                   ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, int)
-                   GEF.TrackRank.lm)
-                  option
+                  unit ->
+                  ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, int)
+                  GEF.TrackRank.lm
               end
             module P :
               sig
@@ -14090,9 +13863,7 @@ module GenFA11 :
                   (('a, unit) Code.abstract option, [> 'a tag_lstate ] list,
                    ('a, 'b) Code.abstract)
                   StateCPSMonad.monad
-                val fin :
-                  (unit -> ('a * [> 'a tag_lstate ] * 'b, perm_rep) lm)
-                  option
+                val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, perm_rep) lm
               end
             module L :
               sig
@@ -14115,8 +13886,7 @@ module GenFA11 :
                   'a GAC_F.Dom.vc ->
                   ('a * [> 'a tag_lstate ] * 'b, unit) lm option
                 val fin :
-                  (unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_F.contr) lm)
-                  option
+                  unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_F.contr) lm
                 val wants_pack : bool
               end
           end
@@ -14206,10 +13976,9 @@ module GenFA12 :
                   ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, unit)
                   GEF.TrackRank.lm
                 val fin :
-                  (unit ->
-                   ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, int)
-                   GEF.TrackRank.lm)
-                  option
+                  unit ->
+                  ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, int)
+                  GEF.TrackRank.lm
               end
             module P :
               sig
@@ -14232,9 +14001,7 @@ module GenFA12 :
                   (('a, unit) Code.abstract option, [> 'a tag_lstate ] list,
                    ('a, 'b) Code.abstract)
                   StateCPSMonad.monad
-                val fin :
-                  (unit -> ('a * [> 'a tag_lstate ] * 'b, perm_rep) lm)
-                  option
+                val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, perm_rep) lm
               end
             module L :
               sig
@@ -14257,8 +14024,7 @@ module GenFA12 :
                   'a GAC_F.Dom.vc ->
                   ('a * [> 'a tag_lstate ] * 'b, unit) lm option
                 val fin :
-                  (unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_F.contr) lm)
-                  option
+                  unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_F.contr) lm
                 val wants_pack : bool
               end
           end
@@ -14357,10 +14123,9 @@ module GenFA13 :
                   ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, unit)
                   GEF.TrackRank.lm
                 val fin :
-                  (unit ->
-                   ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, int)
-                   GEF.TrackRank.lm)
-                  option
+                  unit ->
+                  ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, int)
+                  GEF.TrackRank.lm
               end
             module P :
               sig
@@ -14383,9 +14148,7 @@ module GenFA13 :
                   (('a, unit) Code.abstract option, [> 'a tag_lstate ] list,
                    ('a, 'b) Code.abstract)
                   StateCPSMonad.monad
-                val fin :
-                  (unit -> ('a * [> 'a tag_lstate ] * 'b, perm_rep) lm)
-                  option
+                val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, perm_rep) lm
               end
             module L :
               sig
@@ -14408,8 +14171,7 @@ module GenFA13 :
                   'a GAC_F.Dom.vc ->
                   ('a * [> 'a tag_lstate ] * 'b, unit) lm option
                 val fin :
-                  (unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_F.contr) lm)
-                  option
+                  unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_F.contr) lm
                 val wants_pack : bool
               end
           end
@@ -14499,10 +14261,9 @@ module GenFA14 :
                   ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, unit)
                   GEF.TrackRank.lm
                 val fin :
-                  (unit ->
-                   ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, int)
-                   GEF.TrackRank.lm)
-                  option
+                  unit ->
+                  ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, int)
+                  GEF.TrackRank.lm
               end
             module P :
               sig
@@ -14525,9 +14286,7 @@ module GenFA14 :
                   (('a, unit) Code.abstract option, [> 'a tag_lstate ] list,
                    ('a, 'b) Code.abstract)
                   StateCPSMonad.monad
-                val fin :
-                  (unit -> ('a * [> 'a tag_lstate ] * 'b, perm_rep) lm)
-                  option
+                val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, perm_rep) lm
               end
             module L :
               sig
@@ -14550,8 +14309,7 @@ module GenFA14 :
                   'a GAC_F.Dom.vc ->
                   ('a * [> 'a tag_lstate ] * 'b, unit) lm option
                 val fin :
-                  (unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_F.contr) lm)
-                  option
+                  unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_F.contr) lm
                 val wants_pack : bool
               end
           end
@@ -14650,10 +14408,9 @@ module GenFA24 :
                   ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, unit)
                   GEF.TrackRank.lm
                 val fin :
-                  (unit ->
-                   ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, int)
-                   GEF.TrackRank.lm)
-                  option
+                  unit ->
+                  ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, int)
+                  GEF.TrackRank.lm
               end
             module P :
               sig
@@ -14675,9 +14432,7 @@ module GenFA24 :
                   (('a, unit) Code.abstract option, [> 'a tag_lstate ] list,
                    ('a, 'b) Code.abstract)
                   StateCPSMonad.monad
-                val fin :
-                  (unit -> ('a * [> 'a tag_lstate ] * 'b, perm_rep) lm)
-                  option
+                val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, perm_rep) lm
               end
             module L :
               sig
@@ -14700,8 +14455,7 @@ module GenFA24 :
                   'a GAC_F.Dom.vc ->
                   ('a * [> 'a tag_lstate ] * 'b, unit) lm option
                 val fin :
-                  (unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_F.contr) lm)
-                  option
+                  unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_F.contr) lm
                 val wants_pack : bool
               end
           end
@@ -14800,10 +14554,9 @@ module GenFA25 :
                   ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, unit)
                   GEF.TrackRank.lm
                 val fin :
-                  (unit ->
-                   ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, int)
-                   GEF.TrackRank.lm)
-                  option
+                  unit ->
+                  ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, int)
+                  GEF.TrackRank.lm
               end
             module P :
               sig
@@ -14825,9 +14578,7 @@ module GenFA25 :
                   (('a, unit) Code.abstract option, [> 'a tag_lstate ] list,
                    ('a, 'b) Code.abstract)
                   StateCPSMonad.monad
-                val fin :
-                  (unit -> ('a * [> 'a tag_lstate ] * 'b, perm_rep) lm)
-                  option
+                val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, perm_rep) lm
               end
             module L :
               sig
@@ -14850,8 +14601,7 @@ module GenFA25 :
                   'a GAC_F.Dom.vc ->
                   ('a * [> 'a tag_lstate ] * 'b, unit) lm option
                 val fin :
-                  (unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_F.contr) lm)
-                  option
+                  unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_F.contr) lm
                 val wants_pack : bool
               end
           end
@@ -14950,10 +14700,9 @@ module GenFA26 :
                   ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, unit)
                   GEF.TrackRank.lm
                 val fin :
-                  (unit ->
-                   ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, int)
-                   GEF.TrackRank.lm)
-                  option
+                  unit ->
+                  ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, int)
+                  GEF.TrackRank.lm
               end
             module P :
               sig
@@ -14976,9 +14725,7 @@ module GenFA26 :
                   (('a, unit) Code.abstract option, [> 'a tag_lstate ] list,
                    ('a, 'b) Code.abstract)
                   StateCPSMonad.monad
-                val fin :
-                  (unit -> ('a * [> 'a tag_lstate ] * 'b, perm_rep) lm)
-                  option
+                val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, perm_rep) lm
               end
             module L :
               sig
@@ -15001,8 +14748,7 @@ module GenFA26 :
                   'a GAC_F.Dom.vc ->
                   ('a * [> 'a tag_lstate ] * 'b, unit) lm option
                 val fin :
-                  (unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_F.contr) lm)
-                  option
+                  unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_F.contr) lm
                 val wants_pack : bool
               end
           end
@@ -15092,10 +14838,9 @@ module GenFA5 :
                   ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, unit)
                   GEF.TrackRank.lm
                 val fin :
-                  (unit ->
-                   ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, int)
-                   GEF.TrackRank.lm)
-                  option
+                  unit ->
+                  ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, int)
+                  GEF.TrackRank.lm
               end
             module P :
               sig
@@ -15118,9 +14863,7 @@ module GenFA5 :
                   (('a, unit) Code.abstract option, [> 'a tag_lstate ] list,
                    ('a, 'b) Code.abstract)
                   StateCPSMonad.monad
-                val fin :
-                  (unit -> ('a * [> 'a tag_lstate ] * 'b, perm_rep) lm)
-                  option
+                val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, perm_rep) lm
               end
             module L :
               sig
@@ -15143,8 +14886,7 @@ module GenFA5 :
                   'a GAC_F.Dom.vc ->
                   ('a * [> 'a tag_lstate ] * 'b, unit) lm option
                 val fin :
-                  (unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_F.contr) lm)
-                  option
+                  unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_F.contr) lm
                 val wants_pack : bool
               end
           end
@@ -15234,10 +14976,9 @@ module GenFA6 :
                   ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, unit)
                   GEF.TrackRank.lm
                 val fin :
-                  (unit ->
-                   ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, int)
-                   GEF.TrackRank.lm)
-                  option
+                  unit ->
+                  ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, int)
+                  GEF.TrackRank.lm
               end
             module P :
               sig
@@ -15260,9 +15001,7 @@ module GenFA6 :
                   (('a, unit) Code.abstract option, [> 'a tag_lstate ] list,
                    ('a, 'b) Code.abstract)
                   StateCPSMonad.monad
-                val fin :
-                  (unit -> ('a * [> 'a tag_lstate ] * 'b, perm_rep) lm)
-                  option
+                val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, perm_rep) lm
               end
             module L :
               sig
@@ -15285,8 +15024,7 @@ module GenFA6 :
                   'a GAC_F.Dom.vc ->
                   ('a * [> 'a tag_lstate ] * 'b, unit) lm option
                 val fin :
-                  (unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_F.contr) lm)
-                  option
+                  unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_F.contr) lm
                 val wants_pack : bool
               end
           end
@@ -15385,10 +15123,9 @@ module GenFA7 :
                   ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, unit)
                   GEF.TrackRank.lm
                 val fin :
-                  (unit ->
-                   ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, int)
-                   GEF.TrackRank.lm)
-                  option
+                  unit ->
+                  ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, int)
+                  GEF.TrackRank.lm
               end
             module P :
               sig
@@ -15411,9 +15148,7 @@ module GenFA7 :
                   (('a, unit) Code.abstract option, [> 'a tag_lstate ] list,
                    ('a, 'b) Code.abstract)
                   StateCPSMonad.monad
-                val fin :
-                  (unit -> ('a * [> 'a tag_lstate ] * 'b, perm_rep) lm)
-                  option
+                val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, perm_rep) lm
               end
             module L :
               sig
@@ -15436,8 +15171,7 @@ module GenFA7 :
                   'a GAC_F.Dom.vc ->
                   ('a * [> 'a tag_lstate ] * 'b, unit) lm option
                 val fin :
-                  (unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_F.contr) lm)
-                  option
+                  unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_F.contr) lm
                 val wants_pack : bool
               end
           end
@@ -15527,10 +15261,9 @@ module GenFA8 :
                   ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, unit)
                   GEF.TrackRank.lm
                 val fin :
-                  (unit ->
-                   ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, int)
-                   GEF.TrackRank.lm)
-                  option
+                  unit ->
+                  ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, int)
+                  GEF.TrackRank.lm
               end
             module P :
               sig
@@ -15553,9 +15286,7 @@ module GenFA8 :
                   (('a, unit) Code.abstract option, [> 'a tag_lstate ] list,
                    ('a, 'b) Code.abstract)
                   StateCPSMonad.monad
-                val fin :
-                  (unit -> ('a * [> 'a tag_lstate ] * 'b, perm_rep) lm)
-                  option
+                val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, perm_rep) lm
               end
             module L :
               sig
@@ -15578,8 +15309,7 @@ module GenFA8 :
                   'a GAC_F.Dom.vc ->
                   ('a * [> 'a tag_lstate ] * 'b, unit) lm option
                 val fin :
-                  (unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_F.contr) lm)
-                  option
+                  unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_F.contr) lm
                 val wants_pack : bool
               end
           end
@@ -15678,10 +15408,9 @@ module GenFA9 :
                   ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, unit)
                   GEF.TrackRank.lm
                 val fin :
-                  (unit ->
-                   ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, int)
-                   GEF.TrackRank.lm)
-                  option
+                  unit ->
+                  ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, int)
+                  GEF.TrackRank.lm
               end
             module P :
               sig
@@ -15703,9 +15432,7 @@ module GenFA9 :
                   (('a, unit) Code.abstract option, [> 'a tag_lstate ] list,
                    ('a, 'b) Code.abstract)
                   StateCPSMonad.monad
-                val fin :
-                  (unit -> ('a * [> 'a tag_lstate ] * 'b, perm_rep) lm)
-                  option
+                val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, perm_rep) lm
               end
             module L :
               sig
@@ -15728,8 +15455,7 @@ module GenFA9 :
                   'a GAC_F.Dom.vc ->
                   ('a * [> 'a tag_lstate ] * 'b, unit) lm option
                 val fin :
-                  (unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_F.contr) lm)
-                  option
+                  unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_F.contr) lm
                 val wants_pack : bool
               end
           end
@@ -15819,10 +15545,9 @@ module GenFA31 :
                   ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, unit)
                   GEF.TrackRank.lm
                 val fin :
-                  (unit ->
-                   ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, int)
-                   GEF.TrackRank.lm)
-                  option
+                  unit ->
+                  ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, int)
+                  GEF.TrackRank.lm
               end
             module P :
               sig
@@ -15844,9 +15569,7 @@ module GenFA31 :
                   (('a, unit) Code.abstract option, [> 'a tag_lstate ] list,
                    ('a, 'b) Code.abstract)
                   StateCPSMonad.monad
-                val fin :
-                  (unit -> ('a * [> 'a tag_lstate ] * 'b, perm_rep) lm)
-                  option
+                val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, perm_rep) lm
               end
             module L :
               sig
@@ -15869,8 +15592,7 @@ module GenFA31 :
                   'a GAC_F.Dom.vc ->
                   ('a * [> 'a tag_lstate ] * 'b, unit) lm option
                 val fin :
-                  (unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_F.contr) lm)
-                  option
+                  unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_F.contr) lm
                 val wants_pack : bool
               end
           end
@@ -15960,10 +15682,9 @@ module GenFA32 :
                   ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, unit)
                   GEF.TrackRank.lm
                 val fin :
-                  (unit ->
-                   ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, int)
-                   GEF.TrackRank.lm)
-                  option
+                  unit ->
+                  ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, int)
+                  GEF.TrackRank.lm
               end
             module P :
               sig
@@ -15985,9 +15706,7 @@ module GenFA32 :
                   (('a, unit) Code.abstract option, [> 'a tag_lstate ] list,
                    ('a, 'b) Code.abstract)
                   StateCPSMonad.monad
-                val fin :
-                  (unit -> ('a * [> 'a tag_lstate ] * 'b, perm_rep) lm)
-                  option
+                val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, perm_rep) lm
               end
             module L :
               sig
@@ -16010,8 +15729,7 @@ module GenFA32 :
                   'a GAC_F.Dom.vc ->
                   ('a * [> 'a tag_lstate ] * 'b, unit) lm option
                 val fin :
-                  (unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_F.contr) lm)
-                  option
+                  unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_F.contr) lm
                 val wants_pack : bool
               end
           end
@@ -16101,10 +15819,9 @@ module GenFV1 :
                   ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, unit)
                   GEF.TrackRank.lm
                 val fin :
-                  (unit ->
-                   ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, int)
-                   GEF.TrackRank.lm)
-                  option
+                  unit ->
+                  ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, int)
+                  GEF.TrackRank.lm
               end
             module P :
               sig
@@ -16127,9 +15844,7 @@ module GenFV1 :
                   (('a, unit) Code.abstract option, [> 'a tag_lstate ] list,
                    ('a, 'b) Code.abstract)
                   StateCPSMonad.monad
-                val fin :
-                  (unit -> ('a * [> 'a tag_lstate ] * 'b, perm_rep) lm)
-                  option
+                val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, perm_rep) lm
               end
             module L :
               sig
@@ -16152,8 +15867,7 @@ module GenFV1 :
                   'a GVC_F.Dom.vc ->
                   ('a * [> 'a tag_lstate ] * 'b, unit) lm option
                 val fin :
-                  (unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_F.contr) lm)
-                  option
+                  unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_F.contr) lm
                 val wants_pack : bool
               end
           end
@@ -16243,10 +15957,9 @@ module GenFV2 :
                   ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, unit)
                   GEF.TrackRank.lm
                 val fin :
-                  (unit ->
-                   ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, int)
-                   GEF.TrackRank.lm)
-                  option
+                  unit ->
+                  ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, int)
+                  GEF.TrackRank.lm
               end
             module P :
               sig
@@ -16269,9 +15982,7 @@ module GenFV2 :
                   (('a, unit) Code.abstract option, [> 'a tag_lstate ] list,
                    ('a, 'b) Code.abstract)
                   StateCPSMonad.monad
-                val fin :
-                  (unit -> ('a * [> 'a tag_lstate ] * 'b, perm_rep) lm)
-                  option
+                val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, perm_rep) lm
               end
             module L :
               sig
@@ -16294,8 +16005,7 @@ module GenFV2 :
                   'a GVC_F.Dom.vc ->
                   ('a * [> 'a tag_lstate ] * 'b, unit) lm option
                 val fin :
-                  (unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_F.contr) lm)
-                  option
+                  unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_F.contr) lm
                 val wants_pack : bool
               end
           end
@@ -16394,10 +16104,9 @@ module GenFV3 :
                   ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, unit)
                   GEF.TrackRank.lm
                 val fin :
-                  (unit ->
-                   ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, int)
-                   GEF.TrackRank.lm)
-                  option
+                  unit ->
+                  ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, int)
+                  GEF.TrackRank.lm
               end
             module P :
               sig
@@ -16420,9 +16129,7 @@ module GenFV3 :
                   (('a, unit) Code.abstract option, [> 'a tag_lstate ] list,
                    ('a, 'b) Code.abstract)
                   StateCPSMonad.monad
-                val fin :
-                  (unit -> ('a * [> 'a tag_lstate ] * 'b, perm_rep) lm)
-                  option
+                val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, perm_rep) lm
               end
             module L :
               sig
@@ -16445,8 +16152,7 @@ module GenFV3 :
                   'a GVC_F.Dom.vc ->
                   ('a * [> 'a tag_lstate ] * 'b, unit) lm option
                 val fin :
-                  (unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_F.contr) lm)
-                  option
+                  unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_F.contr) lm
                 val wants_pack : bool
               end
           end
@@ -16536,10 +16242,9 @@ module GenFV4 :
                   ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, unit)
                   GEF.TrackRank.lm
                 val fin :
-                  (unit ->
-                   ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, int)
-                   GEF.TrackRank.lm)
-                  option
+                  unit ->
+                  ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, int)
+                  GEF.TrackRank.lm
               end
             module P :
               sig
@@ -16562,9 +16267,7 @@ module GenFV4 :
                   (('a, unit) Code.abstract option, [> 'a tag_lstate ] list,
                    ('a, 'b) Code.abstract)
                   StateCPSMonad.monad
-                val fin :
-                  (unit -> ('a * [> 'a tag_lstate ] * 'b, perm_rep) lm)
-                  option
+                val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, perm_rep) lm
               end
             module L :
               sig
@@ -16587,8 +16290,7 @@ module GenFV4 :
                   'a GVC_F.Dom.vc ->
                   ('a * [> 'a tag_lstate ] * 'b, unit) lm option
                 val fin :
-                  (unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_F.contr) lm)
-                  option
+                  unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_F.contr) lm
                 val wants_pack : bool
               end
           end
@@ -16687,10 +16389,9 @@ module GenFV5 :
                   ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, unit)
                   GEF.TrackRank.lm
                 val fin :
-                  (unit ->
-                   ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, int)
-                   GEF.TrackRank.lm)
-                  option
+                  unit ->
+                  ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, int)
+                  GEF.TrackRank.lm
               end
             module P :
               sig
@@ -16713,9 +16414,7 @@ module GenFV5 :
                   (('a, unit) Code.abstract option, [> 'a tag_lstate ] list,
                    ('a, 'b) Code.abstract)
                   StateCPSMonad.monad
-                val fin :
-                  (unit -> ('a * [> 'a tag_lstate ] * 'b, perm_rep) lm)
-                  option
+                val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, perm_rep) lm
               end
             module L :
               sig
@@ -16738,8 +16437,7 @@ module GenFV5 :
                   'a GVC_F.Dom.vc ->
                   ('a * [> 'a tag_lstate ] * 'b, unit) lm option
                 val fin :
-                  (unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_F.contr) lm)
-                  option
+                  unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_F.contr) lm
                 val wants_pack : bool
               end
           end
@@ -16838,10 +16536,9 @@ module GenFV6 :
                   ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, unit)
                   GEF.TrackRank.lm
                 val fin :
-                  (unit ->
-                   ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, int)
-                   GEF.TrackRank.lm)
-                  option
+                  unit ->
+                  ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, int)
+                  GEF.TrackRank.lm
               end
             module P :
               sig
@@ -16863,9 +16560,7 @@ module GenFV6 :
                   (('a, unit) Code.abstract option, [> 'a tag_lstate ] list,
                    ('a, 'b) Code.abstract)
                   StateCPSMonad.monad
-                val fin :
-                  (unit -> ('a * [> 'a tag_lstate ] * 'b, perm_rep) lm)
-                  option
+                val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, perm_rep) lm
               end
             module L :
               sig
@@ -16888,8 +16583,7 @@ module GenFV6 :
                   'a GVC_F.Dom.vc ->
                   ('a * [> 'a tag_lstate ] * 'b, unit) lm option
                 val fin :
-                  (unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_F.contr) lm)
-                  option
+                  unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_F.contr) lm
                 val wants_pack : bool
               end
           end
@@ -16979,10 +16673,9 @@ module GenFV7 :
                   ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, unit)
                   GEF.TrackRank.lm
                 val fin :
-                  (unit ->
-                   ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, int)
-                   GEF.TrackRank.lm)
-                  option
+                  unit ->
+                  ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, int)
+                  GEF.TrackRank.lm
               end
             module P :
               sig
@@ -17004,9 +16697,7 @@ module GenFV7 :
                   (('a, unit) Code.abstract option, [> 'a tag_lstate ] list,
                    ('a, 'b) Code.abstract)
                   StateCPSMonad.monad
-                val fin :
-                  (unit -> ('a * [> 'a tag_lstate ] * 'b, perm_rep) lm)
-                  option
+                val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, perm_rep) lm
               end
             module L :
               sig
@@ -17029,8 +16720,7 @@ module GenFV7 :
                   'a GVC_F.Dom.vc ->
                   ('a * [> 'a tag_lstate ] * 'b, unit) lm option
                 val fin :
-                  (unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_F.contr) lm)
-                  option
+                  unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_F.contr) lm
                 val wants_pack : bool
               end
           end
@@ -17120,10 +16810,9 @@ module GenIA1 :
                   ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, unit)
                   GEF.TrackRank.lm
                 val fin :
-                  (unit ->
-                   ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, int)
-                   GEF.TrackRank.lm)
-                  option
+                  unit ->
+                  ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, int)
+                  GEF.TrackRank.lm
               end
             module P :
               sig
@@ -17146,9 +16835,7 @@ module GenIA1 :
                   (('a, unit) Code.abstract option, [> 'a tag_lstate ] list,
                    ('a, 'b) Code.abstract)
                   StateCPSMonad.monad
-                val fin :
-                  (unit -> ('a * [> 'a tag_lstate ] * 'b, perm_rep) lm)
-                  option
+                val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, perm_rep) lm
               end
             module L :
               sig
@@ -17171,8 +16858,7 @@ module GenIA1 :
                   'a GAC_I.Dom.vc ->
                   ('a * [> 'a tag_lstate ] * 'b, unit) lm option
                 val fin :
-                  (unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_I.contr) lm)
-                  option
+                  unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_I.contr) lm
                 val wants_pack : bool
               end
           end
@@ -17272,10 +16958,9 @@ module GenIA2 :
                   ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, unit)
                   GEF.TrackRank.lm
                 val fin :
-                  (unit ->
-                   ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, int)
-                   GEF.TrackRank.lm)
-                  option
+                  unit ->
+                  ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, int)
+                  GEF.TrackRank.lm
               end
             module P :
               sig
@@ -17298,9 +16983,7 @@ module GenIA2 :
                   (('a, unit) Code.abstract option, [> 'a tag_lstate ] list,
                    ('a, 'b) Code.abstract)
                   StateCPSMonad.monad
-                val fin :
-                  (unit -> ('a * [> 'a tag_lstate ] * 'b, perm_rep) lm)
-                  option
+                val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, perm_rep) lm
               end
             module L :
               sig
@@ -17323,8 +17006,7 @@ module GenIA2 :
                   'a GAC_I.Dom.vc ->
                   ('a * [> 'a tag_lstate ] * 'b, unit) lm option
                 val fin :
-                  (unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_I.contr) lm)
-                  option
+                  unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_I.contr) lm
                 val wants_pack : bool
               end
           end
@@ -17423,10 +17105,9 @@ module GenIA3 :
                   ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, unit)
                   GEF.TrackRank.lm
                 val fin :
-                  (unit ->
-                   ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, int)
-                   GEF.TrackRank.lm)
-                  option
+                  unit ->
+                  ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, int)
+                  GEF.TrackRank.lm
               end
             module P :
               sig
@@ -17449,9 +17130,7 @@ module GenIA3 :
                   (('a, unit) Code.abstract option, [> 'a tag_lstate ] list,
                    ('a, 'b) Code.abstract)
                   StateCPSMonad.monad
-                val fin :
-                  (unit -> ('a * [> 'a tag_lstate ] * 'b, perm_rep) lm)
-                  option
+                val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, perm_rep) lm
               end
             module L :
               sig
@@ -17474,8 +17153,7 @@ module GenIA3 :
                   'a GAC_I.Dom.vc ->
                   ('a * [> 'a tag_lstate ] * 'b, unit) lm option
                 val fin :
-                  (unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_I.contr) lm)
-                  option
+                  unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_I.contr) lm
                 val wants_pack : bool
               end
           end
@@ -17574,10 +17252,9 @@ module GenIA4 :
                   ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, unit)
                   GEF.TrackRank.lm
                 val fin :
-                  (unit ->
-                   ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, int)
-                   GEF.TrackRank.lm)
-                  option
+                  unit ->
+                  ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, int)
+                  GEF.TrackRank.lm
               end
             module P :
               sig
@@ -17600,9 +17277,7 @@ module GenIA4 :
                   (('a, unit) Code.abstract option, [> 'a tag_lstate ] list,
                    ('a, 'b) Code.abstract)
                   StateCPSMonad.monad
-                val fin :
-                  (unit -> ('a * [> 'a tag_lstate ] * 'b, perm_rep) lm)
-                  option
+                val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, perm_rep) lm
               end
             module L :
               sig
@@ -17625,8 +17300,7 @@ module GenIA4 :
                   'a GAC_I.Dom.vc ->
                   ('a * [> 'a tag_lstate ] * 'b, unit) lm option
                 val fin :
-                  (unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_I.contr) lm)
-                  option
+                  unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_I.contr) lm
                 val wants_pack : bool
               end
           end
@@ -17727,10 +17401,9 @@ module GenIV1 :
                   ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, unit)
                   GEF.TrackRank.lm
                 val fin :
-                  (unit ->
-                   ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, int)
-                   GEF.TrackRank.lm)
-                  option
+                  unit ->
+                  ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, int)
+                  GEF.TrackRank.lm
               end
             module P :
               sig
@@ -17753,9 +17426,7 @@ module GenIV1 :
                   (('a, unit) Code.abstract option, [> 'a tag_lstate ] list,
                    ('a, 'b) Code.abstract)
                   StateCPSMonad.monad
-                val fin :
-                  (unit -> ('a * [> 'a tag_lstate ] * 'b, perm_rep) lm)
-                  option
+                val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, perm_rep) lm
               end
             module L :
               sig
@@ -17778,8 +17449,7 @@ module GenIV1 :
                   'a GVC_I.Dom.vc ->
                   ('a * [> 'a tag_lstate ] * 'b, unit) lm option
                 val fin :
-                  (unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_I.contr) lm)
-                  option
+                  unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_I.contr) lm
                 val wants_pack : bool
               end
           end
@@ -17878,10 +17548,9 @@ module GenIV2 :
                   ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, unit)
                   GEF.TrackRank.lm
                 val fin :
-                  (unit ->
-                   ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, int)
-                   GEF.TrackRank.lm)
-                  option
+                  unit ->
+                  ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, int)
+                  GEF.TrackRank.lm
               end
             module P :
               sig
@@ -17904,9 +17573,7 @@ module GenIV2 :
                   (('a, unit) Code.abstract option, [> 'a tag_lstate ] list,
                    ('a, 'b) Code.abstract)
                   StateCPSMonad.monad
-                val fin :
-                  (unit -> ('a * [> 'a tag_lstate ] * 'b, perm_rep) lm)
-                  option
+                val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, perm_rep) lm
               end
             module L :
               sig
@@ -17929,8 +17596,7 @@ module GenIV2 :
                   'a GVC_I.Dom.vc ->
                   ('a * [> 'a tag_lstate ] * 'b, unit) lm option
                 val fin :
-                  (unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_I.contr) lm)
-                  option
+                  unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_I.contr) lm
                 val wants_pack : bool
               end
           end
@@ -18029,10 +17695,9 @@ module GenIV3 :
                   ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, unit)
                   GEF.TrackRank.lm
                 val fin :
-                  (unit ->
-                   ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, int)
-                   GEF.TrackRank.lm)
-                  option
+                  unit ->
+                  ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, int)
+                  GEF.TrackRank.lm
               end
             module P :
               sig
@@ -18055,9 +17720,7 @@ module GenIV3 :
                   (('a, unit) Code.abstract option, [> 'a tag_lstate ] list,
                    ('a, 'b) Code.abstract)
                   StateCPSMonad.monad
-                val fin :
-                  (unit -> ('a * [> 'a tag_lstate ] * 'b, perm_rep) lm)
-                  option
+                val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, perm_rep) lm
               end
             module L :
               sig
@@ -18080,8 +17743,7 @@ module GenIV3 :
                   'a GVC_I.Dom.vc ->
                   ('a * [> 'a tag_lstate ] * 'b, unit) lm option
                 val fin :
-                  (unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_I.contr) lm)
-                  option
+                  unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_I.contr) lm
                 val wants_pack : bool
               end
           end
@@ -18180,10 +17842,9 @@ module GenIV4 :
                   ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, unit)
                   GEF.TrackRank.lm
                 val fin :
-                  (unit ->
-                   ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, int)
-                   GEF.TrackRank.lm)
-                  option
+                  unit ->
+                  ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, int)
+                  GEF.TrackRank.lm
               end
             module P :
               sig
@@ -18206,9 +17867,7 @@ module GenIV4 :
                   (('a, unit) Code.abstract option, [> 'a tag_lstate ] list,
                    ('a, 'b) Code.abstract)
                   StateCPSMonad.monad
-                val fin :
-                  (unit -> ('a * [> 'a tag_lstate ] * 'b, perm_rep) lm)
-                  option
+                val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, perm_rep) lm
               end
             module L :
               sig
@@ -18231,8 +17890,7 @@ module GenIV4 :
                   'a GVC_I.Dom.vc ->
                   ('a * [> 'a tag_lstate ] * 'b, unit) lm option
                 val fin :
-                  (unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_I.contr) lm)
-                  option
+                  unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_I.contr) lm
                 val wants_pack : bool
               end
           end
@@ -18331,10 +17989,9 @@ module GenIV5 :
                   ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, unit)
                   GEF.TrackRank.lm
                 val fin :
-                  (unit ->
-                   ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, int)
-                   GEF.TrackRank.lm)
-                  option
+                  unit ->
+                  ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, int)
+                  GEF.TrackRank.lm
               end
             module P :
               sig
@@ -18357,9 +18014,7 @@ module GenIV5 :
                   (('a, unit) Code.abstract option, [> 'a tag_lstate ] list,
                    ('a, 'b) Code.abstract)
                   StateCPSMonad.monad
-                val fin :
-                  (unit -> ('a * [> 'a tag_lstate ] * 'b, perm_rep) lm)
-                  option
+                val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, perm_rep) lm
               end
             module L :
               sig
@@ -18382,8 +18037,7 @@ module GenIV5 :
                   'a GVC_I.Dom.vc ->
                   ('a * [> 'a tag_lstate ] * 'b, unit) lm option
                 val fin :
-                  (unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_I.contr) lm)
-                  option
+                  unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_I.contr) lm
                 val wants_pack : bool
               end
           end
@@ -18482,10 +18136,9 @@ module GenIV6 :
                   ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, unit)
                   GEF.TrackRank.lm
                 val fin :
-                  (unit ->
-                   ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, int)
-                   GEF.TrackRank.lm)
-                  option
+                  unit ->
+                  ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, int)
+                  GEF.TrackRank.lm
               end
             module P :
               sig
@@ -18507,9 +18160,7 @@ module GenIV6 :
                   (('a, unit) Code.abstract option, [> 'a tag_lstate ] list,
                    ('a, 'b) Code.abstract)
                   StateCPSMonad.monad
-                val fin :
-                  (unit -> ('a * [> 'a tag_lstate ] * 'b, perm_rep) lm)
-                  option
+                val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, perm_rep) lm
               end
             module L :
               sig
@@ -18532,8 +18183,7 @@ module GenIV6 :
                   'a GVC_I.Dom.vc ->
                   ('a * [> 'a tag_lstate ] * 'b, unit) lm option
                 val fin :
-                  (unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_I.contr) lm)
-                  option
+                  unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_I.contr) lm
                 val wants_pack : bool
               end
           end
@@ -18632,10 +18282,9 @@ module GenRA1 :
                   ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, unit)
                   GEF.TrackRank.lm
                 val fin :
-                  (unit ->
-                   ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, int)
-                   GEF.TrackRank.lm)
-                  option
+                  unit ->
+                  ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, int)
+                  GEF.TrackRank.lm
               end
             module P :
               sig
@@ -18658,9 +18307,7 @@ module GenRA1 :
                   (('a, unit) Code.abstract option, [> 'a tag_lstate ] list,
                    ('a, 'b) Code.abstract)
                   StateCPSMonad.monad
-                val fin :
-                  (unit -> ('a * [> 'a tag_lstate ] * 'b, perm_rep) lm)
-                  option
+                val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, perm_rep) lm
               end
             module L :
               sig
@@ -18683,8 +18330,7 @@ module GenRA1 :
                   'a GAC_R.Dom.vc ->
                   ('a * [> 'a tag_lstate ] * 'b, unit) lm option
                 val fin :
-                  (unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_R.contr) lm)
-                  option
+                  unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_R.contr) lm
                 val wants_pack : bool
               end
           end
@@ -18774,10 +18420,9 @@ module GenRA2 :
                   ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, unit)
                   GEF.TrackRank.lm
                 val fin :
-                  (unit ->
-                   ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, int)
-                   GEF.TrackRank.lm)
-                  option
+                  unit ->
+                  ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, int)
+                  GEF.TrackRank.lm
               end
             module P :
               sig
@@ -18800,9 +18445,7 @@ module GenRA2 :
                   (('a, unit) Code.abstract option, [> 'a tag_lstate ] list,
                    ('a, 'b) Code.abstract)
                   StateCPSMonad.monad
-                val fin :
-                  (unit -> ('a * [> 'a tag_lstate ] * 'b, perm_rep) lm)
-                  option
+                val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, perm_rep) lm
               end
             module L :
               sig
@@ -18825,8 +18468,7 @@ module GenRA2 :
                   'a GAC_R.Dom.vc ->
                   ('a * [> 'a tag_lstate ] * 'b, unit) lm option
                 val fin :
-                  (unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_R.contr) lm)
-                  option
+                  unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_R.contr) lm
                 val wants_pack : bool
               end
           end
@@ -18925,10 +18567,9 @@ module GenRA3 :
                   ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, unit)
                   GEF.TrackRank.lm
                 val fin :
-                  (unit ->
-                   ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, int)
-                   GEF.TrackRank.lm)
-                  option
+                  unit ->
+                  ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, int)
+                  GEF.TrackRank.lm
               end
             module P :
               sig
@@ -18951,9 +18592,7 @@ module GenRA3 :
                   (('a, unit) Code.abstract option, [> 'a tag_lstate ] list,
                    ('a, 'b) Code.abstract)
                   StateCPSMonad.monad
-                val fin :
-                  (unit -> ('a * [> 'a tag_lstate ] * 'b, perm_rep) lm)
-                  option
+                val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, perm_rep) lm
               end
             module L :
               sig
@@ -18976,8 +18615,7 @@ module GenRA3 :
                   'a GAC_R.Dom.vc ->
                   ('a * [> 'a tag_lstate ] * 'b, unit) lm option
                 val fin :
-                  (unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_R.contr) lm)
-                  option
+                  unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_R.contr) lm
                 val wants_pack : bool
               end
           end
@@ -19067,10 +18705,9 @@ module GenRA4 :
                   ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, unit)
                   GEF.TrackRank.lm
                 val fin :
-                  (unit ->
-                   ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, int)
-                   GEF.TrackRank.lm)
-                  option
+                  unit ->
+                  ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, int)
+                  GEF.TrackRank.lm
               end
             module P :
               sig
@@ -19093,9 +18730,7 @@ module GenRA4 :
                   (('a, unit) Code.abstract option, [> 'a tag_lstate ] list,
                    ('a, 'b) Code.abstract)
                   StateCPSMonad.monad
-                val fin :
-                  (unit -> ('a * [> 'a tag_lstate ] * 'b, perm_rep) lm)
-                  option
+                val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, perm_rep) lm
               end
             module L :
               sig
@@ -19118,8 +18753,7 @@ module GenRA4 :
                   'a GAC_R.Dom.vc ->
                   ('a * [> 'a tag_lstate ] * 'b, unit) lm option
                 val fin :
-                  (unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_R.contr) lm)
-                  option
+                  unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_R.contr) lm
                 val wants_pack : bool
               end
           end
@@ -19218,10 +18852,9 @@ module GenZp3 :
                   ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, unit)
                   GEF.TrackRank.lm
                 val fin :
-                  (unit ->
-                   ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, int)
-                   GEF.TrackRank.lm)
-                  option
+                  unit ->
+                  ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, int)
+                  GEF.TrackRank.lm
               end
             module P :
               sig
@@ -19243,9 +18876,7 @@ module GenZp3 :
                   (('a, unit) Code.abstract option, [> 'a tag_lstate ] list,
                    ('a, 'b) Code.abstract)
                   StateCPSMonad.monad
-                val fin :
-                  (unit -> ('a * [> 'a tag_lstate ] * 'b, perm_rep) lm)
-                  option
+                val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, perm_rep) lm
               end
             module L :
               sig
@@ -19268,8 +18899,7 @@ module GenZp3 :
                   'a GVC_Z3.Dom.vc ->
                   ('a * [> 'a tag_lstate ] * 'b, unit) lm option
                 val fin :
-                  (unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_Z3.contr) lm)
-                  option
+                  unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_Z3.contr) lm
                 val wants_pack : bool
               end
           end
@@ -19373,10 +19003,9 @@ module GenZp19 :
                   ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, unit)
                   GEF.TrackRank.lm
                 val fin :
-                  (unit ->
-                   ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, int)
-                   GEF.TrackRank.lm)
-                  option
+                  unit ->
+                  ('a * [> 'a GEF.TrackRank.tag_lstate ] * 'b, int)
+                  GEF.TrackRank.lm
               end
             module P :
               sig
@@ -19398,9 +19027,7 @@ module GenZp19 :
                   (('a, unit) Code.abstract option, [> 'a tag_lstate ] list,
                    ('a, 'b) Code.abstract)
                   StateCPSMonad.monad
-                val fin :
-                  (unit -> ('a * [> 'a tag_lstate ] * 'b, perm_rep) lm)
-                  option
+                val fin : unit -> ('a * [> 'a tag_lstate ] * 'b, perm_rep) lm
               end
             module L :
               sig
@@ -19423,8 +19050,7 @@ module GenZp19 :
                   'a GVC_Z19.Dom.vc ->
                   ('a * [> 'a tag_lstate ] * 'b, unit) lm option
                 val fin :
-                  (unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_Z19.contr) lm)
-                  option
+                  unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_Z19.contr) lm
                 val wants_pack : bool
               end
           end

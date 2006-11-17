@@ -1,8 +1,12 @@
 open StateCPSMonad
 
 type update_kind = FractionFree | DivisionBased
+(* It used to be that we used an option type to encode some domain
+   information, like the need to compute a Determinant, Rank or Pivot.
+   Not this is done directly with an exception instead, so these routines
+   are no longer needed.
 let fromJust = function Some x -> x | None -> failwith "Can't happen"
-let notNone v str = match v with None -> failwith str | Some _ -> ()
+let notNone v str = match v with None -> failwith str | Some _ -> () *)
 let ensure cond str = if not cond then failwith str else ()
 
 module GEMake(CODE: Coderep.T) = struct
@@ -83,20 +87,20 @@ module TrackRank =
     val rfetch : unit -> ('b, int ref) lm
     val decl   : unit -> ('b, int ref) lm
     val succ   : unit -> ('b, unit) lm
-    val fin    : (unit -> ('b, int) lm) option
+    val fin    : unit -> ('b, int) lm
   end
 end
 
 module Rank = struct
   include TrackRank
-  let fin = Some (fun () -> perform
+  let fin () = perform
       r <-- rfetch ();
-      ret (liftGet r))
+      ret (liftGet r)
 end
 
 module NoRank = struct
   include TrackRank
-  let fin = None
+  let fin () = failwith "Rank is needed but is not computed"
 end
 
 module type PIVOTKIND = sig
@@ -150,7 +154,7 @@ module type TRACKPIVOT = sig
   val decl : ('a, int) abstract -> ('a*'s*'w, unit) lm
   val add : 'a fra ->
     (('a,unit) abstract option,[> 'a tag_lstate] list,('a,'w) abstract) monad
-  val fin : (unit -> ('b,perm_rep) lm) option
+  val fin : unit -> ('b,perm_rep) lm
 end
 
 module PivotCommon(PK:PIVOTKIND) = 
@@ -184,16 +188,16 @@ module KeepPivot(PK:PIVOTKIND) = struct
   let add v = perform
    p <-- pfetch ();
    ret (Some (assign p (PK.add v (liftGet p))))
-  let fin = Some (fun () -> perform
+  let fin  () = perform
       p <-- pfetch ();
-      ret (liftGet p))
+      ret (liftGet p)
 end
 
 module DiscardPivot = struct
   include PivotCommon(PermList)
   let decl _ = unitL
   let add _ = ret None
-  let fin = None
+  let fin () = failwith "Pivot is needed but is not computed"
 end
 
 (* Given a container, we can generate a whole "Linear Algebra"
@@ -233,7 +237,7 @@ module type DETERMINANT = sig
   val acc       : ('a,C.Dom.v) abstract -> ('a * 's * 'w,unit) lm
   val get       : unit -> ('b,tdet) lm
   val set       : ('a,C.Dom.v) abstract -> ('a * 's * 'w,unit) lm
-  val fin       : (unit -> ('b,C.Dom.v) lm) option
+  val fin       : unit -> ('b,C.Dom.v) lm
 end
 
 
@@ -253,7 +257,7 @@ module NoDet =
   let acc _ = unitL
   let get () = ret (liftRef C.Dom.zeroL) (* hack alert! *)
   let set _ = unitL
-  let fin = None
+  let fin () = failwith "Determinant is needed but not computed"
   type 'a tag_lstate = [`TDet of 'a lstate ]
   type ('b,'v) lm = ('a,'v,'s,'w) cmonad
     constraint 's = [> 'a tag_lstate]
@@ -309,11 +313,11 @@ module AbstractDet =
       det <-- dfetch ();
       det2 <-- ret (snd det);
       assignM det2 v
-  let fin = Some (fun () -> perform
+  let fin = fun () -> perform
       (det_sign,det) <-- dfetch ();
       ifM (Logic.equalL (liftGet det_sign) Idx.zero) (ret zeroL)
       (ifM (Logic.equalL (liftGet det_sign) Idx.one) (ret (liftGet det))
-          (ret (uminusL (liftGet det)))))
+          (ret (uminusL (liftGet det))))
 end
 
 
@@ -387,7 +391,7 @@ module type LOWER = sig
   val decl   : ('a, C.contr) abstract -> ('a*'s*'w, C.contr) lm
   val updt   : 'a C.vc -> ('a,int) abstract -> ('a,int) abstract -> 'a C.vo -> 
             'a C.Dom.vc -> ('a*'s*'w, unit) lm option
-  val fin    : (unit -> ('a,  C.contr) lm) option
+  val fin    : unit -> ('a,  C.contr) lm
   val wants_pack : bool
 end
 
@@ -428,9 +432,9 @@ module SeparateLower = struct
       l1 <-- ret (C.col_head_set lower row col nv);
       l2 <-- ret (C.col_head_set mat row col defval);
       ret (seq l1 l2) )
-  let fin = Some (fun () -> perform
+  let fin () = perform
       m <-- mfetch ();
-      ret m)
+      ret m
   let wants_pack = false
 end
 
@@ -443,9 +447,9 @@ module PackedLower = struct
       mstore udecl;
       ret udecl
   let updt  _ _ _ _ _ = None
-  let fin = Some (fun () -> perform
+  let fin () = perform
       m <-- mfetch ();
-      ret m)
+      ret m
   let wants_pack = true
 end
 
@@ -454,7 +458,7 @@ module NoLower = struct
   let decl c = ret c
   let updt mat row col defval _ = 
       Some (ret (C.col_head_set mat row col defval))
-  let fin = None
+  let fin () = failwith "Lower matrix L is needed but not computed"
   let wants_pack = false
 end
 
@@ -624,10 +628,10 @@ module OutDet(OD : OUTPUTDEP) = struct
       module L   = NoLower end
   type res = C.contr * C.Dom.v
   let make_result m = perform
-    det <-- fromJust OD.Det.fin ();
+    det <-- OD.Det.fin ();
     ret (Tuple.tup2 m.matrix det)
   (* Initialization: check the preconditions of instantiation of this struct*)
-  let () = notNone OD.Det.fin "Determinant is not computed here"
+  let _ = OD.Det.fin ()
 end
 
 module OutRank(OD : OUTPUTDEP) = struct
@@ -637,10 +641,10 @@ module OutRank(OD : OUTPUTDEP) = struct
       module L   = NoLower end
   type res = C.contr * int
   let make_result m = perform
-    rank <-- fromJust IF.R.fin ();
+    rank <-- IF.R.fin ();
     ret (Tuple.tup2 m.matrix rank)
   (* Initialization: check the preconditions of instantiation of this struct*)
-  let () = notNone IF.R.fin "Rank is not computed here"
+  let _ = IF.R.fin ()
 end
 
 module OutDetRank(OD : OUTPUTDEP) = struct
@@ -650,12 +654,12 @@ module OutDetRank(OD : OUTPUTDEP) = struct
       module L   = NoLower end
   type res = C.contr * C.Dom.v * int
   let make_result m = perform
-    det  <-- fromJust OD.Det.fin ();
-    rank <-- fromJust IF.R.fin ();
+    det  <-- OD.Det.fin ();
+    rank <-- IF.R.fin ();
     ret (Tuple.tup3 m.matrix det rank)
   (* Initialization: check the preconditions of instantiation of this struct*)
-  let () = notNone OD.Det.fin "Determinant is not computed here"
-  let () = notNone IF.R.fin "Rank is not computed here"
+  let _ = OD.Det.fin ()
+  let _ = IF.R.fin ()
 end
 
 
@@ -670,14 +674,14 @@ module OutDetRankPivot(OD : OUTPUTDEP) = struct
   | None -> failwith "No Pivot computed provided"
 *)
   let make_result m = perform
-    det  <-- fromJust OD.Det.fin ();
-    rank <-- fromJust IF.R.fin ();
-    pivmat <-- fromJust IF.P.fin ();
+    det  <-- OD.Det.fin ();
+    rank <-- IF.R.fin ();
+    pivmat <-- IF.P.fin ();
     ret (Tuple.tup4 m.matrix det rank pivmat)
   (* Initialization: check the preconditions of instantiation of this struct*)
-  let () = notNone OD.Det.fin "Determinant is not computed here"
-  let () = notNone IF.R.fin "Rank is not computed here"
-  let () = notNone IF.P.fin "Pivot is not computed here"
+  let _ = OD.Det.fin ()
+  let _ = IF.R.fin ()
+  let _ = IF.P.fin ()
 end
 
 
@@ -689,13 +693,13 @@ module Out_L_U(OD : OUTPUTDEP) = struct
       module L   = SeparateLower end
   type res = C.contr * C.contr * IF.P.perm_rep
   let make_result m = perform
-    pivmat <-- fromJust IF.P.fin ();
-    lower <-- fromJust IF.L.fin ();
+    pivmat <-- IF.P.fin ();
+    lower <-- IF.L.fin ();
     ret (Tuple.tup3 m.matrix lower pivmat)
   (* Initialization: check the preconditions of instantiation of this struct*)
   let _ = C.Dom.kind = Domains_sig.Domain_is_Field ||
           failwith "Out_L_U: Can't extract the L in a non-field"
-  let () = notNone IF.P.fin "Pivot is not computed here"
+  let _ = IF.P.fin ()
 end
 
 (* Only for Fields: because we can't extract the L in a non-field *)
@@ -706,8 +710,8 @@ module Out_LU_Packed(OD : OUTPUTDEP) = struct
       module L   = PackedLower end
   type res = C.contr * IF.P.perm_rep
   let make_result _ = perform
-    pivmat <-- fromJust IF.P.fin ();
-    lower <-- fromJust IF.L.fin ();
+    pivmat <-- IF.P.fin ();
+    lower <-- IF.L.fin ();
     ret (Tuple.tup2 lower pivmat)
     (* we really should be able to assert that lower == m.matrix
     here, but can't because the representation of lower/m.matrix
@@ -715,7 +719,7 @@ module Out_LU_Packed(OD : OUTPUTDEP) = struct
   (* Initialization: check the preconditions of instantiation of this struct*)
   let _ = C.Dom.kind = Domains_sig.Domain_is_Field ||
           failwith "Out_LU_Packed: Can't extract the L in a non-field"
-  let () = notNone IF.P.fin "Pivot is not computed here"
+  let _ = IF.P.fin ()
 end
 
 (* The `keyword' list of all the present internal features *)
