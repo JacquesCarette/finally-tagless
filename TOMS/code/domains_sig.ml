@@ -51,6 +51,8 @@ module type CONTAINER2D = sig
   val mapper : ('a vo -> 'a vo) option -> 'a vc -> 'a vc
   val copy : 'a vc -> 'a vc
   val init : ('a,int) rep -> ('a, int) rep -> 'a vc
+  val augment : 'a vc -> ('a,int) rep -> ('a, int) rep -> 'a vc ->
+                ('a, int) rep -> 'a vc
   val identity : ('a,int) rep -> ('a, int) rep -> 'a vc
   val swap_rows_stmt : 'a vc -> ('a, int) rep -> ('a, int) rep -> 
                        ('a,unit) rep
