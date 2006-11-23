@@ -10,7 +10,7 @@ module T1 = DivisionUpdate(GAC_F)(NoDet);;
 
 
 module GAC_F = GenericArrayContainer(FloatDomainL)
-module G_GAC_F = GenLA(GAC_F)
+module G_GAC_F = GenLA.GE(GAC_F)
 open G_GAC_F
 module GenFA1_F = struct 
       module PivotF = RowPivot
@@ -57,7 +57,7 @@ let (arr, det, rk, perm) = resF25 in
    begins!
 *)
 module GAC_Z = GenericArrayContainer(IntegerDomainL)
-module G_GAC_Z = GenLA(GAC_Z)
+module G_GAC_Z = GenLA.GE(GAC_Z)
 open G_GAC_Z
 module GenFA1_Z = struct 
       module PivotF = RowPivot

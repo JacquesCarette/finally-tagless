@@ -9,7 +9,12 @@ let fromJust = function Some x -> x | None -> failwith "Can't happen"
 let notNone v str = match v with None -> failwith str | Some _ -> () *)
 let ensure cond str = if not cond then failwith str else ()
 
-module GEMake(CODE: Coderep.T) = struct
+(* A lot of "Linear Algebra" is generic, so structure things 
+   to leverage that.  Some modules are container-independent,
+   so these are pulled out.
+*)
+
+module LAMake(CODE: Coderep.T) = struct
 
 module D = Domains_sig.S(
   struct type ('a, 'v) rep = ('a,'v) CODE.abstract end)
@@ -212,13 +217,11 @@ end
 
 module GenLA(C:CONTAINER2D) = struct
 
-
 (* Bundle up some information, helps abstract some argument lists *)
 type 'a wmatrix = {matrix: 'a C.vc; numrow: ('a,int) abstract; 
                    numcol: ('a,int) abstract}
 type 'a curpos  = {rowpos: ('a, int) abstract; colpos: ('a, int) abstract}
 type 'a curposval = {p: 'a curpos; curval: ('a, C.Dom.v) abstract}
-
 
 module type DETERMINANT = sig
   type tdet = C.Dom.v ref
@@ -240,7 +243,19 @@ module type DETERMINANT = sig
   val fin       : unit -> ('b,C.Dom.v) lm
 end
 
-
+module type PIVOT = 
+      functor (D: DETERMINANT) -> 
+        functor (P: TRACKPIVOT) -> sig
+ (* Find the pivot within [r,m-1] rows and [c,(n-1)] columns
+    of containrer b.
+    If pivot is found, permute the matrix rows and columns so that the pivot
+    becomes the element (r,c) of the matrix,
+    Return the value of the pivot option. Or zero?
+    When we permute the rows of columns, we update the sign of the det.
+ *)
+ val findpivot : 'a wmatrix -> 'a curpos ->
+   ('a,C.Dom.v option,[> 'a D.tag_lstate | 'a P.tag_lstate],'w) cmonad
+end
 
 (* In the case of a non-fraction-free algorithm with no Det
    output, it is possible to not track the determinant, but
@@ -320,7 +335,6 @@ module AbstractDet =
           (ret (uminusL (liftGet det))))
 end
 
-
 module type UPDATE =
         functor(D:DETERMINANT) -> sig
         type 'a in_val = 'a C.Dom.vc
@@ -337,6 +351,10 @@ module type UPDATE =
           ('a, C.Dom.v ref) abstract -> ('a, C.Dom.v, 's, 'w) cmonad *)
         val upd_kind : update_kind
 end
+
+
+    (* all this stuff is GE specific, wrap it up *)
+module GE = struct
 
 (* What is the update formula? *)
 module DivisionUpdate(Det:DETERMINANT) =
@@ -372,7 +390,6 @@ module FractionFreeUpdate(Det:DETERMINANT) = struct
       ret t *)
   let upd_kind = FractionFree
 end
-
 
 
 (* This is for tracking L, as in LU decomposition.
@@ -482,20 +499,6 @@ module InpMatrixMargin = struct
         ret (b, c, true)
 end
 
-
-module type PIVOT = 
-      functor (D: DETERMINANT) -> 
-        functor (P: TRACKPIVOT) -> sig
- (* Find the pivot within [r,m-1] rows and [c,(n-1)] columns
-    of containrer b.
-    If pivot is found, permute the matrix rows and columns so that the pivot
-    becomes the element (r,c) of the matrix,
-    Return the value of the pivot option. Or zero?
-    When we permute the rows of columns, we update the sign of the det.
- *)
- val findpivot : 'a wmatrix -> 'a curpos ->
-   ('a,C.Dom.v option,[> 'a D.tag_lstate | 'a P.tag_lstate],'w) cmonad
-end
 
 module RowPivot(Det: DETERMINANT)(P: TRACKPIVOT) =
 struct
@@ -753,7 +756,6 @@ module GenGE(F : FEATURES) = struct
     (* module Verify = Test(F)  that does the pre-flight test *)
 
     let wants_pack = O.IF.L.wants_pack
-    let back_elim  = false
     let can_pack   = 
         let module U = F.Update(F.Det) in
         (U.upd_kind = DivisionBased)
@@ -813,22 +815,83 @@ module GenGE(F : FEATURES) = struct
                       (F.Det.zero_sign () ))
                   (updateM c Idx.succ) )
 
-   let backward_elim () =
-          if back_elim then
-              Some unitL
-          else
-              None
-
    let ge_gen input = perform
           (mat, r, c, rmar) <-- init input;
           seqM 
-            (optSeqM
-                (forward_elim (mat, r, c, rmar))
-                (backward_elim ()))
+            (forward_elim (mat, r, c, rmar))
             (O.make_result mat)
 
    let gen input = ge_gen input
 end
+
+end
+(* end of GE-specific stuff *)
+
+(* Now comes the solver module *)
+module Solve = struct
+module type INPUT = sig
+    type inp
+    type rhs
+    val get_input : ('a, inp) abstract ->
+        (('a, C.contr) abstract * ('a, rhs) abstract * bool, 's, ('a, 'w)
+        abstract) monad
+end 
+
+(* What is the input *)
+module InpMatrixVector = struct
+    type inp   = C.contr * C.contr
+    let get_input a = perform
+        (b,c) <-- ret (liftPair a);
+        ret (b, c, true)
+end
+
+module type OUTPUT = sig
+  type res
+  val make_result : 'a wmatrix -> ('a, res, 's, 'w) cmonad
+end
+
+(* The `keyword' list of all the present external features *)
+(* Really, these features are exposed by GE, but they can be seen
+   through this implementation of Sove *)
+module type FEATURES = sig
+  module Det       : DETERMINANT
+  module PivotF    : PIVOT
+  module PivotRep  : PIVOTKIND
+  module Update    : UPDATE
+  module Input     : INPUT
+  module Output    : OUTPUT
+end
+
+module GenSolve(F : FEATURES) = struct
+    (* module Verify = Test(F)  that does the pre-flight test *)
+
+	(* some more pre-flight tests *)
+    (* to be filled in *)
+
+    (* We will solve via GE *)
+    module GE_FEATURES = struct
+        module Det = F.Det
+        module PivotF = F.PivotF
+        module PivotRep = F.PivotRep
+        module Update = F.Update
+        module Input = GE.InpMatrixMargin
+        module Output = GE.OutJustMatrix
+    end
+
+    module GE' = GE.GenGE(GE_FEATURES)
+
+    let init input = perform
+        (a,b, mat) <-- F.Input.get_input input;
+        ret (a, b, mat)
+
+    let solve_gen input = perform
+        (a,b, mat) <-- F.Input.get_input input;
+        u          <-- GE'.ge_gen (Tuple.tup2 a (C.dim2 a));
+        ret u
+end
+
+end
+(* end of Solve-specific stuff *)
 
 end
 

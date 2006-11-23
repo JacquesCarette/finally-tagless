@@ -1,7 +1,7 @@
 open StateCPSMonad
 
 
-module GEF = Ge.GEMake(Code)
+module GEF = Ge.LAMake(Code)
 open GEF
 open Domains_code
 

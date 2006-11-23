@@ -36,6 +36,7 @@ module G_GVC_Z19 = GenLA(GVC_Z19)
 module G_GFC_F = GenLA(GFC_F)
 
 open G_GAC_F
+open G_GAC_F.GE
 
 module GenFA1 = GenGE(struct
     module Det = NoDet
@@ -165,6 +166,7 @@ module GenFA32 = GenGE(struct
     module Output = Out_LU_Packed end)
 
 open G_GVC_F
+open G_GVC_F.GE
 module GenFV1 = GenGE(struct 
     module Det = NoDet
     module PivotF = RowPivot
@@ -222,6 +224,7 @@ module GenFV7 = GenGE(struct
 
 
 open G_GAC_I
+open G_GAC_I.GE
 module GenIA1 = GenGE(struct 
     module Det = AbstractDet
     module PivotF = RowPivot
@@ -303,6 +306,7 @@ let _ = assert (
 ;;
 
 open G_GVC_I
+open G_GVC_I.GE
 module GenIV1 = GenGE(struct 
     module Det = AbstractDet
     module PivotF = RowPivot
@@ -347,6 +351,7 @@ module GenIV6 = GenGE(struct
     module Output = OutDetRankPivot end)
 
 open G_GAC_R
+open G_GAC_R.GE
 module GenRA1 = GenGE(struct 
     module Det = NoDet
     module PivotF = RowPivot
@@ -375,7 +380,9 @@ module GenRA4 = GenGE(struct
     module Update = DivisionUpdate
     module Input = InpJustMatrix 
     module Output = OutDetRank end)
+
 open G_GVC_Z3
+open G_GVC_Z3.GE
 module GenZp3 = GenGE(struct 
     module Det = AbstractDet
     module PivotF = RowPivot
@@ -385,6 +392,7 @@ module GenZp3 = GenGE(struct
     module Output = OutDetRankPivot end)
 
 open G_GVC_Z19
+open G_GVC_Z19.GE
 module GenZp19 = GenGE(struct 
     module Det = AbstractDet
     module PivotF = RowPivot
