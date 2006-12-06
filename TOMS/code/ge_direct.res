@@ -58,6 +58,11 @@
             val copy : 'a vc -> 'a vc
             val init :
               ('a, int) Direct.abstract -> ('a, int) Direct.abstract -> 'a vc
+            val augment :
+              'a vc ->
+              ('a, int) Direct.abstract ->
+              ('a, int) Direct.abstract ->
+              'a vc -> ('a, int) Direct.abstract -> 'a vc
             val identity :
               ('a, int) Direct.abstract -> ('a, int) Direct.abstract -> 'a vc
             val swap_rows_stmt :
@@ -535,8 +540,6 @@
                   type 'a tag_lstate = [ `TLower of 'a lstate ]
                   type ('a, 'b) lm = ('c, 'b, 'd, 'e) cmonad
                     constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                  type ('a, 'b) om = ('c, 'b, 'd, 'e) omonad
-                    constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                   val mfetch :
                     unit -> ('a * [> 'a tag_lstate ] * 'b, C.contr) lm
                   val decl :
@@ -559,8 +562,6 @@
                   type 'a tag_lstate = [ `TLower of 'a lstate ]
                   type ('a, 'b) lm = ('c, 'b, 'd, 'e) cmonad
                     constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                  type ('a, 'b) om = ('c, 'b, 'd, 'e) omonad
-                    constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                   val fetch_iter : [> `TLower of 'a ] list -> 'a
                   val mfetch :
                     unit ->
@@ -576,8 +577,6 @@
                   type 'a lstate = ('a, C.contr) Direct.abstract
                   type 'a tag_lstate = [ `TLower of 'a lstate ]
                   type ('a, 'b) lm = ('c, 'b, 'd, 'e) cmonad
-                    constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                  type ('a, 'b) om = ('c, 'b, 'd, 'e) omonad
                     constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                   val fetch_iter : [> `TLower of 'a ] list -> 'a
                   val mfetch :
@@ -615,8 +614,6 @@
                   type 'a tag_lstate = [ `TLower of 'a lstate ]
                   type ('a, 'b) lm = ('c, 'b, 'd, 'e) cmonad
                     constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                  type ('a, 'b) om = ('c, 'b, 'd, 'e) omonad
-                    constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                   val fetch_iter : [> `TLower of 'a ] list -> 'a
                   val mfetch :
                     unit ->
@@ -642,8 +639,6 @@
                   type 'a lstate = ('a, C.contr) Direct.abstract
                   type 'a tag_lstate = [ `TLower of 'a lstate ]
                   type ('a, 'b) lm = ('c, 'b, 'd, 'e) cmonad
-                    constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                  type ('a, 'b) om = ('c, 'b, 'd, 'e) omonad
                     constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                   val fetch_iter : [> `TLower of 'a ] list -> 'a
                   val mfetch :
@@ -828,9 +823,6 @@
                             type ('a, 'b) lm = ('c, 'b, 'd, 'e) cmonad
                               constraint 'a =
                                 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                            type ('a, 'b) om = ('c, 'b, 'd, 'e) omonad
-                              constraint 'a =
-                                'c * ([> 'c tag_lstate ] as 'd) * 'e
                             val fetch_iter : [> `TLower of 'a ] list -> 'a
                             val mfetch :
                               unit ->
@@ -945,9 +937,6 @@
                             type 'a lstate = ('a, C.contr) Direct.abstract
                             type 'a tag_lstate = [ `TLower of 'a lstate ]
                             type ('a, 'b) lm = ('c, 'b, 'd, 'e) cmonad
-                              constraint 'a =
-                                'c * ([> 'c tag_lstate ] as 'd) * 'e
-                            type ('a, 'b) om = ('c, 'b, 'd, 'e) omonad
                               constraint 'a =
                                 'c * ([> 'c tag_lstate ] as 'd) * 'e
                             val fetch_iter : [> `TLower of 'a ] list -> 'a
@@ -1077,9 +1066,6 @@
                             type ('a, 'b) lm = ('c, 'b, 'd, 'e) cmonad
                               constraint 'a =
                                 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                            type ('a, 'b) om = ('c, 'b, 'd, 'e) omonad
-                              constraint 'a =
-                                'c * ([> 'c tag_lstate ] as 'd) * 'e
                             val fetch_iter : [> `TLower of 'a ] list -> 'a
                             val mfetch :
                               unit ->
@@ -1203,9 +1189,6 @@
                             type 'a lstate = ('a, C.contr) Direct.abstract
                             type 'a tag_lstate = [ `TLower of 'a lstate ]
                             type ('a, 'b) lm = ('c, 'b, 'd, 'e) cmonad
-                              constraint 'a =
-                                'c * ([> 'c tag_lstate ] as 'd) * 'e
-                            type ('a, 'b) om = ('c, 'b, 'd, 'e) omonad
                               constraint 'a =
                                 'c * ([> 'c tag_lstate ] as 'd) * 'e
                             val fetch_iter : [> `TLower of 'a ] list -> 'a
@@ -1369,9 +1352,6 @@
                             type ('a, 'b) lm = ('c, 'b, 'd, 'e) cmonad
                               constraint 'a =
                                 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                            type ('a, 'b) om = ('c, 'b, 'd, 'e) omonad
-                              constraint 'a =
-                                'c * ([> 'c tag_lstate ] as 'd) * 'e
                             val fetch_iter : [> `TLower of 'a ] list -> 'a
                             val mfetch :
                               unit ->
@@ -1526,9 +1506,6 @@
                             type 'a lstate = ('a, C.contr) Direct.abstract
                             type 'a tag_lstate = [ `TLower of 'a lstate ]
                             type ('a, 'b) lm = ('c, 'b, 'd, 'e) cmonad
-                              constraint 'a =
-                                'c * ([> 'c tag_lstate ] as 'd) * 'e
-                            type ('a, 'b) om = ('c, 'b, 'd, 'e) omonad
                               constraint 'a =
                                 'c * ([> 'c tag_lstate ] as 'd) * 'e
                             val fetch_iter : [> `TLower of 'a ] list -> 'a
@@ -1696,9 +1673,6 @@
                             type ('a, 'b) lm = ('c, 'b, 'd, 'e) cmonad
                               constraint 'a =
                                 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                            type ('a, 'b) om = ('c, 'b, 'd, 'e) omonad
-                              constraint 'a =
-                                'c * ([> 'c tag_lstate ] as 'd) * 'e
                             val fetch_iter : [> `TLower of 'a ] list -> 'a
                             val mfetch :
                               unit ->
@@ -1823,9 +1797,6 @@
                                     ('a, C.contr) Direct.abstract
                                 type 'a tag_lstate = [ `TLower of 'a lstate ]
                                 type ('a, 'b) lm = ('c, 'b, 'd, 'e) cmonad
-                                  constraint 'a =
-                                    'c * ([> 'c tag_lstate ] as 'd) * 'e
-                                type ('a, 'b) om = ('c, 'b, 'd, 'e) omonad
                                   constraint 'a =
                                     'c * ([> 'c tag_lstate ] as 'd) * 'e
                                 val mfetch :
@@ -1960,243 +1931,6 @@
               module GenSolve :
                 functor (F : FEATURES) ->
                   sig
-                    module GE_FEATURES :
-                      sig
-                        module Det :
-                          sig
-                            type tdet = C.Dom.v ref
-                            type 'a lstate = 'a F.Det.lstate
-                            type 'a tag_lstate = [ `TDet of 'a lstate ]
-                            type ('a, 'b) lm = ('c, 'b, 'd, 'e) cmonad
-                              constraint 'a =
-                                'c * ([> 'c tag_lstate ] as 'd) * 'e
-                            type ('a, 'b) om = ('c, 'b, 'd, 'e) omonad
-                              constraint 'a =
-                                'c * ([> 'c tag_lstate ] as 'd) * 'e
-                            val decl :
-                              unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                            val upd_sign :
-                              unit -> ('a * [> 'a tag_lstate ] * 'b, unit) om
-                            val zero_sign :
-                              unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                            val acc :
-                              ('a, C.Dom.v) Direct.abstract ->
-                              ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                            val get :
-                              unit -> ('a * [> 'a tag_lstate ] * 'b, tdet) lm
-                            val set :
-                              ('a, C.Dom.v) Direct.abstract ->
-                              ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                            val fin :
-                              unit ->
-                              ('a * [> 'a tag_lstate ] * 'b, C.Dom.v) lm
-                          end
-                        module PivotF :
-                          functor (D : DETERMINANT) ->
-                            functor (P : TRACKPIVOT) ->
-                              sig
-                                val findpivot :
-                                  'a wmatrix ->
-                                  'a curpos ->
-                                  ('a, C.Dom.v option,
-                                   [> `TDet of 'a D.lstate
-                                    | `TPivot of 'a P.lstate ],
-                                   'b)
-                                  cmonad
-                              end
-                        module PivotRep :
-                          sig
-                            type perm_rep = F.PivotRep.perm_rep
-                            type 'a ira = ('a, int) Direct.abstract
-                            type 'a fra = 'a F.PivotRep.fra
-                            type 'a pra = ('a, perm_rep) Direct.abstract
-                            val add : 'a fra -> 'a pra -> 'a pra
-                            val empty : 'a ira -> 'a pra
-                            val rowrep : 'a ira -> 'a ira -> 'a fra
-                            val colrep : 'a ira -> 'a ira -> 'a fra
-                          end
-                        module Update :
-                          functor (D : DETERMINANT) ->
-                            sig
-                              type 'a in_val = 'a C.Dom.vc
-                              val update :
-                                'a in_val ->
-                                'a in_val ->
-                                'a in_val ->
-                                'a in_val ->
-                                ('a in_val -> ('a, unit) Direct.abstract) ->
-                                ('a, C.Dom.v ref) Direct.abstract ->
-                                ('a, unit, 'b, 'c) cmonad
-                              val update_det :
-                                'a in_val ->
-                                ('a * [> 'a D.tag_lstate ] * 'b, unit) D.lm
-                              val upd_kind : Ge.update_kind
-                            end
-                        module Input :
-                          sig
-                            type inp = C.contr * int
-                            val get_input :
-                              ('a, 'b * 'c) Direct.abstract ->
-                              'd ->
-                              ('d ->
-                               ('a, 'b) Direct.abstract *
-                               ('a, 'c) Direct.abstract * bool -> 'e) ->
-                              'e
-                          end
-                        module Output :
-                          functor (OD : GE.OUTPUTDEP) ->
-                            sig
-                              module IF :
-                                sig
-                                  module R :
-                                    sig
-                                      type 'a lstate =
-                                          ('a, int ref) Direct.abstract
-                                      type 'a tag_lstate_ =
-                                          [ `TRan of 'a lstate ]
-                                      type 'a tag_lstate = 'a tag_lstate_
-                                      type ('a, 'b) lm =
-                                          ('c, 'b, 'd, 'e) cmonad
-                                        constraint 'a =
-                                          'c * ([> 'c tag_lstate ] as 'd) *
-                                          'e
-                                      val fetch_iter :
-                                        [> `TRan of 'a ] list -> 'a
-                                      val rfetch :
-                                        unit ->
-                                        ([> `TRan of 'b ] as 'a) list ->
-                                        ('a list -> 'b -> 'c) -> 'c
-                                      val rstore :
-                                        'a ->
-                                        ([> `TRan of 'a ] as 'b) list ->
-                                        ('b list -> unit -> 'c) -> 'c
-                                      val decl :
-                                        unit ->
-                                        ([> `TRan of
-                                              ('b, int ref) Direct.abstract ]
-                                         as 'a)
-                                        list ->
-                                        ('a list ->
-                                         ('b, int ref) Direct.abstract ->
-                                         ('b, 'c) Direct.abstract) ->
-                                        ('b, 'c) Direct.abstract
-                                      val succ :
-                                        unit ->
-                                        ([> `TRan of
-                                              ('b, int ref) Direct.abstract ]
-                                         as 'a)
-                                        list ->
-                                        ('a list ->
-                                         ('b, unit) Direct.abstract -> 'c) ->
-                                        'c
-                                      module type RANK =
-                                        sig
-                                          type 'a tag_lstate = 'a tag_lstate_
-                                          val rfetch :
-                                            unit ->
-                                            ('a * [> 'a tag_lstate ] * 'b,
-                                             int ref)
-                                            lm
-                                          val decl :
-                                            unit ->
-                                            ('a * [> 'a tag_lstate ] * 'b,
-                                             int ref)
-                                            lm
-                                          val succ :
-                                            unit ->
-                                            ('a * [> 'a tag_lstate ] * 'b,
-                                             unit)
-                                            lm
-                                          val fin :
-                                            unit ->
-                                            ('a * [> 'a tag_lstate ] * 'b,
-                                             int)
-                                            lm
-                                        end
-                                      val fin : unit -> 'a
-                                    end
-                                  module P :
-                                    sig
-                                      type perm_rep = PermList.perm_rep
-                                      type 'a ira = 'a PermList.ira
-                                      type 'a fra = 'a PermList.fra
-                                      type 'a pra = 'a PermList.pra
-                                      type 'a lstate =
-                                          ('a, PermList.perm_rep ref)
-                                          Direct.abstract
-                                      type 'a tag_lstate =
-                                          [ `TPivot of 'a lstate ]
-                                      type ('a, 'b) lm =
-                                          ('c, 'b, 'd, 'e) cmonad
-                                        constraint 'a =
-                                          'c * ([> 'c tag_lstate ] as 'd) *
-                                          'e
-                                      val rowrep :
-                                        'a PermList.ira ->
-                                        'a PermList.ira -> 'a PermList.fra
-                                      val colrep :
-                                        'a PermList.ira ->
-                                        'a PermList.ira -> 'a PermList.fra
-                                      val decl :
-                                        'a ->
-                                        'b ->
-                                        ('b ->
-                                         ('c, unit) Direct.abstract -> 'd) ->
-                                        'd
-                                      val add :
-                                        'a ->
-                                        'b -> ('b -> 'c option -> 'd) -> 'd
-                                      val fin : unit -> 'a
-                                    end
-                                  module L :
-                                    sig
-                                      type 'a lstate =
-                                          ('a, C.contr) Direct.abstract
-                                      type 'a tag_lstate =
-                                          [ `TLower of 'a lstate ]
-                                      type ('a, 'b) lm =
-                                          ('c, 'b, 'd, 'e) cmonad
-                                        constraint 'a =
-                                          'c * ([> 'c tag_lstate ] as 'd) *
-                                          'e
-                                      type ('a, 'b) om =
-                                          ('c, 'b, 'd, 'e) omonad
-                                        constraint 'a =
-                                          'c * ([> 'c tag_lstate ] as 'd) *
-                                          'e
-                                      val fetch_iter :
-                                        [> `TLower of 'a ] list -> 'a
-                                      val mfetch :
-                                        unit ->
-                                        ([> `TLower of 'b ] as 'a) list ->
-                                        ('a list -> 'b -> 'c) -> 'c
-                                      val mstore :
-                                        'a ->
-                                        ([> `TLower of 'a ] as 'b) list ->
-                                        ('b list -> unit -> 'c) -> 'c
-                                      val decl :
-                                        'a -> 'b -> ('b -> 'a -> 'c) -> 'c
-                                      val updt :
-                                        'a C.vc ->
-                                        ('a, int) Direct.abstract ->
-                                        ('a, int) Direct.abstract ->
-                                        'a C.vo ->
-                                        'b ->
-                                        ('c ->
-                                         ('c ->
-                                          ('a, unit) Direct.abstract -> 'd) ->
-                                         'd)
-                                        option
-                                      val fin : unit -> 'a
-                                      val wants_pack : bool
-                                    end
-                                end
-                              type res = C.contr
-                              val make_result :
-                                'a wmatrix ->
-                                'b -> ('b -> 'a C.vc -> 'c) -> 'c
-                            end
-                      end
                     module GE' :
                       sig
                         module O :
@@ -2230,18 +1964,13 @@
                                   end
                                 module P :
                                   sig
-                                    type perm_rep =
-                                        GE_FEATURES.Output(GE_FEATURES).IF.P.perm_rep
+                                    type perm_rep = PermList.perm_rep
                                     type 'a ira = ('a, int) Direct.abstract
-                                    type 'a fra =
-                                        'a
-                                        GE_FEATURES.Output(GE_FEATURES).IF.P.fra
-                                    type 'a pra =
-                                        'a
-                                        GE_FEATURES.Output(GE_FEATURES).IF.P.pra
+                                    type 'a fra = 'a PermList.fra
+                                    type 'a pra = 'a PermList.pra
                                     type 'a lstate =
-                                        'a
-                                        GE_FEATURES.Output(GE_FEATURES).IF.P.lstate
+                                        ('a, PermList.perm_rep ref)
+                                        Direct.abstract
                                     type 'a tag_lstate =
                                         [ `TPivot of 'a lstate ]
                                     type ('a, 'b) lm =
@@ -2275,10 +2004,6 @@
                                         ('c, 'b, 'd, 'e) cmonad
                                       constraint 'a =
                                         'c * ([> 'c tag_lstate ] as 'd) * 'e
-                                    type ('a, 'b) om =
-                                        ('c, 'b, 'd, 'e) omonad
-                                      constraint 'a =
-                                        'c * ([> 'c tag_lstate ] as 'd) * 'e
                                     val mfetch :
                                       unit ->
                                       ('a * [> 'a tag_lstate ] * 'b, C.contr)
@@ -2302,11 +2027,11 @@
                                     val wants_pack : bool
                                   end
                               end
-                            type res = GE_FEATURES.Output(GE_FEATURES).res
+                            type res = C.contr
                             val make_result :
                               'a wmatrix ->
                               ('a, res,
-                               [> `TDet of 'a GE_FEATURES.Det.lstate
+                               [> `TDet of 'a F.Det.lstate
                                 | `TLower of 'a IF.L.lstate
                                 | `TPivot of 'a IF.P.lstate
                                 | `TRan of 'a TrackRank.lstate ],
@@ -2318,18 +2043,17 @@
                         val zerobelow :
                           'a wmatrix ->
                           'a curposval ->
-                          ([> `TDet of 'a GE_FEATURES.Det.lstate
+                          ([> `TDet of 'a F.Det.lstate
                             | `TLower of ('a, C.contr) Direct.abstract ]
                            as 'b)
                           list ->
                           ('b list -> ('a, unit) Direct.abstract -> 'c) -> 'c
                         val init :
-                          ('a, GE_FEATURES.Input.inp) Direct.abstract ->
-                          ([> `TDet of 'a GE_FEATURES.Det.lstate
+                          ('a, C.contr * int) Direct.abstract ->
+                          ([> `TDet of 'a F.Det.lstate
                             | `TLower of ('a, C.contr) Direct.abstract
                             | `TPivot of
-                                'a
-                                GE_FEATURES.Output(GE_FEATURES).IF.P.lstate
+                                ('a, PermList.perm_rep ref) Direct.abstract
                             | `TRan of 'a TrackRank.lstate ]
                            as 'b)
                           list ->
@@ -2343,18 +2067,17 @@
                           'a wmatrix * ('a, int ref) Direct.abstract *
                           ('a, int ref) Direct.abstract *
                           ('a, int) Direct.abstract ->
-                          ([> `TDet of 'a GE_FEATURES.Det.lstate
+                          ([> `TDet of 'a F.Det.lstate
                             | `TLower of ('a, C.contr) Direct.abstract
                             | `TPivot of
-                                'a
-                                GE_FEATURES.Output(GE_FEATURES).IF.P.lstate
+                                ('a, PermList.perm_rep ref) Direct.abstract
                             | `TRan of 'a TrackRank.lstate ]
                            as 'b)
                           list ->
                           ('b list -> ('a, unit) Direct.abstract -> 'c) -> 'c
                         val ge_gen :
-                          ('a, GE_FEATURES.Input.inp) Direct.abstract ->
-                          ([> `TDet of 'a GE_FEATURES.Det.lstate
+                          ('a, C.contr * int) Direct.abstract ->
+                          ([> `TDet of 'a F.Det.lstate
                             | `TLower of 'a O.IF.L.lstate
                             | `TPivot of 'a O.IF.P.lstate
                             | `TRan of 'a TrackRank.lstate ]
@@ -2365,8 +2088,8 @@
                            ('a, 'c) Direct.abstract) ->
                           ('a, 'c) Direct.abstract
                         val gen :
-                          ('a, GE_FEATURES.Input.inp) Direct.abstract ->
-                          ([> `TDet of 'a GE_FEATURES.Det.lstate
+                          ('a, C.contr * int) Direct.abstract ->
+                          ([> `TDet of 'a F.Det.lstate
                             | `TLower of 'a O.IF.L.lstate
                             | `TPivot of 'a O.IF.P.lstate
                             | `TRan of 'a TrackRank.lstate ]
@@ -2387,7 +2110,7 @@
                       ('a, 'c) Direct.abstract
                     val solve_gen :
                       ('a, F.Input.inp) Direct.abstract ->
-                      ([> `TDet of 'a GE_FEATURES.Det.lstate
+                      ([> `TDet of 'a F.Det.lstate
                         | `TLower of 'a GE'.O.IF.L.lstate
                         | `TPivot of 'a GE'.O.IF.P.lstate
                         | `TRan of 'a TrackRank.lstate ]
@@ -2496,6 +2219,11 @@ module GAC_F :
       (unit -> Dom.v array array) -> unit -> Dom.v array array
     val copy : (unit -> 'a array array) -> unit -> 'a array array
     val init : (unit -> int) -> (unit -> int) -> unit -> Dom.v array array
+    val augment :
+      (unit -> 'a array array) ->
+      (unit -> int) ->
+      (unit -> int) ->
+      (unit -> 'a array array) -> (unit -> int) -> unit -> 'a array array
     val identity :
       (unit -> int) -> (unit -> int) -> unit -> Dom.v array array
     val swap_rows_stmt :
@@ -2557,6 +2285,12 @@ module GVC_F :
     val init :
       (unit -> int) ->
       (unit -> int) -> unit -> Dom.v Domains_direct.container2dfromvector
+    val augment :
+      (unit -> Dom.v Domains_direct.container2dfromvector) ->
+      (unit -> int) ->
+      (unit -> int) ->
+      (unit -> Dom.v Domains_direct.container2dfromvector) ->
+      (unit -> int) -> unit -> Dom.v Domains_direct.container2dfromvector
     val identity :
       (unit -> int) ->
       (unit -> int) -> unit -> Dom.v Domains_direct.container2dfromvector
@@ -2613,6 +2347,11 @@ module GAC_I :
       (unit -> Dom.v array array) -> unit -> Dom.v array array
     val copy : (unit -> 'a array array) -> unit -> 'a array array
     val init : (unit -> int) -> (unit -> int) -> unit -> Dom.v array array
+    val augment :
+      (unit -> 'a array array) ->
+      (unit -> int) ->
+      (unit -> int) ->
+      (unit -> 'a array array) -> (unit -> int) -> unit -> 'a array array
     val identity :
       (unit -> int) -> (unit -> int) -> unit -> Dom.v array array
     val swap_rows_stmt :
@@ -2674,6 +2413,12 @@ module GVC_I :
     val init :
       (unit -> int) ->
       (unit -> int) -> unit -> Dom.v Domains_direct.container2dfromvector
+    val augment :
+      (unit -> Dom.v Domains_direct.container2dfromvector) ->
+      (unit -> int) ->
+      (unit -> int) ->
+      (unit -> Dom.v Domains_direct.container2dfromvector) ->
+      (unit -> int) -> unit -> Dom.v Domains_direct.container2dfromvector
     val identity :
       (unit -> int) ->
       (unit -> int) -> unit -> Dom.v Domains_direct.container2dfromvector
@@ -2730,6 +2475,11 @@ module GAC_R :
       (unit -> Dom.v array array) -> unit -> Dom.v array array
     val copy : (unit -> 'a array array) -> unit -> 'a array array
     val init : (unit -> int) -> (unit -> int) -> unit -> Dom.v array array
+    val augment :
+      (unit -> 'a array array) ->
+      (unit -> int) ->
+      (unit -> int) ->
+      (unit -> 'a array array) -> (unit -> int) -> unit -> 'a array array
     val identity :
       (unit -> int) -> (unit -> int) -> unit -> Dom.v array array
     val swap_rows_stmt :
@@ -2790,6 +2540,12 @@ module GVC_Z3 :
       unit -> 'a Domains_direct.container2dfromvector
     val init :
       (unit -> int) ->
+      (unit -> int) -> unit -> Dom.v Domains_direct.container2dfromvector
+    val augment :
+      (unit -> Dom.v Domains_direct.container2dfromvector) ->
+      (unit -> int) ->
+      (unit -> int) ->
+      (unit -> Dom.v Domains_direct.container2dfromvector) ->
       (unit -> int) -> unit -> Dom.v Domains_direct.container2dfromvector
     val identity :
       (unit -> int) ->
@@ -2854,6 +2610,12 @@ module GVC_Z19 :
     val init :
       (unit -> int) ->
       (unit -> int) -> unit -> Dom.v Domains_direct.container2dfromvector
+    val augment :
+      (unit -> Dom.v Domains_direct.container2dfromvector) ->
+      (unit -> int) ->
+      (unit -> int) ->
+      (unit -> Dom.v Domains_direct.container2dfromvector) ->
+      (unit -> int) -> unit -> Dom.v Domains_direct.container2dfromvector
     val identity :
       (unit -> int) ->
       (unit -> int) -> unit -> Dom.v Domains_direct.container2dfromvector
@@ -2913,6 +2675,11 @@ module GFC_F :
     val init :
       ('a, int) Domains_direct.DirectRep.rep ->
       ('a, int) Domains_direct.DirectRep.rep -> 'a vc
+    val augment :
+      'a vc ->
+      ('a, int) Domains_direct.DirectRep.rep ->
+      ('a, int) Domains_direct.DirectRep.rep ->
+      'a vc -> ('a, int) Domains_direct.DirectRep.rep -> 'a vc
     val identity :
       ('a, int) Domains_direct.DirectRep.rep ->
       ('a, int) Domains_direct.DirectRep.rep -> 'a vc
@@ -3116,8 +2883,6 @@ module G_GAC_F :
             type 'a tag_lstate = [ `TLower of 'a lstate ]
             type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
               constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-            type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
-              constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
             val mfetch :
               unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_F.contr) lm
             val decl :
@@ -3139,8 +2904,6 @@ module G_GAC_F :
             type 'a tag_lstate = [ `TLower of 'a lstate ]
             type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
               constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-            type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
-              constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
             val fetch_iter : [> `TLower of 'a ] list -> 'a
             val mfetch :
               unit ->
@@ -3155,8 +2918,6 @@ module G_GAC_F :
             type 'a lstate = ('a, GAC_F.contr) Direct.abstract
             type 'a tag_lstate = [ `TLower of 'a lstate ]
             type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
-              constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-            type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
               constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
             val fetch_iter : [> `TLower of 'a ] list -> 'a
             val mfetch :
@@ -3192,8 +2953,6 @@ module G_GAC_F :
             type 'a tag_lstate = [ `TLower of 'a lstate ]
             type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
               constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-            type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
-              constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
             val fetch_iter : [> `TLower of 'a ] list -> 'a
             val mfetch :
               unit ->
@@ -3216,8 +2975,6 @@ module G_GAC_F :
             type 'a lstate = ('a, GAC_F.contr) Direct.abstract
             type 'a tag_lstate = [ `TLower of 'a lstate ]
             type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
-              constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-            type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
               constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
             val fetch_iter : [> `TLower of 'a ] list -> 'a
             val mfetch :
@@ -3388,8 +3145,6 @@ module G_GAC_F :
                       type 'a tag_lstate = [ `TLower of 'a lstate ]
                       type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
                         constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                      type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
-                        constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                       val fetch_iter : [> `TLower of 'a ] list -> 'a
                       val mfetch :
                         unit ->
@@ -3494,8 +3249,6 @@ module G_GAC_F :
                       type 'a lstate = ('a, GAC_F.contr) Direct.abstract
                       type 'a tag_lstate = [ `TLower of 'a lstate ]
                       type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
-                        constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                      type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
                         constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                       val fetch_iter : [> `TLower of 'a ] list -> 'a
                       val mfetch :
@@ -3611,8 +3364,6 @@ module G_GAC_F :
                       type 'a tag_lstate = [ `TLower of 'a lstate ]
                       type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
                         constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                      type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
-                        constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                       val fetch_iter : [> `TLower of 'a ] list -> 'a
                       val mfetch :
                         unit ->
@@ -3724,8 +3475,6 @@ module G_GAC_F :
                       type 'a lstate = ('a, GAC_F.contr) Direct.abstract
                       type 'a tag_lstate = [ `TLower of 'a lstate ]
                       type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
-                        constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                      type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
                         constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                       val fetch_iter : [> `TLower of 'a ] list -> 'a
                       val mfetch :
@@ -3871,8 +3620,6 @@ module G_GAC_F :
                       type 'a tag_lstate = [ `TLower of 'a lstate ]
                       type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
                         constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                      type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
-                        constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                       val fetch_iter : [> `TLower of 'a ] list -> 'a
                       val mfetch :
                         unit ->
@@ -4013,8 +3760,6 @@ module G_GAC_F :
                       type 'a lstate = ('a, GAC_F.contr) Direct.abstract
                       type 'a tag_lstate = [ `TLower of 'a lstate ]
                       type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
-                        constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                      type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
                         constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                       val fetch_iter : [> `TLower of 'a ] list -> 'a
                       val mfetch :
@@ -4163,8 +3908,6 @@ module G_GAC_F :
                       type 'a tag_lstate = [ `TLower of 'a lstate ]
                       type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
                         constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                      type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
-                        constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                       val fetch_iter : [> `TLower of 'a ] list -> 'a
                       val mfetch :
                         unit ->
@@ -4286,9 +4029,6 @@ module G_GAC_F :
                           type 'a lstate = ('a, GAC_F.contr) Direct.abstract
                           type 'a tag_lstate = [ `TLower of 'a lstate ]
                           type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
-                            constraint 'a =
-                              'c * ([> 'c tag_lstate ] as 'd) * 'e
-                          type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
                             constraint 'a =
                               'c * ([> 'c tag_lstate ] as 'd) * 'e
                           val mfetch :
@@ -4417,219 +4157,6 @@ module G_GAC_F :
         module GenSolve :
           functor (F : FEATURES) ->
             sig
-              module GE_FEATURES :
-                sig
-                  module Det :
-                    sig
-                      type tdet = GAC_F.Dom.v ref
-                      type 'a lstate = 'a F.Det.lstate
-                      type 'a tag_lstate = [ `TDet of 'a lstate ]
-                      type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
-                        constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                      type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
-                        constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                      val decl :
-                        unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                      val upd_sign :
-                        unit -> ('a * [> 'a tag_lstate ] * 'b, unit) om
-                      val zero_sign :
-                        unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                      val acc :
-                        ('a, GAC_F.Dom.v) Direct.abstract ->
-                        ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                      val get :
-                        unit -> ('a * [> 'a tag_lstate ] * 'b, tdet) lm
-                      val set :
-                        ('a, GAC_F.Dom.v) Direct.abstract ->
-                        ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                      val fin :
-                        unit ->
-                        ('a * [> 'a tag_lstate ] * 'b, GAC_F.Dom.v) lm
-                    end
-                  module PivotF :
-                    functor (D : DETERMINANT) ->
-                      functor (P : GEF.TRACKPIVOT) ->
-                        sig
-                          val findpivot :
-                            'a wmatrix ->
-                            'a curpos ->
-                            ('a, GAC_F.Dom.v option,
-                             [> `TDet of 'a D.lstate | `TPivot of 'a P.lstate ],
-                             'b)
-                            GEF.cmonad
-                        end
-                  module PivotRep :
-                    sig
-                      type perm_rep = F.PivotRep.perm_rep
-                      type 'a ira = ('a, int) Direct.abstract
-                      type 'a fra = 'a F.PivotRep.fra
-                      type 'a pra = ('a, perm_rep) Direct.abstract
-                      val add : 'a fra -> 'a pra -> 'a pra
-                      val empty : 'a ira -> 'a pra
-                      val rowrep : 'a ira -> 'a ira -> 'a fra
-                      val colrep : 'a ira -> 'a ira -> 'a fra
-                    end
-                  module Update :
-                    functor (D : DETERMINANT) ->
-                      sig
-                        type 'a in_val = 'a GAC_F.Dom.vc
-                        val update :
-                          'a in_val ->
-                          'a in_val ->
-                          'a in_val ->
-                          'a in_val ->
-                          ('a in_val -> ('a, unit) Direct.abstract) ->
-                          ('a, GAC_F.Dom.v ref) Direct.abstract ->
-                          ('a, unit, 'b, 'c) GEF.cmonad
-                        val update_det :
-                          'a in_val ->
-                          ('a * [> 'a D.tag_lstate ] * 'b, unit) D.lm
-                        val upd_kind : Ge.update_kind
-                      end
-                  module Input :
-                    sig
-                      type inp = GAC_F.contr * int
-                      val get_input :
-                        ('a, 'b * 'c) Direct.abstract ->
-                        'd ->
-                        ('d ->
-                         ('a, 'b) Direct.abstract *
-                         ('a, 'c) Direct.abstract * bool -> 'e) ->
-                        'e
-                    end
-                  module Output :
-                    functor (OD : GE.OUTPUTDEP) ->
-                      sig
-                        module IF :
-                          sig
-                            module R :
-                              sig
-                                type 'a lstate =
-                                    ('a, int ref) Direct.abstract
-                                type 'a tag_lstate_ = [ `TRan of 'a lstate ]
-                                type 'a tag_lstate = 'a tag_lstate_
-                                type ('a, 'b) lm =
-                                    ('c, 'b, 'd, 'e) GEF.cmonad
-                                  constraint 'a =
-                                    'c * ([> 'c tag_lstate ] as 'd) * 'e
-                                val fetch_iter : [> `TRan of 'a ] list -> 'a
-                                val rfetch :
-                                  unit ->
-                                  ([> `TRan of 'b ] as 'a) list ->
-                                  ('a list -> 'b -> 'c) -> 'c
-                                val rstore :
-                                  'a ->
-                                  ([> `TRan of 'a ] as 'b) list ->
-                                  ('b list -> unit -> 'c) -> 'c
-                                val decl :
-                                  unit ->
-                                  ([> `TRan of ('b, int ref) Direct.abstract ]
-                                   as 'a)
-                                  list ->
-                                  ('a list ->
-                                   ('b, int ref) Direct.abstract ->
-                                   ('b, 'c) Direct.abstract) ->
-                                  ('b, 'c) Direct.abstract
-                                val succ :
-                                  unit ->
-                                  ([> `TRan of ('b, int ref) Direct.abstract ]
-                                   as 'a)
-                                  list ->
-                                  ('a list ->
-                                   ('b, unit) Direct.abstract -> 'c) ->
-                                  'c
-                                module type RANK =
-                                  sig
-                                    type 'a tag_lstate = 'a tag_lstate_
-                                    val rfetch :
-                                      unit ->
-                                      ('a * [> 'a tag_lstate ] * 'b, int ref)
-                                      lm
-                                    val decl :
-                                      unit ->
-                                      ('a * [> 'a tag_lstate ] * 'b, int ref)
-                                      lm
-                                    val succ :
-                                      unit ->
-                                      ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                                    val fin :
-                                      unit ->
-                                      ('a * [> 'a tag_lstate ] * 'b, int) lm
-                                  end
-                                val fin : unit -> 'a
-                              end
-                            module P :
-                              sig
-                                type perm_rep = GEF.PermList.perm_rep
-                                type 'a ira = 'a GEF.PermList.ira
-                                type 'a fra = 'a GEF.PermList.fra
-                                type 'a pra = 'a GEF.PermList.pra
-                                type 'a lstate =
-                                    ('a, GEF.PermList.perm_rep ref)
-                                    Direct.abstract
-                                type 'a tag_lstate = [ `TPivot of 'a lstate ]
-                                type ('a, 'b) lm =
-                                    ('c, 'b, 'd, 'e) GEF.cmonad
-                                  constraint 'a =
-                                    'c * ([> 'c tag_lstate ] as 'd) * 'e
-                                val rowrep :
-                                  'a GEF.PermList.ira ->
-                                  'a GEF.PermList.ira -> 'a GEF.PermList.fra
-                                val colrep :
-                                  'a GEF.PermList.ira ->
-                                  'a GEF.PermList.ira -> 'a GEF.PermList.fra
-                                val decl :
-                                  'a ->
-                                  'b ->
-                                  ('b -> ('c, unit) Direct.abstract -> 'd) ->
-                                  'd
-                                val add :
-                                  'a -> 'b -> ('b -> 'c option -> 'd) -> 'd
-                                val fin : unit -> 'a
-                              end
-                            module L :
-                              sig
-                                type 'a lstate =
-                                    ('a, GAC_F.contr) Direct.abstract
-                                type 'a tag_lstate = [ `TLower of 'a lstate ]
-                                type ('a, 'b) lm =
-                                    ('c, 'b, 'd, 'e) GEF.cmonad
-                                  constraint 'a =
-                                    'c * ([> 'c tag_lstate ] as 'd) * 'e
-                                type ('a, 'b) om =
-                                    ('c, 'b, 'd, 'e) GEF.omonad
-                                  constraint 'a =
-                                    'c * ([> 'c tag_lstate ] as 'd) * 'e
-                                val fetch_iter :
-                                  [> `TLower of 'a ] list -> 'a
-                                val mfetch :
-                                  unit ->
-                                  ([> `TLower of 'b ] as 'a) list ->
-                                  ('a list -> 'b -> 'c) -> 'c
-                                val mstore :
-                                  'a ->
-                                  ([> `TLower of 'a ] as 'b) list ->
-                                  ('b list -> unit -> 'c) -> 'c
-                                val decl : 'a -> 'b -> ('b -> 'a -> 'c) -> 'c
-                                val updt :
-                                  'a GAC_F.vc ->
-                                  ('a, int) Direct.abstract ->
-                                  ('a, int) Direct.abstract ->
-                                  'a GAC_F.vo ->
-                                  'b ->
-                                  ('c ->
-                                   ('c -> ('a, unit) Direct.abstract -> 'd) ->
-                                   'd)
-                                  option
-                                val fin : unit -> 'a
-                                val wants_pack : bool
-                              end
-                          end
-                        type res = GAC_F.contr
-                        val make_result :
-                          'a wmatrix -> 'b -> ('b -> 'a GAC_F.vc -> 'c) -> 'c
-                      end
-                end
               module GE' :
                 sig
                   module O :
@@ -4663,16 +4190,13 @@ module G_GAC_F :
                             end
                           module P :
                             sig
-                              type perm_rep =
-                                  GE_FEATURES.Output(GE_FEATURES).IF.P.perm_rep
+                              type perm_rep = GEF.PermList.perm_rep
                               type 'a ira = ('a, int) Direct.abstract
-                              type 'a fra =
-                                  'a GE_FEATURES.Output(GE_FEATURES).IF.P.fra
-                              type 'a pra =
-                                  'a GE_FEATURES.Output(GE_FEATURES).IF.P.pra
+                              type 'a fra = 'a GEF.PermList.fra
+                              type 'a pra = 'a GEF.PermList.pra
                               type 'a lstate =
-                                  'a
-                                  GE_FEATURES.Output(GE_FEATURES).IF.P.lstate
+                                  ('a, GEF.PermList.perm_rep ref)
+                                  Direct.abstract
                               type 'a tag_lstate = [ `TPivot of 'a lstate ]
                               type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
                                 constraint 'a =
@@ -4700,9 +4224,6 @@ module G_GAC_F :
                               type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
                                 constraint 'a =
                                   'c * ([> 'c tag_lstate ] as 'd) * 'e
-                              type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
-                                constraint 'a =
-                                  'c * ([> 'c tag_lstate ] as 'd) * 'e
                               val mfetch :
                                 unit ->
                                 ('a * [> 'a tag_lstate ] * 'b, GAC_F.contr)
@@ -4726,11 +4247,11 @@ module G_GAC_F :
                               val wants_pack : bool
                             end
                         end
-                      type res = GE_FEATURES.Output(GE_FEATURES).res
+                      type res = GAC_F.contr
                       val make_result :
                         'a wmatrix ->
                         ('a, res,
-                         [> `TDet of 'a GE_FEATURES.Det.lstate
+                         [> `TDet of 'a F.Det.lstate
                           | `TLower of 'a IF.L.lstate
                           | `TPivot of 'a IF.P.lstate
                           | `TRan of 'a GEF.TrackRank.lstate ],
@@ -4742,17 +4263,17 @@ module G_GAC_F :
                   val zerobelow :
                     'a wmatrix ->
                     'a curposval ->
-                    ([> `TDet of 'a GE_FEATURES.Det.lstate
+                    ([> `TDet of 'a F.Det.lstate
                       | `TLower of ('a, GAC_F.contr) Direct.abstract ]
                      as 'b)
                     list ->
                     ('b list -> ('a, unit) Direct.abstract -> 'c) -> 'c
                   val init :
-                    ('a, GE_FEATURES.Input.inp) Direct.abstract ->
-                    ([> `TDet of 'a GE_FEATURES.Det.lstate
+                    ('a, GAC_F.contr * int) Direct.abstract ->
+                    ([> `TDet of 'a F.Det.lstate
                       | `TLower of ('a, GAC_F.contr) Direct.abstract
                       | `TPivot of
-                          'a GE_FEATURES.Output(GE_FEATURES).IF.P.lstate
+                          ('a, GEF.PermList.perm_rep ref) Direct.abstract
                       | `TRan of 'a GEF.TrackRank.lstate ]
                      as 'b)
                     list ->
@@ -4764,17 +4285,17 @@ module G_GAC_F :
                   val forward_elim :
                     'a wmatrix * ('a, int ref) Direct.abstract *
                     ('a, int ref) Direct.abstract * ('a, int) Direct.abstract ->
-                    ([> `TDet of 'a GE_FEATURES.Det.lstate
+                    ([> `TDet of 'a F.Det.lstate
                       | `TLower of ('a, GAC_F.contr) Direct.abstract
                       | `TPivot of
-                          'a GE_FEATURES.Output(GE_FEATURES).IF.P.lstate
+                          ('a, GEF.PermList.perm_rep ref) Direct.abstract
                       | `TRan of 'a GEF.TrackRank.lstate ]
                      as 'b)
                     list ->
                     ('b list -> ('a, unit) Direct.abstract -> 'c) -> 'c
                   val ge_gen :
-                    ('a, GE_FEATURES.Input.inp) Direct.abstract ->
-                    ([> `TDet of 'a GE_FEATURES.Det.lstate
+                    ('a, GAC_F.contr * int) Direct.abstract ->
+                    ([> `TDet of 'a F.Det.lstate
                       | `TLower of 'a O.IF.L.lstate
                       | `TPivot of 'a O.IF.P.lstate
                       | `TRan of 'a GEF.TrackRank.lstate ]
@@ -4784,8 +4305,8 @@ module G_GAC_F :
                      ('a, O.res) Direct.abstract -> ('a, 'c) Direct.abstract) ->
                     ('a, 'c) Direct.abstract
                   val gen :
-                    ('a, GE_FEATURES.Input.inp) Direct.abstract ->
-                    ([> `TDet of 'a GE_FEATURES.Det.lstate
+                    ('a, GAC_F.contr * int) Direct.abstract ->
+                    ([> `TDet of 'a F.Det.lstate
                       | `TLower of 'a O.IF.L.lstate
                       | `TPivot of 'a O.IF.P.lstate
                       | `TRan of 'a GEF.TrackRank.lstate ]
@@ -4805,7 +4326,7 @@ module G_GAC_F :
                 ('a, 'c) Direct.abstract
               val solve_gen :
                 ('a, F.Input.inp) Direct.abstract ->
-                ([> `TDet of 'a GE_FEATURES.Det.lstate
+                ([> `TDet of 'a F.Det.lstate
                   | `TLower of 'a GE'.O.IF.L.lstate
                   | `TPivot of 'a GE'.O.IF.P.lstate
                   | `TRan of 'a GEF.TrackRank.lstate ]
@@ -4997,8 +4518,6 @@ module G_GVC_F :
             type 'a tag_lstate = [ `TLower of 'a lstate ]
             type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
               constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-            type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
-              constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
             val mfetch :
               unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_F.contr) lm
             val decl :
@@ -5020,8 +4539,6 @@ module G_GVC_F :
             type 'a tag_lstate = [ `TLower of 'a lstate ]
             type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
               constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-            type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
-              constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
             val fetch_iter : [> `TLower of 'a ] list -> 'a
             val mfetch :
               unit ->
@@ -5036,8 +4553,6 @@ module G_GVC_F :
             type 'a lstate = ('a, GVC_F.contr) Direct.abstract
             type 'a tag_lstate = [ `TLower of 'a lstate ]
             type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
-              constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-            type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
               constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
             val fetch_iter : [> `TLower of 'a ] list -> 'a
             val mfetch :
@@ -5073,8 +4588,6 @@ module G_GVC_F :
             type 'a tag_lstate = [ `TLower of 'a lstate ]
             type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
               constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-            type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
-              constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
             val fetch_iter : [> `TLower of 'a ] list -> 'a
             val mfetch :
               unit ->
@@ -5097,8 +4610,6 @@ module G_GVC_F :
             type 'a lstate = ('a, GVC_F.contr) Direct.abstract
             type 'a tag_lstate = [ `TLower of 'a lstate ]
             type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
-              constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-            type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
               constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
             val fetch_iter : [> `TLower of 'a ] list -> 'a
             val mfetch :
@@ -5269,8 +4780,6 @@ module G_GVC_F :
                       type 'a tag_lstate = [ `TLower of 'a lstate ]
                       type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
                         constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                      type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
-                        constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                       val fetch_iter : [> `TLower of 'a ] list -> 'a
                       val mfetch :
                         unit ->
@@ -5375,8 +4884,6 @@ module G_GVC_F :
                       type 'a lstate = ('a, GVC_F.contr) Direct.abstract
                       type 'a tag_lstate = [ `TLower of 'a lstate ]
                       type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
-                        constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                      type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
                         constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                       val fetch_iter : [> `TLower of 'a ] list -> 'a
                       val mfetch :
@@ -5492,8 +4999,6 @@ module G_GVC_F :
                       type 'a tag_lstate = [ `TLower of 'a lstate ]
                       type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
                         constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                      type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
-                        constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                       val fetch_iter : [> `TLower of 'a ] list -> 'a
                       val mfetch :
                         unit ->
@@ -5605,8 +5110,6 @@ module G_GVC_F :
                       type 'a lstate = ('a, GVC_F.contr) Direct.abstract
                       type 'a tag_lstate = [ `TLower of 'a lstate ]
                       type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
-                        constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                      type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
                         constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                       val fetch_iter : [> `TLower of 'a ] list -> 'a
                       val mfetch :
@@ -5752,8 +5255,6 @@ module G_GVC_F :
                       type 'a tag_lstate = [ `TLower of 'a lstate ]
                       type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
                         constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                      type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
-                        constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                       val fetch_iter : [> `TLower of 'a ] list -> 'a
                       val mfetch :
                         unit ->
@@ -5894,8 +5395,6 @@ module G_GVC_F :
                       type 'a lstate = ('a, GVC_F.contr) Direct.abstract
                       type 'a tag_lstate = [ `TLower of 'a lstate ]
                       type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
-                        constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                      type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
                         constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                       val fetch_iter : [> `TLower of 'a ] list -> 'a
                       val mfetch :
@@ -6044,8 +5543,6 @@ module G_GVC_F :
                       type 'a tag_lstate = [ `TLower of 'a lstate ]
                       type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
                         constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                      type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
-                        constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                       val fetch_iter : [> `TLower of 'a ] list -> 'a
                       val mfetch :
                         unit ->
@@ -6167,9 +5664,6 @@ module G_GVC_F :
                           type 'a lstate = ('a, GVC_F.contr) Direct.abstract
                           type 'a tag_lstate = [ `TLower of 'a lstate ]
                           type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
-                            constraint 'a =
-                              'c * ([> 'c tag_lstate ] as 'd) * 'e
-                          type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
                             constraint 'a =
                               'c * ([> 'c tag_lstate ] as 'd) * 'e
                           val mfetch :
@@ -6298,219 +5792,6 @@ module G_GVC_F :
         module GenSolve :
           functor (F : FEATURES) ->
             sig
-              module GE_FEATURES :
-                sig
-                  module Det :
-                    sig
-                      type tdet = GVC_F.Dom.v ref
-                      type 'a lstate = 'a F.Det.lstate
-                      type 'a tag_lstate = [ `TDet of 'a lstate ]
-                      type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
-                        constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                      type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
-                        constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                      val decl :
-                        unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                      val upd_sign :
-                        unit -> ('a * [> 'a tag_lstate ] * 'b, unit) om
-                      val zero_sign :
-                        unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                      val acc :
-                        ('a, GVC_F.Dom.v) Direct.abstract ->
-                        ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                      val get :
-                        unit -> ('a * [> 'a tag_lstate ] * 'b, tdet) lm
-                      val set :
-                        ('a, GVC_F.Dom.v) Direct.abstract ->
-                        ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                      val fin :
-                        unit ->
-                        ('a * [> 'a tag_lstate ] * 'b, GVC_F.Dom.v) lm
-                    end
-                  module PivotF :
-                    functor (D : DETERMINANT) ->
-                      functor (P : GEF.TRACKPIVOT) ->
-                        sig
-                          val findpivot :
-                            'a wmatrix ->
-                            'a curpos ->
-                            ('a, GVC_F.Dom.v option,
-                             [> `TDet of 'a D.lstate | `TPivot of 'a P.lstate ],
-                             'b)
-                            GEF.cmonad
-                        end
-                  module PivotRep :
-                    sig
-                      type perm_rep = F.PivotRep.perm_rep
-                      type 'a ira = ('a, int) Direct.abstract
-                      type 'a fra = 'a F.PivotRep.fra
-                      type 'a pra = ('a, perm_rep) Direct.abstract
-                      val add : 'a fra -> 'a pra -> 'a pra
-                      val empty : 'a ira -> 'a pra
-                      val rowrep : 'a ira -> 'a ira -> 'a fra
-                      val colrep : 'a ira -> 'a ira -> 'a fra
-                    end
-                  module Update :
-                    functor (D : DETERMINANT) ->
-                      sig
-                        type 'a in_val = 'a GVC_F.Dom.vc
-                        val update :
-                          'a in_val ->
-                          'a in_val ->
-                          'a in_val ->
-                          'a in_val ->
-                          ('a in_val -> ('a, unit) Direct.abstract) ->
-                          ('a, GVC_F.Dom.v ref) Direct.abstract ->
-                          ('a, unit, 'b, 'c) GEF.cmonad
-                        val update_det :
-                          'a in_val ->
-                          ('a * [> 'a D.tag_lstate ] * 'b, unit) D.lm
-                        val upd_kind : Ge.update_kind
-                      end
-                  module Input :
-                    sig
-                      type inp = GVC_F.contr * int
-                      val get_input :
-                        ('a, 'b * 'c) Direct.abstract ->
-                        'd ->
-                        ('d ->
-                         ('a, 'b) Direct.abstract *
-                         ('a, 'c) Direct.abstract * bool -> 'e) ->
-                        'e
-                    end
-                  module Output :
-                    functor (OD : GE.OUTPUTDEP) ->
-                      sig
-                        module IF :
-                          sig
-                            module R :
-                              sig
-                                type 'a lstate =
-                                    ('a, int ref) Direct.abstract
-                                type 'a tag_lstate_ = [ `TRan of 'a lstate ]
-                                type 'a tag_lstate = 'a tag_lstate_
-                                type ('a, 'b) lm =
-                                    ('c, 'b, 'd, 'e) GEF.cmonad
-                                  constraint 'a =
-                                    'c * ([> 'c tag_lstate ] as 'd) * 'e
-                                val fetch_iter : [> `TRan of 'a ] list -> 'a
-                                val rfetch :
-                                  unit ->
-                                  ([> `TRan of 'b ] as 'a) list ->
-                                  ('a list -> 'b -> 'c) -> 'c
-                                val rstore :
-                                  'a ->
-                                  ([> `TRan of 'a ] as 'b) list ->
-                                  ('b list -> unit -> 'c) -> 'c
-                                val decl :
-                                  unit ->
-                                  ([> `TRan of ('b, int ref) Direct.abstract ]
-                                   as 'a)
-                                  list ->
-                                  ('a list ->
-                                   ('b, int ref) Direct.abstract ->
-                                   ('b, 'c) Direct.abstract) ->
-                                  ('b, 'c) Direct.abstract
-                                val succ :
-                                  unit ->
-                                  ([> `TRan of ('b, int ref) Direct.abstract ]
-                                   as 'a)
-                                  list ->
-                                  ('a list ->
-                                   ('b, unit) Direct.abstract -> 'c) ->
-                                  'c
-                                module type RANK =
-                                  sig
-                                    type 'a tag_lstate = 'a tag_lstate_
-                                    val rfetch :
-                                      unit ->
-                                      ('a * [> 'a tag_lstate ] * 'b, int ref)
-                                      lm
-                                    val decl :
-                                      unit ->
-                                      ('a * [> 'a tag_lstate ] * 'b, int ref)
-                                      lm
-                                    val succ :
-                                      unit ->
-                                      ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                                    val fin :
-                                      unit ->
-                                      ('a * [> 'a tag_lstate ] * 'b, int) lm
-                                  end
-                                val fin : unit -> 'a
-                              end
-                            module P :
-                              sig
-                                type perm_rep = GEF.PermList.perm_rep
-                                type 'a ira = 'a GEF.PermList.ira
-                                type 'a fra = 'a GEF.PermList.fra
-                                type 'a pra = 'a GEF.PermList.pra
-                                type 'a lstate =
-                                    ('a, GEF.PermList.perm_rep ref)
-                                    Direct.abstract
-                                type 'a tag_lstate = [ `TPivot of 'a lstate ]
-                                type ('a, 'b) lm =
-                                    ('c, 'b, 'd, 'e) GEF.cmonad
-                                  constraint 'a =
-                                    'c * ([> 'c tag_lstate ] as 'd) * 'e
-                                val rowrep :
-                                  'a GEF.PermList.ira ->
-                                  'a GEF.PermList.ira -> 'a GEF.PermList.fra
-                                val colrep :
-                                  'a GEF.PermList.ira ->
-                                  'a GEF.PermList.ira -> 'a GEF.PermList.fra
-                                val decl :
-                                  'a ->
-                                  'b ->
-                                  ('b -> ('c, unit) Direct.abstract -> 'd) ->
-                                  'd
-                                val add :
-                                  'a -> 'b -> ('b -> 'c option -> 'd) -> 'd
-                                val fin : unit -> 'a
-                              end
-                            module L :
-                              sig
-                                type 'a lstate =
-                                    ('a, GVC_F.contr) Direct.abstract
-                                type 'a tag_lstate = [ `TLower of 'a lstate ]
-                                type ('a, 'b) lm =
-                                    ('c, 'b, 'd, 'e) GEF.cmonad
-                                  constraint 'a =
-                                    'c * ([> 'c tag_lstate ] as 'd) * 'e
-                                type ('a, 'b) om =
-                                    ('c, 'b, 'd, 'e) GEF.omonad
-                                  constraint 'a =
-                                    'c * ([> 'c tag_lstate ] as 'd) * 'e
-                                val fetch_iter :
-                                  [> `TLower of 'a ] list -> 'a
-                                val mfetch :
-                                  unit ->
-                                  ([> `TLower of 'b ] as 'a) list ->
-                                  ('a list -> 'b -> 'c) -> 'c
-                                val mstore :
-                                  'a ->
-                                  ([> `TLower of 'a ] as 'b) list ->
-                                  ('b list -> unit -> 'c) -> 'c
-                                val decl : 'a -> 'b -> ('b -> 'a -> 'c) -> 'c
-                                val updt :
-                                  'a GVC_F.vc ->
-                                  ('a, int) Direct.abstract ->
-                                  ('a, int) Direct.abstract ->
-                                  'a GVC_F.vo ->
-                                  'b ->
-                                  ('c ->
-                                   ('c -> ('a, unit) Direct.abstract -> 'd) ->
-                                   'd)
-                                  option
-                                val fin : unit -> 'a
-                                val wants_pack : bool
-                              end
-                          end
-                        type res = GVC_F.contr
-                        val make_result :
-                          'a wmatrix -> 'b -> ('b -> 'a GVC_F.vc -> 'c) -> 'c
-                      end
-                end
               module GE' :
                 sig
                   module O :
@@ -6544,16 +5825,13 @@ module G_GVC_F :
                             end
                           module P :
                             sig
-                              type perm_rep =
-                                  GE_FEATURES.Output(GE_FEATURES).IF.P.perm_rep
+                              type perm_rep = GEF.PermList.perm_rep
                               type 'a ira = ('a, int) Direct.abstract
-                              type 'a fra =
-                                  'a GE_FEATURES.Output(GE_FEATURES).IF.P.fra
-                              type 'a pra =
-                                  'a GE_FEATURES.Output(GE_FEATURES).IF.P.pra
+                              type 'a fra = 'a GEF.PermList.fra
+                              type 'a pra = 'a GEF.PermList.pra
                               type 'a lstate =
-                                  'a
-                                  GE_FEATURES.Output(GE_FEATURES).IF.P.lstate
+                                  ('a, GEF.PermList.perm_rep ref)
+                                  Direct.abstract
                               type 'a tag_lstate = [ `TPivot of 'a lstate ]
                               type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
                                 constraint 'a =
@@ -6581,9 +5859,6 @@ module G_GVC_F :
                               type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
                                 constraint 'a =
                                   'c * ([> 'c tag_lstate ] as 'd) * 'e
-                              type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
-                                constraint 'a =
-                                  'c * ([> 'c tag_lstate ] as 'd) * 'e
                               val mfetch :
                                 unit ->
                                 ('a * [> 'a tag_lstate ] * 'b, GVC_F.contr)
@@ -6607,11 +5882,11 @@ module G_GVC_F :
                               val wants_pack : bool
                             end
                         end
-                      type res = GE_FEATURES.Output(GE_FEATURES).res
+                      type res = GVC_F.contr
                       val make_result :
                         'a wmatrix ->
                         ('a, res,
-                         [> `TDet of 'a GE_FEATURES.Det.lstate
+                         [> `TDet of 'a F.Det.lstate
                           | `TLower of 'a IF.L.lstate
                           | `TPivot of 'a IF.P.lstate
                           | `TRan of 'a GEF.TrackRank.lstate ],
@@ -6623,17 +5898,17 @@ module G_GVC_F :
                   val zerobelow :
                     'a wmatrix ->
                     'a curposval ->
-                    ([> `TDet of 'a GE_FEATURES.Det.lstate
+                    ([> `TDet of 'a F.Det.lstate
                       | `TLower of ('a, GVC_F.contr) Direct.abstract ]
                      as 'b)
                     list ->
                     ('b list -> ('a, unit) Direct.abstract -> 'c) -> 'c
                   val init :
-                    ('a, GE_FEATURES.Input.inp) Direct.abstract ->
-                    ([> `TDet of 'a GE_FEATURES.Det.lstate
+                    ('a, GVC_F.contr * int) Direct.abstract ->
+                    ([> `TDet of 'a F.Det.lstate
                       | `TLower of ('a, GVC_F.contr) Direct.abstract
                       | `TPivot of
-                          'a GE_FEATURES.Output(GE_FEATURES).IF.P.lstate
+                          ('a, GEF.PermList.perm_rep ref) Direct.abstract
                       | `TRan of 'a GEF.TrackRank.lstate ]
                      as 'b)
                     list ->
@@ -6645,17 +5920,17 @@ module G_GVC_F :
                   val forward_elim :
                     'a wmatrix * ('a, int ref) Direct.abstract *
                     ('a, int ref) Direct.abstract * ('a, int) Direct.abstract ->
-                    ([> `TDet of 'a GE_FEATURES.Det.lstate
+                    ([> `TDet of 'a F.Det.lstate
                       | `TLower of ('a, GVC_F.contr) Direct.abstract
                       | `TPivot of
-                          'a GE_FEATURES.Output(GE_FEATURES).IF.P.lstate
+                          ('a, GEF.PermList.perm_rep ref) Direct.abstract
                       | `TRan of 'a GEF.TrackRank.lstate ]
                      as 'b)
                     list ->
                     ('b list -> ('a, unit) Direct.abstract -> 'c) -> 'c
                   val ge_gen :
-                    ('a, GE_FEATURES.Input.inp) Direct.abstract ->
-                    ([> `TDet of 'a GE_FEATURES.Det.lstate
+                    ('a, GVC_F.contr * int) Direct.abstract ->
+                    ([> `TDet of 'a F.Det.lstate
                       | `TLower of 'a O.IF.L.lstate
                       | `TPivot of 'a O.IF.P.lstate
                       | `TRan of 'a GEF.TrackRank.lstate ]
@@ -6665,8 +5940,8 @@ module G_GVC_F :
                      ('a, O.res) Direct.abstract -> ('a, 'c) Direct.abstract) ->
                     ('a, 'c) Direct.abstract
                   val gen :
-                    ('a, GE_FEATURES.Input.inp) Direct.abstract ->
-                    ([> `TDet of 'a GE_FEATURES.Det.lstate
+                    ('a, GVC_F.contr * int) Direct.abstract ->
+                    ([> `TDet of 'a F.Det.lstate
                       | `TLower of 'a O.IF.L.lstate
                       | `TPivot of 'a O.IF.P.lstate
                       | `TRan of 'a GEF.TrackRank.lstate ]
@@ -6686,7 +5961,7 @@ module G_GVC_F :
                 ('a, 'c) Direct.abstract
               val solve_gen :
                 ('a, F.Input.inp) Direct.abstract ->
-                ([> `TDet of 'a GE_FEATURES.Det.lstate
+                ([> `TDet of 'a F.Det.lstate
                   | `TLower of 'a GE'.O.IF.L.lstate
                   | `TPivot of 'a GE'.O.IF.P.lstate
                   | `TRan of 'a GEF.TrackRank.lstate ]
@@ -6878,8 +6153,6 @@ module G_GAC_I :
             type 'a tag_lstate = [ `TLower of 'a lstate ]
             type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
               constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-            type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
-              constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
             val mfetch :
               unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_I.contr) lm
             val decl :
@@ -6901,8 +6174,6 @@ module G_GAC_I :
             type 'a tag_lstate = [ `TLower of 'a lstate ]
             type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
               constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-            type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
-              constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
             val fetch_iter : [> `TLower of 'a ] list -> 'a
             val mfetch :
               unit ->
@@ -6917,8 +6188,6 @@ module G_GAC_I :
             type 'a lstate = ('a, GAC_I.contr) Direct.abstract
             type 'a tag_lstate = [ `TLower of 'a lstate ]
             type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
-              constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-            type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
               constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
             val fetch_iter : [> `TLower of 'a ] list -> 'a
             val mfetch :
@@ -6954,8 +6223,6 @@ module G_GAC_I :
             type 'a tag_lstate = [ `TLower of 'a lstate ]
             type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
               constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-            type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
-              constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
             val fetch_iter : [> `TLower of 'a ] list -> 'a
             val mfetch :
               unit ->
@@ -6978,8 +6245,6 @@ module G_GAC_I :
             type 'a lstate = ('a, GAC_I.contr) Direct.abstract
             type 'a tag_lstate = [ `TLower of 'a lstate ]
             type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
-              constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-            type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
               constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
             val fetch_iter : [> `TLower of 'a ] list -> 'a
             val mfetch :
@@ -7150,8 +6415,6 @@ module G_GAC_I :
                       type 'a tag_lstate = [ `TLower of 'a lstate ]
                       type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
                         constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                      type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
-                        constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                       val fetch_iter : [> `TLower of 'a ] list -> 'a
                       val mfetch :
                         unit ->
@@ -7256,8 +6519,6 @@ module G_GAC_I :
                       type 'a lstate = ('a, GAC_I.contr) Direct.abstract
                       type 'a tag_lstate = [ `TLower of 'a lstate ]
                       type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
-                        constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                      type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
                         constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                       val fetch_iter : [> `TLower of 'a ] list -> 'a
                       val mfetch :
@@ -7373,8 +6634,6 @@ module G_GAC_I :
                       type 'a tag_lstate = [ `TLower of 'a lstate ]
                       type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
                         constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                      type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
-                        constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                       val fetch_iter : [> `TLower of 'a ] list -> 'a
                       val mfetch :
                         unit ->
@@ -7486,8 +6745,6 @@ module G_GAC_I :
                       type 'a lstate = ('a, GAC_I.contr) Direct.abstract
                       type 'a tag_lstate = [ `TLower of 'a lstate ]
                       type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
-                        constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                      type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
                         constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                       val fetch_iter : [> `TLower of 'a ] list -> 'a
                       val mfetch :
@@ -7633,8 +6890,6 @@ module G_GAC_I :
                       type 'a tag_lstate = [ `TLower of 'a lstate ]
                       type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
                         constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                      type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
-                        constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                       val fetch_iter : [> `TLower of 'a ] list -> 'a
                       val mfetch :
                         unit ->
@@ -7775,8 +7030,6 @@ module G_GAC_I :
                       type 'a lstate = ('a, GAC_I.contr) Direct.abstract
                       type 'a tag_lstate = [ `TLower of 'a lstate ]
                       type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
-                        constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                      type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
                         constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                       val fetch_iter : [> `TLower of 'a ] list -> 'a
                       val mfetch :
@@ -7925,8 +7178,6 @@ module G_GAC_I :
                       type 'a tag_lstate = [ `TLower of 'a lstate ]
                       type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
                         constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                      type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
-                        constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                       val fetch_iter : [> `TLower of 'a ] list -> 'a
                       val mfetch :
                         unit ->
@@ -8048,9 +7299,6 @@ module G_GAC_I :
                           type 'a lstate = ('a, GAC_I.contr) Direct.abstract
                           type 'a tag_lstate = [ `TLower of 'a lstate ]
                           type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
-                            constraint 'a =
-                              'c * ([> 'c tag_lstate ] as 'd) * 'e
-                          type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
                             constraint 'a =
                               'c * ([> 'c tag_lstate ] as 'd) * 'e
                           val mfetch :
@@ -8179,219 +7427,6 @@ module G_GAC_I :
         module GenSolve :
           functor (F : FEATURES) ->
             sig
-              module GE_FEATURES :
-                sig
-                  module Det :
-                    sig
-                      type tdet = GAC_I.Dom.v ref
-                      type 'a lstate = 'a F.Det.lstate
-                      type 'a tag_lstate = [ `TDet of 'a lstate ]
-                      type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
-                        constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                      type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
-                        constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                      val decl :
-                        unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                      val upd_sign :
-                        unit -> ('a * [> 'a tag_lstate ] * 'b, unit) om
-                      val zero_sign :
-                        unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                      val acc :
-                        ('a, GAC_I.Dom.v) Direct.abstract ->
-                        ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                      val get :
-                        unit -> ('a * [> 'a tag_lstate ] * 'b, tdet) lm
-                      val set :
-                        ('a, GAC_I.Dom.v) Direct.abstract ->
-                        ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                      val fin :
-                        unit ->
-                        ('a * [> 'a tag_lstate ] * 'b, GAC_I.Dom.v) lm
-                    end
-                  module PivotF :
-                    functor (D : DETERMINANT) ->
-                      functor (P : GEF.TRACKPIVOT) ->
-                        sig
-                          val findpivot :
-                            'a wmatrix ->
-                            'a curpos ->
-                            ('a, GAC_I.Dom.v option,
-                             [> `TDet of 'a D.lstate | `TPivot of 'a P.lstate ],
-                             'b)
-                            GEF.cmonad
-                        end
-                  module PivotRep :
-                    sig
-                      type perm_rep = F.PivotRep.perm_rep
-                      type 'a ira = ('a, int) Direct.abstract
-                      type 'a fra = 'a F.PivotRep.fra
-                      type 'a pra = ('a, perm_rep) Direct.abstract
-                      val add : 'a fra -> 'a pra -> 'a pra
-                      val empty : 'a ira -> 'a pra
-                      val rowrep : 'a ira -> 'a ira -> 'a fra
-                      val colrep : 'a ira -> 'a ira -> 'a fra
-                    end
-                  module Update :
-                    functor (D : DETERMINANT) ->
-                      sig
-                        type 'a in_val = 'a GAC_I.Dom.vc
-                        val update :
-                          'a in_val ->
-                          'a in_val ->
-                          'a in_val ->
-                          'a in_val ->
-                          ('a in_val -> ('a, unit) Direct.abstract) ->
-                          ('a, GAC_I.Dom.v ref) Direct.abstract ->
-                          ('a, unit, 'b, 'c) GEF.cmonad
-                        val update_det :
-                          'a in_val ->
-                          ('a * [> 'a D.tag_lstate ] * 'b, unit) D.lm
-                        val upd_kind : Ge.update_kind
-                      end
-                  module Input :
-                    sig
-                      type inp = GAC_I.contr * int
-                      val get_input :
-                        ('a, 'b * 'c) Direct.abstract ->
-                        'd ->
-                        ('d ->
-                         ('a, 'b) Direct.abstract *
-                         ('a, 'c) Direct.abstract * bool -> 'e) ->
-                        'e
-                    end
-                  module Output :
-                    functor (OD : GE.OUTPUTDEP) ->
-                      sig
-                        module IF :
-                          sig
-                            module R :
-                              sig
-                                type 'a lstate =
-                                    ('a, int ref) Direct.abstract
-                                type 'a tag_lstate_ = [ `TRan of 'a lstate ]
-                                type 'a tag_lstate = 'a tag_lstate_
-                                type ('a, 'b) lm =
-                                    ('c, 'b, 'd, 'e) GEF.cmonad
-                                  constraint 'a =
-                                    'c * ([> 'c tag_lstate ] as 'd) * 'e
-                                val fetch_iter : [> `TRan of 'a ] list -> 'a
-                                val rfetch :
-                                  unit ->
-                                  ([> `TRan of 'b ] as 'a) list ->
-                                  ('a list -> 'b -> 'c) -> 'c
-                                val rstore :
-                                  'a ->
-                                  ([> `TRan of 'a ] as 'b) list ->
-                                  ('b list -> unit -> 'c) -> 'c
-                                val decl :
-                                  unit ->
-                                  ([> `TRan of ('b, int ref) Direct.abstract ]
-                                   as 'a)
-                                  list ->
-                                  ('a list ->
-                                   ('b, int ref) Direct.abstract ->
-                                   ('b, 'c) Direct.abstract) ->
-                                  ('b, 'c) Direct.abstract
-                                val succ :
-                                  unit ->
-                                  ([> `TRan of ('b, int ref) Direct.abstract ]
-                                   as 'a)
-                                  list ->
-                                  ('a list ->
-                                   ('b, unit) Direct.abstract -> 'c) ->
-                                  'c
-                                module type RANK =
-                                  sig
-                                    type 'a tag_lstate = 'a tag_lstate_
-                                    val rfetch :
-                                      unit ->
-                                      ('a * [> 'a tag_lstate ] * 'b, int ref)
-                                      lm
-                                    val decl :
-                                      unit ->
-                                      ('a * [> 'a tag_lstate ] * 'b, int ref)
-                                      lm
-                                    val succ :
-                                      unit ->
-                                      ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                                    val fin :
-                                      unit ->
-                                      ('a * [> 'a tag_lstate ] * 'b, int) lm
-                                  end
-                                val fin : unit -> 'a
-                              end
-                            module P :
-                              sig
-                                type perm_rep = GEF.PermList.perm_rep
-                                type 'a ira = 'a GEF.PermList.ira
-                                type 'a fra = 'a GEF.PermList.fra
-                                type 'a pra = 'a GEF.PermList.pra
-                                type 'a lstate =
-                                    ('a, GEF.PermList.perm_rep ref)
-                                    Direct.abstract
-                                type 'a tag_lstate = [ `TPivot of 'a lstate ]
-                                type ('a, 'b) lm =
-                                    ('c, 'b, 'd, 'e) GEF.cmonad
-                                  constraint 'a =
-                                    'c * ([> 'c tag_lstate ] as 'd) * 'e
-                                val rowrep :
-                                  'a GEF.PermList.ira ->
-                                  'a GEF.PermList.ira -> 'a GEF.PermList.fra
-                                val colrep :
-                                  'a GEF.PermList.ira ->
-                                  'a GEF.PermList.ira -> 'a GEF.PermList.fra
-                                val decl :
-                                  'a ->
-                                  'b ->
-                                  ('b -> ('c, unit) Direct.abstract -> 'd) ->
-                                  'd
-                                val add :
-                                  'a -> 'b -> ('b -> 'c option -> 'd) -> 'd
-                                val fin : unit -> 'a
-                              end
-                            module L :
-                              sig
-                                type 'a lstate =
-                                    ('a, GAC_I.contr) Direct.abstract
-                                type 'a tag_lstate = [ `TLower of 'a lstate ]
-                                type ('a, 'b) lm =
-                                    ('c, 'b, 'd, 'e) GEF.cmonad
-                                  constraint 'a =
-                                    'c * ([> 'c tag_lstate ] as 'd) * 'e
-                                type ('a, 'b) om =
-                                    ('c, 'b, 'd, 'e) GEF.omonad
-                                  constraint 'a =
-                                    'c * ([> 'c tag_lstate ] as 'd) * 'e
-                                val fetch_iter :
-                                  [> `TLower of 'a ] list -> 'a
-                                val mfetch :
-                                  unit ->
-                                  ([> `TLower of 'b ] as 'a) list ->
-                                  ('a list -> 'b -> 'c) -> 'c
-                                val mstore :
-                                  'a ->
-                                  ([> `TLower of 'a ] as 'b) list ->
-                                  ('b list -> unit -> 'c) -> 'c
-                                val decl : 'a -> 'b -> ('b -> 'a -> 'c) -> 'c
-                                val updt :
-                                  'a GAC_I.vc ->
-                                  ('a, int) Direct.abstract ->
-                                  ('a, int) Direct.abstract ->
-                                  'a GAC_I.vo ->
-                                  'b ->
-                                  ('c ->
-                                   ('c -> ('a, unit) Direct.abstract -> 'd) ->
-                                   'd)
-                                  option
-                                val fin : unit -> 'a
-                                val wants_pack : bool
-                              end
-                          end
-                        type res = GAC_I.contr
-                        val make_result :
-                          'a wmatrix -> 'b -> ('b -> 'a GAC_I.vc -> 'c) -> 'c
-                      end
-                end
               module GE' :
                 sig
                   module O :
@@ -8425,16 +7460,13 @@ module G_GAC_I :
                             end
                           module P :
                             sig
-                              type perm_rep =
-                                  GE_FEATURES.Output(GE_FEATURES).IF.P.perm_rep
+                              type perm_rep = GEF.PermList.perm_rep
                               type 'a ira = ('a, int) Direct.abstract
-                              type 'a fra =
-                                  'a GE_FEATURES.Output(GE_FEATURES).IF.P.fra
-                              type 'a pra =
-                                  'a GE_FEATURES.Output(GE_FEATURES).IF.P.pra
+                              type 'a fra = 'a GEF.PermList.fra
+                              type 'a pra = 'a GEF.PermList.pra
                               type 'a lstate =
-                                  'a
-                                  GE_FEATURES.Output(GE_FEATURES).IF.P.lstate
+                                  ('a, GEF.PermList.perm_rep ref)
+                                  Direct.abstract
                               type 'a tag_lstate = [ `TPivot of 'a lstate ]
                               type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
                                 constraint 'a =
@@ -8462,9 +7494,6 @@ module G_GAC_I :
                               type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
                                 constraint 'a =
                                   'c * ([> 'c tag_lstate ] as 'd) * 'e
-                              type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
-                                constraint 'a =
-                                  'c * ([> 'c tag_lstate ] as 'd) * 'e
                               val mfetch :
                                 unit ->
                                 ('a * [> 'a tag_lstate ] * 'b, GAC_I.contr)
@@ -8488,11 +7517,11 @@ module G_GAC_I :
                               val wants_pack : bool
                             end
                         end
-                      type res = GE_FEATURES.Output(GE_FEATURES).res
+                      type res = GAC_I.contr
                       val make_result :
                         'a wmatrix ->
                         ('a, res,
-                         [> `TDet of 'a GE_FEATURES.Det.lstate
+                         [> `TDet of 'a F.Det.lstate
                           | `TLower of 'a IF.L.lstate
                           | `TPivot of 'a IF.P.lstate
                           | `TRan of 'a GEF.TrackRank.lstate ],
@@ -8504,17 +7533,17 @@ module G_GAC_I :
                   val zerobelow :
                     'a wmatrix ->
                     'a curposval ->
-                    ([> `TDet of 'a GE_FEATURES.Det.lstate
+                    ([> `TDet of 'a F.Det.lstate
                       | `TLower of ('a, GAC_I.contr) Direct.abstract ]
                      as 'b)
                     list ->
                     ('b list -> ('a, unit) Direct.abstract -> 'c) -> 'c
                   val init :
-                    ('a, GE_FEATURES.Input.inp) Direct.abstract ->
-                    ([> `TDet of 'a GE_FEATURES.Det.lstate
+                    ('a, GAC_I.contr * int) Direct.abstract ->
+                    ([> `TDet of 'a F.Det.lstate
                       | `TLower of ('a, GAC_I.contr) Direct.abstract
                       | `TPivot of
-                          'a GE_FEATURES.Output(GE_FEATURES).IF.P.lstate
+                          ('a, GEF.PermList.perm_rep ref) Direct.abstract
                       | `TRan of 'a GEF.TrackRank.lstate ]
                      as 'b)
                     list ->
@@ -8526,17 +7555,17 @@ module G_GAC_I :
                   val forward_elim :
                     'a wmatrix * ('a, int ref) Direct.abstract *
                     ('a, int ref) Direct.abstract * ('a, int) Direct.abstract ->
-                    ([> `TDet of 'a GE_FEATURES.Det.lstate
+                    ([> `TDet of 'a F.Det.lstate
                       | `TLower of ('a, GAC_I.contr) Direct.abstract
                       | `TPivot of
-                          'a GE_FEATURES.Output(GE_FEATURES).IF.P.lstate
+                          ('a, GEF.PermList.perm_rep ref) Direct.abstract
                       | `TRan of 'a GEF.TrackRank.lstate ]
                      as 'b)
                     list ->
                     ('b list -> ('a, unit) Direct.abstract -> 'c) -> 'c
                   val ge_gen :
-                    ('a, GE_FEATURES.Input.inp) Direct.abstract ->
-                    ([> `TDet of 'a GE_FEATURES.Det.lstate
+                    ('a, GAC_I.contr * int) Direct.abstract ->
+                    ([> `TDet of 'a F.Det.lstate
                       | `TLower of 'a O.IF.L.lstate
                       | `TPivot of 'a O.IF.P.lstate
                       | `TRan of 'a GEF.TrackRank.lstate ]
@@ -8546,8 +7575,8 @@ module G_GAC_I :
                      ('a, O.res) Direct.abstract -> ('a, 'c) Direct.abstract) ->
                     ('a, 'c) Direct.abstract
                   val gen :
-                    ('a, GE_FEATURES.Input.inp) Direct.abstract ->
-                    ([> `TDet of 'a GE_FEATURES.Det.lstate
+                    ('a, GAC_I.contr * int) Direct.abstract ->
+                    ([> `TDet of 'a F.Det.lstate
                       | `TLower of 'a O.IF.L.lstate
                       | `TPivot of 'a O.IF.P.lstate
                       | `TRan of 'a GEF.TrackRank.lstate ]
@@ -8567,7 +7596,7 @@ module G_GAC_I :
                 ('a, 'c) Direct.abstract
               val solve_gen :
                 ('a, F.Input.inp) Direct.abstract ->
-                ([> `TDet of 'a GE_FEATURES.Det.lstate
+                ([> `TDet of 'a F.Det.lstate
                   | `TLower of 'a GE'.O.IF.L.lstate
                   | `TPivot of 'a GE'.O.IF.P.lstate
                   | `TRan of 'a GEF.TrackRank.lstate ]
@@ -8759,8 +7788,6 @@ module G_GVC_I :
             type 'a tag_lstate = [ `TLower of 'a lstate ]
             type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
               constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-            type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
-              constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
             val mfetch :
               unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_I.contr) lm
             val decl :
@@ -8782,8 +7809,6 @@ module G_GVC_I :
             type 'a tag_lstate = [ `TLower of 'a lstate ]
             type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
               constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-            type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
-              constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
             val fetch_iter : [> `TLower of 'a ] list -> 'a
             val mfetch :
               unit ->
@@ -8798,8 +7823,6 @@ module G_GVC_I :
             type 'a lstate = ('a, GVC_I.contr) Direct.abstract
             type 'a tag_lstate = [ `TLower of 'a lstate ]
             type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
-              constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-            type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
               constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
             val fetch_iter : [> `TLower of 'a ] list -> 'a
             val mfetch :
@@ -8835,8 +7858,6 @@ module G_GVC_I :
             type 'a tag_lstate = [ `TLower of 'a lstate ]
             type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
               constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-            type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
-              constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
             val fetch_iter : [> `TLower of 'a ] list -> 'a
             val mfetch :
               unit ->
@@ -8859,8 +7880,6 @@ module G_GVC_I :
             type 'a lstate = ('a, GVC_I.contr) Direct.abstract
             type 'a tag_lstate = [ `TLower of 'a lstate ]
             type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
-              constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-            type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
               constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
             val fetch_iter : [> `TLower of 'a ] list -> 'a
             val mfetch :
@@ -9031,8 +8050,6 @@ module G_GVC_I :
                       type 'a tag_lstate = [ `TLower of 'a lstate ]
                       type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
                         constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                      type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
-                        constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                       val fetch_iter : [> `TLower of 'a ] list -> 'a
                       val mfetch :
                         unit ->
@@ -9137,8 +8154,6 @@ module G_GVC_I :
                       type 'a lstate = ('a, GVC_I.contr) Direct.abstract
                       type 'a tag_lstate = [ `TLower of 'a lstate ]
                       type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
-                        constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                      type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
                         constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                       val fetch_iter : [> `TLower of 'a ] list -> 'a
                       val mfetch :
@@ -9254,8 +8269,6 @@ module G_GVC_I :
                       type 'a tag_lstate = [ `TLower of 'a lstate ]
                       type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
                         constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                      type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
-                        constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                       val fetch_iter : [> `TLower of 'a ] list -> 'a
                       val mfetch :
                         unit ->
@@ -9367,8 +8380,6 @@ module G_GVC_I :
                       type 'a lstate = ('a, GVC_I.contr) Direct.abstract
                       type 'a tag_lstate = [ `TLower of 'a lstate ]
                       type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
-                        constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                      type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
                         constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                       val fetch_iter : [> `TLower of 'a ] list -> 'a
                       val mfetch :
@@ -9514,8 +8525,6 @@ module G_GVC_I :
                       type 'a tag_lstate = [ `TLower of 'a lstate ]
                       type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
                         constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                      type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
-                        constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                       val fetch_iter : [> `TLower of 'a ] list -> 'a
                       val mfetch :
                         unit ->
@@ -9656,8 +8665,6 @@ module G_GVC_I :
                       type 'a lstate = ('a, GVC_I.contr) Direct.abstract
                       type 'a tag_lstate = [ `TLower of 'a lstate ]
                       type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
-                        constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                      type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
                         constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                       val fetch_iter : [> `TLower of 'a ] list -> 'a
                       val mfetch :
@@ -9806,8 +8813,6 @@ module G_GVC_I :
                       type 'a tag_lstate = [ `TLower of 'a lstate ]
                       type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
                         constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                      type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
-                        constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                       val fetch_iter : [> `TLower of 'a ] list -> 'a
                       val mfetch :
                         unit ->
@@ -9929,9 +8934,6 @@ module G_GVC_I :
                           type 'a lstate = ('a, GVC_I.contr) Direct.abstract
                           type 'a tag_lstate = [ `TLower of 'a lstate ]
                           type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
-                            constraint 'a =
-                              'c * ([> 'c tag_lstate ] as 'd) * 'e
-                          type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
                             constraint 'a =
                               'c * ([> 'c tag_lstate ] as 'd) * 'e
                           val mfetch :
@@ -10060,219 +9062,6 @@ module G_GVC_I :
         module GenSolve :
           functor (F : FEATURES) ->
             sig
-              module GE_FEATURES :
-                sig
-                  module Det :
-                    sig
-                      type tdet = GVC_I.Dom.v ref
-                      type 'a lstate = 'a F.Det.lstate
-                      type 'a tag_lstate = [ `TDet of 'a lstate ]
-                      type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
-                        constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                      type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
-                        constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                      val decl :
-                        unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                      val upd_sign :
-                        unit -> ('a * [> 'a tag_lstate ] * 'b, unit) om
-                      val zero_sign :
-                        unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                      val acc :
-                        ('a, GVC_I.Dom.v) Direct.abstract ->
-                        ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                      val get :
-                        unit -> ('a * [> 'a tag_lstate ] * 'b, tdet) lm
-                      val set :
-                        ('a, GVC_I.Dom.v) Direct.abstract ->
-                        ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                      val fin :
-                        unit ->
-                        ('a * [> 'a tag_lstate ] * 'b, GVC_I.Dom.v) lm
-                    end
-                  module PivotF :
-                    functor (D : DETERMINANT) ->
-                      functor (P : GEF.TRACKPIVOT) ->
-                        sig
-                          val findpivot :
-                            'a wmatrix ->
-                            'a curpos ->
-                            ('a, GVC_I.Dom.v option,
-                             [> `TDet of 'a D.lstate | `TPivot of 'a P.lstate ],
-                             'b)
-                            GEF.cmonad
-                        end
-                  module PivotRep :
-                    sig
-                      type perm_rep = F.PivotRep.perm_rep
-                      type 'a ira = ('a, int) Direct.abstract
-                      type 'a fra = 'a F.PivotRep.fra
-                      type 'a pra = ('a, perm_rep) Direct.abstract
-                      val add : 'a fra -> 'a pra -> 'a pra
-                      val empty : 'a ira -> 'a pra
-                      val rowrep : 'a ira -> 'a ira -> 'a fra
-                      val colrep : 'a ira -> 'a ira -> 'a fra
-                    end
-                  module Update :
-                    functor (D : DETERMINANT) ->
-                      sig
-                        type 'a in_val = 'a GVC_I.Dom.vc
-                        val update :
-                          'a in_val ->
-                          'a in_val ->
-                          'a in_val ->
-                          'a in_val ->
-                          ('a in_val -> ('a, unit) Direct.abstract) ->
-                          ('a, GVC_I.Dom.v ref) Direct.abstract ->
-                          ('a, unit, 'b, 'c) GEF.cmonad
-                        val update_det :
-                          'a in_val ->
-                          ('a * [> 'a D.tag_lstate ] * 'b, unit) D.lm
-                        val upd_kind : Ge.update_kind
-                      end
-                  module Input :
-                    sig
-                      type inp = GVC_I.contr * int
-                      val get_input :
-                        ('a, 'b * 'c) Direct.abstract ->
-                        'd ->
-                        ('d ->
-                         ('a, 'b) Direct.abstract *
-                         ('a, 'c) Direct.abstract * bool -> 'e) ->
-                        'e
-                    end
-                  module Output :
-                    functor (OD : GE.OUTPUTDEP) ->
-                      sig
-                        module IF :
-                          sig
-                            module R :
-                              sig
-                                type 'a lstate =
-                                    ('a, int ref) Direct.abstract
-                                type 'a tag_lstate_ = [ `TRan of 'a lstate ]
-                                type 'a tag_lstate = 'a tag_lstate_
-                                type ('a, 'b) lm =
-                                    ('c, 'b, 'd, 'e) GEF.cmonad
-                                  constraint 'a =
-                                    'c * ([> 'c tag_lstate ] as 'd) * 'e
-                                val fetch_iter : [> `TRan of 'a ] list -> 'a
-                                val rfetch :
-                                  unit ->
-                                  ([> `TRan of 'b ] as 'a) list ->
-                                  ('a list -> 'b -> 'c) -> 'c
-                                val rstore :
-                                  'a ->
-                                  ([> `TRan of 'a ] as 'b) list ->
-                                  ('b list -> unit -> 'c) -> 'c
-                                val decl :
-                                  unit ->
-                                  ([> `TRan of ('b, int ref) Direct.abstract ]
-                                   as 'a)
-                                  list ->
-                                  ('a list ->
-                                   ('b, int ref) Direct.abstract ->
-                                   ('b, 'c) Direct.abstract) ->
-                                  ('b, 'c) Direct.abstract
-                                val succ :
-                                  unit ->
-                                  ([> `TRan of ('b, int ref) Direct.abstract ]
-                                   as 'a)
-                                  list ->
-                                  ('a list ->
-                                   ('b, unit) Direct.abstract -> 'c) ->
-                                  'c
-                                module type RANK =
-                                  sig
-                                    type 'a tag_lstate = 'a tag_lstate_
-                                    val rfetch :
-                                      unit ->
-                                      ('a * [> 'a tag_lstate ] * 'b, int ref)
-                                      lm
-                                    val decl :
-                                      unit ->
-                                      ('a * [> 'a tag_lstate ] * 'b, int ref)
-                                      lm
-                                    val succ :
-                                      unit ->
-                                      ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                                    val fin :
-                                      unit ->
-                                      ('a * [> 'a tag_lstate ] * 'b, int) lm
-                                  end
-                                val fin : unit -> 'a
-                              end
-                            module P :
-                              sig
-                                type perm_rep = GEF.PermList.perm_rep
-                                type 'a ira = 'a GEF.PermList.ira
-                                type 'a fra = 'a GEF.PermList.fra
-                                type 'a pra = 'a GEF.PermList.pra
-                                type 'a lstate =
-                                    ('a, GEF.PermList.perm_rep ref)
-                                    Direct.abstract
-                                type 'a tag_lstate = [ `TPivot of 'a lstate ]
-                                type ('a, 'b) lm =
-                                    ('c, 'b, 'd, 'e) GEF.cmonad
-                                  constraint 'a =
-                                    'c * ([> 'c tag_lstate ] as 'd) * 'e
-                                val rowrep :
-                                  'a GEF.PermList.ira ->
-                                  'a GEF.PermList.ira -> 'a GEF.PermList.fra
-                                val colrep :
-                                  'a GEF.PermList.ira ->
-                                  'a GEF.PermList.ira -> 'a GEF.PermList.fra
-                                val decl :
-                                  'a ->
-                                  'b ->
-                                  ('b -> ('c, unit) Direct.abstract -> 'd) ->
-                                  'd
-                                val add :
-                                  'a -> 'b -> ('b -> 'c option -> 'd) -> 'd
-                                val fin : unit -> 'a
-                              end
-                            module L :
-                              sig
-                                type 'a lstate =
-                                    ('a, GVC_I.contr) Direct.abstract
-                                type 'a tag_lstate = [ `TLower of 'a lstate ]
-                                type ('a, 'b) lm =
-                                    ('c, 'b, 'd, 'e) GEF.cmonad
-                                  constraint 'a =
-                                    'c * ([> 'c tag_lstate ] as 'd) * 'e
-                                type ('a, 'b) om =
-                                    ('c, 'b, 'd, 'e) GEF.omonad
-                                  constraint 'a =
-                                    'c * ([> 'c tag_lstate ] as 'd) * 'e
-                                val fetch_iter :
-                                  [> `TLower of 'a ] list -> 'a
-                                val mfetch :
-                                  unit ->
-                                  ([> `TLower of 'b ] as 'a) list ->
-                                  ('a list -> 'b -> 'c) -> 'c
-                                val mstore :
-                                  'a ->
-                                  ([> `TLower of 'a ] as 'b) list ->
-                                  ('b list -> unit -> 'c) -> 'c
-                                val decl : 'a -> 'b -> ('b -> 'a -> 'c) -> 'c
-                                val updt :
-                                  'a GVC_I.vc ->
-                                  ('a, int) Direct.abstract ->
-                                  ('a, int) Direct.abstract ->
-                                  'a GVC_I.vo ->
-                                  'b ->
-                                  ('c ->
-                                   ('c -> ('a, unit) Direct.abstract -> 'd) ->
-                                   'd)
-                                  option
-                                val fin : unit -> 'a
-                                val wants_pack : bool
-                              end
-                          end
-                        type res = GVC_I.contr
-                        val make_result :
-                          'a wmatrix -> 'b -> ('b -> 'a GVC_I.vc -> 'c) -> 'c
-                      end
-                end
               module GE' :
                 sig
                   module O :
@@ -10306,16 +9095,13 @@ module G_GVC_I :
                             end
                           module P :
                             sig
-                              type perm_rep =
-                                  GE_FEATURES.Output(GE_FEATURES).IF.P.perm_rep
+                              type perm_rep = GEF.PermList.perm_rep
                               type 'a ira = ('a, int) Direct.abstract
-                              type 'a fra =
-                                  'a GE_FEATURES.Output(GE_FEATURES).IF.P.fra
-                              type 'a pra =
-                                  'a GE_FEATURES.Output(GE_FEATURES).IF.P.pra
+                              type 'a fra = 'a GEF.PermList.fra
+                              type 'a pra = 'a GEF.PermList.pra
                               type 'a lstate =
-                                  'a
-                                  GE_FEATURES.Output(GE_FEATURES).IF.P.lstate
+                                  ('a, GEF.PermList.perm_rep ref)
+                                  Direct.abstract
                               type 'a tag_lstate = [ `TPivot of 'a lstate ]
                               type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
                                 constraint 'a =
@@ -10343,9 +9129,6 @@ module G_GVC_I :
                               type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
                                 constraint 'a =
                                   'c * ([> 'c tag_lstate ] as 'd) * 'e
-                              type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
-                                constraint 'a =
-                                  'c * ([> 'c tag_lstate ] as 'd) * 'e
                               val mfetch :
                                 unit ->
                                 ('a * [> 'a tag_lstate ] * 'b, GVC_I.contr)
@@ -10369,11 +9152,11 @@ module G_GVC_I :
                               val wants_pack : bool
                             end
                         end
-                      type res = GE_FEATURES.Output(GE_FEATURES).res
+                      type res = GVC_I.contr
                       val make_result :
                         'a wmatrix ->
                         ('a, res,
-                         [> `TDet of 'a GE_FEATURES.Det.lstate
+                         [> `TDet of 'a F.Det.lstate
                           | `TLower of 'a IF.L.lstate
                           | `TPivot of 'a IF.P.lstate
                           | `TRan of 'a GEF.TrackRank.lstate ],
@@ -10385,17 +9168,17 @@ module G_GVC_I :
                   val zerobelow :
                     'a wmatrix ->
                     'a curposval ->
-                    ([> `TDet of 'a GE_FEATURES.Det.lstate
+                    ([> `TDet of 'a F.Det.lstate
                       | `TLower of ('a, GVC_I.contr) Direct.abstract ]
                      as 'b)
                     list ->
                     ('b list -> ('a, unit) Direct.abstract -> 'c) -> 'c
                   val init :
-                    ('a, GE_FEATURES.Input.inp) Direct.abstract ->
-                    ([> `TDet of 'a GE_FEATURES.Det.lstate
+                    ('a, GVC_I.contr * int) Direct.abstract ->
+                    ([> `TDet of 'a F.Det.lstate
                       | `TLower of ('a, GVC_I.contr) Direct.abstract
                       | `TPivot of
-                          'a GE_FEATURES.Output(GE_FEATURES).IF.P.lstate
+                          ('a, GEF.PermList.perm_rep ref) Direct.abstract
                       | `TRan of 'a GEF.TrackRank.lstate ]
                      as 'b)
                     list ->
@@ -10407,17 +9190,17 @@ module G_GVC_I :
                   val forward_elim :
                     'a wmatrix * ('a, int ref) Direct.abstract *
                     ('a, int ref) Direct.abstract * ('a, int) Direct.abstract ->
-                    ([> `TDet of 'a GE_FEATURES.Det.lstate
+                    ([> `TDet of 'a F.Det.lstate
                       | `TLower of ('a, GVC_I.contr) Direct.abstract
                       | `TPivot of
-                          'a GE_FEATURES.Output(GE_FEATURES).IF.P.lstate
+                          ('a, GEF.PermList.perm_rep ref) Direct.abstract
                       | `TRan of 'a GEF.TrackRank.lstate ]
                      as 'b)
                     list ->
                     ('b list -> ('a, unit) Direct.abstract -> 'c) -> 'c
                   val ge_gen :
-                    ('a, GE_FEATURES.Input.inp) Direct.abstract ->
-                    ([> `TDet of 'a GE_FEATURES.Det.lstate
+                    ('a, GVC_I.contr * int) Direct.abstract ->
+                    ([> `TDet of 'a F.Det.lstate
                       | `TLower of 'a O.IF.L.lstate
                       | `TPivot of 'a O.IF.P.lstate
                       | `TRan of 'a GEF.TrackRank.lstate ]
@@ -10427,8 +9210,8 @@ module G_GVC_I :
                      ('a, O.res) Direct.abstract -> ('a, 'c) Direct.abstract) ->
                     ('a, 'c) Direct.abstract
                   val gen :
-                    ('a, GE_FEATURES.Input.inp) Direct.abstract ->
-                    ([> `TDet of 'a GE_FEATURES.Det.lstate
+                    ('a, GVC_I.contr * int) Direct.abstract ->
+                    ([> `TDet of 'a F.Det.lstate
                       | `TLower of 'a O.IF.L.lstate
                       | `TPivot of 'a O.IF.P.lstate
                       | `TRan of 'a GEF.TrackRank.lstate ]
@@ -10448,7 +9231,7 @@ module G_GVC_I :
                 ('a, 'c) Direct.abstract
               val solve_gen :
                 ('a, F.Input.inp) Direct.abstract ->
-                ([> `TDet of 'a GE_FEATURES.Det.lstate
+                ([> `TDet of 'a F.Det.lstate
                   | `TLower of 'a GE'.O.IF.L.lstate
                   | `TPivot of 'a GE'.O.IF.P.lstate
                   | `TRan of 'a GEF.TrackRank.lstate ]
@@ -10640,8 +9423,6 @@ module G_GAC_R :
             type 'a tag_lstate = [ `TLower of 'a lstate ]
             type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
               constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-            type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
-              constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
             val mfetch :
               unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_R.contr) lm
             val decl :
@@ -10663,8 +9444,6 @@ module G_GAC_R :
             type 'a tag_lstate = [ `TLower of 'a lstate ]
             type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
               constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-            type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
-              constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
             val fetch_iter : [> `TLower of 'a ] list -> 'a
             val mfetch :
               unit ->
@@ -10679,8 +9458,6 @@ module G_GAC_R :
             type 'a lstate = ('a, GAC_R.contr) Direct.abstract
             type 'a tag_lstate = [ `TLower of 'a lstate ]
             type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
-              constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-            type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
               constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
             val fetch_iter : [> `TLower of 'a ] list -> 'a
             val mfetch :
@@ -10716,8 +9493,6 @@ module G_GAC_R :
             type 'a tag_lstate = [ `TLower of 'a lstate ]
             type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
               constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-            type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
-              constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
             val fetch_iter : [> `TLower of 'a ] list -> 'a
             val mfetch :
               unit ->
@@ -10740,8 +9515,6 @@ module G_GAC_R :
             type 'a lstate = ('a, GAC_R.contr) Direct.abstract
             type 'a tag_lstate = [ `TLower of 'a lstate ]
             type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
-              constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-            type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
               constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
             val fetch_iter : [> `TLower of 'a ] list -> 'a
             val mfetch :
@@ -10912,8 +9685,6 @@ module G_GAC_R :
                       type 'a tag_lstate = [ `TLower of 'a lstate ]
                       type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
                         constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                      type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
-                        constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                       val fetch_iter : [> `TLower of 'a ] list -> 'a
                       val mfetch :
                         unit ->
@@ -11018,8 +9789,6 @@ module G_GAC_R :
                       type 'a lstate = ('a, GAC_R.contr) Direct.abstract
                       type 'a tag_lstate = [ `TLower of 'a lstate ]
                       type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
-                        constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                      type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
                         constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                       val fetch_iter : [> `TLower of 'a ] list -> 'a
                       val mfetch :
@@ -11135,8 +9904,6 @@ module G_GAC_R :
                       type 'a tag_lstate = [ `TLower of 'a lstate ]
                       type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
                         constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                      type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
-                        constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                       val fetch_iter : [> `TLower of 'a ] list -> 'a
                       val mfetch :
                         unit ->
@@ -11248,8 +10015,6 @@ module G_GAC_R :
                       type 'a lstate = ('a, GAC_R.contr) Direct.abstract
                       type 'a tag_lstate = [ `TLower of 'a lstate ]
                       type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
-                        constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                      type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
                         constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                       val fetch_iter : [> `TLower of 'a ] list -> 'a
                       val mfetch :
@@ -11395,8 +10160,6 @@ module G_GAC_R :
                       type 'a tag_lstate = [ `TLower of 'a lstate ]
                       type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
                         constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                      type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
-                        constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                       val fetch_iter : [> `TLower of 'a ] list -> 'a
                       val mfetch :
                         unit ->
@@ -11537,8 +10300,6 @@ module G_GAC_R :
                       type 'a lstate = ('a, GAC_R.contr) Direct.abstract
                       type 'a tag_lstate = [ `TLower of 'a lstate ]
                       type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
-                        constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                      type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
                         constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                       val fetch_iter : [> `TLower of 'a ] list -> 'a
                       val mfetch :
@@ -11687,8 +10448,6 @@ module G_GAC_R :
                       type 'a tag_lstate = [ `TLower of 'a lstate ]
                       type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
                         constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                      type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
-                        constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                       val fetch_iter : [> `TLower of 'a ] list -> 'a
                       val mfetch :
                         unit ->
@@ -11810,9 +10569,6 @@ module G_GAC_R :
                           type 'a lstate = ('a, GAC_R.contr) Direct.abstract
                           type 'a tag_lstate = [ `TLower of 'a lstate ]
                           type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
-                            constraint 'a =
-                              'c * ([> 'c tag_lstate ] as 'd) * 'e
-                          type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
                             constraint 'a =
                               'c * ([> 'c tag_lstate ] as 'd) * 'e
                           val mfetch :
@@ -11941,219 +10697,6 @@ module G_GAC_R :
         module GenSolve :
           functor (F : FEATURES) ->
             sig
-              module GE_FEATURES :
-                sig
-                  module Det :
-                    sig
-                      type tdet = GAC_R.Dom.v ref
-                      type 'a lstate = 'a F.Det.lstate
-                      type 'a tag_lstate = [ `TDet of 'a lstate ]
-                      type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
-                        constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                      type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
-                        constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                      val decl :
-                        unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                      val upd_sign :
-                        unit -> ('a * [> 'a tag_lstate ] * 'b, unit) om
-                      val zero_sign :
-                        unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                      val acc :
-                        ('a, GAC_R.Dom.v) Direct.abstract ->
-                        ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                      val get :
-                        unit -> ('a * [> 'a tag_lstate ] * 'b, tdet) lm
-                      val set :
-                        ('a, GAC_R.Dom.v) Direct.abstract ->
-                        ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                      val fin :
-                        unit ->
-                        ('a * [> 'a tag_lstate ] * 'b, GAC_R.Dom.v) lm
-                    end
-                  module PivotF :
-                    functor (D : DETERMINANT) ->
-                      functor (P : GEF.TRACKPIVOT) ->
-                        sig
-                          val findpivot :
-                            'a wmatrix ->
-                            'a curpos ->
-                            ('a, GAC_R.Dom.v option,
-                             [> `TDet of 'a D.lstate | `TPivot of 'a P.lstate ],
-                             'b)
-                            GEF.cmonad
-                        end
-                  module PivotRep :
-                    sig
-                      type perm_rep = F.PivotRep.perm_rep
-                      type 'a ira = ('a, int) Direct.abstract
-                      type 'a fra = 'a F.PivotRep.fra
-                      type 'a pra = ('a, perm_rep) Direct.abstract
-                      val add : 'a fra -> 'a pra -> 'a pra
-                      val empty : 'a ira -> 'a pra
-                      val rowrep : 'a ira -> 'a ira -> 'a fra
-                      val colrep : 'a ira -> 'a ira -> 'a fra
-                    end
-                  module Update :
-                    functor (D : DETERMINANT) ->
-                      sig
-                        type 'a in_val = 'a GAC_R.Dom.vc
-                        val update :
-                          'a in_val ->
-                          'a in_val ->
-                          'a in_val ->
-                          'a in_val ->
-                          ('a in_val -> ('a, unit) Direct.abstract) ->
-                          ('a, GAC_R.Dom.v ref) Direct.abstract ->
-                          ('a, unit, 'b, 'c) GEF.cmonad
-                        val update_det :
-                          'a in_val ->
-                          ('a * [> 'a D.tag_lstate ] * 'b, unit) D.lm
-                        val upd_kind : Ge.update_kind
-                      end
-                  module Input :
-                    sig
-                      type inp = GAC_R.contr * int
-                      val get_input :
-                        ('a, 'b * 'c) Direct.abstract ->
-                        'd ->
-                        ('d ->
-                         ('a, 'b) Direct.abstract *
-                         ('a, 'c) Direct.abstract * bool -> 'e) ->
-                        'e
-                    end
-                  module Output :
-                    functor (OD : GE.OUTPUTDEP) ->
-                      sig
-                        module IF :
-                          sig
-                            module R :
-                              sig
-                                type 'a lstate =
-                                    ('a, int ref) Direct.abstract
-                                type 'a tag_lstate_ = [ `TRan of 'a lstate ]
-                                type 'a tag_lstate = 'a tag_lstate_
-                                type ('a, 'b) lm =
-                                    ('c, 'b, 'd, 'e) GEF.cmonad
-                                  constraint 'a =
-                                    'c * ([> 'c tag_lstate ] as 'd) * 'e
-                                val fetch_iter : [> `TRan of 'a ] list -> 'a
-                                val rfetch :
-                                  unit ->
-                                  ([> `TRan of 'b ] as 'a) list ->
-                                  ('a list -> 'b -> 'c) -> 'c
-                                val rstore :
-                                  'a ->
-                                  ([> `TRan of 'a ] as 'b) list ->
-                                  ('b list -> unit -> 'c) -> 'c
-                                val decl :
-                                  unit ->
-                                  ([> `TRan of ('b, int ref) Direct.abstract ]
-                                   as 'a)
-                                  list ->
-                                  ('a list ->
-                                   ('b, int ref) Direct.abstract ->
-                                   ('b, 'c) Direct.abstract) ->
-                                  ('b, 'c) Direct.abstract
-                                val succ :
-                                  unit ->
-                                  ([> `TRan of ('b, int ref) Direct.abstract ]
-                                   as 'a)
-                                  list ->
-                                  ('a list ->
-                                   ('b, unit) Direct.abstract -> 'c) ->
-                                  'c
-                                module type RANK =
-                                  sig
-                                    type 'a tag_lstate = 'a tag_lstate_
-                                    val rfetch :
-                                      unit ->
-                                      ('a * [> 'a tag_lstate ] * 'b, int ref)
-                                      lm
-                                    val decl :
-                                      unit ->
-                                      ('a * [> 'a tag_lstate ] * 'b, int ref)
-                                      lm
-                                    val succ :
-                                      unit ->
-                                      ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                                    val fin :
-                                      unit ->
-                                      ('a * [> 'a tag_lstate ] * 'b, int) lm
-                                  end
-                                val fin : unit -> 'a
-                              end
-                            module P :
-                              sig
-                                type perm_rep = GEF.PermList.perm_rep
-                                type 'a ira = 'a GEF.PermList.ira
-                                type 'a fra = 'a GEF.PermList.fra
-                                type 'a pra = 'a GEF.PermList.pra
-                                type 'a lstate =
-                                    ('a, GEF.PermList.perm_rep ref)
-                                    Direct.abstract
-                                type 'a tag_lstate = [ `TPivot of 'a lstate ]
-                                type ('a, 'b) lm =
-                                    ('c, 'b, 'd, 'e) GEF.cmonad
-                                  constraint 'a =
-                                    'c * ([> 'c tag_lstate ] as 'd) * 'e
-                                val rowrep :
-                                  'a GEF.PermList.ira ->
-                                  'a GEF.PermList.ira -> 'a GEF.PermList.fra
-                                val colrep :
-                                  'a GEF.PermList.ira ->
-                                  'a GEF.PermList.ira -> 'a GEF.PermList.fra
-                                val decl :
-                                  'a ->
-                                  'b ->
-                                  ('b -> ('c, unit) Direct.abstract -> 'd) ->
-                                  'd
-                                val add :
-                                  'a -> 'b -> ('b -> 'c option -> 'd) -> 'd
-                                val fin : unit -> 'a
-                              end
-                            module L :
-                              sig
-                                type 'a lstate =
-                                    ('a, GAC_R.contr) Direct.abstract
-                                type 'a tag_lstate = [ `TLower of 'a lstate ]
-                                type ('a, 'b) lm =
-                                    ('c, 'b, 'd, 'e) GEF.cmonad
-                                  constraint 'a =
-                                    'c * ([> 'c tag_lstate ] as 'd) * 'e
-                                type ('a, 'b) om =
-                                    ('c, 'b, 'd, 'e) GEF.omonad
-                                  constraint 'a =
-                                    'c * ([> 'c tag_lstate ] as 'd) * 'e
-                                val fetch_iter :
-                                  [> `TLower of 'a ] list -> 'a
-                                val mfetch :
-                                  unit ->
-                                  ([> `TLower of 'b ] as 'a) list ->
-                                  ('a list -> 'b -> 'c) -> 'c
-                                val mstore :
-                                  'a ->
-                                  ([> `TLower of 'a ] as 'b) list ->
-                                  ('b list -> unit -> 'c) -> 'c
-                                val decl : 'a -> 'b -> ('b -> 'a -> 'c) -> 'c
-                                val updt :
-                                  'a GAC_R.vc ->
-                                  ('a, int) Direct.abstract ->
-                                  ('a, int) Direct.abstract ->
-                                  'a GAC_R.vo ->
-                                  'b ->
-                                  ('c ->
-                                   ('c -> ('a, unit) Direct.abstract -> 'd) ->
-                                   'd)
-                                  option
-                                val fin : unit -> 'a
-                                val wants_pack : bool
-                              end
-                          end
-                        type res = GAC_R.contr
-                        val make_result :
-                          'a wmatrix -> 'b -> ('b -> 'a GAC_R.vc -> 'c) -> 'c
-                      end
-                end
               module GE' :
                 sig
                   module O :
@@ -12187,16 +10730,13 @@ module G_GAC_R :
                             end
                           module P :
                             sig
-                              type perm_rep =
-                                  GE_FEATURES.Output(GE_FEATURES).IF.P.perm_rep
+                              type perm_rep = GEF.PermList.perm_rep
                               type 'a ira = ('a, int) Direct.abstract
-                              type 'a fra =
-                                  'a GE_FEATURES.Output(GE_FEATURES).IF.P.fra
-                              type 'a pra =
-                                  'a GE_FEATURES.Output(GE_FEATURES).IF.P.pra
+                              type 'a fra = 'a GEF.PermList.fra
+                              type 'a pra = 'a GEF.PermList.pra
                               type 'a lstate =
-                                  'a
-                                  GE_FEATURES.Output(GE_FEATURES).IF.P.lstate
+                                  ('a, GEF.PermList.perm_rep ref)
+                                  Direct.abstract
                               type 'a tag_lstate = [ `TPivot of 'a lstate ]
                               type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
                                 constraint 'a =
@@ -12224,9 +10764,6 @@ module G_GAC_R :
                               type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
                                 constraint 'a =
                                   'c * ([> 'c tag_lstate ] as 'd) * 'e
-                              type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
-                                constraint 'a =
-                                  'c * ([> 'c tag_lstate ] as 'd) * 'e
                               val mfetch :
                                 unit ->
                                 ('a * [> 'a tag_lstate ] * 'b, GAC_R.contr)
@@ -12250,11 +10787,11 @@ module G_GAC_R :
                               val wants_pack : bool
                             end
                         end
-                      type res = GE_FEATURES.Output(GE_FEATURES).res
+                      type res = GAC_R.contr
                       val make_result :
                         'a wmatrix ->
                         ('a, res,
-                         [> `TDet of 'a GE_FEATURES.Det.lstate
+                         [> `TDet of 'a F.Det.lstate
                           | `TLower of 'a IF.L.lstate
                           | `TPivot of 'a IF.P.lstate
                           | `TRan of 'a GEF.TrackRank.lstate ],
@@ -12266,17 +10803,17 @@ module G_GAC_R :
                   val zerobelow :
                     'a wmatrix ->
                     'a curposval ->
-                    ([> `TDet of 'a GE_FEATURES.Det.lstate
+                    ([> `TDet of 'a F.Det.lstate
                       | `TLower of ('a, GAC_R.contr) Direct.abstract ]
                      as 'b)
                     list ->
                     ('b list -> ('a, unit) Direct.abstract -> 'c) -> 'c
                   val init :
-                    ('a, GE_FEATURES.Input.inp) Direct.abstract ->
-                    ([> `TDet of 'a GE_FEATURES.Det.lstate
+                    ('a, GAC_R.contr * int) Direct.abstract ->
+                    ([> `TDet of 'a F.Det.lstate
                       | `TLower of ('a, GAC_R.contr) Direct.abstract
                       | `TPivot of
-                          'a GE_FEATURES.Output(GE_FEATURES).IF.P.lstate
+                          ('a, GEF.PermList.perm_rep ref) Direct.abstract
                       | `TRan of 'a GEF.TrackRank.lstate ]
                      as 'b)
                     list ->
@@ -12288,17 +10825,17 @@ module G_GAC_R :
                   val forward_elim :
                     'a wmatrix * ('a, int ref) Direct.abstract *
                     ('a, int ref) Direct.abstract * ('a, int) Direct.abstract ->
-                    ([> `TDet of 'a GE_FEATURES.Det.lstate
+                    ([> `TDet of 'a F.Det.lstate
                       | `TLower of ('a, GAC_R.contr) Direct.abstract
                       | `TPivot of
-                          'a GE_FEATURES.Output(GE_FEATURES).IF.P.lstate
+                          ('a, GEF.PermList.perm_rep ref) Direct.abstract
                       | `TRan of 'a GEF.TrackRank.lstate ]
                      as 'b)
                     list ->
                     ('b list -> ('a, unit) Direct.abstract -> 'c) -> 'c
                   val ge_gen :
-                    ('a, GE_FEATURES.Input.inp) Direct.abstract ->
-                    ([> `TDet of 'a GE_FEATURES.Det.lstate
+                    ('a, GAC_R.contr * int) Direct.abstract ->
+                    ([> `TDet of 'a F.Det.lstate
                       | `TLower of 'a O.IF.L.lstate
                       | `TPivot of 'a O.IF.P.lstate
                       | `TRan of 'a GEF.TrackRank.lstate ]
@@ -12308,8 +10845,8 @@ module G_GAC_R :
                      ('a, O.res) Direct.abstract -> ('a, 'c) Direct.abstract) ->
                     ('a, 'c) Direct.abstract
                   val gen :
-                    ('a, GE_FEATURES.Input.inp) Direct.abstract ->
-                    ([> `TDet of 'a GE_FEATURES.Det.lstate
+                    ('a, GAC_R.contr * int) Direct.abstract ->
+                    ([> `TDet of 'a F.Det.lstate
                       | `TLower of 'a O.IF.L.lstate
                       | `TPivot of 'a O.IF.P.lstate
                       | `TRan of 'a GEF.TrackRank.lstate ]
@@ -12329,7 +10866,7 @@ module G_GAC_R :
                 ('a, 'c) Direct.abstract
               val solve_gen :
                 ('a, F.Input.inp) Direct.abstract ->
-                ([> `TDet of 'a GE_FEATURES.Det.lstate
+                ([> `TDet of 'a F.Det.lstate
                   | `TLower of 'a GE'.O.IF.L.lstate
                   | `TPivot of 'a GE'.O.IF.P.lstate
                   | `TRan of 'a GEF.TrackRank.lstate ]
@@ -12522,8 +11059,6 @@ module G_GVC_Z3 :
             type 'a tag_lstate = [ `TLower of 'a lstate ]
             type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
               constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-            type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
-              constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
             val mfetch :
               unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_Z3.contr) lm
             val decl :
@@ -12545,8 +11080,6 @@ module G_GVC_Z3 :
             type 'a tag_lstate = [ `TLower of 'a lstate ]
             type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
               constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-            type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
-              constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
             val fetch_iter : [> `TLower of 'a ] list -> 'a
             val mfetch :
               unit ->
@@ -12561,8 +11094,6 @@ module G_GVC_Z3 :
             type 'a lstate = ('a, GVC_Z3.contr) Direct.abstract
             type 'a tag_lstate = [ `TLower of 'a lstate ]
             type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
-              constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-            type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
               constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
             val fetch_iter : [> `TLower of 'a ] list -> 'a
             val mfetch :
@@ -12598,8 +11129,6 @@ module G_GVC_Z3 :
             type 'a tag_lstate = [ `TLower of 'a lstate ]
             type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
               constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-            type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
-              constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
             val fetch_iter : [> `TLower of 'a ] list -> 'a
             val mfetch :
               unit ->
@@ -12622,8 +11151,6 @@ module G_GVC_Z3 :
             type 'a lstate = ('a, GVC_Z3.contr) Direct.abstract
             type 'a tag_lstate = [ `TLower of 'a lstate ]
             type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
-              constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-            type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
               constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
             val fetch_iter : [> `TLower of 'a ] list -> 'a
             val mfetch :
@@ -12794,8 +11321,6 @@ module G_GVC_Z3 :
                       type 'a tag_lstate = [ `TLower of 'a lstate ]
                       type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
                         constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                      type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
-                        constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                       val fetch_iter : [> `TLower of 'a ] list -> 'a
                       val mfetch :
                         unit ->
@@ -12900,8 +11425,6 @@ module G_GVC_Z3 :
                       type 'a lstate = ('a, GVC_Z3.contr) Direct.abstract
                       type 'a tag_lstate = [ `TLower of 'a lstate ]
                       type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
-                        constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                      type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
                         constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                       val fetch_iter : [> `TLower of 'a ] list -> 'a
                       val mfetch :
@@ -13017,8 +11540,6 @@ module G_GVC_Z3 :
                       type 'a tag_lstate = [ `TLower of 'a lstate ]
                       type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
                         constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                      type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
-                        constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                       val fetch_iter : [> `TLower of 'a ] list -> 'a
                       val mfetch :
                         unit ->
@@ -13130,8 +11651,6 @@ module G_GVC_Z3 :
                       type 'a lstate = ('a, GVC_Z3.contr) Direct.abstract
                       type 'a tag_lstate = [ `TLower of 'a lstate ]
                       type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
-                        constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                      type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
                         constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                       val fetch_iter : [> `TLower of 'a ] list -> 'a
                       val mfetch :
@@ -13277,8 +11796,6 @@ module G_GVC_Z3 :
                       type 'a tag_lstate = [ `TLower of 'a lstate ]
                       type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
                         constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                      type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
-                        constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                       val fetch_iter : [> `TLower of 'a ] list -> 'a
                       val mfetch :
                         unit ->
@@ -13419,8 +11936,6 @@ module G_GVC_Z3 :
                       type 'a lstate = ('a, GVC_Z3.contr) Direct.abstract
                       type 'a tag_lstate = [ `TLower of 'a lstate ]
                       type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
-                        constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                      type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
                         constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                       val fetch_iter : [> `TLower of 'a ] list -> 'a
                       val mfetch :
@@ -13570,8 +12085,6 @@ module G_GVC_Z3 :
                       type 'a tag_lstate = [ `TLower of 'a lstate ]
                       type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
                         constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                      type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
-                        constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                       val fetch_iter : [> `TLower of 'a ] list -> 'a
                       val mfetch :
                         unit ->
@@ -13693,9 +12206,6 @@ module G_GVC_Z3 :
                           type 'a lstate = ('a, GVC_Z3.contr) Direct.abstract
                           type 'a tag_lstate = [ `TLower of 'a lstate ]
                           type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
-                            constraint 'a =
-                              'c * ([> 'c tag_lstate ] as 'd) * 'e
-                          type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
                             constraint 'a =
                               'c * ([> 'c tag_lstate ] as 'd) * 'e
                           val mfetch :
@@ -13824,220 +12334,6 @@ module G_GVC_Z3 :
         module GenSolve :
           functor (F : FEATURES) ->
             sig
-              module GE_FEATURES :
-                sig
-                  module Det :
-                    sig
-                      type tdet = GVC_Z3.Dom.v ref
-                      type 'a lstate = 'a F.Det.lstate
-                      type 'a tag_lstate = [ `TDet of 'a lstate ]
-                      type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
-                        constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                      type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
-                        constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                      val decl :
-                        unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                      val upd_sign :
-                        unit -> ('a * [> 'a tag_lstate ] * 'b, unit) om
-                      val zero_sign :
-                        unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                      val acc :
-                        ('a, GVC_Z3.Dom.v) Direct.abstract ->
-                        ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                      val get :
-                        unit -> ('a * [> 'a tag_lstate ] * 'b, tdet) lm
-                      val set :
-                        ('a, GVC_Z3.Dom.v) Direct.abstract ->
-                        ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                      val fin :
-                        unit ->
-                        ('a * [> 'a tag_lstate ] * 'b, GVC_Z3.Dom.v) lm
-                    end
-                  module PivotF :
-                    functor (D : DETERMINANT) ->
-                      functor (P : GEF.TRACKPIVOT) ->
-                        sig
-                          val findpivot :
-                            'a wmatrix ->
-                            'a curpos ->
-                            ('a, GVC_Z3.Dom.v option,
-                             [> `TDet of 'a D.lstate | `TPivot of 'a P.lstate ],
-                             'b)
-                            GEF.cmonad
-                        end
-                  module PivotRep :
-                    sig
-                      type perm_rep = F.PivotRep.perm_rep
-                      type 'a ira = ('a, int) Direct.abstract
-                      type 'a fra = 'a F.PivotRep.fra
-                      type 'a pra = ('a, perm_rep) Direct.abstract
-                      val add : 'a fra -> 'a pra -> 'a pra
-                      val empty : 'a ira -> 'a pra
-                      val rowrep : 'a ira -> 'a ira -> 'a fra
-                      val colrep : 'a ira -> 'a ira -> 'a fra
-                    end
-                  module Update :
-                    functor (D : DETERMINANT) ->
-                      sig
-                        type 'a in_val = 'a GVC_Z3.Dom.vc
-                        val update :
-                          'a in_val ->
-                          'a in_val ->
-                          'a in_val ->
-                          'a in_val ->
-                          ('a in_val -> ('a, unit) Direct.abstract) ->
-                          ('a, GVC_Z3.Dom.v ref) Direct.abstract ->
-                          ('a, unit, 'b, 'c) GEF.cmonad
-                        val update_det :
-                          'a in_val ->
-                          ('a * [> 'a D.tag_lstate ] * 'b, unit) D.lm
-                        val upd_kind : Ge.update_kind
-                      end
-                  module Input :
-                    sig
-                      type inp = GVC_Z3.contr * int
-                      val get_input :
-                        ('a, 'b * 'c) Direct.abstract ->
-                        'd ->
-                        ('d ->
-                         ('a, 'b) Direct.abstract *
-                         ('a, 'c) Direct.abstract * bool -> 'e) ->
-                        'e
-                    end
-                  module Output :
-                    functor (OD : GE.OUTPUTDEP) ->
-                      sig
-                        module IF :
-                          sig
-                            module R :
-                              sig
-                                type 'a lstate =
-                                    ('a, int ref) Direct.abstract
-                                type 'a tag_lstate_ = [ `TRan of 'a lstate ]
-                                type 'a tag_lstate = 'a tag_lstate_
-                                type ('a, 'b) lm =
-                                    ('c, 'b, 'd, 'e) GEF.cmonad
-                                  constraint 'a =
-                                    'c * ([> 'c tag_lstate ] as 'd) * 'e
-                                val fetch_iter : [> `TRan of 'a ] list -> 'a
-                                val rfetch :
-                                  unit ->
-                                  ([> `TRan of 'b ] as 'a) list ->
-                                  ('a list -> 'b -> 'c) -> 'c
-                                val rstore :
-                                  'a ->
-                                  ([> `TRan of 'a ] as 'b) list ->
-                                  ('b list -> unit -> 'c) -> 'c
-                                val decl :
-                                  unit ->
-                                  ([> `TRan of ('b, int ref) Direct.abstract ]
-                                   as 'a)
-                                  list ->
-                                  ('a list ->
-                                   ('b, int ref) Direct.abstract ->
-                                   ('b, 'c) Direct.abstract) ->
-                                  ('b, 'c) Direct.abstract
-                                val succ :
-                                  unit ->
-                                  ([> `TRan of ('b, int ref) Direct.abstract ]
-                                   as 'a)
-                                  list ->
-                                  ('a list ->
-                                   ('b, unit) Direct.abstract -> 'c) ->
-                                  'c
-                                module type RANK =
-                                  sig
-                                    type 'a tag_lstate = 'a tag_lstate_
-                                    val rfetch :
-                                      unit ->
-                                      ('a * [> 'a tag_lstate ] * 'b, int ref)
-                                      lm
-                                    val decl :
-                                      unit ->
-                                      ('a * [> 'a tag_lstate ] * 'b, int ref)
-                                      lm
-                                    val succ :
-                                      unit ->
-                                      ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                                    val fin :
-                                      unit ->
-                                      ('a * [> 'a tag_lstate ] * 'b, int) lm
-                                  end
-                                val fin : unit -> 'a
-                              end
-                            module P :
-                              sig
-                                type perm_rep = GEF.PermList.perm_rep
-                                type 'a ira = 'a GEF.PermList.ira
-                                type 'a fra = 'a GEF.PermList.fra
-                                type 'a pra = 'a GEF.PermList.pra
-                                type 'a lstate =
-                                    ('a, GEF.PermList.perm_rep ref)
-                                    Direct.abstract
-                                type 'a tag_lstate = [ `TPivot of 'a lstate ]
-                                type ('a, 'b) lm =
-                                    ('c, 'b, 'd, 'e) GEF.cmonad
-                                  constraint 'a =
-                                    'c * ([> 'c tag_lstate ] as 'd) * 'e
-                                val rowrep :
-                                  'a GEF.PermList.ira ->
-                                  'a GEF.PermList.ira -> 'a GEF.PermList.fra
-                                val colrep :
-                                  'a GEF.PermList.ira ->
-                                  'a GEF.PermList.ira -> 'a GEF.PermList.fra
-                                val decl :
-                                  'a ->
-                                  'b ->
-                                  ('b -> ('c, unit) Direct.abstract -> 'd) ->
-                                  'd
-                                val add :
-                                  'a -> 'b -> ('b -> 'c option -> 'd) -> 'd
-                                val fin : unit -> 'a
-                              end
-                            module L :
-                              sig
-                                type 'a lstate =
-                                    ('a, GVC_Z3.contr) Direct.abstract
-                                type 'a tag_lstate = [ `TLower of 'a lstate ]
-                                type ('a, 'b) lm =
-                                    ('c, 'b, 'd, 'e) GEF.cmonad
-                                  constraint 'a =
-                                    'c * ([> 'c tag_lstate ] as 'd) * 'e
-                                type ('a, 'b) om =
-                                    ('c, 'b, 'd, 'e) GEF.omonad
-                                  constraint 'a =
-                                    'c * ([> 'c tag_lstate ] as 'd) * 'e
-                                val fetch_iter :
-                                  [> `TLower of 'a ] list -> 'a
-                                val mfetch :
-                                  unit ->
-                                  ([> `TLower of 'b ] as 'a) list ->
-                                  ('a list -> 'b -> 'c) -> 'c
-                                val mstore :
-                                  'a ->
-                                  ([> `TLower of 'a ] as 'b) list ->
-                                  ('b list -> unit -> 'c) -> 'c
-                                val decl : 'a -> 'b -> ('b -> 'a -> 'c) -> 'c
-                                val updt :
-                                  'a GVC_Z3.vc ->
-                                  ('a, int) Direct.abstract ->
-                                  ('a, int) Direct.abstract ->
-                                  'a GVC_Z3.vo ->
-                                  'b ->
-                                  ('c ->
-                                   ('c -> ('a, unit) Direct.abstract -> 'd) ->
-                                   'd)
-                                  option
-                                val fin : unit -> 'a
-                                val wants_pack : bool
-                              end
-                          end
-                        type res = GVC_Z3.contr
-                        val make_result :
-                          'a wmatrix ->
-                          'b -> ('b -> 'a GVC_Z3.vc -> 'c) -> 'c
-                      end
-                end
               module GE' :
                 sig
                   module O :
@@ -14071,16 +12367,13 @@ module G_GVC_Z3 :
                             end
                           module P :
                             sig
-                              type perm_rep =
-                                  GE_FEATURES.Output(GE_FEATURES).IF.P.perm_rep
+                              type perm_rep = GEF.PermList.perm_rep
                               type 'a ira = ('a, int) Direct.abstract
-                              type 'a fra =
-                                  'a GE_FEATURES.Output(GE_FEATURES).IF.P.fra
-                              type 'a pra =
-                                  'a GE_FEATURES.Output(GE_FEATURES).IF.P.pra
+                              type 'a fra = 'a GEF.PermList.fra
+                              type 'a pra = 'a GEF.PermList.pra
                               type 'a lstate =
-                                  'a
-                                  GE_FEATURES.Output(GE_FEATURES).IF.P.lstate
+                                  ('a, GEF.PermList.perm_rep ref)
+                                  Direct.abstract
                               type 'a tag_lstate = [ `TPivot of 'a lstate ]
                               type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
                                 constraint 'a =
@@ -14108,9 +12401,6 @@ module G_GVC_Z3 :
                               type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
                                 constraint 'a =
                                   'c * ([> 'c tag_lstate ] as 'd) * 'e
-                              type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
-                                constraint 'a =
-                                  'c * ([> 'c tag_lstate ] as 'd) * 'e
                               val mfetch :
                                 unit ->
                                 ('a * [> 'a tag_lstate ] * 'b, GVC_Z3.contr)
@@ -14134,11 +12424,11 @@ module G_GVC_Z3 :
                               val wants_pack : bool
                             end
                         end
-                      type res = GE_FEATURES.Output(GE_FEATURES).res
+                      type res = GVC_Z3.contr
                       val make_result :
                         'a wmatrix ->
                         ('a, res,
-                         [> `TDet of 'a GE_FEATURES.Det.lstate
+                         [> `TDet of 'a F.Det.lstate
                           | `TLower of 'a IF.L.lstate
                           | `TPivot of 'a IF.P.lstate
                           | `TRan of 'a GEF.TrackRank.lstate ],
@@ -14150,17 +12440,17 @@ module G_GVC_Z3 :
                   val zerobelow :
                     'a wmatrix ->
                     'a curposval ->
-                    ([> `TDet of 'a GE_FEATURES.Det.lstate
+                    ([> `TDet of 'a F.Det.lstate
                       | `TLower of ('a, GVC_Z3.contr) Direct.abstract ]
                      as 'b)
                     list ->
                     ('b list -> ('a, unit) Direct.abstract -> 'c) -> 'c
                   val init :
-                    ('a, GE_FEATURES.Input.inp) Direct.abstract ->
-                    ([> `TDet of 'a GE_FEATURES.Det.lstate
+                    ('a, GVC_Z3.contr * int) Direct.abstract ->
+                    ([> `TDet of 'a F.Det.lstate
                       | `TLower of ('a, GVC_Z3.contr) Direct.abstract
                       | `TPivot of
-                          'a GE_FEATURES.Output(GE_FEATURES).IF.P.lstate
+                          ('a, GEF.PermList.perm_rep ref) Direct.abstract
                       | `TRan of 'a GEF.TrackRank.lstate ]
                      as 'b)
                     list ->
@@ -14172,17 +12462,17 @@ module G_GVC_Z3 :
                   val forward_elim :
                     'a wmatrix * ('a, int ref) Direct.abstract *
                     ('a, int ref) Direct.abstract * ('a, int) Direct.abstract ->
-                    ([> `TDet of 'a GE_FEATURES.Det.lstate
+                    ([> `TDet of 'a F.Det.lstate
                       | `TLower of ('a, GVC_Z3.contr) Direct.abstract
                       | `TPivot of
-                          'a GE_FEATURES.Output(GE_FEATURES).IF.P.lstate
+                          ('a, GEF.PermList.perm_rep ref) Direct.abstract
                       | `TRan of 'a GEF.TrackRank.lstate ]
                      as 'b)
                     list ->
                     ('b list -> ('a, unit) Direct.abstract -> 'c) -> 'c
                   val ge_gen :
-                    ('a, GE_FEATURES.Input.inp) Direct.abstract ->
-                    ([> `TDet of 'a GE_FEATURES.Det.lstate
+                    ('a, GVC_Z3.contr * int) Direct.abstract ->
+                    ([> `TDet of 'a F.Det.lstate
                       | `TLower of 'a O.IF.L.lstate
                       | `TPivot of 'a O.IF.P.lstate
                       | `TRan of 'a GEF.TrackRank.lstate ]
@@ -14192,8 +12482,8 @@ module G_GVC_Z3 :
                      ('a, O.res) Direct.abstract -> ('a, 'c) Direct.abstract) ->
                     ('a, 'c) Direct.abstract
                   val gen :
-                    ('a, GE_FEATURES.Input.inp) Direct.abstract ->
-                    ([> `TDet of 'a GE_FEATURES.Det.lstate
+                    ('a, GVC_Z3.contr * int) Direct.abstract ->
+                    ([> `TDet of 'a F.Det.lstate
                       | `TLower of 'a O.IF.L.lstate
                       | `TPivot of 'a O.IF.P.lstate
                       | `TRan of 'a GEF.TrackRank.lstate ]
@@ -14213,7 +12503,7 @@ module G_GVC_Z3 :
                 ('a, 'c) Direct.abstract
               val solve_gen :
                 ('a, F.Input.inp) Direct.abstract ->
-                ([> `TDet of 'a GE_FEATURES.Det.lstate
+                ([> `TDet of 'a F.Det.lstate
                   | `TLower of 'a GE'.O.IF.L.lstate
                   | `TPivot of 'a GE'.O.IF.P.lstate
                   | `TRan of 'a GEF.TrackRank.lstate ]
@@ -14407,8 +12697,6 @@ module G_GVC_Z19 :
             type 'a tag_lstate = [ `TLower of 'a lstate ]
             type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
               constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-            type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
-              constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
             val mfetch :
               unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_Z19.contr) lm
             val decl :
@@ -14431,8 +12719,6 @@ module G_GVC_Z19 :
             type 'a tag_lstate = [ `TLower of 'a lstate ]
             type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
               constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-            type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
-              constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
             val fetch_iter : [> `TLower of 'a ] list -> 'a
             val mfetch :
               unit ->
@@ -14447,8 +12733,6 @@ module G_GVC_Z19 :
             type 'a lstate = ('a, GVC_Z19.contr) Direct.abstract
             type 'a tag_lstate = [ `TLower of 'a lstate ]
             type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
-              constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-            type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
               constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
             val fetch_iter : [> `TLower of 'a ] list -> 'a
             val mfetch :
@@ -14484,8 +12768,6 @@ module G_GVC_Z19 :
             type 'a tag_lstate = [ `TLower of 'a lstate ]
             type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
               constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-            type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
-              constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
             val fetch_iter : [> `TLower of 'a ] list -> 'a
             val mfetch :
               unit ->
@@ -14508,8 +12790,6 @@ module G_GVC_Z19 :
             type 'a lstate = ('a, GVC_Z19.contr) Direct.abstract
             type 'a tag_lstate = [ `TLower of 'a lstate ]
             type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
-              constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-            type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
               constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
             val fetch_iter : [> `TLower of 'a ] list -> 'a
             val mfetch :
@@ -14680,8 +12960,6 @@ module G_GVC_Z19 :
                       type 'a tag_lstate = [ `TLower of 'a lstate ]
                       type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
                         constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                      type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
-                        constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                       val fetch_iter : [> `TLower of 'a ] list -> 'a
                       val mfetch :
                         unit ->
@@ -14786,8 +13064,6 @@ module G_GVC_Z19 :
                       type 'a lstate = ('a, GVC_Z19.contr) Direct.abstract
                       type 'a tag_lstate = [ `TLower of 'a lstate ]
                       type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
-                        constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                      type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
                         constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                       val fetch_iter : [> `TLower of 'a ] list -> 'a
                       val mfetch :
@@ -14903,8 +13179,6 @@ module G_GVC_Z19 :
                       type 'a tag_lstate = [ `TLower of 'a lstate ]
                       type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
                         constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                      type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
-                        constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                       val fetch_iter : [> `TLower of 'a ] list -> 'a
                       val mfetch :
                         unit ->
@@ -15016,8 +13290,6 @@ module G_GVC_Z19 :
                       type 'a lstate = ('a, GVC_Z19.contr) Direct.abstract
                       type 'a tag_lstate = [ `TLower of 'a lstate ]
                       type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
-                        constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                      type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
                         constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                       val fetch_iter : [> `TLower of 'a ] list -> 'a
                       val mfetch :
@@ -15163,8 +13435,6 @@ module G_GVC_Z19 :
                       type 'a tag_lstate = [ `TLower of 'a lstate ]
                       type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
                         constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                      type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
-                        constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                       val fetch_iter : [> `TLower of 'a ] list -> 'a
                       val mfetch :
                         unit ->
@@ -15305,8 +13575,6 @@ module G_GVC_Z19 :
                       type 'a lstate = ('a, GVC_Z19.contr) Direct.abstract
                       type 'a tag_lstate = [ `TLower of 'a lstate ]
                       type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
-                        constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                      type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
                         constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                       val fetch_iter : [> `TLower of 'a ] list -> 'a
                       val mfetch :
@@ -15456,8 +13724,6 @@ module G_GVC_Z19 :
                       type 'a tag_lstate = [ `TLower of 'a lstate ]
                       type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
                         constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                      type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
-                        constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                       val fetch_iter : [> `TLower of 'a ] list -> 'a
                       val mfetch :
                         unit ->
@@ -15580,9 +13846,6 @@ module G_GVC_Z19 :
                               ('a, GVC_Z19.contr) Direct.abstract
                           type 'a tag_lstate = [ `TLower of 'a lstate ]
                           type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
-                            constraint 'a =
-                              'c * ([> 'c tag_lstate ] as 'd) * 'e
-                          type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
                             constraint 'a =
                               'c * ([> 'c tag_lstate ] as 'd) * 'e
                           val mfetch :
@@ -15711,220 +13974,6 @@ module G_GVC_Z19 :
         module GenSolve :
           functor (F : FEATURES) ->
             sig
-              module GE_FEATURES :
-                sig
-                  module Det :
-                    sig
-                      type tdet = GVC_Z19.Dom.v ref
-                      type 'a lstate = 'a F.Det.lstate
-                      type 'a tag_lstate = [ `TDet of 'a lstate ]
-                      type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
-                        constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                      type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
-                        constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                      val decl :
-                        unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                      val upd_sign :
-                        unit -> ('a * [> 'a tag_lstate ] * 'b, unit) om
-                      val zero_sign :
-                        unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                      val acc :
-                        ('a, GVC_Z19.Dom.v) Direct.abstract ->
-                        ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                      val get :
-                        unit -> ('a * [> 'a tag_lstate ] * 'b, tdet) lm
-                      val set :
-                        ('a, GVC_Z19.Dom.v) Direct.abstract ->
-                        ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                      val fin :
-                        unit ->
-                        ('a * [> 'a tag_lstate ] * 'b, GVC_Z19.Dom.v) lm
-                    end
-                  module PivotF :
-                    functor (D : DETERMINANT) ->
-                      functor (P : GEF.TRACKPIVOT) ->
-                        sig
-                          val findpivot :
-                            'a wmatrix ->
-                            'a curpos ->
-                            ('a, GVC_Z19.Dom.v option,
-                             [> `TDet of 'a D.lstate | `TPivot of 'a P.lstate ],
-                             'b)
-                            GEF.cmonad
-                        end
-                  module PivotRep :
-                    sig
-                      type perm_rep = F.PivotRep.perm_rep
-                      type 'a ira = ('a, int) Direct.abstract
-                      type 'a fra = 'a F.PivotRep.fra
-                      type 'a pra = ('a, perm_rep) Direct.abstract
-                      val add : 'a fra -> 'a pra -> 'a pra
-                      val empty : 'a ira -> 'a pra
-                      val rowrep : 'a ira -> 'a ira -> 'a fra
-                      val colrep : 'a ira -> 'a ira -> 'a fra
-                    end
-                  module Update :
-                    functor (D : DETERMINANT) ->
-                      sig
-                        type 'a in_val = 'a GVC_Z19.Dom.vc
-                        val update :
-                          'a in_val ->
-                          'a in_val ->
-                          'a in_val ->
-                          'a in_val ->
-                          ('a in_val -> ('a, unit) Direct.abstract) ->
-                          ('a, GVC_Z19.Dom.v ref) Direct.abstract ->
-                          ('a, unit, 'b, 'c) GEF.cmonad
-                        val update_det :
-                          'a in_val ->
-                          ('a * [> 'a D.tag_lstate ] * 'b, unit) D.lm
-                        val upd_kind : Ge.update_kind
-                      end
-                  module Input :
-                    sig
-                      type inp = GVC_Z19.contr * int
-                      val get_input :
-                        ('a, 'b * 'c) Direct.abstract ->
-                        'd ->
-                        ('d ->
-                         ('a, 'b) Direct.abstract *
-                         ('a, 'c) Direct.abstract * bool -> 'e) ->
-                        'e
-                    end
-                  module Output :
-                    functor (OD : GE.OUTPUTDEP) ->
-                      sig
-                        module IF :
-                          sig
-                            module R :
-                              sig
-                                type 'a lstate =
-                                    ('a, int ref) Direct.abstract
-                                type 'a tag_lstate_ = [ `TRan of 'a lstate ]
-                                type 'a tag_lstate = 'a tag_lstate_
-                                type ('a, 'b) lm =
-                                    ('c, 'b, 'd, 'e) GEF.cmonad
-                                  constraint 'a =
-                                    'c * ([> 'c tag_lstate ] as 'd) * 'e
-                                val fetch_iter : [> `TRan of 'a ] list -> 'a
-                                val rfetch :
-                                  unit ->
-                                  ([> `TRan of 'b ] as 'a) list ->
-                                  ('a list -> 'b -> 'c) -> 'c
-                                val rstore :
-                                  'a ->
-                                  ([> `TRan of 'a ] as 'b) list ->
-                                  ('b list -> unit -> 'c) -> 'c
-                                val decl :
-                                  unit ->
-                                  ([> `TRan of ('b, int ref) Direct.abstract ]
-                                   as 'a)
-                                  list ->
-                                  ('a list ->
-                                   ('b, int ref) Direct.abstract ->
-                                   ('b, 'c) Direct.abstract) ->
-                                  ('b, 'c) Direct.abstract
-                                val succ :
-                                  unit ->
-                                  ([> `TRan of ('b, int ref) Direct.abstract ]
-                                   as 'a)
-                                  list ->
-                                  ('a list ->
-                                   ('b, unit) Direct.abstract -> 'c) ->
-                                  'c
-                                module type RANK =
-                                  sig
-                                    type 'a tag_lstate = 'a tag_lstate_
-                                    val rfetch :
-                                      unit ->
-                                      ('a * [> 'a tag_lstate ] * 'b, int ref)
-                                      lm
-                                    val decl :
-                                      unit ->
-                                      ('a * [> 'a tag_lstate ] * 'b, int ref)
-                                      lm
-                                    val succ :
-                                      unit ->
-                                      ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                                    val fin :
-                                      unit ->
-                                      ('a * [> 'a tag_lstate ] * 'b, int) lm
-                                  end
-                                val fin : unit -> 'a
-                              end
-                            module P :
-                              sig
-                                type perm_rep = GEF.PermList.perm_rep
-                                type 'a ira = 'a GEF.PermList.ira
-                                type 'a fra = 'a GEF.PermList.fra
-                                type 'a pra = 'a GEF.PermList.pra
-                                type 'a lstate =
-                                    ('a, GEF.PermList.perm_rep ref)
-                                    Direct.abstract
-                                type 'a tag_lstate = [ `TPivot of 'a lstate ]
-                                type ('a, 'b) lm =
-                                    ('c, 'b, 'd, 'e) GEF.cmonad
-                                  constraint 'a =
-                                    'c * ([> 'c tag_lstate ] as 'd) * 'e
-                                val rowrep :
-                                  'a GEF.PermList.ira ->
-                                  'a GEF.PermList.ira -> 'a GEF.PermList.fra
-                                val colrep :
-                                  'a GEF.PermList.ira ->
-                                  'a GEF.PermList.ira -> 'a GEF.PermList.fra
-                                val decl :
-                                  'a ->
-                                  'b ->
-                                  ('b -> ('c, unit) Direct.abstract -> 'd) ->
-                                  'd
-                                val add :
-                                  'a -> 'b -> ('b -> 'c option -> 'd) -> 'd
-                                val fin : unit -> 'a
-                              end
-                            module L :
-                              sig
-                                type 'a lstate =
-                                    ('a, GVC_Z19.contr) Direct.abstract
-                                type 'a tag_lstate = [ `TLower of 'a lstate ]
-                                type ('a, 'b) lm =
-                                    ('c, 'b, 'd, 'e) GEF.cmonad
-                                  constraint 'a =
-                                    'c * ([> 'c tag_lstate ] as 'd) * 'e
-                                type ('a, 'b) om =
-                                    ('c, 'b, 'd, 'e) GEF.omonad
-                                  constraint 'a =
-                                    'c * ([> 'c tag_lstate ] as 'd) * 'e
-                                val fetch_iter :
-                                  [> `TLower of 'a ] list -> 'a
-                                val mfetch :
-                                  unit ->
-                                  ([> `TLower of 'b ] as 'a) list ->
-                                  ('a list -> 'b -> 'c) -> 'c
-                                val mstore :
-                                  'a ->
-                                  ([> `TLower of 'a ] as 'b) list ->
-                                  ('b list -> unit -> 'c) -> 'c
-                                val decl : 'a -> 'b -> ('b -> 'a -> 'c) -> 'c
-                                val updt :
-                                  'a GVC_Z19.vc ->
-                                  ('a, int) Direct.abstract ->
-                                  ('a, int) Direct.abstract ->
-                                  'a GVC_Z19.vo ->
-                                  'b ->
-                                  ('c ->
-                                   ('c -> ('a, unit) Direct.abstract -> 'd) ->
-                                   'd)
-                                  option
-                                val fin : unit -> 'a
-                                val wants_pack : bool
-                              end
-                          end
-                        type res = GVC_Z19.contr
-                        val make_result :
-                          'a wmatrix ->
-                          'b -> ('b -> 'a GVC_Z19.vc -> 'c) -> 'c
-                      end
-                end
               module GE' :
                 sig
                   module O :
@@ -15958,16 +14007,13 @@ module G_GVC_Z19 :
                             end
                           module P :
                             sig
-                              type perm_rep =
-                                  GE_FEATURES.Output(GE_FEATURES).IF.P.perm_rep
+                              type perm_rep = GEF.PermList.perm_rep
                               type 'a ira = ('a, int) Direct.abstract
-                              type 'a fra =
-                                  'a GE_FEATURES.Output(GE_FEATURES).IF.P.fra
-                              type 'a pra =
-                                  'a GE_FEATURES.Output(GE_FEATURES).IF.P.pra
+                              type 'a fra = 'a GEF.PermList.fra
+                              type 'a pra = 'a GEF.PermList.pra
                               type 'a lstate =
-                                  'a
-                                  GE_FEATURES.Output(GE_FEATURES).IF.P.lstate
+                                  ('a, GEF.PermList.perm_rep ref)
+                                  Direct.abstract
                               type 'a tag_lstate = [ `TPivot of 'a lstate ]
                               type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
                                 constraint 'a =
@@ -15995,9 +14041,6 @@ module G_GVC_Z19 :
                               type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
                                 constraint 'a =
                                   'c * ([> 'c tag_lstate ] as 'd) * 'e
-                              type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
-                                constraint 'a =
-                                  'c * ([> 'c tag_lstate ] as 'd) * 'e
                               val mfetch :
                                 unit ->
                                 ('a * [> 'a tag_lstate ] * 'b, GVC_Z19.contr)
@@ -16021,11 +14064,11 @@ module G_GVC_Z19 :
                               val wants_pack : bool
                             end
                         end
-                      type res = GE_FEATURES.Output(GE_FEATURES).res
+                      type res = GVC_Z19.contr
                       val make_result :
                         'a wmatrix ->
                         ('a, res,
-                         [> `TDet of 'a GE_FEATURES.Det.lstate
+                         [> `TDet of 'a F.Det.lstate
                           | `TLower of 'a IF.L.lstate
                           | `TPivot of 'a IF.P.lstate
                           | `TRan of 'a GEF.TrackRank.lstate ],
@@ -16037,17 +14080,17 @@ module G_GVC_Z19 :
                   val zerobelow :
                     'a wmatrix ->
                     'a curposval ->
-                    ([> `TDet of 'a GE_FEATURES.Det.lstate
+                    ([> `TDet of 'a F.Det.lstate
                       | `TLower of ('a, GVC_Z19.contr) Direct.abstract ]
                      as 'b)
                     list ->
                     ('b list -> ('a, unit) Direct.abstract -> 'c) -> 'c
                   val init :
-                    ('a, GE_FEATURES.Input.inp) Direct.abstract ->
-                    ([> `TDet of 'a GE_FEATURES.Det.lstate
+                    ('a, GVC_Z19.contr * int) Direct.abstract ->
+                    ([> `TDet of 'a F.Det.lstate
                       | `TLower of ('a, GVC_Z19.contr) Direct.abstract
                       | `TPivot of
-                          'a GE_FEATURES.Output(GE_FEATURES).IF.P.lstate
+                          ('a, GEF.PermList.perm_rep ref) Direct.abstract
                       | `TRan of 'a GEF.TrackRank.lstate ]
                      as 'b)
                     list ->
@@ -16059,17 +14102,17 @@ module G_GVC_Z19 :
                   val forward_elim :
                     'a wmatrix * ('a, int ref) Direct.abstract *
                     ('a, int ref) Direct.abstract * ('a, int) Direct.abstract ->
-                    ([> `TDet of 'a GE_FEATURES.Det.lstate
+                    ([> `TDet of 'a F.Det.lstate
                       | `TLower of ('a, GVC_Z19.contr) Direct.abstract
                       | `TPivot of
-                          'a GE_FEATURES.Output(GE_FEATURES).IF.P.lstate
+                          ('a, GEF.PermList.perm_rep ref) Direct.abstract
                       | `TRan of 'a GEF.TrackRank.lstate ]
                      as 'b)
                     list ->
                     ('b list -> ('a, unit) Direct.abstract -> 'c) -> 'c
                   val ge_gen :
-                    ('a, GE_FEATURES.Input.inp) Direct.abstract ->
-                    ([> `TDet of 'a GE_FEATURES.Det.lstate
+                    ('a, GVC_Z19.contr * int) Direct.abstract ->
+                    ([> `TDet of 'a F.Det.lstate
                       | `TLower of 'a O.IF.L.lstate
                       | `TPivot of 'a O.IF.P.lstate
                       | `TRan of 'a GEF.TrackRank.lstate ]
@@ -16079,8 +14122,8 @@ module G_GVC_Z19 :
                      ('a, O.res) Direct.abstract -> ('a, 'c) Direct.abstract) ->
                     ('a, 'c) Direct.abstract
                   val gen :
-                    ('a, GE_FEATURES.Input.inp) Direct.abstract ->
-                    ([> `TDet of 'a GE_FEATURES.Det.lstate
+                    ('a, GVC_Z19.contr * int) Direct.abstract ->
+                    ([> `TDet of 'a F.Det.lstate
                       | `TLower of 'a O.IF.L.lstate
                       | `TPivot of 'a O.IF.P.lstate
                       | `TRan of 'a GEF.TrackRank.lstate ]
@@ -16100,7 +14143,7 @@ module G_GVC_Z19 :
                 ('a, 'c) Direct.abstract
               val solve_gen :
                 ('a, F.Input.inp) Direct.abstract ->
-                ([> `TDet of 'a GE_FEATURES.Det.lstate
+                ([> `TDet of 'a F.Det.lstate
                   | `TLower of 'a GE'.O.IF.L.lstate
                   | `TPivot of 'a GE'.O.IF.P.lstate
                   | `TRan of 'a GEF.TrackRank.lstate ]
@@ -16292,8 +14335,6 @@ module G_GFC_F :
             type 'a tag_lstate = [ `TLower of 'a lstate ]
             type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
               constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-            type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
-              constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
             val mfetch :
               unit -> ('a * [> 'a tag_lstate ] * 'b, GFC_F.contr) lm
             val decl :
@@ -16315,8 +14356,6 @@ module G_GFC_F :
             type 'a tag_lstate = [ `TLower of 'a lstate ]
             type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
               constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-            type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
-              constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
             val fetch_iter : [> `TLower of 'a ] list -> 'a
             val mfetch :
               unit ->
@@ -16331,8 +14370,6 @@ module G_GFC_F :
             type 'a lstate = ('a, GFC_F.contr) Direct.abstract
             type 'a tag_lstate = [ `TLower of 'a lstate ]
             type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
-              constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-            type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
               constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
             val fetch_iter : [> `TLower of 'a ] list -> 'a
             val mfetch :
@@ -16368,8 +14405,6 @@ module G_GFC_F :
             type 'a tag_lstate = [ `TLower of 'a lstate ]
             type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
               constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-            type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
-              constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
             val fetch_iter : [> `TLower of 'a ] list -> 'a
             val mfetch :
               unit ->
@@ -16392,8 +14427,6 @@ module G_GFC_F :
             type 'a lstate = ('a, GFC_F.contr) Direct.abstract
             type 'a tag_lstate = [ `TLower of 'a lstate ]
             type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
-              constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-            type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
               constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
             val fetch_iter : [> `TLower of 'a ] list -> 'a
             val mfetch :
@@ -16564,8 +14597,6 @@ module G_GFC_F :
                       type 'a tag_lstate = [ `TLower of 'a lstate ]
                       type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
                         constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                      type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
-                        constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                       val fetch_iter : [> `TLower of 'a ] list -> 'a
                       val mfetch :
                         unit ->
@@ -16670,8 +14701,6 @@ module G_GFC_F :
                       type 'a lstate = ('a, GFC_F.contr) Direct.abstract
                       type 'a tag_lstate = [ `TLower of 'a lstate ]
                       type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
-                        constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                      type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
                         constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                       val fetch_iter : [> `TLower of 'a ] list -> 'a
                       val mfetch :
@@ -16787,8 +14816,6 @@ module G_GFC_F :
                       type 'a tag_lstate = [ `TLower of 'a lstate ]
                       type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
                         constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                      type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
-                        constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                       val fetch_iter : [> `TLower of 'a ] list -> 'a
                       val mfetch :
                         unit ->
@@ -16900,8 +14927,6 @@ module G_GFC_F :
                       type 'a lstate = ('a, GFC_F.contr) Direct.abstract
                       type 'a tag_lstate = [ `TLower of 'a lstate ]
                       type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
-                        constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                      type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
                         constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                       val fetch_iter : [> `TLower of 'a ] list -> 'a
                       val mfetch :
@@ -17047,8 +15072,6 @@ module G_GFC_F :
                       type 'a tag_lstate = [ `TLower of 'a lstate ]
                       type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
                         constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                      type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
-                        constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                       val fetch_iter : [> `TLower of 'a ] list -> 'a
                       val mfetch :
                         unit ->
@@ -17189,8 +15212,6 @@ module G_GFC_F :
                       type 'a lstate = ('a, GFC_F.contr) Direct.abstract
                       type 'a tag_lstate = [ `TLower of 'a lstate ]
                       type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
-                        constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                      type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
                         constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                       val fetch_iter : [> `TLower of 'a ] list -> 'a
                       val mfetch :
@@ -17339,8 +15360,6 @@ module G_GFC_F :
                       type 'a tag_lstate = [ `TLower of 'a lstate ]
                       type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
                         constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                      type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
-                        constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                       val fetch_iter : [> `TLower of 'a ] list -> 'a
                       val mfetch :
                         unit ->
@@ -17462,9 +15481,6 @@ module G_GFC_F :
                           type 'a lstate = ('a, GFC_F.contr) Direct.abstract
                           type 'a tag_lstate = [ `TLower of 'a lstate ]
                           type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
-                            constraint 'a =
-                              'c * ([> 'c tag_lstate ] as 'd) * 'e
-                          type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
                             constraint 'a =
                               'c * ([> 'c tag_lstate ] as 'd) * 'e
                           val mfetch :
@@ -17593,219 +15609,6 @@ module G_GFC_F :
         module GenSolve :
           functor (F : FEATURES) ->
             sig
-              module GE_FEATURES :
-                sig
-                  module Det :
-                    sig
-                      type tdet = GFC_F.Dom.v ref
-                      type 'a lstate = 'a F.Det.lstate
-                      type 'a tag_lstate = [ `TDet of 'a lstate ]
-                      type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
-                        constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                      type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
-                        constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                      val decl :
-                        unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                      val upd_sign :
-                        unit -> ('a * [> 'a tag_lstate ] * 'b, unit) om
-                      val zero_sign :
-                        unit -> ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                      val acc :
-                        ('a, GFC_F.Dom.v) Direct.abstract ->
-                        ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                      val get :
-                        unit -> ('a * [> 'a tag_lstate ] * 'b, tdet) lm
-                      val set :
-                        ('a, GFC_F.Dom.v) Direct.abstract ->
-                        ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                      val fin :
-                        unit ->
-                        ('a * [> 'a tag_lstate ] * 'b, GFC_F.Dom.v) lm
-                    end
-                  module PivotF :
-                    functor (D : DETERMINANT) ->
-                      functor (P : GEF.TRACKPIVOT) ->
-                        sig
-                          val findpivot :
-                            'a wmatrix ->
-                            'a curpos ->
-                            ('a, GFC_F.Dom.v option,
-                             [> `TDet of 'a D.lstate | `TPivot of 'a P.lstate ],
-                             'b)
-                            GEF.cmonad
-                        end
-                  module PivotRep :
-                    sig
-                      type perm_rep = F.PivotRep.perm_rep
-                      type 'a ira = ('a, int) Direct.abstract
-                      type 'a fra = 'a F.PivotRep.fra
-                      type 'a pra = ('a, perm_rep) Direct.abstract
-                      val add : 'a fra -> 'a pra -> 'a pra
-                      val empty : 'a ira -> 'a pra
-                      val rowrep : 'a ira -> 'a ira -> 'a fra
-                      val colrep : 'a ira -> 'a ira -> 'a fra
-                    end
-                  module Update :
-                    functor (D : DETERMINANT) ->
-                      sig
-                        type 'a in_val = 'a GFC_F.Dom.vc
-                        val update :
-                          'a in_val ->
-                          'a in_val ->
-                          'a in_val ->
-                          'a in_val ->
-                          ('a in_val -> ('a, unit) Direct.abstract) ->
-                          ('a, GFC_F.Dom.v ref) Direct.abstract ->
-                          ('a, unit, 'b, 'c) GEF.cmonad
-                        val update_det :
-                          'a in_val ->
-                          ('a * [> 'a D.tag_lstate ] * 'b, unit) D.lm
-                        val upd_kind : Ge.update_kind
-                      end
-                  module Input :
-                    sig
-                      type inp = GFC_F.contr * int
-                      val get_input :
-                        ('a, 'b * 'c) Direct.abstract ->
-                        'd ->
-                        ('d ->
-                         ('a, 'b) Direct.abstract *
-                         ('a, 'c) Direct.abstract * bool -> 'e) ->
-                        'e
-                    end
-                  module Output :
-                    functor (OD : GE.OUTPUTDEP) ->
-                      sig
-                        module IF :
-                          sig
-                            module R :
-                              sig
-                                type 'a lstate =
-                                    ('a, int ref) Direct.abstract
-                                type 'a tag_lstate_ = [ `TRan of 'a lstate ]
-                                type 'a tag_lstate = 'a tag_lstate_
-                                type ('a, 'b) lm =
-                                    ('c, 'b, 'd, 'e) GEF.cmonad
-                                  constraint 'a =
-                                    'c * ([> 'c tag_lstate ] as 'd) * 'e
-                                val fetch_iter : [> `TRan of 'a ] list -> 'a
-                                val rfetch :
-                                  unit ->
-                                  ([> `TRan of 'b ] as 'a) list ->
-                                  ('a list -> 'b -> 'c) -> 'c
-                                val rstore :
-                                  'a ->
-                                  ([> `TRan of 'a ] as 'b) list ->
-                                  ('b list -> unit -> 'c) -> 'c
-                                val decl :
-                                  unit ->
-                                  ([> `TRan of ('b, int ref) Direct.abstract ]
-                                   as 'a)
-                                  list ->
-                                  ('a list ->
-                                   ('b, int ref) Direct.abstract ->
-                                   ('b, 'c) Direct.abstract) ->
-                                  ('b, 'c) Direct.abstract
-                                val succ :
-                                  unit ->
-                                  ([> `TRan of ('b, int ref) Direct.abstract ]
-                                   as 'a)
-                                  list ->
-                                  ('a list ->
-                                   ('b, unit) Direct.abstract -> 'c) ->
-                                  'c
-                                module type RANK =
-                                  sig
-                                    type 'a tag_lstate = 'a tag_lstate_
-                                    val rfetch :
-                                      unit ->
-                                      ('a * [> 'a tag_lstate ] * 'b, int ref)
-                                      lm
-                                    val decl :
-                                      unit ->
-                                      ('a * [> 'a tag_lstate ] * 'b, int ref)
-                                      lm
-                                    val succ :
-                                      unit ->
-                                      ('a * [> 'a tag_lstate ] * 'b, unit) lm
-                                    val fin :
-                                      unit ->
-                                      ('a * [> 'a tag_lstate ] * 'b, int) lm
-                                  end
-                                val fin : unit -> 'a
-                              end
-                            module P :
-                              sig
-                                type perm_rep = GEF.PermList.perm_rep
-                                type 'a ira = 'a GEF.PermList.ira
-                                type 'a fra = 'a GEF.PermList.fra
-                                type 'a pra = 'a GEF.PermList.pra
-                                type 'a lstate =
-                                    ('a, GEF.PermList.perm_rep ref)
-                                    Direct.abstract
-                                type 'a tag_lstate = [ `TPivot of 'a lstate ]
-                                type ('a, 'b) lm =
-                                    ('c, 'b, 'd, 'e) GEF.cmonad
-                                  constraint 'a =
-                                    'c * ([> 'c tag_lstate ] as 'd) * 'e
-                                val rowrep :
-                                  'a GEF.PermList.ira ->
-                                  'a GEF.PermList.ira -> 'a GEF.PermList.fra
-                                val colrep :
-                                  'a GEF.PermList.ira ->
-                                  'a GEF.PermList.ira -> 'a GEF.PermList.fra
-                                val decl :
-                                  'a ->
-                                  'b ->
-                                  ('b -> ('c, unit) Direct.abstract -> 'd) ->
-                                  'd
-                                val add :
-                                  'a -> 'b -> ('b -> 'c option -> 'd) -> 'd
-                                val fin : unit -> 'a
-                              end
-                            module L :
-                              sig
-                                type 'a lstate =
-                                    ('a, GFC_F.contr) Direct.abstract
-                                type 'a tag_lstate = [ `TLower of 'a lstate ]
-                                type ('a, 'b) lm =
-                                    ('c, 'b, 'd, 'e) GEF.cmonad
-                                  constraint 'a =
-                                    'c * ([> 'c tag_lstate ] as 'd) * 'e
-                                type ('a, 'b) om =
-                                    ('c, 'b, 'd, 'e) GEF.omonad
-                                  constraint 'a =
-                                    'c * ([> 'c tag_lstate ] as 'd) * 'e
-                                val fetch_iter :
-                                  [> `TLower of 'a ] list -> 'a
-                                val mfetch :
-                                  unit ->
-                                  ([> `TLower of 'b ] as 'a) list ->
-                                  ('a list -> 'b -> 'c) -> 'c
-                                val mstore :
-                                  'a ->
-                                  ([> `TLower of 'a ] as 'b) list ->
-                                  ('b list -> unit -> 'c) -> 'c
-                                val decl : 'a -> 'b -> ('b -> 'a -> 'c) -> 'c
-                                val updt :
-                                  'a GFC_F.vc ->
-                                  ('a, int) Direct.abstract ->
-                                  ('a, int) Direct.abstract ->
-                                  'a GFC_F.vo ->
-                                  'b ->
-                                  ('c ->
-                                   ('c -> ('a, unit) Direct.abstract -> 'd) ->
-                                   'd)
-                                  option
-                                val fin : unit -> 'a
-                                val wants_pack : bool
-                              end
-                          end
-                        type res = GFC_F.contr
-                        val make_result :
-                          'a wmatrix -> 'b -> ('b -> 'a GFC_F.vc -> 'c) -> 'c
-                      end
-                end
               module GE' :
                 sig
                   module O :
@@ -17839,16 +15642,13 @@ module G_GFC_F :
                             end
                           module P :
                             sig
-                              type perm_rep =
-                                  GE_FEATURES.Output(GE_FEATURES).IF.P.perm_rep
+                              type perm_rep = GEF.PermList.perm_rep
                               type 'a ira = ('a, int) Direct.abstract
-                              type 'a fra =
-                                  'a GE_FEATURES.Output(GE_FEATURES).IF.P.fra
-                              type 'a pra =
-                                  'a GE_FEATURES.Output(GE_FEATURES).IF.P.pra
+                              type 'a fra = 'a GEF.PermList.fra
+                              type 'a pra = 'a GEF.PermList.pra
                               type 'a lstate =
-                                  'a
-                                  GE_FEATURES.Output(GE_FEATURES).IF.P.lstate
+                                  ('a, GEF.PermList.perm_rep ref)
+                                  Direct.abstract
                               type 'a tag_lstate = [ `TPivot of 'a lstate ]
                               type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
                                 constraint 'a =
@@ -17876,9 +15676,6 @@ module G_GFC_F :
                               type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
                                 constraint 'a =
                                   'c * ([> 'c tag_lstate ] as 'd) * 'e
-                              type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
-                                constraint 'a =
-                                  'c * ([> 'c tag_lstate ] as 'd) * 'e
                               val mfetch :
                                 unit ->
                                 ('a * [> 'a tag_lstate ] * 'b, GFC_F.contr)
@@ -17902,11 +15699,11 @@ module G_GFC_F :
                               val wants_pack : bool
                             end
                         end
-                      type res = GE_FEATURES.Output(GE_FEATURES).res
+                      type res = GFC_F.contr
                       val make_result :
                         'a wmatrix ->
                         ('a, res,
-                         [> `TDet of 'a GE_FEATURES.Det.lstate
+                         [> `TDet of 'a F.Det.lstate
                           | `TLower of 'a IF.L.lstate
                           | `TPivot of 'a IF.P.lstate
                           | `TRan of 'a GEF.TrackRank.lstate ],
@@ -17918,17 +15715,17 @@ module G_GFC_F :
                   val zerobelow :
                     'a wmatrix ->
                     'a curposval ->
-                    ([> `TDet of 'a GE_FEATURES.Det.lstate
+                    ([> `TDet of 'a F.Det.lstate
                       | `TLower of ('a, GFC_F.contr) Direct.abstract ]
                      as 'b)
                     list ->
                     ('b list -> ('a, unit) Direct.abstract -> 'c) -> 'c
                   val init :
-                    ('a, GE_FEATURES.Input.inp) Direct.abstract ->
-                    ([> `TDet of 'a GE_FEATURES.Det.lstate
+                    ('a, GFC_F.contr * int) Direct.abstract ->
+                    ([> `TDet of 'a F.Det.lstate
                       | `TLower of ('a, GFC_F.contr) Direct.abstract
                       | `TPivot of
-                          'a GE_FEATURES.Output(GE_FEATURES).IF.P.lstate
+                          ('a, GEF.PermList.perm_rep ref) Direct.abstract
                       | `TRan of 'a GEF.TrackRank.lstate ]
                      as 'b)
                     list ->
@@ -17940,17 +15737,17 @@ module G_GFC_F :
                   val forward_elim :
                     'a wmatrix * ('a, int ref) Direct.abstract *
                     ('a, int ref) Direct.abstract * ('a, int) Direct.abstract ->
-                    ([> `TDet of 'a GE_FEATURES.Det.lstate
+                    ([> `TDet of 'a F.Det.lstate
                       | `TLower of ('a, GFC_F.contr) Direct.abstract
                       | `TPivot of
-                          'a GE_FEATURES.Output(GE_FEATURES).IF.P.lstate
+                          ('a, GEF.PermList.perm_rep ref) Direct.abstract
                       | `TRan of 'a GEF.TrackRank.lstate ]
                      as 'b)
                     list ->
                     ('b list -> ('a, unit) Direct.abstract -> 'c) -> 'c
                   val ge_gen :
-                    ('a, GE_FEATURES.Input.inp) Direct.abstract ->
-                    ([> `TDet of 'a GE_FEATURES.Det.lstate
+                    ('a, GFC_F.contr * int) Direct.abstract ->
+                    ([> `TDet of 'a F.Det.lstate
                       | `TLower of 'a O.IF.L.lstate
                       | `TPivot of 'a O.IF.P.lstate
                       | `TRan of 'a GEF.TrackRank.lstate ]
@@ -17960,8 +15757,8 @@ module G_GFC_F :
                      ('a, O.res) Direct.abstract -> ('a, 'c) Direct.abstract) ->
                     ('a, 'c) Direct.abstract
                   val gen :
-                    ('a, GE_FEATURES.Input.inp) Direct.abstract ->
-                    ([> `TDet of 'a GE_FEATURES.Det.lstate
+                    ('a, GFC_F.contr * int) Direct.abstract ->
+                    ([> `TDet of 'a F.Det.lstate
                       | `TLower of 'a O.IF.L.lstate
                       | `TPivot of 'a O.IF.P.lstate
                       | `TRan of 'a GEF.TrackRank.lstate ]
@@ -17981,7 +15778,7 @@ module G_GFC_F :
                 ('a, 'c) Direct.abstract
               val solve_gen :
                 ('a, F.Input.inp) Direct.abstract ->
-                ([> `TDet of 'a GE_FEATURES.Det.lstate
+                ([> `TDet of 'a F.Det.lstate
                   | `TLower of 'a GE'.O.IF.L.lstate
                   | `TPivot of 'a GE'.O.IF.P.lstate
                   | `TRan of 'a GEF.TrackRank.lstate ]
@@ -18047,8 +15844,6 @@ module GenFA1 :
                 type 'a lstate = ('a, GAC_F.contr) Direct.abstract
                 type 'a tag_lstate = [ `TLower of 'a lstate ]
                 type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
-                  constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
                   constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                 val mfetch :
                   unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_F.contr) lm
@@ -18183,8 +15978,6 @@ module GenFA2 :
                 type 'a lstate = ('a, GAC_F.contr) Direct.abstract
                 type 'a tag_lstate = [ `TLower of 'a lstate ]
                 type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
-                  constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
                   constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                 val mfetch :
                   unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_F.contr) lm
@@ -18333,8 +16126,6 @@ module GenFA3 :
                 type 'a tag_lstate = [ `TLower of 'a lstate ]
                 type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
                   constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
-                  constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                 val mfetch :
                   unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_F.contr) lm
                 val decl :
@@ -18468,8 +16259,6 @@ module GenFA4 :
                 type 'a lstate = ('a, GAC_F.contr) Direct.abstract
                 type 'a tag_lstate = [ `TLower of 'a lstate ]
                 type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
-                  constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
                   constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                 val mfetch :
                   unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_F.contr) lm
@@ -18618,8 +16407,6 @@ module GenFA11 :
                 type 'a tag_lstate = [ `TLower of 'a lstate ]
                 type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
                   constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
-                  constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                 val mfetch :
                   unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_F.contr) lm
                 val decl :
@@ -18753,8 +16540,6 @@ module GenFA12 :
                 type 'a lstate = ('a, GAC_F.contr) Direct.abstract
                 type 'a tag_lstate = [ `TLower of 'a lstate ]
                 type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
-                  constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
                   constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                 val mfetch :
                   unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_F.contr) lm
@@ -18903,8 +16688,6 @@ module GenFA13 :
                 type 'a tag_lstate = [ `TLower of 'a lstate ]
                 type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
                   constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
-                  constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                 val mfetch :
                   unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_F.contr) lm
                 val decl :
@@ -19038,8 +16821,6 @@ module GenFA14 :
                 type 'a lstate = ('a, GAC_F.contr) Direct.abstract
                 type 'a tag_lstate = [ `TLower of 'a lstate ]
                 type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
-                  constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
                   constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                 val mfetch :
                   unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_F.contr) lm
@@ -19187,8 +16968,6 @@ module GenFA24 :
                 type 'a tag_lstate = [ `TLower of 'a lstate ]
                 type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
                   constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
-                  constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                 val mfetch :
                   unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_F.contr) lm
                 val decl :
@@ -19334,8 +17113,6 @@ module GenFA25 :
                 type 'a lstate = ('a, GAC_F.contr) Direct.abstract
                 type 'a tag_lstate = [ `TLower of 'a lstate ]
                 type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
-                  constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
                   constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                 val mfetch :
                   unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_F.contr) lm
@@ -19484,8 +17261,6 @@ module GenFA26 :
                 type 'a tag_lstate = [ `TLower of 'a lstate ]
                 type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
                   constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
-                  constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                 val mfetch :
                   unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_F.contr) lm
                 val decl :
@@ -19620,8 +17395,6 @@ module GenFA5 :
                 type 'a tag_lstate = [ `TLower of 'a lstate ]
                 type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
                   constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
-                  constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                 val mfetch :
                   unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_F.contr) lm
                 val decl :
@@ -19755,8 +17528,6 @@ module GenFA6 :
                 type 'a lstate = ('a, GAC_F.contr) Direct.abstract
                 type 'a tag_lstate = [ `TLower of 'a lstate ]
                 type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
-                  constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
                   constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                 val mfetch :
                   unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_F.contr) lm
@@ -19905,8 +17676,6 @@ module GenFA7 :
                 type 'a tag_lstate = [ `TLower of 'a lstate ]
                 type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
                   constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
-                  constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                 val mfetch :
                   unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_F.contr) lm
                 val decl :
@@ -20040,8 +17809,6 @@ module GenFA8 :
                 type 'a lstate = ('a, GAC_F.contr) Direct.abstract
                 type 'a tag_lstate = [ `TLower of 'a lstate ]
                 type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
-                  constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
                   constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                 val mfetch :
                   unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_F.contr) lm
@@ -20189,8 +17956,6 @@ module GenFA9 :
                 type 'a tag_lstate = [ `TLower of 'a lstate ]
                 type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
                   constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
-                  constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                 val mfetch :
                   unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_F.contr) lm
                 val decl :
@@ -20324,8 +18089,6 @@ module GenFA31 :
                 type 'a tag_lstate = [ `TLower of 'a lstate ]
                 type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
                   constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
-                  constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                 val mfetch :
                   unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_F.contr) lm
                 val decl :
@@ -20458,8 +18221,6 @@ module GenFA32 :
                 type 'a lstate = ('a, GAC_F.contr) Direct.abstract
                 type 'a tag_lstate = [ `TLower of 'a lstate ]
                 type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
-                  constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
                   constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                 val mfetch :
                   unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_F.contr) lm
@@ -20595,8 +18356,6 @@ module GenFV1 :
                 type 'a tag_lstate = [ `TLower of 'a lstate ]
                 type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
                   constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
-                  constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                 val mfetch :
                   unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_F.contr) lm
                 val decl :
@@ -20730,8 +18489,6 @@ module GenFV2 :
                 type 'a lstate = ('a, GVC_F.contr) Direct.abstract
                 type 'a tag_lstate = [ `TLower of 'a lstate ]
                 type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
-                  constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
                   constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                 val mfetch :
                   unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_F.contr) lm
@@ -20880,8 +18637,6 @@ module GenFV3 :
                 type 'a tag_lstate = [ `TLower of 'a lstate ]
                 type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
                   constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
-                  constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                 val mfetch :
                   unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_F.contr) lm
                 val decl :
@@ -21015,8 +18770,6 @@ module GenFV4 :
                 type 'a lstate = ('a, GVC_F.contr) Direct.abstract
                 type 'a tag_lstate = [ `TLower of 'a lstate ]
                 type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
-                  constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
                   constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                 val mfetch :
                   unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_F.contr) lm
@@ -21165,8 +18918,6 @@ module GenFV5 :
                 type 'a tag_lstate = [ `TLower of 'a lstate ]
                 type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
                   constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
-                  constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                 val mfetch :
                   unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_F.contr) lm
                 val decl :
@@ -21313,8 +19064,6 @@ module GenFV6 :
                 type 'a tag_lstate = [ `TLower of 'a lstate ]
                 type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
                   constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
-                  constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                 val mfetch :
                   unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_F.contr) lm
                 val decl :
@@ -21447,8 +19196,6 @@ module GenFV7 :
                 type 'a lstate = ('a, GVC_F.contr) Direct.abstract
                 type 'a tag_lstate = [ `TLower of 'a lstate ]
                 type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
-                  constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
                   constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                 val mfetch :
                   unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_F.contr) lm
@@ -21583,8 +19330,6 @@ module GenIA1 :
                 type 'a lstate = ('a, GAC_I.contr) Direct.abstract
                 type 'a tag_lstate = [ `TLower of 'a lstate ]
                 type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
-                  constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
                   constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                 val mfetch :
                   unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_I.contr) lm
@@ -21734,8 +19479,6 @@ module GenIA2 :
                 type 'a tag_lstate = [ `TLower of 'a lstate ]
                 type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
                   constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
-                  constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                 val mfetch :
                   unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_I.contr) lm
                 val decl :
@@ -21883,8 +19626,6 @@ module GenIA3 :
                 type 'a tag_lstate = [ `TLower of 'a lstate ]
                 type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
                   constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
-                  constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                 val mfetch :
                   unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_I.contr) lm
                 val decl :
@@ -22031,8 +19772,6 @@ module GenIA4 :
                 type 'a lstate = ('a, GAC_I.contr) Direct.abstract
                 type 'a tag_lstate = [ `TLower of 'a lstate ]
                 type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
-                  constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
                   constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                 val mfetch :
                   unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_I.contr) lm
@@ -22183,8 +19922,6 @@ module GenIV1 :
                 type 'a tag_lstate = [ `TLower of 'a lstate ]
                 type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
                   constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
-                  constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                 val mfetch :
                   unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_I.contr) lm
                 val decl :
@@ -22331,8 +20068,6 @@ module GenIV2 :
                 type 'a lstate = ('a, GVC_I.contr) Direct.abstract
                 type 'a tag_lstate = [ `TLower of 'a lstate ]
                 type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
-                  constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
                   constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                 val mfetch :
                   unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_I.contr) lm
@@ -22481,8 +20216,6 @@ module GenIV3 :
                 type 'a tag_lstate = [ `TLower of 'a lstate ]
                 type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
                   constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
-                  constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                 val mfetch :
                   unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_I.contr) lm
                 val decl :
@@ -22629,8 +20362,6 @@ module GenIV4 :
                 type 'a lstate = ('a, GVC_I.contr) Direct.abstract
                 type 'a tag_lstate = [ `TLower of 'a lstate ]
                 type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
-                  constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
                   constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                 val mfetch :
                   unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_I.contr) lm
@@ -22779,8 +20510,6 @@ module GenIV5 :
                 type 'a tag_lstate = [ `TLower of 'a lstate ]
                 type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
                   constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
-                  constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                 val mfetch :
                   unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_I.contr) lm
                 val decl :
@@ -22926,8 +20655,6 @@ module GenIV6 :
                 type 'a lstate = ('a, GVC_I.contr) Direct.abstract
                 type 'a tag_lstate = [ `TLower of 'a lstate ]
                 type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
-                  constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
                   constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                 val mfetch :
                   unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_I.contr) lm
@@ -23076,8 +20803,6 @@ module GenRA1 :
                 type 'a tag_lstate = [ `TLower of 'a lstate ]
                 type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
                   constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
-                  constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                 val mfetch :
                   unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_R.contr) lm
                 val decl :
@@ -23211,8 +20936,6 @@ module GenRA2 :
                 type 'a lstate = ('a, GAC_R.contr) Direct.abstract
                 type 'a tag_lstate = [ `TLower of 'a lstate ]
                 type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
-                  constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
                   constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                 val mfetch :
                   unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_R.contr) lm
@@ -23361,8 +21084,6 @@ module GenRA3 :
                 type 'a tag_lstate = [ `TLower of 'a lstate ]
                 type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
                   constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
-                  constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                 val mfetch :
                   unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_R.contr) lm
                 val decl :
@@ -23496,8 +21217,6 @@ module GenRA4 :
                 type 'a lstate = ('a, GAC_R.contr) Direct.abstract
                 type 'a tag_lstate = [ `TLower of 'a lstate ]
                 type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
-                  constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
                   constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                 val mfetch :
                   unit -> ('a * [> 'a tag_lstate ] * 'b, GAC_R.contr) lm
@@ -23645,8 +21364,6 @@ module GenZp3 :
                 type 'a tag_lstate = [ `TLower of 'a lstate ]
                 type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
                   constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
-                  constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                 val mfetch :
                   unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_Z3.contr) lm
                 val decl :
@@ -23792,8 +21509,6 @@ module GenZp19 :
                 type 'a lstate = ('a, GVC_Z19.contr) Direct.abstract
                 type 'a tag_lstate = [ `TLower of 'a lstate ]
                 type ('a, 'b) lm = ('c, 'b, 'd, 'e) GEF.cmonad
-                  constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
-                type ('a, 'b) om = ('c, 'b, 'd, 'e) GEF.omonad
                   constraint 'a = 'c * ([> 'c tag_lstate ] as 'd) * 'e
                 val mfetch :
                   unit -> ('a * [> 'a tag_lstate ] * 'b, GVC_Z19.contr) lm

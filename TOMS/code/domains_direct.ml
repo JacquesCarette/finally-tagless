@@ -106,6 +106,11 @@ module GenericArrayContainer(Dom:DOMAINL) =
   let copy a = fun () -> Array.map (fun x -> Array.copy x) 
                        (Array.copy (a ()))
   let init n m = fun () -> Array.make (n ()) (Array.make (m ()) Dom.zero)
+  let augment a na ma b nb = fun () ->
+      Array.init ((na ()) + (nb ())) (fun i -> Array.init (ma ())
+          (fun j -> if i< (na ()) then ((getL a (fun () -> i) (fun () -> j)) ())
+                               else ((getL b (fun () -> (i - (na ()))) (fun ()
+                               -> j)) ())))
   let identity n m = fun () -> Array.init (n ()) (fun i -> Array.init (m ())
       (fun j -> if (i=j) then (Dom.oneL ()) else (Dom.zeroL ())))
   (* this can be optimized with a swap_rows_from if it is known that
@@ -149,6 +154,21 @@ module GenericVectorContainer(Dom:DOMAINL) =
   let copy a = fun () -> { (a ()) with arr = Array.copy (a ()).arr}
   let init n m = fun () -> {arr=Array.make (n () * m ()) Dom.zero; n = n (); m =
       m ()}
+  let augment a na ma b nb = fun () ->
+      let n = (na ()) + (nb ()) in 
+      let aa = (init (fun () -> n) ma) () in
+      let st = (na ()) * (ma ()) in begin
+        for i = 0 to (na ()) - 1 do
+          for j = 0 to (ma ()) do
+            let k = i* (ma ()) + j in
+            aa.arr.(k) <- (a ()).arr.(k) 
+          done;
+          for j = 0 to (ma ()) do
+            let k = i* (ma ()) + j in
+            aa.arr.(st + k) <- (b ()).arr.(k)
+          done
+        done;
+        aa end 
   let identity n m = fun () -> {arr=Array.init (n ()* m ()) 
       (fun k -> if ((k mod (n ()))* (m ()) + (m ()) = k) then (Dom.oneL ()) else
           (Dom.zeroL ())); n = n (); m = m ()}
@@ -203,6 +223,21 @@ module FortranVectorContainer(Dom:DOMAINL):CONTAINER2D =
   (n ()), (m ())) )
   let init n m = fun () -> FortranVector(Array.make ((n ())* (m ())) (Dom.zeroL
   ()), (n ()), (m ()))
+  let augment a na ma b nb = unpack a (fun mata _ _ -> unpack b (fun matb _ _ ->
+      fun () -> let n = (na ()) + (nb ()) in 
+      let FortranVector(aa,_,_) = (init (fun () -> n) ma) () in
+      let st = (na ()) * (ma ()) in begin
+        for i = 0 to (na ()) - 1 do
+          for j = 0 to (ma ()) do
+            let k = i* (ma ()) + j in
+            aa.(k) <- (mata ()).(k)
+          done;
+          for j = 0 to (ma ()) do
+            let k = i* (ma ()) + j in
+            aa.(st + k) <- (matb ()).(k)
+          done
+        done;
+        FortranVector(aa, n, (ma ())) end ) )
   let identity n m = fun () -> FortranVector(Array.init ((n ())* (m ())) 
       (fun k -> if ((k mod (n ()))* (m ()) + (m ()) = k) then Dom.oneL () else
           Dom.zeroL ()), (n ()), (m ()) )
