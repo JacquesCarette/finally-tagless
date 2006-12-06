@@ -5,6 +5,9 @@ type update_kind = FractionFree | DivisionBased
    information, like the need to compute a Determinant, Rank or Pivot.
    Not this is done directly with an exception instead, so these routines
    are no longer needed.
+   For more detail, see the message
+http://caml.inria.fr/pub/ml-archives/caml-list/2006/11/df527bcc780e6f3106889e2d5e8b5e2a.en.html
+  Posted on the caml-list on Nov 17, 2006.
 let fromJust = function Some x -> x | None -> failwith "Can't happen"
 let notNone v str = match v with None -> failwith str | Some _ -> () *)
 let ensure cond str = if not cond then failwith str else ()
@@ -401,9 +404,6 @@ module type LOWER = sig
   type ('b,'v) lm = ('a,'v,'s,'w) cmonad
     constraint 's = [> 'a tag_lstate]
     constraint 'b = 'a * 's * 'w
-  type ('b,'v) om = ('a,'v,'s,'w) omonad
-    constraint 's = [> 'a tag_lstate]
-    constraint 'b = 'a * 's * 'w
   val mfetch : unit -> ('b, C.contr) lm
   val decl   : ('a, C.contr) abstract -> ('a*'s*'w, C.contr) lm
   val updt   : 'a C.vc -> ('a,int) abstract -> ('a,int) abstract -> 'a C.vo -> 
@@ -418,9 +418,6 @@ module TrackLower =
   type 'a lstate = ('a, C.contr) abstract
   type 'a tag_lstate = [`TLower of 'a lstate ]
   type ('b,'v) lm = ('a,'v,'s,'w) cmonad
-    constraint 's = [> 'a tag_lstate]
-    constraint 'b = 'a * 's * 'w
-  type ('b,'v) om = ('a,'v,'s,'w) omonad
     constraint 's = [> 'a tag_lstate]
     constraint 'b = 'a * 's * 'w
   (* In 3.09, no need for any coercion at all, type inference works! *)
@@ -868,17 +865,16 @@ module GenSolve(F : FEATURES) = struct
 	(* some more pre-flight tests *)
     (* to be filled in *)
 
-    (* We will solve via GE *)
-    module GE_FEATURES = struct
+    (* We will solve via GE. We inline the structure to improve
+       compilation time... *)
+    module GE' = GE.GenGE(struct
         module Det = F.Det
         module PivotF = F.PivotF
         module PivotRep = F.PivotRep
         module Update = F.Update
         module Input = GE.InpMatrixMargin
         module Output = GE.OutJustMatrix
-    end
-
-    module GE' = GE.GenGE(GE_FEATURES)
+    end)
 
     let init input = perform
         (a,b, mat) <-- F.Input.get_input input;

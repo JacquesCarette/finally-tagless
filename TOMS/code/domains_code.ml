@@ -145,20 +145,22 @@ module GenericVectorContainer(Dom:DOMAINL) =
       | None   -> a
   let copy a = .< { (.~a) with arr = Array.copy (.~a).arr} >.
   let init n m = .< {arr=Array.make (.~n* .~m) .~(Dom.zeroL); n = .~n; m = .~m} >.
-  let augment a na ma b nb =
-      .< let n = .~na + .~nb in let aa = .~(init .<n>. ma) in
+  let augment a na ma b nb = 
+      .< let n = .~na + .~nb in 
+      let aa = .~(init .<n>. ma) in
       let st = .~na * .~ma in begin
         for i = 0 to .~na - 1 do
           for j = 0 to .~ma do
             let k = i* .~ma + j in
-            aa.arr.(k) <- a.arr.(k)
+            aa.arr.(k) <- (.~a).arr.(k) 
           done;
           for j = 0 to .~ma do
             let k = i* .~ma + j in
-            aa.arr.(st + k) <- b.arr.(k)
+            aa.arr.(st + k) <- (.~b).arr.(k)
           done
         done;
-        aa end >.
+        aa end 
+>.
 
   let identity n m = .< {arr=Array.init (.~n* .~m) 
       (fun k -> if ((k mod .~n)* .~m + .~m = k) then .~(Dom.oneL) else
