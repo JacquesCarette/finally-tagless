@@ -99,7 +99,7 @@
           (('c, int) Code.abstract ->
            ('c, 'd) Code.abstract ->
            'e -> ('f -> 'g -> 'g) -> ('c, 'h) Code.abstract) ->
-          'e -> ('e -> ('c, unit) Code.abstract -> 'i) -> 'i
+          Prelude.dir -> 'e -> ('e -> ('c, unit) Code.abstract -> 'i) -> 'i
         val col_iter :
           'a ->
           'b ->
@@ -108,7 +108,7 @@
           ('a -> 'b -> ('c, int) Code.abstract -> 'd) ->
           (('c, int) Code.abstract ->
            'd -> 'e -> ('f -> 'g -> 'g) -> ('c, 'h) Code.abstract) ->
-          'e -> ('e -> ('c, unit) Code.abstract -> 'i) -> 'i
+          Prelude.dir -> 'e -> ('e -> ('c, unit) Code.abstract -> 'i) -> 'i
       end
     module TrackRank :
       sig
@@ -1838,17 +1838,6 @@
                        as 'b)
                       list ->
                       ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
-                    val ge_gen :
-                      ('a, F.Input.inp) Code.abstract ->
-                      ([> `TDet of 'a F.Det.lstate
-                        | `TLower of 'a O.IF.L.lstate
-                        | `TPivot of 'a O.IF.P.lstate
-                        | `TRan of 'a TrackRank.lstate ]
-                       as 'b)
-                      list ->
-                      ('b list ->
-                       ('a, O.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-                      ('a, 'c) Code.abstract
                     val gen :
                       ('a, F.Input.inp) Code.abstract ->
                       ([> `TDet of 'a F.Det.lstate
@@ -1867,7 +1856,7 @@
               module type INPUT =
                 sig
                   type inp
-                  type rhs
+                  type rhs = C.contr
                   val get_input :
                     ('a, inp) Code.abstract ->
                     (('a, C.contr) Code.abstract * ('a, rhs) Code.abstract *
@@ -1877,6 +1866,7 @@
               module InpMatrixVector :
                 sig
                   type inp = C.contr * C.contr
+                  type rhs = C.contr
                   val get_input :
                     ('a, 'b * 'c) Code.abstract ->
                     'd ->
@@ -1888,14 +1878,19 @@
               module type OUTPUT =
                 sig
                   type res
-                  val make_result : 'a wmatrix -> ('a, res, 'b, 'c) cmonad
+                  val make_result :
+                    ('a, C.contr) Code.abstract -> ('a, res, 'b, 'c) cmonad
+                end
+              module OutJustAnswer :
+                sig
+                  type res = C.contr
+                  val make_result : 'a -> 'b -> ('b -> 'a -> 'c) -> 'c
                 end
               module type FEATURES =
                 sig
                   module Det : DETERMINANT
                   module PivotF : PIVOT
                   module PivotRep : PIVOTKIND
-                  module Update : UPDATE
                   module Input : INPUT
                   module Output : OUTPUT
                 end
@@ -2045,18 +2040,6 @@
                            as 'b)
                           list ->
                           ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
-                        val ge_gen :
-                          ('a, C.contr * int) Code.abstract ->
-                          ([> `TDet of 'a F.Det.lstate
-                            | `TLower of 'a O.IF.L.lstate
-                            | `TPivot of 'a O.IF.P.lstate
-                            | `TRan of 'a TrackRank.lstate ]
-                           as 'b)
-                          list ->
-                          ('b list ->
-                           ('a, O.res) Code.abstract ->
-                           ('a, 'c) Code.abstract) ->
-                          ('a, 'c) Code.abstract
                         val gen :
                           ('a, C.contr * int) Code.abstract ->
                           ([> `TDet of 'a F.Det.lstate
@@ -2078,7 +2061,12 @@
                        ('a, F.Input.rhs) Code.abstract * bool ->
                        ('a, 'c) Code.abstract) ->
                       ('a, 'c) Code.abstract
-                    val solve_gen :
+                    val back_elim :
+                      'a C.vc ->
+                      ('a, int) Code.abstract ->
+                      ('a, int) Code.abstract ->
+                      'b -> ('b -> ('a, C.contr) Code.abstract -> 'c) -> 'c
+                    val gen :
                       ('a, F.Input.inp) Code.abstract ->
                       ([> `TDet of 'a F.Det.lstate
                         | `TLower of 'a GE'.O.IF.L.lstate
@@ -2087,7 +2075,7 @@
                        as 'b)
                       list ->
                       ('b list ->
-                       ('a, GE'.O.res) Code.abstract ->
+                       ('a, F.Output.res) Code.abstract ->
                        ('a, 'c) Code.abstract) ->
                       ('a, 'c) Code.abstract
                   end
@@ -4028,17 +4016,6 @@ module G_GAC_F :
                   | `TRan of 'a GEF.TrackRank.lstate ]
                  as 'b)
                 list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
-              val ge_gen :
-                ('a, F.Input.inp) Code.abstract ->
-                ([> `TDet of 'a F.Det.lstate
-                  | `TLower of 'a O.IF.L.lstate
-                  | `TPivot of 'a O.IF.P.lstate
-                  | `TRan of 'a GEF.TrackRank.lstate ]
-                 as 'b)
-                list ->
-                ('b list ->
-                 ('a, O.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-                ('a, 'c) Code.abstract
               val gen :
                 ('a, F.Input.inp) Code.abstract ->
                 ([> `TDet of 'a F.Det.lstate
@@ -4057,7 +4034,7 @@ module G_GAC_F :
         module type INPUT =
           sig
             type inp
-            type rhs
+            type rhs = GAC_F.contr
             val get_input :
               ('a, inp) Code.abstract ->
               (('a, GAC_F.contr) Code.abstract * ('a, rhs) Code.abstract *
@@ -4067,6 +4044,7 @@ module G_GAC_F :
         module InpMatrixVector :
           sig
             type inp = GAC_F.contr * GAC_F.contr
+            type rhs = GAC_F.contr
             val get_input :
               ('a, 'b * 'c) Code.abstract ->
               'd ->
@@ -4077,14 +4055,19 @@ module G_GAC_F :
         module type OUTPUT =
           sig
             type res
-            val make_result : 'a wmatrix -> ('a, res, 'b, 'c) GEF.cmonad
+            val make_result :
+              ('a, GAC_F.contr) Code.abstract -> ('a, res, 'b, 'c) GEF.cmonad
+          end
+        module OutJustAnswer :
+          sig
+            type res = GAC_F.contr
+            val make_result : 'a -> 'b -> ('b -> 'a -> 'c) -> 'c
           end
         module type FEATURES =
           sig
             module Det : DETERMINANT
             module PivotF : PIVOT
             module PivotRep : GEF.PIVOTKIND
-            module Update : UPDATE
             module Input : INPUT
             module Output : OUTPUT
           end
@@ -4225,17 +4208,6 @@ module G_GAC_F :
                       | `TRan of 'a GEF.TrackRank.lstate ]
                      as 'b)
                     list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
-                  val ge_gen :
-                    ('a, GAC_F.contr * int) Code.abstract ->
-                    ([> `TDet of 'a F.Det.lstate
-                      | `TLower of 'a O.IF.L.lstate
-                      | `TPivot of 'a O.IF.P.lstate
-                      | `TRan of 'a GEF.TrackRank.lstate ]
-                     as 'b)
-                    list ->
-                    ('b list ->
-                     ('a, O.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-                    ('a, 'c) Code.abstract
                   val gen :
                     ('a, GAC_F.contr * int) Code.abstract ->
                     ([> `TDet of 'a F.Det.lstate
@@ -4256,7 +4228,12 @@ module G_GAC_F :
                  ('a, F.Input.rhs) Code.abstract * bool ->
                  ('a, 'c) Code.abstract) ->
                 ('a, 'c) Code.abstract
-              val solve_gen :
+              val back_elim :
+                'a GAC_F.vc ->
+                ('a, int) Code.abstract ->
+                ('a, int) Code.abstract ->
+                'b -> ('b -> ('a, GAC_F.contr) Code.abstract -> 'c) -> 'c
+              val gen :
                 ('a, F.Input.inp) Code.abstract ->
                 ([> `TDet of 'a F.Det.lstate
                   | `TLower of 'a GE'.O.IF.L.lstate
@@ -4265,7 +4242,7 @@ module G_GAC_F :
                  as 'b)
                 list ->
                 ('b list ->
-                 ('a, GE'.O.res) Code.abstract -> ('a, 'c) Code.abstract) ->
+                 ('a, F.Output.res) Code.abstract -> ('a, 'c) Code.abstract) ->
                 ('a, 'c) Code.abstract
             end
       end
@@ -5645,17 +5622,6 @@ module G_GVC_F :
                   | `TRan of 'a GEF.TrackRank.lstate ]
                  as 'b)
                 list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
-              val ge_gen :
-                ('a, F.Input.inp) Code.abstract ->
-                ([> `TDet of 'a F.Det.lstate
-                  | `TLower of 'a O.IF.L.lstate
-                  | `TPivot of 'a O.IF.P.lstate
-                  | `TRan of 'a GEF.TrackRank.lstate ]
-                 as 'b)
-                list ->
-                ('b list ->
-                 ('a, O.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-                ('a, 'c) Code.abstract
               val gen :
                 ('a, F.Input.inp) Code.abstract ->
                 ([> `TDet of 'a F.Det.lstate
@@ -5674,7 +5640,7 @@ module G_GVC_F :
         module type INPUT =
           sig
             type inp
-            type rhs
+            type rhs = GVC_F.contr
             val get_input :
               ('a, inp) Code.abstract ->
               (('a, GVC_F.contr) Code.abstract * ('a, rhs) Code.abstract *
@@ -5684,6 +5650,7 @@ module G_GVC_F :
         module InpMatrixVector :
           sig
             type inp = GVC_F.contr * GVC_F.contr
+            type rhs = GVC_F.contr
             val get_input :
               ('a, 'b * 'c) Code.abstract ->
               'd ->
@@ -5694,14 +5661,19 @@ module G_GVC_F :
         module type OUTPUT =
           sig
             type res
-            val make_result : 'a wmatrix -> ('a, res, 'b, 'c) GEF.cmonad
+            val make_result :
+              ('a, GVC_F.contr) Code.abstract -> ('a, res, 'b, 'c) GEF.cmonad
+          end
+        module OutJustAnswer :
+          sig
+            type res = GVC_F.contr
+            val make_result : 'a -> 'b -> ('b -> 'a -> 'c) -> 'c
           end
         module type FEATURES =
           sig
             module Det : DETERMINANT
             module PivotF : PIVOT
             module PivotRep : GEF.PIVOTKIND
-            module Update : UPDATE
             module Input : INPUT
             module Output : OUTPUT
           end
@@ -5842,17 +5814,6 @@ module G_GVC_F :
                       | `TRan of 'a GEF.TrackRank.lstate ]
                      as 'b)
                     list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
-                  val ge_gen :
-                    ('a, GVC_F.contr * int) Code.abstract ->
-                    ([> `TDet of 'a F.Det.lstate
-                      | `TLower of 'a O.IF.L.lstate
-                      | `TPivot of 'a O.IF.P.lstate
-                      | `TRan of 'a GEF.TrackRank.lstate ]
-                     as 'b)
-                    list ->
-                    ('b list ->
-                     ('a, O.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-                    ('a, 'c) Code.abstract
                   val gen :
                     ('a, GVC_F.contr * int) Code.abstract ->
                     ([> `TDet of 'a F.Det.lstate
@@ -5873,7 +5834,12 @@ module G_GVC_F :
                  ('a, F.Input.rhs) Code.abstract * bool ->
                  ('a, 'c) Code.abstract) ->
                 ('a, 'c) Code.abstract
-              val solve_gen :
+              val back_elim :
+                'a GVC_F.vc ->
+                ('a, int) Code.abstract ->
+                ('a, int) Code.abstract ->
+                'b -> ('b -> ('a, GVC_F.contr) Code.abstract -> 'c) -> 'c
+              val gen :
                 ('a, F.Input.inp) Code.abstract ->
                 ([> `TDet of 'a F.Det.lstate
                   | `TLower of 'a GE'.O.IF.L.lstate
@@ -5882,7 +5848,7 @@ module G_GVC_F :
                  as 'b)
                 list ->
                 ('b list ->
-                 ('a, GE'.O.res) Code.abstract -> ('a, 'c) Code.abstract) ->
+                 ('a, F.Output.res) Code.abstract -> ('a, 'c) Code.abstract) ->
                 ('a, 'c) Code.abstract
             end
       end
@@ -7262,17 +7228,6 @@ module G_GAC_I :
                   | `TRan of 'a GEF.TrackRank.lstate ]
                  as 'b)
                 list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
-              val ge_gen :
-                ('a, F.Input.inp) Code.abstract ->
-                ([> `TDet of 'a F.Det.lstate
-                  | `TLower of 'a O.IF.L.lstate
-                  | `TPivot of 'a O.IF.P.lstate
-                  | `TRan of 'a GEF.TrackRank.lstate ]
-                 as 'b)
-                list ->
-                ('b list ->
-                 ('a, O.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-                ('a, 'c) Code.abstract
               val gen :
                 ('a, F.Input.inp) Code.abstract ->
                 ([> `TDet of 'a F.Det.lstate
@@ -7291,7 +7246,7 @@ module G_GAC_I :
         module type INPUT =
           sig
             type inp
-            type rhs
+            type rhs = GAC_I.contr
             val get_input :
               ('a, inp) Code.abstract ->
               (('a, GAC_I.contr) Code.abstract * ('a, rhs) Code.abstract *
@@ -7301,6 +7256,7 @@ module G_GAC_I :
         module InpMatrixVector :
           sig
             type inp = GAC_I.contr * GAC_I.contr
+            type rhs = GAC_I.contr
             val get_input :
               ('a, 'b * 'c) Code.abstract ->
               'd ->
@@ -7311,14 +7267,19 @@ module G_GAC_I :
         module type OUTPUT =
           sig
             type res
-            val make_result : 'a wmatrix -> ('a, res, 'b, 'c) GEF.cmonad
+            val make_result :
+              ('a, GAC_I.contr) Code.abstract -> ('a, res, 'b, 'c) GEF.cmonad
+          end
+        module OutJustAnswer :
+          sig
+            type res = GAC_I.contr
+            val make_result : 'a -> 'b -> ('b -> 'a -> 'c) -> 'c
           end
         module type FEATURES =
           sig
             module Det : DETERMINANT
             module PivotF : PIVOT
             module PivotRep : GEF.PIVOTKIND
-            module Update : UPDATE
             module Input : INPUT
             module Output : OUTPUT
           end
@@ -7459,17 +7420,6 @@ module G_GAC_I :
                       | `TRan of 'a GEF.TrackRank.lstate ]
                      as 'b)
                     list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
-                  val ge_gen :
-                    ('a, GAC_I.contr * int) Code.abstract ->
-                    ([> `TDet of 'a F.Det.lstate
-                      | `TLower of 'a O.IF.L.lstate
-                      | `TPivot of 'a O.IF.P.lstate
-                      | `TRan of 'a GEF.TrackRank.lstate ]
-                     as 'b)
-                    list ->
-                    ('b list ->
-                     ('a, O.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-                    ('a, 'c) Code.abstract
                   val gen :
                     ('a, GAC_I.contr * int) Code.abstract ->
                     ([> `TDet of 'a F.Det.lstate
@@ -7490,7 +7440,12 @@ module G_GAC_I :
                  ('a, F.Input.rhs) Code.abstract * bool ->
                  ('a, 'c) Code.abstract) ->
                 ('a, 'c) Code.abstract
-              val solve_gen :
+              val back_elim :
+                'a GAC_I.vc ->
+                ('a, int) Code.abstract ->
+                ('a, int) Code.abstract ->
+                'b -> ('b -> ('a, GAC_I.contr) Code.abstract -> 'c) -> 'c
+              val gen :
                 ('a, F.Input.inp) Code.abstract ->
                 ([> `TDet of 'a F.Det.lstate
                   | `TLower of 'a GE'.O.IF.L.lstate
@@ -7499,7 +7454,7 @@ module G_GAC_I :
                  as 'b)
                 list ->
                 ('b list ->
-                 ('a, GE'.O.res) Code.abstract -> ('a, 'c) Code.abstract) ->
+                 ('a, F.Output.res) Code.abstract -> ('a, 'c) Code.abstract) ->
                 ('a, 'c) Code.abstract
             end
       end
@@ -8879,17 +8834,6 @@ module G_GVC_I :
                   | `TRan of 'a GEF.TrackRank.lstate ]
                  as 'b)
                 list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
-              val ge_gen :
-                ('a, F.Input.inp) Code.abstract ->
-                ([> `TDet of 'a F.Det.lstate
-                  | `TLower of 'a O.IF.L.lstate
-                  | `TPivot of 'a O.IF.P.lstate
-                  | `TRan of 'a GEF.TrackRank.lstate ]
-                 as 'b)
-                list ->
-                ('b list ->
-                 ('a, O.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-                ('a, 'c) Code.abstract
               val gen :
                 ('a, F.Input.inp) Code.abstract ->
                 ([> `TDet of 'a F.Det.lstate
@@ -8908,7 +8852,7 @@ module G_GVC_I :
         module type INPUT =
           sig
             type inp
-            type rhs
+            type rhs = GVC_I.contr
             val get_input :
               ('a, inp) Code.abstract ->
               (('a, GVC_I.contr) Code.abstract * ('a, rhs) Code.abstract *
@@ -8918,6 +8862,7 @@ module G_GVC_I :
         module InpMatrixVector :
           sig
             type inp = GVC_I.contr * GVC_I.contr
+            type rhs = GVC_I.contr
             val get_input :
               ('a, 'b * 'c) Code.abstract ->
               'd ->
@@ -8928,14 +8873,19 @@ module G_GVC_I :
         module type OUTPUT =
           sig
             type res
-            val make_result : 'a wmatrix -> ('a, res, 'b, 'c) GEF.cmonad
+            val make_result :
+              ('a, GVC_I.contr) Code.abstract -> ('a, res, 'b, 'c) GEF.cmonad
+          end
+        module OutJustAnswer :
+          sig
+            type res = GVC_I.contr
+            val make_result : 'a -> 'b -> ('b -> 'a -> 'c) -> 'c
           end
         module type FEATURES =
           sig
             module Det : DETERMINANT
             module PivotF : PIVOT
             module PivotRep : GEF.PIVOTKIND
-            module Update : UPDATE
             module Input : INPUT
             module Output : OUTPUT
           end
@@ -9076,17 +9026,6 @@ module G_GVC_I :
                       | `TRan of 'a GEF.TrackRank.lstate ]
                      as 'b)
                     list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
-                  val ge_gen :
-                    ('a, GVC_I.contr * int) Code.abstract ->
-                    ([> `TDet of 'a F.Det.lstate
-                      | `TLower of 'a O.IF.L.lstate
-                      | `TPivot of 'a O.IF.P.lstate
-                      | `TRan of 'a GEF.TrackRank.lstate ]
-                     as 'b)
-                    list ->
-                    ('b list ->
-                     ('a, O.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-                    ('a, 'c) Code.abstract
                   val gen :
                     ('a, GVC_I.contr * int) Code.abstract ->
                     ([> `TDet of 'a F.Det.lstate
@@ -9107,7 +9046,12 @@ module G_GVC_I :
                  ('a, F.Input.rhs) Code.abstract * bool ->
                  ('a, 'c) Code.abstract) ->
                 ('a, 'c) Code.abstract
-              val solve_gen :
+              val back_elim :
+                'a GVC_I.vc ->
+                ('a, int) Code.abstract ->
+                ('a, int) Code.abstract ->
+                'b -> ('b -> ('a, GVC_I.contr) Code.abstract -> 'c) -> 'c
+              val gen :
                 ('a, F.Input.inp) Code.abstract ->
                 ([> `TDet of 'a F.Det.lstate
                   | `TLower of 'a GE'.O.IF.L.lstate
@@ -9116,7 +9060,7 @@ module G_GVC_I :
                  as 'b)
                 list ->
                 ('b list ->
-                 ('a, GE'.O.res) Code.abstract -> ('a, 'c) Code.abstract) ->
+                 ('a, F.Output.res) Code.abstract -> ('a, 'c) Code.abstract) ->
                 ('a, 'c) Code.abstract
             end
       end
@@ -10496,17 +10440,6 @@ module G_GAC_R :
                   | `TRan of 'a GEF.TrackRank.lstate ]
                  as 'b)
                 list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
-              val ge_gen :
-                ('a, F.Input.inp) Code.abstract ->
-                ([> `TDet of 'a F.Det.lstate
-                  | `TLower of 'a O.IF.L.lstate
-                  | `TPivot of 'a O.IF.P.lstate
-                  | `TRan of 'a GEF.TrackRank.lstate ]
-                 as 'b)
-                list ->
-                ('b list ->
-                 ('a, O.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-                ('a, 'c) Code.abstract
               val gen :
                 ('a, F.Input.inp) Code.abstract ->
                 ([> `TDet of 'a F.Det.lstate
@@ -10525,7 +10458,7 @@ module G_GAC_R :
         module type INPUT =
           sig
             type inp
-            type rhs
+            type rhs = GAC_R.contr
             val get_input :
               ('a, inp) Code.abstract ->
               (('a, GAC_R.contr) Code.abstract * ('a, rhs) Code.abstract *
@@ -10535,6 +10468,7 @@ module G_GAC_R :
         module InpMatrixVector :
           sig
             type inp = GAC_R.contr * GAC_R.contr
+            type rhs = GAC_R.contr
             val get_input :
               ('a, 'b * 'c) Code.abstract ->
               'd ->
@@ -10545,14 +10479,19 @@ module G_GAC_R :
         module type OUTPUT =
           sig
             type res
-            val make_result : 'a wmatrix -> ('a, res, 'b, 'c) GEF.cmonad
+            val make_result :
+              ('a, GAC_R.contr) Code.abstract -> ('a, res, 'b, 'c) GEF.cmonad
+          end
+        module OutJustAnswer :
+          sig
+            type res = GAC_R.contr
+            val make_result : 'a -> 'b -> ('b -> 'a -> 'c) -> 'c
           end
         module type FEATURES =
           sig
             module Det : DETERMINANT
             module PivotF : PIVOT
             module PivotRep : GEF.PIVOTKIND
-            module Update : UPDATE
             module Input : INPUT
             module Output : OUTPUT
           end
@@ -10693,17 +10632,6 @@ module G_GAC_R :
                       | `TRan of 'a GEF.TrackRank.lstate ]
                      as 'b)
                     list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
-                  val ge_gen :
-                    ('a, GAC_R.contr * int) Code.abstract ->
-                    ([> `TDet of 'a F.Det.lstate
-                      | `TLower of 'a O.IF.L.lstate
-                      | `TPivot of 'a O.IF.P.lstate
-                      | `TRan of 'a GEF.TrackRank.lstate ]
-                     as 'b)
-                    list ->
-                    ('b list ->
-                     ('a, O.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-                    ('a, 'c) Code.abstract
                   val gen :
                     ('a, GAC_R.contr * int) Code.abstract ->
                     ([> `TDet of 'a F.Det.lstate
@@ -10724,7 +10652,12 @@ module G_GAC_R :
                  ('a, F.Input.rhs) Code.abstract * bool ->
                  ('a, 'c) Code.abstract) ->
                 ('a, 'c) Code.abstract
-              val solve_gen :
+              val back_elim :
+                'a GAC_R.vc ->
+                ('a, int) Code.abstract ->
+                ('a, int) Code.abstract ->
+                'b -> ('b -> ('a, GAC_R.contr) Code.abstract -> 'c) -> 'c
+              val gen :
                 ('a, F.Input.inp) Code.abstract ->
                 ([> `TDet of 'a F.Det.lstate
                   | `TLower of 'a GE'.O.IF.L.lstate
@@ -10733,7 +10666,7 @@ module G_GAC_R :
                  as 'b)
                 list ->
                 ('b list ->
-                 ('a, GE'.O.res) Code.abstract -> ('a, 'c) Code.abstract) ->
+                 ('a, F.Output.res) Code.abstract -> ('a, 'c) Code.abstract) ->
                 ('a, 'c) Code.abstract
             end
       end
@@ -12115,17 +12048,6 @@ module G_GVC_Z3 :
                   | `TRan of 'a GEF.TrackRank.lstate ]
                  as 'b)
                 list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
-              val ge_gen :
-                ('a, F.Input.inp) Code.abstract ->
-                ([> `TDet of 'a F.Det.lstate
-                  | `TLower of 'a O.IF.L.lstate
-                  | `TPivot of 'a O.IF.P.lstate
-                  | `TRan of 'a GEF.TrackRank.lstate ]
-                 as 'b)
-                list ->
-                ('b list ->
-                 ('a, O.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-                ('a, 'c) Code.abstract
               val gen :
                 ('a, F.Input.inp) Code.abstract ->
                 ([> `TDet of 'a F.Det.lstate
@@ -12144,7 +12066,7 @@ module G_GVC_Z3 :
         module type INPUT =
           sig
             type inp
-            type rhs
+            type rhs = GVC_Z3.contr
             val get_input :
               ('a, inp) Code.abstract ->
               (('a, GVC_Z3.contr) Code.abstract * ('a, rhs) Code.abstract *
@@ -12154,6 +12076,7 @@ module G_GVC_Z3 :
         module InpMatrixVector :
           sig
             type inp = GVC_Z3.contr * GVC_Z3.contr
+            type rhs = GVC_Z3.contr
             val get_input :
               ('a, 'b * 'c) Code.abstract ->
               'd ->
@@ -12164,14 +12087,20 @@ module G_GVC_Z3 :
         module type OUTPUT =
           sig
             type res
-            val make_result : 'a wmatrix -> ('a, res, 'b, 'c) GEF.cmonad
+            val make_result :
+              ('a, GVC_Z3.contr) Code.abstract ->
+              ('a, res, 'b, 'c) GEF.cmonad
+          end
+        module OutJustAnswer :
+          sig
+            type res = GVC_Z3.contr
+            val make_result : 'a -> 'b -> ('b -> 'a -> 'c) -> 'c
           end
         module type FEATURES =
           sig
             module Det : DETERMINANT
             module PivotF : PIVOT
             module PivotRep : GEF.PIVOTKIND
-            module Update : UPDATE
             module Input : INPUT
             module Output : OUTPUT
           end
@@ -12312,17 +12241,6 @@ module G_GVC_Z3 :
                       | `TRan of 'a GEF.TrackRank.lstate ]
                      as 'b)
                     list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
-                  val ge_gen :
-                    ('a, GVC_Z3.contr * int) Code.abstract ->
-                    ([> `TDet of 'a F.Det.lstate
-                      | `TLower of 'a O.IF.L.lstate
-                      | `TPivot of 'a O.IF.P.lstate
-                      | `TRan of 'a GEF.TrackRank.lstate ]
-                     as 'b)
-                    list ->
-                    ('b list ->
-                     ('a, O.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-                    ('a, 'c) Code.abstract
                   val gen :
                     ('a, GVC_Z3.contr * int) Code.abstract ->
                     ([> `TDet of 'a F.Det.lstate
@@ -12343,7 +12261,12 @@ module G_GVC_Z3 :
                  ('a, F.Input.rhs) Code.abstract * bool ->
                  ('a, 'c) Code.abstract) ->
                 ('a, 'c) Code.abstract
-              val solve_gen :
+              val back_elim :
+                'a GVC_Z3.vc ->
+                ('a, int) Code.abstract ->
+                ('a, int) Code.abstract ->
+                'b -> ('b -> ('a, GVC_Z3.contr) Code.abstract -> 'c) -> 'c
+              val gen :
                 ('a, F.Input.inp) Code.abstract ->
                 ([> `TDet of 'a F.Det.lstate
                   | `TLower of 'a GE'.O.IF.L.lstate
@@ -12352,7 +12275,7 @@ module G_GVC_Z3 :
                  as 'b)
                 list ->
                 ('b list ->
-                 ('a, GE'.O.res) Code.abstract -> ('a, 'c) Code.abstract) ->
+                 ('a, F.Output.res) Code.abstract -> ('a, 'c) Code.abstract) ->
                 ('a, 'c) Code.abstract
             end
       end
@@ -13736,17 +13659,6 @@ module G_GVC_Z19 :
                   | `TRan of 'a GEF.TrackRank.lstate ]
                  as 'b)
                 list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
-              val ge_gen :
-                ('a, F.Input.inp) Code.abstract ->
-                ([> `TDet of 'a F.Det.lstate
-                  | `TLower of 'a O.IF.L.lstate
-                  | `TPivot of 'a O.IF.P.lstate
-                  | `TRan of 'a GEF.TrackRank.lstate ]
-                 as 'b)
-                list ->
-                ('b list ->
-                 ('a, O.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-                ('a, 'c) Code.abstract
               val gen :
                 ('a, F.Input.inp) Code.abstract ->
                 ([> `TDet of 'a F.Det.lstate
@@ -13765,7 +13677,7 @@ module G_GVC_Z19 :
         module type INPUT =
           sig
             type inp
-            type rhs
+            type rhs = GVC_Z19.contr
             val get_input :
               ('a, inp) Code.abstract ->
               (('a, GVC_Z19.contr) Code.abstract * ('a, rhs) Code.abstract *
@@ -13775,6 +13687,7 @@ module G_GVC_Z19 :
         module InpMatrixVector :
           sig
             type inp = GVC_Z19.contr * GVC_Z19.contr
+            type rhs = GVC_Z19.contr
             val get_input :
               ('a, 'b * 'c) Code.abstract ->
               'd ->
@@ -13785,14 +13698,20 @@ module G_GVC_Z19 :
         module type OUTPUT =
           sig
             type res
-            val make_result : 'a wmatrix -> ('a, res, 'b, 'c) GEF.cmonad
+            val make_result :
+              ('a, GVC_Z19.contr) Code.abstract ->
+              ('a, res, 'b, 'c) GEF.cmonad
+          end
+        module OutJustAnswer :
+          sig
+            type res = GVC_Z19.contr
+            val make_result : 'a -> 'b -> ('b -> 'a -> 'c) -> 'c
           end
         module type FEATURES =
           sig
             module Det : DETERMINANT
             module PivotF : PIVOT
             module PivotRep : GEF.PIVOTKIND
-            module Update : UPDATE
             module Input : INPUT
             module Output : OUTPUT
           end
@@ -13933,17 +13852,6 @@ module G_GVC_Z19 :
                       | `TRan of 'a GEF.TrackRank.lstate ]
                      as 'b)
                     list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
-                  val ge_gen :
-                    ('a, GVC_Z19.contr * int) Code.abstract ->
-                    ([> `TDet of 'a F.Det.lstate
-                      | `TLower of 'a O.IF.L.lstate
-                      | `TPivot of 'a O.IF.P.lstate
-                      | `TRan of 'a GEF.TrackRank.lstate ]
-                     as 'b)
-                    list ->
-                    ('b list ->
-                     ('a, O.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-                    ('a, 'c) Code.abstract
                   val gen :
                     ('a, GVC_Z19.contr * int) Code.abstract ->
                     ([> `TDet of 'a F.Det.lstate
@@ -13964,7 +13872,12 @@ module G_GVC_Z19 :
                  ('a, F.Input.rhs) Code.abstract * bool ->
                  ('a, 'c) Code.abstract) ->
                 ('a, 'c) Code.abstract
-              val solve_gen :
+              val back_elim :
+                'a GVC_Z19.vc ->
+                ('a, int) Code.abstract ->
+                ('a, int) Code.abstract ->
+                'b -> ('b -> ('a, GVC_Z19.contr) Code.abstract -> 'c) -> 'c
+              val gen :
                 ('a, F.Input.inp) Code.abstract ->
                 ([> `TDet of 'a F.Det.lstate
                   | `TLower of 'a GE'.O.IF.L.lstate
@@ -13973,7 +13886,7 @@ module G_GVC_Z19 :
                  as 'b)
                 list ->
                 ('b list ->
-                 ('a, GE'.O.res) Code.abstract -> ('a, 'c) Code.abstract) ->
+                 ('a, F.Output.res) Code.abstract -> ('a, 'c) Code.abstract) ->
                 ('a, 'c) Code.abstract
             end
       end
@@ -15353,17 +15266,6 @@ module G_GFC_F :
                   | `TRan of 'a GEF.TrackRank.lstate ]
                  as 'b)
                 list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
-              val ge_gen :
-                ('a, F.Input.inp) Code.abstract ->
-                ([> `TDet of 'a F.Det.lstate
-                  | `TLower of 'a O.IF.L.lstate
-                  | `TPivot of 'a O.IF.P.lstate
-                  | `TRan of 'a GEF.TrackRank.lstate ]
-                 as 'b)
-                list ->
-                ('b list ->
-                 ('a, O.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-                ('a, 'c) Code.abstract
               val gen :
                 ('a, F.Input.inp) Code.abstract ->
                 ([> `TDet of 'a F.Det.lstate
@@ -15382,7 +15284,7 @@ module G_GFC_F :
         module type INPUT =
           sig
             type inp
-            type rhs
+            type rhs = GFC_F.contr
             val get_input :
               ('a, inp) Code.abstract ->
               (('a, GFC_F.contr) Code.abstract * ('a, rhs) Code.abstract *
@@ -15392,6 +15294,7 @@ module G_GFC_F :
         module InpMatrixVector :
           sig
             type inp = GFC_F.contr * GFC_F.contr
+            type rhs = GFC_F.contr
             val get_input :
               ('a, 'b * 'c) Code.abstract ->
               'd ->
@@ -15402,14 +15305,19 @@ module G_GFC_F :
         module type OUTPUT =
           sig
             type res
-            val make_result : 'a wmatrix -> ('a, res, 'b, 'c) GEF.cmonad
+            val make_result :
+              ('a, GFC_F.contr) Code.abstract -> ('a, res, 'b, 'c) GEF.cmonad
+          end
+        module OutJustAnswer :
+          sig
+            type res = GFC_F.contr
+            val make_result : 'a -> 'b -> ('b -> 'a -> 'c) -> 'c
           end
         module type FEATURES =
           sig
             module Det : DETERMINANT
             module PivotF : PIVOT
             module PivotRep : GEF.PIVOTKIND
-            module Update : UPDATE
             module Input : INPUT
             module Output : OUTPUT
           end
@@ -15550,17 +15458,6 @@ module G_GFC_F :
                       | `TRan of 'a GEF.TrackRank.lstate ]
                      as 'b)
                     list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
-                  val ge_gen :
-                    ('a, GFC_F.contr * int) Code.abstract ->
-                    ([> `TDet of 'a F.Det.lstate
-                      | `TLower of 'a O.IF.L.lstate
-                      | `TPivot of 'a O.IF.P.lstate
-                      | `TRan of 'a GEF.TrackRank.lstate ]
-                     as 'b)
-                    list ->
-                    ('b list ->
-                     ('a, O.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-                    ('a, 'c) Code.abstract
                   val gen :
                     ('a, GFC_F.contr * int) Code.abstract ->
                     ([> `TDet of 'a F.Det.lstate
@@ -15581,7 +15478,12 @@ module G_GFC_F :
                  ('a, F.Input.rhs) Code.abstract * bool ->
                  ('a, 'c) Code.abstract) ->
                 ('a, 'c) Code.abstract
-              val solve_gen :
+              val back_elim :
+                'a GFC_F.vc ->
+                ('a, int) Code.abstract ->
+                ('a, int) Code.abstract ->
+                'b -> ('b -> ('a, GFC_F.contr) Code.abstract -> 'c) -> 'c
+              val gen :
                 ('a, F.Input.inp) Code.abstract ->
                 ([> `TDet of 'a F.Det.lstate
                   | `TLower of 'a GE'.O.IF.L.lstate
@@ -15590,7 +15492,7 @@ module G_GFC_F :
                  as 'b)
                 list ->
                 ('b list ->
-                 ('a, GE'.O.res) Code.abstract -> ('a, 'c) Code.abstract) ->
+                 ('a, F.Output.res) Code.abstract -> ('a, 'c) Code.abstract) ->
                 ('a, 'c) Code.abstract
             end
       end
@@ -15707,16 +15609,6 @@ module GenFA1 :
         | `TRan of 'a GEF.TrackRank.lstate ]
        as 'b)
       list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
-    val ge_gen :
-      ('a, GAC_F.contr) Code.abstract ->
-      ([> `TDet of unit
-        | `TLower of 'a O.IF.L.lstate
-        | `TPivot of 'a O.IF.P.lstate
-        | `TRan of 'a GEF.TrackRank.lstate ]
-       as 'b)
-      list ->
-      ('b list -> ('a, O.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
     val gen :
       ('a, GAC_F.contr) Code.abstract ->
       ([> `TDet of unit
@@ -15847,17 +15739,6 @@ module GenFA2 :
         | `TRan of 'a GEF.TrackRank.lstate ]
        as 'b)
       list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
-    val ge_gen :
-      ('a, GAC_F.contr) Code.abstract ->
-      ([> `TDet of
-            ('a, int ref) Code.abstract * ('a, GAC_F.Dom.v ref) Code.abstract
-        | `TLower of 'a O.IF.L.lstate
-        | `TPivot of 'a O.IF.P.lstate
-        | `TRan of 'a GEF.TrackRank.lstate ]
-       as 'b)
-      list ->
-      ('b list -> ('a, O.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
     val gen :
       ('a, GAC_F.contr) Code.abstract ->
       ([> `TDet of
@@ -15982,16 +15863,6 @@ module GenFA3 :
         | `TRan of 'a GEF.TrackRank.lstate ]
        as 'b)
       list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
-    val ge_gen :
-      ('a, GAC_F.contr) Code.abstract ->
-      ([> `TDet of unit
-        | `TLower of 'a O.IF.L.lstate
-        | `TPivot of 'a O.IF.P.lstate
-        | `TRan of 'a GEF.TrackRank.lstate ]
-       as 'b)
-      list ->
-      ('b list -> ('a, O.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
     val gen :
       ('a, GAC_F.contr) Code.abstract ->
       ([> `TDet of unit
@@ -16122,17 +15993,6 @@ module GenFA4 :
         | `TRan of 'a GEF.TrackRank.lstate ]
        as 'b)
       list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
-    val ge_gen :
-      ('a, GAC_F.contr) Code.abstract ->
-      ([> `TDet of
-            ('a, int ref) Code.abstract * ('a, GAC_F.Dom.v ref) Code.abstract
-        | `TLower of 'a O.IF.L.lstate
-        | `TPivot of 'a O.IF.P.lstate
-        | `TRan of 'a GEF.TrackRank.lstate ]
-       as 'b)
-      list ->
-      ('b list -> ('a, O.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
     val gen :
       ('a, GAC_F.contr) Code.abstract ->
       ([> `TDet of
@@ -16257,16 +16117,6 @@ module GenFA11 :
         | `TRan of 'a GEF.TrackRank.lstate ]
        as 'b)
       list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
-    val ge_gen :
-      ('a, GAC_F.contr) Code.abstract ->
-      ([> `TDet of unit
-        | `TLower of 'a O.IF.L.lstate
-        | `TPivot of 'a O.IF.P.lstate
-        | `TRan of 'a GEF.TrackRank.lstate ]
-       as 'b)
-      list ->
-      ('b list -> ('a, O.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
     val gen :
       ('a, GAC_F.contr) Code.abstract ->
       ([> `TDet of unit
@@ -16397,17 +16247,6 @@ module GenFA12 :
         | `TRan of 'a GEF.TrackRank.lstate ]
        as 'b)
       list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
-    val ge_gen :
-      ('a, GAC_F.contr) Code.abstract ->
-      ([> `TDet of
-            ('a, int ref) Code.abstract * ('a, GAC_F.Dom.v ref) Code.abstract
-        | `TLower of 'a O.IF.L.lstate
-        | `TPivot of 'a O.IF.P.lstate
-        | `TRan of 'a GEF.TrackRank.lstate ]
-       as 'b)
-      list ->
-      ('b list -> ('a, O.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
     val gen :
       ('a, GAC_F.contr) Code.abstract ->
       ([> `TDet of
@@ -16532,16 +16371,6 @@ module GenFA13 :
         | `TRan of 'a GEF.TrackRank.lstate ]
        as 'b)
       list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
-    val ge_gen :
-      ('a, GAC_F.contr) Code.abstract ->
-      ([> `TDet of unit
-        | `TLower of 'a O.IF.L.lstate
-        | `TPivot of 'a O.IF.P.lstate
-        | `TRan of 'a GEF.TrackRank.lstate ]
-       as 'b)
-      list ->
-      ('b list -> ('a, O.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
     val gen :
       ('a, GAC_F.contr) Code.abstract ->
       ([> `TDet of unit
@@ -16672,17 +16501,6 @@ module GenFA14 :
         | `TRan of 'a GEF.TrackRank.lstate ]
        as 'b)
       list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
-    val ge_gen :
-      ('a, GAC_F.contr) Code.abstract ->
-      ([> `TDet of
-            ('a, int ref) Code.abstract * ('a, GAC_F.Dom.v ref) Code.abstract
-        | `TLower of 'a O.IF.L.lstate
-        | `TPivot of 'a O.IF.P.lstate
-        | `TRan of 'a GEF.TrackRank.lstate ]
-       as 'b)
-      list ->
-      ('b list -> ('a, O.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
     val gen :
       ('a, GAC_F.contr) Code.abstract ->
       ([> `TDet of
@@ -16813,17 +16631,6 @@ module GenFA24 :
         | `TRan of 'a GEF.TrackRank.lstate ]
        as 'b)
       list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
-    val ge_gen :
-      ('a, GAC_F.contr) Code.abstract ->
-      ([> `TDet of
-            ('a, int ref) Code.abstract * ('a, GAC_F.Dom.v ref) Code.abstract
-        | `TLower of 'a O.IF.L.lstate
-        | `TPivot of 'a O.IF.P.lstate
-        | `TRan of 'a GEF.TrackRank.lstate ]
-       as 'b)
-      list ->
-      ('b list -> ('a, O.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
     val gen :
       ('a, GAC_F.contr) Code.abstract ->
       ([> `TDet of
@@ -16954,17 +16761,6 @@ module GenFA25 :
         | `TRan of 'a GEF.TrackRank.lstate ]
        as 'b)
       list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
-    val ge_gen :
-      ('a, GAC_F.contr) Code.abstract ->
-      ([> `TDet of
-            ('a, int ref) Code.abstract * ('a, GAC_F.Dom.v ref) Code.abstract
-        | `TLower of 'a O.IF.L.lstate
-        | `TPivot of 'a O.IF.P.lstate
-        | `TRan of 'a GEF.TrackRank.lstate ]
-       as 'b)
-      list ->
-      ('b list -> ('a, O.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
     val gen :
       ('a, GAC_F.contr) Code.abstract ->
       ([> `TDet of
@@ -17089,16 +16885,6 @@ module GenFA26 :
         | `TRan of 'a GEF.TrackRank.lstate ]
        as 'b)
       list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
-    val ge_gen :
-      ('a, GAC_F.contr) Code.abstract ->
-      ([> `TDet of unit
-        | `TLower of 'a O.IF.L.lstate
-        | `TPivot of 'a O.IF.P.lstate
-        | `TRan of 'a GEF.TrackRank.lstate ]
-       as 'b)
-      list ->
-      ('b list -> ('a, O.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
     val gen :
       ('a, GAC_F.contr) Code.abstract ->
       ([> `TDet of unit
@@ -17222,16 +17008,6 @@ module GenFA5 :
         | `TRan of 'a GEF.TrackRank.lstate ]
        as 'b)
       list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
-    val ge_gen :
-      ('a, GAC_F.contr * int) Code.abstract ->
-      ([> `TDet of unit
-        | `TLower of 'a O.IF.L.lstate
-        | `TPivot of 'a O.IF.P.lstate
-        | `TRan of 'a GEF.TrackRank.lstate ]
-       as 'b)
-      list ->
-      ('b list -> ('a, O.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
     val gen :
       ('a, GAC_F.contr * int) Code.abstract ->
       ([> `TDet of unit
@@ -17362,17 +17138,6 @@ module GenFA6 :
         | `TRan of 'a GEF.TrackRank.lstate ]
        as 'b)
       list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
-    val ge_gen :
-      ('a, GAC_F.contr * int) Code.abstract ->
-      ([> `TDet of
-            ('a, int ref) Code.abstract * ('a, GAC_F.Dom.v ref) Code.abstract
-        | `TLower of 'a O.IF.L.lstate
-        | `TPivot of 'a O.IF.P.lstate
-        | `TRan of 'a GEF.TrackRank.lstate ]
-       as 'b)
-      list ->
-      ('b list -> ('a, O.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
     val gen :
       ('a, GAC_F.contr * int) Code.abstract ->
       ([> `TDet of
@@ -17497,16 +17262,6 @@ module GenFA7 :
         | `TRan of 'a GEF.TrackRank.lstate ]
        as 'b)
       list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
-    val ge_gen :
-      ('a, GAC_F.contr * int) Code.abstract ->
-      ([> `TDet of unit
-        | `TLower of 'a O.IF.L.lstate
-        | `TPivot of 'a O.IF.P.lstate
-        | `TRan of 'a GEF.TrackRank.lstate ]
-       as 'b)
-      list ->
-      ('b list -> ('a, O.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
     val gen :
       ('a, GAC_F.contr * int) Code.abstract ->
       ([> `TDet of unit
@@ -17637,17 +17392,6 @@ module GenFA8 :
         | `TRan of 'a GEF.TrackRank.lstate ]
        as 'b)
       list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
-    val ge_gen :
-      ('a, GAC_F.contr * int) Code.abstract ->
-      ([> `TDet of
-            ('a, int ref) Code.abstract * ('a, GAC_F.Dom.v ref) Code.abstract
-        | `TLower of 'a O.IF.L.lstate
-        | `TPivot of 'a O.IF.P.lstate
-        | `TRan of 'a GEF.TrackRank.lstate ]
-       as 'b)
-      list ->
-      ('b list -> ('a, O.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
     val gen :
       ('a, GAC_F.contr * int) Code.abstract ->
       ([> `TDet of
@@ -17771,16 +17515,6 @@ module GenFA9 :
         | `TRan of 'a GEF.TrackRank.lstate ]
        as 'b)
       list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
-    val ge_gen :
-      ('a, GAC_F.contr) Code.abstract ->
-      ([> `TDet of unit
-        | `TLower of 'a O.IF.L.lstate
-        | `TPivot of 'a O.IF.P.lstate
-        | `TRan of 'a GEF.TrackRank.lstate ]
-       as 'b)
-      list ->
-      ('b list -> ('a, O.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
     val gen :
       ('a, GAC_F.contr) Code.abstract ->
       ([> `TDet of unit
@@ -17903,16 +17637,6 @@ module GenFA31 :
         | `TRan of 'a GEF.TrackRank.lstate ]
        as 'b)
       list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
-    val ge_gen :
-      ('a, GAC_F.contr) Code.abstract ->
-      ([> `TDet of unit
-        | `TLower of 'a O.IF.L.lstate
-        | `TPivot of 'a O.IF.P.lstate
-        | `TRan of 'a GEF.TrackRank.lstate ]
-       as 'b)
-      list ->
-      ('b list -> ('a, O.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
     val gen :
       ('a, GAC_F.contr) Code.abstract ->
       ([> `TDet of unit
@@ -18035,16 +17759,6 @@ module GenFA32 :
         | `TRan of 'a GEF.TrackRank.lstate ]
        as 'b)
       list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
-    val ge_gen :
-      ('a, GAC_F.contr) Code.abstract ->
-      ([> `TDet of unit
-        | `TLower of 'a O.IF.L.lstate
-        | `TPivot of 'a O.IF.P.lstate
-        | `TRan of 'a GEF.TrackRank.lstate ]
-       as 'b)
-      list ->
-      ('b list -> ('a, O.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
     val gen :
       ('a, GAC_F.contr) Code.abstract ->
       ([> `TDet of unit
@@ -18168,16 +17882,6 @@ module GenFV1 :
         | `TRan of 'a GEF.TrackRank.lstate ]
        as 'b)
       list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
-    val ge_gen :
-      ('a, GVC_F.contr) Code.abstract ->
-      ([> `TDet of unit
-        | `TLower of 'a O.IF.L.lstate
-        | `TPivot of 'a O.IF.P.lstate
-        | `TRan of 'a GEF.TrackRank.lstate ]
-       as 'b)
-      list ->
-      ('b list -> ('a, O.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
     val gen :
       ('a, GVC_F.contr) Code.abstract ->
       ([> `TDet of unit
@@ -18308,17 +18012,6 @@ module GenFV2 :
         | `TRan of 'a GEF.TrackRank.lstate ]
        as 'b)
       list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
-    val ge_gen :
-      ('a, GVC_F.contr) Code.abstract ->
-      ([> `TDet of
-            ('a, int ref) Code.abstract * ('a, GVC_F.Dom.v ref) Code.abstract
-        | `TLower of 'a O.IF.L.lstate
-        | `TPivot of 'a O.IF.P.lstate
-        | `TRan of 'a GEF.TrackRank.lstate ]
-       as 'b)
-      list ->
-      ('b list -> ('a, O.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
     val gen :
       ('a, GVC_F.contr) Code.abstract ->
       ([> `TDet of
@@ -18443,16 +18136,6 @@ module GenFV3 :
         | `TRan of 'a GEF.TrackRank.lstate ]
        as 'b)
       list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
-    val ge_gen :
-      ('a, GVC_F.contr) Code.abstract ->
-      ([> `TDet of unit
-        | `TLower of 'a O.IF.L.lstate
-        | `TPivot of 'a O.IF.P.lstate
-        | `TRan of 'a GEF.TrackRank.lstate ]
-       as 'b)
-      list ->
-      ('b list -> ('a, O.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
     val gen :
       ('a, GVC_F.contr) Code.abstract ->
       ([> `TDet of unit
@@ -18583,17 +18266,6 @@ module GenFV4 :
         | `TRan of 'a GEF.TrackRank.lstate ]
        as 'b)
       list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
-    val ge_gen :
-      ('a, GVC_F.contr) Code.abstract ->
-      ([> `TDet of
-            ('a, int ref) Code.abstract * ('a, GVC_F.Dom.v ref) Code.abstract
-        | `TLower of 'a O.IF.L.lstate
-        | `TPivot of 'a O.IF.P.lstate
-        | `TRan of 'a GEF.TrackRank.lstate ]
-       as 'b)
-      list ->
-      ('b list -> ('a, O.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
     val gen :
       ('a, GVC_F.contr) Code.abstract ->
       ([> `TDet of
@@ -18725,17 +18397,6 @@ module GenFV5 :
         | `TRan of 'a GEF.TrackRank.lstate ]
        as 'b)
       list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
-    val ge_gen :
-      ('a, GVC_F.contr) Code.abstract ->
-      ([> `TDet of
-            ('a, int ref) Code.abstract * ('a, GVC_F.Dom.v ref) Code.abstract
-        | `TLower of 'a O.IF.L.lstate
-        | `TPivot of 'a O.IF.P.lstate
-        | `TRan of 'a GEF.TrackRank.lstate ]
-       as 'b)
-      list ->
-      ('b list -> ('a, O.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
     val gen :
       ('a, GVC_F.contr) Code.abstract ->
       ([> `TDet of
@@ -18859,16 +18520,6 @@ module GenFV6 :
         | `TRan of 'a GEF.TrackRank.lstate ]
        as 'b)
       list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
-    val ge_gen :
-      ('a, GVC_F.contr) Code.abstract ->
-      ([> `TDet of unit
-        | `TLower of 'a O.IF.L.lstate
-        | `TPivot of 'a O.IF.P.lstate
-        | `TRan of 'a GEF.TrackRank.lstate ]
-       as 'b)
-      list ->
-      ('b list -> ('a, O.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
     val gen :
       ('a, GVC_F.contr) Code.abstract ->
       ([> `TDet of unit
@@ -18991,16 +18642,6 @@ module GenFV7 :
         | `TRan of 'a GEF.TrackRank.lstate ]
        as 'b)
       list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
-    val ge_gen :
-      ('a, GVC_F.contr) Code.abstract ->
-      ([> `TDet of unit
-        | `TLower of 'a O.IF.L.lstate
-        | `TPivot of 'a O.IF.P.lstate
-        | `TRan of 'a GEF.TrackRank.lstate ]
-       as 'b)
-      list ->
-      ('b list -> ('a, O.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
     val gen :
       ('a, GVC_F.contr) Code.abstract ->
       ([> `TDet of unit
@@ -19131,17 +18772,6 @@ module GenIA1 :
         | `TRan of 'a GEF.TrackRank.lstate ]
        as 'b)
       list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
-    val ge_gen :
-      ('a, GAC_I.contr) Code.abstract ->
-      ([> `TDet of
-            ('a, int ref) Code.abstract * ('a, GAC_I.Dom.v ref) Code.abstract
-        | `TLower of 'a O.IF.L.lstate
-        | `TPivot of 'a O.IF.P.lstate
-        | `TRan of 'a GEF.TrackRank.lstate ]
-       as 'b)
-      list ->
-      ('b list -> ('a, O.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
     val gen :
       ('a, GAC_I.contr) Code.abstract ->
       ([> `TDet of
@@ -19274,17 +18904,6 @@ module GenIA2 :
         | `TRan of 'a GEF.TrackRank.lstate ]
        as 'b)
       list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
-    val ge_gen :
-      ('a, GAC_I.contr) Code.abstract ->
-      ([> `TDet of
-            ('a, int ref) Code.abstract * ('a, GAC_I.Dom.v ref) Code.abstract
-        | `TLower of 'a O.IF.L.lstate
-        | `TPivot of 'a O.IF.P.lstate
-        | `TRan of 'a GEF.TrackRank.lstate ]
-       as 'b)
-      list ->
-      ('b list -> ('a, O.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
     val gen :
       ('a, GAC_I.contr) Code.abstract ->
       ([> `TDet of
@@ -19416,17 +19035,6 @@ module GenIA3 :
         | `TRan of 'a GEF.TrackRank.lstate ]
        as 'b)
       list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
-    val ge_gen :
-      ('a, GAC_I.contr) Code.abstract ->
-      ([> `TDet of
-            ('a, int ref) Code.abstract * ('a, GAC_I.Dom.v ref) Code.abstract
-        | `TLower of 'a O.IF.L.lstate
-        | `TPivot of 'a O.IF.P.lstate
-        | `TRan of 'a GEF.TrackRank.lstate ]
-       as 'b)
-      list ->
-      ('b list -> ('a, O.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
     val gen :
       ('a, GAC_I.contr) Code.abstract ->
       ([> `TDet of
@@ -19558,17 +19166,6 @@ module GenIA4 :
         | `TRan of 'a GEF.TrackRank.lstate ]
        as 'b)
       list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
-    val ge_gen :
-      ('a, GAC_I.contr) Code.abstract ->
-      ([> `TDet of
-            ('a, int ref) Code.abstract * ('a, GAC_I.Dom.v ref) Code.abstract
-        | `TLower of 'a O.IF.L.lstate
-        | `TPivot of 'a O.IF.P.lstate
-        | `TRan of 'a GEF.TrackRank.lstate ]
-       as 'b)
-      list ->
-      ('b list -> ('a, O.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
     val gen :
       ('a, GAC_I.contr) Code.abstract ->
       ([> `TDet of
@@ -19702,17 +19299,6 @@ module GenIV1 :
         | `TRan of 'a GEF.TrackRank.lstate ]
        as 'b)
       list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
-    val ge_gen :
-      ('a, GVC_I.contr) Code.abstract ->
-      ([> `TDet of
-            ('a, int ref) Code.abstract * ('a, GVC_I.Dom.v ref) Code.abstract
-        | `TLower of 'a O.IF.L.lstate
-        | `TPivot of 'a O.IF.P.lstate
-        | `TRan of 'a GEF.TrackRank.lstate ]
-       as 'b)
-      list ->
-      ('b list -> ('a, O.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
     val gen :
       ('a, GVC_I.contr) Code.abstract ->
       ([> `TDet of
@@ -19844,17 +19430,6 @@ module GenIV2 :
         | `TRan of 'a GEF.TrackRank.lstate ]
        as 'b)
       list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
-    val ge_gen :
-      ('a, GVC_I.contr) Code.abstract ->
-      ([> `TDet of
-            ('a, int ref) Code.abstract * ('a, GVC_I.Dom.v ref) Code.abstract
-        | `TLower of 'a O.IF.L.lstate
-        | `TPivot of 'a O.IF.P.lstate
-        | `TRan of 'a GEF.TrackRank.lstate ]
-       as 'b)
-      list ->
-      ('b list -> ('a, O.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
     val gen :
       ('a, GVC_I.contr) Code.abstract ->
       ([> `TDet of
@@ -19986,17 +19561,6 @@ module GenIV3 :
         | `TRan of 'a GEF.TrackRank.lstate ]
        as 'b)
       list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
-    val ge_gen :
-      ('a, GVC_I.contr) Code.abstract ->
-      ([> `TDet of
-            ('a, int ref) Code.abstract * ('a, GVC_I.Dom.v ref) Code.abstract
-        | `TLower of 'a O.IF.L.lstate
-        | `TPivot of 'a O.IF.P.lstate
-        | `TRan of 'a GEF.TrackRank.lstate ]
-       as 'b)
-      list ->
-      ('b list -> ('a, O.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
     val gen :
       ('a, GVC_I.contr) Code.abstract ->
       ([> `TDet of
@@ -20128,17 +19692,6 @@ module GenIV4 :
         | `TRan of 'a GEF.TrackRank.lstate ]
        as 'b)
       list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
-    val ge_gen :
-      ('a, GVC_I.contr) Code.abstract ->
-      ([> `TDet of
-            ('a, int ref) Code.abstract * ('a, GVC_I.Dom.v ref) Code.abstract
-        | `TLower of 'a O.IF.L.lstate
-        | `TPivot of 'a O.IF.P.lstate
-        | `TRan of 'a GEF.TrackRank.lstate ]
-       as 'b)
-      list ->
-      ('b list -> ('a, O.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
     val gen :
       ('a, GVC_I.contr) Code.abstract ->
       ([> `TDet of
@@ -20270,17 +19823,6 @@ module GenIV5 :
         | `TRan of 'a GEF.TrackRank.lstate ]
        as 'b)
       list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
-    val ge_gen :
-      ('a, GVC_I.contr) Code.abstract ->
-      ([> `TDet of
-            ('a, int ref) Code.abstract * ('a, GVC_I.Dom.v ref) Code.abstract
-        | `TLower of 'a O.IF.L.lstate
-        | `TPivot of 'a O.IF.P.lstate
-        | `TRan of 'a GEF.TrackRank.lstate ]
-       as 'b)
-      list ->
-      ('b list -> ('a, O.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
     val gen :
       ('a, GVC_I.contr) Code.abstract ->
       ([> `TDet of
@@ -20411,17 +19953,6 @@ module GenIV6 :
         | `TRan of 'a GEF.TrackRank.lstate ]
        as 'b)
       list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
-    val ge_gen :
-      ('a, GVC_I.contr) Code.abstract ->
-      ([> `TDet of
-            ('a, int ref) Code.abstract * ('a, GVC_I.Dom.v ref) Code.abstract
-        | `TLower of 'a O.IF.L.lstate
-        | `TPivot of 'a O.IF.P.lstate
-        | `TRan of 'a GEF.TrackRank.lstate ]
-       as 'b)
-      list ->
-      ('b list -> ('a, O.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
     val gen :
       ('a, GVC_I.contr) Code.abstract ->
       ([> `TDet of
@@ -20546,16 +20077,6 @@ module GenRA1 :
         | `TRan of 'a GEF.TrackRank.lstate ]
        as 'b)
       list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
-    val ge_gen :
-      ('a, GAC_R.contr) Code.abstract ->
-      ([> `TDet of unit
-        | `TLower of 'a O.IF.L.lstate
-        | `TPivot of 'a O.IF.P.lstate
-        | `TRan of 'a GEF.TrackRank.lstate ]
-       as 'b)
-      list ->
-      ('b list -> ('a, O.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
     val gen :
       ('a, GAC_R.contr) Code.abstract ->
       ([> `TDet of unit
@@ -20686,17 +20207,6 @@ module GenRA2 :
         | `TRan of 'a GEF.TrackRank.lstate ]
        as 'b)
       list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
-    val ge_gen :
-      ('a, GAC_R.contr) Code.abstract ->
-      ([> `TDet of
-            ('a, int ref) Code.abstract * ('a, GAC_R.Dom.v ref) Code.abstract
-        | `TLower of 'a O.IF.L.lstate
-        | `TPivot of 'a O.IF.P.lstate
-        | `TRan of 'a GEF.TrackRank.lstate ]
-       as 'b)
-      list ->
-      ('b list -> ('a, O.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
     val gen :
       ('a, GAC_R.contr) Code.abstract ->
       ([> `TDet of
@@ -20821,16 +20331,6 @@ module GenRA3 :
         | `TRan of 'a GEF.TrackRank.lstate ]
        as 'b)
       list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
-    val ge_gen :
-      ('a, GAC_R.contr) Code.abstract ->
-      ([> `TDet of unit
-        | `TLower of 'a O.IF.L.lstate
-        | `TPivot of 'a O.IF.P.lstate
-        | `TRan of 'a GEF.TrackRank.lstate ]
-       as 'b)
-      list ->
-      ('b list -> ('a, O.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
     val gen :
       ('a, GAC_R.contr) Code.abstract ->
       ([> `TDet of unit
@@ -20961,17 +20461,6 @@ module GenRA4 :
         | `TRan of 'a GEF.TrackRank.lstate ]
        as 'b)
       list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
-    val ge_gen :
-      ('a, GAC_R.contr) Code.abstract ->
-      ([> `TDet of
-            ('a, int ref) Code.abstract * ('a, GAC_R.Dom.v ref) Code.abstract
-        | `TLower of 'a O.IF.L.lstate
-        | `TPivot of 'a O.IF.P.lstate
-        | `TRan of 'a GEF.TrackRank.lstate ]
-       as 'b)
-      list ->
-      ('b list -> ('a, O.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
     val gen :
       ('a, GAC_R.contr) Code.abstract ->
       ([> `TDet of
@@ -21105,18 +20594,6 @@ module GenZp3 :
         | `TRan of 'a GEF.TrackRank.lstate ]
        as 'b)
       list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
-    val ge_gen :
-      ('a, GVC_Z3.contr) Code.abstract ->
-      ([> `TDet of
-            ('a, int ref) Code.abstract *
-            ('a, GVC_Z3.Dom.v ref) Code.abstract
-        | `TLower of 'a O.IF.L.lstate
-        | `TPivot of 'a O.IF.P.lstate
-        | `TRan of 'a GEF.TrackRank.lstate ]
-       as 'b)
-      list ->
-      ('b list -> ('a, O.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
     val gen :
       ('a, GVC_Z3.contr) Code.abstract ->
       ([> `TDet of
@@ -21251,18 +20728,6 @@ module GenZp19 :
         | `TRan of 'a GEF.TrackRank.lstate ]
        as 'b)
       list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
-    val ge_gen :
-      ('a, GVC_Z19.contr) Code.abstract ->
-      ([> `TDet of
-            ('a, int ref) Code.abstract *
-            ('a, GVC_Z19.Dom.v ref) Code.abstract
-        | `TLower of 'a O.IF.L.lstate
-        | `TPivot of 'a O.IF.P.lstate
-        | `TRan of 'a GEF.TrackRank.lstate ]
-       as 'b)
-      list ->
-      ('b list -> ('a, O.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
     val gen :
       ('a, GVC_Z19.contr) Code.abstract ->
       ([> `TDet of

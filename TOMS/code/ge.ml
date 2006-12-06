@@ -1,4 +1,5 @@
 open StateCPSMonad
+open Prelude
 
 type update_kind = FractionFree | DivisionBased
 (* It used to be that we used an option type to encode some domain
@@ -44,16 +45,16 @@ type ('a,'v,'s,'w) omonad = (('a,'v) abstract option,
   coded as `exceptions'
 *)
 module Iters = struct
-  let row_iter b c low high get body = 
+  let row_iter b c low high get body d = 
     let newbody j = perform
         bjc <-- retN (get b j c);
         body j bjc
-    in  loopM low high newbody
-  let col_iter b r low high get body = 
+    in  loopM low high newbody d
+  let col_iter b r low high get body d = 
     let newbody k = perform
         brk <-- ret (get b r k);
         body k brk
-    in  loopM low high newbody
+    in  loopM low high newbody d
 end
 
 (* Here are the various design aspects of GE-type algorithms *)
@@ -519,7 +520,7 @@ struct
                                      (Tuple.tup2 j bjc))))
                      (assignM pivot (Maybe.just 
                                   (Tuple.tup2 j bjc))))
-              )
+              ) UP
          | None ->
            perform
             brc <-- retN (C.row_head mat.matrix pos.rowpos pos.colpos);
@@ -575,7 +576,7 @@ struct
               | None ->
                   (assignM pivot (Maybe.just (
                       Tuple.tup2 (Tuple.tup2 j k) bjk)))
-              ))))
+              )) UP ) UP )
               (* finished the loop *)
               (matchM (liftGet pivot)
                   (fun pv -> perform
@@ -771,14 +772,14 @@ module GenGE(F : FEATURES) = struct
                       (fun k bjk -> perform
                       brk <-- ret (C.getL mat.matrix pos.p.rowpos k);
                       U.update bjc pos.curval brk bjk 
-                          (fun ov -> C.col_head_set mat.matrix j k ov) det) )
+                          (fun ov -> C.col_head_set mat.matrix j k ov) det) UP )
                       (IF.L.updt mat.matrix j pos.p.colpos C.Dom.zeroL 
                           (* this makes no sense outside a field! *)
                           (C.Dom.divL bjc pos.curval))) in
         perform
               seqM (Iters.row_iter mat.matrix pos.p.colpos
 		      (Idx.succ pos.p.rowpos)
-              (Idx.pred mat.numrow) C.getL innerbody) 
+              (Idx.pred mat.numrow) C.getL innerbody UP) 
                    (U.update_det pos.curval)
 
    let init input = perform
@@ -812,13 +813,11 @@ module GenGE(F : FEATURES) = struct
                       (F.Det.zero_sign () ))
                   (updateM c Idx.succ) )
 
-   let ge_gen input = perform
+   let gen input = perform
           (mat, r, c, rmar) <-- init input;
           seqM 
             (forward_elim (mat, r, c, rmar))
             (O.make_result mat)
-
-   let gen input = ge_gen input
 end
 
 end
@@ -828,7 +827,7 @@ end
 module Solve = struct
 module type INPUT = sig
     type inp
-    type rhs
+    type rhs = C.contr
     val get_input : ('a, inp) abstract ->
         (('a, C.contr) abstract * ('a, rhs) abstract * bool, 's, ('a, 'w)
         abstract) monad
@@ -837,6 +836,7 @@ end
 (* What is the input *)
 module InpMatrixVector = struct
     type inp   = C.contr * C.contr
+    type rhs   = C.contr
     let get_input a = perform
         (b,c) <-- ret (liftPair a);
         ret (b, c, true)
@@ -844,17 +844,25 @@ end
 
 module type OUTPUT = sig
   type res
-  val make_result : 'a wmatrix -> ('a, res, 's, 'w) cmonad
+  val make_result : ('a, C.contr) abstract -> ('a, res, 's, 'w) cmonad
+end
+
+module OutJustAnswer = struct
+  type res = C.contr
+  let make_result m = ret m
 end
 
 (* The `keyword' list of all the present external features *)
 (* Really, these features are exposed by GE, but they can be seen
-   through this implementation of Sove *)
+   through this implementation of Solve.
+   
+   As we do not support solving over non-fields (GE does not seem
+   to be the right way to do that!), there is no point to expose
+   the Update choice, we might as well always use DivisionUpdate. *)
 module type FEATURES = sig
   module Det       : DETERMINANT
   module PivotF    : PIVOT
   module PivotRep  : PIVOTKIND
-  module Update    : UPDATE
   module Input     : INPUT
   module Output    : OUTPUT
 end
@@ -863,7 +871,9 @@ module GenSolve(F : FEATURES) = struct
     (* module Verify = Test(F)  that does the pre-flight test *)
 
 	(* some more pre-flight tests *)
-    (* to be filled in *)
+    let _ = ensure (C.Dom.kind = Domains_sig.Domain_is_Field)
+        "Cannot Solve in a non-field"
+    (* more to be filled in *)
 
     (* We will solve via GE. We inline the structure to improve
        compilation time... *)
@@ -871,19 +881,48 @@ module GenSolve(F : FEATURES) = struct
         module Det = F.Det
         module PivotF = F.PivotF
         module PivotRep = F.PivotRep
-        module Update = F.Update
+        module Update = GE.DivisionUpdate
         module Input = GE.InpMatrixMargin
         module Output = GE.OutJustMatrix
     end)
 
+    open C.Dom
     let init input = perform
-        (a,b, mat) <-- F.Input.get_input input;
-        ret (a, b, mat)
+        (a,b, isvec) <-- F.Input.get_input input;
+        ret (a, b, isvec)
 
-    let solve_gen input = perform
-        (a,b, mat) <-- F.Input.get_input input;
-        u          <-- GE'.ge_gen (Tuple.tup2 a (C.dim2 a));
-        ret u
+    let back_elim a m n = 
+        let innerloop k = perform
+            t <-- retN (divL oneL (C.getL a k k));
+            seqM 
+              (loopM m (Idx.pred n) (fun j -> perform
+                  ret (C.col_head_set a k j (t *^ (C.getL a k j)))) UP)
+              (seqM
+              (loopM (Idx.zero) (Idx.pred k) (fun i -> perform
+                seqM
+                  (loopM m (Idx.pred n) (fun j -> perform
+                      aij <-- ret (C.getL a i j);
+                      aik <-- ret (C.getL a i k);
+                      akj <-- ret (C.getL a k j);
+                      ret (C.col_head_set a i j (aij -^ (aik *^ akj)))) UP) 
+                  (ret (C.col_head_set a i k zeroL))) UP)
+              (ret (C.col_head_set a k k oneL)))
+        in 
+        seqM
+          (loopM (Idx.pred m) Idx.zero (innerloop) DOWN)
+          (ret a)
+
+    let gen input = perform
+        (a,b, isvec) <-- F.Input.get_input input;
+        ma         <-- retN (C.dim1 a);
+        na         <-- retN (C.dim2 a);
+        nb         <-- retN (C.dim1 b);
+        aug_a      <-- retN (C.augment a ma na b nb);
+        u          <-- GE'.gen (Tuple.tup2 aug_a (C.dim2 a));
+        uu         <-- retN u;
+        eli        <-- back_elim uu ma (Idx.add na nb);
+        res        <-- F.Output.make_result eli;
+        ret res
 end
 
 end

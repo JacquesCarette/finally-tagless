@@ -1,6 +1,7 @@
 type ('a, 'b) abstract = unit -> 'b
 
 open StateCPSMonad
+open Prelude
 
 (* This one is very special! *)
 let retN a = fun s k -> fun () -> let t = a () in k s (fun () -> t) ()
@@ -44,8 +45,13 @@ let whenM test th  = rshiftM (fun s ->
   fun () ->  if test () then th s k0 () else () )
 
 (* loops actually bind a value *)
-let loopM low high body = fun s k -> 
-    k s (fun () ->  for j = low () to high () do body (fun () -> j) s k0 () done )
+let loopM low high body = function
+  | UP -> (fun s k -> 
+    k s (fun () ->  for j = low () to high () do body (fun () -> j) s k0 () done
+))
+  | DOWN -> (fun s k -> 
+    k s (fun () ->  for j = low () downto high () do body (fun () -> j) s k0 ()
+done ))
 
 (* while ``loops'' do not naturally bind a value *)
 let whileM cond body = fun s k -> 
@@ -113,6 +119,7 @@ module Idx = struct
   let pred a = fun () -> (a ()) - 1
   let less a b = fun () -> (a ()) < (b ())
   let uminus a = fun () -> - (a ())
+  let add a b = fun () -> (a ()) + (b ())
 
   (* need explicit fun to avoid monomorphising *)
   let minusoneL = fun s k -> k s minusone

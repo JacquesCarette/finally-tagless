@@ -1,0 +1,1 @@
+type dir = UP | DOWN

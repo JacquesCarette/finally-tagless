@@ -1,3 +1,5 @@
+open Prelude
+
 (*module type T = functor(R: Abstractrep.T) -> sig *)
 module type T = sig
 (* Abstract Representation of ``code'' of ``code'' *)
@@ -35,6 +37,7 @@ val loopM :
   ('a, int) abstract ->
   ('a, int) abstract ->
   (('a, int) abstract -> 'b -> ('c -> 'd -> 'd) -> ('a, 'e) abstract) ->
+  dir ->
   'b -> ('b -> ('a, unit) abstract -> 'f) -> 'f
 val whileM :
   ('a, bool) abstract ->
@@ -74,6 +77,7 @@ module Idx :
     val pred : ('a, int) abstract -> ('a, int) abstract
     val less : ('a, 'b) abstract -> ('a, 'b) abstract -> ('a, bool) abstract
     val uminus : ('a, int) abstract -> ('a, int) abstract
+    val add : ('a, int) abstract -> ('a, int) abstract -> ('a, int) abstract
     val minusoneL : 'a -> ('a -> ('b, int) abstract -> 'c) -> 'c
   end
 module Maybe :

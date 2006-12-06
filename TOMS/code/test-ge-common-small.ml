@@ -10,9 +10,11 @@ module T1 = DivisionUpdate(GAC_F)(NoDet);;
 
 
 module GAC_F = GenericArrayContainer(FloatDomainL)
-module G_GAC_F = GenLA.GE(GAC_F)
+module G_GAC_F = GenLA(GAC_F)
 open G_GAC_F
+open G_GAC_F.GE
 module GenFA1_F = struct 
+      module Det = NoDet
       module PivotF = RowPivot
       module PivotRep = PermList
       module Update = DivisionUpdate
@@ -35,7 +37,30 @@ let _ = assert (rFA1 fa2 =
     [|[|4.; 13.; 5.; 0.|]; [|0.; 6.25; 1.25; 0.|]; [|0.; 0.; 2.; 0.|]|]
           )
 
+module SolFA1 = Solve.GenSolve(struct
+      module Det = NoDet
+      module PivotF = RowPivot
+      module PivotRep = PermList
+      module Input = Solve.InpMatrixVector
+      module Output = Solve.OutJustAnswer
+  end) ;;
+let solFA1 = instantiate SolFA1.gen ;;
+let sFA1 = runit {pf =  solFA1 } ;;
+
+let fa3 = Array.of_list [
+    Array.of_list [1. ; 2. ; 3. ] ;
+    Array.of_list [4. ; 13. ; 5. ] ;
+    Array.of_list [(-1.) ; 3. ; 0. ]
+    ] ;;
+let fb3 = Array.of_list [
+    Array.of_list [100.] ;
+    Array.of_list [100.] ;
+    Array.of_list [100.] 
+] ;;
+let xx = sFA1 (fa3,fb3) ;;
+
 module GenFA25_F = struct 
+      module Det = AbstractDet
       module PivotF = RowPivot
       module PivotRep = RowVectorPerm
       module Update = DivisionUpdate
@@ -57,9 +82,11 @@ let (arr, det, rk, perm) = resF25 in
    begins!
 *)
 module GAC_Z = GenericArrayContainer(IntegerDomainL)
-module G_GAC_Z = GenLA.GE(GAC_Z)
+module G_GAC_Z = GenLA(GAC_Z)
 open G_GAC_Z
+open G_GAC_Z.GE
 module GenFA1_Z = struct 
+      module Det = NoDet
       module PivotF = RowPivot
       module PivotRep = PermList
       module Update = DivisionUpdate
