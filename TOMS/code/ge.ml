@@ -829,7 +829,7 @@ module type INPUT = sig
     type inp
     type rhs = C.contr
     val get_input : ('a, inp) abstract ->
-        (('a, C.contr) abstract * ('a, rhs) abstract * bool, 's, ('a, 'w)
+        (('a, C.contr) abstract * ('a, rhs) abstract, 's, ('a, 'w)
         abstract) monad
 end 
 
@@ -839,17 +839,28 @@ module InpMatrixVector = struct
     type rhs   = C.contr
     let get_input a = perform
         (b,c) <-- ret (liftPair a);
-        ret (b, c, true)
+        bb <-- retN b;
+        cc <-- retN c;
+        ret (bb, cc)
 end
 
 module type OUTPUT = sig
   type res
-  val make_result : ('a, C.contr) abstract -> ('a, res, 's, 'w) cmonad
+  val make_result : ('a, C.contr) abstract -> ('a, C.contr) abstract ->
+      ('a, int) abstract -> ('a, int) abstract -> ('a, int) abstract ->
+      ('a, res, 's, 'w) cmonad
 end
 
 module OutJustAnswer = struct
   type res = C.contr
-  let make_result m = ret m
+  let make_result src dest rmar cols rows = perform
+      seqM
+      (loopM Idx.zero (Idx.pred cols) (fun j -> 
+          loopM Idx.zero (Idx.pred rows) (fun i -> perform
+              aij <-- ret (C.getL src i (Idx.add j rmar));
+              ret (C.col_head_set dest i j aij)
+          ) UP) UP)
+      (ret dest)
 end
 
 (* The `keyword' list of all the present external features *)
@@ -888,8 +899,8 @@ module GenSolve(F : FEATURES) = struct
 
     open C.Dom
     let init input = perform
-        (a,b, isvec) <-- F.Input.get_input input;
-        ret (a, b, isvec)
+        (a,b) <-- F.Input.get_input input;
+        ret (a, b)
 
     let back_elim a m n = 
         let innerloop k = perform
@@ -913,15 +924,15 @@ module GenSolve(F : FEATURES) = struct
           (ret a)
 
     let gen input = perform
-        (a,b, isvec) <-- F.Input.get_input input;
-        ma         <-- retN (C.dim1 a);
-        na         <-- retN (C.dim2 a);
-        nb         <-- retN (C.dim1 b);
-        aug_a      <-- retN (C.augment a ma na b nb);
-        u          <-- GE'.gen (Tuple.tup2 aug_a (C.dim2 a));
-        uu         <-- retN u;
-        eli        <-- back_elim uu ma (Idx.add na nb);
-        res        <-- F.Output.make_result eli;
+        (a,b)   <-- F.Input.get_input input;
+        ma      <-- retN (C.dim1 a);
+        na      <-- retN (C.dim2 a);
+        nb      <-- retN (C.dim1 b);
+        aug_a   <-- retN (C.augment a ma na b nb);
+        u       <-- GE'.gen (Tuple.tup2 aug_a (C.dim2 a));
+        uu      <-- retN u;
+        eli     <-- back_elim uu ma (Idx.add na nb);
+        res     <-- F.Output.make_result eli b na nb ma;
         ret res
 end
 

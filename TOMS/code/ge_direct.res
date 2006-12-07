@@ -1887,8 +1887,7 @@
                   val get_input :
                     ('a, inp) Direct.abstract ->
                     (('a, C.contr) Direct.abstract *
-                     ('a, rhs) Direct.abstract * bool, 'b,
-                     ('a, 'c) Direct.abstract)
+                     ('a, rhs) Direct.abstract, 'b, ('a, 'c) Direct.abstract)
                     StateCPSMonad.monad
                 end
               module InpMatrixVector :
@@ -1899,20 +1898,30 @@
                     ('a, 'b * 'c) Direct.abstract ->
                     'd ->
                     ('d ->
-                     ('a, 'b) Direct.abstract * ('a, 'c) Direct.abstract *
-                     bool -> 'e) ->
-                    'e
+                     ('a, 'b) Direct.abstract * ('a, 'c) Direct.abstract ->
+                     ('a, 'e) Direct.abstract) ->
+                    ('a, 'e) Direct.abstract
                 end
               module type OUTPUT =
                 sig
                   type res
                   val make_result :
-                    ('a, C.contr) Direct.abstract -> ('a, res, 'b, 'c) cmonad
+                    ('a, C.contr) Direct.abstract ->
+                    ('a, C.contr) Direct.abstract ->
+                    ('a, int) Direct.abstract ->
+                    ('a, int) Direct.abstract ->
+                    ('a, int) Direct.abstract -> ('a, res, 'b, 'c) cmonad
                 end
               module OutJustAnswer :
                 sig
                   type res = C.contr
-                  val make_result : 'a -> 'b -> ('b -> 'a -> 'c) -> 'c
+                  val make_result :
+                    'a C.vc ->
+                    'a C.vc ->
+                    ('a, int) Direct.abstract ->
+                    ('a, int) Direct.abstract ->
+                    ('a, int) Direct.abstract ->
+                    'b -> ('b -> ('a, C.contr) Direct.abstract -> 'c) -> 'c
                 end
               module type FEATURES =
                 sig
@@ -2087,7 +2096,7 @@
                       'b ->
                       ('b ->
                        ('a, C.contr) Direct.abstract *
-                       ('a, F.Input.rhs) Direct.abstract * bool ->
+                       ('a, F.Input.rhs) Direct.abstract ->
                        ('a, 'c) Direct.abstract) ->
                       ('a, 'c) Direct.abstract
                     val back_elim :
@@ -4100,9 +4109,8 @@ module G_GAC_F :
             type rhs = GAC_F.contr
             val get_input :
               ('a, inp) Direct.abstract ->
-              (('a, GAC_F.contr) Direct.abstract *
-               ('a, rhs) Direct.abstract * bool, 'b,
-               ('a, 'c) Direct.abstract)
+              (('a, GAC_F.contr) Direct.abstract * ('a, rhs) Direct.abstract,
+               'b, ('a, 'c) Direct.abstract)
               StateCPSMonad.monad
           end
         module InpMatrixVector :
@@ -4113,21 +4121,30 @@ module G_GAC_F :
               ('a, 'b * 'c) Direct.abstract ->
               'd ->
               ('d ->
-               ('a, 'b) Direct.abstract * ('a, 'c) Direct.abstract * bool ->
-               'e) ->
-              'e
+               ('a, 'b) Direct.abstract * ('a, 'c) Direct.abstract ->
+               ('a, 'e) Direct.abstract) ->
+              ('a, 'e) Direct.abstract
           end
         module type OUTPUT =
           sig
             type res
             val make_result :
               ('a, GAC_F.contr) Direct.abstract ->
-              ('a, res, 'b, 'c) GEF.cmonad
+              ('a, GAC_F.contr) Direct.abstract ->
+              ('a, int) Direct.abstract ->
+              ('a, int) Direct.abstract ->
+              ('a, int) Direct.abstract -> ('a, res, 'b, 'c) GEF.cmonad
           end
         module OutJustAnswer :
           sig
             type res = GAC_F.contr
-            val make_result : 'a -> 'b -> ('b -> 'a -> 'c) -> 'c
+            val make_result :
+              'a GAC_F.vc ->
+              'a GAC_F.vc ->
+              ('a, int) Direct.abstract ->
+              ('a, int) Direct.abstract ->
+              ('a, int) Direct.abstract ->
+              'b -> ('b -> ('a, GAC_F.contr) Direct.abstract -> 'c) -> 'c
           end
         module type FEATURES =
           sig
@@ -4293,7 +4310,7 @@ module G_GAC_F :
                 'b ->
                 ('b ->
                  ('a, GAC_F.contr) Direct.abstract *
-                 ('a, F.Input.rhs) Direct.abstract * bool ->
+                 ('a, F.Input.rhs) Direct.abstract ->
                  ('a, 'c) Direct.abstract) ->
                 ('a, 'c) Direct.abstract
               val back_elim :
@@ -5726,9 +5743,8 @@ module G_GVC_F :
             type rhs = GVC_F.contr
             val get_input :
               ('a, inp) Direct.abstract ->
-              (('a, GVC_F.contr) Direct.abstract *
-               ('a, rhs) Direct.abstract * bool, 'b,
-               ('a, 'c) Direct.abstract)
+              (('a, GVC_F.contr) Direct.abstract * ('a, rhs) Direct.abstract,
+               'b, ('a, 'c) Direct.abstract)
               StateCPSMonad.monad
           end
         module InpMatrixVector :
@@ -5739,21 +5755,30 @@ module G_GVC_F :
               ('a, 'b * 'c) Direct.abstract ->
               'd ->
               ('d ->
-               ('a, 'b) Direct.abstract * ('a, 'c) Direct.abstract * bool ->
-               'e) ->
-              'e
+               ('a, 'b) Direct.abstract * ('a, 'c) Direct.abstract ->
+               ('a, 'e) Direct.abstract) ->
+              ('a, 'e) Direct.abstract
           end
         module type OUTPUT =
           sig
             type res
             val make_result :
               ('a, GVC_F.contr) Direct.abstract ->
-              ('a, res, 'b, 'c) GEF.cmonad
+              ('a, GVC_F.contr) Direct.abstract ->
+              ('a, int) Direct.abstract ->
+              ('a, int) Direct.abstract ->
+              ('a, int) Direct.abstract -> ('a, res, 'b, 'c) GEF.cmonad
           end
         module OutJustAnswer :
           sig
             type res = GVC_F.contr
-            val make_result : 'a -> 'b -> ('b -> 'a -> 'c) -> 'c
+            val make_result :
+              'a GVC_F.vc ->
+              'a GVC_F.vc ->
+              ('a, int) Direct.abstract ->
+              ('a, int) Direct.abstract ->
+              ('a, int) Direct.abstract ->
+              'b -> ('b -> ('a, GVC_F.contr) Direct.abstract -> 'c) -> 'c
           end
         module type FEATURES =
           sig
@@ -5919,7 +5944,7 @@ module G_GVC_F :
                 'b ->
                 ('b ->
                  ('a, GVC_F.contr) Direct.abstract *
-                 ('a, F.Input.rhs) Direct.abstract * bool ->
+                 ('a, F.Input.rhs) Direct.abstract ->
                  ('a, 'c) Direct.abstract) ->
                 ('a, 'c) Direct.abstract
               val back_elim :
@@ -7352,9 +7377,8 @@ module G_GAC_I :
             type rhs = GAC_I.contr
             val get_input :
               ('a, inp) Direct.abstract ->
-              (('a, GAC_I.contr) Direct.abstract *
-               ('a, rhs) Direct.abstract * bool, 'b,
-               ('a, 'c) Direct.abstract)
+              (('a, GAC_I.contr) Direct.abstract * ('a, rhs) Direct.abstract,
+               'b, ('a, 'c) Direct.abstract)
               StateCPSMonad.monad
           end
         module InpMatrixVector :
@@ -7365,21 +7389,30 @@ module G_GAC_I :
               ('a, 'b * 'c) Direct.abstract ->
               'd ->
               ('d ->
-               ('a, 'b) Direct.abstract * ('a, 'c) Direct.abstract * bool ->
-               'e) ->
-              'e
+               ('a, 'b) Direct.abstract * ('a, 'c) Direct.abstract ->
+               ('a, 'e) Direct.abstract) ->
+              ('a, 'e) Direct.abstract
           end
         module type OUTPUT =
           sig
             type res
             val make_result :
               ('a, GAC_I.contr) Direct.abstract ->
-              ('a, res, 'b, 'c) GEF.cmonad
+              ('a, GAC_I.contr) Direct.abstract ->
+              ('a, int) Direct.abstract ->
+              ('a, int) Direct.abstract ->
+              ('a, int) Direct.abstract -> ('a, res, 'b, 'c) GEF.cmonad
           end
         module OutJustAnswer :
           sig
             type res = GAC_I.contr
-            val make_result : 'a -> 'b -> ('b -> 'a -> 'c) -> 'c
+            val make_result :
+              'a GAC_I.vc ->
+              'a GAC_I.vc ->
+              ('a, int) Direct.abstract ->
+              ('a, int) Direct.abstract ->
+              ('a, int) Direct.abstract ->
+              'b -> ('b -> ('a, GAC_I.contr) Direct.abstract -> 'c) -> 'c
           end
         module type FEATURES =
           sig
@@ -7545,7 +7578,7 @@ module G_GAC_I :
                 'b ->
                 ('b ->
                  ('a, GAC_I.contr) Direct.abstract *
-                 ('a, F.Input.rhs) Direct.abstract * bool ->
+                 ('a, F.Input.rhs) Direct.abstract ->
                  ('a, 'c) Direct.abstract) ->
                 ('a, 'c) Direct.abstract
               val back_elim :
@@ -8978,9 +9011,8 @@ module G_GVC_I :
             type rhs = GVC_I.contr
             val get_input :
               ('a, inp) Direct.abstract ->
-              (('a, GVC_I.contr) Direct.abstract *
-               ('a, rhs) Direct.abstract * bool, 'b,
-               ('a, 'c) Direct.abstract)
+              (('a, GVC_I.contr) Direct.abstract * ('a, rhs) Direct.abstract,
+               'b, ('a, 'c) Direct.abstract)
               StateCPSMonad.monad
           end
         module InpMatrixVector :
@@ -8991,21 +9023,30 @@ module G_GVC_I :
               ('a, 'b * 'c) Direct.abstract ->
               'd ->
               ('d ->
-               ('a, 'b) Direct.abstract * ('a, 'c) Direct.abstract * bool ->
-               'e) ->
-              'e
+               ('a, 'b) Direct.abstract * ('a, 'c) Direct.abstract ->
+               ('a, 'e) Direct.abstract) ->
+              ('a, 'e) Direct.abstract
           end
         module type OUTPUT =
           sig
             type res
             val make_result :
               ('a, GVC_I.contr) Direct.abstract ->
-              ('a, res, 'b, 'c) GEF.cmonad
+              ('a, GVC_I.contr) Direct.abstract ->
+              ('a, int) Direct.abstract ->
+              ('a, int) Direct.abstract ->
+              ('a, int) Direct.abstract -> ('a, res, 'b, 'c) GEF.cmonad
           end
         module OutJustAnswer :
           sig
             type res = GVC_I.contr
-            val make_result : 'a -> 'b -> ('b -> 'a -> 'c) -> 'c
+            val make_result :
+              'a GVC_I.vc ->
+              'a GVC_I.vc ->
+              ('a, int) Direct.abstract ->
+              ('a, int) Direct.abstract ->
+              ('a, int) Direct.abstract ->
+              'b -> ('b -> ('a, GVC_I.contr) Direct.abstract -> 'c) -> 'c
           end
         module type FEATURES =
           sig
@@ -9171,7 +9212,7 @@ module G_GVC_I :
                 'b ->
                 ('b ->
                  ('a, GVC_I.contr) Direct.abstract *
-                 ('a, F.Input.rhs) Direct.abstract * bool ->
+                 ('a, F.Input.rhs) Direct.abstract ->
                  ('a, 'c) Direct.abstract) ->
                 ('a, 'c) Direct.abstract
               val back_elim :
@@ -10604,9 +10645,8 @@ module G_GAC_R :
             type rhs = GAC_R.contr
             val get_input :
               ('a, inp) Direct.abstract ->
-              (('a, GAC_R.contr) Direct.abstract *
-               ('a, rhs) Direct.abstract * bool, 'b,
-               ('a, 'c) Direct.abstract)
+              (('a, GAC_R.contr) Direct.abstract * ('a, rhs) Direct.abstract,
+               'b, ('a, 'c) Direct.abstract)
               StateCPSMonad.monad
           end
         module InpMatrixVector :
@@ -10617,21 +10657,30 @@ module G_GAC_R :
               ('a, 'b * 'c) Direct.abstract ->
               'd ->
               ('d ->
-               ('a, 'b) Direct.abstract * ('a, 'c) Direct.abstract * bool ->
-               'e) ->
-              'e
+               ('a, 'b) Direct.abstract * ('a, 'c) Direct.abstract ->
+               ('a, 'e) Direct.abstract) ->
+              ('a, 'e) Direct.abstract
           end
         module type OUTPUT =
           sig
             type res
             val make_result :
               ('a, GAC_R.contr) Direct.abstract ->
-              ('a, res, 'b, 'c) GEF.cmonad
+              ('a, GAC_R.contr) Direct.abstract ->
+              ('a, int) Direct.abstract ->
+              ('a, int) Direct.abstract ->
+              ('a, int) Direct.abstract -> ('a, res, 'b, 'c) GEF.cmonad
           end
         module OutJustAnswer :
           sig
             type res = GAC_R.contr
-            val make_result : 'a -> 'b -> ('b -> 'a -> 'c) -> 'c
+            val make_result :
+              'a GAC_R.vc ->
+              'a GAC_R.vc ->
+              ('a, int) Direct.abstract ->
+              ('a, int) Direct.abstract ->
+              ('a, int) Direct.abstract ->
+              'b -> ('b -> ('a, GAC_R.contr) Direct.abstract -> 'c) -> 'c
           end
         module type FEATURES =
           sig
@@ -10797,7 +10846,7 @@ module G_GAC_R :
                 'b ->
                 ('b ->
                  ('a, GAC_R.contr) Direct.abstract *
-                 ('a, F.Input.rhs) Direct.abstract * bool ->
+                 ('a, F.Input.rhs) Direct.abstract ->
                  ('a, 'c) Direct.abstract) ->
                 ('a, 'c) Direct.abstract
               val back_elim :
@@ -12232,9 +12281,8 @@ module G_GVC_Z3 :
             type rhs = GVC_Z3.contr
             val get_input :
               ('a, inp) Direct.abstract ->
-              (('a, GVC_Z3.contr) Direct.abstract *
-               ('a, rhs) Direct.abstract * bool, 'b,
-               ('a, 'c) Direct.abstract)
+              (('a, GVC_Z3.contr) Direct.abstract * ('a, rhs) Direct.abstract,
+               'b, ('a, 'c) Direct.abstract)
               StateCPSMonad.monad
           end
         module InpMatrixVector :
@@ -12245,21 +12293,30 @@ module G_GVC_Z3 :
               ('a, 'b * 'c) Direct.abstract ->
               'd ->
               ('d ->
-               ('a, 'b) Direct.abstract * ('a, 'c) Direct.abstract * bool ->
-               'e) ->
-              'e
+               ('a, 'b) Direct.abstract * ('a, 'c) Direct.abstract ->
+               ('a, 'e) Direct.abstract) ->
+              ('a, 'e) Direct.abstract
           end
         module type OUTPUT =
           sig
             type res
             val make_result :
               ('a, GVC_Z3.contr) Direct.abstract ->
-              ('a, res, 'b, 'c) GEF.cmonad
+              ('a, GVC_Z3.contr) Direct.abstract ->
+              ('a, int) Direct.abstract ->
+              ('a, int) Direct.abstract ->
+              ('a, int) Direct.abstract -> ('a, res, 'b, 'c) GEF.cmonad
           end
         module OutJustAnswer :
           sig
             type res = GVC_Z3.contr
-            val make_result : 'a -> 'b -> ('b -> 'a -> 'c) -> 'c
+            val make_result :
+              'a GVC_Z3.vc ->
+              'a GVC_Z3.vc ->
+              ('a, int) Direct.abstract ->
+              ('a, int) Direct.abstract ->
+              ('a, int) Direct.abstract ->
+              'b -> ('b -> ('a, GVC_Z3.contr) Direct.abstract -> 'c) -> 'c
           end
         module type FEATURES =
           sig
@@ -12425,7 +12482,7 @@ module G_GVC_Z3 :
                 'b ->
                 ('b ->
                  ('a, GVC_Z3.contr) Direct.abstract *
-                 ('a, F.Input.rhs) Direct.abstract * bool ->
+                 ('a, F.Input.rhs) Direct.abstract ->
                  ('a, 'c) Direct.abstract) ->
                 ('a, 'c) Direct.abstract
               val back_elim :
@@ -13864,8 +13921,7 @@ module G_GVC_Z19 :
             val get_input :
               ('a, inp) Direct.abstract ->
               (('a, GVC_Z19.contr) Direct.abstract *
-               ('a, rhs) Direct.abstract * bool, 'b,
-               ('a, 'c) Direct.abstract)
+               ('a, rhs) Direct.abstract, 'b, ('a, 'c) Direct.abstract)
               StateCPSMonad.monad
           end
         module InpMatrixVector :
@@ -13876,21 +13932,30 @@ module G_GVC_Z19 :
               ('a, 'b * 'c) Direct.abstract ->
               'd ->
               ('d ->
-               ('a, 'b) Direct.abstract * ('a, 'c) Direct.abstract * bool ->
-               'e) ->
-              'e
+               ('a, 'b) Direct.abstract * ('a, 'c) Direct.abstract ->
+               ('a, 'e) Direct.abstract) ->
+              ('a, 'e) Direct.abstract
           end
         module type OUTPUT =
           sig
             type res
             val make_result :
               ('a, GVC_Z19.contr) Direct.abstract ->
-              ('a, res, 'b, 'c) GEF.cmonad
+              ('a, GVC_Z19.contr) Direct.abstract ->
+              ('a, int) Direct.abstract ->
+              ('a, int) Direct.abstract ->
+              ('a, int) Direct.abstract -> ('a, res, 'b, 'c) GEF.cmonad
           end
         module OutJustAnswer :
           sig
             type res = GVC_Z19.contr
-            val make_result : 'a -> 'b -> ('b -> 'a -> 'c) -> 'c
+            val make_result :
+              'a GVC_Z19.vc ->
+              'a GVC_Z19.vc ->
+              ('a, int) Direct.abstract ->
+              ('a, int) Direct.abstract ->
+              ('a, int) Direct.abstract ->
+              'b -> ('b -> ('a, GVC_Z19.contr) Direct.abstract -> 'c) -> 'c
           end
         module type FEATURES =
           sig
@@ -14056,7 +14121,7 @@ module G_GVC_Z19 :
                 'b ->
                 ('b ->
                  ('a, GVC_Z19.contr) Direct.abstract *
-                 ('a, F.Input.rhs) Direct.abstract * bool ->
+                 ('a, F.Input.rhs) Direct.abstract ->
                  ('a, 'c) Direct.abstract) ->
                 ('a, 'c) Direct.abstract
               val back_elim :
@@ -15489,9 +15554,8 @@ module G_GFC_F :
             type rhs = GFC_F.contr
             val get_input :
               ('a, inp) Direct.abstract ->
-              (('a, GFC_F.contr) Direct.abstract *
-               ('a, rhs) Direct.abstract * bool, 'b,
-               ('a, 'c) Direct.abstract)
+              (('a, GFC_F.contr) Direct.abstract * ('a, rhs) Direct.abstract,
+               'b, ('a, 'c) Direct.abstract)
               StateCPSMonad.monad
           end
         module InpMatrixVector :
@@ -15502,21 +15566,30 @@ module G_GFC_F :
               ('a, 'b * 'c) Direct.abstract ->
               'd ->
               ('d ->
-               ('a, 'b) Direct.abstract * ('a, 'c) Direct.abstract * bool ->
-               'e) ->
-              'e
+               ('a, 'b) Direct.abstract * ('a, 'c) Direct.abstract ->
+               ('a, 'e) Direct.abstract) ->
+              ('a, 'e) Direct.abstract
           end
         module type OUTPUT =
           sig
             type res
             val make_result :
               ('a, GFC_F.contr) Direct.abstract ->
-              ('a, res, 'b, 'c) GEF.cmonad
+              ('a, GFC_F.contr) Direct.abstract ->
+              ('a, int) Direct.abstract ->
+              ('a, int) Direct.abstract ->
+              ('a, int) Direct.abstract -> ('a, res, 'b, 'c) GEF.cmonad
           end
         module OutJustAnswer :
           sig
             type res = GFC_F.contr
-            val make_result : 'a -> 'b -> ('b -> 'a -> 'c) -> 'c
+            val make_result :
+              'a GFC_F.vc ->
+              'a GFC_F.vc ->
+              ('a, int) Direct.abstract ->
+              ('a, int) Direct.abstract ->
+              ('a, int) Direct.abstract ->
+              'b -> ('b -> ('a, GFC_F.contr) Direct.abstract -> 'c) -> 'c
           end
         module type FEATURES =
           sig
@@ -15682,7 +15755,7 @@ module G_GFC_F :
                 'b ->
                 ('b ->
                  ('a, GFC_F.contr) Direct.abstract *
-                 ('a, F.Input.rhs) Direct.abstract * bool ->
+                 ('a, F.Input.rhs) Direct.abstract ->
                  ('a, 'c) Direct.abstract) ->
                 ('a, 'c) Direct.abstract
               val back_elim :
