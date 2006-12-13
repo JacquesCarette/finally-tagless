@@ -137,7 +137,7 @@ module GenericVectorContainer(Dom:DOMAINL) =
   type contr = Dom.v container2dfromvector
   type 'a vc = ('a,contr) code
   type 'a vo = ('a,Dom.v) code
-  let getL x n m = .< ((.~x).arr).(.~n* (.~x).m + .~m) >.
+  let getL x i j = .< ((.~x).arr).(.~i* (.~x).m + .~j) >.
   let dim2 x = .< (.~x).n >.
   let dim1 x = .< (.~x).m >.
   let mapper g a = match g with
@@ -160,11 +160,14 @@ module GenericVectorContainer(Dom:DOMAINL) =
           done
         done;
         aa end 
->.
+	>.
 
-  let identity n m = .< {arr=Array.init (.~n* .~m) 
-      (fun k -> if ((k mod .~n)* .~m + .~m = k) then .~(Dom.oneL) else
-          .~(Dom.zeroL)); n = .~n; m = .~m} >.
+  let identity n m = .<
+    let nelems = .~n * .~ m in
+    let ar = Array.make nelems .~(Dom.zeroL) in
+    let rec loop i = if i >= nelems then {arr = ar; n = .~n; m = .~m}
+	             else (ar.(i) <- .~(Dom.oneL); loop (i+ .~m +1)) in
+    loop 0>.
   let swap_rows_stmt b r1 r2 = .<
       let a = (.~b).arr and m = (.~b).m in
       let i1 = .~r1*m and i2 = .~r2*m in
