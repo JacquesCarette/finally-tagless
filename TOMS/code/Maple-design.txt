@@ -1,0 +1,693 @@
+The formatting below is not very good, because cut&paste from a Maple 
+document to 'pure text' is not so good.  But this should give you an 
+idea of the full "complexity" of the Matrix container in Maple.  In 
+Maple everything is dynamic; my work now is to see how much of this can 
+be made static.  I attach the page for 'Matrix', 'storage modes' and 
+'indexing functions'; I also give the help page for LUDecomposition (as 
+GE in Maple just calls LU with the appropriate options).  You'll see our 
+work still has some ways to go to offer the same "complexity" as Maple does.
+
+Matrix - construct a Matrix
+Calling Sequence
+     Matrix(r, c, init, ro, sym, sc, sh, st, o, dt, f, a)
+Parameters
+     r    - (optional) non-negative integer or integer range with 
+left-hand endpoint 1; row dimension of Matrix
+     c    - (optional) non-negative integer or integer range with 
+left-hand endpoint 1; column dimension of Matrix
+     init - (optional) Maple procedure, table, array, list, Array, 
+Matrix, Vector, set of equations, or expression of type algebraic; 
+initial values for the Matrix
+     ro   - (optional) equation of the form readonly=true or false; 
+specify whether Matrix entries can be changed
+     sym  - (optional) equation of the form symbol=name; specifies the 
+symbolic name to be used for the Matrix entries
+     sc   - (optional) equation of the form scan=name or scan=list 
+specifying the structure and/or data order for interpreting initial 
+values; interpreter for initial values in parameter init
+     sh   - (optional) equation of the form shape=name or shape=list 
+specifying one or more built-in or user-defined indexing functions; 
+storage allocation for Matrix entries
+     st   - (optional) equation of the form storage=name, where name is 
+a permitted storage mode; storage requirements for Matrix entries
+     o    - (optional) equation of the form order=name, where name is 
+either C_order or Fortran_order; specifies if Matrix entries are stored 
+by rows or columns
+     dt   - (optional) equation of the form datatype=name, where name is 
+any Maple type, complex[8], or integer[n] for n=1,2,4, or 8; type of 
+data stored in Matrix
+     f    - (optional) equation of the form fill=value, where value is 
+of the type specified by the dt parameter; specifies Matrix entries at 
+locations not otherwise set
+     a    - (optional) equation of the form attributes=list, where list 
+specifies permitted attributes; specifies additional mathematical 
+properties of the Matrix
+Description
+The Matrix(..) function is the constructor for the Matrix data 
+structure. It is one of the principal data structures on which the 
+LinearAlgebra routines operate.
+Only small Matrices are displayed inline in Maple. By default, a small 
+Matrix is defined as one whose dimensions are in the range 1..25 
+(Command-line version of Maple) or the range 1..10 (worksheet version of 
+Maple). Any Matrix whose dimension(s) are larger than this size is 
+displayed by using a place-holder. For information on how to view the 
+place-holder, see structuredview.
+You can display larger Matrices inline by using the 
+interface(rtablesize=value) command, where value is an integer that 
+represents the upper bound of the dimension range.
+To change the environment so that Maple always displays rtables inline, 
+include the interface(rtablesize=infinity) command in a Maple 
+initialization file (see maple).
+For more information, see interface.
+All parameters are optional. However, enough information must be 
+provided in the calling sequence for the mathematical shape of the 
+Matrix and the storage requirements for its entries to be determined. In 
+particular, if no parameters are specified, the result is a 0 x 0 Matrix.
+The Matrix(r) function constructs an r x r Matrix whose entries are 
+determined by the fill value in parameter f (default = 0). If the row 
+dimension is not provided, it defaults to zero.
+The Matrix(r,c) function constructs an r x c Matrix whose entries are 
+determined by the fill value in parameter f (default = 0). If the column 
+dimension is not provided, it defaults to the row dimension. The column 
+dimension cannot be specified without specifying the row dimension.
+The Matrix(init) function constructs a Matrix whose shape and entries 
+are determined by parameter init.
+The Matrix(r,c,init) function constructs an r x c Matrix whose initial 
+entries are determined by parameter init (and parameter f if all of the 
+entries in the Matrix are not set by init). If the initial entries of 
+the Matrix are not provided, all of the entry values default to the fill 
+value (default = 0).
+Parameter init can take any one of the following forms. (Dimensions must 
+be provided in the calling sequence if init is one of the first four 
+forms (procedure, expression, table, or set).)
+procedure
+ The procedure must accept pairs of positive integer arguments (i.e., 
+Matrix indices) and return the value for the corresponding entry in the 
+Matrix.
+expression of type algebraic
+ The expression is evaluated as a function (or procedure) which takes a 
+pair of positive integers as arguments (i.e., Matrix indices) and 
+returns the value of the corresponding entry of the Matrix.
+table
+ The table is referenced by indices of the form [i,j] where i and j are 
+positive integers (i.e., Matrix indices). (The table may include entries 
+for indices of other forms. These will be ignored.)
+set of equations
+ The set of equations must take the form (i, j) = <value> where i and j 
+are positive integers (i.e., Matrix indices). It is an error to specify 
+entries for locations that are outside the index range of the resulting 
+Matrix.
+array or Array
+ This must be a 2-dimensional table-based array or rtable-based Array. 
+The indexing is shifted to be 1-based. It is an error to specify entries 
+for locations that are outside the index range of the resulting Matrix.
+Matrix
+ The Matrix constructor accepts another Matrix as an initializer for the 
+entries. It is an error to specify entries for locations that are 
+outside the index range of the resulting Matrix.
+list, or list of lists
+ If L is a list whose elements are not themselves lists, it is 
+interpreted as [L]. If L is a list of lists, the first row of the Matrix 
+is constructed from L[1], the second row from L[2], and so on, unless a 
+scan parameter is provided. It is an error to specify entries for 
+locations that are outside the index range of the resulting Matrix.
+ The sublists in init must satisfy the following Conformance Rule:
+   The components of the sublists of the init parameter                
+   must define a complete partition of the Matrix being constructed.    
+Vector
+ If the sh parameter is included in the calling sequence and set to 
+shape = diagonal or shape = [diagonal], then the Vector is used to 
+initialize the main diagonal of the resulting Matrix, regardless of the 
+Vector's orientation. Otherwise, the elements of the Vector are placed 
+in the first column or row of the resulting Matrix, according to the 
+orientation of the Vector.
+If the ro option is included in the calling sequence as either readonly 
+or readonly=true, then the resulting Matrix is "readonly" (i.e., its 
+entries cannot be changed after construction).
+The sym option, in the form symbol=name, provides a symbolic name to use 
+for the Matrix entries if no initializer is provided. This parameter is 
+ignored if an initializer is given.
+Parameters may be included more than once. If more than 2 integers are 
+included in the calling sequence, the first is r, the second is c and 
+the last is init (algebraic expression case). Otherwise, if a parameter 
+is repeated, the last occurrence is the effective one.
+Parameters may be given in any order (except that the interpretation of 
+integer parameters is always that the first is r and the second is c).
+The remaining parameters in the calling sequence have been provided for 
+achieving maximal efficiency in computations with Matrices.
+scan=name or scan=list
+Specifies the structure and/or the data order for interpreting the 
+initial values of a Matrix when init is a list. If the scan parameter is 
+not provided in the calling sequence and init is a list, scan defaults 
+to [rectangular,rows]. In the case that init is not a list, the scan 
+parameter is ignored. For more information regarding scan methods in 
+Matrices, see scan.
+shape=name or shape=list
+Specifies one or more built-in or user-defined indexing functions that 
+determine the non-zero structure of the Matrix. If more than one 
+indexing function is included, they must be entered as a list. The 
+default shape is [] (none). For Matrices, the built-in indexing 
+functions are:
+antihermitian antisymmetric band      constant  
+diagonal      identity      hermitian scalar    
+symmetric     triangular    zero      Hessenberg 
+For more information, see storage and rtable_indexfcn.
+storage=name
+Specifies how physical memory is allocated for storing the entries of 
+the Matrix. The default storage is rectangular.
+For more information, see storage.
+order=name
+Specifies the internal ordering of the Matrix structure. Permissible 
+values are C_order (stored by rows) and Fortran_order (stored by 
+columns). The default order is Fortran_order.
+datatype=name 
+Specifies the type of data stored in the Matrix. It can be one of 
+integer[n], float[n], complex[n], or any Maple type specification.
+For integer[n], n can be 1, 2, 4, or 8, indicating the number of bytes 
+per integer. For float[n] and complex[n], the only allowable value of n 
+is 8. The default datatype is the general Maple type anything.
+fill=value
+Specifies the value for unspecified Matrix elements. This value must 
+meet the same evaluation requirements as the initializer values. The 
+default fill value is 0.
+Note:  The fill value is only used to fill those elements of the Matrix 
+that are unspecified in spite of the indexing function. For instance, 
+the fill value is not used to fill the lower triangle of an upper 
+triangular Matrix. In the case of a sparse Matrix, the fill value is 
+always ignored.
+attributes=list 
+Specifies the attributes with which the Matrix is created. This option 
+can be used to attach mathematical properties to the Matrix. Anything 
+that is a valid argument to setattribute can be an attribute of a Matrix.
+This information can be used by various routines, for example, when 
+choosing between algorithms. In particular, the following LinearAlgebra 
+package routines efficiently choose an appropriate algorithm if 
+attributes=[positive_definite] is included in the calling sequence to 
+construct the Matrices used in the routines.
+ 
+ConditionNumber Eigenvalues     Eigenvectors 
+LinearSolve     LUDecomposition MatrixInverse 
+ 
+The default is to have no attributes.
+After creation, it is possible to change the entries and some of the 
+mathematical properties of the Matrix. See MVassignment and 
+MatrixOptions for more information.
+If expr is a Matrix expression, the nops(expr) function returns 3.
+If expr is a Matrix expression, the op(n, expr) function returns the 
+following operands for the specified values of n.
+n      returned operand                                                    
+                                                                           
+0      Matrix                                                              
+1      dimensions as an expression sequence of two integers                
+2      Matrix elements as a set of equations of the form (indices)=value  *
+3      Matrix options as an expression sequence of equations of the        
+       form option=value  **                                               
+                                                                           
+                                                                           
+*      Only the elements that explicitly need to be specified, taking into 
+       account storage, are returned.                                      
+                                                                           
+**     The subtype option is not returned since it is                      
+       implicitly Matrix. The user and built-in indexing functions         
+       are returned as options.  The scan and fill options                 
+       are not 
+returned.                                                    
+Matrices do not have last name evaluation.
+===========================================
+Shapes and Storage Modes for Matrices and Vectors
+Each of the built-in shapes has an associated storage scheme, which is 
+used if no storage value is provided in the Matrix or Vector 
+constructor. The storage parameter in the Matrix and Vector constructors 
+specify how physical memory is allocated for holding the entries of the 
+constructed Matrix or Vector.
+Shape
+The shape parameter must be either a Maple name (possibly indexed) or 
+else a list of (possibly indexed) Maple names (see the list below for 
+the built-in shapes).
+If no storage parameter is given, then the storage mode is deduced from 
+the last component of the shape. For example, the storage method used 
+for shape = [triangular[upper], band[0, 2] ] will be to store by 
+diagonals (and hence store only the three non-0 diagonals), whereas 
+shape = [band[0, 2], triangular[upper] ] will store the entire upper 
+triangle (by columns, unless the order parameter specifies C_order).
+Note:  A symmetric band Matrix should be created with shape = symmetric, 
+storage = band[0, b] or shape = symmetric, storage = band[b, 0]. That 
+is, the band property should be given as the storage, rather than as 
+part of the shape. If the band property is given as part of the shape, 
+then it must agree with the storage, as shape = [symmetric, band[0, b]], 
+storage = band[0, b] or shape = [symmetric, band[b, b]], storage = 
+band[b, b], not as shape = [symmetric, band[b, b]], storage = band[0, 
+b]. The latter specification will lose the off diagonal information from 
+the initializer (because of the way that Matrices are initialized). If 
+the storage parameter is not specified, it will default to agreeing with 
+the shape, as described above.
+For Vectors, the shapes (built-in indexing functions) are:
+unit[j] scalar[j, x] zero constant[x] 
+ 
+For Matrices, the shapes (built-in indexing functions) are:
+identity      scalar[x]  zero          
+constant[x]   diagonal   band[b]       
+band[b1, b2]  symmetric  skewsymmetric 
+antisymmetric hermitian  skewhermitian 
+antihermitian triangular Hessenberg     
+ 
+Note:  For each of the shapes following, and including, diagonal in the 
+above list, the resulting Matrix is constructed according to the 
+following view: The initializer effectively causes a Matrix with no 
+(i.e., rectangular) shape to be built, and then the shape is "imposed", 
+as a mask, on the result. For example, if A is a 2 x 2 Matrix, then the 
+calling sequence Matrix( A, shape=triangular[lower]), results in a 2 x 2 
+lower triangular Matrix, which has the same entries as A except for the 
+[1,2] entry, which is 0. Similarly, Matrix( [[A], [A,A]], 
+shape=triangular[lower], scan=triangular[lower] ) builds a lower 
+triangular Matrix, with the pieces of the diagonal blocks which "stuck 
+out" above the diagonal being set to 0. For the shapes in the symmetric 
+family, the entries in the upper triangle are used to construct the 
+result. (Note that if the initializer is an array, or a list containing 
+arrays, the array indices are implicitly shifted to be 1-based for this 
+operation - or any other Matrix construction or modification operation.)
+For completeness, a shape value of rectangular can be given when 
+constructing a Matrix or Vector. All occurrences of rectangular in the 
+shape parameter are removed when the Matrix or Vector is constructed, so 
+that specifying shape = rectangular is identical to shape = [].
+Storage
+The storage value can be any one of
+rectangular               triangular[upper]         triangular[lower]
+triangular[upper, strict] triangular[lower, strict] Hessenberg[upper]
+Hessenberg[lower]         band[b1, b2]              band[b]          
+diagonal                  empty                     sparse           
+sparse[upper]             sparse[lower]                               
+The sparse[upper] and sparse[lower] storage values can be used to 
+efficiently store sparse Matrices which have symmetry (symmetric, 
+hermitian, etc).
+Maple combines the storage and (in the case of Matrices) order values 
+into the storage mode for the Matrix or Vector. The storage mode and the 
+shape combine to form the access method. The shape parameter tells Maple 
+(together with the scan method, if necessary) how much storage to 
+allocate (in units determined by the datatype parameter of the Matrix or 
+Vector constructor). The access method tells Maple how to retrieve 
+values, and how to store values. In particular, the access method 
+provides the following information:
+   *  Whether a Matrix is stored as sparse, Fortran order (column 
+major), C order (row major) and/or other special format.
+   *  Whether or which of the entries are determinable from the access 
+method itself.
+ 
+If the datatype parameter is provided:
+   *  Storage is allocated in units of corresponding size.
+   *  If datatype is a floating-point or hardware type, data is 
+converted to this type before storing. This conversion is done by the 
+storage function (which is implicitly called by the last indexing 
+function). Data of the correct type is not modified in any way (e.g., 
+floating-point numbers are not rounded to Digits precision).
+   *  Data to be stored in the Matrix or Vector must be of the specified 
+type (after conversion to floating-point or hardware numeric type, if 
+necessary).
+   *  Values returned from the storage function are of this type.
+Notes: 
+1.  In general, the specified storage mode for a Matrix or Vector must 
+provide storage for each location in the Matrix or Vector for which a 
+value cannot be obtained directly from the shape. For example, if there 
+is no shape associated with a Matrix, it will generally be an error to 
+provide any storage parameter value other than rectangular or sparse; if 
+storage = triangular[upper] were given, for instance, the resulting 
+Matrix would have mutable locations (the lower triangle) for which no 
+storage is provided. Attempting to access such an entry results in an 
+error.
+2.  A non-zero value returned from the storage function is guaranteed to 
+be of the correct type. However, if a user indexing function returns a 
+value without invoking the storage function, no type conversion is 
+implied (i.e., it is the responsibility of the user indexing function to 
+return an object of the correct type). A zero value returned from the 
+storage function cannot be guaranteed to be of the correct type, because 
+such values are returned from positions not corresponding to physical 
+memory positions (i.e., values outside of the actual storage allocated) 
+and 0 may not, in fact, be recognized by the datatype type.
+The last indexing function for a Matrix or Vector calls the storage 
+function for that Matrix or Vector to perform the actual storage or 
+retrieval operation requested (this is done simply by referencing the 
+appropriate element of the Matrix or Vector, just as if the storage 
+function were another indexing function).
+See Also
+Matrix, rtable_indexfcn, scan, Vector
+===================================
+Indexing Functions for Array, Matrices, and Vectors (Rtable Objects)
+About Indexing Functions
+Indexing functions are used to index into an rtable (Array, Matrix, or 
+Vector) to retrieve or store a value. They come in two types: built-in 
+or user-defined (see below). An rtable can have zero or more indexing 
+functions, each specified by name when the rtable is constructed. For 
+more information on how to construct an rtable object with an indexing 
+function, see the help pages for Array, Matrix, and Vector.
+Whenever an attempt is made to reference or store a value in a location 
+of an rtable that has indexing functions, the first indexing function of 
+the rtable is called. The indexing function performs whatever 
+manipulations it sees fit on the indices (e.g. sorting them for 
+symmetric indexing), and then accesses the passed rtable by using the 
+manipulated indices. If the passed rtable has any indexing functions, 
+the first of these is invoked in the same manner as the current one.
+When an attempt is made to reference or store a value in a location of 
+an rtable that does not have any indexing functions, the rtable's 
+storage function (as specified in the calling sequence when the rtable 
+was constructed) is invoked to carry out the reference or storage 
+operation.
+A standard set of indexing functions is built into the Maple kernel (see 
+below). In addition, you can add your own custom indexing function by 
+defining a routine whose name starts with 'index/ ...' and passing the 
+name to the appropriate constructor. An example is provided below.
+The name of an indexing function is always of the form "index/indFn". 
+When specifying indexing functions during the construction of an rtable, 
+only the indFn part of the name is specified.
+Responsibilities of an Indexing Function
+When reading from an rtable, the indexing function is responsible for 
+performing the appropriate index manipulation (for example, sorting for 
+a symmetric Matrix), looking up the value by reindexing into the passed 
+rtable, performing the appropriate manipulation of the result (for 
+example, negation of a lower-triangle element of an antisymmetric 
+Matrix), and returning the result.
+When writing to an rtable, the indexing function must perform the 
+appropriate index manipulation, and assign the value by reindexing into 
+the passed rtable. Furthermore, it may need to make use of information 
+about the rtable to know what must be assigned. For example, a symmetric 
+Matrix with a rectangular storage must have both entries assigned.
+Maple Built-in Indexing Functions
+Several indexing functions are built into Maple. For more information, 
+see the corresponding help page.
+   index/antihermitian            
+   index/antisymmetric            
+   index/band[b1,b2]              
+   index/Circulant[V]             
+   index/constant[n]              
+   index/diagonal                 
+   index/hermitian                
+   index/Hessenberg[lower]        
+   index/Hessenberg[upper]        
+   index/identity                 
+   index/scalar[j,n]              
+   index/scalar[n]                
+   index/symmetric                
+   index/triangular[upper]        
+   index/triangular[lower]        
+   index/triangular[upper,unit]   
+   index/triangular[lower,unit]   
+   index/unit[j]                  
+   index/Vandermonde[V]           
+   index/zero                      
+User Indexing Functions
+A user indexing function is a Maple procedure with name of the form 
+`index/my_indexing_fn`.
+If a user indexing function is included as a parameter passed to the 
+Array constructor, or as the value of the shape parameter of a Matrix or 
+Vector, the index/ part must be omitted (that is, Maple will add the 
+index/ prefix, when accessing the Matrix or Vector).
+A procedure which is to be used as an indexing function receives two or 
+three arguments. The first is a list specifying the index at which the 
+Matrix, Vector or Array is being referenced. The second argument is the 
+Matrix, Vector or Array itself, with its first indexing function 
+removed. For retrieval operations, no more arguments are specified. For 
+storage operations, the third argument is a list of the value(s) to be 
+stored in the location determined by the indexing function itself, given 
+the first two arguments. It is the responsibility of the indexing 
+function to remove the list wrapper. Since the first indexing function 
+has been removed from the object being passed in, retrieval and storage 
+are effected simply by indexing the Matrix, Vector or Array at the 
+(possibly new) index.
+A typical user indexing function has the following form (with the 
+obvious changes for Vector or Array indexing):
+ >      `index/my_indexing_function` := proc( idx :: list( posint ),
+ >              M :: Matrix, val :: list )
+ >          local idx1, init_val;
+ >          if nops(idx) <> 2 then
+ >              error "Matrix indexing requires exactly 2 indices";
+ >          end if;  
+ >          idx1 :=  <some function of idx>;
+ >          if nargs = 2 then
+ >              # retrieval
+ >              if <some test on idx1> then
+ >                  # indexing function determines value, i.e.,
+ >                  # location is not mutable
+ >                  <indexing_function_value>;
+ >              else
+ >                  # get value from storage
+ >                  M[idx1];
+ >              end if;
+ >          else
+ >              # storage
+ >              if <some test on idx1> then
+ >                  # indexing function determines value, i.e.,
+ >                  # location is not mutable
+ >                  if op( val ) <> <indexing_function_value> then
+ >                      # invalid value
+ >                      error "invalid assignment";
+ >                  else
+ >                      # be sure to do explicit write, but catch
+ >                      # this if the storage fails, as storage
+ >                      # for non-mutable locations need not be
+ >                      # allocated
+ >                      try
+ >                          M[idx1] := op( val );
+ >                      catch "unable to store":
+ >                          # couldn't write, return value (as if
+ >                          # the write succeeded)
+ >                          op( val );
+ >                      end try;
+ >                  end if;
+ >              else
+ >                  # general value
+ >                  M[idx1] := op( val );
+ >              end if;
+ >          end if;
+ >      end proc;
+The Matrix, Vector or Array object M which is passed in to this routine 
+is the Matrix, Vector or Array on which the original index reference was 
+requested, with its first indexing function removed.
+Any number of user indexing functions can be provided, and they can be 
+intermixed with the built-in indexing functions described in the 
+previous section.
+See Also
+antihermitian, antisymmetric, Array, band, constant, diagonal, 
+hermitian, Hessenberg, identity, Matrix, rtable, scalar, symmetric, 
+triangular, unit, Vector, zero 
+=====================================
+LinearAlgebra[LUDecomposition] - compute the Cholesky, PLU or PLU1R 
+decomposition of a Matrix
+Calling Sequence
+     LUDecomposition(A, m, out, c, ip, outopts, ...)
+Parameters
+     A       - Matrix
+     m       - (optional) equation of the form method = name where name 
+is one of 'GaussianElimination', 'RREF', 'FractionFree', 'Cholesky', or 
+'none'; method used to factorize A
+     out     - (optional) equation of the form output = obj where obj is 
+one of 'P', 'L', 'U', 'U1', 'R', 'NAG', 'determinant', or 'rank', or a 
+list consisting of one or more of these names; selects result objects to 
+compute
+     c       - (optional) BooleanOpt(conjugate); specifies whether to 
+use the Hermitian transpose in the case of Cholesky decomposition
+     ip      - (optional) BooleanOpt(inplace); specifies if output 
+overwrites input when U or NAG is in the output list
+     outopts - (optional) equation of the form outputoptions[o] = list 
+where o is one of 'P', 'L', 'U', 'U1', 'R', or 'NAG', and list contains 
+options to pass to the result constructor; constructor options for the 
+result object
+     ...     - (optional) additional instances of outputoptions[o] = list
+Description
+The LUDecomposition command computes a PLU decomposition, a modified 
+PLU1R decomposition, or a Cholesky decomposition of the Matrix A.
+Depending on what is included in the output option (out), an expression 
+sequence containing one or more of the factors P, L, U, U1, R, the 
+compact NAG form, the determinant, and the rank can be returned. The 
+objects are returned in the same order as specified in the output list.
+Note:  Either U or the pair U1 and R may be returned, but not both.
+The LUDecomposition(A) calling sequence is equivalent, by default, to 
+LUDecomposition(A, method='GaussianElimination'). If A has both 
+symmetric or hermitian shape and positive_definite attributes, then the 
+LUDecomposition(A) calling sequence is equivalent to LUDecomposition(A, 
+method='Cholesky').
+The LUDecomposition(A, method='GaussianElimination') calling sequence is 
+equivalent to LUDecomposition(A, method='GaussianElimination', 
+output=['P','L','U']). This PLU decomposition generates a square unit 
+lower triangular L factor and an upper triangular factor U with the same 
+dimensions as A so that A = P . L . U. The Matrix P is a permutation 
+Matrix.
+The selection of pivots in the GaussianElimination method differs 
+according to the type of the Matrix entries. For Matrices with numeric 
+entries and at least one floating-point entry, pivots are selected 
+according to absolute magnitude. For Matrices with only exact rational 
+or symbolic entries, pivots are selected as the first nonzero element in 
+the current column, moving downwards from the current row.
+The PLU1R decomposition is achieved by using LUDecomposition(A, 
+method='RREF') or LUDecomposition(A, output=['P','L','U1','R']). This 
+further factors U into U1 . R where U1 is square upper triangular factor 
+and R is the unique reduced row-echelon form of the Matrix A. In this 
+case, A = P . L . U1 . R. The option method='Cholesky' is incompatible 
+with providing either 'U1' or 'R' in the out list.
+The PLU decomposition obtained by using method='FractionFree' generates 
+a square non-unit lower triangular L factor and fraction-free upper 
+triangular factor U with the same dimensions as A so that A = P . L . U. 
+The Matrix P is a permutation Matrix.
+The Cholesky decomposition of the positive definite Matrix A can be 
+obtained by using LUDecomposition(A, method='Cholesky') which generates 
+the square lower triangular factor L. If A is real symmetric, then A = L 
+. Transpose(L); if A is complex hermitian, then A = L . 
+HermitianTranspose(L). The factor U = HermitianTranspose(L) can be 
+generated using the calling sequence LUDecomposition(A, 
+method='Cholesky', output=['U']).
+For the Cholesky decomposition, if A is neither real symmetric nor 
+complex hermitian, then a library-level warning is generated. In such a 
+case, A is treated as if it were hermitian or symmetric, with only one 
+of the upper or lower triangles of A being accessed. For floating-point 
+data, the upper triangle of A is used if the factor U is requested; 
+otherwise, the lower triangle of A is used. For exact data, the upper 
+triangle of A is used.
+If m is not specified in the calling sequence, method='none' is used. 
+Note:  method='none' is equivalent to method='GaussianElimination'.
+In the case of Cholesky decomposition, the Hermitian transpose is used 
+by default. If conjugate=false is specified in the calling sequence, the 
+ordinary transpose is used.
+The output option (out) determines the content of the returned 
+expression sequence.
+If output='NAG' and method='Cholesky' are specified in the calling 
+sequence, then the output consists of a Matrix whose lower triangle 
+contains the data of the lower triangular factorization. The entries 
+above the diagonal may not be set to zero.
+If output='NAG' is specified and the Cholesky factorization method is 
+not used, then the output is an expression sequence consisting of a 
+Vector followed by a Matrix. The upper triangle of the Matrix is the U 
+factor and the strictly lower triangle is the L factor (with implicit 
+ones along the diagonal). The Vector is the NAG-style pivot Vector.
+If NAG is included in the output list, all other output entries are 
+excluded with the exception of determinant and rank.
+The inplace option (ip) determines where the result is returned. If 
+given as inplace=true and either U or NAG is included in the output 
+list, the result overwrites the first argument. If given as 
+inplace=false, or if this option is not included in the calling 
+sequence, the result is returned in a new Matrix.
+The condition inplace=true can be abbreviated to inplace.
+The inplace option must be used with caution since, if the operation 
+fails, the original Matrix argument may be corrupted.
+The outputoptions[o] option (outopts) provides additional information 
+(readonly, shape, storage, order, datatype, and attributes) to the 
+Matrix (or Vector) constructor that builds the result.
+The following list indicates permissible values for index [o] of 
+outputoptions with their corresponding meaning.
+ 
+P      permutation Matrix            
+L      lower triangular factor       
+U      upper triangular factor       
+U1     square upper triangular factor
+R      reduced row-echelon form      
+NAG    compact (NAG-style) form       
+ 
+The inplace and outputoptions options are mutually exclusive.
+For more information on the P*L*U1*R decomposition see: Corless, Robert 
+M, and Jeffrey, David J, "The Turing Factorization of a Rectangular 
+Matrix," Sigsam Bulletin 31, no. 3 (September 1997): 20-28. This paper 
+names the U1 factor U.
+This function is part of the LinearAlgebra package, and so it can be 
+used in the form LUDecomposition(..) only after executing the command 
+with(LinearAlgebra). However, it can always be accessed through the long 
+form of the command by using LinearAlgebra[LUDecomposition](..).
+Examples
+ > with(LinearAlgebra):
+ > A := <<0,-2,0,3>|<1,3,0,1>|<1,1,0,0>|<-3,4,1,0>>;
+
+                           [ 0    1    1    -3]
+                           [                  ]
+                           [-2    3    1     4]
+                      A := [                  ]
+                           [ 0    0    0     1]
+                           [                  ]
+                           [ 3    1    0     0]
+
+ > (p, l, u) := LUDecomposition(A);
+
+             [0    1    0    0]  [ 1       0      0    0]
+             [                ]  [                      ]
+             [1    0    0    0]  [ 0       1      0    0]
+  p, l, u := [                ], [                      ],
+             [0    0    0    1]  [-3/2    11/2    1    0]
+             [                ]  [                      ]
+             [0    0    1    0]  [ 0       0      0    1]
+
+        [-2    3     1     4  ]
+        [                     ]
+        [ 0    1     1     -3 ]
+        [                     ]
+        [ 0    0    -4    45/2]
+        [                     ]
+        [ 0    0     0     1  ]
+
+ > p . l . u;
+
+                         [ 0    1    1    -3]
+                         [                  ]
+                         [-2    3    1     4]
+                         [                  ]
+                         [ 0    0    0     1]
+                         [                  ]
+                         [ 3    1    0     0]
+
+ > B := <<1,0,2>|<3,1,4>|<6,1,4>|<1,1,2>>:
+ > LUDecomposition( B, method='RREF', 
+outputoptions['U1']=[datatype=integer] );
+
+  [1    0    0]  [1     0    0]  [1    3     6]
+  [           ]  [            ]  [            ]
+  [0    1    0], [0     1    0], [0    1     1],
+  [           ]  [            ]  [            ]
+  [0    0    1]  [2    -2    1]  [0    0    -6]
+
+        [1    0    0     -1 ]
+        [                   ]
+        [0    1    0    4/3 ]
+        [                   ]
+        [0    0    1    -1/3]
+
+ > C := Matrix([[2,3+I,4+2*I,5+3*I],[13,17+3*I,21+6*I],[41,50+6*I],[62]],
+ >      scan=triangular[upper],shape=hermitian,datatype=complex(sfloat)):
+ > G := LUDecomposition(C, method='Cholesky');
+
+  G :=
+
+        [1.41421356237309515 + 0. I , 0. I , 0. I , 0. I]
+
+        [2.12132034355964239 - 0.707106781186547462 I ,
+
+        2.82842712474619029 + 0. I , 0. I , 0. I]
+
+        [2.82842712474618985 - 1.41421356237309492 I ,
+
+        3.53553390593273775 - 0.707106781186547573 I ,
+
+        4.24264068711928477 + 0. I , 0. I]
+
+        [3.53553390593273731 - 2.12132034355964239 I ,
+
+        4.24264068711928566 - 1.41421356237309515 I ,
+
+        4.94974746830583267 - 0.707106781186547684 I , 0. + 0. I]
+
+To reduce a Matrix using Gaussian elimination, specify the 'U' object:
+ > LUDecomposition(A, output='U');
+
+                       [-2    3     1     4  ]
+                       [                     ]
+                       [ 0    1     1     -3 ]
+                       [                     ]
+                       [ 0    0    -4    45/2]
+                       [                     ]
+                       [ 0    0     0     1  ]
+
+To reduce a Matrix using Gauss-Jordan elimination, specify the 'R' object:
+ > LUDecomposition( B, output='R' );
+
+                        [1    0    0     -1 ]
+                        [                   ]
+                        [0    1    0    4/3 ]
+                        [                   ]
+                        [0    0    1    -1/3]
+
+See Also
+Matrix, Vector, LinearAlgebra[GaussianElimination], 
+LinearAlgebra[ReducedRowEchelonForm], type[BooleanOpt], 
