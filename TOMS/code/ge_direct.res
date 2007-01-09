@@ -1927,7 +1927,6 @@
                 sig
                   module Det : DETERMINANT
                   module PivotF : PIVOT
-                  module PivotRep : PIVOTKIND
                   module Input : INPUT
                   module Output : OUTPUT
                 end
@@ -4150,7 +4149,6 @@ module G_GAC_F :
           sig
             module Det : DETERMINANT
             module PivotF : PIVOT
-            module PivotRep : GEF.PIVOTKIND
             module Input : INPUT
             module Output : OUTPUT
           end
@@ -5784,7 +5782,6 @@ module G_GVC_F :
           sig
             module Det : DETERMINANT
             module PivotF : PIVOT
-            module PivotRep : GEF.PIVOTKIND
             module Input : INPUT
             module Output : OUTPUT
           end
@@ -7418,7 +7415,6 @@ module G_GAC_I :
           sig
             module Det : DETERMINANT
             module PivotF : PIVOT
-            module PivotRep : GEF.PIVOTKIND
             module Input : INPUT
             module Output : OUTPUT
           end
@@ -9052,7 +9048,6 @@ module G_GVC_I :
           sig
             module Det : DETERMINANT
             module PivotF : PIVOT
-            module PivotRep : GEF.PIVOTKIND
             module Input : INPUT
             module Output : OUTPUT
           end
@@ -10686,7 +10681,6 @@ module G_GAC_R :
           sig
             module Det : DETERMINANT
             module PivotF : PIVOT
-            module PivotRep : GEF.PIVOTKIND
             module Input : INPUT
             module Output : OUTPUT
           end
@@ -12322,7 +12316,6 @@ module G_GVC_Z3 :
           sig
             module Det : DETERMINANT
             module PivotF : PIVOT
-            module PivotRep : GEF.PIVOTKIND
             module Input : INPUT
             module Output : OUTPUT
           end
@@ -13961,7 +13954,6 @@ module G_GVC_Z19 :
           sig
             module Det : DETERMINANT
             module PivotF : PIVOT
-            module PivotRep : GEF.PIVOTKIND
             module Input : INPUT
             module Output : OUTPUT
           end
@@ -15595,7 +15587,6 @@ module G_GFC_F :
           sig
             module Det : DETERMINANT
             module PivotF : PIVOT
-            module PivotRep : GEF.PIVOTKIND
             module Input : INPUT
             module Output : OUTPUT
           end
