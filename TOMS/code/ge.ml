@@ -823,7 +823,11 @@ end
 end
 (* end of GE-specific stuff *)
 
-(* Now comes the solver module *)
+
+(* ======================================================================
+   Now comes the solver module 
+*)
+
 module Solve = struct
 module type INPUT = sig
     type inp
@@ -869,11 +873,12 @@ end
    
    As we do not support solving over non-fields (GE does not seem
    to be the right way to do that!), there is no point to expose
-   the Update choice, we might as well always use DivisionUpdate. *)
+   the Update choice, we might as well always use DivisionUpdate. 
+   Also, the pivor representation is irrelevant.
+*)
 module type FEATURES = sig
   module Det       : DETERMINANT
   module PivotF    : PIVOT
-  module PivotRep  : PIVOTKIND
   module Input     : INPUT
   module Output    : OUTPUT
 end
@@ -891,7 +896,7 @@ module GenSolve(F : FEATURES) = struct
     module GE' = GE.GenGE(struct
         module Det = F.Det
         module PivotF = F.PivotF
-        module PivotRep = F.PivotRep
+        module PivotRep = RowVectorPerm
         module Update = GE.DivisionUpdate
         module Input = GE.InpMatrixMargin
         module Output = GE.OutJustMatrix
