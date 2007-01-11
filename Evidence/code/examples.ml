@@ -1,8 +1,15 @@
-module type ALL = sig 
+(* Type for an abstract monoid 
+   bop = binary operator
+   neutral = neutral element 
+*)
+module type MONOID = sig 
   type 'a b 
   val bop : 'a b -> 'a b -> 'a b
   val neutral : 'a b
 end
+
+(* Type for a (value,property) pair.  Should be tought of as
+   taking an "untyped" value a producing v:p *)
 module type VALUEPROP = sig
   type 'a v
   type prop
@@ -12,35 +19,8 @@ module type VALUEPROP = sig
   val attach : 'a v -> prop -> 'a vp
 end
 
-module type ABSTRACTCODE = sig
-  type 'b b
-  type ('a,'b) abstract = Ground of 'b b | Code of ('a, 'b b) code
-  val concretize : ('a,'b) abstract -> ('a,'b b) code
-  val inject_value : 'b b -> ('a, 'b) abstract
-  val inject_code : ('a,'b b) code -> ('a, 'b) abstract
-  val binaryop : ('a,'b) abstract -> ('a,'b) abstract -> ('a,'b) abstract
-  val simplop : 'b b -> ('a,'b) abstract -> ('a,'b) abstract
-  val bop : 'b b -> 'b b -> 'b b
-end
-
-module Code(B:ALL) = struct
-  type 'b b = 'b B.b
-  type ('a,'b) abstract = Ground of 'b B.b | Code of ('a, 'b B.b) code
-  let concretize = function
-    | Ground x -> .<x>.
-    | Code x   -> x
-  let inject_value x = Ground x
-  let inject_code x = Code x
-  let simplop x y = if x=B.neutral then y else Code .< B.bop x .~(concretize y) >.
-  let binaryop a b = match (a,b) with
-      | (Ground x, Ground y) -> Ground (B.bop x y)
-      | (Ground x, Code y)   -> simplop x b
-      | (Code x, Ground y)   -> simplop y a
-      | (Code x, Code y)   -> Code .< B.bop .~x .~y >.
-  let bop a b = B.bop a b
-end
-
-module AbstractVector(B:ALL) = struct
+(* direct vector (as a list) paired with its length *)
+module AbstractVector(B:MONOID) = struct
   type 'a v = ('a B.b) list
   type prop = int
   type 'a vp = 'a v * prop
@@ -49,7 +29,10 @@ module AbstractVector(B:ALL) = struct
   let attach v p = (v,p)
 end
 
-module LVector(B:ALL) = struct
+(* "safe" vector-with-length.  That is, if the underlying List.hd
+   and List.tl were *unsafe*, then this version would add safety.
+   Just for demonstration purposes, later this will become more useful *)
+module LVector(B:MONOID) = struct
   module VP = AbstractVector(B)
   let lnil = ([], 0)
   let lcons (h:'a B.b) ((t:'a VP.v),p2) = VP.attach (h::t) (1+p2)
@@ -63,23 +46,56 @@ module LVector(B:ALL) = struct
   let concat (a1,l1) (a2,l2) = (a1@a2, l1+l2)
 end
 
-(* of type ALL but we don't want the types to be abstract *)
-module T = struct 
+(* of type MONOID but we don't want the types to be abstract *)
+module MString = struct 
   type 'a b = string 
   let bop x y = x ^ y
   let neutral = ""
 end
 
-module LV = LVector(T)
+(* used in the tests *)
+module LV = LVector(MString)
 
-(* of type ALL but we don't want the types to be abstract *)
-module TC = struct 
+(* of type MONOID but we don't want the types to be abstract *)
+(* this is a pure lift [to code] of MString *)
+module MStringC = struct 
   type 'a b=('a,string) code 
   let bop x y = .< .~x ^ .~ y >.
   let neutral = .< "" >.
 end
-module LVC = LVector(TC)
+module LVC = LVector(MStringC)
 
+(* Type for "abstract" code, ie code that may be observed if it is of
+   Ground type.  Abstract-interpretation influenced *)
+module type ABSTRACTCODE = sig
+  type 'b b
+  type ('a,'b) abstract = Ground of 'b b | Code of ('a, 'b b) code
+  val concretize : ('a,'b) abstract -> ('a,'b b) code
+  val inject_value : 'b b -> ('a, 'b) abstract
+  val inject_code : ('a,'b b) code -> ('a, 'b) abstract
+  val binaryop : ('a,'b) abstract -> ('a,'b) abstract -> ('a,'b) abstract
+  val simplop : 'b b -> ('a,'b) abstract -> ('a,'b) abstract
+end
+
+(* We can 'lift' any monoid to "abstract" code. *)
+module Code(B:MONOID) = struct
+  type 'b b = 'b B.b
+  type ('a,'b) abstract = Ground of 'b B.b | Code of ('a, 'b B.b) code
+  let concretize = function
+    | Ground x -> .<x>.
+    | Code x   -> x
+  let inject_value x = Ground x
+  let inject_code x = Code x
+  let simplop x y = if x=B.neutral then y else Code .< B.bop x .~(concretize y) >.
+  let binaryop a b = match (a,b) with
+      | (Ground x, Ground y) -> Ground (B.bop x y)
+      | (Ground x, Code y)   -> simplop x b
+      | (Code x, Ground y)   -> simplop y a
+      | (Code x, Code y)   -> Code .< B.bop .~x .~y >.
+end
+
+(* lifting of AbstractVector to abstract code.
+   Note how /prop/ does not change. *)
 module AbstractVector2(B:ABSTRACTCODE) = struct
   type ('a,'b) v = ('a, 'b B.b) B.abstract
   type prop = int
@@ -89,7 +105,18 @@ module AbstractVector2(B:ABSTRACTCODE) = struct
   let attach v p = (v,p)
 end
 
-(* deal with values & code-values evenly in spec-time lists *)
+(* So now it gets a little interesting.  Give some lifted
+   monoid type, we create a vector-with-length version of
+   it.  The biggest change over LVector is that now any failures 
+   will happen at generation-time and never at run-time, *even*
+   if List.hd and List.tl are unsafe.  Of course, this requires
+   the length to be known statically at generation time.
+
+   The drawback with this version is that the List computations are
+   all done at generation time too, so that there is essentially 
+   nothing left to be done at run-time!  One step at a time...
+
+   The concretize function just erases all traces of the properties *)
 module LVector2(B:ABSTRACTCODE ) = struct
   module VP = AbstractVector2(B)
   let lnil = ([], 0)
@@ -113,10 +140,12 @@ module LVector2(B:ABSTRACTCODE ) = struct
 		.< .~(tocode (List.map B.concretize v)) >.
 end
 
-module TC2 = Code(T)
+(* Instantiate above for test purposes *)
+module TC2 = Code(MString)
 module LVC2 = LVector2(TC2)
 
-(* of type ALL but we don't want the types to be abstract *)
+(* repeat of the same but over (Nat,+) monoid *)
+(* of type MONOID but we don't want the types to be abstract *)
 module T3 = struct 
   type 'a b=int 
   let bop x y = x + y
@@ -134,9 +163,15 @@ end
 module TC4 = Code(T4)
 module LVC4 = LVector2(TC4)
 
-(* deal with values & code-values evenly in run-time lists *)
-(* we are starting to get intensional here *)
-module LVector3(B:ALL ) = struct
+(* Ok, now we're getting somewhere.  This is very much like 
+   LVector3, except that we have a cleaner separation of generation-time
+   and run-time operations.  All the property computations are done at
+   generation-time, but all the list computations are done at run-time.
+   So finally we don't need explicit lists, just the various usage, and
+   we'll be able to figure out if some things go wrong.
+
+   we are starting to get intensional here *)
+module LVector3(B:MONOID ) = struct
   let lnil = ( .<[]>. , 0)
   let lcons h (t,p2) = (.<(h:: .~t)>. , (1+p2))
 
@@ -160,6 +195,11 @@ module T5 = struct
 end
 
 module LVC5 = LVector3(T5)
+
+(* ========================================================= *)
+(*  End of "working" code.  Rest is still under construction *)
+
+(* ========================================================= *)
 
 (* that's all very cute, but that is mostly a very difficult way
    to do dynamic typing and produce boring residual code.  What 

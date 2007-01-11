@@ -1,7 +1,7 @@
         MetaOCaml version 3.09.1 alpha 029
 
 #       val e1 : 'a list * int = ([], 0)
-# val e2 : 'a Examples.T.b list * int = (["foo"], 1)
+# val e2 : 'a Examples.MString.b list * int = (["foo"], 1)
 #   val e3 : 'a list * int = ([], 0)
 # val e4 : ('a, '_b) Examples.TC2.abstract list * int =
   ([Examples.TC2.Ground "foo"], 1)
@@ -19,8 +19,8 @@
   (.<[(* cross-stage persistent value (as id: h) *);
    (* cross-stage persistent value (as id: h) *)]>.,
    2)
-#     val w1 : 'a Examples.T.b = "foo"
-# val w2 : 'a Examples.T.b list * int = ([], 0)
+#     val w1 : 'a Examples.MString.b = "foo"
+# val w2 : 'a Examples.MString.b list * int = ([], 0)
 #   val w3 : ('a, '_b) Examples.TC2.abstract list * int =
   ([Examples.TC2.Ground "foo"; Examples.TC2.Ground "foo"], 2)
 # val w4 : ('a, '_b) Examples.TC2.abstract list * int =
