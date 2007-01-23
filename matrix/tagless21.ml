@@ -96,6 +96,7 @@ let fact = fix (fun self ->
   f_1>.
 *)
 
-let tfact1 = .!(app fact (i 5));;
+let tfact1 = (app fact (i 5));;
+let tfact1a = .!tfact1;;
 let tfact2 = (.! fact) 5;;
 (* 120 *)
