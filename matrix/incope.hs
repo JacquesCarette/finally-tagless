@@ -25,8 +25,11 @@ module Incope where
 class Symantics repr res | repr -> res where
     int :: Int -> repr Int		-- int literal
     
-    lam :: (repr a -> repr b) -> repr (a->b)
-    app :: repr (a->b) -> repr a -> repr b
+    -- lam and app are now `monadic' and need a `join'
+    -- lam :: (repr a -> repr b) -> repr (a->b)
+    lam :: (repr a -> repr b) -> repr (repr a -> repr b)
+    -- app :: repr (a->b) -> repr a -> repr b
+    app :: repr (repr a -> repr b) -> repr a -> repr b
     fix :: (repr a -> repr a) -> repr a
 
     add :: repr Int -> repr Int -> repr Int
@@ -59,8 +62,8 @@ asR :: R x -> R x; asR = id
 instance Symantics R R where
     int x = R x
 
-    lam f = R (unR . f . R)
-    app e1 e2 = R( (unR e1) (unR e2) )
+    lam f = R f
+    app e1 e2 = (unR e1) e2
     fix f = R( fx (unR . f . R)) where fx f = f (fx f)
 
     add e1 e2 = R( (unR e1) + (unR e2) )
@@ -84,18 +87,18 @@ itest3 = unR (comp . asR . testgib1 $ ())
 -- Note how teh compiler never raises any exception and matches no tags
 -- (no generated code has any tags)
 
-data ByteCode t where
-    Var :: Int -> ByteCode t		-- variables identified by numbers
-    Lam :: Int -> ByteCode t2 -> ByteCode (t1->t2)
-    App :: ByteCode (t1->t2) -> ByteCode t1  -> ByteCode t2
-    Fix :: Int -> ByteCode t -> ByteCode t
-    INT :: Int -> ByteCode Int
-    Add :: ByteCode Int -> ByteCode Int -> ByteCode Int
-    IFEQ :: ByteCode Int -> ByteCode Int -> ByteCode t -> ByteCode t ->
-	    ByteCode t
+data ByteCode r t where
+    Var :: Int -> ByteCode r t		-- variables identified by numbers
+    Lam :: Int -> ByteCode r t2 -> ByteCode r (r t1-> r t2)
+    App :: ByteCode r (r t1-> r t2) -> ByteCode r t1  -> ByteCode r t2
+    Fix :: Int -> ByteCode r t -> ByteCode r t
+    INT :: Int -> ByteCode r Int
+    Add :: ByteCode r Int -> ByteCode r Int -> ByteCode r Int
+    IFEQ :: ByteCode r Int -> ByteCode r Int -> ByteCode r t -> ByteCode r t ->
+	    ByteCode r t
 
 
-instance Show (ByteCode t) where
+instance Show (ByteCode r t) where
     show (Var n) = "V" ++ show n
     show (Lam n b) = "(\\V" ++ show n ++ " -> " ++ show b ++ ")"
     show (App e1 e2) = "(" ++ show e1 ++ " " ++ show e2 ++ ")"
@@ -109,11 +112,11 @@ instance Show (ByteCode t) where
 
 -- Int is the variable counter
 -- for allocation of fresh variables
-newtype C t = C (Int -> (ByteCode t, Int)) 
+newtype C t = C (Int -> (ByteCode C t, Int)) 
 unC (C t) vc0 = t vc0
 asC :: C x -> C x; asC = id
 
-instance Symantics C ByteCode where
+instance Symantics C (ByteCode C) where
     int x = C(\vc -> (INT x, vc))
 
     lam f = C(\vc -> let v = vc
@@ -148,11 +151,9 @@ ctest3 = comp . asC . testgib1 $ ()
 -- ------------------------------------------------------------------------
 -- The partial evaluator
 
-{-
+
 data P t = V t (C t) | E (C t)
 asP :: P x -> P x; asP = id
-liftP :: t -> P t
-liftP x = V x (C (\vc -> 
 
 abstr :: P t -> C t
 abstr (V _ e) = e
@@ -162,16 +163,27 @@ abstr (E e) = e
 instance Symantics P ByteCode where
     int x = V x (int x)
 
-    lam :: (repr a -> repr b) -> repr (a->b)
 
-    lam e = 
-    app :: repr (a->b) -> repr a -> repr b
-    app e1 e2 = case (e1,e2) of
-		 (V n1 _,V n2 _) -> case n1 n2 of
-				     V nr er -> 
+e :: P a -> P b
 
-V nr (int nr) where nr = n1 + n2
-		 _ -> E $ add (abstr e1) (abstr e2)
+P (P a -> P b) 
+V (P a -> P b) (C (P a -> P b))
+
+C (C a -> C b)
+
+
+V (a->b)
+V (\x -> e (V x 
+    lam e = V e (C (\vc -> xxx))
+	    where 
+	    c1 = (lam (abstr . e . E)) -- C (C a -> C b)
+
+--    lam e = V e (lam (abstr . e . E))
+{-
+    app e1 e2 = case e1 of
+		 (V n1 _) -> n1 e2
+		 _ -> E $ app (abstr e1) (abstr e2)
+-}
 
     add e1 e2 = case (e1,e2) of
 		 (V n1 _,V n2 _) -> V nr (int nr) where nr = n1 + n2
