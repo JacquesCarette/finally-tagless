@@ -31,7 +31,7 @@ module Inco where
 -- This class defines syntax (and its instances, semantics) of our language
 
 class Symantics repr res | repr -> res where
-    int :: Int -> repr Int		-- int literal
+    int :: Int -> repr Int                -- int literal
     
     lam :: (repr a -> repr b) -> repr (a->b)
     app :: repr (a->b) -> repr a -> repr b
@@ -46,11 +46,11 @@ test1 () = add (int 1) (int 2)
 test2 () = lam (\x -> add x x)
 
 testgib () = lam (\x -> lam (\y ->
-		  fix (\self -> lam (\n ->
-		      ifeq n (int 0) x
-			(ifeq n (int 1) y
-			 (add (app self (add n (int (-1))))
-			      (app self (add n (int (-2))))))))))
+                  fix (\self -> lam (\n ->
+                      ifeq n (int 0) x
+                        (ifeq n (int 1) y
+                         (add (app self (add n (int (-1))))
+                              (app self (add n (int (-2))))))))))
 
 
 testgib1 () = app (app (app (testgib ()) (int 1)) (int 1)) (int 5)
@@ -93,14 +93,14 @@ itest3 = unR (comp . asR . testgib1 $ ())
 -- (no generated code has any tags)
 
 data ByteCode t where
-    Var :: Int -> ByteCode t		-- variables identified by numbers
+    Var :: Int -> ByteCode t                -- variables identified by numbers
     Lam :: Int -> ByteCode t2 -> ByteCode (t1->t2)
     App :: ByteCode (t1->t2) -> ByteCode t1  -> ByteCode t2
     Fix :: Int -> ByteCode t -> ByteCode t
     INT :: Int -> ByteCode Int
     Add :: ByteCode Int -> ByteCode Int -> ByteCode Int
     IFEQ :: ByteCode Int -> ByteCode Int -> ByteCode t -> ByteCode t ->
-	    ByteCode t
+            ByteCode t
 
 
 instance Show (ByteCode t) where
@@ -111,8 +111,8 @@ instance Show (ByteCode t) where
     show (INT n) = show n
     show (Add e1 e2) = "(" ++ show e1 ++ " + " ++ show e2 ++ ")"
     show (IFEQ ie1 ie2 et ee)
-	= "(if " ++ show ie1 ++ " == " ++ show ie2  ++
-	  " then " ++ show et ++ " else " ++ show ee ++ ")"
+        = "(if " ++ show ie1 ++ " == " ++ show ie2  ++
+          " then " ++ show et ++ " else " ++ show ee ++ ")"
 
 
 -- Int is the variable counter
@@ -125,27 +125,27 @@ instance Symantics C ByteCode where
     int x = C(\vc -> (INT x, vc))
 
     lam f = C(\vc -> let v = vc
-	                 var = C(\vc -> (Var v, vc))
-	                 (body,vc') = unC (f var) (succ vc)
-	             in (Lam v body, vc'))
+                         var = C(\vc -> (Var v, vc))
+                         (body,vc') = unC (f var) (succ vc)
+                     in (Lam v body, vc'))
     app e1 e2 = C(\vc -> let (e1b,vc1) = unC e1 vc
-		             (e2b,vc2) = unC e2 vc1
-		         in (App e1b e2b,vc2))
+                             (e2b,vc2) = unC e2 vc1
+                         in (App e1b e2b,vc2))
 
     fix f = C(\vc -> let v = vc
-	                 var = C(\vc -> (Var v, vc))
-	                 (body,vc') = unC (f var) (succ vc)
-	             in (Fix v body, vc'))
+                         var = C(\vc -> (Var v, vc))
+                         (body,vc') = unC (f var) (succ vc)
+                     in (Fix v body, vc'))
 
     add e1 e2 = C(\vc -> let (e1b,vc1) = unC e1 vc
-		             (e2b,vc2) = unC e2 vc1
-		         in (Add e1b e2b,vc2))
+                             (e2b,vc2) = unC e2 vc1
+                         in (Add e1b e2b,vc2))
 
     ifeq ie1 ie2 et ee = C(\vc -> let (ie1b,vc1) = unC ie1 vc
-		                      (ie2b,vc2) = unC ie2 vc1
-		                      (etb,vc3)  = unC et  vc2
-		                      (eeb,vc4)  = unC ee  vc3
-		         in (IFEQ ie1b ie2b etb eeb,vc4))
+                                      (ie2b,vc2) = unC ie2 vc1
+                                      (etb,vc3)  = unC et  vc2
+                                      (eeb,vc4)  = unC ee  vc3
+                         in (IFEQ ie1b ie2b etb eeb,vc4))
 
     comp repr = fst $ unC repr 0
 
