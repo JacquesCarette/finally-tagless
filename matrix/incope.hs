@@ -6,18 +6,26 @@ module Incope where
 
 {-
   The language is simply-typed lambda-calculus with fixpoint,
-  integers and comparison
+  integers and comparison.
 
   Lam hoas_fn | App e e | Fix hoas_fn |
   I Int | Add ie1 ie2 |
   IFEQ ie1 ie2 e-then e-else
   
-  The language just expressive enough for the Gibonacci function.
+  The language is just expressive enough for the Gibonacci function.
 
   The compiler, the interpreter and the source and target languages
   are *all* typed. The interpreter and the compiler use no tags.
   There is no pattern-match failure possible: the evaluators never
   get stuck.
+
+  The implementation below is *almost* possible in OCaml. Indeed,
+  one can emulate Haskell typeclasses using explicit dictionary passing.
+  The dictionary will by a polymorphic (rank-2) record -- but it is OK,
+  OCaml permits it. Alas, The typeclass below uses higher-order type
+  constructors: repr and res are of a kind * -> *. OCaml does not support
+  higher-order polymorphism.
+
 -}
 
 -- This class defines syntax (and its instances, semantics) of our language
@@ -81,15 +89,8 @@ itest3 = unR (comp . asR . testgib1 $ ())
 -- are untyped.
 -- Note how ByteCode represents MetaOCaml's `code'. Thus the compiler
 -- below neatly maps to the MetaOCaml (with no GADTs).
--- Note how teh compiler never raises any exception and matches no tags
+-- Note how the compiler never raises any exception and matches no tags
 -- (no generated code has any tags)
-
--- The Lift `bytecode instruction' is sort of cross-stage persistent value
--- It is present in many (all?) bytecodes and in many (all?) staged
--- languages. But it can be higher-order. The approach in version 326
--- can perhaps be made to work, at the cost of duplicating this
--- whole section of the code. The feature of that approach is that
--- lam had the type lam :: repr a -> repr b -> repr (repr a -> repr b)
 
 data ByteCode t where
     Var :: Int -> ByteCode t		-- variables identified by numbers
@@ -97,7 +98,6 @@ data ByteCode t where
     App :: ByteCode (t1->t2) -> ByteCode t1  -> ByteCode t2
     Fix :: Int -> ByteCode t -> ByteCode t
     INT :: Int -> ByteCode Int
-    Lift :: t  -> ByteCode t  
     Add :: ByteCode Int -> ByteCode Int -> ByteCode Int
     IFEQ :: ByteCode Int -> ByteCode Int -> ByteCode t -> ByteCode t ->
 	    ByteCode t
@@ -156,68 +156,61 @@ ctest3 = comp . asC . testgib1 $ ()
 -- ------------------------------------------------------------------------
 -- The partial evaluator
 
+-- We need no Lift byte-code instruction: no parametric CSP. That is great!
 
-data P t = V t (C t) | E (C t)
-asP :: P x -> P x; asP = id
-liftP :: t -> P t
-liftP x = V x (C (\vc -> (Lift x,vc)))
+-- The code below is NOT parametric. We could have used type-classes
+-- instead of GADTs. Ken noted that the code below could be re-functionalized,
+-- and so could in fact be translated into MetaOCaml.
+-- Or, if we observe the correspondence between GADT and MetaOCaml <code>,
+-- perhaps we can translate to MetaOCaml with an additional layer of code?
+
+-- Note that the datatype P carries the `dynamic' version along the way.
+-- That simplifies the `abstr' function below. 
+-- That is partly historical: in the first order, we don't need GADT
+-- then and still can get by without the polymorphic Lift.
+
+
+data P t where
+    VI :: Int -> C Int -> P Int		-- Possibly static (base type)
+    VF :: (P a -> P b) -> C (a->b) -> P (a->b)
+    E  :: C t -> P t			-- Purely dynamic
+
+asP :: P t -> P t; asP = id
 
 abstr :: P t -> C t
-abstr (V _ e) = e
-abstr (E e) = e
-
-
-BV t = V t (ByteCode t) | E ByteCode t
-
-newtype P t = P (Int -> (BV t, Int)) 
-unC (C t) vc0 = t vc0
-asC :: C x -> C x; asC = id
-
+abstr (VI _ x) = x
+abstr (VF _ x) = x
+abstr (E x) = x
 
 instance Symantics P ByteCode where
-    int x = P(\vc -> (V x (INT x), vc))
+    int x = VI x (int x)
 
-    lam f = P(\vc -> let v = vc
-	                 var = P(\vc -> (E (Var v), vc))
-	                 (body,vc') = unP (f var) (succ vc)
-	             in (VLam v body, vc'))
+    -- lam :: (repr a -> repr b) -> repr (a->b)
+    lam f = VF f (lam (abstr . f . E))
+    -- app :: repr (a->b) -> repr a -> repr b
+    app ef ea = case ef of
+			VF f _ -> f ea
+			E  f   -> E (app f (abstr ea))
 
-V(\x -> 
-instance Symantics P ByteCode where
-    int x = V x (int x)
+    -- fix :: (repr a -> repr a) -> repr a
+    -- For now, to avoid divergence at the PE stage, we residualize
+    -- actually, we unroll the fixpoint exactly once, and then
+    -- residualize
+    fix f = f (E (fix (abstr . f . E)))
 
-
-v
-V x var
-e (V x var)
-
-\x -> 
-
-    lam e = V (\x -> e (liftP x)) (abstr . e . E)
-{-
-    app :: repr (a->b) -> repr a -> repr b
-    app e1 e2 = case (e1,e2) of
-		 (V n1 _,V n2 _) -> case n1 n2 of
-				     V nr er -> 
-
-V nr (int nr) where nr = n1 + n2
-		 _ -> E $ add (abstr e1) (abstr e2)
--}
     add e1 e2 = case (e1,e2) of
-		 (V n1 _,V n2 _) -> V nr (int nr) where nr = n1 + n2
+		 (VI n1 _,VI n2 _) -> VI nr (int nr) where nr = n1 + n2
 		 _ -> E $ add (abstr e1) (abstr e2)
 
     ifeq ie1 ie2 et ee = case (ie1,ie2) of
-			  (V n1 _, V n2 _) -> if n1==n2 then et else ee
+			  (VI n1 _, VI n2 _) -> if n1==n2 then et else ee
 			  _ -> E $ ifeq (abstr ie1) (abstr ie2)
 			                (abstr et) (abstr ee)
-
-
-{-
-    fix :: (repr a -> repr a) -> repr a
-
--}
 
     comp = comp . abstr
 
 ptest1 = comp . asP . test1 $ ()
+ptest2 = comp . asP . test2 $ ()
+-- Compare the output with ctest3. The partial evaluation should be
+-- evident!
+ptest3 = comp . asP . testgib1 $ ()
