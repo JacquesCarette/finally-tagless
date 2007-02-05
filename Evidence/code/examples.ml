@@ -74,7 +74,8 @@ module type ABSTRACTCODE = sig
   val inject_value : 'b b -> ('a, 'b) abstract
   val inject_code : ('a,'b b) code -> ('a, 'b) abstract
   val binaryop : ('a,'b) abstract -> ('a,'b) abstract -> ('a,'b) abstract
-  val simplop : 'b b -> ('a,'b) abstract -> ('a,'b) abstract
+  val left_simplify: 'b b -> ('a,'b) abstract -> ('a,'b) abstract
+  val right_simplify: ('a,'b) abstract -> 'b b -> ('a,'b) abstract
 end
 
 (* We can 'lift' any monoid to "abstract" code. *)
@@ -86,11 +87,13 @@ module Code(B:MONOID) = struct
     | Code x   -> x
   let inject_value x = Ground x
   let inject_code x = Code x
-  let simplop x y = if x=B.neutral then y else Code .< B.bop x .~(concretize y) >.
+  let left_simplify x y = if x=B.neutral then y else Code .< B.bop x .~(concretize y) >.
+  let right_simplify x y = if y=B.neutral then x else Code .< B.bop
+  .~(concretize x) y >.
   let binaryop a b = match (a,b) with
       | (Ground x, Ground y) -> Ground (B.bop x y)
-      | (Ground x, Code y)   -> simplop x b
-      | (Code x, Ground y)   -> simplop y a
+      | (Ground x, Code y)   -> left_simplify x b
+      | (Code x, Ground y)   -> right_simplify a y
       | (Code x, Code y)   -> Code .< B.bop .~x .~y >.
 end
 
