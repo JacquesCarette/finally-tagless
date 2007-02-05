@@ -60,6 +60,8 @@ testgib1 () = app (app (app (testgib ()) (int 1)) (int 1)) (int 5)
 -- It is typed, tagless interpreter: R is not a tag. The interpreter
 -- never gets stuck, because it evaluates typed terms only
 
+-- Note that everything going on here is straight out of
+-- "Boxes go Bananas" by Washburn and Weirich (intended or otherwise)
 newtype R a = R a deriving Show
 unR (R x) = x
 asR :: R x -> R x; asR = id
@@ -103,8 +105,6 @@ data ByteCode t where
     Add :: ByteCode Int -> ByteCode Int -> ByteCode Int
     IFEQ :: ByteCode Int -> ByteCode Int -> ByteCode t -> ByteCode t ->
             ByteCode t
-
-
 instance Show (ByteCode t) where
     show (Var n) = "V" ++ show n
     show (Lam n b) = "(\\V" ++ show n ++ " -> " ++ show b ++ ")"
@@ -179,10 +179,11 @@ data P t where
 
 asP :: P t -> P t; asP = id
 
+-- don't waste the static part, use it
 abstr :: P t -> C t
-abstr (VI _ x) = x
-abstr (VF _ x) = x
+abstr (VI i x) = int i
 abstr (E x) = x
+abstr (VF f x) = lam (abstr . f . E)
 
 instance Symantics P ByteCode where
     int x = VI x (int x)
