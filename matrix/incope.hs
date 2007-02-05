@@ -166,34 +166,27 @@ ctest3 = comp . asC . testgib1 $ ()
 -- Or, if we observe the correspondence between GADT and MetaOCaml <code>,
 -- perhaps we can translate to MetaOCaml with an additional layer of code?
 
--- Note that the datatype P carries the `dynamic' version along the way.
--- That simplifies the `abstr' function below. 
--- That is partly historical: in the first order, we don't need GADT
--- then and still can get by without the polymorphic Lift.
-
-
 data P t where
-    VI :: Int -> C Int -> P Int                -- Possibly static (base type)
-    VF :: (P a -> P b) -> C (a->b) -> P (a->b)
-    E  :: C t -> P t                        -- Purely dynamic
+    VI :: Int -> P Int                -- Possibly static (base type)
+    VF :: (P a -> P b) -> P (a->b)
+    E  :: C t -> P t                  -- Purely dynamic
 
 asP :: P t -> P t; asP = id
 
--- don't waste the static part, use it
 abstr :: P t -> C t
-abstr (VI i x) = int i
+abstr (VI i) = int i
+abstr (VF f) = lam (abstr . f . E)
 abstr (E x) = x
-abstr (VF f x) = lam (abstr . f . E)
 
 instance Symantics P ByteCode where
-    int x = VI x (int x)
+    int x = VI x
 
     -- lam :: (repr a -> repr b) -> repr (a->b)
-    lam f = VF f (lam (abstr . f . E))
+    lam = VF
     -- app :: repr (a->b) -> repr a -> repr b
     app ef ea = case ef of
-                        VF f _ -> f ea
-                        E  f   -> E (app f (abstr ea))
+                        VF f -> f ea
+                        E  f -> E (app f (abstr ea))
 
     -- fix :: (repr a -> repr a) -> repr a
     -- For now, to avoid divergence at the PE stage, we residualize
@@ -202,11 +195,11 @@ instance Symantics P ByteCode where
     fix f = f (E (fix (abstr . f . E)))
 
     add e1 e2 = case (e1,e2) of
-                 (VI n1 _,VI n2 _) -> VI nr (int nr) where nr = n1 + n2
+                 (VI n1,VI n2) -> VI nr where nr = n1 + n2
                  _ -> E $ add (abstr e1) (abstr e2)
 
     ifeq ie1 ie2 et ee = case (ie1,ie2) of
-                          (VI n1 _, VI n2 _) -> if n1==n2 then et else ee
+                          (VI n1, VI n2) -> if n1==n2 then et else ee
                           _ -> E $ ifeq (abstr ie1) (abstr ie2)
                                         (abstr et) (abstr ee)
 
