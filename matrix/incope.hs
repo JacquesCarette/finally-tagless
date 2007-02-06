@@ -35,6 +35,7 @@ class Symantics repr res | repr -> res where
     
     lam :: (repr a -> repr b) -> repr (a->b)
     app :: repr (a->b) -> repr a -> repr b
+    rec :: repr a -> repr (a -> a) -> repr (Int -> a)
     fix :: (repr a -> repr a) -> repr a
 
     add :: repr Int -> repr Int -> repr Int
@@ -52,8 +53,16 @@ testgib () = lam (\x -> lam (\y ->
                          (add (app self (add n (int (-1))))
                               (app self (add n (int (-2))))))))))
 
+testgib' () = lam (\x -> lam (\y -> lam (\n ->
+              app (app (rec (lam (\c -> app (app c x) y))
+                            (lam (\m -> lam (\c -> app m (lam (\a -> lam (\b ->
+                                        app (app c b) (add a b))))))))
+                       n)
+                  (lam (\a -> lam (\b -> a))))))
 
 testgib1 () = app (app (app (testgib ()) (int 1)) (int 1)) (int 5)
+
+testgib1' () = app (app (app (testgib' ()) (int 1)) (int 1)) (int 5)
 
 -- ------------------------------------------------------------------------
 -- The interpreter
@@ -72,6 +81,7 @@ instance Symantics R R where
     lam f = R (unR . f . R)
     app e1 e2 = R( (unR e1) (unR e2) )
     fix f = R( fx (unR . f . R)) where fx f = f (fx f)
+    rec z s = R (\n -> if n <= 0 then unR z else unR s (unR (rec z s) (pred n)))
 
     add e1 e2 = R( (unR e1) + (unR e2) )
     ifeq ie1 ie2 et ee = R( if (unR ie1) == (unR ie2) then unR et else unR ee )
@@ -139,6 +149,17 @@ instance Symantics C ByteCode where
                          (body,vc') = unC (f var) (succ vc)
                      in (Fix v body, vc'))
 
+    rec z s = C(\vc -> let f = vc
+                           func = C(\vc -> (Var f, vc))
+                           vc1 = succ vc
+                           n = vc1
+                           num = C(\vc -> (Var n, vc))
+                           vc2 = succ vc1
+                           (zc, vc3) = unC z vc2
+                           (sc, vc4) = unC s vc3
+                       in (Fix f (Lam n (IFEQ (Var n) (INT 0) zc (App sc (App (Var f) (Var n))))), vc4))
+    -- ccshan TODO: change ifeq to ifle so that we can compile rec correctly
+
     add e1 e2 = C(\vc -> let (e1b,vc1) = unC e1 vc
                              (e2b,vc2) = unC e2 vc1
                          in (Add e1b e2b,vc2))
@@ -194,6 +215,13 @@ instance Symantics P ByteCode where
     -- residualize
     fix f = f (E (fix (abstr . f . E)))
 
+    rec z s = VF (\n -> case n of
+        VI n -> let f n | n <= 0    = z
+                        | otherwise = case s of VF s -> s (f (pred n))
+                                                E s -> E (app s (abstr (f (pred n))))
+                in f n
+        E n -> E (app (rec (abstr z) (abstr s)) n))
+
     add e1 e2 = case (e1,e2) of
                  (VI n1,VI n2) -> VI nr where nr = n1 + n2
                  _ -> E $ add (abstr e1) (abstr e2)
@@ -210,3 +238,6 @@ ptest2 = comp . asP . test2 $ ()
 -- Compare the output with ctest3. The partial evaluation should be
 -- evident!
 ptest3 = comp . asP . testgib1 $ ()
+-- Compare the output with ptest3. The full partial evaluation should be
+-- evident!
+ptest3' = comp . asP . testgib1' $ ()
