@@ -60,7 +60,7 @@ testgib1 () = app (app (app (testgib ()) (int 1)) (int 1)) (int 5)
 -- It is typed, tagless interpreter: R is not a tag. The interpreter
 -- never gets stuck, because it evaluates typed terms only
 
--- Note that everything going on here is straight out of
+-- Note that everything going on in the interpreter is straight out of
 -- "Boxes go Bananas" by Washburn and Weirich (intended or otherwise)
 newtype R a = R a deriving Show
 unR (R x) = x
