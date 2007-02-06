@@ -4,13 +4,16 @@
 
 module Incope where
 
+-- import qualified Data.Map as Map
+-- import Data.Maybe
+
 {-
   The language is simply-typed lambda-calculus with fixpoint,
-  integers and comparison.
+  integers, booleans and comparison.
 
   Lam hoas_fn | App e e | Fix hoas_fn |
-  I Int | Add ie1 ie2 |
-  IFEQ ie1 ie2 e-then e-else
+  I Int | B Bool | Add ie1 ie2 |
+  IF b e-then e-else
   
   The language is just expressive enough for the Gibonacci function.
 
@@ -32,6 +35,7 @@ module Incope where
 
 class Symantics repr res | repr -> res where
     int :: Int -> repr Int                -- int literal
+    bool :: Bool -> repr Bool             -- bool literal
     
     lam :: (repr a -> repr b) -> repr (a->b)
     app :: repr (a->b) -> repr a -> repr b
@@ -39,7 +43,8 @@ class Symantics repr res | repr -> res where
     fix :: (repr a -> repr a) -> repr a
 
     add :: repr Int -> repr Int -> repr Int
-    ifeq :: repr Int -> repr Int -> repr a -> repr a -> repr a
+    if_ :: repr Bool -> repr a -> repr a -> repr a
+    eql :: Eq a => repr a -> repr a -> repr Bool
 
     comp :: repr a -> res a
 
@@ -48,8 +53,8 @@ test2 () = lam (\x -> add x x)
 
 testgib () = lam (\x -> lam (\y ->
                   fix (\self -> lam (\n ->
-                      ifeq n (int 0) x
-                        (ifeq n (int 1) y
+                      if_ (eql n (int 0)) x
+                        (if_ (eql n (int 1)) y
                          (add (app self (add n (int (-1))))
                               (app self (add n (int (-2))))))))))
 
@@ -77,6 +82,7 @@ asR :: R x -> R x; asR = id
 
 instance Symantics R R where
     int x = R x
+    bool b = R b
 
     lam f = R (unR . f . R)
     app e1 e2 = R( (unR e1) (unR e2) )
@@ -84,7 +90,8 @@ instance Symantics R R where
     rec z s = R (\n -> if n <= 0 then unR z else unR s (unR (rec z s) (pred n)))
 
     add e1 e2 = R( (unR e1) + (unR e2) )
-    ifeq ie1 ie2 et ee = R( if (unR ie1) == (unR ie2) then unR et else unR ee )
+    eql e1 e2 = R( (unR e1) == (unR e2) )
+    if_ be et ee = R( if (unR be) then unR et else unR ee )
 
     comp = id
 
@@ -112,20 +119,38 @@ data ByteCode t where
     App :: ByteCode (t1->t2) -> ByteCode t1  -> ByteCode t2
     Fix :: Int -> ByteCode t -> ByteCode t
     INT :: Int -> ByteCode Int
+    BOOL :: Bool -> ByteCode Bool
     Add :: ByteCode Int -> ByteCode Int -> ByteCode Int
-    IFEQ :: ByteCode Int -> ByteCode Int -> ByteCode t -> ByteCode t ->
-            ByteCode t
+    Eql :: ByteCode t1 -> ByteCode t1 -> ByteCode Bool
+    IF :: ByteCode Bool -> ByteCode t -> ByteCode t -> ByteCode t
 instance Show (ByteCode t) where
     show (Var n) = "V" ++ show n
     show (Lam n b) = "(\\V" ++ show n ++ " -> " ++ show b ++ ")"
     show (App e1 e2) = "(" ++ show e1 ++ " " ++ show e2 ++ ")"
     show (Fix n b) = "(fix\\V" ++ show n ++ " " ++ show b ++ ")"
     show (INT n) = show n
+    show (BOOL b) = show b
     show (Add e1 e2) = "(" ++ show e1 ++ " + " ++ show e2 ++ ")"
-    show (IFEQ ie1 ie2 et ee)
-        = "(if " ++ show ie1 ++ " == " ++ show ie2  ++
+    show (Eql e1 e2) = "(" ++ show e1 ++ " == " ++ show e2 ++ ")"
+    show (IF be et ee)
+        = "(if " ++ show be ++ 
           " then " ++ show et ++ " else " ++ show ee ++ ")"
 
+-- An evaluator for the ByteCode
+-- built using a one-step evaluator with an explicit environment
+-- which does not work :-(  because I have no experience with GADTs
+
+-- type Env = forall t.Map.Map Int (ByteCode t)
+-- eval1 :: ByteCode a -> Env -> ByteCode a
+-- eval1 (Var n) e = fromJust $ Map.lookup n e -- yuck!
+-- eval1 x@(Lam _ _) e = x
+-- eval1 (App (Lam n b) x) e = let e2 = Map.insert n x e in eval1 b e2
+-- eval1 (Fix n b) e = 
+-- eval1 x@(INT n) _ = x
+-- eval1 (Add e1 e2) e = let x1 = eval1 e1 e
+--                           x2 = eval1 e2 e
+--                        in INT (x1 + x2)
+-- eval1 (IF be et ee) e = 
 
 -- Int is the variable counter
 -- for allocation of fresh variables
@@ -135,6 +160,7 @@ asC :: C x -> C x; asC = id
 
 instance Symantics C ByteCode where
     int x = C(\vc -> (INT x, vc))
+    bool b = C(\vc -> (BOOL b, vc))
 
     lam f = C(\vc -> let v = vc
                          var = C(\vc -> (Var v, vc))
@@ -157,18 +183,21 @@ instance Symantics C ByteCode where
                            vc2 = succ vc1
                            (zc, vc3) = unC z vc2
                            (sc, vc4) = unC s vc3
-                       in (Fix f (Lam n (IFEQ (Var n) (INT 0) zc (App sc (App (Var f) (Var n))))), vc4))
+                       in (Fix f (Lam n (IF (Eql (Var n) (INT 0)) zc (App sc (App (Var f) (Var n))))), vc4))
     -- ccshan TODO: change ifeq to ifle so that we can compile rec correctly
 
     add e1 e2 = C(\vc -> let (e1b,vc1) = unC e1 vc
                              (e2b,vc2) = unC e2 vc1
                          in (Add e1b e2b,vc2))
 
-    ifeq ie1 ie2 et ee = C(\vc -> let (ie1b,vc1) = unC ie1 vc
-                                      (ie2b,vc2) = unC ie2 vc1
-                                      (etb,vc3)  = unC et  vc2
-                                      (eeb,vc4)  = unC ee  vc3
-                         in (IFEQ ie1b ie2b etb eeb,vc4))
+    eql e1 e2 = C(\vc -> let (e1b,vc1) = unC e1 vc
+                             (e2b,vc2) = unC e2 vc1
+                         in (Eql e1b e2b,vc2))
+
+    if_ be et ee = C(\vc -> let (beb,vc1) = unC be vc
+                                (etb,vc2)  = unC et vc1
+                                (eeb,vc3)  = unC ee vc2
+                         in (IF beb etb eeb,vc3))
 
     comp repr = fst $ unC repr 0
 
@@ -189,6 +218,7 @@ ctest3 = comp . asC . testgib1 $ ()
 
 data P t where
     VI :: Int -> P Int                -- Possibly static (base type)
+    VB :: Bool -> P Bool
     VF :: (P a -> P b) -> P (a->b)
     E  :: C t -> P t                  -- Purely dynamic
 
@@ -201,6 +231,7 @@ abstr (E x) = x
 
 instance Symantics P ByteCode where
     int x = VI x
+    bool b = VB b
 
     -- lam :: (repr a -> repr b) -> repr (a->b)
     lam = VF
@@ -226,10 +257,14 @@ instance Symantics P ByteCode where
                  (VI n1,VI n2) -> VI nr where nr = n1 + n2
                  _ -> E $ add (abstr e1) (abstr e2)
 
-    ifeq ie1 ie2 et ee = case (ie1,ie2) of
-                          (VI n1, VI n2) -> if n1==n2 then et else ee
-                          _ -> E $ ifeq (abstr ie1) (abstr ie2)
-                                        (abstr et) (abstr ee)
+    eql e1 e2 = case (e1,e2) of
+                 (VI n1,VI n2) -> VB nr where nr = n1 == n2
+                 (VB n1,VB n2) -> VB nr where nr = n1 == n2
+                 _ -> E $ eql (abstr e1) (abstr e2)
+
+    if_ be et ee = case be of
+                        (VB b1) -> if b1 then et else ee
+                        _ -> E $ if_ (abstr be) (abstr et) (abstr ee)
 
     comp = comp . abstr
 
