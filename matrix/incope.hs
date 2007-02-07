@@ -26,14 +26,15 @@ module Incope where
   one can emulate Haskell typeclasses using explicit dictionary passing.
   The dictionary will by a polymorphic (rank-2) record -- but it is OK,
   OCaml permits it. Alas, The typeclass below uses higher-order type
-  constructors: repr and res are of a kind * -> *. OCaml does not support
+  constructors: repr is of a kind * -> *. OCaml does not support
   higher-order polymorphism.
 
 -}
 
 -- This class defines syntax (and its instances, semantics) of our language
+-- This class is Haskell98!
 
-class Symantics repr res | repr -> res where
+class Symantics repr where
     int :: Int -> repr Int                -- int literal
     bool :: Bool -> repr Bool             -- bool literal
     
@@ -46,10 +47,13 @@ class Symantics repr res | repr -> res where
     if_ :: repr Bool -> repr a -> repr a -> repr a
     eql :: Eq a => repr a -> repr a -> repr Bool
 
-    comp :: repr a -> res a
+-- The following `projection' function is specific to repr.
+-- It is like `run' of the monad
+--    comp :: repr a -> something a
 
 test1 () = add (int 1) (int 2)
 test2 () = lam (\x -> add x x)
+test2' () = lam (\x -> add (x (int 1)) (int 2))
 
 testgib () = lam (\x -> lam (\y ->
                   fix (\self -> lam (\n ->
@@ -78,9 +82,8 @@ testgib1' () = app (app (app (testgib' ()) (int 1)) (int 1)) (int 5)
 -- "Boxes go Bananas" by Washburn and Weirich (intended or otherwise)
 newtype R a = R a deriving Show
 unR (R x) = x
-asR :: R x -> R x; asR = id
 
-instance Symantics R R where
+instance Symantics R where
     int x = R x
     bool b = R b
 
@@ -93,9 +96,9 @@ instance Symantics R R where
     eql e1 e2 = R( (unR e1) == (unR e2) )
     if_ be et ee = R( if (unR be) then unR et else unR ee )
 
-    comp = id
+compR = unR
 
-mkitest f = unR (comp. asR . f $ ())
+mkitest f = compR (f ())
 
 itest1 = mkitest test1
 itest2 = mkitest test2
@@ -110,8 +113,13 @@ itest3 = mkitest testgib1
 -- are untyped.
 -- Note how ByteCode represents MetaOCaml's `code'. Thus the compiler
 -- below neatly maps to the MetaOCaml (with no GADTs).
+-- Also note, that like MetaOCaml `code', we never pattern-match on
+-- ByteCode!
 -- Note how the compiler never raises any exception and matches no tags
 -- (no generated code has any tags)
+
+-- The LIFT bytecode operation is used only dyring evaluation
+-- it correponds to a CSP in MetaOCaml.
 
 data ByteCode t where
     Var :: Int -> ByteCode t                -- variables identified by numbers
@@ -119,10 +127,12 @@ data ByteCode t where
     App :: ByteCode (t1->t2) -> ByteCode t1  -> ByteCode t2
     Fix :: Int -> ByteCode t -> ByteCode t
     INT :: Int -> ByteCode Int
-    BOOL :: Bool -> ByteCode Bool
+    BOOL:: Bool -> ByteCode Bool
     Add :: ByteCode Int -> ByteCode Int -> ByteCode Int
     Eql :: ByteCode t1 -> ByteCode t1 -> ByteCode Bool
-    IF :: ByteCode Bool -> ByteCode t -> ByteCode t -> ByteCode t
+    IF  :: ByteCode Bool -> ByteCode t -> ByteCode t -> ByteCode t
+    LIFT :: t -> ByteCode t                 -- Used only for eval
+
 instance Show (ByteCode t) where
     show (Var n) = "V" ++ show n
     show (Lam n b) = "(\\V" ++ show n ++ " -> " ++ show b ++ ")"
@@ -136,29 +146,29 @@ instance Show (ByteCode t) where
         = "(if " ++ show be ++ 
           " then " ++ show et ++ " else " ++ show ee ++ ")"
 
--- An evaluator for the ByteCode
--- built using a one-step evaluator with an explicit environment
--- which does not work :-(  because I have no experience with GADTs
-
--- type Env = forall t.Map.Map Int (ByteCode t)
--- eval1 :: ByteCode a -> Env -> ByteCode a
--- eval1 (Var n) e = fromJust $ Map.lookup n e -- yuck!
--- eval1 x@(Lam _ _) e = x
--- eval1 (App (Lam n b) x) e = let e2 = Map.insert n x e in eval1 b e2
+{-
+-- An evaluator for the ByteCode: the virtual machine
+eval :: ByteCode t -> t
+eval (Lam v b) = \x -> eval $ subst (Var v) x b
+eval (App e1 e2) = (eval e1) (eval e2)
 -- eval1 (Fix n b) e = 
--- eval1 x@(INT n) _ = x
--- eval1 (Add e1 e2) e = let x1 = eval1 e1 e
---                           x2 = eval1 e2 e
---                        in INT (x1 + x2)
+eval (INT n) = n
+eval (Add e1 e2) = eval e1 + eval e2
 -- eval1 (IF be et ee) e = 
+
+subst :: ByteCode t1 -> t1 -> ByteCode t2 -> ByteCode t2
+subst (Var n) x (Var n') | n == n' = LIFT x -- need eq evidence of coerce
+subst (Var n) x v'@(Var _) = v'
+subst v x (Lam n b) = Lam n $ subst v x b
+subst v x (App e1 e2) = App (subst v x e1) (subst v x e2)
+-}
 
 -- Int is the variable counter
 -- for allocation of fresh variables
 newtype C t = C (Int -> (ByteCode t, Int)) 
 unC (C t) vc0 = t vc0
-asC :: C x -> C x; asC = id
 
-instance Symantics C ByteCode where
+instance Symantics C where
     int x = C(\vc -> (INT x, vc))
     bool b = C(\vc -> (BOOL b, vc))
 
@@ -199,11 +209,11 @@ instance Symantics C ByteCode where
                                 (eeb,vc3)  = unC ee vc2
                          in (IF beb etb eeb,vc3))
 
-    comp repr = fst $ unC repr 0
+compC repr = fst $ unC repr 0
 
-ctest1 = comp . asC . test1 $ ()
-ctest2 = comp . asC . test2 $ ()
-ctest3 = comp . asC . testgib1 $ ()
+ctest1 = compC . test1 $ ()
+ctest2 = compC . test2 $ ()
+ctest3 = compC . testgib1 $ ()
 
 -- ------------------------------------------------------------------------
 -- The partial evaluator
@@ -222,14 +232,12 @@ data P t where
     VF :: (P a -> P b) -> P (a->b)
     E  :: C t -> P t                  -- Purely dynamic
 
-asP :: P t -> P t; asP = id
-
 abstr :: P t -> C t
 abstr (VI i) = int i
 abstr (VF f) = lam (abstr . f . E)
 abstr (E x) = x
 
-instance Symantics P ByteCode where
+instance Symantics P where
     int x = VI x
     bool b = VB b
 
@@ -266,13 +274,13 @@ instance Symantics P ByteCode where
                         (VB b1) -> if b1 then et else ee
                         _ -> E $ if_ (abstr be) (abstr et) (abstr ee)
 
-    comp = comp . abstr
+compP = compC . abstr
 
-ptest1 = comp . asP . test1 $ ()
-ptest2 = comp . asP . test2 $ ()
+ptest1 = compP . test1 $ ()
+ptest2 = compP . test2 $ ()
 -- Compare the output with ctest3. The partial evaluation should be
 -- evident!
-ptest3 = comp . asP . testgib1 $ ()
+ptest3 = compP . testgib1 $ ()
 -- Compare the output with ptest3. The full partial evaluation should be
 -- evident!
-ptest3' = comp . asP . testgib1' $ ()
+ptest3' = compP . testgib1' $ ()
