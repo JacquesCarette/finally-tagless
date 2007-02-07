@@ -29,8 +29,9 @@ module Inco where
 -}
 
 -- This class defines syntax (and its instances, semantics) of our language
+-- This class is Haskell98!
 
-class Symantics repr res | repr -> res where
+class Symantics repr where
     int :: Int -> repr Int                -- int literal
     
     lam :: (repr a -> repr b) -> repr (a->b)
@@ -40,7 +41,11 @@ class Symantics repr res | repr -> res where
     add :: repr Int -> repr Int -> repr Int
     ifeq :: repr Int -> repr Int -> repr a -> repr a -> repr a
 
-    comp :: repr a -> res a
+
+-- The following `projection' function is specific to repr.
+-- It is like `run' of the monad
+--    comp :: repr a -> something a
+
 
 test1 () = add (int 1) (int 2)
 test2 () = lam (\x -> add x x)
@@ -62,9 +67,8 @@ testgib1 () = app (app (app (testgib ()) (int 1)) (int 1)) (int 5)
 
 newtype R a = R a deriving Show
 unR (R x) = x
-asR :: R x -> R x; asR = id
 
-instance Symantics R R where
+instance Symantics R where
     int x = R x
 
     lam f = R (unR . f . R)
@@ -74,11 +78,12 @@ instance Symantics R R where
     add e1 e2 = R( (unR e1) + (unR e2) )
     ifeq ie1 ie2 et ee = R( if (unR ie1) == (unR ie2) then unR et else unR ee )
 
-    comp = id
+compR :: R a -> a
+compR = unR
 
-itest1 = unR (comp . asR . test1 $ ())
-itest2 = unR (comp . asR . test2 $ ())
-itest3 = unR (comp . asR . testgib1 $ ())
+itest1 = compR . test1 $ ()
+itest2 = compR . test2 $ ()
+itest3 = compR . testgib1 $ ()
 
 
 -- ------------------------------------------------------------------------
@@ -89,6 +94,8 @@ itest3 = unR (comp . asR . testgib1 $ ())
 -- are untyped.
 -- Note how ByteCode represents MetaOCaml's `code'. Thus the compiler
 -- below neatly maps to the MetaOCaml (with no GADTs).
+-- Also note, that like MetaOCaml `code', we never pattern-match on
+-- ByteCode!
 -- Note how the compiler never raises any exception and matches no tags
 -- (no generated code has any tags)
 
@@ -119,9 +126,8 @@ instance Show (ByteCode t) where
 -- for allocation of fresh variables
 newtype C t = C (Int -> (ByteCode t, Int)) 
 unC (C t) vc0 = t vc0
-asC :: C x -> C x; asC = id
 
-instance Symantics C ByteCode where
+instance Symantics C where
     int x = C(\vc -> (INT x, vc))
 
     lam f = C(\vc -> let v = vc
@@ -147,11 +153,13 @@ instance Symantics C ByteCode where
                                       (eeb,vc4)  = unC ee  vc3
                          in (IFEQ ie1b ie2b etb eeb,vc4))
 
-    comp repr = fst $ unC repr 0
 
-ctest1 = comp . asC . test1 $ ()
-ctest2 = comp . asC . test2 $ ()
-ctest3 = comp . asC . testgib1 $ ()
+compC :: C a -> ByteCode a
+compC repr = fst $ unC repr 0
+
+ctest1 = compC . test1 $ ()
+ctest2 = compC . test2 $ ()
+ctest3 = compC . testgib1 $ ()
 
 -- ------------------------------------------------------------------------
 -- Compiler into the CPS bytecode
