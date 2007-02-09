@@ -40,7 +40,8 @@ module type Symantics = sig
      Or, at least it shouldn't take just (undelayed) terms.
   *)
   val if_ : ('c,bool) repr ->
-             (unit -> ('c,'a) repr) -> ('c,unit->'a) repr -> ('c,'a) repr 
+             (unit -> ('c,'a) repr) ->
+             (unit -> ('c,'a) repr) -> ('c,'a) repr 
 
   val lam : (('c,'a) repr -> ('c,'b) repr) -> ('c,'a->'b) repr
   val app : ('c,'a->'b) repr -> ('c,'a) repr -> ('c,'b) repr
@@ -63,12 +64,12 @@ module EX(S: Symantics) = struct
 
  let testgib () = lam (fun x -> lam (fun y ->
                   fix (fun self -> lam (fun n ->
-                      if_ (eql n (int 0)) (fun _ -> x)
-                        (lam (fun _ ->
-                          (if_ (eql n (int 1)) (fun _ -> y)
-                           (lam (fun _ ->
+                      if_ (eql n (int 0)) (fun () -> x)
+                        (fun () ->
+                          (if_ (eql n (int 1)) (fun () -> y)
+                           (fun () ->
                              (add (app self (add n (int (-1))))
-                                  (app self (add n (int (-2))))))))))))))
+                                  (app self (add n (int (-2))))))))))))
 
 
  let testgib1 () = app (app (app (testgib ()) (int 1)) (int 1)) (int 5)
@@ -125,7 +126,7 @@ module C = struct
   let add e1 e2 = .<.~e1 + .~e2>.
   let eql x y = .< .~x == .~y >.
   let if_ eb et ee = 
-    .<if .~eb then .~(et () ) else .~ee ()>.
+    .<if .~eb then .~(et () ) else .~(ee () )>.
 
   let lam f = .<fun x -> .~(f .<x>.)>.
   let app e1 e2 = .<.~e1 .~e2>.
