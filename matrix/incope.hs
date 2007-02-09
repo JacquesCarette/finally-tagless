@@ -4,9 +4,6 @@
 
 module Incope where
 
--- import qualified Data.Map as Map
--- import Data.Maybe
-
 {-
   The language is simply-typed lambda-calculus with fixpoint,
   integers, booleans and comparison.
@@ -33,11 +30,11 @@ module Incope where
 
 -- This class defines syntax (and its instances, semantics) of our language
 -- This class is Haskell98!
-
+-- The Typeable constraint is for the sake of ByteCode evaluator
 class Symantics repr where
     int :: Int -> repr Int                -- int literal
     bool :: Bool -> repr Bool             -- bool literal
-    
+
     lam :: (repr a -> repr b) -> repr (a->b)
     app :: repr (a->b) -> repr a -> repr b
     rec :: repr a -> repr (a -> a) -> repr (Int -> a)
@@ -104,6 +101,20 @@ itest1 = mkitest test1
 itest2 = mkitest test2
 itest3 = mkitest testgib1
 
+{-
+The expression "R (unR . f . R)" _looks_ like tag introduction and
+elimination.
+But. the function unR is *total*. There is no run-time error
+is possible at all -- and this fact is fully apparent to the
+compiler.
+Note the corresponding code in incope.ml:
+  let int (x:int) = x
+  let add e1 e2 = e1 + e2
+
+  let lam f = f
+No tags at all...
+-}
+
 
 -- ------------------------------------------------------------------------
 -- The compiler
@@ -146,22 +157,29 @@ instance Show (ByteCode t) where
         = "(if " ++ show be ++ 
           " then " ++ show et ++ " else " ++ show ee ++ ")"
 
-{-
 -- An evaluator for the ByteCode: the virtual machine
-eval :: ByteCode t -> t
-eval (Lam v b) = \x -> eval $ subst (Var v) x b
-eval (App e1 e2) = (eval e1) (eval e2)
--- eval1 (Fix n b) e = 
-eval (INT n) = n
-eval (Add e1 e2) = eval e1 + eval e2
--- eval1 (IF be et ee) e = 
+-- The evaluator is partial: if we attempt to evaluate an open code
+-- (a variable not found in the env), we will get an error.
+-- We use Dynamic to `assure' that variables are properly typed,
+-- that is, that the variable name (counter) witnesses its type.
+-- A better assurance is to use STRef. Strange correspondence:
+-- mutation and lambda application. The essence of both is sharing.
+{-
+type BEnv = [(Int,Dynamic)]
 
-subst :: ByteCode t1 -> t1 -> ByteCode t2 -> ByteCode t2
-subst (Var n) x (Var n') | n == n' = LIFT x -- need eq evidence of coerce
-subst (Var n) x v'@(Var _) = v'
-subst v x (Lam n b) = Lam n $ subst v x b
-subst v x (App e1 e2) = App (subst v x e1) (subst v x e2)
+eval :: Typeable t => BEnv -> ByteCode t -> t
+eval env (Var n) | Just dv <- lookup n env,
+		   Just v  <- fromDynamic dv = v
+eval env v@Var{} = error $ "Open code? variable not found: " ++ show v
+eval env (Lam v b) = \x -> eval ((v,toDyn x):env) b
+eval env (App e1 e2) = (eval env e1) (eval env e2)
+-- eval1 (Fix n b) e = 
+eval env (INT n) = n
+eval env (BOOL n) = n
+eval env (Add e1 e2) = eval env e1 + eval env e2
+-- eval1 (IF be et ee) e = 
 -}
+
 
 -- Int is the variable counter
 -- for allocation of fresh variables
@@ -284,3 +302,23 @@ ptest3 = compP . testgib1 $ ()
 -- Compare the output with ptest3. The full partial evaluation should be
 -- evident!
 ptest3' = compP . testgib1' $ ()
+
+
+{- GADTs, although work, are still not quite satsifactory:
+let us look at the following lines in incope.hs
+
+    app ef ea = case ef of
+                        VF f -> f ea
+                        E  f -> E (app f (abstr ea))
+The datatype has four constructors, VI, VB, VF and E. How come we used
+only two of them in the above expression. It is obvious, one may say,
+that the constructors VI and VB just can't occur, because of the
+typing consideration. This is obvious to us -- but it is not obvious
+to the compiler. The case matching above does look *partial*. That
+seems like a tenuous point -- but it is precisely the main point of
+the whole tag elimination approach. In a typed tagged interpreter
+there are lots of pattern-matching that looks partial but in reality
+total. The ultimate goal is to make this totality syntactically
+apparent.
+-}
+
