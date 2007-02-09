@@ -135,13 +135,13 @@ module C = struct
   let get_res x = RC x
 end;;
 
-module EXR = EX(C);;
+module EXC = EX(C);;
 
-let ctest1 = EXR.test1r;;
-let ctest2 = EXR.test2r;;
-let ctest3 = EXR.test3r;;
-let ctestg = EXR.testgibr;;
-let ctestg1 = EXR.testgib1r;;
+let ctest1 = EXC.test1r;;
+let ctest2 = EXC.test2r;;
+let ctest3 = EXC.test3r;;
+let ctestg = EXC.testgibr;;
+let ctestg1 = EXC.testgib1r;;
 
 (* actually run some of the above tests *)
 let ctest2' = let res = match (ctest2) with
@@ -159,19 +159,23 @@ let ctestg1' =
     | (RC x) -> x
 in .! res;;
 
-
 (*
 module P = struct
-  type ('c,'v) repr = ('c,'v) code
-  let int (x:int) = fun iint -> let x = iint x in .<x>.
-  let add e1 e2 = fun iadd -> .<iadd .~e1 .~e2>.
-  let if_ ie1 ie2 et ee = 
+  let abstr = function (RL x) -> .<x>. | RC x -> x
+  let int (x:int) = .<RL x>.
+  let add e1 e2 = .<
+    match (e1,e2) with
+      (RL n1, RL n2) -> RL (n1+n2)
+    | _              -> RC (C.add (abstr e1) (abstr e2))>.
+(*
+  let ifeq ie1 ie2 et ee = 
     .<let i1 = .~ie1 in if i1 = .~ie2 then .~et i1 else .~ee i1>.
 
   let lam f = .<fun x -> .~(f .<x>.)>.
   let app e1 e2 = .<.~e1 .~e2>.
   let fix f = .<fun n -> let rec self n = .~(f .<self>.) n in self n>.
-
-  let get_res x = RC x
+  let get_res x = .! x
+*)
 end;;
+
 *)
