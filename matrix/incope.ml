@@ -27,11 +27,11 @@ type ('a,'v) result = RL of 'v | RC of ('a,'v) code;;
  *)
 
 module type Symantics = sig
-  type ('c,'v) repr
-  val int  : int -> ('c,int) repr
-  val add  : ('c,int) repr -> ('c,int) repr -> ('c,int) repr
-  val eql  : ('c,'v) repr -> ('c,'v) repr -> ('c,bool) repr
-  val bool : bool -> ('c,bool) repr
+  type ('c,'sv,'dv) repr
+  val int  : int  -> ('c,int,int) repr
+  val bool : bool -> ('c,bool,bool) repr
+  val add  : ('c,int,int) repr -> ('c,int,int) repr -> ('c,int,int) repr
+  val leq  : ('c,int,int) repr -> ('c,int,int) repr -> ('c,bool,bool) repr
   (* The last two arguments to if are functional terms.
      One of them is applied to unit.
      The reason for this charade is to prevent evaluation
@@ -39,15 +39,17 @@ module type Symantics = sig
      if_ must be a syntactic form rather than just a function.
      Or, at least it shouldn't take just (undelayed) terms.
   *)
-  val if_ : ('c,bool) repr ->
-             (unit -> ('c,'a) repr) ->
-             (unit -> ('c,'a) repr) -> ('c,'a) repr 
+  val if_ : ('c,bool,bool) repr ->
+             (unit -> ('c,'sa,'da) repr) ->
+             (unit -> ('c,'sa,'da) repr) -> ('c,'sa,'da) repr 
 
-  val lam : (('c,'a) repr -> ('c,'b) repr) -> ('c,'a->'b) repr
-  val app : ('c,'a->'b) repr -> ('c,'a) repr -> ('c,'b) repr
-  val fix : (('c,'a->'b) repr -> ('c,'a->'b) repr) -> ('c,'a->'b) repr
+  val lam : (('c,'sa,'da) repr -> ('c,'sb,'db) repr)
+    -> ('c,(('c,'sa,'da) repr -> ('c,'sb,'db) repr),'da->'db) repr
+  val app : ('c,(('c,'sa,'da) repr -> ('c,'sb,'db) repr),'da->'db) repr
+    -> ('c,'sa,'da) repr -> ('c,'sb,'db) repr
+  val fix : (('c,'s,'a->'b) repr -> ('c,'s,'a->'b) repr) -> ('c,'s,'a->'b) repr
 
-  val get_res : ('c,'v) repr -> ('c,'v) result
+  val get_res : ('c,'sv,'dv) repr -> ('c,'dv) result
 end
 ;;
 
@@ -64,9 +66,9 @@ module EX(S: Symantics) = struct
 
  let testgib () = lam (fun x -> lam (fun y ->
                   fix (fun self -> lam (fun n ->
-                      if_ (eql n (int 0)) (fun () -> x)
+                      if_ (leq n (int 0)) (fun () -> x)
                         (fun () ->
-                          (if_ (eql n (int 1)) (fun () -> y)
+                          (if_ (leq n (int 1)) (fun () -> y)
                            (fun () ->
                              (add (app self (add n (int (-1))))
                                   (app self (add n (int (-2))))))))))))
@@ -91,11 +93,11 @@ end;;
 *)
 (* Pure interpreter. It is essentially the identity transformer *)
 module R = struct
-  type ('c,'v) repr = 'v    (* absolutely no wrappers *)
+  type ('c,'sv,'dv) repr = 'dv    (* absolutely no wrappers *)
   let int (x:int) = x
-  let add e1 e2 = e1 + e2
   let bool (b:bool) = b
-  let eql x y = x == y
+  let add e1 e2 = e1 + e2
+  let leq x y = x <= y
   let if_ eb et ee = if eb then (et ()) else (ee ())
 
   let lam f = f
@@ -120,11 +122,11 @@ let itestg1 = EXR.testgib1r;;
 *)
 
 module C = struct
-  type ('c,'v) repr = ('c,'v) code
+  type ('c,'sv,'dv) repr = ('c,'dv) code
   let int (x:int) = .<x>.
   let bool (b:bool) = .<b>.
   let add e1 e2 = .<.~e1 + .~e2>.
-  let eql x y = .< .~x == .~y >.
+  let leq x y = .< .~x <= .~y >.
   let if_ eb et ee = 
     .<if .~eb then .~(et () ) else .~(ee () )>.
 
@@ -133,6 +135,7 @@ module C = struct
   let fix f = .<fun n -> let rec self n = .~(f .<self>.) n in self n>.
 
   let get_res x = RC x
+  let cC (x : ('c,'sv,'dv) repr) : ('c,'sv1,'dv) repr = x
 end;;
 
 module EXC = EX(C);;
@@ -158,6 +161,62 @@ let ctestg1' =
     | (RL x) -> failwith "not what we want"
     | (RC x) -> x
 in .! res;;
+
+(* ------------------------------------------------------------------------ *)
+(* Partial evaluator *)
+(* Inspired by Ken's solution *)
+
+module P = struct
+  type ('c,'sv,'dv) repr = {st: 'sv option; dy: ('c,'dv) code}
+  let abstr {dy = x} = x
+  let pdyn x = {st = None; dy = x}
+
+  let int  (x:int)  = {st = Some x; dy = .<x>.}
+  let bool (x:bool) = {st = Some x; dy = .<x>.}
+
+  let add e1 e2 = match (e1,e2) with
+                   ({st = Some n1}, {st = Some n2}) -> int (n1+n2)
+                 | _ -> pdyn (C.add (abstr e1) (abstr e2))
+  let leq e1 e2 = match (e1,e2) with
+                   ({st = Some n1}, {st = Some n2}) -> bool (n1<=n2)
+                 | _ -> pdyn (C.leq (abstr e1) (abstr e2))
+  let if_ eb et ee = match eb with
+                       {st = Some b} -> if b then et () else ee ()
+                     | _ -> pdyn (C.if_ (abstr eb) 
+                                      (fun () -> abstr (et ()))
+                                      (fun () -> abstr (ee ())))
+
+  let lam f = {st = Some f; 
+	       dy = C.cC (C.lam (fun x -> abstr (f (pdyn x))))}
+
+  let app ef ea = match ef with
+                    {st = Some f} -> f ea
+                  | _ -> pdyn (C.app (C.cC (abstr ef)) (abstr ea))
+   (*
+     For now, to avoid divergence at the PE stage, we residualize
+    actually, we unroll the fixpoint exactly once, and then
+    residualize
+   *)
+  let fix f = f (pdyn (C.fix (fun x -> abstr (f (pdyn x)))))
+
+  let get_res x = C.get_res (abstr x)
+end;;
+
+module EXP = EX(P);;
+
+let ptest1 = EXP.test1r;;
+let ptest2 = EXP.test2r;;
+let ptest3 = EXP.test3r;;
+let ptestg = EXP.testgibr;;
+let ptestg1 = EXP.testgib1r;;
+
+(* That's all folks. It seems to work... *)
+
+
+(* Remnants of an earlier idea: compile the PE: make a code, which,
+when run, will make a PE...
+*)
+
 
 (*
 module P = struct
