@@ -252,6 +252,7 @@ data P t where
 
 abstr :: P t -> C t
 abstr (VI i) = int i
+abstr (VB b) = bool b
 abstr (VF f) = lam (abstr . f . E)
 abstr (E x) = x
 
@@ -321,4 +322,58 @@ there are lots of pattern-matching that looks partial but in reality
 total. The ultimate goal is to make this totality syntactically
 apparent.
 -}
+
+
+-- ------------------------------------------------------------------------
+-- A partial evaluator that does not use GADTs (except in using C)
+
+-- Ken thinks that, without GADTs, it's not possible to explain in Haskell or
+-- MetaOCaml how PE is an instance of Symantics.  But we can still explain PE
+-- by itself.  In some sense we're just observing that Asai's code type-checks
+-- in Hindley-Milner as soon as we deforest the static code representation.
+
+data Rep dynamic static = Rep { dynamic :: C dynamic, static :: Maybe static }
+
+zE dynamic = Rep dynamic Nothing
+
+zint x = Rep (int x) (Just x)
+zbool b = Rep (bool b) (Just b)
+zlam f = Rep (lam (dynamic . f . zE)) (Just f)
+zapp (Rep _ (Just f)) = f
+zapp (Rep f _       ) = zE . app f . dynamic
+zfix f = f (zE (fix (dynamic . f . zE)))
+zrec z s = zlam (\n -> case n of
+    Rep _ (Just n) -> let f n | n <= 0    = z
+                              | otherwise = case s of Rep _ (Just s) -> s (f (pred n))
+                                                      Rep s _ -> zE (app s (dynamic (f (pred n))))
+                      in f n
+    Rep n _ -> zE (app (rec (dynamic z) (dynamic s)) n))
+zadd (Rep _ (Just n1)) (Rep _ (Just n2)) = zint (n1 + n2)
+zadd (Rep n1 _       ) (Rep n2 _       ) = zE (add n1 n2)
+zeql (Rep _ (Just n1)) (Rep _ (Just n2)) = zbool (n1 == n2)
+zeql (Rep n1 _       ) (Rep n2 _       ) = zE (eql n1 n2)
+zif_ (Rep _ (Just b1)) et ee = if b1 then et else ee
+zif_ (Rep be _       ) et ee = zE (if_ be (dynamic et) (dynamic ee))
+
+ztestgib = zlam (\x -> zlam (\y ->
+                zfix (\self -> zlam (\n ->
+                    zif_ (zeql n (zint 0)) x
+                      (zif_ (zeql n (zint 1)) y
+                       (zadd (zapp self (zadd n (zint (-1))))
+                             (zapp self (zadd n (zint (-2))))))))))
+
+ztestgib1 = zapp (zapp (zapp ztestgib (zint 1)) (zint 1)) (zint 5)
+
+-- "show ptest3 == show (compC (dynamic ztestgib1))" is True
+
+ztestgib' = zlam (\x -> zlam (\y -> zlam (\n ->
+            zapp (zapp (zrec (zlam (\c -> zapp (zapp c x) y))
+                             (zlam (\m -> zlam (\c -> zapp m (zlam (\a -> zlam (\b ->
+                                          zapp (zapp c b) (zadd a b))))))))
+                       n)
+                 (zlam (\a -> zlam (\b -> a))))))
+
+ztestgib1' = zapp (zapp (zapp ztestgib' (zint 1)) (zint 1)) (zint 5)
+
+-- "show ptest3' == show (compC (dynamic ztestgib1'))" is True
 
