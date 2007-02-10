@@ -42,7 +42,7 @@ class Symantics repr where
 
     add :: repr Int -> repr Int -> repr Int
     if_ :: repr Bool -> repr a -> repr a -> repr a
-    eql :: Eq a => repr a -> repr a -> repr Bool
+    eql :: repr Int -> repr Int -> repr Bool
 
 -- The following `projection' function is specific to repr.
 -- It is like `run' of the monad
@@ -129,8 +129,8 @@ No tags at all...
 -- Note how the compiler never raises any exception and matches no tags
 -- (no generated code has any tags)
 
--- The LIFT bytecode operation is used only dyring evaluation
--- it correponds to a CSP in MetaOCaml.
+-- The LIFT bytecode operation is used only during evaluation
+-- it corresponds to a CSP in MetaOCaml.
 
 data ByteCode t where
     Var :: Int -> ByteCode t                -- variables identified by numbers
@@ -377,3 +377,87 @@ ztestgib1' = zapp (zapp (zapp ztestgib' (zint 1)) (zint 1)) (zint 5)
 
 -- "show ptest3' == show (compC (dynamic ztestgib1'))" is True
 
+
+
+-- ------------------------------------------------------------------------
+-- The HOAS bytecode compiler
+-- We compile to GADT, to be understood as a typed assembly language
+-- (typed bytecode). 
+-- One may argue that this bytecode still faithfully represents
+-- MetaOCaml's `code': this is because the function
+-- 'a code -> 'b code is trivially convertible to ('a->'b) code.
+-- Also, HOAS bytecode certainly seems to match better with MetaOCaml's
+-- syntax for functions.
+-- Also note, that like MetaOCaml `code', we never pattern-match on
+-- HByteCode!
+-- Note how the compiler never raises any exception and matches no tags
+-- (no generated code has any tags)
+
+-- The HVar bytecode operation is used only during evaluation
+-- it corresponds to a CSP in MetaOCaml.
+
+data HByteCode t where
+    HVar :: t -> HByteCode t                -- essentially, the Lift operation
+    HLam :: (HByteCode t1 -> HByteCode t2) -> HByteCode (t1->t2)
+    HApp :: HByteCode (t1->t2) -> HByteCode t1  -> HByteCode t2
+    HFix :: (HByteCode t -> HByteCode t) -> HByteCode t
+    HINT :: Int -> HByteCode Int
+    HBOOL:: Bool -> HByteCode Bool
+    HAdd :: HByteCode Int -> HByteCode Int -> HByteCode Int
+    HEql :: HByteCode Int -> HByteCode Int -> HByteCode Bool
+    HIF  :: HByteCode Bool -> HByteCode t -> HByteCode t -> HByteCode t
+
+{- Showing HOAS has always been problematic... We just skip it for now...
+
+instance Show (HByteCode t) where
+    show (HVar n) = "V" ++ show n
+    show (Lam n b) = "(\\V" ++ show n ++ " -> " ++ show b ++ ")"
+    show (App e1 e2) = "(" ++ show e1 ++ " " ++ show e2 ++ ")"
+    show (Fix n b) = "(fix\\V" ++ show n ++ " " ++ show b ++ ")"
+    show (INT n) = show n
+    show (BOOL b) = show b
+    show (Add e1 e2) = "(" ++ show e1 ++ " + " ++ show e2 ++ ")"
+    show (Eql e1 e2) = "(" ++ show e1 ++ " == " ++ show e2 ++ ")"
+    show (IF be et ee)
+        = "(if " ++ show be ++ 
+          " then " ++ show et ++ " else " ++ show ee ++ ")"
+-}
+
+-- An evaluator for the ByteCode: the virtual machine
+-- It is total (modulo potential non-termination in fix)
+-- No exceptions are to be raised, and no pattern-match failure
+-- may occur. All pattern-matching is _syntactically_, patently complete.
+eval :: HByteCode t -> t
+eval (HVar v) = v
+eval (HLam b) = \x -> eval (b (HVar x))
+eval (HApp e1 e2) = (eval e1) (eval e2)
+eval (HFix f) = eval (f (HFix f))
+eval (HINT n) = n
+eval (HBOOL n) = n
+eval (HAdd e1 e2) = eval e1 + eval e2
+eval (HEql e1 e2) = eval e1 == eval e2
+eval (HIF be et ee) = if (eval be) then eval et else eval ee
+
+
+instance Symantics HByteCode where
+    int  = HINT
+    bool = HBOOL
+
+    lam  = HLam
+    app  = HApp
+
+    fix  = HFix
+    add  = HAdd
+    eql  = HEql
+    if_  = HIF
+    rec z s = fix (\f -> lam (\n -> if_ (eql n (int 0)) z (app s (app f n))))
+
+compH :: HByteCode t -> HByteCode t
+compH = id 
+
+htest1 = compH . test1 $ ()
+htest1r = eval . test1 $ ()
+htest2 = compH . test2 $ ()
+htest2r = eval . test2 $ ()
+htest3 = compH . testgib1 $ ()
+htest3r = eval . testgib1 $ ()
