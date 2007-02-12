@@ -207,10 +207,14 @@ module P = struct
   let bool (x:bool) = {st = Some x; dy = .<x>.}
 
   let add e1 e2 = match (e1,e2) with
-                   ({st = Some n1}, {st = Some n2}) -> int (n1+n2)
+                 | ({st = Some 0}, _) -> e2
+                 | (_, {st = Some 0}) -> e1
+                 | ({st = Some n1}, {st = Some n2}) -> int (n1+n2)
                  | _ -> pdyn (C.add (abstr e1) (abstr e2))
   let mul e1 e2 = match (e1,e2) with
-                   ({st = Some n1}, {st = Some n2}) -> int (n1*n2)
+                 | ({st = Some 1}, _) -> e2
+                 | (_, {st = Some 1}) -> e1
+                 | ({st = Some n1}, {st = Some n2}) -> int (n1*n2)
                  | _ -> pdyn (C.mul (abstr e1) (abstr e2))
   let leq e1 e2 = match (e1,e2) with
                    ({st = Some n1}, {st = Some n2}) -> bool (n1<=n2)
