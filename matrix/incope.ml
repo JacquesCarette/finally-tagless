@@ -2,10 +2,11 @@
 
 (*
   The language is simply-typed lambda-calculus with fixpoint,
-  integers, booleans and comparison.
+  integers [plus basic operations], booleans [ditto] and comparison.
 
   Lam hoas_fn | App e e | Fix hoas_fn |
-  I Int | B Bool | Add ie1 ie2 |
+  I Int | Add ie1 ie2 | Mul ie1 ie2 
+  B Bool |
   IF b e-then e-else
   
   The language is just expressive enough for the Gibonacci function.
@@ -23,7 +24,7 @@
 *)
 type ('a,'v) result = RL of 'v | RC of ('a,'v) code;;
 
-(* This class defines syntax (and its instances, semantics) of our language
+(* This class/type defines syntax (and its instances, semantics) of our language
  *)
 
 module type Symantics = sig
@@ -31,6 +32,8 @@ module type Symantics = sig
   val int  : int  -> ('c,int,int) repr
   val bool : bool -> ('c,bool,bool) repr
   val add  : ('c,int,int) repr -> ('c,int,int) repr -> ('c,int,int) repr
+  val mul  : ('c,int,int) repr -> ('c,int,int) repr -> ('c,int,int) repr
+  val eql  : ('c,'a,'a) repr -> ('c,'a,'a) repr -> ('c,bool,bool) repr
   val leq  : ('c,int,int) repr -> ('c,int,int) repr -> ('c,bool,bool) repr
   (* The last two arguments to if are functional terms.
      One of them is applied to unit.
@@ -48,6 +51,9 @@ module type Symantics = sig
   val app : ('c,(('c,'sa,'da) repr -> ('c,'sb,'db) repr),'da->'db) repr
     -> ('c,'sa,'da) repr -> ('c,'sb,'db) repr
   val fix : (('c,'s,'a->'b) repr -> ('c,'s,'a->'b) repr) -> ('c,'s,'a->'b) repr
+  val unfold : ('c,'s,'a) repr -> 
+               ('c,('c,'s,'a) repr -> ('c,'s,'a) repr,'a->'a) repr -> 
+               ('c, ('c,int,int) repr -> ('c,'s,'a) repr, int->'a) repr
 
   val get_res : ('c,'sv,'dv) repr -> ('c,'dv) result
 end
@@ -73,8 +79,19 @@ module EX(S: Symantics) = struct
                              (add (app self (add n (int (-1))))
                                   (app self (add n (int (-2))))))))))))
 
-
  let testgib1 () = app (app (app (testgib ()) (int 1)) (int 1)) (int 5)
+
+ (* this pow takes its arguments backwards for now, for ease of PE,
+    should be fixed later *)
+ let testpowfix () = fix (fun self -> lam (fun n -> lam (fun x ->
+     if_ (eql n (int 0)) (fun () -> (int 1)) (fun () -> 
+         (if_ (eql n (int 1)) (fun () -> x) (fun () -> 
+             (mul x (app (app self (add n (int (-1)))) x))))))))
+ let testpowfix7 () = app (testpowfix ()) (int 7)
+
+ (* should really write a power function using unfold rather than fix,
+    since we know how to do that.  But I tried, and my solutions had
+    the right type yet sent metaocaml into an infinite loop :-( *)
 
  let test1r = get_res (test1 ())
  let test2r = get_res (test2 ())
@@ -83,6 +100,10 @@ module EX(S: Symantics) = struct
 
  let testgibr = get_res (testgib ())
  let testgib1r = get_res (testgib1 ())
+
+ let testpowfixr = get_res (testpowfix ())
+ let testpowfix7r = get_res (testpowfix7 ())
+
 end;;
 
 
@@ -97,12 +118,15 @@ module R = struct
   let int (x:int) = x
   let bool (b:bool) = b
   let add e1 e2 = e1 + e2
+  let mul e1 e2 = e1 * e2
   let leq x y = x <= y
+  let eql x y = x == y
   let if_ eb et ee = if eb then (et ()) else (ee ())
 
   let lam f = f
   let app e1 e2 = e1 e2
   let fix f n = let rec fx f n = f (fx f) n in fx f n
+  let rec unfold z s = fun n -> if n<=0 then z else s ((unfold z s) (n-1))
 
   let get_res x = RL x
 end;;
@@ -113,6 +137,7 @@ let itest2 = EXR.test2r;;
 let itest3 = EXR.test3r;;
 let itestg = EXR.testgibr;;
 let itestg1 = EXR.testgib1r;;
+let itestp7 = EXR.testpowfix7r;;
 
 (* ------------------------------------------------------------------------ *)
 (* Pure compiler *)
@@ -126,13 +151,17 @@ module C = struct
   let int (x:int) = .<x>.
   let bool (b:bool) = .<b>.
   let add e1 e2 = .<.~e1 + .~e2>.
+  let mul e1 e2 = .<.~e1 * .~e2>.
   let leq x y = .< .~x <= .~y >.
+  let eql x y = .< .~x == .~y >.
   let if_ eb et ee = 
     .<if .~eb then .~(et () ) else .~(ee () )>.
 
   let lam f = .<fun x -> .~(f .<x>.)>.
   let app e1 e2 = .<.~e1 .~e2>.
   let fix f = .<fun n -> let rec self n = .~(f .<self>.) n in self n>.
+  let rec unfold z s = .<fun n -> if n <= 0 then .~z else 
+      .~s (.~(unfold z s) (n-1)) >.
 
   let get_res x = RC x
   let cC (x : ('c,'sv,'dv) repr) : ('c,'sv1,'dv) repr = x
@@ -145,6 +174,7 @@ let ctest2 = EXC.test2r;;
 let ctest3 = EXC.test3r;;
 let ctestg = EXC.testgibr;;
 let ctestg1 = EXC.testgib1r;;
+let ctestp7 = EXC.testpowfix7r;;
 
 (* actually run some of the above tests *)
 let ctest2' = let res = match (ctest2) with
@@ -177,9 +207,15 @@ module P = struct
   let add e1 e2 = match (e1,e2) with
                    ({st = Some n1}, {st = Some n2}) -> int (n1+n2)
                  | _ -> pdyn (C.add (abstr e1) (abstr e2))
+  let mul e1 e2 = match (e1,e2) with
+                   ({st = Some n1}, {st = Some n2}) -> int (n1*n2)
+                 | _ -> pdyn (C.mul (abstr e1) (abstr e2))
   let leq e1 e2 = match (e1,e2) with
                    ({st = Some n1}, {st = Some n2}) -> bool (n1<=n2)
                  | _ -> pdyn (C.leq (abstr e1) (abstr e2))
+  let eql e1 e2 = match (e1,e2) with
+                   ({st = Some n1}, {st = Some n2}) -> bool (n1==n2)
+                 | _ -> pdyn (C.eql (abstr e1) (abstr e2))
   let if_ eb et ee = match eb with
                        {st = Some b} -> if b then et () else ee ()
                      | _ -> pdyn (C.if_ (abstr eb) 
@@ -198,6 +234,15 @@ module P = struct
     residualize
    *)
   let fix f = f (pdyn (C.fix (fun x -> abstr (f (pdyn x)))))
+  (* this should allow us controlled unfolding *)
+  let unfold z s = lam (function
+      | {st = Some n} -> 
+              let rec f k = if k<=0 then z else
+                                match s with
+                                | {st = Some m} -> m (f (k-1))
+                                | {dy = y}      -> pdyn (C.app y (abstr (f (k-1))))
+              in f n
+      | {dy = y}      -> pdyn (C.app (C.unfold (abstr z) (abstr s)) y))
 
   let get_res x = C.get_res (abstr x)
 end;;
@@ -209,6 +254,7 @@ let ptest2 = EXP.test2r;;
 let ptest3 = EXP.test3r;;
 let ptestg = EXP.testgibr;;
 let ptestg1 = EXP.testgib1r;;
+let ptestp7 = EXP.testpowfix7r;;
 
 (* That's all folks. It seems to work... *)
 
