@@ -88,10 +88,6 @@ module EX(S: Symantics) = struct
                             (lam (fun f -> lam (fun x -> mul x (app f x))))
  let testpowfix7 () = app (testpowfix ()) (int 7)
 
- (* should really write a power function using unfold rather than fix,
-    since we know how to do that.  But I tried, and my solutions had
-    the right type yet sent metaocaml into an infinite loop :-( *)
-
  let test1r = get_res (test1 ())
  let test2r = get_res (test2 ())
  let test3r = get_res (test3 ())
