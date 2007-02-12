@@ -84,10 +84,8 @@ module EX(S: Symantics) = struct
 
  (* this pow takes its arguments backwards for now, for ease of PE,
     should be fixed later *)
- let testpowfix () = fix (fun self -> lam (fun n -> lam (fun x ->
-     if_ (eql n (int 0)) (fun () -> (int 1)) (fun () -> 
-         (if_ (eql n (int 1)) (fun () -> x) (fun () -> 
-             (mul x (app (app self (add n (int (-1)))) x))))))))
+ let testpowfix () = unfold (lam (fun x -> int 1))
+                            (lam (fun f -> lam (fun x -> mul x (app f x))))
  let testpowfix7 () = app (testpowfix ()) (int 7)
 
  (* should really write a power function using unfold rather than fix,
@@ -162,8 +160,7 @@ module C = struct
   let lam f = .<fun x -> .~(f .<x>.)>.
   let app e1 e2 = .<.~e1 .~e2>.
   let fix f = .<fun n -> let rec self n = .~(f .<self>.) n in self n>.
-  let rec unfold z s = .<fun n -> if n <= 0 then .~z else 
-      .~s (.~(unfold z s) (n-1)) >.
+  let unfold z s = .<let rec f n = if n <= 0 then .~z else .~s (f (n-1)) in f>.
 
   let get_res x = RC x
   let dyn_id (x : ('c,'sv,'dv) repr) : ('c,'sv1,'dv) repr = x
