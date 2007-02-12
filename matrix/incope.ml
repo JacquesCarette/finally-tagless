@@ -56,6 +56,7 @@ module type Symantics = sig
                ('c, ('c,int,int) repr -> ('c,'s,'a) repr, int->'a) repr
 
   val get_res : ('c,'sv,'dv) repr -> ('c,'dv) result
+  val dyn_id : ('c, 's, 'a) repr -> ('c, 's1, 'a) repr
 end
 ;;
 
@@ -129,6 +130,7 @@ module R = struct
   let rec unfold z s = fun n -> if n<=0 then z else s ((unfold z s) (n-1))
 
   let get_res x = RL x
+  let dyn_id (x : ('c,'sv,'dv) repr) : ('c,'sv1,'dv) repr = x
 end;;
 
 module EXR = EX(R);;
@@ -164,7 +166,7 @@ module C = struct
       .~s (.~(unfold z s) (n-1)) >.
 
   let get_res x = RC x
-  let cC (x : ('c,'sv,'dv) repr) : ('c,'sv1,'dv) repr = x
+  let dyn_id (x : ('c,'sv,'dv) repr) : ('c,'sv1,'dv) repr = x
 end;;
 
 module EXC = EX(C);;
@@ -223,11 +225,11 @@ module P = struct
                                       (fun () -> abstr (ee ())))
 
   let lam f = {st = Some f; 
-	       dy = C.cC (C.lam (fun x -> abstr (f (pdyn x))))}
+               dy = C.dyn_id (C.lam (fun x -> abstr (f (pdyn x))))}
 
   let app ef ea = match ef with
                     {st = Some f} -> f ea
-                  | _ -> pdyn (C.app (C.cC (abstr ef)) (abstr ea))
+                  | _ -> pdyn (C.app (C.dyn_id (abstr ef)) (abstr ea))
    (*
      For now, to avoid divergence at the PE stage, we residualize
     actually, we unroll the fixpoint exactly once, and then
@@ -245,6 +247,7 @@ module P = struct
       | {dy = y}      -> pdyn (C.app (C.unfold (abstr z) (abstr s)) y))
 
   let get_res x = C.get_res (abstr x)
+  let dyn_id (x : ('c,'sv,'dv) repr) : ('c,'sv1,'dv) repr = pdyn (abstr x)
 end;;
 
 module EXP = EX(P);;
@@ -255,6 +258,64 @@ let ptest3 = EXP.test3r;;
 let ptestg = EXP.testgibr;;
 let ptestg1 = EXP.testgib1r;;
 let ptestp7 = EXP.testpowfix7r;;
+
+(* Try the same, but being more explicit about where things come from *)
+module PP =
+struct
+  type ('c,'sv,'dv) repr = {st: 'sv option; dy: ('c,'dv) code}
+  let abstr {dy = x} = x
+  let pdyn x = {st = None; dy = x}
+
+  let int  (x:int)  = {st = Some (R.int x); dy = C.int x}
+  let bool (x:bool) = {st = Some (R.bool x); dy = C.bool x}
+
+  let build cast f1 f2 = fun e1 -> fun e2 -> match (e1,e2) with
+                   ({st = Some n1}, {st = Some n2}) -> cast (f1 n1 n2)
+                 | _ -> pdyn (f2 (abstr e1) (abstr e2))
+  let add e1 e2 = build int R.add C.add e1 e2
+  let mul e1 e2 = build int R.mul C.mul e1 e2
+  let leq e1 e2 = build bool R.leq C.leq e1 e2
+  let eql e1 e2 = build bool R.eql C.eql e1 e2
+  let if_ eb et ee = match eb with
+                       {st = Some b} -> if b then et () else ee ()
+                     | _ -> pdyn (C.if_ (abstr eb) 
+                                      (fun () -> abstr (et ()))
+                                      (fun () -> abstr (ee ())))
+
+  let lam f = {st = Some f; 
+               dy = C.lam (fun x -> abstr (f (pdyn x)))}
+
+  let app ef ea = match ef with
+                    {st = Some f} -> f ea
+                  | _ -> pdyn (C.app (C.dyn_id (abstr ef)) (abstr ea))
+   (*
+     For now, to avoid divergence at the PE stage, we residualize
+    actually, we unroll the fixpoint exactly once, and then
+    residualize
+   *)
+  let fix f = f (pdyn (C.fix (fun x -> abstr (f (pdyn x)))))
+  (* this should allow us controlled unfolding *)
+  let unfold z s = lam (function
+      | {st = Some n} -> 
+              let rec f k = if k<=0 then z else
+                                match s with
+                                | {st = Some m} -> m (f (k-1))
+                                | {dy = y}      -> pdyn (C.app y (abstr (f (k-1))))
+              in f n
+      | {dy = y}      -> pdyn (C.app (C.unfold (abstr z) (abstr s)) y))
+
+  let get_res x = C.get_res (abstr x)
+  let dyn_id (x : ('c,'sv,'dv) repr) : ('c,'sv1,'dv) repr = pdyn (abstr x)
+end;;
+
+module EXPP = EX(PP);;
+
+let pptest1 = EXPP.test1r;;
+let pptest2 = EXPP.test2r;;
+let pptest3 = EXPP.test3r;;
+let pptestg = EXPP.testgibr;;
+let pptestg1 = EXPP.testgib1r;;
+let pptestp7 = EXPP.testpowfix7r;;
 
 (* That's all folks. It seems to work... *)
 
