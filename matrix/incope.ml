@@ -50,7 +50,8 @@ module type Symantics = sig
     -> ('c,(('c,'sa,'da) repr -> ('c,'sb,'db) repr),'da->'db) repr
   val app : ('c,(('c,'sa,'da) repr -> ('c,'sb,'db) repr),'da->'db) repr
     -> ('c,'sa,'da) repr -> ('c,'sb,'db) repr
-  val fix : (('c,'s,'a->'b) repr -> ('c,'s,'a->'b) repr) -> ('c,'s,'a->'b) repr
+  val fix : (('c,(('c,'sa,'da) repr -> ('c,'sb,'db) repr) as 's,'da->'db) repr 
+	     -> ('c,'s,'da->'db) repr)  -> ('c,'s,'da->'db) repr
   val unfold : ('c,'s,'a) repr -> 
                ('c,('c,'s,'a) repr -> ('c,'s,'a) repr,'a->'a) repr -> 
                ('c, ('c,int,int) repr -> ('c,'s,'a) repr, int->'a) repr
@@ -81,12 +82,20 @@ module EX(S: Symantics) = struct
                                   (app self (add n (int (-2))))))))))))
 
  let testgib1 () = app (app (app (testgib ()) (int 1)) (int 1)) (int 5)
+ let testgib2 () = lam (fun x -> (lam (fun y ->
+   app (app (app (testgib ()) x) y) (int 5))))
 
  (* this pow takes its arguments backwards for now, for ease of PE,
     should be fixed later *)
+ let testpowfix () = lam (fun x ->
+                      fix (fun self -> lam (fun n ->
+			if_ (leq n (int 0)) (fun () -> int 1)
+			    (fun () -> mul x (app self (add n (int (-1))))))))
+(*
  let testpowfix () = unfold (lam (fun x -> int 1))
                             (lam (fun f -> lam (fun x -> mul x (app f x))))
- let testpowfix7 () = app (testpowfix ()) (int 7)
+*)
+ let testpowfix7 () = lam (fun x -> app (app (testpowfix ()) x) (int 7))
 
  let test1r = get_res (test1 ())
  let test2r = get_res (test2 ())
@@ -95,6 +104,7 @@ module EX(S: Symantics) = struct
 
  let testgibr = get_res (testgib ())
  let testgib1r = get_res (testgib1 ())
+ let testgib2r = get_res (testgib2 ())
 
  let testpowfixr = get_res (testpowfix ())
  let testpowfix7r = get_res (testpowfix7 ())
@@ -133,6 +143,7 @@ let itest2 = EXR.test2r;;
 let itest3 = EXR.test3r;;
 let itestg = EXR.testgibr;;
 let itestg1 = EXR.testgib1r;;
+let itestg2 = EXR.testgib2r;;
 let itestp7 = EXR.testpowfix7r;;
 
 (* ------------------------------------------------------------------------ *)
@@ -169,6 +180,7 @@ let ctest2 = EXC.test2r;;
 let ctest3 = EXC.test3r;;
 let ctestg = EXC.testgibr;;
 let ctestg1 = EXC.testgib1r;;
+let ctestg2 = EXC.testgib2r;;
 let ctestp7 = EXC.testpowfix7r;;
 
 (* actually run some of the above tests *)
@@ -207,9 +219,9 @@ struct
                  | _ -> pdyn (f2 (abstr e1) (abstr e2))
   (* same as 'build' but takes care of the neutral element (e) simplification
      allowed via a monoid structure which is implicitly present *)
-  let buildsimp cast e f1 f2 = fun e1 -> fun e2 -> match (e1,e2) with
-                 | ({st = Some e}, _) -> e2
-                 | (_, {st = Some e}) -> e1
+  let buildsimp cast e f1 f2 = fun e1 e2 -> match (e1,e2) with
+                 | ({st = Some e'}, _) when e = e' -> e2
+                 | (_, {st = Some e'}) when e = e' -> e1
                  | ({st = Some n1}, {st = Some n2}) -> cast (f1 n1 n2)
                  | _ -> pdyn (f2 (abstr e1) (abstr e2))
 
@@ -249,13 +261,35 @@ struct
   let dyn_id (x : ('c,'sv,'dv) repr) : ('c,'sv1,'dv) repr = pdyn (abstr x)
 end;;
 
-module EXP = EX(P);;
+module P1 =
+struct
+  include P
+(*
+  type ('c,'sv,'dv) repr = {st: 'sv option; dy: ('c,'dv) code}
+  let abstr {dy = x} = x
+  let pdyn x = {st = None; dy = x}
+*)
+  let fix f = 
+    let fdyn = C.fix (fun x -> abstr (f (pdyn x))) in
+    let fdynn e = pdyn (C.app fdyn e.dy) in
+    {st = Some (function {st = Some _} as e -> 
+                  let rec self n = 
+		    (match n.st with Some _ -> app (f (lam self)) n 
+		                     | _ ->  fdynn n) in 
+		  app (f (lam self)) e
+               | e  -> fdynn e);
+	       dy = fdyn }
+end;;
+
+
+module EXP = EX(P1);;
 
 let ptest1 = EXP.test1r;;
 let ptest2 = EXP.test2r;;
 let ptest3 = EXP.test3r;;
 let ptestg = EXP.testgibr;;
 let ptestg1 = EXP.testgib1r;;
+let ptestg2 = EXP.testgib2r;;
 let ptestp7 = EXP.testpowfix7r;;
 
 (* That's all folks. It seems to work... *)
