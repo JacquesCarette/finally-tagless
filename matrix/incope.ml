@@ -191,73 +191,7 @@ in .! res;;
 (* Partial evaluator *)
 (* Inspired by Ken's solution *)
 
-module P = struct
-  type ('c,'sv,'dv) repr = {st: 'sv option; dy: ('c,'dv) code}
-  let abstr {dy = x} = x
-  let pdyn x = {st = None; dy = x}
-
-  let int  (x:int)  = {st = Some x; dy = .<x>.}
-  let bool (x:bool) = {st = Some x; dy = .<x>.}
-
-  let add e1 e2 = match (e1,e2) with
-                 | ({st = Some 0}, _) -> e2
-                 | (_, {st = Some 0}) -> e1
-                 | ({st = Some n1}, {st = Some n2}) -> int (n1+n2)
-                 | _ -> pdyn (C.add (abstr e1) (abstr e2))
-  let mul e1 e2 = match (e1,e2) with
-                 | ({st = Some 1}, _) -> e2
-                 | (_, {st = Some 1}) -> e1
-                 | ({st = Some n1}, {st = Some n2}) -> int (n1*n2)
-                 | _ -> pdyn (C.mul (abstr e1) (abstr e2))
-  let leq e1 e2 = match (e1,e2) with
-                   ({st = Some n1}, {st = Some n2}) -> bool (n1<=n2)
-                 | _ -> pdyn (C.leq (abstr e1) (abstr e2))
-  let eql e1 e2 = match (e1,e2) with
-                   ({st = Some n1}, {st = Some n2}) -> bool (n1==n2)
-                 | _ -> pdyn (C.eql (abstr e1) (abstr e2))
-  let if_ eb et ee = match eb with
-                       {st = Some b} -> if b then et () else ee ()
-                     | _ -> pdyn (C.if_ (abstr eb) 
-                                      (fun () -> abstr (et ()))
-                                      (fun () -> abstr (ee ())))
-
-  let lam f = {st = Some f; 
-               dy = C.dyn_id (C.lam (fun x -> abstr (f (pdyn x))))}
-
-  let app ef ea = match ef with
-                    {st = Some f} -> f ea
-                  | _ -> pdyn (C.app (C.dyn_id (abstr ef)) (abstr ea))
-   (*
-     For now, to avoid divergence at the PE stage, we residualize
-    actually, we unroll the fixpoint exactly once, and then
-    residualize
-   *)
-  let fix f = f (pdyn (C.fix (fun x -> abstr (f (pdyn x)))))
-  (* this should allow us controlled unfolding *)
-  let unfold z s = lam (function
-      | {st = Some n} -> 
-              let rec f k = if k<=0 then z else
-                                match s with
-                                | {st = Some m} -> m (f (k-1))
-                                | {dy = y}      -> pdyn (C.app y (abstr (f (k-1))))
-              in f n
-      | {dy = y}      -> pdyn (C.app (C.unfold (abstr z) (abstr s)) y))
-
-  let get_res x = C.get_res (abstr x)
-  let dyn_id (x : ('c,'sv,'dv) repr) : ('c,'sv1,'dv) repr = pdyn (abstr x)
-end;;
-
-module EXP = EX(P);;
-
-let ptest1 = EXP.test1r;;
-let ptest2 = EXP.test2r;;
-let ptest3 = EXP.test3r;;
-let ptestg = EXP.testgibr;;
-let ptestg1 = EXP.testgib1r;;
-let ptestp7 = EXP.testpowfix7r;;
-
-(* Try the same, but being more explicit about where things come from *)
-module PP =
+module P =
 struct
   type ('c,'sv,'dv) repr = {st: 'sv option; dy: ('c,'dv) code}
   let abstr {dy = x} = x
@@ -266,11 +200,21 @@ struct
   let int  (x:int)  = {st = Some (R.int x); dy = C.int x}
   let bool (x:bool) = {st = Some (R.bool x); dy = C.bool x}
 
+  (* generic build - takes a repr constructor, an interpreter function
+     and a compiler function (all binary) and builds a PE version *)
   let build cast f1 f2 = fun e1 -> fun e2 -> match (e1,e2) with
                    ({st = Some n1}, {st = Some n2}) -> cast (f1 n1 n2)
                  | _ -> pdyn (f2 (abstr e1) (abstr e2))
-  let add e1 e2 = build int R.add C.add e1 e2
-  let mul e1 e2 = build int R.mul C.mul e1 e2
+  (* same as 'build' but takes care of the neutral element (e) simplification
+     allowed via a monoid structure which is implicitly present *)
+  let buildsimp cast e f1 f2 = fun e1 -> fun e2 -> match (e1,e2) with
+                 | ({st = Some e}, _) -> e2
+                 | (_, {st = Some e}) -> e1
+                 | ({st = Some n1}, {st = Some n2}) -> cast (f1 n1 n2)
+                 | _ -> pdyn (f2 (abstr e1) (abstr e2))
+
+  let add e1 e2 = buildsimp int 0 R.add C.add e1 e2
+  let mul e1 e2 = buildsimp int 1 R.mul C.mul e1 e2
   let leq e1 e2 = build bool R.leq C.leq e1 e2
   let eql e1 e2 = build bool R.eql C.eql e1 e2
   let if_ eb et ee = match eb with
@@ -305,14 +249,14 @@ struct
   let dyn_id (x : ('c,'sv,'dv) repr) : ('c,'sv1,'dv) repr = pdyn (abstr x)
 end;;
 
-module EXPP = EX(PP);;
+module EXP = EX(P);;
 
-let pptest1 = EXPP.test1r;;
-let pptest2 = EXPP.test2r;;
-let pptest3 = EXPP.test3r;;
-let pptestg = EXPP.testgibr;;
-let pptestg1 = EXPP.testgib1r;;
-let pptestp7 = EXPP.testpowfix7r;;
+let ptest1 = EXP.test1r;;
+let ptest2 = EXP.test2r;;
+let ptest3 = EXP.test3r;;
+let ptestg = EXP.testgibr;;
+let ptestg1 = EXP.testgib1r;;
+let ptestp7 = EXP.testpowfix7r;;
 
 (* That's all folks. It seems to work... *)
 
