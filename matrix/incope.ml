@@ -293,6 +293,26 @@ let ptestg1 = EXP.testgib1r;;
 let ptestg2 = EXP.testgib2r;;
 let ptestp7 = EXP.testpowfix7r;;
 
+(* start encoding some of Ken's ideas on a self-interpreter *)
+let apply_to_si_R encoded_e =
+    encoded_e R.int R.bool R.add R.app ;;
+
+let apply_to_si_C encoded_e =
+    encoded_e C.int C.bool C.add C.app
+    ;;
+
+let apply_to_si_P encoded_e =
+    encoded_e P1.int P1.bool P1.add P1.app
+    ;;
+
+let an_e = (fun _int -> (fun _bool -> (fun _add -> (fun _app ->
+           (_add (_int 1) (_int 2)))))) ;;
+
+(* 3 three ways *)
+let testR = apply_to_si_R an_e ;;
+let testC = apply_to_si_C an_e ;;
+let testP = apply_to_si_P an_e ;;
+
 (* That's all folks. It seems to work... *)
 
 
