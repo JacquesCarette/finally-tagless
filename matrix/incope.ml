@@ -33,8 +33,9 @@ module type Symantics = sig
   val bool : bool -> ('c,bool,bool) repr
   val add  : ('c,int,int) repr -> ('c,int,int) repr -> ('c,int,int) repr
   val mul  : ('c,int,int) repr -> ('c,int,int) repr -> ('c,int,int) repr
-  val eql  : ('c,'a,'a) repr -> ('c,'a,'a) repr -> ('c,bool,bool) repr
   val leq  : ('c,int,int) repr -> ('c,int,int) repr -> ('c,bool,bool) repr
+  (* could be defined in terms of leq and if_ *)
+  val eql  : ('c,'a,'a) repr -> ('c,'a,'a) repr -> ('c,bool,bool) repr
   (* The last two arguments to if are functional terms.
      One of them is applied to unit.
      The reason for this charade is to prevent evaluation
@@ -51,7 +52,7 @@ module type Symantics = sig
   val app : ('c,(('c,'sa,'da) repr -> ('c,'sb,'db) repr),'da->'db) repr
     -> ('c,'sa,'da) repr -> ('c,'sb,'db) repr
   val fix : (('c,(('c,'sa,'da) repr -> ('c,'sb,'db) repr) as 's,'da->'db) repr 
-	     -> ('c,'s,'da->'db) repr)  -> ('c,'s,'da->'db) repr
+             -> ('c,'s,'da->'db) repr)  -> ('c,'s,'da->'db) repr
   val unfold : ('c,'s,'a) repr -> 
                ('c,('c,'s,'a) repr -> ('c,'s,'a) repr,'a->'a) repr -> 
                ('c, ('c,int,int) repr -> ('c,'s,'a) repr, int->'a) repr
@@ -89,8 +90,8 @@ module EX(S: Symantics) = struct
     should be fixed later *)
  let testpowfix () = lam (fun x ->
                       fix (fun self -> lam (fun n ->
-			if_ (leq n (int 0)) (fun () -> int 1)
-			    (fun () -> mul x (app self (add n (int (-1))))))))
+                        if_ (leq n (int 0)) (fun () -> int 1)
+                            (fun () -> mul x (app self (add n (int (-1))))))))
 (*
  let testpowfix () = unfold (lam (fun x -> int 1))
                             (lam (fun f -> lam (fun x -> mul x (app f x))))
@@ -274,11 +275,11 @@ struct
     let fdynn e = pdyn (C.app fdyn e.dy) in
     {st = Some (function {st = Some _} as e -> 
                   let rec self n = 
-		    (match n.st with Some _ -> app (f (lam self)) n 
-		                     | _ ->  fdynn n) in 
-		  app (f (lam self)) e
+                    (match n.st with Some _ -> app (f (lam self)) n 
+                                     | _ ->  fdynn n) in 
+                  app (f (lam self)) e
                | e  -> fdynn e);
-	       dy = fdyn }
+               dy = fdyn }
 end;;
 
 
