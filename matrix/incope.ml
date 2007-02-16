@@ -24,7 +24,8 @@
 *)
 type ('a,'v) result = RL of 'v | RC of ('a,'v) code;;
 
-(* This class/type defines syntax (and its instances, semantics) of our language
+(* This class/type defines syntax (and its instances, semantics) 
+   of our language
  *)
 
 module type Symantics = sig
@@ -85,16 +86,18 @@ module EX(S: Symantics) = struct
  let testgib2 () = lam (fun x -> (lam (fun y ->
    app (app (app (testgib ()) x) y) (int 5))))
 
- (* this pow takes its arguments backwards for now, for ease of PE,
-    should be fixed later *)
  let testpowfix () = lam (fun x ->
                       fix (fun self -> lam (fun n ->
                         if_ (leq n (int 0)) (fun () -> int 1)
                             (fun () -> mul x (app self (add n (int (-1))))))))
-(*
+
+ (* this pow takes its arguments backwards for now, for ease of PE,
+    should be fixed later 
+  Can we delete this?
  let testpowfix () = unfold (lam (fun x -> int 1))
                             (lam (fun f -> lam (fun x -> mul x (app f x))))
 *)
+
  let testpowfix7 () = lam (fun x -> app (app (testpowfix ()) x) (int 7))
 
  let test1r = get_res (test1 ())
@@ -169,6 +172,7 @@ module C = struct
   let unfold z s = .<let rec f n = if n <= 0 then .~z else .~s (f (n-1)) in f>.
 
   let get_res x = RC x
+  let dyn_id (x : ('c,'sv,'dv) repr) : ('c,'sv1,'dv) repr = x
 end;;
 
 module EXC = EX(C);;
@@ -238,7 +242,8 @@ struct
 
   let app ef ea = match ef with
                     {st = Some f} -> f ea
-                  | _ -> pdyn ((C.app (abstr ef)) (abstr ea))
+                  | _ -> pdyn (C.app (C.dyn_id (abstr ef)) (abstr ea))
+
    (*
      For now, to avoid divergence at the PE stage, we residualize
     actually, we unroll the fixpoint exactly once, and then
