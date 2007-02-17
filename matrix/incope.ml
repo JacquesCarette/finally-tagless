@@ -54,10 +54,11 @@ module type Symantics = sig
     -> ('c,'sa,'da) repr -> ('c,'sb,'db) repr
   val fix : (('c,(('c,'sa,'da) repr -> ('c,'sb,'db) repr) as 's,'da->'db) repr 
              -> ('c,'s,'da->'db) repr)  -> ('c,'s,'da->'db) repr
+(* Should we keep this in the comments?
   val unfold : ('c,'s,'a) repr -> 
                ('c,('c,'s,'a) repr -> ('c,'s,'a) repr,'a->'a) repr -> 
                ('c, ('c,int,int) repr -> ('c,'s,'a) repr, int->'a) repr
-
+*)
   val get_res : ('c,'sv,'dv) repr -> ('c,'dv) result
 end
 ;;
@@ -66,7 +67,7 @@ end
 (* Running example *)
 
 module EX(S: Symantics) = struct
- include S
+ open S
 
  (* Unit is to prevent monomorphising over 'c *)
  let test1 () = add (int 1) (int 2)
@@ -152,7 +153,7 @@ let itestp7 = EXR.testpowfix7r;;
 (* Pure compiler *)
 
 (* Note how the compiler never raises any exception and matches no tags
-  (no generated code has any tags)
+  (nor generated code has any tags)
 *)
 
 module C = struct
@@ -373,4 +374,67 @@ module P = struct
 *)
 end;;
 
+*)
+
+
+(* Extension of S for an imperative language with a single piece of
+   state.
+
+        let x = e1 in e2
+        deref e
+        set e1 e2 (returning the old value of e1)
+        The optional 
+                begin e1; e2 end
+        is just 
+                let dummy=e1 in e2
+
+ Since we use higher-order abstract syntax, let x = e1 in e2
+ is just lapp e1 (\x -> e2), which is an inverse application.
+ Some may call it `bind'.
+*)
+
+(* Extension of S for an imperative language
+
+        let x = e1 in e2
+        newref e
+        deref e
+        set e1 e2 (returning the old value of e1)
+        The optional 
+                begin e1; e2 end
+        is just 
+                let dummy=e1 in e2
+
+ Since we use higher-order abstract syntax, let x = e1 in e2
+ is just lapp e1 (\x -> e2), which is an inverse application.
+
+*)
+(*
+module type SI = sig
+  include S
+  val lapp : ('c,'sa,'da) repr ->
+    ('c,(('c,'sa,'da) repr -> ('c,'sb,'db) repr),'da->'db) repr
+    -> ('c,'sb,'db) repr
+  val 
+*)
+
+(* The following shows that splitting a type variable doesn't
+   help for module subtyping. A split (constrained) type variable
+   is less polymorphic, so it won't pass where the signature demands
+   unconstrained variable.
+
+module type S1 = sig
+  type ('a,'v) rep
+  val vi : int -> ('a,int) rep
+end;;
+
+module R1 = struct
+  type ('a,'v) rep = ('b, ('v->'w) -> 'w) code constraint 'a = 'b * 'w
+  let vi (x:int) = .<fun k -> k x>.
+end;;
+
+module E1(S:S1) = struct
+  let t () = S.vi 1
+end;;
+
+module E11 = E1(R1);;
 *)
