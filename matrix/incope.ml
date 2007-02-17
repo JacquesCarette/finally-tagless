@@ -297,36 +297,36 @@ let ptestp7 = EXP.testpowfix7r;;
 (* start encoding some of Ken's ideas on a self-interpreter *)
 let apply_to_si_R encoded_e =
     encoded_e R.int R.bool R.add R.app 
-        R.mul R.leq R.eql (R.if_) (R.lam) (R.fix) (R.unfold)
+        R.mul R.leq R.eql (R.if_) (R.lam) (R.lam) (R.fix)
     ;;
 
 let apply_to_si_C encoded_e =
     encoded_e C.int C.bool C.add C.app
-        C.mul C.leq C.eql C.if_ C.lam C.fix C.unfold
+        C.mul C.leq C.eql C.if_ C.lam C.lam C.fix
     ;;
 
 let apply_to_si_P encoded_e =
     encoded_e P1.int P1.bool P1.add P1.app
-        P1.mul P1.leq P1.eql P1.if_ P1.lam P1.fix P1.unfold
+        P1.mul P1.leq P1.eql P1.if_ P1.lam P1.lam P1.fix
     ;;
 
 let an_e1 = (fun _int -> (fun _bool -> (fun _add -> (fun _app ->
             (fun _mul -> (fun _leq -> (fun _eql -> (fun _if_ ->
-            (fun _lam -> (fun _fix -> (fun _unfold ->
+            (fun _lam1 -> (fun _lam2 -> (fun _fix -> 
             (_add (_int 1) (_int 2))
             ))))))))))) ;;
 
 let an_e2 = (fun _int -> (fun _bool -> (fun _add -> (fun _app ->
             (fun _mul -> (fun _leq -> (fun _eql -> (fun _if_ ->
-            (fun _lam -> (fun _fix -> (fun _unfold ->
-            _lam (fun x -> _add x x)
+            (fun _lam1 -> (fun _lam2 -> (fun _fix ->
+            _lam1 (fun x -> _add x x)
             ))))))))))) ;;
 
 let an_ep = (fun _int -> (fun _bool -> (fun _add -> (fun _app ->
             (fun _mul -> (fun _leq -> (fun _eql -> (fun _if_ ->
-            (fun _lam -> (fun _fix -> (fun _unfold ->
-            _lam (fun x ->
-                  _fix (fun self -> _lam (fun n ->
+            (fun _lam1 -> (fun _lam2 -> (fun _fix -> 
+            _lam1 (fun x ->
+                  _fix (fun self -> _lam2 (fun n ->
                     _if_ (_leq n (_int 0)) (fun () -> _int 1)
                         (fun () -> _mul x (_app self (_add n (_int (-1))))))))
             ))))))))))) ;;
@@ -341,11 +341,10 @@ let testR2 = apply_to_si_R an_e2 ;;
 let testC2 = apply_to_si_C an_e2 ;;
 let testP2 = apply_to_si_P an_e2 ;;
 
-(* an_ep - compute power three ways 
+(* an_ep - compute power three ways *)
 let testRp = apply_to_si_R an_ep ;;
 let testCp = apply_to_si_C an_ep ;;
 let testPp = apply_to_si_P an_ep ;;
- doesn't type? *)
 
 (* That's all folks. It seems to work... *)
 
