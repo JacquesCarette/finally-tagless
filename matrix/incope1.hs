@@ -36,11 +36,11 @@ class SymanticsInt ar ci | ar -> ci  where
     add :: ar ci Int -> ar ci Int -> ar ci Int
 
 
-class SymanticsA ar a ci ca | ar -> ci, ar a -> ca  where
+class SymanticsA ar a ci ca | ar -> ci, ar a -> ci ca  where
     ifeq:: ar ci Int -> ar ci Int -> ar ca a -> ar ca a -> ar ca a
     fix :: (ar ca a -> ar ca a) -> ar ca a
 
-class SymanticsAB ar a b ca cb cab | ar a->ca, ar b->cb, ar a b -> cab  where
+class SymanticsAB ar a b ca cb cab | ar a->ca, ar b->cb, ar a b -> ca cb cab  where
     lam :: (ar ca a -> ar cb b) -> ar cab (a->b)
     app :: ar cab (a->b) -> ar ca a -> ar cb b
 
@@ -256,21 +256,14 @@ ptest4 () = compP (fix (\s -> lam (\x -> (app s x) )))
 -- ptest4 = compP (fix (\s -> lam (\x -> add (app s x) (int 2))))
 -- Compare the output with ctest3. The partial evaluation should be
 -- evident!
--- ptestg = compP . testgib1 $ ()
+ptestg = compP . testgib1 $ ()
 
--- The inferred type for pp1 shows some problem 
+-- The inferred type for pp1 used to show a problem 
 -- pp1 :: (SymanticsAB P a b ca cb (PF a b ca1 cb1)) =>
 --        P (PF a b ca1 cb1) (a -> b) -> P ca a -> P cb b
 -- why ca1 cb1 where we should have ca cb? Note, that the type
 -- for pp2 is more precise. Looks like a GHC bug?
+-- See correspondence with Martin, Feb 2007
+-- the constraint c -> a b is _NOT the same as c -> a, c -> b
 pp1 f@PE{} x = app f x
-pp2 f x@PE{} = app f x
 
-{-
-class TypeCast   a b   | a -> b, b->a   where typeCast   :: a -> b
-class TypeCast'  t a b | t a -> b, t b -> a where typeCast'  :: t->a->b
-class TypeCast'' t a b | t a -> b, t b -> a where typeCast'' :: t->a->b
-instance TypeCast'  () a b => TypeCast a b where typeCast x = typeCast' () x
-instance TypeCast'' t a b => TypeCast' t a b where typeCast' = typeCast''
-instance TypeCast'' () a a where typeCast'' _ x  = x
--}
