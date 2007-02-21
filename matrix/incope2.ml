@@ -122,6 +122,62 @@ module EX(S: Symantics) = struct
 
  let testpowfix7 e = e.lam (fun x -> e.app (e.app (testpowfix e) x) (e.int 7))
 
+ let interp prog =
+     p.app (p.app (p.app (p.app (p.app (p.app (p.app (p.app (p.app (p.app prog
+       (p.lam (fun (x:('a,int,int) S.repr) -> x)))
+       (p.lam (fun (b:('a,bool,bool) S.repr) -> b)))
+       (p.lam (fun e1 -> p.lam (fun e2 -> p.add e1 e2))))
+       (p.lam (fun e1 -> p.lam (fun e2 -> p.mul e1 e2))))
+       (p.lam (fun e1 -> p.lam (fun e2 -> p.leq e1 e2))))
+       (p.lam (fun e1 -> p.lam (fun e2 -> p.eql e1 e2))))
+       (p.lam (fun eb -> p.lam (fun et -> p.lam (fun ee -> p.if_ eb (fun () ->
+           et) (fun () -> ee))))))
+       (p.lam (fun f  -> f)))
+       (p.lam (fun e1 -> p.lam (fun e2 -> p.app e1 e2))))
+       (p.lam (fun f  -> p.lam (fun n -> p.app (p.app (
+           p.fix (fun fx -> p.lam (fun f -> p.lam (fun n -> 
+              p.app (p.app f (p.app fx f)) n)))) f) n)))
+
+ (* simple test of above *)
+ let test1' () = 
+     p.lam (fun int ->
+     p.lam (fun bool ->
+     p.lam (fun add ->
+     p.lam (fun mul ->
+     p.lam (fun leq ->
+     p.lam (fun eql ->
+     p.lam (fun if_ ->
+     p.lam (fun lam ->
+     p.lam (fun app ->
+     p.lam (fun fix ->
+         p.app (p.app add (p.app int (p.int 1))) (p.app int (p.int 2))
+     ))))))))))
+ 
+ let i1 = interp (test1' ())
+
+ let test_interp = 
+     p.lam (fun int ->
+     p.lam (fun bool ->
+     p.lam (fun add ->
+     p.lam (fun mul ->
+     p.lam (fun leq ->
+     p.lam (fun eql ->
+     p.lam (fun if_ ->
+     p.lam (fun lam ->
+     p.lam (fun app ->
+     p.lam (fun fix ->
+         p.lam (fun prog ->
+         p.app (p.app (p.app (p.app (p.app (p.app (p.app (p.app (p.app (p.app
+         (interp prog)
+         int) bool) (add)) (mul)) (leq)) (eql)) if_) lam) app) fix)
+     ))))))))) )
+ 
+ (* self-interpreter application ! *)
+ let i2 = interp test_interp
+
+ (* and if that worked, then we should get eta-expansion to work *)
+ let i3 = p.lam (fun prog -> p.app i2 prog)
+
  let runit t = S.get_res (t p)
 
  let test1r = runit test1
@@ -134,7 +190,6 @@ module EX(S: Symantics) = struct
 
  let testpowfixr = runit testpowfix
  let testpowfix7r = runit testpowfix7
-
 end;;
 
 
@@ -307,6 +362,14 @@ let ptestg2 = EXP.testgib2r;;
 let itestp7 = EXR.testpowfix7r;;
 let ctestp7 = EXC.testpowfix7r;;
 let ptestp7 = EXP.testpowfix7r;;
+
+let itesti1 = EXR.i1;;
+let ctesti1 = EXC.i1;;
+let ptesti1 = EXP.i1;;
+
+let itesti2 = EXR.i2;;
+let ctesti2 = EXC.i2;;
+let ptesti2 = EXP.i2;;
 
 (* actually run some of the above tests *)
 let ctest2' = let res = match (ctest2) with
