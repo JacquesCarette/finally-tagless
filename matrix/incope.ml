@@ -406,12 +406,21 @@ end;;
 module EXSI_INT(S: SymSI with type state = int) = struct
   open S
 
+  (* this program corresponds to 
+     let v0 = !state in
+       state := 2;
+       v0 + !state; *)
   let test1 () = lapp (deref ()) (fun v0 -> 
                   lapp (set (int 2)) (fun _ ->
 		   add v0 (deref ())))
       (* Here we know the evaluation is left-to-right *)
+  (* (state := 2) + !state *)
   let test2 () = add (set (int 2)) (deref ())
       (* imperative power *)
+      (* fun x -> let _ = (state := 1) in
+           fix (fun self -> fun n ->
+               if n<=0 then !state
+               else let _ = state := !state * x in self(n-1)) *)
   let pow () = lam (fun x -> lapp (set (int 1)) (fun _ -> 
 		  fix (fun self ->
 		  lam (fun n ->
