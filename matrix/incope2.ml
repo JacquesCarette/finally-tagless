@@ -59,7 +59,7 @@ module type Symantics = sig
   val mul  : ('c,int,int) repr -> ('c,int,int) repr -> ('c,int,int) repr
   val leq  : ('c,int,int) repr -> ('c,int,int) repr -> ('c,bool,bool) repr
   (* could be defined in terms of leq and if_ *)
-  val eql  : ('c,'a,'a) repr -> ('c,'a,'a) repr -> ('c,bool,bool) repr
+  val eql  : ('c,'sa,'da) repr -> ('c,'sa,'da) repr -> ('c,bool,bool) repr
   (* The last two arguments to if are functional terms.
      One of them is applied to unit.
      The reason for this charade is to prevent evaluation
@@ -77,7 +77,7 @@ module type Symantics = sig
     -> ('c,'sa,'da) repr -> ('c,'sb,'db) repr
   val fix : (('c,(('c,'sa,'da) repr -> ('c,'sb,'db) repr) as 's,'da->'db) repr 
              -> ('c,'s,'da->'db) repr)  -> ('c,'s,'da->'db) repr
-(* Should we keep this in the comments? (JC: yes)
+(*
   val unfold : ('c,'s,'a) repr -> 
                ('c,('c,'s,'a) repr -> ('c,'s,'a) repr,'a->'a) repr -> 
                ('c, ('c,int,int) repr -> ('c,'s,'a) repr, int->'a) repr
@@ -206,13 +206,13 @@ module R = struct
   let add e1 e2 = e1 + e2
   let mul e1 e2 = e1 * e2
   let leq x y = x <= y
-  let eql x y = x == y
+  let eql x y = x = y
   let if_ eb et ee = if eb then (et ()) else (ee ())
 
   let lam f = f
   let app e1 e2 = e1 e2
-  let fix f n = let rec fx f n = f (fx f) n in fx f n
-  let rec unfold z s = fun n -> if n<=0 then z else s ((unfold z s) (n-1))
+  let fix f = let rec self n = f self n in self
+  (* let rec unfold z s = fun n -> if n<=0 then z else s ((unfold z s) (n-1)) *)
 
   let get_res x = RL x
 end;;
@@ -234,14 +234,14 @@ module C = struct
   let add e1 e2 = .<.~e1 + .~e2>.
   let mul e1 e2 = .<.~e1 * .~e2>.
   let leq x y = .< .~x <= .~y >.
-  let eql x y = .< .~x == .~y >.
+  let eql x y = .< .~x = .~y >.
   let if_ eb et ee = 
     .<if .~eb then .~(et () ) else .~(ee () )>.
 
   let lam f = .<fun x -> .~(f .<x>.)>.
   let app e1 e2 = .<.~e1 .~e2>.
-  let fix f = .<fun n -> let rec self n = .~(f .<self>.) n in self n>.
-  let unfold z s = .<let rec f n = if n <= 0 then .~z else .~s (f (n-1)) in f>.
+  let fix f = .<let rec self n = .~(f .<self>.) n in self>.
+  (* let unfold z s = .<let rec f n = if n <= 0 then .~z else .~s (f (n-1)) in f>. *)
 
   let get_res x = RC x
   let dyn_id (x : ('c,'sv,'dv) repr) : ('c,'sv1,'dv) repr = x
@@ -299,6 +299,7 @@ struct
    *)
   let fix f = f (pdyn (C.fix (fun x -> abstr (f (pdyn x)))))
   (* this should allow us controlled unfolding *)
+  (*
   let unfold z s = lam (function
       | {st = Some n} -> 
               let rec f k = if k<=0 then z else
@@ -307,6 +308,7 @@ struct
                                 | {dy = y}      -> pdyn (C.app y (abstr (f (k-1))))
               in f n
       | {dy = y}      -> pdyn (C.app (C.unfold (abstr z) (abstr s)) y))
+  *)
 
   let get_res x = C.get_res (abstr x)
 end;;
