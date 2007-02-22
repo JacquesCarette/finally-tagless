@@ -1,0 +1,46 @@
+
+* Questions for Neil Jones
+
+What exactly Neil Jones meant by Jones-optimality. Is it to be
+understood in a narrow sense, with the application to the
+self-interpreter? Or a wider interpretation is possible, with relation
+to tag elimination. The second (perhaps implicit) question is to
+solicit Neil Jones' comments about novelty, utility and interest of
+our approach. Since you and Ken have raised the issue of
+self-interpreter and obviously know about it, perhaps you would like
+to explain the issue of self-interpretation and our questions.
+
+* Our contributions
+
+What are our contributions:
+1) a much clearer implementation
+2) a nicely comparable Haskell/MetaOCaml version
+3) a functorial Symantics that deals with interp/comp/pe uniformly
+4) clear and easy extensibility to more features
+
+In sharp contrast to Danvy's paper, all the evaluators in our case
+cannot produce any pattern-match error! Except for the partial
+evaluator, there are NO patterns to match. And this is critical for
+tag elimination -- pattern matching means there are no tags. And in
+PE, the pattern-match deals with phases rather than with types. Also,
+in our case the exhaustiveness of the pattern match is apparent to the
+compiler -- that's why there are no tags.
+
+Anyway, I think it is important for our paper to reproduce the code
+from Walid's paper, with deBruin indices. We don't actually need HO
+syntax, we can fully implement Walid's example as it is.
+
+
+* the inductive type function 'dv -> 'sv
+It's relation to PE and CPS. Currently, our CPS is CBN. Need to
+investigate CBV.
+
+See incope1.hs for another way to compute the function -- literally as
+a type-level function. Need to thank Martin (it was something that he
+mentioned that made me realize how to fix the problem. It still seems
+to be a problem with GHC, because Hugs infers a different type. This
+is a gray area, it seems)
+
+
+* Other issues
+rank-2 polymorphism...
