@@ -139,44 +139,30 @@ module EX(S: Symantics) = struct
               p.app (p.app f (p.app fx f)) n)))) f) n)))
 
  (* simple test of above *)
- let test1' () = 
-     p.lam (fun int ->
-     p.lam (fun bool ->
-     p.lam (fun add ->
-     p.lam (fun mul ->
-     p.lam (fun leq ->
-     p.lam (fun eql ->
-     p.lam (fun if_ ->
-     p.lam (fun lam ->
-     p.lam (fun app ->
-     p.lam (fun fix ->
-         p.app (p.app add (p.app int (p.int 1))) (p.app int (p.int 2))
+ let test1' e = 
+     e.lam (fun int ->
+     e.lam (fun bool ->
+     e.lam (fun add ->
+     e.lam (fun mul ->
+     e.lam (fun leq ->
+     e.lam (fun eql ->
+     e.lam (fun if_ ->
+     e.lam (fun lam ->
+     e.lam (fun app ->
+     e.lam (fun fix ->
+         e.app (e.app add (e.app int (e.int 1))) (e.app int (e.int 2))
      ))))))))))
  
- let i1 = interp (test1' ())
+ let i1 e = interp (test1' e)
 
- let test_interp = 
-     p.lam (fun int ->
-     p.lam (fun bool ->
-     p.lam (fun add ->
-     p.lam (fun mul ->
-     p.lam (fun leq ->
-     p.lam (fun eql ->
-     p.lam (fun if_ ->
-     p.lam (fun lam ->
-     p.lam (fun app ->
-     p.lam (fun fix ->
-         p.lam (fun prog ->
-         p.app (p.app (p.app (p.app (p.app (p.app (p.app (p.app (p.app (p.app
-         (interp prog)
-         int) bool) (add)) (mul)) (leq)) (eql)) if_) lam) app) fix)
-     ))))))))) )
+ let test_interp () = p.lam interp
  
  (* self-interpreter application ! *)
- let i2 = interp test_interp
+ let i2 prog = interp (p.app (test_interp ()) prog)
 
- (* and if that worked, then we should get eta-expansion to work *)
- let i3 = p.lam (fun prog -> p.app i2 prog)
+ (* but it is not quite an interpreter, as
+ let i3 e = i2 (test1' e)
+    does not work.  Seems like the failure of rank-2 polymorphism again? *)
 
  let runit t = S.get_res (t p)
 
@@ -190,6 +176,9 @@ module EX(S: Symantics) = struct
 
  let testpowfixr = runit testpowfix
  let testpowfix7r = runit testpowfix7
+
+ let testi1r = runit i1
+ let testi2r = p.lam i2 (* will give _a but that's ok *)
 end;;
 
 
@@ -365,13 +354,13 @@ let itestp7 = EXR.testpowfix7r;;
 let ctestp7 = EXC.testpowfix7r;;
 let ptestp7 = EXP.testpowfix7r;;
 
-let itesti1 = EXR.i1;;
-let ctesti1 = EXC.i1;;
-let ptesti1 = EXP.i1;;
+let itesti1 = EXR.testi1r;;
+let ctesti1 = EXC.testi1r;;
+let ptesti1 = EXP.testi1r;;
 
-let itesti2 = EXR.i2;;
-let ctesti2 = EXC.i2;;
-let ptesti2 = EXP.i2;;
+let itesti2 = EXR.testi2r;;
+let ctesti2 = EXC.testi2r;;
+let ptesti2 = EXP.testi2r;;
 
 (* actually run some of the above tests *)
 let ctest2' = let res = match (ctest2) with
