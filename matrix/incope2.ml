@@ -18,12 +18,6 @@
 *)
 
 
-(* This is used only to extract the result so we can see it nicely.
-   Alternatively, we can always extract the result as code,
-   especially if we don't use the interpreter.
-*)
-type ('a,'v) result = RL of 'v | RC of ('a,'v) code;;
-
 module type T = sig type ('a, 'b, 'c) repr end;;
 module Q(T:T) = struct
   type ('c, 'sv, 'dv) pack = {
@@ -53,6 +47,7 @@ end ;;
 
 module type Symantics = sig
   type ('c,'sv,'dv) repr
+  type ('a,'s,'v) result
   val int  : int  -> ('c,int,int) repr
   val bool : bool -> ('c,bool,bool) repr
   val add  : ('c,int,int) repr -> ('c,int,int) repr -> ('c,int,int) repr
@@ -82,7 +77,11 @@ module type Symantics = sig
                ('c,('c,'s,'a) repr -> ('c,'s,'a) repr,'a->'a) repr -> 
                ('c, ('c,int,int) repr -> ('c,'s,'a) repr, int->'a) repr
 *)
-  val get_res : ('c,'sv,'dv) repr -> ('c,'dv) result
+(* This is used only to extract the result so we can see it nicely.
+   Alternatively, we can always extract the result as code,
+   especially if we don't use the interpreter.
+*)
+  val get_res : ('c,'sv,'dv) repr -> ('c,'sv,'dv) result
 
 end
 ;;
@@ -166,12 +165,12 @@ module EX(S: Symantics) = struct
 
  let runit t = S.get_res (t p)
 
- let test1r = runit test1
- let test2r = runit test2
- let test3r = runit test3
+ let test1r () = runit test1
+ let test2r () = runit test2
+ let test3r () = runit test3
 
  let testgibr = runit testgib
- let testgib1r = runit testgib1
+ let testgib1r () = runit testgib1
  let testgib2r = runit testgib2
 
  let testpowfixr = runit testpowfix
@@ -190,6 +189,7 @@ end;;
 (* Pure interpreter. It is essentially the identity transformer *)
 module R = struct
   type ('c,'sv,'dv) repr = 'dv    (* absolutely no wrappers *)
+  type ('a,'s,'v) result = 'v;;
   let int (x:int) = x
   let bool (b:bool) = b
   let add e1 e2 = e1 + e2
@@ -203,7 +203,7 @@ module R = struct
   let fix f = let rec self n = f self n in self
   (* let rec unfold z s = fun n -> if n<=0 then z else s ((unfold z s) (n-1)) *)
 
-  let get_res x = RL x
+  let get_res x = x
 end;;
 
 module EXR = EX(R);;
@@ -218,6 +218,7 @@ module EXR = EX(R);;
 
 module C = struct
   type ('c,'sv,'dv) repr = ('c,'dv) code
+  type ('a,'s,'v) result = ('a,'v) code;;
   let int (x:int) = .<x>.
   let bool (b:bool) = .<b>.
   let add e1 e2 = .<.~e1 + .~e2>.
@@ -232,7 +233,7 @@ module C = struct
   let fix f = .<let rec self n = .~(f .<self>.) n in self>.
   (* let unfold z s = .<let rec f n = if n <= 0 then .~z else .~s (f (n-1)) in f>. *)
 
-  let get_res x = RC x
+  let get_res x = x
   let dyn_id (x : ('c,'sv,'dv) repr) : ('c,'sv1,'dv) repr = x
 end;;
 
@@ -245,6 +246,7 @@ module EXC = EX(C);;
 module P =
 struct
   type ('c,'sv,'dv) repr = {st: 'sv option; dy: ('c,'dv) code}
+  type ('a,'s,'v) result = RL of 's | RC of ('a,'v) code;;
   let abstr {dy = x} = x
   let pdyn x = {st = None; dy = x}
 
@@ -299,7 +301,9 @@ struct
       | {dy = y}      -> pdyn (C.app (C.unfold (abstr z) (abstr s)) y))
   *)
 
-  let get_res x = C.get_res (abstr x)
+  let get_res t = match t with
+      | {st = (Some y) } -> RL y
+      | _                -> RC (abstr t)
 end;;
 
 module P1 =
@@ -326,25 +330,25 @@ end;;
 module EXP = EX(P1);;
 
 (* all the tests together *)
-let itest1 = EXR.test1r;;
-let ctest1 = EXC.test1r;;
-let ptest1 = EXP.test1r;;
+let itest1 = EXR.test1r ();;
+let ctest1 = EXC.test1r ();;
+let ptest1 = EXP.test1r ();;
 
-let itest2 = EXR.test2r;;
-let ctest2 = EXC.test2r;;
-let ptest2 = EXP.test2r;;
+let itest2 = EXR.test2r ();;
+let ctest2 = EXC.test2r ();;
+let ptest2 = EXP.test2r ();;
 
-let itest3 = EXR.test3r;;
-let ctest3 = EXC.test3r;;
-let ptest3 = EXP.test3r;;
+let itest3 = EXR.test3r ();;
+let ctest3 = EXC.test3r ();;
+let ptest3 = EXP.test3r ();;
 
 let itestg = EXR.testgibr;;
 let ctestg = EXC.testgibr;;
 let ptestg = EXP.testgibr;;
 
-let itestg1 = EXR.testgib1r;;
-let ctestg1 = EXC.testgib1r;;
-let ptestg1 = EXP.testgib1r;;
+let itestg1 = EXR.testgib1r ();;
+let ctestg1 = EXC.testgib1r ();;
+let ptestg1 = EXP.testgib1r ();;
 
 let itestg2 = EXR.testgib2r;;
 let ctestg2 = EXC.testgib2r;;
@@ -363,20 +367,10 @@ let ctesti2 = EXC.testi2r;;
 let ptesti2 = EXP.testi2r;;
 
 (* actually run some of the above tests *)
-let ctest2' = let res = match (ctest2) with
-    | (RL x) -> failwith "not what we want"
-    | (RC x) -> (.< .~x 5 >.) 
-in .! res;;
+let ctest2' = let res =  (.< .~(EXC.test2r ()) 5 >.) in .! res;;
 let ctest3' = let f = (fun x -> x+17) in
-    let res = match ctest3 with
-    | (RL x) -> failwith "not what we want"
-    | (RC x) -> (.< .~x f >.) 
-in .! res;;
-let ctestg1' = 
-    let res = match ctestg1 with
-    | (RL x) -> failwith "not what we want"
-    | (RC x) -> x
-in .! res;;
+    let res = (.< .~(EXC.test3r ()) f >.) in .! res;;
+let ctestg1' = let res = .< .~(EXC.testgib1r ())>. in .! res;;
 
 (* That's all folks. It seems to work... *)
 
