@@ -482,3 +482,26 @@ htest2r = eval . test2 $ ()
 htestgib1  = compH . testgib1 $ ()
 htestgib1r = eval . testgib1 $ ()
 
+
+
+-- start encoding some of Ken's ideas on a self-interpreter
+an_ep :: (Int  -> repr Int)
+      -> (Bool -> repr Bool)
+      -> (repr Int -> repr Int -> repr Int)  -- add
+      -> (repr Int -> repr Int -> repr Int)  -- mul
+      -> (forall a b. repr (a->b) -> repr a -> repr b)             -- app
+      -> (repr Int -> repr Int -> repr Bool) -- leq
+      -> (forall a. repr Bool -> repr a  -> repr a  -> repr a)     -- if
+      -> (forall a b. (repr a -> repr b) -> repr (a->b))	   -- lam
+      -> (forall a. (repr a -> repr a) -> repr a)	           -- fix
+      -> repr (Int -> Int -> Int)
+an_ep = (\ _int _bool _add _mul _app _leq _if_ _lam _fix -> 
+            _lam (\x ->
+                  _fix (\self -> _lam (\n ->
+                    _if_ (_leq n (_int 0)) (_int 1)
+                        (_mul x (_app self (_add n (_int (-1)))))))))
+
+
+test_epr = compR (an_ep int bool add mul app leq if_ lam fix)
+test_epc = compC (an_ep int bool add mul app leq if_ lam fix)
+test_epp = compP (an_ep int bool add mul app leq if_ lam fix)
