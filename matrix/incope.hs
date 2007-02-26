@@ -9,10 +9,11 @@ module Incope where
   integers, booleans and comparison.
 
   Lam hoas_fn | App e e | Fix hoas_fn |
-  I Int | B Bool | Add ie1 ie2 |
+  I Int | B Bool | Add ie1 ie2 | Mul ie1 ie2 | Leq ie1 ie2 |
   IF b e-then e-else
   
-  The language is just expressive enough for the Gibonacci function.
+  The language is just expressive enough for the Gibonacci function
+  and the power function.
 
   The compiler, the interpreter and the source and target languages
   are *all* typed. The interpreter and the compiler use no tags.
@@ -37,12 +38,12 @@ class Symantics repr where
 
     lam :: (repr a -> repr b) -> repr (a->b)
     app :: repr (a->b) -> repr a -> repr b
-    rec :: repr a -> repr (a -> a) -> repr (Int -> a)
     fix :: (repr a -> repr a) -> repr a
 
     add :: repr Int -> repr Int -> repr Int
+    mul :: repr Int -> repr Int -> repr Int
     if_ :: repr Bool -> repr a -> repr a -> repr a
-    eql :: repr Int -> repr Int -> repr Bool
+    leq :: repr Int -> repr Int -> repr Bool
 
 -- The following `projection' function is specific to repr.
 -- It is like `run' of the monad
@@ -50,25 +51,23 @@ class Symantics repr where
 
 test1 () = add (int 1) (int 2)
 test2 () = lam (\x -> add x x)
-test2' () = lam (\x -> add (x (int 1)) (int 2))
+test3 () = lam (\x -> add (app x (int 1)) (int 2))
 
 testgib () = lam (\x -> lam (\y ->
                   fix (\self -> lam (\n ->
-                      if_ (eql n (int 0)) x
-                        (if_ (eql n (int 1)) y
+                      if_ (leq n (int 0)) x
+                        (if_ (leq n (int 1)) y
                          (add (app self (add n (int (-1))))
                               (app self (add n (int (-2))))))))))
 
-testgib' () = lam (\x -> lam (\y -> lam (\n ->
-              app (app (rec (lam (\c -> app (app c x) y))
-                            (lam (\m -> lam (\c -> app m (lam (\a -> lam (\b ->
-                                        app (app c b) (add a b))))))))
-                       n)
-                  (lam (\a -> lam (\b -> a))))))
-
 testgib1 () = app (app (app (testgib ()) (int 1)) (int 1)) (int 5)
+testgib2 () = lam (\x -> (lam (\y ->app (app (app (testgib ()) x) y) (int 5))))
 
-testgib1' () = app (app (app (testgib' ()) (int 1)) (int 1)) (int 5)
+testpowfix () = lam (\x ->
+                      fix (\self -> lam (\n ->
+                        if_ (leq n (int 0)) (int 1)
+                            (mul x (app self (add n (int (-1))))))))
+testpowfix7 () = lam (\x -> app (app (testpowfix ()) x) (int 7))
 
 -- ------------------------------------------------------------------------
 -- The interpreter
@@ -87,19 +86,28 @@ instance Symantics R where
     lam f = R (unR . f . R)
     app e1 e2 = R( (unR e1) (unR e2) )
     fix f = R( fx (unR . f . R)) where fx f = f (fx f)
-    rec z s = R (\n -> if n <= 0 then unR z else unR s (unR (rec z s) (pred n)))
 
     add e1 e2 = R( (unR e1) + (unR e2) )
-    eql e1 e2 = R( (unR e1) == (unR e2) )
+    mul e1 e2 = R( (unR e1) * (unR e2) )
+    leq e1 e2 = R( (unR e1) <= (unR e2) )
     if_ be et ee = R( if (unR be) then unR et else unR ee )
 
 compR = unR
 
 mkitest f = compR (f ())
 
+
 itest1 = mkitest test1
 itest2 = mkitest test2
-itest3 = mkitest testgib1
+itest3 = mkitest test3
+
+itestgib  = mkitest testgib
+itestgib1 = mkitest testgib1
+itestgib2 = mkitest testgib2
+
+itestpw   = mkitest testpowfix
+itestpw7  = mkitest testpowfix7
+itestpw72 = mkitest (\() -> app (testpowfix7 ()) (int 2))
 
 {-
 The expression "R (unR . f . R)" _looks_ like tag introduction and
@@ -140,7 +148,8 @@ data ByteCode t where
     INT :: Int -> ByteCode Int
     BOOL:: Bool -> ByteCode Bool
     Add :: ByteCode Int -> ByteCode Int -> ByteCode Int
-    Eql :: ByteCode t1 -> ByteCode t1 -> ByteCode Bool
+    Mul :: ByteCode Int -> ByteCode Int -> ByteCode Int
+    Leq :: ByteCode t1 -> ByteCode t1 -> ByteCode Bool
     IF  :: ByteCode Bool -> ByteCode t -> ByteCode t -> ByteCode t
     LIFT :: t -> ByteCode t                 -- Used only for eval
 
@@ -152,7 +161,8 @@ instance Show (ByteCode t) where
     show (INT n) = show n
     show (BOOL b) = show b
     show (Add e1 e2) = "(" ++ show e1 ++ " + " ++ show e2 ++ ")"
-    show (Eql e1 e2) = "(" ++ show e1 ++ " == " ++ show e2 ++ ")"
+    show (Mul e1 e2) = "(" ++ show e1 ++ " * " ++ show e2 ++ ")"
+    show (Leq e1 e2) = "(" ++ show e1 ++ " <= " ++ show e2 ++ ")"
     show (IF be et ee)
         = "(if " ++ show be ++ 
           " then " ++ show et ++ " else " ++ show ee ++ ")"
@@ -187,7 +197,7 @@ newtype C t = C (Int -> (ByteCode t, Int))
 unC (C t) vc0 = t vc0
 
 instance Symantics C where
-    int x = C(\vc -> (INT x, vc))
+    int x  = C(\vc -> (INT x, vc))
     bool b = C(\vc -> (BOOL b, vc))
 
     lam f = C(\vc -> let v = vc
@@ -203,24 +213,17 @@ instance Symantics C where
                          (body,vc') = unC (f var) (succ vc)
                      in (Fix v body, vc'))
 
-    rec z s = C(\vc -> let f = vc
-                           func = C(\vc -> (Var f, vc))
-                           vc1 = succ vc
-                           n = vc1
-                           num = C(\vc -> (Var n, vc))
-                           vc2 = succ vc1
-                           (zc, vc3) = unC z vc2
-                           (sc, vc4) = unC s vc3
-                       in (Fix f (Lam n (IF (Eql (Var n) (INT 0)) zc (App sc (App (Var f) (Var n))))), vc4))
-    -- ccshan TODO: change ifeq to ifle so that we can compile rec correctly
-
     add e1 e2 = C(\vc -> let (e1b,vc1) = unC e1 vc
                              (e2b,vc2) = unC e2 vc1
                          in (Add e1b e2b,vc2))
 
-    eql e1 e2 = C(\vc -> let (e1b,vc1) = unC e1 vc
+    mul e1 e2 = C(\vc -> let (e1b,vc1) = unC e1 vc
                              (e2b,vc2) = unC e2 vc1
-                         in (Eql e1b e2b,vc2))
+                         in (Mul e1b e2b,vc2))
+
+    leq e1 e2 = C(\vc -> let (e1b,vc1) = unC e1 vc
+                             (e2b,vc2) = unC e2 vc1
+                         in (Leq e1b e2b,vc2))
 
     if_ be et ee = C(\vc -> let (beb,vc1) = unC be vc
                                 (etb,vc2)  = unC et vc1
@@ -231,7 +234,15 @@ compC repr = fst $ unC repr 0
 
 ctest1 = compC . test1 $ ()
 ctest2 = compC . test2 $ ()
-ctest3 = compC . testgib1 $ ()
+ctest3 = compC . test3 $ ()
+
+ctestgib  = compC . testgib  $ ()
+ctestgib1 = compC . testgib1 $ ()
+ctestgib2 = compC . testgib2 $ ()
+
+ctestpw   = compC . testpowfix $ ()
+ctestpw7  = compC . testpowfix7 $ ()
+ctestpw72 = compC  (app (testpowfix7 ()) (int 2))
 
 -- ------------------------------------------------------------------------
 -- The partial evaluator
@@ -257,7 +268,7 @@ abstr (VF f) = lam (abstr . f . E)
 abstr (E x) = x
 
 instance Symantics P where
-    int x = VI x
+    int x  = VI x
     bool b = VB b
 
     -- lam :: (repr a -> repr b) -> repr (a->b)
@@ -268,41 +279,61 @@ instance Symantics P where
                         E  f -> E (app f (abstr ea))
 
     -- fix :: (repr a -> repr a) -> repr a
+    {- use to:
     -- For now, to avoid divergence at the PE stage, we residualize
     -- actually, we unroll the fixpoint exactly once, and then
     -- residualize
     fix f = f (E (fix (abstr . f . E)))
+    -}
+    -- Now, we just go all the way (see Jacques' point)
+    -- provided `fixing' produces static results...
 
-    rec z s = VF (\n -> case n of
-        VI n -> let f n | n <= 0    = z
-                        | otherwise = case s of VF s -> s (f (pred n))
-                                                E s -> E (app s (abstr (f (pred n))))
-                in f n
-        E n -> E (app (rec (abstr z) (abstr s)) n))
+    fix f = pfix f -- need this sharade for GADTs sake
 
     add e1 e2 = case (e1,e2) of
                  (VI n1,VI n2) -> VI nr where nr = n1 + n2
                  _ -> E $ add (abstr e1) (abstr e2)
 
-    eql e1 e2 = case (e1,e2) of
-                 (VI n1,VI n2) -> VB nr where nr = n1 == n2
-                 (VB n1,VB n2) -> VB nr where nr = n1 == n2
-                 _ -> E $ eql (abstr e1) (abstr e2)
+    mul e1 e2 = case (e1,e2) of
+                 (VI n1,VI n2) -> VI nr where nr = n1 * n2
+                 _ -> E $ mul (abstr e1) (abstr e2)
+
+    leq e1 e2 = case (e1,e2) of
+                 (VI n1,VI n2) -> VB nr where nr = n1 <= n2
+                 _ -> E $ leq (abstr e1) (abstr e2)
 
     if_ be et ee = case be of
                         (VB b1) -> if b1 then et else ee
                         _ -> E $ if_ (abstr be) (abstr et) (abstr ee)
 
+
+-- we need this signature to bind 'a'. That's why it can't be a method
+pfix :: forall a. (P a -> P a) -> P a
+pfix f = res where
+ res:: P a
+ res = case f res  of
+	      E _  -> E (fix (abstr . f . E))
+	      VF g -> VF (\x -> 
+			  case x of
+			          E cde -> E (app (fix (abstr . f . E)) cde)
+			          x     -> g x)
+
 compP = compC . abstr
 
 ptest1 = compP . test1 $ ()
 ptest2 = compP . test2 $ ()
--- Compare the output with ctest3. The partial evaluation should be
+ptest3 = compP . test3 $ ()
+
+-- Compare the output with ctestgib1. The partial evaluation should be
 -- evident!
-ptest3 = compP . testgib1 $ ()
--- Compare the output with ptest3. The full partial evaluation should be
--- evident!
-ptest3' = compP . testgib1' $ ()
+ptestgib  = compP . testgib  $ ()
+ptestgib1 = compP . testgib1 $ ()
+ptestgib2 = compP . testgib2 $ ()
+
+
+ptestpw   = compP . testpowfix $ ()
+ptestpw7  = compP . testpowfix7 $ ()
+ptestpw72 = compP  (app (testpowfix7 ()) (int 2))
 
 
 {- GADTs, although work, are still not quite satsifactory:
@@ -342,38 +373,25 @@ zlam f = Rep (lam (dynamic . f . zE)) (Just f)
 zapp (Rep _ (Just f)) = f
 zapp (Rep f _       ) = zE . app f . dynamic
 zfix f = f (zE (fix (dynamic . f . zE)))
-zrec z s = zlam (\n -> case n of
-    Rep _ (Just n) -> let f n | n <= 0    = z
-                              | otherwise = case s of Rep _ (Just s) -> s (f (pred n))
-                                                      Rep s _ -> zE (app s (dynamic (f (pred n))))
-                      in f n
-    Rep n _ -> zE (app (rec (dynamic z) (dynamic s)) n))
 zadd (Rep _ (Just n1)) (Rep _ (Just n2)) = zint (n1 + n2)
 zadd (Rep n1 _       ) (Rep n2 _       ) = zE (add n1 n2)
-zeql (Rep _ (Just n1)) (Rep _ (Just n2)) = zbool (n1 == n2)
-zeql (Rep n1 _       ) (Rep n2 _       ) = zE (eql n1 n2)
+zmul (Rep _ (Just n1)) (Rep _ (Just n2)) = zint (n1 * n2)
+zmul (Rep n1 _       ) (Rep n2 _       ) = zE (mul n1 n2)
+zleq (Rep _ (Just n1)) (Rep _ (Just n2)) = zbool (n1 <= n2)
+zleq (Rep n1 _       ) (Rep n2 _       ) = zE (leq n1 n2)
 zif_ (Rep _ (Just b1)) et ee = if b1 then et else ee
 zif_ (Rep be _       ) et ee = zE (if_ be (dynamic et) (dynamic ee))
 
 ztestgib = zlam (\x -> zlam (\y ->
                 zfix (\self -> zlam (\n ->
-                    zif_ (zeql n (zint 0)) x
-                      (zif_ (zeql n (zint 1)) y
+                    zif_ (zleq n (zint 0)) x
+                      (zif_ (zleq n (zint 1)) y
                        (zadd (zapp self (zadd n (zint (-1))))
                              (zapp self (zadd n (zint (-2))))))))))
 
 ztestgib1 = zapp (zapp (zapp ztestgib (zint 1)) (zint 1)) (zint 5)
 
 -- "show ptest3 == show (compC (dynamic ztestgib1))" is True
-
-ztestgib' = zlam (\x -> zlam (\y -> zlam (\n ->
-            zapp (zapp (zrec (zlam (\c -> zapp (zapp c x) y))
-                             (zlam (\m -> zlam (\c -> zapp m (zlam (\a -> zlam (\b ->
-                                          zapp (zapp c b) (zadd a b))))))))
-                       n)
-                 (zlam (\a -> zlam (\b -> a))))))
-
-ztestgib1' = zapp (zapp (zapp ztestgib' (zint 1)) (zint 1)) (zint 5)
 
 -- "show ptest3' == show (compC (dynamic ztestgib1'))" is True
 
@@ -404,7 +422,8 @@ data HByteCode t where
     HINT :: Int -> HByteCode Int
     HBOOL:: Bool -> HByteCode Bool
     HAdd :: HByteCode Int -> HByteCode Int -> HByteCode Int
-    HEql :: HByteCode Int -> HByteCode Int -> HByteCode Bool
+    HMul :: HByteCode Int -> HByteCode Int -> HByteCode Int
+    HLeq :: HByteCode Int -> HByteCode Int -> HByteCode Bool
     HIF  :: HByteCode Bool -> HByteCode t -> HByteCode t -> HByteCode t
 
 {- Showing HOAS has always been problematic... We just skip it for now...
@@ -435,7 +454,8 @@ eval (HFix f) = eval (f (HFix f))
 eval (HINT n) = n
 eval (HBOOL n) = n
 eval (HAdd e1 e2) = eval e1 + eval e2
-eval (HEql e1 e2) = eval e1 == eval e2
+eval (HMul e1 e2) = eval e1 * eval e2
+eval (HLeq e1 e2) = eval e1 <= eval e2
 eval (HIF be et ee) = if (eval be) then eval et else eval ee
 
 
@@ -448,9 +468,9 @@ instance Symantics HByteCode where
 
     fix  = HFix
     add  = HAdd
-    eql  = HEql
+    mul  = HMul
+    leq  = HLeq
     if_  = HIF
-    rec z s = fix (\f -> lam (\n -> if_ (eql n (int 0)) z (app s (app f n))))
 
 compH :: HByteCode t -> HByteCode t
 compH = id 
@@ -459,5 +479,6 @@ htest1 = compH . test1 $ ()
 htest1r = eval . test1 $ ()
 htest2 = compH . test2 $ ()
 htest2r = eval . test2 $ ()
-htest3 = compH . testgib1 $ ()
-htest3r = eval . testgib1 $ ()
+htestgib1  = compH . testgib1 $ ()
+htestgib1r = eval . testgib1 $ ()
+
