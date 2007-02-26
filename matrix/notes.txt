@@ -13,6 +13,8 @@ to explain the issue of self-interpretation and our questions.
 * Our contributions
 
 What are our contributions:
+0) we interpret/compile/pe the typed source language
+   [Ken says that Danvy's source language is untyped]
 1) a much clearer implementation
 2) a nicely comparable Haskell/MetaOCaml version
 3) a functorial Symantics that deals with interp/comp/pe uniformly
@@ -25,6 +27,17 @@ tag elimination -- pattern matching means there are no tags. And in
 PE, the pattern-match deals with phases rather than with types. Also,
 in our case the exhaustiveness of the pattern match is apparent to the
 compiler -- that's why there are no tags.
+
+We should emphasize that not only our code can't have pattern-match
+errors, that fact is apparent to the compiler itself. It is one thing
+to write a code with pattern-matching and claim (and prove) that
+missing cases cannot occur. However true that may be, the fact the
+missing cases cannot occur is not evident to the compiler, which still
+has to generate code to report missing cases or compile in the error
+generation. That's where efficiency is lost, and Walid's papers on tag
+elimination have numbers showing that performance is lost indeed. 
+In our code, there is simply no pattern-mismatch opportunity: the
+proof of no bad match is expressed in the code itself. 
 
 Anyway, I think it is important for our paper to reproduce the code
 from Walid's paper, with deBruin indices. We don't actually need HO
