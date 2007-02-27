@@ -32,7 +32,7 @@ module Incope where
 -- This class defines syntax (and its instances, semantics) of our language
 -- This class is Haskell98!
 -- The Typeable constraint is for the sake of ByteCode evaluator
-class Symantics repr where
+class Functor repr => Symantics repr where
     int :: Int -> repr Int                -- int literal
     bool :: Bool -> repr Bool             -- bool literal
 
@@ -78,6 +78,9 @@ testpowfix7 () = lam (\x -> app (app (testpowfix ()) x) (int 7))
 -- "Boxes go Bananas" by Washburn and Weirich (intended or otherwise)
 newtype R a = R a deriving Show
 unR (R x) = x
+
+instance Functor R where
+    fmap _ = undefined
 
 instance Symantics R where
     int x = R x
@@ -196,6 +199,9 @@ eval env (Add e1 e2) = eval env e1 + eval env e2
 newtype C t = C (Int -> (ByteCode t, Int)) 
 unC (C t) vc0 = t vc0
 
+instance Functor C where
+    fmap _ = undefined
+
 instance Symantics C where
     int x  = C(\vc -> (INT x, vc))
     bool b = C(\vc -> (BOOL b, vc))
@@ -266,6 +272,9 @@ abstr (VI i) = int i
 abstr (VB b) = bool b
 abstr (VF f) = lam (abstr . f . E)
 abstr (E x) = x
+
+instance Functor P where
+    fmap _ = undefined
 
 instance Symantics P where
     int x  = VI x
@@ -457,6 +466,9 @@ eval (HAdd e1 e2) = eval e1 + eval e2
 eval (HMul e1 e2) = eval e1 * eval e2
 eval (HLeq e1 e2) = eval e1 <= eval e2
 eval (HIF be et ee) = if (eval be) then eval et else eval ee
+
+instance Functor HByteCode where
+    fmap _ = undefined
 
 
 instance Symantics HByteCode where
