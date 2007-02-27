@@ -33,7 +33,6 @@ newtype Box a = Box a deriving (Eq, Ord, Show)
 
 -- This class defines syntax (and its instances, semantics) of our language
 -- This class is Haskell98!
--- The Typeable constraint is for the sake of ByteCode evaluator
 class Functor repr => Symantics repr where
     int :: Int -> repr Int                -- int literal
     bool :: Bool -> repr Bool             -- bool literal
@@ -49,6 +48,7 @@ class Functor repr => Symantics repr where
 
     box :: repr a -> repr (Box a)
     unbox :: repr (Box a) -> repr a
+    out :: RR repr a -> repr a; out = unRR
 
 -- The following `projection' function is specific to repr.
 -- It is like `run' of the monad
@@ -548,6 +548,34 @@ test_epp = compP (an_ep int bool add mul app leq if_ lam fix)
 twice :: (Symantics repr) => repr ((a -> a) -> (a -> a))
 twice = lam (\f -> lam (\x -> app f (app f x)))
 
+tid :: Symantics repr => repr (a -> a)
+tid = lam (\f -> f)
+
+tid_enc :: (Symantics repr) => repr (((a -> a) -> b) -> b)
+tid_enc = lam (\_lam -> app _lam (lam (\f -> f)))
+
+tid_r = compC tid_enc
+
+{-
+_lam must have the type repr ((a->a)->b)
+(lam (\f -> f)) :: repr (a->a)
+
+_lam :: repr (forall a b. (r a -> r b) -> r(a->b))
+-}
+
+{-
+twice_encoded :: (Symantics repr) => () ->
+   repr ((forall a b. (r a -> r b) -> r (a -> b)) ->
+	 (forall a b. r (a -> b) -> (r a -> r b)) -> 
+	 r ((c -> c) -> (c -> c)))
+twice_encoded () = lam (\_lam -> lam (\_app ->
+      app _lam (lam (\f -> app _lam (lam (\x -> app (app _app f)
+                                          (app (app _app f) x)))))))
+-}
+
+
+-- The following doesn't work because "repr" and "forall a." quite reasonably
+-- do not commute
 -- Use CSP to encode the object language in the object language?
 
 open_lam :: (Symantics repr) => repr (forall a b. (r a -> r b) -> r (a -> b))
@@ -599,3 +627,30 @@ self_interp :: (Symantics repr) => repr
 self_interp = lam (\exp_encoded ->
     app (open_encoded exp_encoded)
 -}
+
+
+newtype RR r a = RR{unRR::r a} deriving Functor
+
+instance Symantics r => Symantics (RR r) where
+    int  = RR . int
+    bool = RR . bool
+
+    lam f = RR (lam (unRR . f . RR))
+    app e1 e2 = RR( app (unRR e1) (unRR e2) )
+    fix f = RR(fix (unRR . f . RR))
+
+    add e1 e2 = RR( add (unRR e1) (unRR e2) )
+    mul e1 e2 = RR( mul (unRR e1) (unRR e2) )
+    leq e1 e2 = RR( leq (unRR e1) (unRR e2) )
+    if_ be et ee = RR( if_ (unRR be) (unRR et) (unRR ee) )
+
+
+-- test3_1 and test3_2 have the same signature!
+test3_1 :: (Symantics repr) => repr ((Int->Int)->Int)
+test3_1 = lam (\x -> add (app x (int 1)) (int 2))
+
+test3_2 :: (Symantics repr) => repr ((Int->Int)->Int)
+test3_2 = unRR (test3_1)
+
+test3_3 :: (Symantics repr) => repr ((Int->Int)->Int)
+test3_3 = out (test3_1)
