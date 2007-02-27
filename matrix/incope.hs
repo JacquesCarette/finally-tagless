@@ -29,6 +29,8 @@ module Incope where
 
 -}
 
+newtype Box a = Box a deriving (Eq, Ord, Show)
+
 -- This class defines syntax (and its instances, semantics) of our language
 -- This class is Haskell98!
 -- The Typeable constraint is for the sake of ByteCode evaluator
@@ -44,6 +46,9 @@ class Functor repr => Symantics repr where
     mul :: repr Int -> repr Int -> repr Int
     if_ :: repr Bool -> repr a -> repr a -> repr a
     leq :: repr Int -> repr Int -> repr Bool
+
+    box :: repr a -> repr (Box a)
+    unbox :: repr (Box a) -> repr a
 
 -- The following `projection' function is specific to repr.
 -- It is like `run' of the monad
@@ -80,7 +85,7 @@ newtype R a = R a deriving Show
 unR (R x) = x
 
 instance Functor R where
-    fmap _ = undefined
+    fmap f (R x) = R (f x)
 
 instance Symantics R where
     int x = R x
@@ -94,6 +99,9 @@ instance Symantics R where
     mul e1 e2 = R( (unR e1) * (unR e2) )
     leq e1 e2 = R( (unR e1) <= (unR e2) )
     if_ be et ee = R( if (unR be) then unR et else unR ee )
+
+    box (R a) = R (Box a)
+    unbox (R (Box a)) = R a
 
 compR = unR
 
@@ -140,7 +148,7 @@ No tags at all...
 -- Note how the compiler never raises any exception and matches no tags
 -- (no generated code has any tags)
 
--- The LIFT bytecode operation is used only during evaluation
+-- The LIFT bytecode operation is used only during evaluation and for fmap
 -- it corresponds to a CSP in MetaOCaml.
 
 data ByteCode t where
@@ -154,7 +162,9 @@ data ByteCode t where
     Mul :: ByteCode Int -> ByteCode Int -> ByteCode Int
     Leq :: ByteCode t1 -> ByteCode t1 -> ByteCode Bool
     IF  :: ByteCode Bool -> ByteCode t -> ByteCode t -> ByteCode t
-    LIFT :: t -> ByteCode t                 -- Used only for eval
+    LIFT :: t -> ByteCode t                 -- Used only for eval and fmap
+    BOX :: ByteCode t -> ByteCode (Box t)
+    UNBOX :: ByteCode (Box t) -> ByteCode t
 
 instance Show (ByteCode t) where
     show (Var n) = "V" ++ show n
@@ -169,6 +179,8 @@ instance Show (ByteCode t) where
     show (IF be et ee)
         = "(if " ++ show be ++ 
           " then " ++ show et ++ " else " ++ show ee ++ ")"
+    show (BOX e) = "(box " ++ show e ++ ")"
+    show (UNBOX e) = "(unbox " ++ show e ++ ")"
 
 -- An evaluator for the ByteCode: the virtual machine
 -- The evaluator is partial: if we attempt to evaluate an open code
@@ -200,7 +212,7 @@ newtype C t = C (Int -> (ByteCode t, Int))
 unC (C t) vc0 = t vc0
 
 instance Functor C where
-    fmap _ = undefined
+    fmap f = app (C(\vc -> (LIFT f, vc)))
 
 instance Symantics C where
     int x  = C(\vc -> (INT x, vc))
@@ -236,6 +248,9 @@ instance Symantics C where
                                 (eeb,vc3)  = unC ee vc2
                          in (IF beb etb eeb,vc3))
 
+    box a = C(\vc -> let (e,vc') = unC a vc in (BOX e, vc'))
+    unbox a = C(\vc -> let (e,vc') = unC a vc in (UNBOX e, vc'))
+
 compC repr = fst $ unC repr 0
 
 ctest1 = compC . test1 $ ()
@@ -265,16 +280,18 @@ data P t where
     VI :: Int -> P Int                -- Possibly static (base type)
     VB :: Bool -> P Bool
     VF :: (P a -> P b) -> P (a->b)
+    VBox :: P a -> P (Box a)
     E  :: C t -> P t                  -- Purely dynamic
 
 abstr :: P t -> C t
 abstr (VI i) = int i
 abstr (VB b) = bool b
 abstr (VF f) = lam (abstr . f . E)
+abstr (VBox x) = box (abstr x)
 abstr (E x) = x
 
 instance Functor P where
-    fmap _ = undefined
+    fmap f = E . fmap f . abstr
 
 instance Symantics P where
     int x  = VI x
@@ -297,7 +314,7 @@ instance Symantics P where
     -- Now, we just go all the way (see Jacques' point)
     -- provided `fixing' produces static results...
 
-    fix f = pfix f -- need this sharade for GADTs sake
+    fix f = pfix f -- need this charade for GADTs sake
 
     add e1 e2 = case (e1,e2) of
                  (VI n1,VI n2) -> VI nr where nr = n1 + n2
@@ -315,6 +332,9 @@ instance Symantics P where
                         (VB b1) -> if b1 then et else ee
                         _ -> E $ if_ (abstr be) (abstr et) (abstr ee)
 
+    box a = VBox a
+    unbox (VBox a) = a
+    unbox (E a) = E (unbox a)
 
 -- we need this signature to bind 'a'. That's why it can't be a method
 pfix :: forall a. (P a -> P a) -> P a
@@ -434,6 +454,8 @@ data HByteCode t where
     HMul :: HByteCode Int -> HByteCode Int -> HByteCode Int
     HLeq :: HByteCode Int -> HByteCode Int -> HByteCode Bool
     HIF  :: HByteCode Bool -> HByteCode t -> HByteCode t -> HByteCode t
+    HBox :: HByteCode a -> HByteCode (Box a)
+    HUnbox :: HByteCode (Box a) -> HByteCode a
 
 {- Showing HOAS has always been problematic... We just skip it for now...
 
@@ -466,9 +488,11 @@ eval (HAdd e1 e2) = eval e1 + eval e2
 eval (HMul e1 e2) = eval e1 * eval e2
 eval (HLeq e1 e2) = eval e1 <= eval e2
 eval (HIF be et ee) = if (eval be) then eval et else eval ee
+eval (HBox e) = Box (eval e)
+eval (HUnbox e) = case eval e of Box b -> b
 
 instance Functor HByteCode where
-    fmap _ = undefined
+    fmap = HApp . HVar
 
 
 instance Symantics HByteCode where
@@ -483,6 +507,9 @@ instance Symantics HByteCode where
     mul  = HMul
     leq  = HLeq
     if_  = HIF
+
+    box  = HBox
+    unbox= HUnbox
 
 compH :: HByteCode t -> HByteCode t
 compH = id 
@@ -521,12 +548,54 @@ test_epp = compP (an_ep int bool add mul app leq if_ lam fix)
 twice :: (Symantics repr) => repr ((a -> a) -> (a -> a))
 twice = lam (\f -> lam (\x -> app f (app f x)))
 
--- The following doesn't work because "repr" and "forall a." quite reasonably
--- do not commute
+-- Use CSP to encode the object language in the object language?
+
+open_lam :: (Symantics repr) => repr (forall a b. (r a -> r b) -> r (a -> b))
+                             -> repr (            (r a -> r b) -> r (a -> b))
+open_lam = fmap id
+
+open_app :: (Symantics repr) => repr (forall a b. r (a -> b) -> (r a -> r b))
+                             -> repr (            r (a -> b) -> (r a -> r b))
+open_app = fmap id
+
+open_csp :: (Symantics repr) => repr (forall a. a -> r a)
+                             -> repr (          a -> r a)
+open_csp = fmap id
+
+twice_encoded :: (Symantics repr) => repr
+    ((forall a b. (r a -> r b) -> r (a -> b)) ->
+     (forall a b. r (a -> b) -> (r a -> r b)) ->
+     (forall a. a -> r a) ->
+     r ((c -> c)  -> (c -> c)))
+twice_encoded =
+    lam (\_lam ->
+    lam (\_app ->
+    lam (\_csp ->
+    app (open_lam _lam)
+        (lam (\f -> app (open_lam _lam)
+                        (lam (\x -> app (app (open_app _app) f)
+                                        (app (app (open_app _app) f) x))))))))
+
+open_encoded :: (Symantics repr)
+    => repr (forall r. (forall a b. (r a -> r b) -> r (a -> b)) ->
+                       (forall a b. r (a -> b) -> (r a -> r b)) ->
+                       (forall a. a -> r a) ->
+                       r c)
+    -> repr (          (forall a b. (r a -> r b) -> r (a -> b)) ->
+                       (forall a b. r (a -> b) -> (r a -> r b)) ->
+                       (forall a. a -> r a) ->
+                       r c)
+open_encoded = fmap id
+
+-- Need repr to not just be covariant but also "continuous" for universal intro
 {-
-twice_encoded :: (Symantics repr) => repr ((forall a b. (r a -> r b) -> r (a -> b)) -> (forall a b. r (a -> b) -> (r a -> r b)) -> r ((c -> c) -> (c -> c)))
-twice_encoded = lam (\_lam ->
-                lam (\_app ->
-                app _lam (lam (\f -> app _lam (lam (\x -> app (app _app f)
-                                                              (app (app _app f) x)))))))
+self_interp :: (Symantics repr) => repr
+    ((forall r.
+      (forall a b. (r a -> r b) -> r (a -> b)) ->
+      (forall a b. r (a -> b) -> (r a -> r b)) ->
+      (forall a b. (a -> b) -> (r a-> r b)) ->
+      r c)
+     -> c)
+self_interp = lam (\exp_encoded ->
+    app (open_encoded exp_encoded)
 -}
