@@ -505,3 +505,16 @@ an_ep = (\ _int _bool _add _mul _app _leq _if_ _lam _fix ->
 test_epr = compR (an_ep int bool add mul app leq if_ lam fix)
 test_epc = compC (an_ep int bool add mul app leq if_ lam fix)
 test_epp = compP (an_ep int bool add mul app leq if_ lam fix)
+
+twice :: (Symantics repr) => repr ((a -> a) -> (a -> a))
+twice = lam (\f -> lam (\x -> app f (app f x)))
+
+-- The following doesn't work because "repr" and "forall a." quite reasonably
+-- do not commute
+{-
+twice_encoded :: (Symantics repr) => repr ((forall a b. (r a -> r b) -> r (a -> b)) -> (forall a b. r (a -> b) -> (r a -> r b)) -> r ((c -> c) -> (c -> c)))
+twice_encoded = lam (\_lam ->
+                lam (\_app ->
+                app _lam (lam (\f -> app _lam (lam (\x -> app (app _app f)
+                                                              (app (app _app f) x)))))))
+-}
