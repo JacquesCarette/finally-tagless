@@ -76,7 +76,7 @@ testpowfix7 () = lam (\x -> app (app (testpowfix ()) x) (int 7))
 
 -- ------------------------------------------------------------------------
 -- The interpreter
--- It is typed, tagless interpreter: R is not a tag. The interpreter
+-- It is a typed, tagless interpreter: R is not a tag. The interpreter
 -- never gets stuck, because it evaluates typed terms only
 
 -- Note that everything going on in the interpreter is straight out of
@@ -133,6 +133,50 @@ Note the corresponding code in incope.ml:
   let lam f = f
 No tags at all...
 -}
+
+-- ------------------------------------------------------------------------
+-- Another interpreter: it interprets each term to give its size
+-- (the number of constructors)
+-- It is a typed, tagless interpreter: L is not a tag. The interpreter
+-- never gets stuck, because it evaluates typed terms only.
+-- This interpreter is also total: it determines the size of the term
+-- even if the term itself is divergent.
+
+newtype L a = L Int deriving Show
+unL (L x) = x
+
+instance Functor L where
+    fmap f (L x) = L x
+
+instance Symantics L where
+    int x  = L 1
+    bool b = L 1
+
+    lam f = L( unL (f (L 0)) + 1 )
+    app e1 e2 = L( unL e1 + unL e2 + 1 )
+    fix f = L( unL (f (L 0)) + 1 )
+
+    add e1 e2 = L( unL e1 + unL e2 + 1 )
+    mul e1 e2 = L( unL e1 + unL e2 + 1 )
+    leq e1 e2 = L( unL e1 + unL e2 + 1 )
+    if_ be et ee = L( unL be +  unL et + unL ee  + 1 )
+
+
+compL = unL
+
+ltest1 = compL . test1 $ ()
+ltest2 = compL . test2 $ ()
+ltest3 = compL . test3 $ ()
+
+
+ltestgib  = compL . testgib  $ ()
+ltestgib1 = compL . testgib1 $ ()
+ltestgib2 = compL . testgib2 $ ()
+
+ltestpw   = compL . testpowfix $ ()
+ltestpw7  = compL . testpowfix7 $ ()
+ltestpw72 = compL (app (testpowfix7 ()) (int 2))
+
 
 
 -- ------------------------------------------------------------------------
