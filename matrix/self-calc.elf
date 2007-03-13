@@ -1,0 +1,286 @@
+
+% Alas, it is way too difficulat and unnatural to implementr Algorithm W
+% and the close() function in Elf. So, we resort to small cheating -- type
+% annotations (see the term constructor tup, corresponds to G).
+% We still claim that the idealized language to self-interpret needs
+% no type sublanguage because the types can be inferred. So, in the idealized
+% language, tup will not have type annotations.
+% OTH, the language here most closely corresponds to Haskell translations.
+
+% Literals
+
+nat : type.				%name nat X.
+z : nat.
+s : nat -> nat.
+
+nat-add : nat -> nat -> nat -> type.
+%mode nat-add +N1 +N2 -N3.
+-: nat-add z N N.
+-: nat-add (s N1) N2 (s N3) <- nat-add N1 N2 N3.
+%worlds () (nat-add _ _ _).
+%total {N1 N2} (nat-add N1 N2 _).
+
+
+bool : type.
+#t : bool.
+#f : bool.
+
+nat-leq : nat -> nat -> bool -> type.
+%mode nat-leq +N1 +N2 -B.
+-: nat-leq z N #t.
+-: nat-leq (s N) z #f.
+-: nat-leq (s N1) (s N2) R <- nat-leq N1 N2 R.
+%worlds () (nat-leq _ _ _).
+%total {N1} (nat-leq N1 _ _).
+
+% Types and type schemas
+
+tp : type.				%name tp T.
+
+ti : tp.				% primitive types
+tb : tp.
+=> : tp -> tp -> tp.			%infix right 10 =>.
+
+sg : type.				%name sg S.
+sZ : tp -> sg.				% forall (). tp
+sC : (tp -> sg) -> sg.
+
+tG : sg -> tp.				% the G type
+
+
+% Expressions
+
+exp : type.				%name exp E.
+il  : nat  -> exp.		% integer literal
+bl  : bool -> exp.		% boolean literal
+add : exp -> exp -> exp.
+leq : exp -> exp -> exp.
+if  : exp -> exp -> exp -> exp.
+
+lam : (exp -> exp) -> exp.
+app : exp -> exp -> exp.
+fix : (exp -> exp) -> exp.
+
+tup : sg -> exp -> exp.		% G and unG
+tdn : exp -> exp.
+
+
+% Dynamic semantics (untyped, CBN and big-step)
+eval : exp -> exp -> type.
+%mode eval +E1 -E2.
+eval1 : exp -> exp -> type.
+%mode eval1 +E1 -E2.
+
+-: eval (il X) (il X).		% literals evaluate to themselves.
+-: eval (bl X) (bl X).
+-: eval (add X Y) R 
+	<- eval X XR 
+	<- eval Y YR
+	<- eval1 (add XR YR) R.
+-: eval1 (add (il N1) (il N2)) (il NR) <- nat-add N1 N2 NR.
+
+-: eval (leq X Y) R 
+	<- eval X XR 
+	<- eval Y YR
+	<- eval1 (leq XR YR) R.
+-: eval1 (leq (il N1) (il N2)) (bl BR) <- nat-leq N1 N2 BR.
+
+-: eval (if C TE FE) R 
+	<- eval C CR 
+	<- eval1 (if CR TE FE) R1
+	<- eval R1 R.
+-: eval1 (if (bl #t) TE FE) TE.
+-: eval1 (if (bl #f) TE FE) FE.
+
+-: eval (lam B) (lam B).	% abstractions are values
+
+-: eval (app X Y) R
+	<- eval X XR 
+%	<- eval Y YR		% uncomment for CBV
+%	<- eval1 (app XR YR) R.
+	<- eval1 (app XR Y) R1
+	<- eval R1 R.
+-: eval1 (app (lam B) Y) (B Y).
+
+-: eval (fix X) R <- eval (X (fix X)) R.
+
+% ignore types during eval...
+-: eval (tup S X) (tup S R) <- eval X R.
+-: eval (tdn X) R
+	<- eval X XR
+	<- eval1 (tdn XR) R.
+-: eval1 (tdn (tup _ R)) R.
+
+%worlds () (eval1 _ _).
+%worlds () (eval _ _).
+
+%covers eval +E1 -E2.
+
+% some tests
+n0 = il z.
+n1 = il (s z).
+n2 = il (s (s z)).
+n5 = il (s (s (s (s (s z))))).
+
+test1 = add n1 n2.
+%query 1 2 eval test1 R.
+
+test2f = (lam [f] (lam [x] (app f x))).
+test2 = (app (app test2f (lam [n] (add n n1))) n5).
+%query 1 2 eval test2 (il (s (s (s (s (s (s z))))))).
+
+
+tfib1 = lam [n] (fix [self]
+            (lam [m] (lam [x] (lam [y]
+	       (if (leq n m) x (app (app (app self (add m n1)) y) (add x y)))
+	)))).
+
+tfib = lam [n] (app (app (app (app tfib1 n) n0) n1) n1).
+
+tfib5 = app tfib n5.
+
+%query 1 2 eval tfib5 R.
+
+
+
+% ----------------------------------------------------------------------
+% Static semantics: type checking
+
+
+of : exp -> tp -> type.			%name of P.
+%mode of +E *T.
+
+tp_il  : of (il _) ti.
+tp_bl  : of (bl _) tb.
+tp_add : of (add X Y) ti
+	<- of X ti
+	<- of Y ti.
+tp_leq : of (leq X Y) tb
+	<- of X ti
+	<- of Y ti.
+tp_if : of (if C TE FE) T
+	<- of C tb
+	<- of TE T
+	<- of FE T.
+
+tp_app : of (app E1 E2) T2
+    <- of E1 (T1 => T2)
+    <- of E2 T1.
+
+tp_lam : of (lam E) (T1 => T2)
+    <- {x:exp} of x T1 -> of (E x) T2.
+
+tp_fix : of (fix E) T
+    <- {x:exp} of x T -> of (E x) T.
+
+%{
+sigup: sg -> tp -> type.
+%mode sigup +S -T.
+sigup0 : sigup (sZ T) T.
+sigupN : sigup (sC TS) T <- {t:tp} sigup (TS t) T.
+%terminates S (sigup S _).
+}%
+
+sigdn: sg -> tp -> type.
+%mode sigdn *S *T.
+sigdn0 : sigdn (sZ T) T.
+sigdnN : sigdn (sC TS) T <- sigdn (TS Tsome) T.
+% %terminates S (sigdn S _).
+
+
+ofsig : exp -> sg -> type.
+%mode ofsig +E +S.
+ofsig0 : ofsig E (sZ T) <- of E T.
+ofsigN : ofsig E (sC TS) <- {t:tp} ofsig E (TS t).
+
+tp_tup : of (tup S E) (tG S)
+	<- ofsig E S.
+
+tp_tdn : of (tdn E) T
+	<- of E (tG TP)
+	<- sigdn TP T.
+
+
+% %terminates E (of E T).
+
+%block tp_var : some {T:tp} block {x:exp} {u:of x T}.
+%block tp_tup : block {t:tp}.
+%worlds (tp_var | tp_tup) (sigdn S T).
+%worlds (tp_var | tp_tup) (ofsig S T) (of E T).
+%covers of +E *T.
+
+
+% Basic typechecking examples
+
+%query 1 2 of test1 ti.
+
+%query 1 2 of test2f ((T1 => T2) => T1 => T2).
+
+%query 1 2 of test2 ti.
+
+%query 1 2 of tfib1 (ti => ti => ti => ti => ti).
+%query 1 2 of tfib (ti => ti).
+%query 1 2 of tfib5 ti.
+
+% Polymorphism
+
+%query 1 2 of (tup (sZ ti) test1) (tG (sZ ti)).
+
+% encoding of integers: a term int is encoded as G(\int_ -> app int_ int)
+
+%query 1 2 of (lam [il_] (app il_ n1)) R.
+
+%query 1 2 of (tup (sC [a] (sZ ((ti => a) => a))) (lam [il_] (app il_ n1))) R.
+
+
+% test2f above is clearly polymorphic
+
+test2_gen = tup (sC [a] (sC [b] (sZ ((a => b) => (a => b))))) test2f.
+%query 1 2 of test2_gen R.
+
+test2_genapp = (app (app (tdn test2_gen) (lam [n] (add n n1))) n5).
+%query 1 2 of test2_genapp ti.
+%query 1 2 eval test2_genapp (il (s (s (s (s (s (s z))))))).
+
+
+% Now we can play with encodings.
+
+term1 = leq (add n1 n2) n5.
+% its encoding is
+term1enc = tup (sC [ti_] (sC [tb_] 
+    (sZ ((ti => ti_) => (ti_ => ti_ => ti_) => (ti_ => ti_ => tb_) => tb_))))
+	   (lam [int_] (lam [add_] (lam [leq_]
+	      (app (app leq_
+		(app (app add_ (app int_ n1)) 
+		     (app int_ n2)))
+		(app int_ n5))))).
+
+%query 1 2 of term1enc R.
+
+% The int interpreter of values, using only int, add, leq
+% But the type of teh following can't be inferred!
+% Big bummer!
+% int1_v = lam [term] 
+%	(app (tdn term)
+	   
+
+
+
+%. 
+
+
+test2f = (lam [f] (lam [x] (app f x))).
+test2 = (app (app test2f (lam [n] (add n n1))) n5).
+%query 1 2 eval test2 (il (s (s (s (s (s (s z))))))).
+
+
+tfib1 = lam [n] (fix [self]
+            (lam [m] (lam [x] (lam [y]
+	       (if (leq n m) x (app (app (app self (add m n1)) y) (add x y)))
+	)))).
+
+tfib = lam [n] (app (app (app (app tfib1 n) n0) n1) n1).
+
+tfib5 = app tfib n5.
+
+%query 1 2 eval tfib5 R.
