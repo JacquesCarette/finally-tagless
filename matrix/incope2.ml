@@ -169,14 +169,14 @@ module EX(S: Symantics) = struct
  let test2r () = runit test2
  let test3r () = runit test3
 
- let testgibr = runit testgib
+ let testgibr () = runit testgib
  let testgib1r () = runit testgib1
- let testgib2r = runit testgib2
+ let testgib2r () = runit testgib2
 
- let testpowfixr = runit testpowfix
- let testpowfix7r = runit testpowfix7
+ let testpowfixr () = runit testpowfix
+ let testpowfix7r () = runit testpowfix7
 
- let testi1r = runit i1
+ let testi1r () = runit i1
  let testi2r = p.lam i2 (* will give _a but that's ok *)
 end;;
 
@@ -342,25 +342,25 @@ let itest3 = EXR.test3r ();;
 let ctest3 = EXC.test3r ();;
 let ptest3 = EXP.test3r ();;
 
-let itestg = EXR.testgibr;;
-let ctestg = EXC.testgibr;;
-let ptestg = EXP.testgibr;;
+let itestg = EXR.testgibr ();;
+let ctestg = EXC.testgibr ();;
+let ptestg = EXP.testgibr ();;
 
 let itestg1 = EXR.testgib1r ();;
 let ctestg1 = EXC.testgib1r ();;
 let ptestg1 = EXP.testgib1r ();;
 
-let itestg2 = EXR.testgib2r;;
-let ctestg2 = EXC.testgib2r;;
-let ptestg2 = EXP.testgib2r;;
+let itestg2 = EXR.testgib2r ();;
+let ctestg2 = EXC.testgib2r ();;
+let ptestg2 = EXP.testgib2r ();;
 
-let itestp7 = EXR.testpowfix7r;;
-let ctestp7 = EXC.testpowfix7r;;
-let ptestp7 = EXP.testpowfix7r;;
+let itestp7 = EXR.testpowfix7r ();;
+let ctestp7 = EXC.testpowfix7r ();;
+let ptestp7 = EXP.testpowfix7r ();;
 
-let itesti1 = EXR.testi1r;;
-let ctesti1 = EXC.testi1r;;
-let ptesti1 = EXP.testi1r;;
+let itesti1 = EXR.testi1r ();;
+let ctesti1 = EXC.testi1r ();;
+let ptesti1 = EXP.testi1r ();;
 
 let itesti2 = EXR.testi2r;;
 let ctesti2 = EXC.testi2r;;
@@ -406,8 +406,8 @@ end;;
    state.
 
         let x = e1 in e2
-        deref e
-        set e1 e2 (returning the old value of e1)
+        deref ()
+        set e (returning the old value of the state)
         The optional 
                 begin e1; e2 end
         is just 
@@ -417,6 +417,113 @@ end;;
  is just lapp e1 (\x -> e2), which is an inverse application.
  Some may call it `bind'.
 *)
+
+module type SymSI = sig
+  include Symantics
+  type state
+  val lapp : ('c,'sa,'da) repr -> (('c,'sa,'da) repr -> ('c,'sb,'db) repr)
+    ->  ('c,'sb,'db) repr
+  val deref : unit -> ('c,state,state) repr
+  val set   : ('c,state,state) repr -> ('c,state,state) repr
+end;;
+
+(* INT state *)
+module EXSI_INT(S: SymSI with type state = int) = struct
+  open S
+
+  (* this program corresponds to 
+     let v0 = !state in
+       state := 2;
+       v0 + !state; *)
+  let test1 () = lapp (deref ()) (fun v0 -> 
+                  lapp (set (int 2)) (fun _ ->
+		   add v0 (deref ())))
+      (* Here we know the evaluation is left-to-right *)
+  (* (state := 2) + !state *)
+  let test2 () = add (set (int 2)) (deref ())
+      (* imperative power *)
+      (* fun x -> let _ = (state := 1) in
+           fix (fun self -> fun n ->
+               if n<=0 then !state
+               else let _ = state := !state * x in self(n-1)) *)
+  let pow () = lam (fun x -> lapp (set (int 1)) (fun _ -> 
+		  fix (fun self ->
+		  lam (fun n ->
+		    if_ (leq n (int 0)) (fun () -> deref ())
+			(fun () -> 
+			  lapp (set (mul (deref ()) x)) (fun _ ->
+			    (app self (add n (int (-1))))))))))
+  let pow7 () = lam (fun x -> app (app (pow ()) x) (int 7))
+  let pow27 () = app (pow7 ()) (int 2)
+end;;
+
+(* Pure state passing CPS interpreter. *)
+(* We make the CPS to be fully polymorphic over the answer type.
+   We could have just as well put the answer type into the ST signature
+   below (as common in SML). But because we have higher-rank types
+   in OCaml, we may as well use them.
+*)
+module RCPS(ST: sig type state end) = struct
+  type state = ST.state
+  type ('c,'sv,'dv) repr = {ko: 'w. ('sv -> state -> 'w) -> state -> 'w}
+  type ('c, 'sv, 'dv) result = state -> 'sv
+  let int (x:int) = {ko = fun k -> k x}
+  let bool (b:bool) = {ko = fun k -> k b}
+  let add e1 e2 = 
+    {ko = fun k -> e1.ko (fun v1 -> e2.ko (fun v2 -> k (v1+v2)))}
+  let mul e1 e2 = 
+    {ko = fun k -> e1.ko (fun v1 -> e2.ko (fun v2 -> k (v1*v2)))}
+  let leq e1 e2 = 
+    {ko = fun k -> e1.ko (fun v1 -> e2.ko (fun v2 -> k (v1 <= v2)))}
+  let eql e1 e2 = 
+    {ko = fun k -> e1.ko (fun v1 -> e2.ko (fun v2 -> k (v1 = v2)))}
+  let if_ eb et ee = 
+    {ko = fun k -> eb.ko (fun vb -> if vb then (et ()).ko k else (ee ()).ko k)}
+
+(*
+  val lam : (('c,'sa,'da) repr -> ('c,'sb,'db) repr)
+    -> ('c,(('c,'sa,'da) repr -> ('c,'sb,'db) repr),'da->'db) repr
+  val app : ('c,(('c,'sa,'da) repr -> ('c,'sb,'db) repr),'da->'db) repr
+    -> ('c,'sa,'da) repr -> ('c,'sb,'db) repr
+  val fix : (('c,(('c,'sa,'da) repr -> ('c,'sb,'db) repr) as 's,'da->'db) repr 
+             -> ('c,'s,'da->'db) repr)  -> ('c,'s,'da->'db) repr
+*)
+
+  let lam f = {ko = fun k -> k f} (* weird CPS: it's actually a CBN CPS! *)
+
+  let app e1 e2 = {ko = fun k -> e1.ko (fun f -> (f e2).ko k)}
+
+  let fix f = let rec fx f n = app (f (lam (fx f))) n in lam(fx f)
+
+  let get_res x = fun s0 -> x.ko (fun v s -> v) s0
+  (* let run x s0 = x.ko (fun v s -> v) s0 *)
+
+  (* The following is the `imperative' part, dealing with the state *)
+  (* because our CPS is CBN, we have to force the evaluation of e2! *)
+  let lapp e2 e1 = 
+    {ko = fun k -> e2.ko (fun v -> (app (lam e1) {ko = fun k -> k v}).ko k)}
+  let deref () = {ko = fun k s -> k s s}
+  let set e = {ko = fun k -> e.ko (fun v s -> k s v)}
+end;;
+
+module RCPSI = RCPS(struct type state = int end);;
+module EXPSI = EX(RCPSI);;
+
+let cpsitest1 = (EXPSI.test1r ()) 100;;
+let cpsitest2 = (EXPSI.test2r ()) 100;;
+let cpsitest3 = (EXPSI.test3r ()) 100;;
+let cpsitestg = (EXPSI.testgibr ()) 100;;
+let cpsitestg1 = (EXPSI.testgib1r ()) 100;;
+let cpsitestg2 = (EXPSI.testgib2r ()) 100;;
+let cpsitestp7 = (EXPSI.testpowfix7r ()) 100;;
+
+
+module EXPSI_INT = EXSI_INT(RCPSI);;
+let cpsitesti1 = RCPSI.get_res (EXPSI_INT.test1 ()) 100;; (* 102 *)
+let cpsitesti2 = RCPSI.get_res (EXPSI_INT.test2 ()) 100;; (* 102 *)
+let cpsipow = RCPSI.get_res (EXPSI_INT.pow ()) 100;;
+let cpsipow7 = RCPSI.get_res (EXPSI_INT.pow7 ()) 100;;
+let cpsipow27 = RCPSI.get_res (EXPSI_INT.pow27 ()) 100;;
 
 (* Extension of S for an imperative language
 
