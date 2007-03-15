@@ -201,12 +201,39 @@ module R = struct
   let lam f = f
   let app e1 e2 = e1 e2
   let fix f = let rec self n = f self n in self
-  (* let rec unfold z s = fun n -> if n<=0 then z else s ((unfold z s) (n-1)) *)
 
   let get_res x = x
 end;;
 
 module EXR = EX(R);;
+
+(* ------------------------------------------------------------------------ *)
+(* Another interpreter: it interprets each term to give its size
+   (the number of constructors)
+   It is a typed, tagless interpreter: L is not a tag. The interpreter
+   never gets stuck, because it evaluates typed terms only.
+   This interpreter is also total: it determines the size of the term
+   even if the term itself is divergent  *)
+
+module L = struct
+  type ('c,'sv,'dv) repr = int    (* absolutely no wrappers *)
+  type ('a,'s,'v) result = int;;
+  let int (x:int) = 1
+  let bool (b:bool) = 1
+  let add e1 e2 = e1 + e2 + 1
+  let mul e1 e2 = e1 + e2 + 1
+  let leq x y = x + y + 1
+  let eql x y = x + y + 1
+  let if_ eb et ee = eb + et () + ee () + 1
+
+  let lam f = (f 0) + 1
+  let app e1 e2 = e1 + e2 + 1
+  let fix f = (f 0) + 1
+
+  let get_res x = x
+end;;
+
+module EXL = EX(L);;
 
 (* ------------------------------------------------------------------------ *)
 (* Pure compiler *)
@@ -332,34 +359,42 @@ module EXP = EX(P1);;
 let itest1 = EXR.test1r ();;
 let ctest1 = EXC.test1r ();;
 let ptest1 = EXP.test1r ();;
+let ltest1 = EXL.test1r ();;
 
 let itest2 = EXR.test2r ();;
 let ctest2 = EXC.test2r ();;
 let ptest2 = EXP.test2r ();;
+let ltest2 = EXL.test2r ();;
 
 let itest3 = EXR.test3r ();;
 let ctest3 = EXC.test3r ();;
 let ptest3 = EXP.test3r ();;
+let ltest3 = EXL.test3r ();;
 
 let itestg = EXR.testgibr ();;
 let ctestg = EXC.testgibr ();;
 let ptestg = EXP.testgibr ();;
+let ltestg = EXL.testgibr ();;
 
 let itestg1 = EXR.testgib1r ();;
 let ctestg1 = EXC.testgib1r ();;
 let ptestg1 = EXP.testgib1r ();;
+let ltestg1 = EXL.testgib1r ();;
 
 let itestg2 = EXR.testgib2r ();;
 let ctestg2 = EXC.testgib2r ();;
 let ptestg2 = EXP.testgib2r ();;
+let ltestg2 = EXL.testgib2r ();;
 
 let itestp7 = EXR.testpowfix7r ();;
 let ctestp7 = EXC.testpowfix7r ();;
 let ptestp7 = EXP.testpowfix7r ();;
+let ltestp7 = EXL.testpowfix7r ();;
 
 let itesti1 = EXR.testi1r ();;
 let ctesti1 = EXC.testi1r ();;
 let ptesti1 = EXP.testi1r ();;
+let ltesti1 = EXL.testi1r ();;
 
 (* start encoding some of Ken's ideas on a self-interpreter *)
 let apply_to_si_R encoded_e =
@@ -380,6 +415,7 @@ let apply_to_si_P encoded_e =
 let itesti2 = EXR.testi2r;;
 let ctesti2 = EXC.testi2r;;
 let ptesti2 = EXP.testi2r;;
+let ltesti2 = EXL.testi2r;;
 
 (* actually run some of the above tests *)
 let ctest2' = let res =  (.< .~(EXC.test2r ()) 5 >.) in .! res;;
