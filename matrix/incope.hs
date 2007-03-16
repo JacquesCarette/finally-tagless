@@ -48,7 +48,6 @@ class Functor repr => Symantics repr where
 
     box :: repr a -> repr (Box a)
     unbox :: repr (Box a) -> repr a
-    out :: RR repr a -> repr a; out = unRR
 
 -- The following `projection' function is specific to repr.
 -- It is like `run' of the monad
@@ -161,6 +160,8 @@ instance Symantics L where
     leq e1 e2 = L( unL e1 + unL e2 + 1 )
     if_ be et ee = L( unL be +  unL et + unL ee  + 1 )
 
+    box e = L . unL $ e -- count the box as 0
+    unbox (L e) = L e   -- ditto
 
 compL = unL
 
@@ -589,6 +590,160 @@ test_epr = compR (an_ep int bool add mul app leq if_ lam fix)
 test_epc = compC (an_ep int bool add mul app leq if_ lam fix)
 test_epp = compP (an_ep int bool add mul app leq if_ lam fix)
 
+{-
+  The self-interpreter seems to want this instance to exist
+  or at least it did at one point!   And that was usually 
+  a sign of a bug, so this should not be allowed in, even
+  though it is a rather fun instance.
+instance Functor ((->) t) where
+    fmap f = \y -> f . y
+
+instance Symantics ((->) t) where
+    int x = \y -> x
+    bool b = \y -> b
+
+    lam f = \t -> \a -> let ta = const a in (f ta) t
+    app e1 e2 = \t -> (e1 t) (e2 t)
+
+    add e1 e2 = \y -> (e1 y) + (e2 y)
+    mul e1 e2 = \y -> (e1 y) * (e2 y)
+    leq e1 e2 = \y -> (e1 y) <= (e2 y)
+    if_ be et ee = \y -> if (be y) then (et y) else (ee y)
+-}
+
+-- A plain interpreter, with the right type
+interp :: (Symantics repr) => 
+         ((Int -> repr Int)
+      -> (Bool -> repr Bool)
+      -> (repr Int -> repr Int -> repr Int)  -- add
+      -> (repr Int -> repr Int -> repr Int)  -- mul
+      -> (forall a b. repr (a->b) -> repr a -> repr b)             -- app
+      -> (repr Int -> repr Int -> repr Bool) -- leq
+      -> (forall a. repr Bool -> repr a  -> repr a  -> repr a)     -- if
+      -> (forall a b. (repr a -> repr b) -> repr (a->b))	   -- lam
+      -> (forall a. (repr a -> repr a) -> repr a)              -- fix
+      -> a ) -> a
+interp prog = (prog int bool add mul app leq if_ lam fix)
+
+type Foo c = (Symantics repr) =>
+         (Int -> repr Int)
+      -> (Bool -> repr Bool)
+      -> (repr Int -> repr Int -> repr Int)  -- add
+      -> (repr Int -> repr Int -> repr Int)  -- mul
+      -> (forall a b. repr (a->b) -> repr a -> repr b)             -- app
+      -> (repr Int -> repr Int -> repr Bool) -- leq
+      -> (forall a. repr Bool -> repr a  -> repr a  -> repr a)     -- if
+      -> (forall a b. (repr a -> repr b) -> repr (a->b))	   -- lam
+      -> (forall a. (repr a -> repr a) -> repr a)              -- fix
+      -> repr c
+-- simple tests, but they need signatures else they don't work
+int1 :: Foo Int
+int1 = \ _int _bool _add _mul _app _leq _if_ _lam _fix -> 
+    _add (_int 1) (_int 2)
+int2 :: Foo (Int -> Int)
+int2 = \ _int _bool _add _mul _app _leq _if_ _lam _fix -> 
+    _lam (\x -> _add x x)
+int3 :: Foo ((Int -> Int) -> Int)
+int3 = \ _int _bool _add _mul _app _leq _if_ _lam _fix -> 
+    _lam (\x -> _add (_app x (_int 1)) (_int 2))
+
+-- monomorphism restriction means we need signatures
+t_int1 :: Symantics repr => repr Int
+t_int1 = interp int1
+t_int2 :: Symantics repr => repr (Int -> Int)
+t_int2 = interp int2
+t_int3 :: Symantics repr => repr ((Int -> Int) -> Int)
+t_int3 = interp int3
+
+class Self repr where
+    lift :: a -> repr a
+
+sinterp :: (Symantics repr, Self repr) => 
+      repr (
+         (Int -> repr Int)
+      -> (Bool -> repr Bool)
+      -> (repr Int -> repr Int -> repr Int)  -- add
+      -> (repr Int -> repr Int -> repr Int)  -- mul
+      -> (forall a b. repr (a->b) -> repr a -> repr b)             -- app
+      -> (repr Int -> repr Int -> repr Bool) -- leq
+      -> (forall a. repr Bool -> repr a  -> repr a  -> repr a)     -- if
+      -> (forall a b. (repr a -> repr b) -> repr (a->b))	   -- lam
+      -> (forall a. (repr a -> repr a) -> repr a)	           -- fix
+      -> a)
+      -> repr a
+sinterp prog = 
+       app (app (app (app (app (app (app (app (app prog
+       (lam (\x -> lift x)))
+       (lam (\b -> lift b)))
+       (lift add ))
+       (lift mul))
+       (lift (\f x -> app f x)))
+       (lift leq))
+       (lift (\be te ee -> if_ be te ee)))
+       (lift (\f -> lam f)))
+       (lift (\f -> fix f))
+{-
+This can't possibly have the type as above!
+
+Perhaps the issue is that the type of the constructors in
+Symantics and the types in the self-interpreter should be
+different?  [Related, but not identical]
+interp prog = 
+       app (app (app (app (app (app (app (app (app prog
+       (lam (\x -> x)))
+       (lam (\b -> b)))
+       (lam (\e1 -> lam (\e2 -> add e1 e2))))
+       (lam (\e1 -> lam (\e2 -> mul e1 e2))))
+       (lam (\e1 -> lam (\e2 -> app e1 e2))))
+       (lam (\e1 -> lam (\e2 -> leq e1 e2))))
+       (lam (\eb -> lam (\et -> lam (\ee -> if_ eb et ee)))))
+       (lam (\f  -> f)))
+       (lam (\f  -> lam (\n -> app (app (
+           fix (\fx -> lam (\f -> lam (\n -> 
+              app (app f (app fx f)) n)))) f) n)))
+-}
+
+type SFoo c = (Symantics repr, Self repr) => repr (
+         (Int -> repr Int)
+      -> (Bool -> repr Bool)
+      -> (repr Int -> repr Int -> repr Int)  -- add
+      -> (repr Int -> repr Int -> repr Int)  -- mul
+      -> (forall a b. repr (a->b) -> repr a -> repr b)             -- app
+      -> (repr Int -> repr Int -> repr Bool) -- leq
+      -> (forall a. repr Bool -> repr a  -> repr a  -> repr a)     -- if
+      -> (forall a b. (repr a -> repr b) -> repr (a->b))	   -- lam
+      -> (forall a. (repr a -> repr a) -> repr a)             -- fix
+      -> repr c)
+testi :: SFoo Int
+testi = lift (\ _int _bool _add _mul _app _leq _if_ _lam _fix -> 
+     _add (int 1) (int 3))
+
+{-  This is so tentalizingly close!
+i1 :: (Symantics repr, Self repr) => repr Int
+i1 = app (lam sinterp) (testi)
+i1r = compR i1 -- 3
+i1c = compC i1
+i1p = compP i1 -- 3
+-}
+
+{-
+si prog = 
+     lam (\_int ->
+     lam (\_bool ->
+     lam (\_add ->
+     lam (\_mul ->
+     lam (\_leq ->
+     lam (\_if_ ->
+     lam (\_lam ->
+     lam (\_app ->
+     lam (\_fix ->
+       app (app (app (app (app (app (app (app (app prog
+       _int) _bool) _add) _mul) _leq) _if_) _lam) _app) _fix
+     )))))))))
+
+-- i2 prog = (si interp) prog
+-}
+
 twice :: (Symantics repr) => repr ((a -> a) -> (a -> a))
 twice = lam (\f -> lam (\x -> app f (app f x)))
 
@@ -697,4 +852,4 @@ test3_2 :: (Symantics repr) => repr ((Int->Int)->Int)
 test3_2 = unRR (test3_1)
 
 test3_3 :: (Symantics repr) => repr ((Int->Int)->Int)
-test3_3 = out (test3_1)
+test3_3 = unRR (test3_1)
