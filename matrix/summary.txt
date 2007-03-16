@@ -1,0 +1,51 @@
+We built a tagless partial evaluator for a typed object language,
+placing minimal requirements on the type system of the metalanguage:
+we need let-bound polymorphism and staging, but not dependent
+types, generalized algebraic data types, or a tag elimination as a
+postprocessing step.  The trick is the "final" approach: we encode the
+higher-order abstract syntax of object terms not using constructors for
+an algebraic data type but by invoking cogen functions, which occur as
+free variables in the encoded term.  For example, we encode the object
+term (incrementing 3)
+
+    (\x -> x + 1) 3
+
+as the object or metalanguage term
+
+    app (lam (\x -> add x (int 1))) (int 3)
+
+A partial evaluator (or a compiler or interpreter) is an evaluation
+context that (let-)binds the cogen functions "app", "lam", "add",
+"int", etc.  For the object language to take advantage of let-bound
+polymorphism in the metalanguage, we encode object "let" to meta "let".
+
+We achieve self-interpretation in that the following evaluation context
+in the object language defines an interpreter for encoded terms in the
+object language.
+
+    let lam = \f -> f in
+    let app = \f x -> f x in
+    let add = \m n -> m + n in
+    let int = \i -> i in
+    []
+
+The obvious notion of Jones optimality in this setup is easy to achieve.
+For example, our partial evaluator turns
+
+    let lam = \f -> f in
+    let app = \f x -> f x in
+    let add = \m n -> m + n in
+    let int = \i -> i in
+    app (lam (\x -> add x (int 1))) (int 3)
+
+into the number 4, as desired.  We can also encode the self-interpreter
+above as the following evaluation context in the object language.
+
+    let lam = lam (\f -> f) in
+    let app = lam (\f -> lam (\x -> app f x) in
+    let add = lam (\m -> lam (\n -> add m n) in
+    let int = lam (\i -> i) in
+    []
+
+We have implemented our approach in MetaOCaml and Haskell (the latter
+using generalized algebraic data types in lieu of staging).

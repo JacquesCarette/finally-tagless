@@ -46,7 +46,7 @@ end ;;
  *)
 
 module type Symantics = sig
-  type ('c,'sv,'dv) repr
+  type ('c,+'sv,+'dv) repr
   type ('a,'s,'v) result
   val int  : int  -> ('c,int,int) repr
   val bool : bool -> ('c,bool,bool) repr
