@@ -1,0 +1,11 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{fancyvrb1}[2007/03/17 Improved fancyvrb by ccshan]
+\RequirePackage{fancyvrb}
+
+\DeclareOption{compact}{%
+  \let\saveFV@PreProcessLine\FV@PreProcessLine
+  \def\FV@PreProcessLine{%
+    \global\advance\FV@CodeLineNo\@ne
+    \ifx\FV@Line\empty\box\@tempboxa\penalty-200\medskip
+    \else\expandafter\FV@FindStartStop\fi}}
+\ProcessOptions

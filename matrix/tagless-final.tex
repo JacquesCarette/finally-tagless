@@ -1,5 +1,46 @@
+\documentclass[preprint]{sigplanconf}
+\usepackage{amsmath}
+\usepackage{natbib1}
+
+\newcommand{\jacques}[1]{{\it [Jacques says: #1]}}
+\newcommand{\oleg}[1]{{\it [Oleg says: #1]}}
+\newcommand{\ccshan}[1]{{\it [Ken says: #1]}}
+
+\usepackage[compact]{fancyvrb1}
+\DefineShortVerb{\|}
+\DefineVerbatimEnvironment{code}{Verbatim}{xleftmargin=1em,fontsize=\small}
 
 \begin{document}
+
+\conferenceinfo{ICFP '07}{Freiburg, Germany} 
+\copyrightyear{2007} 
+\copyrightdata{[to be supplied]} 
+
+\titlebanner{banner above paper title}        % These are ignored unless
+\preprintfooter{short description of paper}   % 'preprint' option specified.
+
+\title{Title Text}
+\subtitle{Subtitle Text, if any}
+
+\authorinfo{Jacques Carette}
+           {McMaster University}
+           {carette@mcmaster.ca}
+\authorinfo{Oleg Kiselyov}
+           {FNMOC}
+           {oleg@pobox.com}
+\authorinfo{Chung-chieh Shan}
+           {Rutgers University}
+           {ccshan@cs.rutgers.edu}
+
+\maketitle
+
+\begin{abstract}
+This is the text of the abstract.
+\end{abstract}
+
+%\category{CR-number}{subcategory}{third-level}
+%\terms term1, term2
+%\keywords keyword1, keyword2
 
 \section{Introduction}
 
@@ -11,7 +52,7 @@ Define Staging, meta-language and object language. (Walid uses
 
 \subsection{The Tag Problem}
 
-\comment{see tagless_interp1.ml, module Tagfull for the complete code.
+\oleg{see tagless\_interp1.ml, module Tagfull for the complete code.
 If you change the code in here, please adjust the .ml file
 accordingly. Let the paper and the accompanying code be in sync.}
 
@@ -135,7 +176,7 @@ We have realized that, if we change the encoding of the term from data
 constructors to functions, then we can encode a tagless interpreter of a
 typed object language in a metalanguage with a very simple type system.
 
-\comment{see tagless_interp1.ml, module Tagless for the complete code.
+\oleg{see tagless\_interp1.ml, module Tagless for the complete code.
 If you change the code in here, please adjust the .ml file
 accordingly. Let the paper and the accompanying code be in sync.}
 
@@ -219,7 +260,7 @@ differently gives rise to different interpreters.  Given the same term
 representation but varying the interpreters, we can
 	- evaluate the term to a value in the metalanguage
 	- determine the size or depth of a term
-	- compute a _CBN_ CPS transformation of a term
+        - compute a \emph{CBN} CPS transformation of a term
 	- `compile' the term. This requires staging, as in MetaOCaml.
 	- Surprisingly, it is also possible to write a partial
 	evaluator! 
@@ -246,10 +287,11 @@ Introduce the language,
   The language is simply-typed lambda-calculus with fixpoint,
   integers, booleans and comparison.
 
+\begin{code}
   Lam hoas_fn | App e e | Fix hoas_fn |
   I Int | B Bool | Add ie1 ie2 | Mul ie1 ie2 | Leq ie1 ie2 |
   IF b e-then e-else
-
+\end{code}
 
 this time with HOAS rather than deBruin indices. The language is close 
 to the language of Xi03, but without the polymorphic lift and more 
@@ -298,7 +340,7 @@ investigate CBV.
 
 Surprisingly, it is also possible to write a partial evaluator!  The
 partial evaluator does have tags: whether a value is static or dynamic.
-The pattern-matching on this _phase_ tag is always exhaustive; we still
+The pattern-matching on this \emph{phase} tag is always exhaustive; we still
 have no universal type and no tags for object types.  The partial
 evaluator uses the previously mentioned compiler to `interpret' dynamic
 terms.  In this sense, the partial evaluator is a modular extension to
@@ -327,7 +369,7 @@ instantiates "r" to interpret terms in a particular way.
 
 \section{Related work}
 Walid's Jones optimality paper. See his own ICFP02 paper that
-described what he achieved then and what he _did not_. He did not
+described what he achieved then and what he \emph{did not}. He did not
 eliminate all the tags.
 
 Walid's ICFP02

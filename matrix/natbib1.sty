@@ -1,0 +1,19 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{natbib1}[2003/01/13 Enhanced natbib by ccshan]
+\RequirePackageWithOptions{natbib}
+
+\expandafter\def
+\expandafter\NAT@@open
+\expandafter{%
+\expandafter\the
+\expandafter\NAT@@openprefix
+\NAT@@open}
+
+\newtoks\NAT@@openprefix
+\newcommand{\citearound}[1]{%
+    \NAT@@openprefix{\unskip#1\ \global\NAT@@openprefix{}}}
+\newcommand{\citegenitive}{\citearound{'s}}
+\newcommand{\citets}{\citegenitive\citet}
+\newcommand{\Citets}{\citegenitive\Citet}
+\newcommand{\citealts}{\citegenitive\citealt}
+\newcommand{\Citealts}{\citegenitive\Citealt}
