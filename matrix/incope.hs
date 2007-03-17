@@ -31,7 +31,7 @@ module Incope where
 
 -- This class defines syntax (and its instances, semantics) of our language
 -- This class is Haskell98!
-class Functor repr => Symantics repr where
+class Symantics repr where
     int :: Int -> repr Int                -- int literal
     bool :: Bool -> repr Bool             -- bool literal
 
@@ -77,9 +77,6 @@ testpowfix7 () = lam (\x -> app (app (testpowfix ()) x) (int 7))
 -- "Boxes go Bananas" by Washburn and Weirich (intended or otherwise)
 newtype R a = R a deriving Show
 unR (R x) = x
-
-instance Functor R where
-    fmap f (R x) = R (f x)
 
 instance Symantics R where
     int x = R x
@@ -135,9 +132,6 @@ No tags at all...
 
 newtype L a = L Int deriving Show
 unL (L x) = x
-
-instance Functor L where
-    fmap f (L x) = L x
 
 instance Symantics L where
     int x  = L 1
@@ -241,8 +235,10 @@ eval env (Add e1 e2) = eval env e1 + eval env e2
 newtype C t = C (Int -> (ByteCode t, Int)) 
 unC (C t) vc0 = t vc0
 
+{-
 instance Functor C where
     fmap f = app (C(\vc -> (LIFT f, vc)))
+-}
 
 instance Symantics C where
     int x  = C(\vc -> (INT x, vc))
@@ -315,8 +311,10 @@ abstr (VB b) = bool b
 abstr (VF f) = lam (abstr . f . E)
 abstr (E x) = x
 
+{-
 instance Functor P where
     fmap f = E . fmap f . abstr
+-}
 
 instance Symantics P where
     int x  = VI x
@@ -508,9 +506,6 @@ eval (HMul e1 e2) = eval e1 * eval e2
 eval (HLeq e1 e2) = eval e1 <= eval e2
 eval (HIF be et ee) = if (eval be) then eval et else eval ee
 
-instance Functor HByteCode where
-    fmap = HApp . HVar
-
 
 instance Symantics HByteCode where
     int  = HINT
@@ -552,6 +547,24 @@ twice_inc_3_e () =
     zapp (zapp (zapp app_ twice_) inc_) (zapp int_ (zint 3))
 -- *Incope> compC (dynamic (twice_inc_3_e ()))
 -- 5
+
+{-
+twice_inc_3_e () =
+    -- The evaluation context in the following four lines is a self-interpreter
+    -- of the object language, encoded in the metalanguage.
+    let lam_ = zlam (\f -> f) in
+    let app_ = zlam (\f -> zlam (\x -> zapp f x)) in
+    let add_ = zlam (\m -> zlam (\n -> zadd m n)) in
+    let int_ = zlam (\i -> i) in
+    -- The term in the following three lines is the object term
+    --      let twice_ f x = f (f x) in let inc_ n = n + 1 in twice_ inc_ 3
+    -- encoded in the object language then encoded in the metalanguage.
+    let twice_ = zapp lam_ (zlam (\f -> zapp lam_ (zlam (\x -> zapp (zapp app_ f) (zapp (zapp app_ f) x))))) in
+    let inc_ = zapp lam_ (zlam (\n -> zapp (zapp add_ n) (zapp int_ (zint 1)))) in
+    zapp (zapp (zapp app_ twice_) inc_) (zapp int_ (zint 3))
+-- *Incope> compC (dynamic (twice_inc_3_e ()))
+-- 5
+-}
 
 twice_inc_3_ee () =
     -- The evaluation context in the following four lines is a self-interpreter
@@ -793,19 +806,22 @@ twice_encoded () = lam (\_lam -> lam (\_app ->
 -- do not commute
 -- Use CSP to encode the object language in the object language?
 
-open_lam :: (Symantics repr) => repr (forall a b. (r a -> r b) -> r (a -> b))
+open_lam :: (Symantics repr, Functor repr) 
+	                     => repr (forall a b. (r a -> r b) -> r (a -> b))
                              -> repr (            (r a -> r b) -> r (a -> b))
 open_lam = fmap id
 
-open_app :: (Symantics repr) => repr (forall a b. r (a -> b) -> (r a -> r b))
+open_app :: (Symantics repr, Functor repr)
+	                     => repr (forall a b. r (a -> b) -> (r a -> r b))
                              -> repr (            r (a -> b) -> (r a -> r b))
 open_app = fmap id
 
-open_csp :: (Symantics repr) => repr (forall a. a -> r a)
+open_csp :: (Symantics repr, Functor repr)
+	                     => repr (forall a. a -> r a)
                              -> repr (          a -> r a)
 open_csp = fmap id
 
-twice_encoded :: (Symantics repr) => repr
+twice_encoded :: (Symantics repr, Functor repr) => repr
     ((forall a b. (r a -> r b) -> r (a -> b)) ->
      (forall a b. r (a -> b) -> (r a -> r b)) ->
      (forall a. a -> r a) ->
@@ -819,7 +835,7 @@ twice_encoded =
                         (lam (\x -> app (app (open_app _app) f)
                                         (app (app (open_app _app) f) x))))))))
 
-open_encoded :: (Symantics repr)
+open_encoded :: (Symantics repr, Functor repr)
     => repr (forall r. (forall a b. (r a -> r b) -> r (a -> b)) ->
                        (forall a b. r (a -> b) -> (r a -> r b)) ->
                        (forall a. a -> r a) ->
