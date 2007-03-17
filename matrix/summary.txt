@@ -1,23 +1,18 @@
-From: oleg@pobox.com
+Dear Prof Jones,
 
-Hello!
-	Regarding the letter to Neil Jones. I believe we need to
-explain our work in stages, leading to our ideas aboit
-self-interpreter and question how is it acceptable and if it is needed
-for Jones optimality.
+	We are working on partial evaluation of typed programs, and hope
+that you could clarify for us the notion of Jones optimality and whether
+it requires a self-interpreter.  We apologize for this long message.
 
-	Preface with the apology and the goal of our message to elicit
-his opnion on Jones optimality and the need for self-interpreter and
-the constraints on the form of the self-interpreter.
-
-	Taha et al and Xi et al (both POPL2003) argued that writing an
-interpreter of a typed language in a typed language is an interesting
-problem. The known solutions include the use of the Universal type, or
-GADTs. The former is not quite satisfactory for performance reasons;
-and also because of the presence of partial pattern matching in the
-interpreter; the inexhaustiveness of the pattern matching should never
-be triggered when executing a well-typed term. Alas, this fact cannot
-be made obvious to the compiler. That also exlains unoptimality.
+	At POPL 2003, Taha et al and Xi et al both argued that writing
+an interpreter of a typed language in a typed language is an interesting
+problem.  The known solutions use the Universal type, dependent types,
+or generalized algebraic datatypes.  It is not satisfactory to use
+the Universal type because tagging hurts performance and necessitates
+partial pattern matching in the metalanguage, even for a well-typed
+object term.  Thus advanced type-system features such as dependent
+types or generalized algebraic datatypes appeared necessary for Jones
+optimality.
 
 	We have realized that if we change the encoding of the term --
 from data constructors to functions, we can encode the tagless
