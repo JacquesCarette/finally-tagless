@@ -29,8 +29,6 @@ module Incope where
 
 -}
 
-newtype Box a = Box a deriving (Eq, Ord, Show)
-
 -- This class defines syntax (and its instances, semantics) of our language
 -- This class is Haskell98!
 class Functor repr => Symantics repr where
@@ -45,9 +43,6 @@ class Functor repr => Symantics repr where
     mul :: repr Int -> repr Int -> repr Int
     if_ :: repr Bool -> repr a -> repr a -> repr a
     leq :: repr Int -> repr Int -> repr Bool
-
-    box :: repr a -> repr (Box a)
-    unbox :: repr (Box a) -> repr a
 
 -- The following `projection' function is specific to repr.
 -- It is like `run' of the monad
@@ -98,9 +93,6 @@ instance Symantics R where
     mul e1 e2 = R( (unR e1) * (unR e2) )
     leq e1 e2 = R( (unR e1) <= (unR e2) )
     if_ be et ee = R( if (unR be) then unR et else unR ee )
-
-    box (R a) = R (Box a)
-    unbox (R (Box a)) = R a
 
 compR = unR
 
@@ -160,9 +152,6 @@ instance Symantics L where
     leq e1 e2 = L( unL e1 + unL e2 + 1 )
     if_ be et ee = L( unL be +  unL et + unL ee  + 1 )
 
-    box e = L . unL $ e -- count the box as 0
-    unbox (L e) = L e   -- ditto
-
 compL = unL
 
 ltest1 = compL . test1 $ ()
@@ -208,8 +197,6 @@ data ByteCode t where
     Leq :: ByteCode t1 -> ByteCode t1 -> ByteCode Bool
     IF  :: ByteCode Bool -> ByteCode t -> ByteCode t -> ByteCode t
     LIFT :: t -> ByteCode t                 -- Used only for eval and fmap
-    BOX :: ByteCode t -> ByteCode (Box t)
-    UNBOX :: ByteCode (Box t) -> ByteCode t
 
 instance Show (ByteCode t) where
     show (Var n) = "V" ++ show n
@@ -224,8 +211,6 @@ instance Show (ByteCode t) where
     show (IF be et ee)
         = "(if " ++ show be ++ 
           " then " ++ show et ++ " else " ++ show ee ++ ")"
-    show (BOX e) = "(box " ++ show e ++ ")"
-    show (UNBOX e) = "(unbox " ++ show e ++ ")"
 
 -- An evaluator for the ByteCode: the virtual machine
 -- The evaluator is partial: if we attempt to evaluate an open code
@@ -293,9 +278,6 @@ instance Symantics C where
                                 (eeb,vc3)  = unC ee vc2
                          in (IF beb etb eeb,vc3))
 
-    box a = C(\vc -> let (e,vc') = unC a vc in (BOX e, vc'))
-    unbox a = C(\vc -> let (e,vc') = unC a vc in (UNBOX e, vc'))
-
 compC repr = fst $ unC repr 0
 
 ctest1 = compC . test1 $ ()
@@ -325,14 +307,12 @@ data P t where
     VI :: Int -> P Int                -- Possibly static (base type)
     VB :: Bool -> P Bool
     VF :: (P a -> P b) -> P (a->b)
-    VBox :: P a -> P (Box a)
     E  :: C t -> P t                  -- Purely dynamic
 
 abstr :: P t -> C t
 abstr (VI i) = int i
 abstr (VB b) = bool b
 abstr (VF f) = lam (abstr . f . E)
-abstr (VBox x) = box (abstr x)
 abstr (E x) = x
 
 instance Functor P where
@@ -376,10 +356,6 @@ instance Symantics P where
     if_ be et ee = case be of
                         (VB b1) -> if b1 then et else ee
                         _ -> E $ if_ (abstr be) (abstr et) (abstr ee)
-
-    box a = VBox a
-    unbox (VBox a) = a
-    unbox (E a) = E (unbox a)
 
 -- we need this signature to bind 'a'. That's why it can't be a method
 pfix :: forall a. (P a -> P a) -> P a
@@ -499,8 +475,6 @@ data HByteCode t where
     HMul :: HByteCode Int -> HByteCode Int -> HByteCode Int
     HLeq :: HByteCode Int -> HByteCode Int -> HByteCode Bool
     HIF  :: HByteCode Bool -> HByteCode t -> HByteCode t -> HByteCode t
-    HBox :: HByteCode a -> HByteCode (Box a)
-    HUnbox :: HByteCode (Box a) -> HByteCode a
 
 {- Showing HOAS has always been problematic... We just skip it for now...
 
@@ -533,8 +507,6 @@ eval (HAdd e1 e2) = eval e1 + eval e2
 eval (HMul e1 e2) = eval e1 * eval e2
 eval (HLeq e1 e2) = eval e1 <= eval e2
 eval (HIF be et ee) = if (eval be) then eval et else eval ee
-eval (HBox e) = Box (eval e)
-eval (HUnbox e) = case eval e of Box b -> b
 
 instance Functor HByteCode where
     fmap = HApp . HVar
@@ -552,9 +524,6 @@ instance Symantics HByteCode where
     mul  = HMul
     leq  = HLeq
     if_  = HIF
-
-    box  = HBox
-    unbox= HUnbox
 
 compH :: HByteCode t -> HByteCode t
 compH = id 
