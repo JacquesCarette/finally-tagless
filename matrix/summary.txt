@@ -1,37 +1,32 @@
 Dear Prof Jones,
 
 We are working on partial evaluation of typed programs, and hope that
-you could clarify for us the notion of Jones optimality and whether it
-requires a self-interpreter.  We apologize for this long message.
+you could clarify for us the notion of Jones optimality and whether
+it requires a self-interpreter.  We apologize for this long message,
+but our main question is simple: can a partial evaluator be optimal
+just by virtue of being tagless, or does optimality presuppose a
+self-interpreter?
 
 At POPL 2003, Taha et al and Xi et al both argued that writing an
 interpreter of a typed language in a typed language is an interesting
-problem.  The known solutions use the Universal type, dependent types,
-or generalized algebraic datatypes (GADTs).  It is not satisfactory
-to use the Universal type because tagging hurts performance and
-necessitates partial pattern matching in the metalanguage, even for a
-well-typed object term.  Thus advanced type-system features such as
-dependent types or GADTs appeared necessary for Jones optimality.
-
-We have realized that, if we change the encoding of the term from data
-constructors to functions, then we can encode a tagless interpreter of a
-typed object language in a metalanguage with a very simple type system.
-For example, we encode the object term (incrementing 3)
+problem.  Past solutions either incur the tagging overhead of the
+Universal type or typing complexities such as dependent types or
+generalized algebraic datatypes (GADTs).  By encoding terms using
+not data constructors but ordinary functions, we achieve a tagless
+interpreter of a typed object language in a metalanguage with a
+very simple type system.  For example, we encode the object term
+(incrementing 3)
 	(\x -> x + 1) 3
 as the object or metalanguage term
 	app (lam (\x -> add x (int 1))) (int 3)
-The interpreter uses no Universal type or pattern matching, and it
-is obvious to the compiler that non-termination can only result from
-interpreting fix.  If the source language is strongly normalizing, then
-our interpreter is total.
+The interpreter uses no Universal type, and it is obvious to the
+compiler that non-termination can only result from interpreting fix.
+If the source language is strongly normalizing, our interpreter is
+total.  Our actual source language is higher-order and contains fix and
+primitive integer operations, enough to express Fibonacci, factorial,
+and power.  We have experimented with adding mutable state.
 
-Our source language is higher-order and contains fix, boolean and
-integer types, and a few primitive functions enough to express
-Fibonacci, factorial, and power.  We use higher-order abstract syntax
-for functions (de-Bruijn indices work too but make writing terms more
-tedious).  We have experimented with adding mutable state.
-
-The term `constructor' functions lam, app, etc. look like free
+The term `constructor' functions "lam", "app", etc. above look like free
 variables in the encoding of an object term.  Defining these functions
 differently gives rise to different interpreters.  Given the same term
 representation but varying the interpreters, we can
@@ -39,104 +34,70 @@ representation but varying the interpreters, we can
 	- determine the size or depth of a term
 	- compute a _CBN_ CPS transformation of a term
 	- `compile' the term. This requires staging, as in MetaOCaml.
-Surprisingly, it is also possible to write a partial evaluator!  The
-partial evaluator does have tags: whether a value is static or dynamic.
-The pattern-matching on this _phase_ tag is always exhaustive; we still
-have no universal type and no tags for object types.  The partial
-evaluator uses the previously mentioned compiler to `interpret' dynamic
-terms.  In this sense, the partial evaluator is a modular extension to
-the compiler.
-
-We have implemented the above in (Meta)OCaml and Haskell.  In Haskell,
-the term `constructor' functions are defined as methods in a type class
-Symantics (the name means that the class interface gives the syntax for
-the source language and its instances give the semantics).
+We have implemented the above in (Meta)OCaml and Haskell.  In Haskell
+for example, the term `constructor' functions are defined as methods in
+a type class Symantics.  The name means that the class specifies the
+syntax for the object language and each instance gives a semantics.
 	class Symantics r where
 	  int :: Int -> r Int
 	  add :: r Int -> r Int -> r Int
-	  lam :: (r a -> r b) -> r (a->b)
-	  app :: r (a->b) -> r a -> r b
-	  fix :: (r a -> r a) -> r a
+	  lam :: forall a b. (r a -> r b) -> r (a->b)
+	  app :: forall a b. r (a -> b) -> r a -> r b
+	  fix :: forall a. (r a -> r a) -> r a
 	  ...
-So, Haskell infers the type "Symantics r => r Int" for the example term
-encoding above.
-
-The type constructor "r" above represents a particular interpreter.  The
-meta-type "r tau" hides how the interpreter represents the object type
-"tau" yet exposes enough of the type information so we can type-check
-the encoding of an object term without knowing what "r" is.  The checked
+Haskell infers the type "forall r. Symantics r => r Int" for the
+example term encoding above.  The type constructor "r" represents an
+interpreter.  The meta-type "r tau" hides how the interpreter represents
+the object type "tau" yet exposes enough information to type-check the
+encoding of an object term without knowing what "r" is.  The checked
 term is then well-typed in any interpreter.  Each instance of Symantics
 instantiates "r" to interpret terms in a particular way.
 
-In OCaml, we use OCaml module system:
-	module Symantics
+Finally, we also built a partial evaluator!  The partial evaluator uses
+tags to distinguish static values from dynamic ones, but the pattern
+matching on this _phase_ tag is always exhaustive.  Given that this
+partial evaluator uses no Universal type and no tags for object types,
+is it then tagless and optimal, independent of a self-interpreter of the
+object language?
 
-the sample term is then a functor
-	(S:Semantics) ...
+We ask this question because self-interpretation in our framework is
+a bit tricky due to a need for polymorphism.  An encoded term should
+be polymorphic in the interpreter type-constructor "r".  Further, the
+functions "lam", "app", etc. above should be polymorphic in the object
+types "a" and "b".  Thus the object language seems to require rank-2
+polymorphism.  Because higher-rank types cannot be inferred, is it
+OK for the self-interpreter and the object language to include type
+annotations?
 
-	The notion of the indexed functions in PE: we skip it here
-
-
-Now, the questions. Our partial evaluator has no universal type, no
-type tags. Can it be said to be tagless or Jones optimal? Is the
-notion of Jones optimality applies specifically to a self-interpreter,
-or it has a broader scope?
-
-We have thought how to encode self-interpreter in our system. The
-crucial point is representing higher-order type constructor r (which
-`choses' the particular interpreter) and polymorphism of lam and app
-and fix `term-constructors'. Representing them in the source lanmguage
-seems to require rank-2 polymorphism. We have a thought how to neatly
-bypass these difficulties, using the notion of let-polymorphism and a
-`hole'. 
-
-We built a tagless partial evaluator for a typed object language,
-placing minimal requirements on the type system of the metalanguage:
-we need let-bound polymorphism and staging, but not dependent
-types, generalized algebraic data types, or a tag elimination as a
-postprocessing step.  The trick is the "final" approach: we encode the
-higher-order abstract syntax of object terms not using constructors for
-an algebraic data type but by invoking cogen functions, which occur as
-free variables in the encoded term.
-A partial evaluator (or a compiler or interpreter) is an evaluation
-context that (let-)binds the cogen functions "app", "lam", "add",
-"int", etc.  For the object language to take advantage of let-bound
-polymorphism in the metalanguage, we encode object "let" to meta "let".
-
-We achieve self-interpretation in that the following evaluation context
-in the object language defines an interpreter for encoded terms in the
-object language.
-
-    let lam = \f -> f in
-    let app = \f x -> f x in
-    let add = \m n -> m + n in
-    let int = \i -> i in
-    []
-
-The obvious notion of Jones optimality in this setup is easy to achieve.
-For example, our partial evaluator turns
-
-    let lam = \f -> f in
-    let app = \f x -> f x in
-    let add = \m n -> m + n in
-    let int = \i -> i in
-    app (lam (\x -> add x (int 1))) (int 3)
-
+To neatly bypass the need for rank-2 polymorphism, we use the notion
+of let-polymorphism and a `hole', as follows.  A partial evaluator (or
+a compiler or interpreter) is an evaluation context that (let-)binds
+variables named "app", "lam", etc.  For the object language to
+take advantage of let-bound polymorphism in the metalanguage, it
+is crucial that we encode object "let" to meta "let".  We achieve
+self-interpretation in that the following evaluation context in the
+object language defines an interpreter for encoded object terms.
+	let lam = \f -> f in
+	let app = \f x -> f x in
+	let add = \m n -> m + n in
+	let int = \i -> i in
+	[]
+The obvious notion of optimality in this setup is easy to achieve.  For
+example, our partial evaluator turns
+	let lam = \f -> f in
+	let app = \f x -> f x in
+	let add = \m n -> m + n in
+	let int = \i -> i in
+	app (lam (\x -> add x (int 1))) (int 3)
 into the number 4, as desired.  We can also encode the self-interpreter
 above as the following evaluation context in the object language.
+	let lam = lam (\f -> f) in
+	let app = lam (\f -> lam (\x -> app f x) in
+	let add = lam (\m -> lam (\n -> add m n) in
+	let int = lam (\i -> i) in
+	[]
+The "let" and the hole "[]" are meta-constructions, which must map to
+themselves in any interpretation.  Is this OK for a self-interpreter?
+Do you have any objections to such constructions?
 
-    let lam = lam (\f -> f) in
-    let app = lam (\f -> lam (\x -> app f x) in
-    let add = lam (\m -> lam (\n -> add m n) in
-    let int = lam (\i -> i) in
-    []
-
-We have implemented our approach in MetaOCaml and Haskell (the latter
-using generalized algebraic data types in lieu of staging).
-
-The let and the hole are meta-constructions, which are always
-interpreted to themselves (in any possible interpretetaion). Is this
-OK for a self-interpreter? Do you have any objections to such
-constructions? What about type annotations in self-interpreter, which
-will be needed if we are to use higher-ranked types, which can't be
-inferred?
+Thank you.
