@@ -92,8 +92,8 @@ example, our partial evaluator turns
 into the number 4, as desired.  We can also encode the self-interpreter
 above as the following evaluation context in the object language.
 	let lam = lam (\f -> f) in
-	let app = lam (\f -> lam (\x -> app f x) in
-	let add = lam (\m -> lam (\n -> add m n) in
+	let app = lam (\f -> lam (\x -> app f x)) in
+	let add = lam (\m -> lam (\n -> add m n)) in
 	let int = lam (\i -> i) in
 	[]
 The "let" and the hole "[]" are meta-constructions, which must map to
