@@ -530,57 +530,63 @@ htest2r = eval . test2 $ ()
 htestgib1  = compH . testgib1 $ ()
 htestgib1r = eval . testgib1 $ ()
 
---------------------------------------------------------------------------------
+-- ---------------------------------------------------------------------------
 
 twice_inc_3_e () =
     -- The evaluation context in the following four lines is a self-interpreter
     -- of the object language, encoded in the metalanguage.
-    let lam_ = zlam (\f -> f) in
-    let app_ = zlam (\f -> zlam (\x -> zapp f x)) in
-    let add_ = zlam (\m -> zlam (\n -> zadd m n)) in
-    let int_ = zlam (\i -> i) in
+    let lam_ = lam (\f -> f) in
+    let app_ = lam (\f -> lam (\x -> app f x)) in
+    let add_ = lam (\m -> lam (\n -> add m n)) in
+    let int_ = lam (\i -> i) in
     -- The term in the following three lines is the object term
     --      let twice_ f x = f (f x) in let inc_ n = n + 1 in twice_ inc_ 3
     -- encoded in the object language then encoded in the metalanguage.
-    let twice_ = zapp lam_ (zlam (\f -> zapp lam_ (zlam (\x -> zapp (zapp app_ f) (zapp (zapp app_ f) x))))) in
-    let inc_ = zapp lam_ (zlam (\n -> zapp (zapp add_ n) (zapp int_ (zint 1)))) in
-    zapp (zapp (zapp app_ twice_) inc_) (zapp int_ (zint 3))
--- *Incope> compC (dynamic (twice_inc_3_e ()))
+    let twice_ = app lam_ (lam (\f -> 
+	   app lam_ (lam (\x -> app (app app_ f) (app (app app_ f) x))))) in
+    let inc_ = app lam_ (lam (\n -> app (app add_ n) (app int_ (int 1)))) in
+    app (app (app app_ twice_) inc_) (app int_ (int 3))
+test_inc3e_r = compR $ twice_inc_3_e ()
+test_inc3e_c = compC $ twice_inc_3_e ()
+test_inc3e_p = compP $ twice_inc_3_e ()
 -- 5
 
 {-
-twice_inc_3_e () =
+twice_inc_3_se () =
     -- The evaluation context in the following four lines is a self-interpreter
     -- of the object language, encoded in the metalanguage.
-    let lam_ = zlam (\f -> f) in
-    let app_ = zlam (\f -> zlam (\x -> zapp f x)) in
-    let add_ = zlam (\m -> zlam (\n -> zadd m n)) in
-    let int_ = zlam (\i -> i) in
+    let lam_ = lam (\f -> add (int 1) (f (int 0)) ) in
+    let app_ = lam (\f -> lam (\x -> add (int 1) (add f x))) in
+    let add_ = lam (\m -> lam (\n -> add (int 1) (add m n))) in
+    let int_ = lam (\i -> int 1) in
     -- The term in the following three lines is the object term
     --      let twice_ f x = f (f x) in let inc_ n = n + 1 in twice_ inc_ 3
     -- encoded in the object language then encoded in the metalanguage.
-    let twice_ = zapp lam_ (zlam (\f -> zapp lam_ (zlam (\x -> zapp (zapp app_ f) (zapp (zapp app_ f) x))))) in
-    let inc_ = zapp lam_ (zlam (\n -> zapp (zapp add_ n) (zapp int_ (zint 1)))) in
-    zapp (zapp (zapp app_ twice_) inc_) (zapp int_ (zint 3))
--- *Incope> compC (dynamic (twice_inc_3_e ()))
+    let twice_ = app lam_ (lam (\f -> 
+	   app lam_ (lam (\x -> app (app app_ f) (app (app app_ f) x))))) in
+    let inc_ = app lam_ (lam (\n -> app (app add_ n) (app int_ (int 1)))) in
+    app (app (app app_ twice_) inc_) (app int_ (int 3))
+test_inc3se_r = compR $ twice_inc_3_se ()
+-- test_inc3e_c = compC $ twice_inc_3_e ()
+-- test_inc3e_p = compP $ twice_inc_3_e ()
 -- 5
 -}
 
 twice_inc_3_ee () =
     -- The evaluation context in the following four lines is a self-interpreter
     -- of the object language, encoded in the metalanguage.
-    let lam_ = zlam (\f -> f) in
-    let app_ = zlam (\f -> zlam (\x -> zapp f x)) in
-    let add_ = zlam (\m -> zlam (\n -> zadd m n)) in
-    let int_ = zlam (\i -> i) in
+    let lam_ = lam (\f -> f) in
+    let app_ = lam (\f -> lam (\x -> app f x)) in
+    let add_ = lam (\m -> lam (\n -> add m n)) in
+    let int_ = lam (\i -> i) in
     -- The evaluation context in the following four lines is a self-interpreters
     -- of the object language (the same one as above), encoded in the object
     -- language then encoded in the metalanguage.  We use two underscores in
     -- the variable names only because Haskell's "let" is "letrec".
-    let lam__ = zapp lam_ (zlam (\f -> f)) in
-    let app__ = zapp lam_ (zlam (\f -> zapp lam_ (zlam (\x -> zapp (zapp app_ f) x)))) in
-    let add__ = zapp lam_ (zlam (\m -> zapp lam_ (zlam (\n -> zapp (zapp add_ m) n)))) in
-    let int__ = zapp lam_ (zlam (\i -> zapp int_ i)) in
+    let lam__ = app lam_ (lam (\f -> f)) in
+    let app__ = app lam_ (lam (\f -> app lam_ (lam (\x -> app (app app_ f) x)))) in
+    let add__ = app lam_ (lam (\m -> app lam_ (lam (\n -> app (app add_ m) n)))) in
+    let int__ = app lam_ (lam (\i -> app int_ i)) in
     -- Rename *__ back to *_.
     let lam_ = lam__ in
     let app_ = app__ in
@@ -589,12 +595,17 @@ twice_inc_3_ee () =
     -- The term in the following three lines is the object term
     --      let twice_ f x = f (f x) in let inc_ n = n + 1 in twice_ inc_ 3
     -- encoded in the object language then encoded in the metalanguage.
-    let twice_ = zapp lam_ (zlam (\f -> zapp lam_ (zlam (\x -> zapp (zapp app_ f) (zapp (zapp app_ f) x))))) in
-    let inc_ = zapp lam_ (zlam (\n -> zapp (zapp add_ n) (zapp int_ (zint 1)))) in
-    zapp (zapp (zapp app_ twice_) inc_) (zapp int_ (zint 3))
+    let twice_ = app lam_ (lam (\f -> app lam_ (lam (\x -> app (app app_ f) (app (app app_ f) x))))) in
+    let inc_ = app lam_ (lam (\n -> app (app add_ n) (app int_ (int 1)))) in
+    app (app (app app_ twice_) inc_) (app int_ (int 3))
+
+test_inc3ee_r = compR $ twice_inc_3_ee ()
+test_inc3ee_c = compC $ twice_inc_3_ee ()
+test_inc3ee_p = compP $ twice_inc_3_ee ()
 -- *Incope> compC (dynamic (twice_inc_3_ee ()))
 -- 5
 
+-- test_inc3e_c and test_inc3ee_c are most illustrative.
 
 
 -- start encoding some of Ken's ideas on a self-interpreter
