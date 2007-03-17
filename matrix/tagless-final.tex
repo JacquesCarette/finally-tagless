@@ -1,0 +1,363 @@
+
+\begin{document}
+
+\section{Introduction}
+
+See Section 1 of Walid02. Our subject area is that of a definitional DSL
+interpreter.
+Define Staging, meta-language and object language. (Walid uses
+`subject' language).
+
+
+\subsection{The Tag Problem}
+
+\comment{see tagless_interp1.ml, module Tagfull for the complete code.
+If you change the code in here, please adjust the .ml file
+accordingly. Let the paper and the accompanying code be in sync.}
+
+
+Consider the sample language of abstraction, application and boolean
+literals with deBruin indices as variables. This is the language used
+in the body of Walid02.
+
+The language can be described by the following grammar (using OCaml
+syntax)
+
+
+\begin{code}
+  type var = VZ | VS of var
+  type exp = V of var | B of bool | A of exp * exp | L of exp
+\end{code}
+
+and a sample term is
+\begin{code}
+  let test1 = A ((L (V VZ)),(B true))
+\end{code}
+
+The first attempt at the interpreter: take the object language term
+such as test1 and give us the value
+\begin{code}
+  let rec eval0 env = function 
+  | V VZ -> List.hd env
+  | V (VS v) -> eval0 (List.tl env) (V v)
+  | B b -> b 
+  | L e -> fun x -> eval0 (x::env) e
+  | A (e1,e2) -> (eval0 env e1) (eval0 env e2) 
+\end{code}
+
+If our meta-language (the language in which we wrote test1
+and that interpreter) were untyped, the above code would be acceptable.
+The |L e| line exhibits interpretative overhead (see descr in Walid02
+paper): |eval0 env' e| will be executed every time the result of
+evaluating |L e| is applied. Staging can be used to remove the
+interpretative overhead. Cite some paper -- see Walid02, Sec 1.1 and
+1.2. They say it well.
+
+If we use OCaml or other typed language as the meta-language, 
+the function |eval0| is ill-typed. The line |B b|
+tells that the function returns a boolean, whereas the next line says
+the result of |eval0| is a function. Clearly, the result of the
+function can't be both of these types. 
+A related problem is the type of the env: since variables
+in the language may be either of boolean or function types, a regular
+OCaml list cannot be used for holding the corresponding values. 
+
+The solution is to introduce the Universal type (see Walid02 Section
+1.3)
+
+\begin{code}
+  type u = UB of bool | UA of (u -> u)
+\end{code}
+
+We can then write the interpreter, and it works
+\begin{code}
+  let rec eval env = function
+  | V VZ -> List.hd env
+  | V (VS v) -> eval (List.tl env) (V v)
+  | B b -> UB b
+  | L e -> UA (fun x -> eval (x::env) e)
+  | A (e1,e2) -> match eval env e1 with UA f -> f (eval env e2)
+\end{code}
+whose inferred type is |u list -> exp -> u|,
+
+\begin{code}
+  let test1r = eval [] test1
+  val test1r : u = UB true 
+\end{code}
+
+Unfortunately, the result is tagged: |UB true| rather than just
+|true|. We also note that the eval function is partial in two
+respects: first there is an inexhaustive pattern-matching in the 
+line |A (e1,e2)|.
+Second, the occurrences of |List.hd| and |List.tl|.
+The failure of the latter corresponds to the evaluation of `open'
+terms. One can see that if all our terms are closed, List.hd and
+List.tl above will never be applied to the empty list. The partial
+pattern match in the |A (e1,e2)| line raises an exception when we try to
+evaluate something like |A (B true, B false)|, that is, the first
+operand is not a function. 
+
+Suppose our object language were typed, too. Then terms like
+|A (B true, B false)| would be ill-typed. Thus, if our evaluator
+accepted only typed terms, then the missing alternatives in the |A|
+rule would not occur. Alas, what is obvious to us is not obvious to
+the meta-language. There is still the pattern match, and we still have
+to attach and eliminate the UB and UA tags, even when there is no
+longer a need for them. See Walid02, Sec 1.4 for more detail.
+
+Of course there is also the issue how to design a type system to type
+terms like test1 (GADT seem necessary). Also, how to design the
+typesystem to keep track of open/closed status of terms, so we can
+statically assure that only closed terms are passed to eval and that
+the Nil checking in List.hd and List.tl can be eliminated as well. The
+latter is even more interesting problem requiring even more advanced
+type systems (cite env classifiers, Nanevski, Rowan Davies).
+
+The problem is also outlined in Simon Peyton-Jones GADT paper, but
+only in the context of a first-order language
+
+In short: (put into really introduction or the conclusions?)
+It is not satisfactory
+to use the Universal type because tagging hurts performance and
+necessitates partial pattern matching in the metalanguage, even for a
+well-typed object term.  
+
+
+\subsection{Other solutions}
+The tag problem motivated GADTs (SPJ, Xi) and dependent types
+(WalidICFP02, Concoqtion). Or, perhaps just refer to related work?
+But we need to say something here, to give the reader the feeling of
+how advanced solutions were proposed and how rarely they are implemented.
+
+
+\subsection{The Final Proposal}
+We have realized that, if we change the encoding of the term from data
+constructors to functions, then we can encode a tagless interpreter of a
+typed object language in a metalanguage with a very simple type system.
+
+\comment{see tagless_interp1.ml, module Tagless for the complete code.
+If you change the code in here, please adjust the .ml file
+accordingly. Let the paper and the accompanying code be in sync.}
+
+Now, let us define our object language (embedded DSL) in a different
+way. Instead of using algebraic datatypes to encode the terms of the
+language in the meta-language (reminiscent to the initial approach),
+we will be using functions as term constructors (final approach):
+
+\begin{code}
+  let b (bv:bool) env = bv
+  let varZ (vc,_) = vc
+  let varS vp (_,envr) = vp envr
+  let app e1 e2 env = (e1 env) (e2 env)
+  let lam e env = fun x -> e (x,env)
+\end{code}
+
+That is all of the interpreter. The previous term |test1| now reads
+\begin{code}
+  let testf1 = app (lam varZ) (b true)
+\end{code}
+
+To evaluate the term, we merely need to apply that to the empty
+environment
+
+\begin{code}
+  let testf1r = testf1 ()
+  val testf1r : bool = true
+\end{code}
+
+Now we see that the result has no tags. The above functions |b|,
+|varZ|, |app| constitute the evaluator. It is patent that the
+interpreter has no tags and no pattern matching. A term |b true| is
+evaluated to a boolean and a term |lam varZ| is evaluated to a
+function, with no tags attached. The application rule than applies that
+function without any need for pattern-matching. The evaluator has
+another feature: evaluation of open terms leads to a type error rather
+than a run-time error. Indeed, the following gives a type error
+
+\begin{code}
+  let testf1bad = app (lam (varS varZ)) (b true)
+  let testf1badr = testf1bad ()
+\end{code}
+that the initial environment should be a tuple rather than () --
+meaning the term requires non-empty initial environment, the term is
+open.
+
+Thus all the errors that previously reported at run-time (open terms,
+applications of non-functions) are now reported at compile
+time. Running of the interpreter assuredly gives no run-time errors
+because its code uses no run-time error-raising constructs.
+
+
+
+The interpreter uses no Universal type or pattern matching, and it
+is obvious to the compiler that non-termination can only result from
+interpreting fix.  If the source language is strongly normalizing, then
+our interpreter is total.
+
+We should emphasize that not only our code can't have pattern-match
+errors, that fact is apparent to the compiler itself. It is one thing
+to write a code with pattern-matching and claim (and prove) that
+missing cases cannot occur. However true that may be, the fact the
+missing cases cannot occur is not evident to the compiler, which still
+has to generate code to report missing cases or compile in the error
+generation. That's where efficiency is lost, and Walid's papers on tag
+elimination have numbers showing that performance is lost indeed. 
+In our code, there is simply no pattern-mismatch opportunity: the
+proof of no bad match is expressed in the code itself. 
+
+
+In the above code, the interpreter is wired in, built into the
+functions |b|, |app|, etc. We explain how to abstract the interpreter
+below, to make it possible to `evaluate' the same term in many different
+ways (e.g., interpret term, compile it, compute its size or depth,
+etc.)
+
+\subsection{Contributions}
+The term `constructor' functions lam, app, etc. look like free
+variables in the encoding of an object term.  Defining these functions
+differently gives rise to different interpreters.  Given the same term
+representation but varying the interpreters, we can
+	- evaluate the term to a value in the metalanguage
+	- determine the size or depth of a term
+	- compute a _CBN_ CPS transformation of a term
+	- `compile' the term. This requires staging, as in MetaOCaml.
+	- Surprisingly, it is also possible to write a partial
+	evaluator! 
+
+We have implemented the above in (Meta)OCaml and Haskell.
+
+What are our contributions:
+0) we interpret/compile/pe the typed source language
+   [Ken says that Danvy's source language is untyped]
+1) a much clearer implementation
+2) a nicely comparable Haskell/MetaOCaml version
+3) a functorial Symantics that deals with interp/comp/pe uniformly
+4) clear and easy extensibility to more features
+- only closed terms can be evaluated
+Making sure that we interpret terms that are well-typed and closed --
+and we can do that in far simpler type system (e.g., Haskell or
+OCaml). It was thought that doing either requires quite advanced
+extensions (GADT, Nanevski, Concoqtion).
+
+
+\section{Our base language: Tagless interpreter}
+
+Introduce the language, 
+  The language is simply-typed lambda-calculus with fixpoint,
+  integers, booleans and comparison.
+
+  Lam hoas_fn | App e e | Fix hoas_fn |
+  I Int | B Bool | Add ie1 ie2 | Mul ie1 ie2 | Leq ie1 ie2 |
+  IF b e-then e-else
+
+
+this time with HOAS rather than deBruin indices. The language is close 
+to the language of Xi03, but without the polymorphic lift and more 
+constants so we can write better examples, enough to express
+Fibonacci, factorial, and power.
+
+How to make encoding flexible: abstract the interpreter
+Haskell: type classes, OCaml: functors (give the signature of
+Symantics without the 'sv part)
+
+We have implemented the above in (Meta)OCaml and Haskell.  In Haskell,
+the term `constructor' functions are defined as methods in a type class
+Symantics (the name means that the class interface gives the syntax for
+the source language and its instances give the semantics).
+	class Symantics r where
+	  int :: Int -> r Int
+	  add :: r Int -> r Int -> r Int
+	  lam :: (r a -> r b) -> r (a->b)
+	  app :: r (a->b) -> r a -> r b
+	  fix :: (r a -> r a) -> r a
+	  ...
+So, Haskell infers the type "Symantics r => r Int" for the example term
+encoding above.
+
+
+encoding of a few terms.
+
+
+\section{Tagless compiler (aka, staged interpreter)}
+Staged code in OCaml... Don't show the Haskell code (too much)
+
+
+\section{Tagless partial evaluator}
+
+the sv type problem: the inductive type function 'dv -> 'sv
+its GADT solution. 
+its type-level function solution: incope1.hs 
+  Need to thank Martin Sulzmann
+
+How can we do without GADT
+Now show the Symantics signature in full, with the 'sv types
+
+It's relation to PE and CPS. Currently, our CPS is CBN. Need to
+investigate CBV.
+
+
+Surprisingly, it is also possible to write a partial evaluator!  The
+partial evaluator does have tags: whether a value is static or dynamic.
+The pattern-matching on this _phase_ tag is always exhaustive; we still
+have no universal type and no tags for object types.  The partial
+evaluator uses the previously mentioned compiler to `interpret' dynamic
+terms.  In this sense, the partial evaluator is a modular extension to
+the compiler.
+
+
+\section{Variations and discussion}
+
+state and imperative features
+
+CPS transformation (interpreting/compiling the term to CBN CPS)
+
+\subsection{Translucent types}
+The crucial role of the higher-order type parameter r
+
+The type constructor "r" above represents a particular interpreter.  The
+meta-type "r tau" hides how the interpreter represents the object type
+"tau" yet exposes enough of the type information so we can type-check
+the encoding of an object term without knowing what "r" is.  The checked
+term is then well-typed in any interpreter.  Each instance of Symantics
+instantiates "r" to interpret terms in a particular way.
+
+\section{Self-interpretation}
+
+
+
+\section{Related work}
+Walid's Jones optimality paper. See his own ICFP02 paper that
+described what he achieved then and what he _did not_. He did not
+eliminate all the tags.
+
+Walid's ICFP02
+
+Walid's PEPM07 (Concoqtion paper)? At leats at the Concoqtion
+presentation at WG2.11, Emir used tagless interpreter as the main and
+only example.
+
+Danvy's self-interpreter
+In sharp contrast to Danvy's paper, all the evaluators in our case
+cannot produce any pattern-match error! Except for the partial
+evaluator, there are NO patterns to match. And this is critical for
+tag elimination -- pattern matching means there are no tags. And in
+PE, the pattern-match deals with phases rather than with types. Also,
+in our case the exhaustiveness of the pattern match is apparent to the
+compiler -- that's why there are no tags.
+
+Simon Peyton-Jones GADTs (the motivation for GADT is tagless
+interpreter, but only for the first-order language)
+
+Xi's POPL03 (He uses a higher-order language, one of the motivations
+for his GRDT)
+
+Typing Dep Typing plus two messages on Haskell-Cafe: typechecking 
+from untyped to the typed form, ready to be interpreted. Walid's ICFP02
+uses dept types
+
+\section{Conclusions}
+
+Our approach showed better the meaning of GADT and when they can be
+avoided.
+
+\end{document}
