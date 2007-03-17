@@ -545,17 +545,16 @@ twice_inc_3_e () =
     let twice_ = app lam_ (lam (\f -> 
 	   app lam_ (lam (\x -> app (app app_ f) (app (app app_ f) x))))) in
     let inc_ = app lam_ (lam (\n -> app (app add_ n) (app int_ (int 1)))) in
-    app (app (app app_ twice_) inc_) (app int_ (int 3))
+    app (app app_ (app (app app_ twice_) inc_)) (app int_ (int 3))
 test_inc3e_r = compR $ twice_inc_3_e ()
 test_inc3e_c = compC $ twice_inc_3_e ()
 test_inc3e_p = compP $ twice_inc_3_e ()
 -- 5
 
-{-
 twice_inc_3_se () =
     -- The evaluation context in the following four lines is a self-interpreter
     -- of the object language, encoded in the metalanguage.
-    let lam_ = lam (\f -> add (int 1) (f (int 0)) ) in
+    let lam_ = lam (\f -> add (int 1) (app f (int 0)) ) in
     let app_ = lam (\f -> lam (\x -> add (int 1) (add f x))) in
     let add_ = lam (\m -> lam (\n -> add (int 1) (add m n))) in
     let int_ = lam (\i -> int 1) in
@@ -565,12 +564,11 @@ twice_inc_3_se () =
     let twice_ = app lam_ (lam (\f -> 
 	   app lam_ (lam (\x -> app (app app_ f) (app (app app_ f) x))))) in
     let inc_ = app lam_ (lam (\n -> app (app add_ n) (app int_ (int 1)))) in
-    app (app (app app_ twice_) inc_) (app int_ (int 3))
+    app (app app_ (app (app app_ twice_) inc_)) (app int_ (int 3))
 test_inc3se_r = compR $ twice_inc_3_se ()
--- test_inc3e_c = compC $ twice_inc_3_e ()
--- test_inc3e_p = compP $ twice_inc_3_e ()
--- 5
--}
+test_inc3se_c = compC $ twice_inc_3_se ()
+test_inc3se_p = compP $ twice_inc_3_se ()
+-- 10
 
 twice_inc_3_ee () =
     -- The evaluation context in the following four lines is a self-interpreter
@@ -597,7 +595,7 @@ twice_inc_3_ee () =
     -- encoded in the object language then encoded in the metalanguage.
     let twice_ = app lam_ (lam (\f -> app lam_ (lam (\x -> app (app app_ f) (app (app app_ f) x))))) in
     let inc_ = app lam_ (lam (\n -> app (app add_ n) (app int_ (int 1)))) in
-    app (app (app app_ twice_) inc_) (app int_ (int 3))
+    app (app app_ (app (app app_ twice_) inc_)) (app int_ (int 3))
 
 test_inc3ee_r = compR $ twice_inc_3_ee ()
 test_inc3ee_c = compC $ twice_inc_3_ee ()
