@@ -1,3 +1,98 @@
+From: oleg@pobox.com
+
+Hello!
+	Regarding the letter to Neil Jones. I believe we need to
+explain our work in stages, leading to our ideas aboit
+self-interpreter and question how is it acceptable and if it is needed
+for Jones optimality.
+
+	Preface with the apology and the goal of our message to elicit
+his opnion on Jones optimality and the need for self-interpreter and
+the constraints on the form of the self-interpreter.
+
+	Taha et al and Xi et al (both POPL2003) argued that writing an
+interpreter of a typed language in a typed language is an interesting
+problem. The known solutions include the use of the Universal type, or
+GADTs. The former is not quite satisfactory for performance reasons;
+and also because of the presence of partial pattern matching in the
+interpreter; the inexhaustiveness of the pattern matching should never
+be triggered when executing a well-typed term. Alas, this fact cannot
+be made obvious to the compiler. That also exlains unoptimality.
+
+	We have realized that if we change the encoding of the term --
+from data constructors to functions, we can encode the tagless
+interpreter of the type language in a typed language with no GADTs and
+a very simple type system. The interpreter uses no universal type, no
+pattern matching and is patently obviopus to the compiler that the
+only non-termination can come from the interpreting fix. If the source
+language is strongly normalizing, our interpreter is total.
+
+	Our source language is higher-order, contains fix, boolean and
+int types and a few primitive functions enough to express gib,
+factorial and power. We use higher-order abstract syntax for functions
+(we have also used deBrujn indices, although that makes writing terms
+more tedious). We have experimented with adding a state.
+
+	Given the same term repreesentation but varying the
+interpreters, we can
+	- evaluate the term to a value in the meta-language
+	- determine the size or the depth of a term
+	- compute a _CBN_ CPS of a term
+	- `compile' the term. This requires staging, e.g.: MetaOCaml
+	
+Surprisingly, it is also possible to write a partial evaluator! the
+partial evaluator does have tags: whether a value is static or
+dynamic. The pattern-matching on this _phase_ tag is always
+exhaustive; we still have no universal type and no type tags. The
+partial evaluator uses the previously mentioned compiler (interpreter
+to the code expression) to `interpret' dynamic terms. So, the
+partial evaluator is `modular' in that respect.
+
+	Here a few examples of terms in the source language.
+
+
+Where the term `constructors' lam, app, etc. come from? They look like
+`free variables'. Especially to permit us to vary the interpreters? We
+have encoded that in (Meta)OCaml and Haskell. In Haskell, the are
+defined as methods in the typeclass Symantics (the name means that the
+class interface gives the syntax for the source language and its
+instances give the semantics).
+
+  quote Semantics class
+
+So, the example terms above have the following inferred types:
+
+We must point out the second-order type constructor r, which
+represents a particular interpreter. The type r tau hides the
+representation of the interpreter and yet permits enough of the type
+information to show thtough, so we can still typecheck a term even we
+don't know what 'r' is. So, the typechecked term is well-typed in any
+of the interpreters.  By writing an instance of Semantics (show the R
+interpreter?) we instantiate r and so evaluate the term in the
+cointext of a particular interpreter.
+
+In OCaml, we use OCaml module system:
+	module Symantics
+
+the sample term is then a functor
+	(S:Semantics) ...
+
+	The notion of the indexed functions in PE: we skip it here
+
+
+Now, the questions. Our partial evaluator has no universal type, no
+type tags. Can it be said to be tagless or Jones optimal? Is the
+notion of Jones optimality applies specifically to a self-interpreter,
+or it has a broader scope?
+
+We have thought how to encode self-interpreter in our system. The
+crucial point is representing higher-order type constructor r (which
+`choses' the particular interpreter) and polymorphism of lam and app
+and fix `term-constructors'. Representing them in the source lanmguage
+seems to require rank-2 polymorphism. We have a thought how to neatly
+bypass these difficulties, using the notion of let-polymorphism and a
+`hole'. 
+
 We built a tagless partial evaluator for a typed object language,
 placing minimal requirements on the type system of the metalanguage:
 we need let-bound polymorphism and staging, but not dependent
@@ -49,3 +144,10 @@ above as the following evaluation context in the object language.
 
 We have implemented our approach in MetaOCaml and Haskell (the latter
 using generalized algebraic data types in lieu of staging).
+
+The let and the hole are meta-constructions, which are always
+interpreted to themselves (in any possible interpretetaion). Is this
+OK for a self-interpreter? Do you have any objections to such
+constructions? What about type annotations in self-interpreter, which
+will be needed if we are to use higher-ranked types, which can't be
+inferred?
