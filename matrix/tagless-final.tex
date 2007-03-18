@@ -171,7 +171,7 @@ But we need to say something here, to give the reader the feeling of
 how advanced solutions were proposed and how rarely they are implemented.
 
 
-\subsection{The Final Proposal}
+\subsection{The `Final' Proposal}
 We have realized that, if we change the encoding of the term from data
 constructors to functions, then we can encode a tagless interpreter of a
 typed object language in a metalanguage with a very simple type system.
@@ -352,6 +352,11 @@ the compiler.
 state and imperative features
 
 CPS transformation (interpreting/compiling the term to CBN CPS)
+
+We must formulate some propositions: a typed term makes progress in
+any interpreter. The reason it is typed in any interpreter:
+|forall r. Symantics r => r tau| directly says that in every model the
+term is typed. 
 
 \subsection{Translucent types}
 The crucial role of the higher-order type parameter r
