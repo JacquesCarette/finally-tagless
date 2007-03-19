@@ -606,8 +606,7 @@ test_inc3ee_p = compP $ twice_inc_3_ee ()
 
 -- test_inc3e_c and test_inc3ee_c are most illustrative.
 
-{- Try to implement a term that is a lambda term rather than a ground
-   term -- and fail!
+-- Try to implement a term that is a lambda term rather than a ground term
 test3_e () =
     -- The evaluation context in the following four lines is a self-interpreter
     -- of the object language, encoded in the metalanguage.
@@ -618,17 +617,13 @@ test3_e () =
     -- The term in the following three lines is the object term
     -- let test3_ = \x -> (x 1) + 2
     -- encoded in the object language then encoded in the metalanguage.
-    -- let test3_ = app lam_ (lam (\x ->
-    --              app app_ (
-    --                 app (app add_ (app app_ x (app int_ (int 1)))) 
-    --              (app int_ (int 2)))))
-    let test3_ = app lam_ (lam (\x -> app (app app_ x) (app int_ (int 1))))
-    in test3_ 
+    app lam_ (lam (\x -> (app 
+			   (app add_
+			    (app (app app_ x) (app int_ (int 1))))
+			   (app int_ (int 2)))))
 test_t3_r = compR $ test3_e ()
 test_t3_c = compC $ test3_e ()
 test_t3_p = compP $ test3_e ()
--- ??
--}
 
 -- start encoding some of Ken's ideas on a self-interpreter
 an_ep :: (Int  -> repr Int)
