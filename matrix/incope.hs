@@ -551,6 +551,7 @@ test_inc3e_c = compC $ twice_inc_3_e ()
 test_inc3e_p = compP $ twice_inc_3_e ()
 -- 5
 
+-- This is for computing *size*.
 twice_inc_3_se () =
     -- The evaluation context in the following four lines is a self-interpreter
     -- of the object language, encoded in the metalanguage.
@@ -605,6 +606,29 @@ test_inc3ee_p = compP $ twice_inc_3_ee ()
 
 -- test_inc3e_c and test_inc3ee_c are most illustrative.
 
+{- Try to implement a term that is a lambda term rather than a ground
+   term -- and fail!
+test3_e () =
+    -- The evaluation context in the following four lines is a self-interpreter
+    -- of the object language, encoded in the metalanguage.
+    let lam_ = lam (\f -> f) in
+    let app_ = lam (\f -> lam (\x -> app f x)) in
+    let add_ = lam (\m -> lam (\n -> add m n)) in
+    let int_ = lam (\i -> i) in
+    -- The term in the following three lines is the object term
+    -- let test3_ = \x -> (x 1) + 2
+    -- encoded in the object language then encoded in the metalanguage.
+    -- let test3_ = app lam_ (lam (\x ->
+    --              app app_ (
+    --                 app (app add_ (app app_ x (app int_ (int 1)))) 
+    --              (app int_ (int 2)))))
+    let test3_ = app lam_ (lam (\x -> app (app app_ x) (app int_ (int 1))))
+    in test3_ 
+test_t3_r = compR $ test3_e ()
+test_t3_c = compC $ test3_e ()
+test_t3_p = compP $ test3_e ()
+-- ??
+-}
 
 -- start encoding some of Ken's ideas on a self-interpreter
 an_ep :: (Int  -> repr Int)
@@ -720,26 +744,6 @@ sinterp prog =
        (lift (\be te ee -> if_ be te ee)))
        (lift (\f -> lam f)))
        (lift (\f -> fix f))
-{-
-This can't possibly have the type as above!
-
-Perhaps the issue is that the type of the constructors in
-Symantics and the types in the self-interpreter should be
-different?  [Related, but not identical]
-interp prog = 
-       app (app (app (app (app (app (app (app (app prog
-       (lam (\x -> x)))
-       (lam (\b -> b)))
-       (lam (\e1 -> lam (\e2 -> add e1 e2))))
-       (lam (\e1 -> lam (\e2 -> mul e1 e2))))
-       (lam (\e1 -> lam (\e2 -> app e1 e2))))
-       (lam (\e1 -> lam (\e2 -> leq e1 e2))))
-       (lam (\eb -> lam (\et -> lam (\ee -> if_ eb et ee)))))
-       (lam (\f  -> f)))
-       (lam (\f  -> lam (\n -> app (app (
-           fix (\fx -> lam (\f -> lam (\n -> 
-              app (app f (app fx f)) n)))) f) n)))
--}
 
 type SFoo c = (Symantics repr, Self repr) => repr (
          (Int -> repr Int)
@@ -780,34 +784,6 @@ si prog =
      )))))))))
 
 -- i2 prog = (si interp) prog
--}
-
-twice :: (Symantics repr) => repr ((a -> a) -> (a -> a))
-twice = lam (\f -> lam (\x -> app f (app f x)))
-
-tid :: Symantics repr => repr (a -> a)
-tid = lam (\f -> f)
-
-tid_enc :: (Symantics repr) => repr (((a -> a) -> b) -> b)
-tid_enc = lam (\_lam -> app _lam (lam (\f -> f)))
-
-tid_r = compC tid_enc
-
-{-
-_lam must have the type repr ((a->a)->b)
-(lam (\f -> f)) :: repr (a->a)
-
-_lam :: repr (forall a b. (r a -> r b) -> r(a->b))
--}
-
-{-
-twice_encoded :: (Symantics repr) => () ->
-   repr ((forall a b. (r a -> r b) -> r (a -> b)) ->
-	 (forall a b. r (a -> b) -> (r a -> r b)) -> 
-	 r ((c -> c) -> (c -> c)))
-twice_encoded () = lam (\_lam -> lam (\_app ->
-      app _lam (lam (\f -> app _lam (lam (\x -> app (app _app f)
-                                          (app (app _app f) x)))))))
 -}
 
 

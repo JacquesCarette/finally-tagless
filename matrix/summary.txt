@@ -1,64 +1,70 @@
 Dear Prof Jones,
 
-We are working on partial evaluation of typed programs, and hope that
-you could clarify for us the notion of Jones optimality and whether
+We are working on typed partial evaluation of typed programs, and hope 
+that you could clarify for us the notion of Jones optimality and whether
 it requires a self-interpreter.  We apologize for this long message,
 but our main question is simple: can a partial evaluator be optimal
-just by virtue of being tagless, or does optimality presuppose a
+if it does not generate any redundant computations (which 
+essentially reduces to being tagless), or does optimality presuppose a
 self-interpreter?
+
+In the rest of this message, we give more details of what we are doing,
+and follow up with more detailed versions of the above general question.
 
 At POPL 2003, Taha et al and Xi et al both argued that writing an
 interpreter of a typed language in a typed language is an interesting
-problem.  Past solutions either incur the tagging overhead of the
-Universal type or typing complexities such as dependent types or
+problem.  Past solutions either incur the tagging overhead of using a
+Universal type, or typing complexities such as dependent types or
 generalized algebraic datatypes (GADTs).  By encoding terms using
-not data constructors but ordinary functions, we achieve a tagless
+ordinary functions rather than data constructors, we achieve a tagless
 interpreter of a typed object language in a metalanguage with a
 very simple type system.  For example, we encode the object term
 (incrementing 3)
-	(\x -> x + 1) 3
+    (\x -> x + 1) 3
 as the object or metalanguage term
-	app (lam (\x -> add x (int 1))) (int 3)
+    app (lam (\x -> add x (int 1))) (int 3)
 The interpreter uses no Universal type, and it is obvious to the
-compiler that non-termination can only result from interpreting fix.
-If the source language is strongly normalizing, our interpreter is
-total.  Our actual source language is higher-order and contains fix and
-primitive integer operations, enough to express Fibonacci, factorial,
-and power.  We have experimented with adding mutable state.
+compiler that non-termination can only result from interpreting the
+fixpoint combinator fix.  If the source language is strongly normalizing, 
+our interpreter is total.  Our actual source language is higher-order 
+and contains fix and primitive integer operations, enough to express 
+Fibonacci, factorial, and power.  We have experimented with adding 
+mutable state as well.
 
 The term `constructor' functions "lam", "app", etc. above look like free
 variables in the encoding of an object term.  Defining these functions
-differently gives rise to different interpreters.  Given the same term
+in different ways gives rise to different interpreters.  Given the same term
 representation but varying the interpreters, we can
-	- evaluate the term to a value in the metalanguage
-	- determine the size or depth of a term
-	- compute a _CBN_ CPS transformation of a term
-	- `compile' the term. This requires staging, as in MetaOCaml.
-We have implemented the above in (Meta)OCaml and Haskell.  In Haskell
+    - evaluate the term to a value in the metalanguage
+    - determine the size or depth of a term
+    - compute a _CBN_ CPS transformation of a term
+    - `compile' the term. This requires staging, as in MetaOCaml.
+We have implemented the above in both (Meta)OCaml and Haskell.  In Haskell
 for example, the term `constructor' functions are defined as methods in
 a type class Symantics.  The name means that the class specifies the
 syntax for the object language and each instance gives a semantics.
-	class Symantics r where
-	  int :: Int -> r Int
-	  add :: r Int -> r Int -> r Int
-	  lam :: forall a b. (r a -> r b) -> r (a->b)
-	  app :: forall a b. r (a -> b) -> r a -> r b
-	  fix :: forall a. (r a -> r a) -> r a
-	  ...
+   class Symantics r where
+      int :: Int -> r Int
+      add :: r Int -> r Int -> r Int
+      lam :: forall a b. (r a -> r b) -> r (a->b)
+      app :: forall a b. r (a -> b) -> r a -> r b
+      fix :: forall a. (r a -> r a) -> r a
+      ...
 Haskell infers the type "forall r. Symantics r => r Int" for the
 example term encoding above.  The type constructor "r" represents an
-interpreter.  The meta-type "r tau" hides how the interpreter represents
-the object type "tau" yet exposes enough information to type-check the
-encoding of an object term without knowing what "r" is.  The checked
-term is then well-typed in any interpreter.  Each instance of Symantics
-instantiates "r" to interpret terms in a particular way.
+interpreter/compiler/etc.  The meta-type "r tau" hides how the 
+interpreter represents the object type "tau" yet exposes enough 
+information to type-check the encoding of an object term without 
+knowing what "r" is.  The checked term is then well-typed in any 
+interpreter.  Each instance of Symantics instantiates "r" to interpret 
+terms in a particular way.
 
-Finally, we also built a partial evaluator!  The partial evaluator uses
-tags to distinguish static values from dynamic ones, but the pattern
-matching on this _phase_ tag is always exhaustive.  Given that this
-partial evaluator uses no Universal type and no tags for object types,
-is it then tagless and optimal, independent of a self-interpreter of the
-object language?
+Finally, we also built a partial evaluator in this framework!  The 
+partial evaluator uses tags to distinguish static values from dynamic 
+ones, but the pattern matching on this _phase_ tag is always exhaustive.  
+Given that this partial evaluator uses no Universal type and no tags 
+for object types, is it then tagless and optimal, independent of a 
+self-interpreter of the object language?
 
 We ask this question because self-interpretation in our framework is
 a bit tricky due to a need for polymorphism.  An encoded term should
@@ -77,27 +83,24 @@ take advantage of let-bound polymorphism in the metalanguage, it
 is crucial that we encode object "let" to meta "let".  We achieve
 self-interpretation in that the following evaluation context in the
 object language defines an interpreter for encoded object terms.
-	let lam = \f -> f in
-	let app = \f x -> f x in
-	let add = \m n -> m + n in
-	let int = \i -> i in
-	[]
+    let lam = \f -> f in
+    let app = \f x -> f x in
+    let add = \m n -> m + n in
+    let int = \i -> i in
+    [hole]
 The obvious notion of optimality in this setup is easy to achieve.  For
-example, our partial evaluator turns
-	let lam = \f -> f in
-	let app = \f x -> f x in
-	let add = \m n -> m + n in
-	let int = \i -> i in
-	app (lam (\x -> add x (int 1))) (int 3)
+example, given the context above, our partial evaluator turns
+    app (lam (\x -> add x (int 1))) (int 3)
 into the number 4, as desired.  We can also encode the self-interpreter
 above as the following evaluation context in the object language.
-	let lam = lam (\f -> f) in
-	let app = lam (\f -> lam (\x -> app f x)) in
-	let add = lam (\m -> lam (\n -> add m n)) in
-	let int = lam (\i -> i) in
-	[]
-The "let" and the hole "[]" are meta-constructions, which must map to
-themselves in any interpretation.  Is this OK for a self-interpreter?
-Do you have any objections to such constructions?
+    let lam = lam (\f -> f) in
+    let app = lam (\f -> lam (\x -> app f x)) in
+    let add = lam (\m -> lam (\n -> add m n)) in
+    let int = lam (\i -> i) in
+    [hole]
+The "let" and the hole "[hole]" are meta-constructions, which must map to
+themselves in any interpretation.  Would you agree that we have indeed
+built an optimal self-interpreter via the above constructions?
 
 Thank you.
+Jacques Carette, Oleg Kiselyov and Chung-chieh Shan
