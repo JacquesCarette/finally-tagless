@@ -606,7 +606,8 @@ test_inc3ee_p = compP $ twice_inc_3_ee ()
 
 -- test_inc3e_c and test_inc3ee_c are most illustrative.
 
--- Try to implement a term that is a lambda term rather than a ground term
+-- Implement a term that is a lambda term rather than a ground term
+-- this is test3 above.
 test3_e () =
     -- The evaluation context in the following four lines is a self-interpreter
     -- of the object language, encoded in the metalanguage.
@@ -625,7 +626,51 @@ test_t3_r = compR $ test3_e ()
 test_t3_c = compC $ test3_e ()
 test_t3_p = compP $ test3_e ()
 
+{- And now something harder: powfix
+testpowfix () = lam (\x ->
+                      fix (\self -> lam (\n ->
+                        if_ (leq n (int 0)) (int 1)
+                            (mul x (app self (add n (int (-1))))))))
+at the same time, do
+testpowfix7 () = lam (\x -> app (app (testpowfix ()) x) (int 7))
+-}
+testpowfix_e () =
+    -- The evaluation context in the following lines is a self-interpreter
+    -- of the object language, encoded in the metalanguage.
+    let lam_ = lam (\f -> f) in
+    let app_ = lam (\f -> lam (\x -> app f x)) in
+    let add_ = lam (\m -> lam (\n -> add m n)) in
+    let mul_ = lam (\m -> lam (\n -> mul m n)) in
+    let leq_ = lam (\m -> lam (\n -> leq m n)) in
+    let if__ = lam (\be -> lam (\ee -> lam (\te -> if_ be ee te))) in
+    let int_ = lam (\i -> i) in
+    -- careful, trying to print something with fix_ can loop!
+    let fix_ = lam (\f -> app f (app fix_ f)) in
+    -- The term in the following three lines is the object term
+    -- testpowfix above
+    -- encoded in the object language then encoded in the metalanguage.
+    -- That is seriously not pretty, but it works!
+    let tpf = app lam_ (lam (\x ->
+          app fix_ (lam (\self -> app lam_ (lam (\n ->
+             (app (app (app if__ (app (app leq_ n) (app int_ (int 0))))
+                (app int_ (int 1)))
+                (app (app mul_ x) (app (app app_ self)
+                     (app (app add_ n) (app int_ (int (-1))))))))))))) in  
+    let tpf7 = app lam_ (lam (\x ->
+          app (app app_ (app (app app_ tpf) x)) (app int_ (int 7)))) in
+    (tpf, tpf7)
+
+test_pf_r = compR.fst $ testpowfix_e ()
+test_pf_c = compC.fst $ testpowfix_e ()
+test_pf_p = compP.fst $ testpowfix_e () -- don't print this one!
+test_pf7_r = compR.snd $ testpowfix_e ()
+test_pf7_c = compC.snd $ testpowfix_e ()
+test_pf7_p = compP.snd $ testpowfix_e () -- this one's good
+
 -- start encoding some of Ken's ideas on a self-interpreter
+-- Comment (Jacques): I have left this in here because this is
+-- what we would really like to do, but it doesn't quite work
+-- because of polymorphism issues.
 an_ep :: (Int  -> repr Int)
       -> (Bool -> repr Bool)
       -> (repr Int -> repr Int -> repr Int)  -- add
