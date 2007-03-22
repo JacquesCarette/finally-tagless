@@ -293,31 +293,95 @@ Introduce the language,
   IF b e-then e-else
 \end{code}
 
-this time with HOAS rather than deBruin indices. The language is close 
+this time with HOAS rather than deBruijn indices. The language is close 
 to the language of Xi03, but without the polymorphic lift and more 
 constants so we can write better examples, enough to express
 Fibonacci, factorial, and power.
 
 How to make encoding flexible: abstract the interpreter
-Haskell: type classes, OCaml: functors (give the signature of
-Symantics without the 'sv part)
-
 We have implemented the above in (Meta)OCaml and Haskell.  In Haskell,
 the term `constructor' functions are defined as methods in a type class
 Symantics (the name means that the class interface gives the syntax for
 the source language and its instances give the semantics).
-	class Symantics r where
-	  int :: Int -> r Int
-	  add :: r Int -> r Int -> r Int
-	  lam :: (r a -> r b) -> r (a->b)
-	  app :: r (a->b) -> r a -> r b
-	  fix :: (r a -> r a) -> r a
-	  ...
-So, Haskell infers the type "Symantics r => r Int" for the example term
-encoding above.
 
+
+
+\begin{code}
+class Symantics repr where
+    int :: Int -> repr Int                -- int literal
+    bool :: Bool -> repr Bool             -- bool literal
+
+    lam :: (repr a -> repr b) -> repr (a->b)
+    app :: repr (a->b) -> repr a -> repr b
+    fix :: (repr a -> repr a) -> repr a
+
+    add :: repr Int -> repr Int -> repr Int
+    mul :: repr Int -> repr Int -> repr Int
+    if_ :: repr Bool -> repr a -> repr a -> repr a
+    leq :: repr Int -> repr Int -> repr Bool
+\end{code}
+
+The previous test now reads |app (lam (\x -> x)) (bool True)| and the
+inferred type is |Symantics repr => repr Bool|.
 
 encoding of a few terms.
+
+\begin{code}
+testpowfix () = lam (\x ->
+                      fix (\self -> lam (\n ->
+                        if_ (leq n (int 0)) (int 1)
+                            (mul x (app self (add n (int (-1))))))))
+testpowfix7 () = lam (\x -> app (app (testpowfix ()) x) (int 7))
+\end{code}
+
+
+OCaml: functors (give the signature of
+Symantics without the 'sv part)
+
+\begin{code}
+module type Symantics = sig
+  type ('c,'dv) repr
+  val int  : int  -> ('c,int) repr
+  val bool : bool -> ('c,bool) repr
+  val add  : ('c,int) repr -> ('c,int) repr -> ('c,int) repr
+  ...
+  val if_ : ('c,bool) repr ->
+             (unit -> ('c,'da) repr) ->
+             (unit -> ('c,'da) repr) -> ('c,'da) repr 
+
+  val lam : (('c,'da) repr -> ('c,'db) repr) 
+          -> ('c,'da->'db) repr
+  val app : ('c,'da->'db) repr
+    -> ('c,'da) repr -> ('c,'db) repr
+  val fix : (('c,'da->'db) repr -> ('c,'da->'db) repr) 
+            -> ('c,'da->'db) repr
+end
+\end{code}
+
+Some differences are in the additional type parameter |c| (the
+environment classifier, Walid03) to be used later when we get to code
+generation (required by MetaOCaml, part of the type of the
+code). MetaOCaml is a call-by-value language, and thus we have to eta-expand
+the fix-point combinator and encapsulate the branches of the |if_|
+into thunks to prevent their evaluation. 
+
+\begin{code}
+module EX(S: Symantics) = struct
+ open S
+ let testpowfix () = lam (fun x ->
+                      fix (fun self -> lam (fun n ->
+                        if_ (leq n (int 0)) (fun () -> int 1)
+                            (fun () -> mul x (app self (add n (int (-1))))))))
+
+ let testpowfix7 = 
+    lam (fun x -> app (app (testpowfix ()) x) (int 7))
+end
+\end{code}
+The unit in |testpowfix| is for the sake of value restrcition (which
+interferes with the environment classifier inference).
+
+Thus the DSL expression has the type of the functor, from |Symantics|
+to the value.
 
 
 \section{Tagless compiler (aka, staged interpreter)}
@@ -370,6 +434,45 @@ instantiates "r" to interpret terms in a particular way.
 
 \section{Self-interpretation}
 
+
+Self-interpretation in our framework is
+a bit tricky due to a need for polymorphism.  An encoded term should
+be polymorphic in the interpreter type-constructor "r".  Further, the
+functions "lam", "app", etc. above should be polymorphic in the object
+types "a" and "b".  Thus the object language seems to require rank-2
+polymorphism; and so type annotations will be inevitable.
+
+To neatly bypass the need for rank-2 polymorphism, we use the notion
+of let-polymorphism and a `hole', as follows.  A partial evaluator (or
+a compiler or interpreter) is an evaluation context that (let-)binds
+variables named "app", "lam", etc.  For the object language to
+take advantage of let-bound polymorphism in the metalanguage, it
+is crucial that we encode object "let" to meta "let".  We achieve
+self-interpretation in that the following evaluation context in the
+object language defines an interpreter for encoded object terms.
+\begin{code}
+    let lam = \f -> f in
+    let app = \f x -> f x in
+    let add = \m n -> m + n in
+    let int = \i -> i in
+    [hole]
+\end{code}
+The obvious notion of optimality in this setup is easy to achieve.  For
+example, given the context above, our partial evaluator turns
+\begin{code}
+    app (lam (\x -> add x (int 1))) (int 3)
+\end{code}
+into the number 4, as desired.  We can also encode the self-interpreter
+above as the following evaluation context in the object language.
+\begin{code}
+    let lam = lam (\f -> f) in
+    let app = lam (\f -> lam (\x -> app f x)) in
+    let add = lam (\m -> lam (\n -> add m n)) in
+    let int = lam (\i -> i) in
+    [hole]
+\end{code}
+The "let" and the hole "[hole]" are meta-constructions, which must map to
+themselves in any interpretation.  
 
 
 \section{Related work}
