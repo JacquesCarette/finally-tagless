@@ -47,7 +47,6 @@ end ;;
 
 module type Symantics = sig
   type ('c,+'sv,+'dv) repr
-  type ('a,'s,'v) result
   val int  : int  -> ('c,int,int) repr
   val bool : bool -> ('c,bool,bool) repr
   val add  : ('c,int,int) repr -> ('c,int,int) repr -> ('c,int,int) repr
@@ -80,8 +79,8 @@ module type Symantics = sig
 (* This is used only to extract the result so we can see it nicely.
    Alternatively, we can always extract the result as code,
    especially if we don't use the interpreter.
-*)
   val get_res : ('c,'sv,'dv) repr -> ('c,'sv,'dv) result
+*)
 
 end
 ;;
@@ -163,7 +162,7 @@ module EX(S: Symantics) = struct
  let i3 e = i2 (test1' e)
     does not work.  Seems like the failure of rank-2 polymorphism again? *)
 
- let runit t = S.get_res (t p)
+ let runit t = t p
 
  let test1r () = runit test1
  let test2r () = runit test2
@@ -189,7 +188,6 @@ end;;
 (* Pure interpreter. It is essentially the identity transformer *)
 module R = struct
   type ('c,'sv,'dv) repr = 'dv    (* absolutely no wrappers *)
-  type ('a,'s,'v) result = 'v;;
   let int (x:int) = x
   let bool (b:bool) = b
   let add e1 e2 = e1 + e2
@@ -201,8 +199,6 @@ module R = struct
   let lam f = f
   let app e1 e2 = e1 e2
   let fix f = let rec self n = f self n in self
-
-  let get_res x = x
 end;;
 
 module EXR = EX(R);;
@@ -217,7 +213,6 @@ module EXR = EX(R);;
 
 module L = struct
   type ('c,'sv,'dv) repr = int    (* absolutely no wrappers *)
-  type ('a,'s,'v) result = int;;
   let int (x:int) = 1
   let bool (b:bool) = 1
   let add e1 e2 = e1 + e2 + 1
@@ -229,8 +224,6 @@ module L = struct
   let lam f = (f 0) + 1
   let app e1 e2 = e1 + e2 + 1
   let fix f = (f 0) + 1
-
-  let get_res x = x
 end;;
 
 module EXL = EX(L);;
@@ -244,7 +237,6 @@ module EXL = EX(L);;
 
 module C = struct
   type ('c,'sv,'dv) repr = ('c,'dv) code
-  type ('a,'s,'v) result = ('a,'v) code;;
   let int (x:int) = .<x>.
   let bool (b:bool) = .<b>.
   let add e1 e2 = .<.~e1 + .~e2>.
@@ -259,7 +251,6 @@ module C = struct
   let fix f = .<let rec self n = .~(f .<self>.) n in self>.
   (* let unfold z s = .<let rec f n = if n <= 0 then .~z else .~s (f (n-1)) in f>. *)
 
-  let get_res x = x
   let dyn_id (x : ('c,'sv,'dv) repr) : ('c,'sv1,'dv) repr = x
 end;;
 
