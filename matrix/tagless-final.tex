@@ -1,6 +1,7 @@
 \documentclass[preprint]{sigplanconf}
 \usepackage{amsmath}
 \usepackage{natbib1}
+\usepackage{comment}
 
 \newcommand{\jacques}[1]{{\it [Jacques says: #1]}}
 \newcommand{\oleg}[1]{{\it [Oleg says: #1]}}
@@ -365,9 +366,10 @@ OCaml: functors.
 module type Symantics = sig
   type ('c,'dv) repr
   val int  : int  -> ('c,int) repr
-  val bool : bool -> ('c,bool) repr
-  val add  : ('c,int) repr -> ('c,int) repr -> ('c,int) repr
-  ...
+  val bool: bool -> ('c,bool) repr
+  val add : ('c,int) repr-> ('c,int) repr-> ('c,int) repr
+  val mul : ('c,int) repr-> ('c,int) repr-> ('c,int) repr
+  val leq : ('c,int) repr-> ('c,int) repr-> ('c,bool) repr
   val if_ : ('c,bool) repr ->
              (unit -> ('c,'da) repr) ->
              (unit -> ('c,'da) repr) -> ('c,'da) repr 
@@ -378,13 +380,14 @@ module type Symantics = sig
     -> ('c,'da) repr -> ('c,'db) repr
   val fix : (('c,'da->'db) repr -> ('c,'da->'db) repr) 
             -> ('c,'da->'db) repr
-end
+end;;
 \end{code}
 
 Some differences are in the additional type parameter |c| (the
 environment classifier, Walid03) to be used later when we get to code
 generation (required by MetaOCaml, part of the type of the
-code). MetaOCaml is a call-by-value language, and thus we have to eta-expand
+code). MetaOCaml is a call-by-value language, and thus we have to 
+$\eta$-expand
 the fix-point combinator and encapsulate the branches of the |if_|
 into thunks to prevent their evaluation. 
 
@@ -396,11 +399,11 @@ module EX(S: Symantics) = struct
  let testpowfix () = 
    lam (fun x ->fix (fun self -> lam (fun n ->
          if_ (leq n (int 0)) (fun () -> int 1)
-             (fun () -> mul x (app self (add n (int (-1))))))))
-
+             (fun () -> mul x (app self 
+                                   (add n (int (-1))))))))
  let testpowfix7 = 
     lam (fun x -> app (app (testpowfix ()) x) (int 7))
-end
+end;;
 \end{code}
 The dummy unit argument in |testpowfix| is the artefact of MetaOCaml
 (which we will be using to compile our tests in Sections below). To be
@@ -417,7 +420,84 @@ OCaml the type of the functor, from |Symantics| to the value. This
 essentially the same as |Symantics repr => | constraint in the case of
 the embedding of the DSL in Haskell.
 
+The first instatiation of the Symantics structure is the interpreter:
+evaluating the object (DSL) term to its value in the meta-language. 
+The following module essentially interprets (gives one-to-one
+correspondence of) each operation of the object language as the
+corresponding operation in the meta-language.
+\begin{code}
+module R  = struct
+  type ('c,'dv) repr = 'dv    (* absolutely no wrappers *)
+  let int (x:int) = x
+  let bool (b:bool) = b
+  let add e1 e2 = e1 + e2
+  let mul e1 e2 = e1 * e2
+  let leq x y = x <= y
+  let if_ eb et ee = if eb then (et ()) else (ee ())
 
+  let lam f = f
+  let app e1 e2 = e1 e2
+  let fix f = let rec self n = f self n in self
+end;;
+\end{code}
+
+This interpreter is patently tagless: the operation |add| is really
+OCaml's addition, and |app| is OCaml's application. We can run our
+examples by instatiating the |EX| functor with |R|.
+\oleg{Jacques: you mentioned "Boxes go Bananas" by Washburn and
+  Weirich. Do you want to comment more about that paper here?}
+
+\begin{code}
+  module EXR = EX(R);;
+\end{code}
+
+and so |EXR.test1 ()| evaluates to untagged boolean value |true|.
+In Haskell, we define a |newtype R a = R a| and 
+|instance Symantics R|
+with the straightforward implementation. We must stress that |R| is
+a |newtype|. Although it may look like a tag, it has no run-time
+representation (erased during the compilation) and pattern-matching
+against |R| cannot ever fail and so is operationally identity and
+compiled that way.
+
+Proposition: If |e| is the term in the meta-language has the type
+|t|, evaluation of that term in the interpreter R will either continue
+idenfinetely or termninate with a value of the same type |t|.
+
+We'd like show a different interpreter: it interprets each terms of
+the object language to its size (defined as the number of term
+constructors). The following is a slightly abbreviated code (see the
+accompanying source code for the complete definition)
+ 
+\begin{code}
+module L = struct
+  type ('c,'dv) repr = int
+  let int (x:int) = 1
+  let mul e1 e2 = e1 + e2 + 1
+  let if_ eb et ee = eb + et () + ee () + 1
+
+  let lam f = (f 0) + 1
+  let app e1 e2 = e1 + e2 + 1
+  let fix f = (f 0) + 1
+end;;
+\end{code}
+
+Now the expression
+\begin{code}
+  let module E = EX(L) in E.test1 ()
+\end{code}
+evaluates to |3|. This interpreter is not only tagless, it is also
+total. It `evaluates' even seemingly divergent terms like\\
+|app (fix (fun self -> self)) (int 1)|.
+
+\begin{comment}
+module EX1(S: Symantics) = struct
+ open S
+ let tfix () = app (fix (fun self -> self)) (int 1)
+end;;
+let module E =EX1(R) in E.tfix ();;
+let module E =EX1(L) in E.tfix ();;
+\end{comment}
 
 \section{Tagless compiler (aka, staged interpreter)}
 Staged code in OCaml... Don't show the Haskell code (too much)
