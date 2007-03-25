@@ -1,5 +1,5 @@
 \documentclass[preprint]{sigplanconf}
-\usepackage{amsmath}
+\usepackage{amsmath,amssymb}
 \usepackage{natbib1}
 \usepackage{comment}
 
@@ -12,6 +12,9 @@
 \DefineVerbatimEnvironment{code}{Verbatim}{xleftmargin=1em,fontsize=\small}
 
 \newtheorem{prop}{Proposition}
+
+\newcommand{\ZZ}{\mathbb{Z}}
+\newcommand{\BB}{\mathbb{B}}
 
 \begin{document}
 
@@ -362,6 +365,8 @@ What are our contributions:
 evaluators, from interpretation to partial evaluation,
 \item clear and easy extensibility to more features,
 \item only closed terms can be evaluated.
+\item an approach to self-interpretation which is compatible with the
+  above.
 \end{enumerate}
 
 Making sure that we interpret terms that are well-typed and closed --
@@ -383,8 +388,8 @@ with fixpoint, integers, booleans and comparison, whose BNF grammar is
 
 \begin{code}
   e ::= Lam hoas_fn | App e e | Fix hoas_fn |
-  I int_literal | B bool_literal | Add e1 e2 | Mul e1 e2 | Leq e1 e2 |
-  IF b e-then e-else
+  I int_literal | B bool_literal | Add e1 e2 | 
+  Mul e1 e2 | Leq e1 e2 | IF b e-then e-else
 \end{code}
 
 This time we use higher-order abstract syntax (cite: but not
@@ -394,6 +399,7 @@ lift but with more constants so we can write better examples, enough to
 express Fibonacci, factorial, and power.
 
 \subsection{How to make encoding flexible: abstract the interpreter}
+\label{encoding}
 We have implemented the above in (Meta)OCaml and Haskell.  In Haskell,
 the term `constructor' functions are defined as methods in a type class
 Symantics (the name means that the class interface gives the syntax for
@@ -414,7 +420,7 @@ class Symantics repr where
   leq :: repr Int -> repr Int -> repr Bool
 \end{code}
 
-Our sample code test1 now reads |app (lam (\x -> x)) (bool True)|,
+|test1| now reads |app (lam (\x -> x)) (bool True)|,
 whose inferred type is |Symantics repr => repr Bool|.
 For example, we can encode the classical |power| function, as well
 as the partial application |\x -> power x 7| as
@@ -451,7 +457,8 @@ subject-level terms.\oleg{Should we perhaps move this up, in the
   good. Or keep the explanation here but refer to it from the Introduction.}
 
 We can do the above in (Meta)OCaml as well, replacing type classes with
-functors, via a module type.
+functors, via a module type.  For this section, the following simple
+signature will be sufficient:
 
 \begin{code}
 module type Symantics = sig
@@ -488,9 +495,9 @@ module EX(S: Symantics) = struct
  let test1 () = app (lam (fun x -> x)) (bool true)
  let testpowfix () = 
    lam (fun x ->fix (fun self -> lam (fun n ->
-         if_ (leq n (int 0)) (fun () -> int 1)
-             (fun () -> mul x (app self 
-                                   (add n (int (-1))))))))
+     if_ (leq n (int 0)) (fun () -> int 1)
+         (fun () -> mul x (app self 
+                               (add n (int (-1))))))))
  let testpowfix7 = 
     lam (fun x -> app (app (testpowfix ()) x) (int 7))
 end;;
@@ -518,7 +525,7 @@ correspondence to) each operation of the object language as the
 corresponding operation in the meta-language.
 \begin{code}
 module R  = struct
-  type ('c,'dv) repr = 'dv    (* absolutely no wrappers *)
+  type ('c,'dv) repr = 'dv (* absolutely no wrappers *)
   let int  (x:int)  = x
   let bool (b:bool) = b
   let add  e1 e2    = e1 + e2
@@ -538,11 +545,12 @@ examples by instatiating the |EX| functor with |R|.
 \oleg{Jacques: you mentioned "Boxes go Bananas" by Washburn and
   Weirich. Do you want to comment more about that paper here?}
 
+\noindent
 \begin{code}
   module EXR = EX(R);;
 \end{code}
 
-and so |EXR.test1 ()| evaluates to the untagged boolean value |true|.
+\noindent and so |EXR.test1 ()| evaluates to the untagged boolean value |true|.
 In Haskell, we define a\\
 |newtype R a = R a| and |instance Symantics R|
 with the straightforward implementation. We must stress that |R| is
@@ -593,26 +601,119 @@ let module E =EX1(L) in E.tfix ();;
 \end{comment}
 
 \section{Tagless compiler (aka, staged interpreter)}\label{compiler}
-Staged code in OCaml... Don't show the Haskell code (too much)
 
+We can also write a ``compiler'' from our lambda calculus directly
+into OCaml code, using MetaOCaml's staging facilities.  This compiler
+attempts no optimizations at all, it simply produces residual code.
+This is a completely straightforward staging of |module R|.
 
+% taken from incope.ml -- should this be put into another file, to make
+% sure the paper does not get out of synch?
+\begin{code}
+module C = struct
+  type ('c,'sv,'dv) repr = ('c,'dv) code
+  let int (x:int) = .<x>.
+  let bool (b:bool) = .<b>.
+  let add e1 e2 = .<.~e1 + .~e2>.
+  let mul e1 e2 = .<.~e1 * .~e2>.
+  let leq x y = .< .~x <= .~y >.
+  let eql x y = .< .~x = .~y >.
+  let if_ eb et ee = 
+    .<if .~eb then .~(et () ) else .~(ee () )>.
+
+  let lam f = .<fun x -> .~(f .<x>.)>.
+  let app e1 e2 = .<.~e1 .~e2>.
+  let fix f = 
+     .<let rec self n = .~(f .<self>.) n in self>.
+  let dyn_id (x:('c,'sv,'dv) repr):('c,'sv1,'dv) repr = x
+end;;
+\end{code}
+
+\noindent It is readily obvious that this compiler does not suffer
+any interpretive overhead whatsoever, nor does the resulting code
+contain any tags.  We add one item to the language, |dyn_id|, as it
+is needed in the next section, where we will explain its purpose.
+
+\jacques{we need to say something about the Haskell version here too,
+even though we don't show it.  This is the first place we use GADT,
+so maybe the ByteCode data type should be shown?}
 \section{Tagless partial evaluator}\label{PE}
 
 Surprisingly, it is also possible to write a partial evaluator!  The
 partial evaluator does have tags: whether a value is static or dynamic.
 The pattern-matching on this \emph{phase} tag is always exhaustive; we still
 have no universal type and no tags for object types.  The partial
-evaluator uses the previously mentioned compiler to `interpret' dynamic
-terms.  In this sense, the partial evaluator is a modular extension to
-the compiler.
+evaluator uses the previously mentioned compiler to ``interpret'' dynamic
+terms, and it uses the interpreter to reduce static terms.  In this sense, 
+the partial evaluator is a modular extension to both the compiler and
+the interpreter. 
 
-Compare the output of some of the ctest with the corresponding
-ptest. Use power?
+\subsection{MetaOCaml version}
+
+Here is the full code for the MetaOCaml version.
+\begin{code}
+module P = struct
+  type ('c,'sv,'dv) repr = {st: 'sv option; dy: ('c,'dv) code}
+  let abstr {dy = x} = x
+  let pdyn x = {st = None; dy = x}
+
+  let int  (x:int)  = {st = Some (R.int x); dy = C.int x}
+  let bool (x:bool) = {st = Some (R.bool x); dy = C.bool x}
+
+  (* generic build - takes a repr constructor, an 
+     interpreter function and a compiler function (all 
+     binary) and builds a PE version *)
+  let build cast f1 f2 = fun e1 -> fun e2 -> 
+     match (e1,e2) with
+         ({st = Some n1}, {st = Some n2}) -> cast (f1 n1 n2)
+        | _ -> pdyn (f2 (abstr e1) (abstr e2))
+  (* same as 'build' but takes care of the neutral element 
+     (e) simplification allowed via a monoid structure which is 
+     implicitly present *)
+  let buildsimp cast e f1 f2 = fun e1 e2 -> 
+     match (e1,e2) with
+        | ({st = Some e'}, _) when e = e' -> e2
+        | (_, {st = Some e'}) when e = e' -> e1
+        | ({st = Some n1}, {st = Some n2}) -> cast (f1 n1 n2)
+        | _ -> pdyn (f2 (abstr e1) (abstr e2))
+
+  let add e1 e2 = buildsimp int 0 R.add C.add e1 e2
+  let mul e1 e2 = buildsimp int 1 R.mul C.mul e1 e2
+  let leq e1 e2 = build bool R.leq C.leq e1 e2
+  let eql e1 e2 = build bool R.eql C.eql e1 e2
+  let if_ eb et ee = match eb with
+           {st = Some b} -> if b then et () else ee ()
+         | _ -> pdyn (C.if_ (abstr eb) 
+                          (fun () -> abstr (et ()))
+                          (fun () -> abstr (ee ())))
+  let lam f = {st = Some f; 
+               dy = C.lam (fun x -> abstr (f (pdyn x)))}
+  let app ef ea = match ef with
+        {st = Some f} -> f ea
+      | _ -> pdyn (C.app (C.dyn_id (abstr ef)) (abstr ea))
+
+   (* For now, to avoid divergence at the PE stage,
+      we unroll the fixpoint exactly once, and then
+      residualize *)
+  let fix f = f (pdyn (C.fix (fun x -> abstr (f (pdyn x)))))
+end;;
+\end{code}
+
+\oleg{Compare the output of some of the ctest with the corresponding
+ptest. Use power?}
 
 One should note that the partial evaluator has fully reused the code
-of the compiler. It is truly the `composition' of the interpreter and
-the compiler.
+of the compiler and the interpreter. It is truly the `composition' of the
+interpreter and the compiler.  \jacques{Perhaps cite a paper of Thiemann
+here, cogen in 6 lines?}
 
+\jacques{Comment on the various nice generic things in the implementation,
+which are a little silly in this small version, but would really pay off
+in something bigger.  See the abstract interpretation hard at work!
+See the monoid-driven simplifications!}
+\jacques{Also need to note that the type of the above is not quite
+the original Symantics (although the code has the right operational
+semantics).  We need to make some adjustments, as per below.}
 
 the sv type problem: the inductive type function 'dv -> 'sv
 its GADT solution. 
@@ -642,31 +743,32 @@ there are lots of pattern-matching that looks partial but in reality
 total. The ultimate goal is to make this totality syntactically
 apparent.
 
-
 How can we do without GADT
 Now show the Symantics signature in full, with the 'sv types
 
 In the ideal world, the MetaOCaml signature (or Haskell type class)
 Symantics would start with
 \begin{code}
-    kind tp = int | bool | (->) tp tp
-    type ('c, 'dv:tp) repr : tp
-    val int : int -> ('c, int) repr
-    val bool : bool -> ('c, bool) repr
-    val lam : (('c, 'da) repr -> ('c, 'db) repr) -> ('c, 'da -> 'db) repr
-    val add : ('c, int) repr -> ('c, int) repr -> ('c, int) repr
+  kind tp = int | bool | (->) tp tp
+  type ('c, 'dv:tp) repr : tp
+  val int : int -> ('c, int) repr
+  val bool : bool -> ('c, bool) repr
+  val lam : (('c, 'da) repr -> ('c, 'db) repr) -> 
+            ('c, 'da -> 'db) repr
+  val add : ('c, int) repr -> ('c, int) repr -> 
+            ('c, int) repr
 \end{code}
 
 Here "repr" is a tp-to-tp function, defined inductively in the case of
 partial evaluation:
 
 \begin{code}
-    ('c, int     ) repr_pe = VI of int
-                           | E of ('c, int) code
-    ('c, bool    ) repr_pe = VB of bool
-                           | E of ('c, bool) code
-    ('c, 'a -> 'b) repr_pe = VF of ('c, 'a) repr -> ('c, 'b) repr
-                           | E of ('c, 'a -> 'b) code
+  ('c, int   ) repr_pe = VI of int
+                       | E of ('c, int) code
+  ('c, bool  ) repr_pe = VB of bool
+                       | E of ('c, bool) code
+  ('c, 'a->'b) repr_pe = VF of ('c,'a) repr -> ('c,'b) repr
+                       | E of ('c, 'a->'b) code
 \end{code}
 
 Unfortunately, we can't define type-level functions inductively.
@@ -678,20 +780,22 @@ inductively... This shows also how a limited form of GADTs (the ones
 used for the sake of type-dependent representations) can be
 implemented with just functions. 
 
-So, the full signature of Symantics looks like (cf Section 2)
-
+So we have to augment the full signature of Symantics (from that of
+sec.~\ref{encoding}) to
 \begin{code}
 module type Symantics = sig
   type ('c,'sv,'dv) repr
   val int  : int  -> ('c,int,int) repr
   val bool : bool -> ('c,bool,bool) repr
-  val add  : ('c,int,int) repr -> ('c,int,int) repr -> ('c,int,int) repr
-  val mul  : ('c,int,int) repr -> ('c,int,int) repr -> ('c,int,int) repr
-  val leq  : ('c,int,int) repr -> ('c,int,int) repr -> ('c,bool,bool) repr
-  val if_ : ('c,bool,bool) repr ->
+  val add  : ('c,int,int) repr -> 
+      ('c,int,int) repr -> ('c,int,int) repr
+  val mul  : ('c,int,int) repr -> 
+      ('c,int,int) repr -> ('c,int,int) repr
+  val leq  : ('c,int,int) repr -> 
+      ('c,int,int) repr -> ('c,bool,bool) repr
+  val if_  : ('c,bool,bool) repr ->
              (unit -> ('c,'sa,'da) repr) ->
              (unit -> ('c,'sa,'da) repr) -> ('c,'sa,'da) repr 
-
   val lam : (('c,'sa,'da) repr -> ('c,'sb,'db) repr)
     -> ('c,(('c,'sa,'da) repr -> ('c,'sb,'db) repr),'da->'db) repr
   val app : ('c,(('c,'sa,'da) repr -> ('c,'sb,'db) repr),'da->'db) repr
@@ -702,6 +806,8 @@ end
 \end{code}
 
 
+\jacques{We talk a lot about GADT, but show none.  I think we need to
+show a bit of Haskell, to explain what we are talking about.}
 
 Also, unlike the GADT
 solution, there is no longer any seemingly partial
@@ -719,7 +825,6 @@ the CPS transform. So, the type-function
 that enables the PE is exactly the same type function that enables
 CPS....
 
-
 Say that when doing PE on fix, we made a deliberate decision to `go
 all the way' -- so long as the computation can proceed at the PE stage
 (`static value'), we do that rather than residualizing. We have also
@@ -733,7 +838,6 @@ residual program. That is an issue investigated elsewhere (cite our
 PEPM2006 paper). 
 
 \section{Variations and discussion}\label{discussion}
-
 
 state and imperative features
 
@@ -788,11 +892,15 @@ The only approach that does seem to work
 is the one in incope.hs or incope.ml. If we de-sugar away records and
 type-classes, the type of a term L of the inferred type tau is
 
-\begin{code}
-  (Int -> r Int) ->
-  (Bool -> r Bool) ->
-  (forall alpha beta. (r alpha -> r beta) -> r (alpha->beta)) -> ... r tau
-\end{code}
+$$ 
+  (\ZZ \rightarrow r \ZZ) \rightarrow
+  (\BB \rightarrow r \BB) \rightarrow
+  \forall \alpha \beta. (r \alpha \rightarrow r \beta)
+      \rightarrow r (\alpha\rightarrow\beta) \rightarrow ... r \tau
+$$
+% (Int -> r Int) ->
+% (Bool -> r Bool) ->
+% (forall alpha beta. (r alpha -> r beta) -> r (alpha->beta)) -> ... r tau
 
 or, if we denote the sequence of initial arguments as S r, terms have
 the type |S r -> r tau|
@@ -810,8 +918,8 @@ fragment.
 
 \section{Self-interpretation}\cite{selfinterp}
 
-Taha et al define a self-interpreter si to be an object-language term
-such that, for any object-language term e,
+Taha et al (cite different paper) define a self-interpreter si to be an
+object-language term such that, for any object-language term e,
 
 \begin{code}
   si "e"    is observationally equivalent to    e
@@ -903,25 +1011,25 @@ We achieve
 self-interpretation in that the following evaluation context in the
 object language defines an interpreter for encoded object terms.
 \begin{code}
-    let lam = \f -> f in
-    let app = \f x -> f x in
-    let add = \m n -> m + n in
-    let int = \i -> i in
-    [hole]
+  let lam = \f -> f in
+  let app = \f x -> f x in
+  let add = \m n -> m + n in
+  let int = \i -> i in
+  [hole]
 \end{code}
 The obvious notion of optimality in this setup is easy to achieve.  For
 example, given the context above, our partial evaluator turns
 \begin{code}
-    app (lam (\x -> add x (int 1))) (int 3)
+  app (lam (\x -> add x (int 1))) (int 3)
 \end{code}
 into the number 4, as desired.  We can also encode the self-interpreter
 above as the following evaluation context in the object language.
 \begin{code}
-    let lam = lam (\f -> f) in
-    let app = lam (\f -> lam (\x -> app f x)) in
-    let add = lam (\m -> lam (\n -> add m n)) in
-    let int = lam (\i -> i) in
-    [hole]
+  let lam = lam (\f -> f) in
+  let app = lam (\f -> lam (\x -> app f x)) in
+  let add = lam (\m -> lam (\n -> add m n)) in
+  let int = lam (\i -> i) in
+  [hole]
 \end{code}
 The "let" and the hole "[hole]" are meta-constructions, which must map to
 themselves in any interpretation.  
@@ -945,7 +1053,6 @@ which is the same as
 The partial evaluator yields 5 on both |twice_inc_3_e| and 
 |twice_inc_3_ee|,
 as desired.
-
 
 
 ``But how 
@@ -992,7 +1099,10 @@ Walid's ICFP02
 
 Walid's PEPM07 (Concoqtion paper)? At leats at the Concoqtion
 presentation at WG2.11, Emir used tagless interpreter as the main and
-only example.
+only example. \jacques{but at the PEPM07 presentation, Walid did not
+quite do it that way.  He presented Concoqtion more as an exploration
+of (an obvious but difficult) part of the design space for programming
+languages.}
 
 Danvy's self-interpreter
 Ken has read Danvy et al's paper and said that the paper
@@ -1023,10 +1133,7 @@ Ken: ``In some sense we're just observing that Asai's code type-checks
 -- in Hindley-Milner as soon as we deforest the static code
 representation.''
 
-
-
-
- Sumii et al.
+Sumii et al.
 
 "Boxes go Bananas" by Washburn and Weirich (intended or otherwise) Ken
 wrote about this: ``but a glance reveals no type classes.  Do you mean
@@ -1054,7 +1161,10 @@ However, the typecase paper relies on having a
 bijection between types -- our |'sv| and |'dv| in this case, which is not 
 our situation.  We have a one-sided view of things, where |'sv -> 'dv| is 
 easy, and |'dv| "perfectly reflects" an |'sv|, but you still can't get at 
-that |'sv|.
+that |'sv|.  \jacques{Could we say that we have a meta-level Galois
+injection?  We have one direction completely covered at the object
+level (and so easy to lift), but 'dv to 'sv can only be done by
+an outside mechanism}
 
 
 Self-Interpretation and Reflection in a Statically Typed Language 
@@ -1065,6 +1175,15 @@ claim to have implemented a far better interpreter for a far richer
 language.
 
 \section{Conclusions}\label{conclusion}
+
+We show how to do many things without tags, in a simple type system, 
+essentially by avoiding any (inductive) types.  
+
+\jacques{Should we mention that algebraic type tags give us a partly
+intensional representation of terms.  This nicely allows pattern matching,
+but as sits inside an extensional theory, ensuring that all traces 
+of these tags disappear seems quite difficult without a very powerful
+type system (enter GADTs).}
 
 Our approach showed better the meaning of GADT and when they can be
 avoided.
