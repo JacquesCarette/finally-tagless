@@ -36,7 +36,15 @@
 \maketitle
 
 \begin{abstract}
-This is the text of the abstract.
+We built a tagless partial evaluator for a typed object language,
+placing minimal requirements on the type system of the metalanguage:
+we need let-bound polymorphism and staging, but not dependent
+types, generalized algebraic data types, or a tag elimination as a
+postprocessing step.
+The trick is the "final" approach: we encode the
+higher-order abstract syntax of object terms not using constructors for
+an algebraic data type but by invoking cogen functions, which occur as
+free variables in the encoded term.
 \end{abstract}
 
 %\category{CR-number}{subcategory}{third-level}
@@ -56,17 +64,49 @@ www.metaocaml.org) and Haskell. The complete code is available
 in the supplemental material to the paper. We will use both
 (Meta)OCaml and Haskell for our examples throughout the paper.
 
+\oleg{should say somewhere in the Introduction that we are interested
+  in the typed subject language embedded in the typed
+  meta-language. Refer to Sec 2 (see the remark below) why this is
+  good. We assume the DSL setting: we enter EDSL terms in the
+  meta-language program (e.g., GHCi or (Meta)OCaml top-level). A
+  different approach is reading EDSL terms from a file. In that case, we
+  need to typecheck them first. We do not deal with that problem here,
+  because it has been solved. First we mention Walid02 where they use
+  dependent typed. However, these don't seem to be needed: refer to
+  `typing dependent typing', and the related work section.}
+
+\jacques{I quite agree that the point that needs to be revisited is
+  that a \emph{direct} interpreter for a (typed) language "cannot" be
+  done. see discussion in related work about the direct interpreter,
+  with regards to Walid's paper. Perhaps bring some of it here?}
+\jacques{I have looked at a fair bit of the literature, and I have not
+  seen this done, especially not in the typed 'online' setting.  The
+  one question that seems to be open is, how accurate can we make the
+  PE without a tough BTA?}
+Should we mention some of these points in our contributions subsection
+below?
+
+        Taha et al and Xi et al (both POPL2003) argued that writing an
+interpreter of a typed language in a typed language is an interesting
+problem. The known solutions include the use of the Universal type, or
+GADTs. The former is not quite satisfactory for performance reasons;
+and also because of the presence of partial pattern matching in the
+interpreter; the inexhaustiveness of the pattern matching should never
+be triggered when executing a well-typed term. Alas, this fact cannot
+be made obvious to the compiler. That also exlains unoptimality.
+
 
 \subsection{The Tag Problem}
 
 \oleg{see tagless\_interp1.ml, module Tagfull for the complete code.
-If you change the code in here, please adjust the .ml file
-accordingly. Let the paper and the accompanying code be in sync.}
+  If you change the code in here, please adjust the .ml file
+  accordingly. Let the paper and the accompanying code be in sync.}
 
 
 Consider the sample language of abstraction, application and boolean
 literals with deBruin indices as variables. This is the language used
-in the body of Walid02.
+in the body of Walid02, from which we borrow the first part of 
+this example.
 
 The language can be described by the following grammar (using OCaml
 syntax)
@@ -267,6 +307,16 @@ ways (e.g., interpret term, compile it, compute its size or depth,
 etc.)
 
 \subsection{Contributions}
+
+        We have realized that if we change the encoding of the term --
+from data constructors to functions, we can encode the tagless
+interpreter of the type language in a typed language with no GADTs and
+a very simple type system. The interpreter uses no universal type, no
+pattern matching and is patently obviopus to the compiler that the
+only non-termination can come from the interpreting fix. If the source
+language is strongly normalizing, our interpreter is total.
+
+
 The term `constructor' functions lam, app, etc. look like free
 variables in the encoding of an object term.  Defining these functions
 differently gives rise to different interpreters.  Given the same term
@@ -358,6 +408,21 @@ sugnature. We however prefer if the typechecker of the meta-language
 (Haskell) inferred the types of the object terms for us. We could also
 avoid the |()| argument by switching off the monomophism restriction
 with a compiler flag.
+
+Note that the subject language (DSL) is typed. If we make a mistake
+(for example, replace |int 7| with |bool True| in |testpowfix7|, the
+compiler will highlight that term and complain that it couldn't match
+the expected |Int| against the inferred |Bool|). The type error
+also results when entering |lam (\x -> app x x)|, with the compiuler
+complaining about the infinite type. The type-checker of the
+meta-language not only flags meaningless DSL (subject level) terms --
+before any of their evaluation. If we forget, for example, |app| in
+some of the terms above, we again get an error message with a precise
+location. So the type-checker also flags syntactically invalid
+subject-level terms.\oleg{Should we perhaps move this up, in the
+  intro? To justify why typed-metalanguages and the typed DSL are
+  good. Or keep the explanation here but refer to it from the Introduction.}
+
 
 
 OCaml: functors.
@@ -505,17 +570,6 @@ Staged code in OCaml... Don't show the Haskell code (too much)
 
 \section{Tagless partial evaluator}
 
-the sv type problem: the inductive type function 'dv -> 'sv
-its GADT solution. 
-its type-level function solution: incope1.hs 
-
-How can we do without GADT
-Now show the Symantics signature in full, with the 'sv types
-
-It's relation to PE and CPS. Currently, our CPS is CBN. Need to
-investigate CBV.
-
-
 Surprisingly, it is also possible to write a partial evaluator!  The
 partial evaluator does have tags: whether a value is static or dynamic.
 The pattern-matching on this \emph{phase} tag is always exhaustive; we still
@@ -524,8 +578,138 @@ evaluator uses the previously mentioned compiler to `interpret' dynamic
 terms.  In this sense, the partial evaluator is a modular extension to
 the compiler.
 
+Compare the output of some of the ctest with the corresponding
+ptest. Use power?
+
+One should note that the partial evaluator has fully reused the code
+of the compiler. It is truly the `composition' of the interpreter and
+the compiler.
+
+
+the sv type problem: the inductive type function 'dv -> 'sv
+its GADT solution. 
+its type-level function solution: incope1.hs 
+
+We need GADT -- or, to be more precise,
+representation that varies with the type. We need a value of the type
+|P Int| to have a different representation than the value of the type 
+|P (Int->Int)|. GADT give you that (although we don't use the GADT in
+their intended meaning for that). 
+
+Drawbacks of the GADT solution. GADTs, although work, are still not
+quite satsifactory: let us look at the following lines in incope.hs
+\begin{code}
+    app ef ea = case ef of
+                        VF f -> f ea
+                        E  f -> E (app f (abstr ea))
+\end{code}
+The datatype has four constructors, |VI|, |VB|, |VF| and |E|. How come we used
+only two of them in the above expression. It is obvious, one may say,
+that the constructors |VI| and |VB| just can't occur, because of the
+typing consideration. This is obvious to us -- but it is not obvious
+to the compiler. The case matching above does look \emph{partial}. That
+seems like a tenuous point -- but it is precisely the main point of
+the whole tag elimination approach. In a typed tagged interpreter
+there are lots of pattern-matching that looks partial but in reality
+total. The ultimate goal is to make this totality syntactically
+apparent.
+
+
+How can we do without GADT
+Now show the Symantics signature in full, with the 'sv types
+
+
+
+
+In the ideal world, the MetaOCaml signature (or Haskell type class)
+Symantics would start with
+\begin{code}
+    kind tp = int | bool | (->) tp tp
+    type ('c, 'dv:tp) repr : tp
+    val int : int -> ('c, int) repr
+    val bool : bool -> ('c, bool) repr
+    val lam : (('c, 'da) repr -> ('c, 'db) repr) -> ('c, 'da -> 'db) repr
+    val add : ('c, int) repr -> ('c, int) repr -> ('c, int) repr
+\end{code}
+
+Here "repr" is a tp-to-tp function, defined inductively in the case of
+partial evaluation:
+
+\begin{code}
+    ('c, int     ) repr_pe = VI of int
+                           | E of ('c, int) code
+    ('c, bool    ) repr_pe = VB of bool
+                           | E of ('c, bool) code
+    ('c, 'a -> 'b) repr_pe = VF of ('c, 'a) repr -> ('c, 'b) repr
+                           | E of ('c, 'a -> 'b) code
+\end{code}
+
+Unfortunately, we can't define type-level functions inductively.
+Instead we bake |repr_pe| above into the signature Symantics, so repr
+takes three type arguments |('c,'sv,'dv)|, where the extra argument 
+|'sv| is equal to |('c,'dv) repr_pe.|
+It seems Ken has just showed how to define type-level functions
+inductively... This shows also how a limited form of GADTs (the ones
+used for the sake of type-dependent representations) can be
+implemented with just functions. 
+
+So, the full signature of Symantics looks like (cf Section 2)
+
+\begin{code}
+module type Symantics = sig
+  type ('c,'sv,'dv) repr
+  val int  : int  -> ('c,int,int) repr
+  val bool : bool -> ('c,bool,bool) repr
+  val add  : ('c,int,int) repr -> ('c,int,int) repr -> ('c,int,int) repr
+  val mul  : ('c,int,int) repr -> ('c,int,int) repr -> ('c,int,int) repr
+  val leq  : ('c,int,int) repr -> ('c,int,int) repr -> ('c,bool,bool) repr
+  val if_ : ('c,bool,bool) repr ->
+             (unit -> ('c,'sa,'da) repr) ->
+             (unit -> ('c,'sa,'da) repr) -> ('c,'sa,'da) repr 
+
+  val lam : (('c,'sa,'da) repr -> ('c,'sb,'db) repr)
+    -> ('c,(('c,'sa,'da) repr -> ('c,'sb,'db) repr),'da->'db) repr
+  val app : ('c,(('c,'sa,'da) repr -> ('c,'sb,'db) repr),'da->'db) repr
+    -> ('c,'sa,'da) repr -> ('c,'sb,'db) repr
+  val fix : (('c,(('c,'sa,'da) repr -> ('c,'sb,'db) repr) as 's,'da->'db) repr 
+             -> ('c,'s,'da->'db) repr)  -> ('c,'s,'da->'db) repr
+end
+\end{code}
+
+
+
+Also, unlike the GADT
+solution, there is no longer any seemingly partial
+pattern-matching. The pattern-match only occurs in PE (to check if the
+code is static or dynamic), it is only a phase rather than a type tag
+match, and the pattern match is \emph{patently} exhaustive. That is,
+totality is assured and it is assured \emph{syntactically}, in the way that
+is apparent to the compiler.
+
+
+It's relation to PE and CPS. Currently, our CPS is CBN. Need to
+investigate CBV.
+The type-level function |'da -> 'sa| is important because it gives 
+the CPS transform. So, the type-function
+that enables the PE is exactly the same type function that enables
+CPS....
+
+
+Say that when doing PE on fix, we made a deliberate decision to `go
+all the way' -- so long as the computation can proceed at the PE stage
+(`static value'), we do that rather than residualizing. We have also
+an alternative where fix is unrolled only once and them we
+residualize. We have used the first approach, even it (unlike the
+latter) may cause non-termination at the PE stage -- but \emph{only} if the
+computation we are partially evaluating is non-terminating and enough
+static information is available to trigger this non-termination.
+Say that our treating of fix may lead to the code bloat in the
+residual program. That is an issue investigated elsewhere (cite our
+PEPM2006 paper). 
+
 
 \section{Variations and discussion}
+
 
 state and imperative features
 
@@ -536,6 +720,19 @@ any interpreter. The reason it is typed in any interpreter:
 |forall r. Symantics r => r tau| directly says that in every model the
 term is typed. 
 
+The PE in incope is really a mixture of online and off-line; it looks 
+online, but it has a sort of "just in time" binding-time analysis built in.
+
+If we just add a method 'lift' to Symantics with a type
+|lift :: a -> repr a| (cf polymorphic lift of Xi03, of MetaML and
+MetaOCaml: CSP)
+then |Symantics repr| implies |Functor repr|. We can write then
+\begin{code}
+  instance Semantics repr => Functor repr where
+  -- fmap :: (a->b) -> repr a -> repr b
+  fmap f ra = app (lift f) ra
+\end{code}
+
 \subsection{Translucent types}
 The crucial role of the higher-order type parameter r
 
@@ -544,9 +741,84 @@ meta-type "r tau" hides how the interpreter represents the object type
 "tau" yet exposes enough of the type information so we can type-check
 the encoding of an object term without knowing what "r" is.  The checked
 term is then well-typed in any interpreter.  Each instance of Symantics
-instantiates "r" to interpret terms in a particular way.
+instantiates "r" to interpret terms in a particular way. The L
+interpreter is quite illustrative. We need the above semantics to be
+able to represent both R and L (the latter returns only Int as the
+values) in the same framework.
+
+We encode a term like |add 1 2| as
+|app _add (app _int 1) (app _int 2)| where |_add| and |_int| are just
+`free variables'. Now, how to typecheck such a term? Some type should
+be assigned to these free variables. The goal is to complete the work
+without needing any type annotations (so we don't have to introduce any
+type language), with all types inferred and all terms typed. It seems
+the second-order type R neatly separates the typechecking part from
+the representation of R: it hides aspects that depend on the
+particular interpreter, and yet lets enough type information through
+(via its type argument) to permit the typechecking of terms, and infer
+all the types. 
+
+
+
+The only approach that does seem to work
+is the one in incope.hs or incope.ml. If we de-sugar away records and
+type-classes, the type of a term L of the inferred type tau is
+
+\begin{code}
+  (Int -> r Int) ->
+  (Bool -> r Bool) ->
+  (forall alpha beta. (r alpha -> r beta) -> r (alpha->beta)) -> ... r tau
+\end{code}
+
+or, if we denote the sequence of initial arguments as S r, terms have
+the type |S r -> r tau|
+The interpreter has the type
+|(forall r. S r -> r tau) -> r' tau|
+
+The higher-order type (variable) of kind |*->*| seems essential. So, at
+least we need some fragment of Fw (somehow our OCaml code manages to
+avoid the full Fw; probably because the module language is separated
+from the term language). Thus, we seem to need a fragment of Fw. It
+seems the inference is possible, as our Haskell and OCaml code
+constructively illustrates. Perhaps we need to characterize our
+fragment.
+
 
 \section{Self-interpretation}
+
+Taha et al define a self-interpreter si to be an object-language term
+such that, for any object-language term e,
+
+\begin{code}
+  si "e"    is observationally equivalent to    e
+\end{code}
+
+where |"e"| is an encoding of |e|.  Under the co-approach, we want to encode
+each object-language term as a function from a record of cogen methods
+to a generated rep.  (Thanks to currying, the object language need not
+actually support records.)  In the case of a self-interpreter, that
+record is simply si!  So we should define a self-interpreter si to be an
+object-language record-term such that, for any object-language term e,
+
+\begin{code}
+  "e" si    is observationally equivalent to    e
+\end{code}
+
+The self-interpreter then is just like the interpreter
+|R| in Section 2, except written at the object rather than meta level.
+
+Note on terms and special forms. In our class Symantics, |add|
+is not a term -- because it does not have the type repr t. We could
+have introduced |add| to be of the type |repr (Int->Int->Int)| -- but we
+didn't. So, |add| is a special form. It is to be applied in
+meta-language (using the Haskell application -- white space) rather
+than in the object language (app). 
+
+Mention the RR interpreter: for any term E, (RR E) is equivalent to E.
+RR is not an identity: it is an interpreter that encapsulates another
+interpreter. The RR interpreter can be made self if we treat RR as a
+special form and interpret it always with itself (similar to let and
+hole below).
 
 
 Self-interpretation in our framework is
@@ -556,12 +828,54 @@ functions "lam", "app", etc. above should be polymorphic in the object
 types "a" and "b".  Thus the object language seems to require rank-2
 polymorphism; and so type annotations will be inevitable.
 
+
 To neatly bypass the need for rank-2 polymorphism, we use the notion
 of let-polymorphism and a `hole', as follows.  A partial evaluator (or
 a compiler or interpreter) is an evaluation context that (let-)binds
 variables named "app", "lam", etc.  For the object language to
 take advantage of let-bound polymorphism in the metalanguage, it
-is crucial that we encode object "let" to meta "let".  We achieve
+is crucial that we encode object "let" to meta "let".  
+
+We also (unfortunately need to) define a self-interpreter slightly
+differently.  A self-interpreter |SI[]| is an object expression with a
+hole |[]| waiting to be plugged with the encoding of an object expression.
+The self-interpreter binds the free variables |_lam|, |_app|, |_int|, |_bool|,
+etc. in the plugged encoding.  We require |SI["E"]| to be equivalent to |E|,
+where |"E"| is the object encoding of the object expression |E|.
+
+This strategy of course limits what kinds of processing on encoded
+object expressions can be expressed in the object language.  For
+example, unlike if we had simply defined |"E"| to be the `identity
+encoding' E, we \emph{can} write a size-measurer |SZ[]|, which like |SI[]| is
+an object expression with a hole |[]| waiting to be plugged with |"E"|.
+However, this notion of size cannot distinguish |let x = E1 in E2[x]|
+from |"E2[E1]"|.  Cf. one way to type-check polymorphic let:
+\begin{code}
+        E1:T    E2[E1]:T'
+    ------------------------
+    let x = E1 in E2[x] : T'
+\end{code}
+That analogy shows that the self-interpreter with a hole is a
+euphemism for a higher-rank abstraction. That makes it clear where
+the difficulty lies, and how to simulate the higher-rank application
+(that is, higher-rank arrow elimination) `by hand'.
+
+
+We also need to duplicate the encoding of an object expression if we
+want to process the same object expression in multiple ways (e.g., both
+measure its size and interpret it).  But all this is consistent with (in
+fact, amplifies) our `coalgebraic/final/cogen' spirit, so our revised
+notion of self-interpretation (and, some might say, of size measurement)
+may just squeak by the reader's skepticism as we explain our desire for
+kind polymorphism.
+
+I guess the let-and-hole argument works out if we don't typecheck the
+encoded terms. We can't typecheck the interpreter with the whole
+either. We insert the encoded term into the interpreter -- and then
+typecheck the whole thing. That'll work. Yet a bit unsatisfactory...
+
+
+We achieve
 self-interpretation in that the following evaluation context in the
 object language defines an interpreter for encoded object terms.
 \begin{code}
@@ -588,11 +902,67 @@ above as the following evaluation context in the object language.
 The "let" and the hole "[hole]" are meta-constructions, which must map to
 themselves in any interpretation.  
 
+The 'result' of applying an interpreter to itself, needs to be an 
+interpreter too!  In fact, if it is Jones-optimal, then you should be 
+able to apply it to itself again and get the same answer.  
+Our code does that. First, |twice_inc_3_e| is the
+metalanguage encoding of the object term |si["e"]|
+where si is the self-interpreter of the object language (actually, only
+lam,app,add,int), |""| means the object-to-object encoding, and e is the
+object term
+\begin{code}
+  let twice_ f x = f (f x) in let inc_ n = n + 1 in twice_ inc_ 3
+\end{code}
+
+Second, |twice_inc_3_ee| is the metalanguage encoding of the object term
+|si["si[e]"]|
+which is the same as
+|si["si"["e"]]|
+The partial evaluator yields 5 on both |twice_inc_3_e| and 
+|twice_inc_3_ee|,
+as desired.
+
+
+
+``But how 
+to you create, in either Haskell or MetaOCaml, an untypechecked 
+interpreter-with-a-hole [UIH] ?''
+Well, one can make an argument that we already have such an
+interpreter with polymorphic let and the hole: incope. In Haskell, the
+declaration of an instance of Symantics is like the sequence of
+polymorphic lets. We construct terms where lam, add, etc, are free
+variables. We apply the interpreter to the semantics (plug the hole)
+by instantiating these terms (binding the free variables lam, etc. to
+the particular instance of Symantics). The unRR construction does
+this plugging in explicitly.
+Again, what is different from the above is that we \emph{can}
+typecheck terms separately, without inserting them first within the
+hole of a particular interpreter. Rank-2 type of |repr| helps. It lets
+enough of the type information out so the typechecking can
+proceed. So, |repr| is the representation of the polymorphic
+interpreter context with the hole, which permits separately
+typecheckable terms (the evaluation still entails `duplication' so to
+speak -- which is one way how polymorphism is resolved).
+
+
 
 \section{Related work}
 Walid's Jones optimality paper. See his own ICFP02 paper that
 described what he achieved then and what he \emph{did not}. He did not
-eliminate all the tags.
+eliminate all the tags. Ken's and mine impression of it:
+(i) we can't write a \emph{direct} interpreter of the type language
+           -- the only known to them, and \emph{partial} solution, was 
+              that by Zhe Yang;
+(ii) we have to use indirect interpreter, which needs the universal
+           type and hence tagging;
+(iii) that means any self-interpreter must have tags
+(iv) that means not Jones-optimal.
+It seems we should attack the point1 (in which case we don't have to
+bother with self-interpreters). We say that we \emph{can} write the direct
+interpreter, and without GADT or their equivalents (typeclasses).
+Meta-language computes types, and the compiler and interpreter respect
+those types and needs no tags.
+
 
 Walid's ICFP02
 
@@ -601,6 +971,10 @@ presentation at WG2.11, Emir used tagless interpreter as the main and
 only example.
 
 Danvy's self-interpreter
+Ken has read Danvy et al's paper and said that the paper
+doesn't seem to even make the claim that the source language is
+typed. The interpreter is typed, but the source language doesn't seem
+to be.
 In sharp contrast to Danvy's paper, all the evaluators in our case
 cannot produce any pattern-match error! Except for the partial
 evaluator, there are NO patterns to match. And this is critical for
@@ -615,15 +989,59 @@ interpreter, but only for the first-order language)
 Xi's POPL03 (He uses a higher-order language, one of the motivations
 for his GRDT)
 
-Asai; Simii et al.
+Asai; 
+It [dynamic part when dealing with bool, int, lam in PE] is
+Asai's trick for reducing the amount of reify/reflect back-and-forth
+in a PE for an untyped language that allows you back-and-forth.  Or at
+least that's how I read those papers.
+Asai's approach is related to our PE (emulating typelevel functions):
+Ken: ``In some sense we're just observing that Asai's code type-checks
+-- in Hindley-Milner as soon as we deforest the static code
+representation.''
 
-"Boxes go Bananas" by Washburn and Weirich (intended or otherwise)
+
+
+
+ Simii et al.
+
+"Boxes go Bananas" by Washburn and Weirich (intended or otherwise) Ken
+wrote about this: ``but a glance reveals no type classes.  Do you mean
+then that if we hide the definition |newtype R a = R a| from a client,
+and export only the interpreter |instance Symantics R R|, then the
+client would see R as an HOAS datatype a la Washburn and Weirich and
+only be able to create parametric ("non-exotic") terms?''  Jacques
+commented: ``I mean the HOAS parts, and how to deal with it (like in
+the instance for |Symantics R R|).  There are other nice tricks for
+dealing with HOAS in that paper worth a closer look.  It's all about
+plain polymorphism, not type classes, but there are still some clever
+ideas there, and they are about issues of tagging (an lack thereof).''
+
+
 
 
 Typing Dep Typing plus two messages on Haskell-Cafe: typechecking 
 from untyped to the typed form, ready to be interpreted. Walid's ICFP02
-uses dept types
+uses dependent types
 
+
+Regarding our implementation of the type-level function |'sv -> 'dv|.
+Gibbons et al paper on
+the implementations of typecase may be relevant. I have not read it,
+but I have the feeling some of their typecase designs may be
+relevant (at least to cite). 
+However, the typecase paper relies on having a 
+bijection between types -- our |'sv| and |'dv| in this case, which is not 
+our situation.  We have a one-sided view of things, where |'sv -> 'dv| is 
+easy, and |'dv| "perfectly reflects" an |'sv|, but you still can't get at 
+that |'sv|.
+
+
+Self-Interpretation and Reflection in a Statically Typed Language 
+\url{http://webpages.cs.luc.edu/~laufer/papers/reflection93.pdf}
+He uses the SK language and some typeclasses. Their interpreter is a
+meta-circular interpreter -- rather than self-interpreter. We can
+claim to have implemented a far better interpreter for a far richer
+language.
 
 \section{Conclusions}
 
