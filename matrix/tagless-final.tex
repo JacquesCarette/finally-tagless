@@ -11,6 +11,8 @@
 \DefineShortVerb{\|}
 \DefineVerbatimEnvironment{code}{Verbatim}{xleftmargin=1em,fontsize=\small}
 
+\newtheorem{prop}{Proposition}
+
 \begin{document}
 
 \conferenceinfo{ICFP '07}{Freiburg, Germany} 
@@ -20,7 +22,7 @@
 \titlebanner{banner above paper title}        % These are ignored unless
 \preprintfooter{short description of paper}   % 'preprint' option specified.
 
-\title{Staged typed type-preserving tagless interpreters, \emph{finally}}
+\title{Staged typed type-preserving tagless ``interpreters'', \emph{finally}}
 \subtitle{Subtitle Text, if any}
 
 \authorinfo{Jacques Carette}
@@ -36,22 +38,25 @@
 \maketitle
 
 \begin{abstract}
-We built a tagless partial evaluator for a typed object language,
-placing minimal requirements on the type system of the metalanguage:
+We have built a (family of) tagless partial evaluator(s) for a typed object
+language, placing minimal requirements on the type system of the metalanguage:
 we need let-bound polymorphism and staging, but not dependent
-types, generalized algebraic data types, or a tag elimination as a
+types, generalized algebraic data types, nor a tag elimination 
 postprocessing step.
-The trick is the "final" approach: we encode the
-higher-order abstract syntax of object terms not using constructors for
-an algebraic data type but by invoking cogen functions, which occur as
-free variables in the encoded term.
+The main tool is to take functions seriously: we encode the
+higher-order abstract syntax of object terms not by using constructors for
+an algebraic data type but rather by invoking cogen functions, which occur as
+free variables in the encoded term.  In other words, we eschew initial
+algebras for the wilder world of implicit representations of final algebras.
+Our family of evaluators contains an interpreter, a compiler, a partial
+evaluator and a term-size evaluator.
 \end{abstract}
 
 %\category{CR-number}{subcategory}{third-level}
 %\terms term1, term2
 %\keywords keyword1, keyword2
 
-\section{Introduction}
+\section{Introduction}\label{intro}
 
 See Section 1 of Walid02. Our subject area is that of a definitional DSL
 interpreter.
@@ -60,9 +65,15 @@ Define Staging, meta-language and object language. (Walid uses
 
 We have programmed out interpreters in OCaml/MetaOCaml (cite
 www.metaocaml.org) and Haskell. The complete code is available 
+\footnote{the URL will appear in the final version of the paper.}
 % connot give URL in the ICFP paper due to double-blind reviews
 in the supplemental material to the paper. We will use both
 (Meta)OCaml and Haskell for our examples throughout the paper.
+Each language has its strength and weaknesses; this dual implementation
+forced us to clarify our own ideas.  We will continually leverage the
+respective strengths of these languages, as certain of our claims are
+patently obvious in one implementation, while requiring more argumentation
+in the other.
 
 \oleg{should say somewhere in the Introduction that we are interested
   in the typed subject language embedded in the typed
@@ -74,7 +85,11 @@ in the supplemental material to the paper. We will use both
   because it has been solved. First we mention Walid02 where they use
   dependent typed. However, these don't seem to be needed: refer to
   `typing dependent typing', and the related work section.}
-
+\jacques{I think it is important to emphasize, probably later in the 
+paper, that we could write a camlp4 extension (or simply a parser in
+Haskell) that would transform a nice syntax for a lambda calculus into
+syntactic terms for what we present here.  Even the self-interpreter
+terms could be done this way, which would simplify things tremendously.}
 \jacques{I quite agree that the point that needs to be revisited is
   that a \emph{direct} interpreter for a (typed) language "cannot" be
   done. see discussion in related work about the direct interpreter,
@@ -96,7 +111,7 @@ be triggered when executing a well-typed term. Alas, this fact cannot
 be made obvious to the compiler. That also exlains unoptimality.
 
 
-\subsection{The Tag Problem}
+\subsection{The Tag Problem}\label{tagproblem}
 
 \oleg{see tagless\_interp1.ml, module Tagfull for the complete code.
   If you change the code in here, please adjust the .ml file
@@ -104,7 +119,7 @@ be made obvious to the compiler. That also exlains unoptimality.
 
 
 Consider the sample language of abstraction, application and boolean
-literals with deBruin indices as variables. This is the language used
+literals with de Bruin indices as variables. This is the language used
 in the body of Walid02, from which we borrow the first part of 
 this example.
 
@@ -136,7 +151,7 @@ interpreted code.
   | A (e1,e2) -> (eval0 env e1) (eval0 env e2) 
 \end{code}
 
-Suppose our our meta-language (the language in which we wrote test1
+Suppose our meta-language (the language in which we wrote test1
 and that interpreter) were untyped. The above code would be acceptable.
 The |L e| line exhibits interpretative overhead (see descr in Walid02
 paper): |eval0 env' e| will be executed every time the result of
@@ -144,7 +159,7 @@ evaluating |L e| is applied. Staging can be used to remove the
 interpretative overhead. Cite some paper -- see Walid02, Sec 1.1 and
 1.2. They say it well.
 
-If we use OCaml or other typed language as the meta-language, 
+If we use OCaml or some other typed language as the meta-language, 
 the function |eval0| is ill-typed. The line |B b|
 tells that the function returns a boolean, whereas the next line says
 the result of |eval0| is a function. Clearly, the result of the
@@ -153,8 +168,8 @@ A related problem is the type of the env: since variables
 in the language may be either of boolean or function types, a regular
 OCaml list cannot be used for holding the corresponding values. 
 
-The solution is to introduce the Universal type (see Walid02 Section
-1.3)
+The solution is to introduce a Universal type (see Walid02 Section
+1.3) which contains both of these:
 
 \begin{code}
   type u = UB of bool | UA of (u -> u)
@@ -193,44 +208,50 @@ Suppose our object language were typed, too. Then terms like
 |A (B true, B false)| would be ill-typed. Thus, if our evaluator
 accepted only typed terms, then the missing alternatives in the |A|
 line would not occur. Alas, what is obvious to us is not obvious to
-the meta-language. There is still the pattern match, and we still have
+the meta-language. There is still a pattern match, and we still have
 to attach and eliminate the UB and UA tags, even when there is no
 longer a need for them. See Walid02, Sec 1.4 for more detail.
 
 Of course there is also the issue how to design a type system to type
-terms like test1 (GADT seem necessary). Also, how to design the
+terms like |test1| (GADT seem necessary). Also, how to design the
 typesystem to keep track of open/closed status of terms, so we can
 statically assure that only closed terms are passed to eval and that
 the empty list checking in |List.hd| and |List.tl| can be eliminated
 as well. The latter is even more interesting problem requiring even
 more advanced type systems (cite env classifiers, Nanevski, Rowan
-Davies).
+Davies, Pitts).
 
 The problem is also outlined in Simon Peyton-Jones GADT paper, but
 only in the context of a first-order language
 
-In short: (put into really introduction or the conclusions?)
+In short: \oleg{ (put into really introduction or the conclusions?) }
 It is not satisfactory
 to use the Universal type because tagging hurts performance and
 necessitates partial pattern matching in the metalanguage, even for a
 well-typed object term.  
 
 
-\subsection{Other solutions}
-The tag problem motivated GADTs (SPJ, Xi) and dependent types
-(WalidICFP02, Concoqtion). Or, perhaps just refer to related work?
-But we need to say something here, to give the reader the feeling of
-how advanced solutions were proposed and how rarely they are implemented.
+% \subsection{Other solutions}
+% The tag problem motivated GADTs (SPJ, Xi) and dependent types
+% (WalidICFP02, Concoqtion). Or, perhaps just refer to related work?
+% But we need to say something here, to give the reader the feeling of
+% how advanced solutions were proposed and how rarely they are implemented.
 
+See the Related Work section (\ref{related}) for a discussion of the other
+solutions to this problem.
 
-\subsection{The `Final' Proposal}
-We have realized that, if we change the encoding of the term from data
-constructors to functions, then we can encode a tagless interpreter of a
-typed object language in a metalanguage with a very simple type system.
+\subsection{The `Final' Proposal}\label{ourapproach}
+
+We have realized that if we change the encoding of the term from data
+constructors to functions, we can encode a tagless interpreter for a
+typed object language into a metalanguage with a very simple type system.
 
 \oleg{see tagless\_interp1.ml, module Tagless for the complete code.
 If you change the code in here, please adjust the .ml file
 accordingly. Let the paper and the accompanying code be in sync.}
+
+\jacques{do we want to start using a lot of little files and
+use includes to insure the code stays in synch?}
 
 Now, let us define our object language (embedded DSL) in a different
 way. Instead of using algebraic datatypes to encode the terms of the
@@ -265,29 +286,32 @@ evaluated to a boolean and a term |lam varZ| is evaluated to a
 function, with no tags attached. The application rule applies that
 function without any need for pattern-matching. The evaluator has
 another feature: evaluation of open terms leads to a type error rather
-than a run-time error. Indeed, the following gives a type error
+than a run-time error. Indeed, 
 
 \begin{code}
   let testf1bad = app (lam (varS varZ)) (b true)
   let testf1badr = testf1bad ()
 \end{code}
+gives a type error saying 
 that the initial environment should be a tuple rather than () --
-meaning the term requires non-empty initial environment: the term is
+meaning the term requires a non-empty initial environment: the term is
 open.
 
 Thus all the errors that were previously reported at run-time (open terms,
 applications of non-functions) are now reported at compile
-time. Running of the interpreter assuredly gives no run-time errors
-because its code uses no operations that could possibly raise a
-run-time error.
+time. Running of the interpreter will never result in run-time errors
+because its code uses no operations that could possibly raise such
+an error.
 
-
-
-The interpreter uses no Universal type or pattern matching, and it
+Also, note that 
+the interpreter uses no Universal type nor pattern matching, and it
 is obvious to the compiler that non-termination can only result from
 interpreting |fix|.  If the source language is strongly normalizing, then
 our interpreter is total.
+\jacques{the language above has no fix (yet), so we should move this 
+comment somewhere else}
 
+\oleg{
 We should emphasize that not only our code can't have pattern-match
 errors, that fact is apparent to the compiler itself. It is one thing
 to write a code with pattern-matching and claim (and prove) that
@@ -297,57 +321,62 @@ has to generate code to report missing cases or compile in the error
 generation. That's where efficiency is lost, and Walid's papers on tag
 elimination have numbers showing that performance is lost indeed. 
 In our code, there is simply no pattern-mismatch opportunity: the
-proof of no bad match is expressed in the code itself. 
+proof of no bad match is expressed in the code itself. }
 
+In the above code, the interpreter is wired in, directly built into the
+functions |b|, |app|, etc.  In the remainder of this paper, 
+we explain how to abstract the interpreter,
+to make it possible to `evaluate' the same term in many different
+ways: interpretation, compilation, compute the size (or depth), etc.
 
-In the above code, the interpreter is wired in, built into the
-functions |b|, |app|, etc. We explain how to abstract the interpreter
-below, to make it possible to `evaluate' the same term in many different
-ways (e.g., interpret term, compile it, compute its size or depth,
-etc.)
-
-\subsection{Contributions}
+\subsection{Contributions}\label{contributions}
 
         We have realized that if we change the encoding of the term --
-from data constructors to functions, we can encode the tagless
-interpreter of the type language in a typed language with no GADTs and
+from data constructors to functions, we can encode a tagless
+interpreter of a typed language in a typed language with no GADTs and
 a very simple type system. The interpreter uses no universal type, no
-pattern matching and is patently obviopus to the compiler that the
-only non-termination can come from the interpreting fix. If the source
+pattern matching and it is patently obvious to the compiler that the
+only non-termination can come from interpreting |fix|. If the source
 language is strongly normalizing, our interpreter is total.
 
-
-The term `constructor' functions lam, app, etc. look like free
+The term ``constructor'' functions lam, app, etc. look like free
 variables in the encoding of an object term.  Defining these functions
 differently gives rise to different interpreters.  Given the same term
 representation but varying the interpreters, we can
 	- evaluate the term to a value in the metalanguage
 	- determine the size or depth of a term
-        - compute a \emph{CBN} CPS transformation of a term
+    - compute a \emph{CBN} CPS transformation of a term
 	- `compile' the term. This requires staging, as in MetaOCaml.
-	- Surprisingly, it is also possible to write a partial
-	evaluator! 
+	- Surprisingly, it is also possible to write a partial evaluator! 
 
 We have implemented the above in (Meta)OCaml and Haskell.
 
 What are our contributions:
-0) we interpret/compile/pe the typed source language
-   [Ken says that Danvy's source language is untyped]
-1) a much clearer implementation
-2) a nicely comparable Haskell/MetaOCaml version
-3) a functorial Symantics that deals with interp/comp/pe uniformly
-4) clear and easy extensibility to more features
-- only closed terms can be evaluated
+\begin{enumerate}
+\item we interpret/compile/partially-evaluate a typed source language
+   from within a typed language.  The requirements of the host type
+   system are \jacques{not so onerous?  simple?},
+\item a simple, clean implementation,
+\item a nicely comparable Haskell/MetaOCaml version,
+\item a functorial Symantics that deals with uniformly across all
+evaluators, from interpretation to partial evaluation,
+\item clear and easy extensibility to more features,
+\item only closed terms can be evaluated.
+\end{enumerate}
+
 Making sure that we interpret terms that are well-typed and closed --
 and we can do that in far simpler type system (e.g., Haskell or
 OCaml). It was thought that doing either requires quite advanced
 extensions (GADT, Nanevski, Concoqtion).
+\jacques{can we state fairly clearly what type system we need?  I mean,
+Haskell98(?) and MetaOCaml with (objects, polymorphic variants, ...).
+With our let-polymorphism trick for self-interpretation, what do we really
+need?}
 
 The structure of our paper is as follows. Section XXX ...
 We finally conclude.
 
-
-\section{Our base language: Tagless interpreter}
+\section{Our base language: Tagless interpreter}\label{language}
 
 Introduce the language, The language is simply-typed lambda-calculus
 with fixpoint, integers, booleans and comparison, whose BNF grammar is
@@ -358,39 +387,37 @@ with fixpoint, integers, booleans and comparison, whose BNF grammar is
   IF b e-then e-else
 \end{code}
 
-This time we use the higher-order abstract syntax (cite: but not
-Elliott. Cite Dale Miller!) rather than deBruijn indices.  The
+This time we use higher-order abstract syntax (cite: but not
+Elliott. Cite Dale Miller!) rather than de Bruijn indices.  The
 language is close to the language of Xi03, without the polymorphic
 lift but with more constants so we can write better examples, enough to
 express Fibonacci, factorial, and power.
 
-How to make encoding flexible: abstract the interpreter
+\subsection{How to make encoding flexible: abstract the interpreter}
 We have implemented the above in (Meta)OCaml and Haskell.  In Haskell,
 the term `constructor' functions are defined as methods in a type class
 Symantics (the name means that the class interface gives the syntax for
 the source language and its instances give the semantics).
 
-
-
 \begin{code}
 class Symantics repr where
-    int :: Int -> repr Int                -- int literal
-    bool :: Bool -> repr Bool             -- bool literal
+  int :: Int -> repr Int            -- int literal
+  bool :: Bool -> repr Bool         -- bool literal
 
-    lam :: (repr a -> repr b) -> repr (a->b)
-    app :: repr (a->b) -> repr a -> repr b
-    fix :: (repr a -> repr a) -> repr a
+  lam :: (repr a -> repr b) -> repr (a->b)
+  app :: repr (a->b) -> repr a -> repr b
+  fix :: (repr a -> repr a) -> repr a
 
-    add :: repr Int -> repr Int -> repr Int
-    mul :: repr Int -> repr Int -> repr Int
-    if_ :: repr Bool -> repr a -> repr a -> repr a
-    leq :: repr Int -> repr Int -> repr Bool
+  add :: repr Int -> repr Int -> repr Int
+  mul :: repr Int -> repr Int -> repr Int
+  if_ :: repr Bool -> repr a -> repr a -> repr a
+  leq :: repr Int -> repr Int -> repr Bool
 \end{code}
 
 Our sample code test1 now reads |app (lam (\x -> x)) (bool True)|,
 whose inferred type is |Symantics repr => repr Bool|.
-
-encoding of a few terms.
+For example, we can encode the classical |power| function, as well
+as the partial application |\x -> power x 7| as
 
 \begin{code}
 testpowfix () = 
@@ -402,35 +429,34 @@ testpowfix7 () =
 \end{code}
 The dummy unit |()| argument above is to avoid the monomorphism
 restriction and so that the type of |testpowfix| and |testpowfix7|
-would remain polymorphic in |repr|. Instead of supplying the dummy
+will remain polymorphic in |repr|. Instead of supplying the dummy
 argument, we could have given the terms explicit polymorphic
-sugnature. We however prefer if the typechecker of the meta-language
-(Haskell) inferred the types of the object terms for us. We could also
+signature.  We however prefer if the typechecker of the meta-language
+(Haskell) infers the types of the object terms for us. We could also
 avoid the |()| argument by switching off the monomophism restriction
 with a compiler flag.
 
 Note that the subject language (DSL) is typed. If we make a mistake
 (for example, replace |int 7| with |bool True| in |testpowfix7|, the
 compiler will highlight that term and complain that it couldn't match
-the expected |Int| against the inferred |Bool|). The type error
-also results when entering |lam (\x -> app x x)|, with the compiuler
-complaining about the infinite type. The type-checker of the
-meta-language not only flags meaningless DSL (subject level) terms --
+the expected |Int| against the inferred |Bool|). A type error
+also results when entering |lam (\x -> app x x)|, with the compiler
+complaining about an infinite type. The type-checker of the
+meta-language will flag meaningless DSL (subject level) terms --
 before any of their evaluation. If we forget, for example, |app| in
-some of the terms above, we again get an error message with a precise
+some of the terms above, we get an error message with a precise
 location. So the type-checker also flags syntactically invalid
 subject-level terms.\oleg{Should we perhaps move this up, in the
   intro? To justify why typed-metalanguages and the typed DSL are
   good. Or keep the explanation here but refer to it from the Introduction.}
 
-
-
-OCaml: functors.
+We can do the above in (Meta)OCaml as well, replacing type classes with
+functors, via a module type.
 
 \begin{code}
 module type Symantics = sig
   type ('c,'dv) repr
-  val int  : int  -> ('c,int) repr
+  val int : int  -> ('c,int) repr
   val bool: bool -> ('c,bool) repr
   val add : ('c,int) repr-> ('c,int) repr-> ('c,int) repr
   val mul : ('c,int) repr-> ('c,int) repr-> ('c,int) repr
@@ -438,7 +464,6 @@ module type Symantics = sig
   val if_ : ('c,bool) repr ->
              (unit -> ('c,'da) repr) ->
              (unit -> ('c,'da) repr) -> ('c,'da) repr 
-
   val lam : (('c,'da) repr -> ('c,'db) repr) 
           -> ('c,'da->'db) repr
   val app : ('c,'da->'db) repr
@@ -470,39 +495,40 @@ module EX(S: Symantics) = struct
     lam (fun x -> app (app (testpowfix ()) x) (int 7))
 end;;
 \end{code}
-The dummy unit argument in |testpowfix| is the artefact of MetaOCaml
-(which we will be using to compile our tests in Sections below). To be
+The dummy unit argument in |testpowfix| is an artefact of MetaOCaml
+(which we will be using to compile our tests in Sections below),
+again related to monorphism. To be
 more precise, the environment qualifier (which appears as the |'c|
 type parameter in the signature of Symantic functions) must remain
 uninstantiated in order for us to `run' the code. That means, the type
 must be polymorhic. The value restriction then dictates 
 the definitions of our object terms must look syntactically like
-values. Alternatively to giving the |()| argument, we could have used
+values. Alternatively to giving an |()| argument, we could have used
 rank-2 record types of OCaml to maintain the necessary polymorphism.
 
 Thus the object expressions (expressions of the embedded DSL) have in
-OCaml the type of the functor, from |Symantics| to the value. This
-essentially the same as |Symantics repr => | constraint in the case of
+OCaml the type of a functor from |Symantics| to the desired value. This
+is essentially the same as the |Symantics repr => | constraint in the case of
 the embedding of the DSL in Haskell.
 
-The first instatiation of the Symantics structure is the interpreter:
+The first instantiation of the Symantics structure is an interpreter:
 evaluating the object (DSL) term to its value in the meta-language. 
 The following module essentially interprets (gives one-to-one
-correspondence of) each operation of the object language as the
+correspondence to) each operation of the object language as the
 corresponding operation in the meta-language.
 \begin{code}
 module R  = struct
   type ('c,'dv) repr = 'dv    (* absolutely no wrappers *)
-  let int (x:int) = x
+  let int  (x:int)  = x
   let bool (b:bool) = b
-  let add e1 e2 = e1 + e2
-  let mul e1 e2 = e1 * e2
-  let leq x y = x <= y
-  let if_ eb et ee = if eb then (et ()) else (ee ())
+  let add  e1 e2    = e1 + e2
+  let mul  e1 e2    = e1 * e2
+  let leq  x y      = x <= y
+  let if_  eb et ee = if eb then (et ()) else (ee ())
 
-  let lam f = f
-  let app e1 e2 = e1 e2
-  let fix f = let rec self n = f self n in self
+  let lam f         = f
+  let app e1 e2     = e1 e2
+  let fix f         = let rec self n = f self n in self
 end;;
 \end{code}
 
@@ -516,23 +542,25 @@ examples by instatiating the |EX| functor with |R|.
   module EXR = EX(R);;
 \end{code}
 
-and so |EXR.test1 ()| evaluates to untagged boolean value |true|.
-In Haskell, we define a |newtype R a = R a| and 
-|instance Symantics R|
+and so |EXR.test1 ()| evaluates to the untagged boolean value |true|.
+In Haskell, we define a\\
+|newtype R a = R a| and |instance Symantics R|
 with the straightforward implementation. We must stress that |R| is
 a |newtype|. Although it may look like a tag, it has no run-time
-representation (erased during the compilation) and pattern-matching
-against |R| cannot ever fail and so is operationally identity and
+representation (erased during compilation) and pattern-matching
+against |R| cannot ever fail and so is operationally an identity and
 compiled that way.
 
-Proposition: If |e| is the term in the meta-language has the type
+\begin{prop}
+If the term |e| in the meta-language has type
 |t|, evaluation of that term in the interpreter R will either continue
-idenfinetely or termninate with a value of the same type |t|.
+indefinitely or termninate with a value of the same type |t|.
+\end{prop}
 
 We'd like show a different interpreter: it interprets each terms of
 the object language to its size (defined as the number of term
-constructors). The following is a slightly abbreviated code (see the
-accompanying source code for the complete definition)
+constructors). The following is slightly abbreviated code (see the
+accompanying source code for the complete definition).
  
 \begin{code}
 module L = struct
@@ -547,12 +575,12 @@ module L = struct
 end;;
 \end{code}
 
-Now the expression
+\noindent Now the expression
 \begin{code}
   let module E = EX(L) in E.test1 ()
 \end{code}
 evaluates to |3|. This interpreter is not only tagless, it is also
-total. It `evaluates' even seemingly divergent terms like\\
+total. It ``evaluates'' even seemingly divergent terms like\\
 |app (fix (fun self -> self)) (int 1)|.
 
 \begin{comment}
@@ -564,11 +592,11 @@ let module E =EX1(R) in E.tfix ();;
 let module E =EX1(L) in E.tfix ();;
 \end{comment}
 
-\section{Tagless compiler (aka, staged interpreter)}
+\section{Tagless compiler (aka, staged interpreter)}\label{compiler}
 Staged code in OCaml... Don't show the Haskell code (too much)
 
 
-\section{Tagless partial evaluator}
+\section{Tagless partial evaluator}\label{PE}
 
 Surprisingly, it is also possible to write a partial evaluator!  The
 partial evaluator does have tags: whether a value is static or dynamic.
@@ -617,9 +645,6 @@ apparent.
 
 How can we do without GADT
 Now show the Symantics signature in full, with the 'sv types
-
-
-
 
 In the ideal world, the MetaOCaml signature (or Haskell type class)
 Symantics would start with
@@ -707,8 +732,7 @@ Say that our treating of fix may lead to the code bloat in the
 residual program. That is an issue investigated elsewhere (cite our
 PEPM2006 paper). 
 
-
-\section{Variations and discussion}
+\section{Variations and discussion}\label{discussion}
 
 
 state and imperative features
@@ -784,7 +808,7 @@ constructively illustrates. Perhaps we need to characterize our
 fragment.
 
 
-\section{Self-interpretation}
+\section{Self-interpretation}\cite{selfinterp}
 
 Taha et al define a self-interpreter si to be an object-language term
 such that, for any object-language term e,
@@ -946,7 +970,7 @@ speak -- which is one way how polymorphism is resolved).
 
 
 
-\section{Related work}
+\section{Related work}\label{related}
 Walid's Jones optimality paper. See his own ICFP02 paper that
 described what he achieved then and what he \emph{did not}. He did not
 eliminate all the tags. Ken's and mine impression of it:
@@ -1002,7 +1026,7 @@ representation.''
 
 
 
- Simii et al.
+ Sumii et al.
 
 "Boxes go Bananas" by Washburn and Weirich (intended or otherwise) Ken
 wrote about this: ``but a glance reveals no type classes.  Do you mean
@@ -1015,9 +1039,6 @@ the instance for |Symantics R R|).  There are other nice tricks for
 dealing with HOAS in that paper worth a closer look.  It's all about
 plain polymorphism, not type classes, but there are still some clever
 ideas there, and they are about issues of tagging (an lack thereof).''
-
-
-
 
 Typing Dep Typing plus two messages on Haskell-Cafe: typechecking 
 from untyped to the typed form, ready to be interpreted. Walid's ICFP02
@@ -1043,12 +1064,12 @@ meta-circular interpreter -- rather than self-interpreter. We can
 claim to have implemented a far better interpreter for a far richer
 language.
 
-\section{Conclusions}
+\section{Conclusions}\label{conclusion}
 
 Our approach showed better the meaning of GADT and when they can be
 avoided.
 
 \subsection*{Acknowledgments}
-We woul like to tank Martin Sulzmann for helpful discussions.
+We would like to thank Martin Sulzmann for helpful discussions.
 
 \end{document}
