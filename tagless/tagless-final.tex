@@ -2,6 +2,7 @@
 \usepackage{amsmath,amssymb}
 \usepackage{natbib1}
 \usepackage{comment}
+\usepackage{url}
 
 \newcommand{\jacques}[1]{{\it [Jacques says: #1]}}
 \newcommand{\oleg}[1]{{\it [Oleg says: #1]}}
@@ -42,17 +43,27 @@
 
 \begin{abstract}
 We have built a (family of) tagless partial evaluator(s) for a typed object
-language, placing minimal requirements on the type system of the metalanguage:
+language \oleg{``,or, embedded DSL''}, placing minimal requirements on
+the type system of the meta-language:
 we need let-bound polymorphism and staging, but not dependent
 types, generalized algebraic data types, nor a tag elimination 
 postprocessing step.
+
 The main tool is to take functions seriously: we encode the
 higher-order abstract syntax of object terms not by using constructors for
 an algebraic data type but rather by invoking cogen functions, which occur as
 free variables in the encoded term.  In other words, we eschew initial
 algebras for the wilder world of implicit representations of final algebras.
 Our family of evaluators contains an interpreter, a compiler, a partial
-evaluator and a term-size evaluator.
+evaluator and a term-size evaluator \oleg{and a CPS CBN transfromer?}
+Our approach highlights the importance of order-2 type constructors
+(order-2 polymorphism), which lets us encode DSL terms with
+translucent types: enough abstraction is available to interpret the
+terms in various ways, and yet enought type information is available 
+to typecheck the terms and statically assure their interpretation will
+never get stuck.
+\oleg{say something about type functions, GADTs and the way to get
+  around them?}
 \end{abstract}
 
 %\category{CR-number}{subcategory}{third-level}
@@ -141,7 +152,7 @@ and a sample term is
 \end{code}
 
 The first attempt at the interpreter, the function eval. It takes the
-object language term such as test1 and gives us its value.
+object language term such as |test1| and gives us its value.
 The first argument to |eval| is the environment, initially empty,
 which is the sequence of values associated with free variables in the
 interpreted code.
@@ -242,6 +253,11 @@ well-typed object term.
 
 See the Related Work section (\ref{related}) for a discussion of the other
 solutions to this problem.
+\oleg{I feel we need to give some details of the other solutions here, 
+to give the reader the feeling of
+how advanced solutions were proposed and how rarely they are
+implemented.}
+
 
 \subsection{The `Final' Proposal}\label{ourapproach}
 
@@ -255,6 +271,9 @@ accordingly. Let the paper and the accompanying code be in sync.}
 
 \jacques{do we want to start using a lot of little files and
 use includes to insure the code stays in synch?}
+\oleg{Because the fragements are interrelated, we can't. We have to
+  use sort of a `partial include', and I don't think that is easy. I
+  have checked all the fragments so far.}
 
 Now, let us define our object language (embedded DSL) in a different
 way. Instead of using algebraic datatypes to encode the terms of the
@@ -304,15 +323,8 @@ Thus all the errors that were previously reported at run-time (open terms,
 applications of non-functions) are now reported at compile
 time. Running of the interpreter will never result in run-time errors
 because its code uses no operations that could possibly raise such
-an error.
+an error. In fact, our interpreter is total.
 
-Also, note that 
-the interpreter uses no Universal type nor pattern matching, and it
-is obvious to the compiler that non-termination can only result from
-interpreting |fix|.  If the source language is strongly normalizing, then
-our interpreter is total.
-\jacques{the language above has no fix (yet), so we should move this 
-comment somewhere else}
 
 \oleg{
 We should emphasize that not only our code can't have pattern-match
@@ -559,6 +571,10 @@ representation (erased during compilation) and pattern-matching
 against |R| cannot ever fail and so is operationally an identity and
 compiled that way.
 
+Also, note that the interpreter uses no Universal type nor pattern
+matching, and it is obvious to the compiler that non-termination can
+only result from interpreting |fix|.
+
 \begin{prop}
 If the term |e| in the meta-language has type
 |t|, evaluation of that term in the interpreter R will either continue
@@ -603,21 +619,29 @@ let module E =EX1(L) in E.tfix ();;
 \section{Tagless compiler (aka, staged interpreter)}\label{compiler}
 
 We can also write a ``compiler'' from our lambda calculus directly
-into OCaml code, using MetaOCaml's staging facilities.  This compiler
-attempts no optimizations at all, it simply produces residual code.
-This is a completely straightforward staging of |module R|.
+into OCaml code, using MetaOCaml's staging facilities. Namely,
+future-stage expressions of the type |t| are represented at the
+present stage as values of the type |('a,t) code| where |'a| is the
+environment classifier (Walid03, ESOP04). Code values are created by
+a \emph{bracket} form: |.<e>.| specifies the expression |e| is to be
+evaluated at the future stage. The \emph{escape} |.~e|, which must occur
+within a bracket, specifies that the expression |e| must be evaluated
+at the present stage; its result, which must be a code value, is
+spliced in into the code being built. The \emph{run} form |.! e|
+evaluates the code value, which involves run-time compilation and
+linking of the future-stage code. The bracket, escape and run are akin to
+quasi-quotation, unquotation and |eval| of Lisp.
 
-% taken from incope.ml -- should this be put into another file, to make
-% sure the paper does not get out of synch?
+
+% this code does not have the 'sv parameter. It shows up later.
 \begin{code}
 module C = struct
-  type ('c,'sv,'dv) repr = ('c,'dv) code
+  type ('c,'dv) repr = ('c,'dv) code
   let int (x:int) = .<x>.
   let bool (b:bool) = .<b>.
   let add e1 e2 = .<.~e1 + .~e2>.
   let mul e1 e2 = .<.~e1 * .~e2>.
   let leq x y = .< .~x <= .~y >.
-  let eql x y = .< .~x = .~y >.
   let if_ eb et ee = 
     .<if .~eb then .~(et () ) else .~(ee () )>.
 
@@ -625,18 +649,64 @@ module C = struct
   let app e1 e2 = .<.~e1 .~e2>.
   let fix f = 
      .<let rec self n = .~(f .<self>.) n in self>.
-  let dyn_id (x:('c,'sv,'dv) repr):('c,'sv1,'dv) repr = x
 end;;
 \end{code}
+This is a completely straightforward staging of
+|module R|.
+This compiler attempts no optimizations at all, it simply produces
+residual code. For example, the evaluation of our |test1|
+\begin{code}
+  let module E = EX(C) in E.test1 ();;
+\end{code}
+gives the value of the inferred type |('a, bool) C.repr| which looks
+like |.<((fun x_6 -> x_6) (true))>.|. MetaOCaml can print the code
+values, that is, the corresponding future-stage code.
+
+\begin{comment}
+\oleg{one may wish to give the folloiwng example too; the code
+  expression can be somewhat abbreviated...}
+\begin{code}
+  let module E = EX(C) in E.testpowfix7;;
+# - : ('_a, int -> int) C.repr =
+.<fun x_1 ->
+   (((fun x_2 ->
+       let rec self_3 =
+        fun n_4 ->
+         ((fun x_5 -> if (x_5 <= 0) then 1 else (x_2 * (self_3 (x_5 + (-1)))))
+           n_4) in
+       self_3) x_1) 7)>.
+\end{code}
+\end{comment}
 
 \noindent It is readily obvious that this compiler does not suffer
-any interpretive overhead whatsoever, nor does the resulting code
-contain any tags.  We add one item to the language, |dyn_id|, as it
-is needed in the next section, where we will explain its purpose.
+any interpretive overhead whatsoever. Indeed, the
+  code produced for a function is simply |fun x_6 -> x_6| and has no 
+  embedded calls to the evaluator: cf. the evaluator of DSL functions
+  in Section~\ref{tagproblem}, the L-line.
+The resulting code obviously contains no tags and no pattern-matching.
 
-\jacques{we need to say something about the Haskell version here too,
-even though we don't show it.  This is the first place we use GADT,
-so maybe the ByteCode data type should be shown?}
+We have also implemented the ``compiler'' in Haskell. Since Haskell
+has no (convenient, and typed) staging facilities, we had to emulate
+them. To be precise, we defined a data type |ByteCode| with the
+constructors |Var|, |Lam|, |App|, |Fix|, |INT| etc. with the obvious
+meaning. Unlike our staging language (which is based on higher-order
+abstract syntax), our bytecode, to be realistic, uses integer-named
+variables. We then define 
+\begin{code}
+  newtype C t = C (Int -> (ByteCode t, Int)) 
+\end{code}
+where |Int| is the counter for the creation of fresh variable
+names. We define the compiler by making |C| to be the instance of the
+class |Symantics|. The implementation is quite similar (but more
+verbose) than the corresponding MetaOCaml code given above. The
+accompanying complete code gives more details.
+
+\oleg{I wanted to avoid saying anything about GADTs here. There
+  doesn't seem to be much point in getting into too long
+  explanations...}
+
+
+
 \section{Tagless partial evaluator}\label{PE}
 
 Surprisingly, it is also possible to write a partial evaluator!  The
@@ -648,76 +718,39 @@ terms, and it uses the interpreter to reduce static terms.  In this sense,
 the partial evaluator is a modular extension to both the compiler and
 the interpreter. 
 
-\subsection{MetaOCaml version}
-
-Here is the full code for the MetaOCaml version.
-\begin{code}
-module P = struct
-  type ('c,'sv,'dv) repr = {st: 'sv option; dy: ('c,'dv) code}
-  let abstr {dy = x} = x
-  let pdyn x = {st = None; dy = x}
-
-  let int  (x:int)  = {st = Some (R.int x); dy = C.int x}
-  let bool (x:bool) = {st = Some (R.bool x); dy = C.bool x}
-
-  (* generic build - takes a repr constructor, an 
-     interpreter function and a compiler function (all 
-     binary) and builds a PE version *)
-  let build cast f1 f2 = fun e1 -> fun e2 -> 
-     match (e1,e2) with
-         ({st = Some n1}, {st = Some n2}) -> cast (f1 n1 n2)
-        | _ -> pdyn (f2 (abstr e1) (abstr e2))
-  (* same as 'build' but takes care of the neutral element 
-     (e) simplification allowed via a monoid structure which is 
-     implicitly present *)
-  let buildsimp cast e f1 f2 = fun e1 e2 -> 
-     match (e1,e2) with
-        | ({st = Some e'}, _) when e = e' -> e2
-        | (_, {st = Some e'}) when e = e' -> e1
-        | ({st = Some n1}, {st = Some n2}) -> cast (f1 n1 n2)
-        | _ -> pdyn (f2 (abstr e1) (abstr e2))
-
-  let add e1 e2 = buildsimp int 0 R.add C.add e1 e2
-  let mul e1 e2 = buildsimp int 1 R.mul C.mul e1 e2
-  let leq e1 e2 = build bool R.leq C.leq e1 e2
-  let eql e1 e2 = build bool R.eql C.eql e1 e2
-  let if_ eb et ee = match eb with
-           {st = Some b} -> if b then et () else ee ()
-         | _ -> pdyn (C.if_ (abstr eb) 
-                          (fun () -> abstr (et ()))
-                          (fun () -> abstr (ee ())))
-  let lam f = {st = Some f; 
-               dy = C.lam (fun x -> abstr (f (pdyn x)))}
-  let app ef ea = match ef with
-        {st = Some f} -> f ea
-      | _ -> pdyn (C.app (C.dyn_id (abstr ef)) (abstr ea))
-
-   (* For now, to avoid divergence at the PE stage,
-      we unroll the fixpoint exactly once, and then
-      residualize *)
-  let fix f = f (pdyn (C.fix (fun x -> abstr (f (pdyn x)))))
-end;;
-\end{code}
-
-\oleg{Compare the output of some of the ctest with the corresponding
-ptest. Use power?}
-
-One should note that the partial evaluator has fully reused the code
-of the compiler and the interpreter. It is truly the `composition' of the
-interpreter and the compiler.  \jacques{Perhaps cite a paper of Thiemann
-here, cogen in 6 lines?}
-
-\jacques{Comment on the various nice generic things in the implementation,
-which are a little silly in this small version, but would really pay off
-in something bigger.  See the abstract interpretation hard at work!
-See the monoid-driven simplifications!}
-\jacques{Also need to note that the type of the above is not quite
-the original Symantics (although the code has the right operational
-semantics).  We need to make some adjustments, as per below.}
-
+\subsection{Non-functorialness of functions problem}
 the sv type problem: the inductive type function 'dv -> 'sv
 its GADT solution. 
 its type-level function solution: incope1.hs 
+\begin{code}
+data P t where
+    VI :: Int -> P Int
+    VB :: Bool -> P Bool
+    VF :: (P a -> P b) -> P (a->b)
+    E  :: C t -> P t
+
+abstr :: P t -> C t
+abstr (VI i) = int i
+abstr (VB b) = bool b
+abstr (VF f) = lam (abstr . f . E)
+abstr (E x) = x
+
+instance Symantics P where
+    int x  = VI x
+    bool b = VB b
+
+    -- lam :: (repr a -> repr b) -> repr (a->b)
+    lam = VF
+    -- app :: repr (a->b) -> repr a -> repr b
+    app ef ea = case ef of
+                        VF f -> f ea
+                        E  f -> E (app f (abstr ea))
+    add e1 e2 = case (e1,e2) of
+                 (VI n1,VI n2) -> VI nr where nr = n1 + n2
+                 _ -> E (add (abstr e1) (abstr e2))
+\end{code}
+
+GADT: |E|, Purely dynamic; the other alternatives: |static| code.
 
 We need GADT -- or, to be more precise,
 representation that varies with the type. We need a value of the type
@@ -726,7 +759,7 @@ representation that varies with the type. We need a value of the type
 their intended meaning for that). 
 
 Drawbacks of the GADT solution. GADTs, although work, are still not
-quite satsifactory: let us look at the following lines in incope.hs
+quite satisfactory: let us look at the following lines in incope.hs
 \begin{code}
     app ef ea = case ef of
                         VF f -> f ea
@@ -780,6 +813,7 @@ inductively... This shows also how a limited form of GADTs (the ones
 used for the sake of type-dependent representations) can be
 implemented with just functions. 
 
+
 So we have to augment the full signature of Symantics (from that of
 sec.~\ref{encoding}) to
 \begin{code}
@@ -795,19 +829,105 @@ module type Symantics = sig
       ('c,int,int) repr -> ('c,bool,bool) repr
   val if_  : ('c,bool,bool) repr ->
              (unit -> ('c,'sa,'da) repr) ->
-             (unit -> ('c,'sa,'da) repr) -> ('c,'sa,'da) repr 
+             (unit -> ('c,'sa,'da) repr) -> 
+             ('c,'sa,'da) repr 
   val lam : (('c,'sa,'da) repr -> ('c,'sb,'db) repr)
-    -> ('c,(('c,'sa,'da) repr -> ('c,'sb,'db) repr),'da->'db) repr
-  val app : ('c,(('c,'sa,'da) repr -> ('c,'sb,'db) repr),'da->'db) repr
+    -> ('c,(('c,'sa,'da) repr -> ('c,'sb,'db) repr),
+           'da->'db) repr
+  val app : ('c,(('c,'sa,'da) repr -> ('c,'sb,'db) repr),
+             'da->'db) repr
     -> ('c,'sa,'da) repr -> ('c,'sb,'db) repr
-  val fix : (('c,(('c,'sa,'da) repr -> ('c,'sb,'db) repr) as 's,'da->'db) repr 
-             -> ('c,'s,'da->'db) repr)  -> ('c,'s,'da->'db) repr
+  val fix : 
+    (('c,(('c,'sa,'da) repr -> ('c,'sb,'db) repr) as 's,
+         'da->'db) repr 
+    -> ('c,'s,'da->'db) repr)  -> ('c,'s,'da->'db) repr
 end
 \end{code}
 
 
-\jacques{We talk a lot about GADT, but show none.  I think we need to
-show a bit of Haskell, to explain what we are talking about.}
+
+\subsection{MetaOCaml version}
+
+%%  let dyn_id (x:('c,'sv,'dv) repr):('c,'sv1,'dv) repr = x
+
+%% We add one item to the language, |dyn_id|, as it
+%% is needed in the next section, where we will explain its purpose.
+
+Here is the full code for the MetaOCaml version.
+\begin{code}
+module P = struct
+  type ('c,'sv,'dv) repr = 
+        {st: 'sv option; dy: ('c,'dv) code}
+  let abstr {dy = x} = x
+  let pdyn x = {st = None; dy = x}
+
+  let int  (x:int)  = {st = Some (R.int x); dy = C.int x}
+  let bool (x:bool) = {st = Some (R.bool x); dy = C.bool x}
+
+  (* generic build - takes a repr constructor, an 
+     interpreter function and a compiler function (all 
+     binary) and builds a PE version *)
+  let build cast f1 f2 = fun e1 -> fun e2 -> 
+     match (e1,e2) with
+         ({st = Some n1}, {st = Some n2}) -> cast (f1 n1 n2)
+        | _ -> pdyn (f2 (abstr e1) (abstr e2))
+  (* same as 'build' but takes care of the neutral element 
+     (e) simplification allowed via a monoid structure which is 
+     implicitly present *)
+  let buildsimp cast e f1 f2 = fun e1 e2 -> 
+     match (e1,e2) with
+        | ({st = Some e'}, _) when e = e' -> e2
+        | (_, {st = Some e'}) when e = e' -> e1
+        | ({st=Some n1}, {st=Some n2})-> cast (f1 n1 n2)
+        | _ -> pdyn (f2 (abstr e1) (abstr e2))
+
+  let add e1 e2 = buildsimp int 0 R.add C.add e1 e2
+  let mul e1 e2 = buildsimp int 1 R.mul C.mul e1 e2
+  let leq e1 e2 = 
+     match (e1,e2) with
+         ({st=Some n1},{st=Some n2})-> bool (R.leq n1 n2)
+        | _ -> pdyn (C.leq (abstr e1) (abstr e2))
+  let if_ eb et ee = match eb with
+           {st = Some b} -> if b then et () else ee ()
+         | _ -> pdyn (C.if_ (abstr eb) 
+                          (fun () -> abstr (et ()))
+                          (fun () -> abstr (ee ())))
+  let lam f = {st = Some f; 
+               dy = C.lam (fun x -> abstr (f (pdyn x)))}
+  let app ef ea = match ef with
+        {st = Some f} -> f ea
+      | _ -> pdyn (C.app (C.dyn_id (abstr ef)) (abstr ea))
+
+  let fix f = 
+    let fdyn = C.fix (fun x -> abstr (f (pdyn x))) in
+    let fdynn e = pdyn (C.app fdyn e.dy) in
+    {st=Some (function {st = Some _} as e -> 
+               let rec self n = 
+                 (match n.st with Some _-> app (f (lam self)) n 
+                                 | _ -> fdynn n) in 
+               app (f (lam self)) e
+             | e  -> fdynn e);
+    dy = fdyn }
+end;;
+\end{code}
+
+\oleg{Compare the output of some of the ctest with the corresponding
+ptest. Use power?}
+
+One should note that the partial evaluator has fully reused the code
+of the compiler and the interpreter. It is truly the `composition' of the
+interpreter and the compiler.  \jacques{Perhaps cite a paper of Thiemann
+here, cogen in 6 lines?}
+
+\jacques{Comment on the various nice generic things in the implementation,
+which are a little silly in this small version, but would really pay off
+in something bigger.  See the abstract interpretation hard at work!
+See the monoid-driven simplifications!}
+\jacques{Also need to note that the type of the above is not quite
+the original Symantics (although the code has the right operational
+semantics).  We need to make some adjustments, as per below.}
+
+
 
 Also, unlike the GADT
 solution, there is no longer any seemingly partial
@@ -1188,7 +1308,13 @@ type system (enter GADTs).}
 Our approach showed better the meaning of GADT and when they can be
 avoided.
 
+separate compilation: separate
+typechecking of terms without knowing which particular
+hole they will be plugged into. Formulate this as a prop?
+
+
 \subsection*{Acknowledgments}
-We would like to thank Martin Sulzmann for helpful discussions.
+We would like to thank Martin Sulzmann and Walid Taha 
+for helpful discussions.
 
 \end{document}
