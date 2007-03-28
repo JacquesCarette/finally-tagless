@@ -289,15 +289,40 @@ ctestpw7  = compC . testpowfix7 $ ()
 ctestpw72 = compC  (app (testpowfix7 ()) (int 2))
 
 -- ------------------------------------------------------------------------
--- The partial evaluator
-
+-- The partial evaluator: the combination of the interpreter (R) and
+-- the compiler (C).
 -- We need no Lift byte-code instruction: no parametric CSP. That is great!
 
+-- First attempt: works for the first-order fragment of our language,
+-- but stumbles on the higher-order fragment.
+
+data P1 t = S1 (R t) (C t) | E1 (C t)
+
+abstr1 :: P1 t -> C t
+abstr1 (S1 _ dyn) = dyn
+abstr1 (E1 dyn)   = dyn
+
+instance Symantics P1 where
+    int  x  = S1 (int x) (int x)
+    bool b  = S1 (bool b) (bool b)
+    add (S1 n1 _) (S1 n2 _) = int (unR (add n1 n2))
+    add e1 e2 = E1 (add (abstr1 e1) (abstr1 e2))
+    mul (S1 n1 _) (S1 n2 _) = int (unR (mul n1 n2))
+    mul e1 e2 = E1 (mul (abstr1 e1) (abstr1 e2))
+    leq (S1 n1 _) (S1 n2 _) = bool (unR (leq n1 n2))
+    leq e1 e2 = E1 (leq (abstr1 e1) (abstr1 e2))
+    if_ (S1 s _) et ef = if unR s then et else ef
+    if_ eb et ef = E1 (if_ (abstr1 eb) (abstr1 et) (abstr1 ef))
+
+-- But the problem occurs when we try to implement lam. The result
+-- of (lam f) must be either S1 _ _ or E1 _ value. Alas, we won't know
+-- which is which until we apply the function 'f' to a particular
+-- P1 value. 
+
+
 -- The code below is NOT parametric. We could have used type-classes
--- instead of GADTs. Ken noted that the code below could be re-functionalized,
--- and so could in fact be translated into MetaOCaml.
--- Or, if we observe the correspondence between GADT and MetaOCaml <code>,
--- perhaps we can translate to MetaOCaml with an additional layer of code?
+-- instead of GADTs (see incope1.hs, where we did just that). 
+-- See also the GADT-less solution below.
 
 data P t where
     VI :: Int -> P Int                -- Possibly static (base type)
@@ -340,15 +365,15 @@ instance Symantics P where
     fix f = pfix f -- need this charade for GADTs sake
 
     add e1 e2 = case (e1,e2) of
-                 (VI n1,VI n2) -> VI nr where nr = n1 + n2
+                 (VI n1,VI n2) -> VI (n1 + n2)
                  _ -> E $ add (abstr e1) (abstr e2)
 
     mul e1 e2 = case (e1,e2) of
-                 (VI n1,VI n2) -> VI nr where nr = n1 * n2
+                 (VI n1,VI n2) -> VI (n1 * n2)
                  _ -> E $ mul (abstr e1) (abstr e2)
 
     leq e1 e2 = case (e1,e2) of
-                 (VI n1,VI n2) -> VB nr where nr = n1 <= n2
+                 (VI n1,VI n2) -> VB (n1 <= n2)
                  _ -> E $ leq (abstr e1) (abstr e2)
 
     if_ be et ee = case be of
@@ -407,9 +432,11 @@ apparent.
 -- A partial evaluator that does not use GADTs (except in using C)
 
 -- Ken thinks that, without GADTs, it's not possible to explain in Haskell or
--- MetaOCaml how PE is an instance of Symantics.  But we can still explain PE
--- by itself.  In some sense we're just observing that Asai's code type-checks
--- in Hindley-Milner as soon as we deforest the static code representation.
+-- MetaOCaml how PE is an instance of Symantics (unless Symantics is 
+-- generalized to carry both `static' and `dynamic' parts). But we can 
+-- still explain PE by itself. In some sense we're just observing 
+-- that Asai's code type-checks in Hindley-Milner as soon as we
+-- deforest the static code representation.
 
 data Rep dynamic static = Rep { dynamic :: C dynamic, static :: Maybe static }
 

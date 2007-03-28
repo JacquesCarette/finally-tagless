@@ -298,7 +298,7 @@ struct
 
   let app ef ea = match ef with
                     {st = Some f} -> f ea
-                  | _ -> pdyn (C.app (C.dyn_id (abstr ef)) (abstr ea))
+                  | _ -> pdyn (C.app (abstr ef)) (abstr ea)
 
    (*
      For now, to avoid divergence at the PE stage, we residualize

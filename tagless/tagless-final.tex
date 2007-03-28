@@ -393,9 +393,9 @@ need?}
 The structure of our paper is as follows. Section XXX ...
 We finally conclude.
 
-\section{Our base language: Tagless interpreter}\label{language}
+\section{Base language and its tagless interpreters}\label{language}
 
-Introduce the language, The language is simply-typed lambda-calculus
+Our DSL language to be embedded is simply-typed lambda-calculus
 with fixpoint, integers, booleans and comparison, whose BNF grammar is
 
 \begin{code}
@@ -408,14 +408,14 @@ This time we use higher-order abstract syntax (cite: but not
 Elliott. Cite Dale Miller!) rather than de Bruijn indices.  The
 language is close to the language of Xi03, without the polymorphic
 lift but with more constants so we can write better examples, enough to
-express Fibonacci, factorial, and power.
+express Gibonacci, factorial, and power.
 
 \subsection{How to make encoding flexible: abstract the interpreter}
 \label{encoding}
-We have implemented the above in (Meta)OCaml and Haskell.  In Haskell,
-the term `constructor' functions are defined as methods in a type class
-Symantics (the name means that the class interface gives the syntax for
-the source language and its instances give the semantics).
+We have embedded the above language in (Meta)OCaml and Haskell.  In Haskell,
+the constructors of DSL terms are functions defined as methods in a type class
+Symantics. The name implies that the class interface gives the syntax for
+the source language and its instances give the semantics.
 
 \begin{code}
 class Symantics repr where
@@ -468,7 +468,7 @@ subject-level terms.\oleg{Should we perhaps move this up, in the
   intro? To justify why typed-metalanguages and the typed DSL are
   good. Or keep the explanation here but refer to it from the Introduction.}
 
-We can do the above in (Meta)OCaml as well, replacing type classes with
+We also embedded our DSL in (Meta)OCaml, replacing type classes with
 functors, via a module type.  For this section, the following simple
 signature will be sufficient:
 
@@ -522,7 +522,7 @@ type parameter in the signature of Symantic functions) must remain
 uninstantiated in order for us to `run' the code. That means, the type
 must be polymorhic. The value restriction then dictates 
 the definitions of our object terms must look syntactically like
-values. Alternatively to giving an |()| argument, we could have used
+values. Alternatively to giving the |()| argument, we could have used
 rank-2 record types of OCaml to maintain the necessary polymorphism.
 
 Thus the object expressions (expressions of the embedded DSL) have in
@@ -530,6 +530,7 @@ OCaml the type of a functor from |Symantics| to the desired value. This
 is essentially the same as the |Symantics repr => | constraint in the case of
 the embedding of the DSL in Haskell.
 
+\subsection{Two tagless interpreters}
 The first instantiation of the Symantics structure is an interpreter:
 evaluating the object (DSL) term to its value in the meta-language. 
 The following module essentially interprets (gives one-to-one
@@ -697,7 +698,7 @@ variables. We then define
 \end{code}
 where |Int| is the counter for the creation of fresh variable
 names. We define the compiler by making |C| to be the instance of the
-class |Symantics|. The implementation is quite similar (but more
+class |Symantics|. The implementation is quite similar (but slightly more
 verbose) than the corresponding MetaOCaml code given above. The
 accompanying complete code gives more details.
 
@@ -719,103 +720,198 @@ the partial evaluator is a modular extension to both the compiler and
 the interpreter. 
 
 \subsection{Non-functorialness of functions problem}
-the sv type problem: the inductive type function 'dv -> 'sv
-its GADT solution. 
-its type-level function solution: incope1.hs 
+\label{S:PE-problem}
+We want to combine the interpreter |R| and the compiler |C| to produce
+an (online) partial evaluator. \oleg{discuss if our PE online or
+  offline: here or below. In the latter case refer to the discussion
+  from here.} The partial evaluator (PE) is also an interpreter: it
+evaluates a term either to immediate (or, `static' or present-stage)
+value or a `dynamic', future-stage value, or `code' (of the sort
+produced by the compiler C). The interpreter attempts to perform all
+possible computations (i.e., computations whose operarands are
+present-stage values) as the present-stage. Our first attempt is
+straightforward: we introduce
+\begin{code}
+data P1 t = S1 (R t) (C t) | E1 (C t)
+\end{code}
+as a `direct sum' of the interpreter |R| and the compiler |C|. The
+datatype |P1| has two \emph{phase} (not type!) tags |S1| 
+(for static) and |E1| for dynamic. The static value has both the
+present-stage and future-stage alternatives. The dynamic value does
+not have the present-stage component. We define
+\begin{code}
+abstr1 :: P1 t -> C t
+abstr1 (S1 _ dyn) = dyn
+abstr1 (E1 dyn)   = dyn
+\end{code}
+to extract the future-stage component. We then attempt to define the
+interpreter |P1| compositionally -- and it works for the first-order
+fragment of our DSL language.
+
+\begin{code}
+instance Symantics P1 where
+    int  x  = S1 (int x) (int x)
+    bool b  = S1 (bool b) (bool b)
+    add (S1 n1 _) (S1 n2 _) = int (unR (add n1 n2))
+    add e1 e2 = E1 (add (abstr1 e1) (abstr1 e2))
+    -- mul and leq are analogous and elided
+    if_ (S1 s _) et ef = if unR s then et else ef
+    if_ eb et ef = 
+       E1 (if_ (abstr1 eb) (abstr1 et) (abstr1 ef))
+\end{code}
+Integer and boolean literals are obviously immediate, present-stage
+values. The result of adding two values is static only if both values
+are. If so, we use the evaluator |R| to add the values; the result is
+an essentially integer literal, which can be promoted to the future
+stage. If at least one of the operands to |add| is dynamic, we promote
+both operands to the future-stage and use the compiler |C| to
+`compile' the code for adding the operand expressions.  Because the
+static value includes as a component its future-stage variant, and
+because we build both components together, we are able to get by
+without the polymorphic `lift' operation (that is, lift the
+computation of any type from the present-stage to the future
+stage). We can do such a lifting only on type-by-type basis (for
+booleans and for integers). The problem with the polymorphic lift is
+that it inhibits true compilation, to assembler or other similar first
+order target language with no polymorphic (run-time reified) types.
+The representation of integers in the target language most likely
+differs from the representation of booleans or functions,
+etc. Therefore, without the intentional type analysis, the polymorphic
+lift is not compilable.
+
+When we come to the higher-order fragment of our language, however, we
+stumble. Let us consider |lam f|. Here, |f| is a function from a
+|P1 a| value to a |P1 b| value. The result of |lam f| must be either a
+static value or a dynamic value -- but which? Unlike |add| or |if_|, 
+|lam| cannot really examine its operand. The arguments of |add| are 
+of type |P1 int|, which we can examine by pattern-matching and so 
+determine if they are static or dynamic. The argument of |lam| is a 
+higher-order function, which is not introspectible. One may only 
+apply |f| to a particular static or dynamic value, and receive another 
+value in return. Alas, as in the case |lam (\x -> mul x dynval)|, 
+applying the same function to different static values may give 
+either static or dynamic results (in the example above, applying 
+the function to (int 0) gives the static value in return). One
+solution is to be conservative and always use the |C| compiler to
+compile |f| to the future-stage expression, which we can tag with
+E1. But that defeats the purpose of partial evaluation as we may miss
+many opportunities for static computations and simplifications, such
+as multiplication by zero in the example above. Another solution is to
+delay the binding-type-analysis (BTA) until the function |f| is
+applied to a particular argument (that is, until the result of |lam f|
+appears as the argument of |app|). That means, we have to find a way
+to incorporate |f| as it is into the P1 data structure. We would like
+to write that when |t| is a particular type |a->b|, that data type
+should be 
+\begin{code}
+data P1 (a->b) = S1 (R (P1 a -> P1 b)) (C (a->b)) 
+               | E1 (C (a->b))
+\end{code}
+That is, we need a non-parameteric data type, something like a
+typecase (ref? Gibbons?).
+
+The problem we encountered here is quite akin to typed CPS
+transform. When transforming abstractions, we come across
+non-factorialness. The connection with CPS is not an accident, as we
+shall see below (in Section XXX).
+
+\subsection{GADT -- not quite tagless PE}
+\label{S:PE-GADT}
+
+Two common ways of providing typecase in Haskell is by using either
+generalized algebraic data types (GADT) or type-class functions
+(implemented via typeclasses with functional dependencies). These
+methods are equivalent; here we show the GADT; please see |incope1.ml|
+in the accompanying source code for the latter.
+
+We introduce the following GADT
 \begin{code}
 data P t where
-    VI :: Int -> P Int
+    VI :: Int  -> P Int
     VB :: Bool -> P Bool
     VF :: (P a -> P b) -> P (a->b)
     E  :: C t -> P t
-
+\end{code}
+with four data constructors. The constructor |VF| stands out as its
+operand is of the type |P a -> P b| rather than |a -> b| as one may
+have expected if |P t| were parametric in |t|. As before, we define a
+function to extract the future-stage computation from the |P t| value:
+\begin{code}
 abstr :: P t -> C t
 abstr (VI i) = int i
 abstr (VB b) = bool b
 abstr (VF f) = lam (abstr . f . E)
-abstr (E x) = x
+abstr (E x)  = x
+\end{code}
 
+We use the method |lam| of the |C| intrepreter to compile the argument
+of |lam| into the code value. We may now make |P| the instance of
+Symantics and thus implement the partial evaluator (the
+implementations of |mul|, |leq|, |if_| and |fix| are elided).
+\begin{code}
 instance Symantics P where
     int x  = VI x
     bool b = VB b
 
-    -- lam :: (repr a -> repr b) -> repr (a->b)
-    lam = VF
-    -- app :: repr (a->b) -> repr a -> repr b
-    app ef ea = case ef of
-                        VF f -> f ea
-                        E  f -> E (app f (abstr ea))
     add e1 e2 = case (e1,e2) of
-                 (VI n1,VI n2) -> VI nr where nr = n1 + n2
+                 (VI n1,VI n2) -> VI (n1 + n2)
                  _ -> E (add (abstr e1) (abstr e2))
-\end{code}
-
-GADT: |E|, Purely dynamic; the other alternatives: |static| code.
-
-We need GADT -- or, to be more precise,
-representation that varies with the type. We need a value of the type
-|P Int| to have a different representation than the value of the type 
-|P (Int->Int)|. GADT give you that (although we don't use the GADT in
-their intended meaning for that). 
-
-Drawbacks of the GADT solution. GADTs, although work, are still not
-quite satisfactory: let us look at the following lines in incope.hs
-\begin{code}
+    lam = VF
     app ef ea = case ef of
                         VF f -> f ea
                         E  f -> E (app f (abstr ea))
 \end{code}
-The datatype has four constructors, |VI|, |VB|, |VF| and |E|. How come we used
-only two of them in the above expression. It is obvious, one may say,
-that the constructors |VI| and |VB| just can't occur, because of the
-typing consideration. This is obvious to us -- but it is not obvious
-to the compiler. The case matching above does look \emph{partial}. That
-seems like a tenuous point -- but it is precisely the main point of
-the whole tag elimination approach. In a typed tagged interpreter
-there are lots of pattern-matching that looks partial but in reality
-total. The ultimate goal is to make this totality syntactically
+
+The implementations of |int|, |bool|, and |add| are similar to the
+above. The interpretation of |lam f| merely incorporates the
+HOAS function |f| into the result. At any point we can convert it to a
+code value, if we must. But delaying such a conversion, we get the
+opportunity to apply |f| to a concrete argument. When we evaluating
+|app ef ea|, we check to see of the first argument is so-delayed
+lambda-expression. If it is, we apply the incorporated |f| to the
+concrete argument |ea|, giving us a chance to perform the static
+computations (we see the example in the next subsection). If |ef| is a
+dynamic value, we residualize.
+
+
+Although GADT solve our problem, the solution is not quite
+satisfactory. First of all, it cannot be ported to MetaOCaml as GADTs
+are not supported in OCaml. Second, the tagging problem reappeared, in
+the implementation of |app| above. The datatype |P t| has four data
+constructors; the pattern-matching in |app| however used only two of
+them, |VF| and |E|. It is obvious, one may say, that the constructors
+|VI| and |VB| just cannot occur, because the corresponding values
+cannot have the arrow type. What is obvious to us is not obvious to
+the compiler. The case matching above does look \emph{partial}. The
+point may loop tenuous -- and yet it is precisely the main point of
+tag elimination. In a typed tagged interpreter there are many
+pattern-matching forms that looks partial but are total in
+reality. The goal is to make this totality \emph{syntactically}
 apparent.
 
-How can we do without GADT
-Now show the Symantics signature in full, with the 'sv types
-
-In the ideal world, the MetaOCaml signature (or Haskell type class)
-Symantics would start with
+\subsection{The `final' solution}
+\label{S:PE-solution}
+Let us re-examone the problem in Section~\ref{S:PE-problem}. What we
+would ideally like is to write
 \begin{code}
-  kind tp = int | bool | (->) tp tp
-  type ('c, 'dv:tp) repr : tp
-  val int : int -> ('c, int) repr
-  val bool : bool -> ('c, bool) repr
-  val lam : (('c, 'da) repr -> ('c, 'db) repr) -> 
-            ('c, 'da -> 'db) repr
-  val add : ('c, int) repr -> ('c, int) repr -> 
-            ('c, int) repr
+data P t = S (repr_pe t) (C t) | E (C t)
 \end{code}
-
-Here "repr" is a tp-to-tp function, defined inductively in the case of
-partial evaluation:
-
+where |repr_pe| is a type function, defined inductively as 
 \begin{code}
-  ('c, int   ) repr_pe = VI of int
-                       | E of ('c, int) code
-  ('c, bool  ) repr_pe = VB of bool
-                       | E of ('c, bool) code
-  ('c, 'a->'b) repr_pe = VF of ('c,'a) repr -> ('c,'b) repr
-                       | E of ('c, 'a->'b) code
+repr_pe Int    = Int
+repr_pe Bool   = Bool
+repr_pe (a->b) = (repr_pr a) -> (repr_pe b)
 \end{code}
-
-Unfortunately, we can't define type-level functions inductively.
-Instead we bake |repr_pe| above into the signature Symantics, so repr
-takes three type arguments |('c,'sv,'dv)|, where the extra argument 
-|'sv| is equal to |('c,'dv) repr_pe.|
-It seems Ken has just showed how to define type-level functions
-inductively... This shows also how a limited form of GADTs (the ones
-used for the sake of type-dependent representations) can be
-implemented with just functions. 
-
-
-So we have to augment the full signature of Symantics (from that of
-sec.~\ref{encoding}) to
+Although we can use typeclasses to define that type function
+in Haskell, that is not portable to MetaOCaml. We notice however that
+the type case alternatives above are all associated with the existing
+methods of |Symantics| and so the case analysis is already present. 
+A simple and more portable solution thus emerges: we bake |repr_pe| 
+into the signature |Symantics|. Switching to MetaOCaml for
+portability, we recall from Section~\ref{encoding} that |repr| type
+had two arguments |type ('c,'dv) repr|. We add an extra argument,
+|'sv|, which is the result of applying |repr_pe| function above to the
+type |'dv|. The signature |Symantics| now reads
 \begin{code}
 module type Symantics = sig
   type ('c,'sv,'dv) repr
@@ -841,19 +937,21 @@ module type Symantics = sig
     (('c,(('c,'sa,'da) repr -> ('c,'sb,'db) repr) as 's,
          'da->'db) repr 
     -> ('c,'s,'da->'db) repr)  -> ('c,'s,'da->'db) repr
-end
+end;;
 \end{code}
+The interpreters |R|, |L| and |C| above only relied on the last
+argument of the |repr| type, which is unchanged. And so is their
+implementation; the newly added argument |'sv| will be phantom.
+For example, we would have write, in the case of the |C| interpreter,
+\begin{code}
+module C = struct
+  type ('c,'sv,'dv) repr = ('c,'dv) code
+  (* the rest is the same *)
+\end{code}
+When writing the partial evaluator however, we make use of that
+type argument |'sv|. Here's the corresponding instance of the
+Symantics:
 
-
-
-\subsection{MetaOCaml version}
-
-%%  let dyn_id (x:('c,'sv,'dv) repr):('c,'sv1,'dv) repr = x
-
-%% We add one item to the language, |dyn_id|, as it
-%% is needed in the next section, where we will explain its purpose.
-
-Here is the full code for the MetaOCaml version.
 \begin{code}
 module P = struct
   type ('c,'sv,'dv) repr = 
@@ -864,16 +962,6 @@ module P = struct
   let int  (x:int)  = {st = Some (R.int x); dy = C.int x}
   let bool (x:bool) = {st = Some (R.bool x); dy = C.bool x}
 
-  (* generic build - takes a repr constructor, an 
-     interpreter function and a compiler function (all 
-     binary) and builds a PE version *)
-  let build cast f1 f2 = fun e1 -> fun e2 -> 
-     match (e1,e2) with
-         ({st = Some n1}, {st = Some n2}) -> cast (f1 n1 n2)
-        | _ -> pdyn (f2 (abstr e1) (abstr e2))
-  (* same as 'build' but takes care of the neutral element 
-     (e) simplification allowed via a monoid structure which is 
-     implicitly present *)
   let buildsimp cast e f1 f2 = fun e1 e2 -> 
      match (e1,e2) with
         | ({st = Some e'}, _) when e = e' -> e2
@@ -896,47 +984,115 @@ module P = struct
                dy = C.lam (fun x -> abstr (f (pdyn x)))}
   let app ef ea = match ef with
         {st = Some f} -> f ea
-      | _ -> pdyn (C.app (C.dyn_id (abstr ef)) (abstr ea))
+      | _ -> pdyn (C.app (abstr ef) (abstr ea))
 
   let fix f = 
     let fdyn = C.fix (fun x -> abstr (f (pdyn x))) in
     let fdynn e = pdyn (C.app fdyn e.dy) in
     {st=Some (function {st = Some _} as e -> 
                let rec self n = 
-                 (match n.st with Some _-> app (f (lam self)) n 
-                                 | _ -> fdynn n) in 
+                (match n.st with Some _->app (f (lam self)) n 
+                                | _ -> fdynn n) in 
                app (f (lam self)) e
              | e  -> fdynn e);
     dy = fdyn }
 end;;
 \end{code}
 
-\oleg{Compare the output of some of the ctest with the corresponding
-ptest. Use power?}
+The type |repr| here literally expresses the type equation at the
+beginning of this section. The function |abstr|, as in the previous
+subsection, extracts the future-stage computation from the result of
+PE. The function |pdyn| does the converse. As in
+section~\ref{S:PE-problem}, we build future-stage computations as we
+build present-stage ones, if any. Therefore, we avoid the need for the
+polymorphic `lift' function. The implementations of
+|add| and |mul| are a bit more sophisticated, taking advantage of the
+implicit monoid structure. The function |buildsimp| checks to see if
+its two arguments |e1| and |e2| are static expressions. If so, the
+corresponding static computation (with the help of the intrepreter
+|R|) is performed. The function also checks if one argument is static
+and is the neutral element of the monoid structure 
+\jacques{Comment on the various nice generic things in the implementation,
+which are a little silly in this small version, but would really pay off
+in something bigger.  See the abstract interpretation hard at work!
+See the monoid-driven simplifications!}
+\oleg{I'm inclined to ditch buildsimp. We miss an opportunity here:
+  when multiplying anything by 0, the result is zero!}
+
+When doing PE on fix, we made a deliberate decision to `go all the
+way' -- so long as the computation can proceed at the PE stage
+(`static value'), we do that rather than residualizing. In the
+accompanying source code, we have also implemented an alternative
+where fix is unrolled only once and them we residualize. We prefer the
+first approach, even though it (unlike the latter) may cause
+non-termination at the PE stage -- but \emph{only} if the computation
+we are partially evaluating is non-terminating and enough static
+information is available to trigger this non-termination.  Our
+treatment of fix may lead to the code bloat in the residual
+program. That is an issue investigated elsewhere (cite our PEPM2006
+paper).
+
+Given the above Symantics, our running test now evaluates
+\begin{code}
+  let module E = EX(P) in E.test1 ();;
+\end{code}
+to
+\begin{code}
+- : ('a, bool, bool) P.repr = 
+   {P.st = Some true; P.dy = .<(true)>.}
+\end{code}
+It is instructive to compare this result with that of the |C|
+evaluator. We observe the beta-redex that was apparent there is now
+performed. The result is the static value |true|.
+More interesting is the partial evaluation of testpowfix7. The |C|
+interpreter evaluates |testpowfix7| to the future-stage code with many
+apparent beta-redexes.
+\begin{code}
+  let module E = EX(C) in E.testpowfix7;;
+ - : ('_a, int -> int) C.repr =
+.<fun x_1 ->
+   (((fun x_2 ->
+       let rec self_3 =
+        fun n_4 ->
+         ((fun x_5 -> if (x_5 <= 0) then 1 
+                      else (x_2 * (self_3 (x_5 + (-1)))))
+           n_4) in
+       self_3) x_1) 7)>.
+\end{code}
+The result of the |P| interpreter is different:
+
+\begin{code}
+  let module E = EX(P) in E.testpowfix7;;
+ - : ('_a, ('_a, int, int) P.repr -> ('_a, int, int) P.repr, 
+      int -> int) P.repr = 
+ {P.st = Some <fun>;
+  P.dy = .<fun x_1 -> 
+     (x_1 * (x_1 * (x_1 * (x_1 * (x_1 * (x_1 * x_1))))))>.}
+\end{code}
+
+which is what one would have expected from the power example.
+
+Unlike the GADT approach in the previous subsection, there is no
+longer any seemingly partial pattern-matching. The pattern-match only
+occurs in PE (to check if the code is static or dynamic), it is only a
+phase rather than a type tag match, and the pattern match is
+\emph{patently} exhaustive. That is, totality is assured and it is
+assured \emph{syntactically}, in the way that is apparent to the
+compiler.
 
 One should note that the partial evaluator has fully reused the code
 of the compiler and the interpreter. It is truly the `composition' of the
 interpreter and the compiler.  \jacques{Perhaps cite a paper of Thiemann
 here, cogen in 6 lines?}
 
-\jacques{Comment on the various nice generic things in the implementation,
-which are a little silly in this small version, but would really pay off
-in something bigger.  See the abstract interpretation hard at work!
-See the monoid-driven simplifications!}
-\jacques{Also need to note that the type of the above is not quite
-the original Symantics (although the code has the right operational
-semantics).  We need to make some adjustments, as per below.}
 
 
 
-Also, unlike the GADT
-solution, there is no longer any seemingly partial
-pattern-matching. The pattern-match only occurs in PE (to check if the
-code is static or dynamic), it is only a phase rather than a type tag
-match, and the pattern match is \emph{patently} exhaustive. That is,
-totality is assured and it is assured \emph{syntactically}, in the way that
-is apparent to the compiler.
+\section{Variations and discussion}\label{discussion}
 
+state and imperative features
+
+CPS transformation (interpreting/compiling the term to CBN CPS)
 
 It's relation to PE and CPS. Currently, our CPS is CBN. Need to
 investigate CBV.
@@ -945,23 +1101,6 @@ the CPS transform. So, the type-function
 that enables the PE is exactly the same type function that enables
 CPS....
 
-Say that when doing PE on fix, we made a deliberate decision to `go
-all the way' -- so long as the computation can proceed at the PE stage
-(`static value'), we do that rather than residualizing. We have also
-an alternative where fix is unrolled only once and them we
-residualize. We have used the first approach, even it (unlike the
-latter) may cause non-termination at the PE stage -- but \emph{only} if the
-computation we are partially evaluating is non-terminating and enough
-static information is available to trigger this non-termination.
-Say that our treating of fix may lead to the code bloat in the
-residual program. That is an issue investigated elsewhere (cite our
-PEPM2006 paper). 
-
-\section{Variations and discussion}\label{discussion}
-
-state and imperative features
-
-CPS transformation (interpreting/compiling the term to CBN CPS)
 
 We must formulate some propositions: a typed term makes progress in
 any interpreter. The reason it is typed in any interpreter:
@@ -1307,10 +1446,14 @@ type system (enter GADTs).}
 
 Our approach showed better the meaning of GADT and when they can be
 avoided.
+This shows also how a limited form of GADTs (the ones
+used for the sake of type-dependent representations) can be
+implemented with just functions. 
 
 separate compilation: separate
 typechecking of terms without knowing which particular
 hole they will be plugged into. Formulate this as a prop?
+
 
 
 \subsection*{Acknowledgments}
