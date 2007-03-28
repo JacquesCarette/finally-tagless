@@ -43,7 +43,7 @@
 
 \begin{abstract}
 We have built a (family of) tagless partial evaluator(s) for a typed object
-language \oleg{``,or, embedded DSL''}, placing minimal requirements on
+language (embedded DSL), placing minimal requirements on
 the type system of the meta-language:
 we need let-bound polymorphism and staging, but not dependent
 types, generalized algebraic data types, nor a tag elimination 
@@ -55,15 +55,15 @@ an algebraic data type but rather by invoking cogen functions, which occur as
 free variables in the encoded term.  In other words, we eschew initial
 algebras for the wilder world of implicit representations of final algebras.
 Our family of evaluators contains an interpreter, a compiler, a partial
-evaluator and a term-size evaluator \oleg{and a CPS CBN transfromer?}
+evaluator, a term-size evaluator and a CPS call-by-name transformer.
 Our approach highlights the importance of order-2 type constructors
-(order-2 polymorphism), which lets us encode DSL terms with
+(rank-2 polymorphism), which lets us encode DSL terms with
 translucent types: enough abstraction is available to interpret the
 terms in various ways, and yet enought type information is available 
 to typecheck the terms and statically assure their interpretation will
 never get stuck.
 \oleg{say something about type functions, GADTs and the way to get
-  around them?}
+  around them?}\jacques{not in the abstract?}
 \end{abstract}
 
 %\category{CR-number}{subcategory}{third-level}
@@ -77,7 +77,7 @@ interpreter.
 Define Staging, meta-language and object language. (Walid uses
 `subject' language).
 
-We have programmed out interpreters in OCaml/MetaOCaml (\cite{metaocaml})
+We have programmed our interpreters in OCaml/MetaOCaml (\cite{metaocaml})
 and Haskell. The complete code is available 
 \footnote{the URL will appear in the final version of the paper.}
 % connot give URL in the ICFP paper due to double-blind reviews
@@ -128,14 +128,13 @@ be made obvious to the compiler. That also exlains unoptimality.
 
 \subsection{The Tag Problem}\label{tagproblem}
 
-\oleg{see tagless\_interp1.ml, module Tagfull for the complete code.
-  If you change the code in here, please adjust the .ml file
-  accordingly. Let the paper and the accompanying code be in sync.}
+%\oleg{see tagless\_interp1.ml, module Tagfull for the complete code.
+%  If you change the code in here, please adjust the .ml file
+%  accordingly. Let the paper and the accompanying code be in sync.}
 
-
-Consider the sample language of abstraction, application and boolean
+Consider a language with abstraction, application and boolean
 literals with de Bruin indices as variables. This is the language used
-in the body of Walid02, from which we borrow the first part of 
+in the body of \cite{WalidIFCP02}, from which we borrow the first part of 
 this example.
 
 The language can be described by the following grammar (using OCaml
