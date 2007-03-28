@@ -77,8 +77,8 @@ interpreter.
 Define Staging, meta-language and object language. (Walid uses
 `subject' language).
 
-We have programmed out interpreters in OCaml/MetaOCaml (cite
-www.metaocaml.org) and Haskell. The complete code is available 
+We have programmed out interpreters in OCaml/MetaOCaml (\cite{metaocaml})
+and Haskell. The complete code is available 
 \footnote{the URL will appear in the final version of the paper.}
 % connot give URL in the ICFP paper due to double-blind reviews
 in the supplemental material to the paper. We will use both
@@ -115,7 +115,8 @@ terms could be done this way, which would simplify things tremendously.}
 Should we mention some of these points in our contributions subsection
 below?
 
-        Taha et al and Xi et al (both POPL2003) argued that writing an
+    At POPL 2003, Taha et al~\cite{TahaPOPL03} and Xi et al~\cite{XiPOPL03}
+both
 interpreter of a typed language in a typed language is an interesting
 problem. The known solutions include the use of the Universal type, or
 GADTs. The former is not quite satisfactory for performance reasons;
@@ -234,6 +235,8 @@ the empty list checking in |List.hd| and |List.tl| can be eliminated
 as well. The latter is even more interesting problem requiring even
 more advanced type systems (cite env classifiers, Nanevski, Rowan
 Davies, Pitts).
+(\cite{WalidPOPLo3,NanevskiICFP02,NanevskiJFP05,DaviesJACM01}
+\jacques{I hope that is the right Davies paper}
 
 The problem is also outlined in Simon Peyton-Jones GADT paper, but
 only in the context of a first-order language
@@ -257,6 +260,8 @@ solutions to this problem.
 to give the reader the feeling of
 how advanced solutions were proposed and how rarely they are
 implemented.}
+\jacques{Sure, we can refer to this section from the Related Work section
+for details.}
 
 
 \subsection{The `Final' Proposal}\label{ourapproach}
