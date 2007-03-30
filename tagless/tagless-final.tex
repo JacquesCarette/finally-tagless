@@ -1,5 +1,7 @@
 \documentclass[preprint]{sigplanconf}
 \usepackage{amsmath,amssymb}
+\usepackage{mathptmx}
+%\usepackage{txfonts} \renewcommand{\ttdefault}{cmtt}
 \usepackage{comment}
 \usepackage{hyphenat}
 \usepackage{url}
@@ -14,7 +16,7 @@
 
 \usepackage[compact]{fancyvrb1}
 \DefineShortVerb{\|}
-\DefineVerbatimEnvironment{code}{Verbatim}{xleftmargin=1em,fontsize=\small}
+\DefineVerbatimEnvironment{code}{Verbatim}{xleftmargin=\parindent}
 
 \newtheorem{prop}{Proposition}
 
@@ -25,7 +27,9 @@
 \newcommand{\fix}[1]{\mathopen{\mathrm{fix\,}\mathord{#1}.\,}}
 \newcommand{\Forall}[1]{\mathopen{\forall\mathord{#1}.\,}}
 \newcommand{\Exists}[1]{\mathopen{\exists\mathord{#1}.\,}}
-\newcommand{\cond}[3]{\mathrm{if\,}#1\mathrm{\,then\,}#2\mathrm{\,else\,}#3}
+\newcommand{\cond}[3]{\mathrm{if\ }#1\mathrm{\ then\ }#2\mathrm{\ else\ }#3}
+\newcommand{\True}{\mathinner{\mathrm{true}}}
+\newcommand{\False}{\mathinner{\mathrm{false}}}
 
 % Make space around section headings no less than space around theorems
 \makeatletter
@@ -106,12 +110,12 @@ never get stuck.
 \section{Introduction}\label{intro}
 
 A popular way to define and implement a programming language is to embed it in
-another \citep{reynolds-definitional}.  The embedded language is called the
-\emph{object} or \emph{subject} language, whereas the host language is the
+another \citep{reynolds-definitional}.  Embedding means to represent
+terms and values of the \emph{object language} as terms and values in the
 \emph{metalanguage}.  Embedding is especially appropriate for domain\hyp
 specific object languages because it supports rapid prototyping and integration
-with the host environment \oleg{Cite Hudaks' survey and perhaps say a
-  couple of more words}.  If the metalanguage supports \emph{staging}, then
+with the host environment \citep{hudak-building} \oleg{perhaps say a
+  couple more words}.  If the metalanguage supports \emph{staging}, then
 the embedding can compile object programs to the metalanguage and avoid the
 overhead of interpreting them on the fly \citep{WalidICFP02}.  A staged
 definitional interpreter is thus a promising way to build a domain\hyp specific
@@ -125,10 +129,10 @@ language.
         \[ e_1:t_1\to t_2 \quad e_2:t_1 \justifies e_1 e_2: t_2 \]
         \[ \text{$n$ is an integer} \justifies n:\ZZ \]
         \[ \text{$b$ is a Boolean} \justifies b:\BB \]
+        \[ e:\BB \quad e_1:t \quad e_2:t \justifies \cond{e}{e_1}{e_2}:t \]
         \[ e_1:\ZZ \quad e_2:\ZZ \justifies e_1+e_2:\ZZ \]
         \[ e_1:\ZZ \quad e_2:\ZZ \justifies e_1 \times e_2:\ZZ \]
         \[ e_1:\ZZ \quad e_2:\ZZ \justifies e_1 \le e_2:\BB \]
-        \[ e:\BB \quad e_1:t \quad e_2:t \justifies \cond{e}{e_1}{e_2}:t \]
     \end{proofrules}
     \end{floatrule}
     \caption{Our typed object language}
@@ -136,76 +140,24 @@ language.
 \end{figure}
 
 We focus on embedding a typed object language into a typed metalanguage.
-\ccshan{Collect reasons to type here.}
+Types are useful as usual because they document the programmer's
+intentions and can be checked early by machine.  \ccshan{Collect reasons
+to type here.}  To be concrete, we use the typed object language in
+Figure~\ref{fig:object} throughout this paper.  We aim not just to
+interpret the object language in the narrow sense but also for
+compilation, partial evaluation, and other processing.
 
-
-    At POPL 2003, Taha et al~\cite{TahaPOPL03} and Xi et al~\cite{XiPOPL03}
-both
-interpreter of a typed language in a typed language is an interesting
-problem. The known solutions include the use of the Universal type, or
-GADTs. The former is not quite satisfactory for performance reasons;
-and also because of the presence of partial pattern matching in the
-interpreter; the inexhaustiveness of the pattern matching should never
-be triggered when executing a well-typed term. Alas, this fact cannot
-be made obvious to the compiler. That also exlains unoptimality.
-
- The problem of typed direct
-  intrepreter of a typed language is difficult and thought to require
-  GADT or dependent types. 
-  In fact, several papers introducing GADTs (Xi03 and SPJ) as well as 
-  (language in Walid03) and Concoqtion, written 2003-2007, used the 
-  typed tagless intrepreter as the motivating example.
-  Taha (in Jones optimality paper, I think) said that typed
-  interpreter of the typed language was not solved then.
-  Or, should we refer to Sec `Other solutions'.
-
-\oleg{should say somewhere in the Introduction that we are interested
-  in the typed object language embedded in the typed
-  meta-language. Refer to Sec 2 (see the remark below) why this is
-  good. We assume the DSL setting: we enter EDSL terms in the
-  meta-language program (e.g., GHCi or (Meta)OCaml top-level). A
-  different approach is reading EDSL terms from a file. In that case, we
-  need to typecheck them first. We do not deal with that problem here,
-  because it has been solved. First we mention Walid02 where they use
-  dependent typed. However, these don't seem to be needed: refer to
-  `typing dependent typing', and the related work section.}
-\jacques{I think it is important to emphasize, probably later in the 
-paper, that we could write a camlp4 extension (or simply a parser in
-Haskell) that would transform a nice syntax for a lambda calculus into
-syntactic terms for what we present here.  Even the self-interpreter
-terms could be done this way, which would simplify things tremendously.}
-\jacques{I quite agree that the point that needs to be revisited is
-  that a \emph{direct} interpreter for a (typed) language "cannot" be
-  done. see discussion in related work about the direct interpreter,
-  with regards to Walid's paper. Perhaps bring some of it here?}
-\jacques{I have looked at a fair bit of the literature, and I have not
-  seen this done, especially not in the typed 'online' setting.  The
-  one question that seems to be open is, how accurate can we make the
-  PE without a tough BTA?}
-Should we mention some of these points in our contributions subsection
-below?
-
-
-
-We have programmed our interpreters in OCaml (and, for staging,
-MetaOCaml (\cite{metaocaml})) and Haskell. The complete code is available 
-\footnote{the URL will appear in the final version of the paper.}
-% connot give URL in the ICFP paper due to double-blind reviews
-in the supplemental material to the paper. We will use both
-(Meta)OCaml and Haskell for our examples throughout the paper.
-Each language has its strength and weaknesses; this dual implementation
-forced us to clarify our own ideas.  We will continually leverage the
-respective strengths of these languages, as certain of our claims are
-patently obvious in one implementation, while requiring more argumentation
-in the other.
-Our code is surprisingly simple, and, in the hindsight, obvious. We
-must emphasize however that direct typeful tagless interpretation of a typed
-language until now has thought to be impossible in plain ML and
-require extensions like GADT -- which we discuss in detail in Section
-XXX.
-
-
-
+\Citet{WalidICFP02} and \citet{xi-guarded} motivated interpreting
+a typed object language in a typed metalanguage as an interesting
+problem.  The known solutions to this problem store object terms and
+values in the metalanguage in a universal type, a generalized algebraic
+datatype (GADT), or a dependent type.  In the remainder of this section,
+we discuss these solutions, identify their drawbacks, then summarize our
+contributions.  No matter how we represent the object language in the
+metalanguage, the representation can be performed by hand or more
+conveniently by a parser or preprocessor such as camlp4.  We leave aside
+the issue of whether to program a parser or preprocessor using dependent
+types \citep{WalidICFP02} or not \citep{baars-typing}.
 
 \subsection{The Tag Problem}\label{tagproblem}
 
@@ -213,46 +165,41 @@ XXX.
 %  If you change the code in here, please adjust the .ml file
 %  accordingly. Let the paper and the accompanying code be in sync.}
 
-Consider a language with abstraction, application and boolean
-literals with de Bruin indices as variables. This is the language used
-by \citet{WalidICFP02}, from which we borrow the first part of 
-this example.
-
-The language can be described by the following grammar (using OCaml
-syntax)
-
-
+It is straightforward to create an algebraic data type, say in OCaml, to
+represent object terms such as those in Figure~\ref{fig:object}.
 \begin{code}
-  type var = VZ | VS of var
-  type exp = V of var | B of bool | A of exp * exp | L of exp
+type var = VZ | VS of var
+type exp = V of var | B of bool
+         | L of exp | A of exp * exp | ...
+\end{code}
+We represent each variable using a unary de-Bruijn number.
+For example, we represent the object term $(\fun{x}x)\True$ as
+\begin{code}
+let test1 = A (L (V VZ), B true)
 \end{code}
 
-with a sample term (application of the identity function to a boolean) as
-\begin{code}
-  let test1 = A ((L (V VZ)),(B true))
-\end{code}
-
-Let us attempt to implement an the interpreter, the function |eval0|. It takes
-an object language term such as |test1| and gives us its value.
-The first argument to |eval| is the environment, initially empty,
-which is the sequence of values associated with free variables in the
+Following \citet{WalidICFP02},
+we try to implement an interpreter function |eval0|. It takes
+an object term such as |test1| above and gives us its value.
+The first argument to |eval0| is the environment, initially empty,
+which is the list of values bound to free variables in the
 interpreted code.
 \begin{code}
-  let rec eval0 env = function 
-  | V VZ      -> List.hd env
-  | V (VS v)  -> eval0 (List.tl env) (V v)
-  | B b       -> b 
-  | L e       -> fun x -> eval0 (x::env) e
-  | A (e1,e2) -> (eval0 env e1) (eval0 env e2) 
-\end{code}
+let rec lookup (x::env) = function
+| VZ   -> x
+| VS v -> lookup env v
 
-Suppose our meta-language (the language in which we wrote |test1|
-and that interpreter) were untyped. The above code would be acceptable.
-The |L e| line exhibits interpretive overhead \cite{WalidICFP02}: 
-|eval0 env' e| will be executed every time (the result of
+let rec eval0 env = function 
+| V v       -> lookup env v
+| B b       -> b 
+| L e       -> fun x -> eval0 (x::env) e
+| A (e1,e2) -> (eval0 env e1) (eval0 env e2) 
+\end{code}
+If our OCaml-like metalanguage were untyped, the code above would be acceptable.
+The |L e| line exhibits interpretive overhead:
+|eval0| traverses the function body~|e| every time (the result of
 evaluating) |L e| is applied. Staging can be used to remove this
-interpretive overhead (sections 1.1 and 1.2 of \cite{WalidICFP02} explain
-this well). 
+interpretive overhead \cite[\S1.1--2]{WalidICFP02}.
 
 If we use OCaml or some other typed language as the meta-language, 
 the function |eval0| is ill-typed. The line |B b|
@@ -313,7 +260,24 @@ to use a Universal type because tagging hurts performance and
 necessitates partial pattern matching in the metalanguage, even for a
 well-typed object term.  
 
+The universal type fails to express in the metalanguage
+that the object program is well-typed.  This failure gives rise to
+tagging and untagging (that is, apparently inexhaustive pattern\hyp
+matching) operations that incur a performance penalty in interpretation
+and impair optimality in partial evaluation.  In short, the
+universal\hyp type solution is not type\hyp preserving.
+
 \subsection{Other solutions}
+
+ The problem of typed direct
+  intrepreter of a typed language is difficult and thought to require
+  GADT or dependent types. 
+  In fact, several papers introducing GADTs (Xi03 and SPJ) as well as 
+  (language in Walid03) and Concoqtion, written 2003-2007, used the 
+  typed tagless intrepreter as the motivating example.
+  Taha (in Jones optimality paper, I think) said that typed
+  interpreter of the typed language was not solved then.
+  Or, should we refer to Sec `Other solutions'.
 
 But how should one design a type system to type
 terms like |test1|? GADTs seem necessary. Similarly, how does one design a
@@ -341,6 +305,36 @@ implemented.}
 to extend it to explain these other solutions}
 
 \subsection{The ``Final'' Proposal}\label{ourapproach}
+
+\jacques{I quite agree that the point that needs to be revisited is
+  that a \emph{direct} interpreter for a (typed) language "cannot" be
+  done. see discussion in related work about the direct interpreter,
+  with regards to Walid's paper. Perhaps bring some of it here?}
+\jacques{I have looked at a fair bit of the literature, and I have not
+  seen this done, especially not in the typed 'online' setting.  The
+  one question that seems to be open is, how accurate can we make the
+  PE without a tough BTA?}
+Should we mention some of these points in our contributions subsection
+below?
+
+
+
+We have programmed our interpreters in OCaml (and, for staging,
+MetaOCaml (\cite{metaocaml})) and Haskell. The complete code is available 
+\footnote{the URL will appear in the final version of the paper.}
+% connot give URL in the ICFP paper due to double-blind reviews
+in the supplemental material to the paper. We will use both
+(Meta)OCaml and Haskell for our examples throughout the paper.
+Each language has its strength and weaknesses; this dual implementation
+forced us to clarify our own ideas.  We will continually leverage the
+respective strengths of these languages, as certain of our claims are
+patently obvious in one implementation, while requiring more argumentation
+in the other.
+Our code is surprisingly simple, and, in the hindsight, obvious. We
+must emphasize however that direct typeful tagless interpretation of a typed
+language until now has thought to be impossible in plain ML and
+require extensions like GADT -- which we discuss in detail in Section
+XXX.
 
 We have realized that if we change the encoding of the term from data
 constructors to functions, we can encode a tagless interpreter for a

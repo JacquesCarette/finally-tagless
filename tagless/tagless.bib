@@ -1,6 +1,9 @@
+@STRING{j_acmcs			= "{ACM} Computing Surveys" }
 @STRING{j_hosc			= "Higher-Order and Symbolic Computation" }
 @STRING{proc_icfp_1		= "{ICFP} '" }
 @STRING{proc_icfp_2		= ": Proceedings of the {ACM} International Conference on Functional Programming" }
+@STRING{proc_popl_1		= "{POPL} '" }
+@STRING{proc_popl_2		= ": Conference Record of the Annual {ACM} Symposium on Principles of Programming Languages" }
 @STRING{pub_acm			= "{ACM} {P}ress" }
 @STRING{pub_acm_addr		= "{N}ew {Y}ork" }
 
@@ -12,15 +15,45 @@
   url		= "http://www.cs.rice.edu/~taha/publications/conference/icfp02.dvi http://www.cs.rice.edu/~taha/publications/conference/icfp02.ps http://www.cs.rice.edu/~taha/publications/conference/icfp02.pdf"
 }
 
+@Article{	hudak-building,
+  author	= {Paul Hudak},
+  title		= {Building Domain-Specific Embedded Languages},
+  journal	= j_acmcs,
+  year		= 1996,
+  month		= dec,
+  volume	= 28,
+  number	= {4es},
+  pages		= 196
+}
+
+@InProceedings{	xi-guarded,
+  author	= "Hongwei Xi and Chiyan Chen and Gang Chen",
+  title		= "Guarded Recursive Datatype Constructors",
+  pages		= "224--235",
+  crossref	= "popl2003",
+  url		= "http://www.cs.bu.edu/~hwxi/academic/papers/popl03.pdf http://www.cs.bu.edu/~hwxi/academic/papers/popl03.ps http://www.cs.bu.edu/~hwxi/academic/talks/popl03.ppt"
+}
+
 @inproceedings{WalidPOPL03,
-  author    = {Walid Taha and
-               Michael Florentin Nielsen},
-  title     = {Environment classifiers.},
-  booktitle = {POPL},
-  year      = {2003},
-  pages     = {26-37},
-  ee        = {http://doi.acm.org/10.1145/640128.604134},
-  bibsource = {DBLP, http://dblp.uni-trier.de}
+  author    = {Walid Taha and Michael Florentin Nielsen},
+  title     = {Environment Classifiers},
+  pages     = {26--37},
+  crossref  = "popl2003",
+  url       = "http://www.cs.rice.edu/~taha/publications/conference/popl03.dvi http://www.cs.rice.edu/~taha/publications/conference/popl03.ps http://www.cs.rice.edu/~taha/publications/conference/popl03.pdf"
+}
+
+@InProceedings{	baars-typing,
+  author	= "Arthur I. Baars and S. Doaitse Swierstra",
+  title		= "Typing Dynamic Typing",
+  pages		= "157--166",
+  crossref	= "icfp2002",
+  url		= "http://www.cs.uu.nl/~arthurb/data/Dynamic/p189-baars.pdf http://www.cs.uu.nl/~arthurb/data/Dynamic/Talk.pdf http://www.cs.uu.nl/~arthurb/dynamic.html",
+  abstract	= "Even when programming in a statically typed language we every now and then encounter statically untypable values; such values result from interpreting values or from communicating with the outside world. To cope with this
+		  problem most languages include some form of \emph{dynamic} types. It may be that the core language has been explicitly extended with such a type, or that one is allowed to live dangerously by using functions like
+		  \emph{unsafeCoerce}. We show how, by a careful use of existentially and universally quantified types, one may achieve the same effect, without extending the language with new or unsafe features. The techniques explained
+		  are universally applicable, provided the core language is expressive enough; this is the case for the common implementations of Haskell. The techniques are used in the description of a type checking compiler that, starting
+		  from an expression term, constructs a typed function representing the semantics of that expression. In this function the overhead associated with the type checking is only once being paid for; in this sense we have thus
+		  achieved static type checking."
 }
 
 @misc{metaocaml,
@@ -113,4 +146,16 @@
   publisher	= pub_acm,
   year		= 2002,
   location	= "Pittsburgh, PA"
+}
+
+@Proceedings{	popl2003,
+  key		= "{\relax POPL}",
+  title		= proc_popl_1 # "03"  # proc_popl_2,
+  booktitle	= proc_popl_1 # "03"  # proc_popl_2,
+  address	= pub_acm_addr,
+  publisher	= pub_acm,
+  year		= 2003,
+  isbn		= {1-58113-628-5},
+  issn		= "0730-8566",
+  location	= {New Orleans}
 }
