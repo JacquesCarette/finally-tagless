@@ -89,8 +89,6 @@ translucent types: enough abstraction is available to interpret the
 terms in various ways, and yet enought type information is available 
 to typecheck the terms and statically assure their interpretation will
 never get stuck.
-\oleg{say something about type functions, GADTs and the way to get
-  around them?}\jacques{not in the abstract?}
 \end{abstract}
 
 %\category{CR-number}{subcategory}{third-level}
@@ -181,6 +179,17 @@ and also because of the presence of partial pattern matching in the
 interpreter; the inexhaustiveness of the pattern matching should never
 be triggered when executing a well-typed term. Alas, this fact cannot
 be made obvious to the compiler. That also exlains unoptimality.
+\oleg{Should say somewhere here that our code is surprisingly simple,
+  and, in the hindsight, obvious. The problem of typed direct
+  intrepreter of a typed language is difficult and thought to require
+  GADT or dependent types. 
+  In fact, several papers introducing GADTs (Xi03 and SPJ) as well as 
+  (language in Walid03) and Concoqtion, written 2003-2007, used the 
+  typed tagless intrepreter as the motivating example.
+  Taha (in Jones optimality paper, I think) said that typed
+  interpreter of the typed language was not solved then.
+  Or, should we refer to Sec `Other solutions'}
+
 
 
 \subsection{The Tag Problem}\label{tagproblem}
@@ -203,12 +212,12 @@ syntax)
   type exp = V of var | B of bool | A of exp * exp | L of exp
 \end{code}
 
-and a sample term is
+with a sample term (application of the identity function to a boolean) as
 \begin{code}
   let test1 = A ((L (V VZ)),(B true))
 \end{code}
 
-Let us attempt to implment an the interpreter, the function |eval0|. It takes
+Let us attempt to implement an the interpreter, the function |eval0|. It takes
 an object language term such as |test1| and gives us its value.
 The first argument to |eval| is the environment, initially empty,
 which is the sequence of values associated with free variables in the
@@ -222,7 +231,7 @@ interpreted code.
   | A (e1,e2) -> (eval0 env e1) (eval0 env e2) 
 \end{code}
 
-Suppose our meta-language (the language in which we wrote test1
+Suppose our meta-language (the language in which we wrote |test1|
 and that interpreter) were untyped. The above code would be acceptable.
 The |L e| line exhibits interpretive overhead \cite{WalidICFP02}: 
 |eval0 env' e| will be executed every time (the result of
@@ -232,9 +241,9 @@ this well).
 
 If we use OCaml or some other typed language as the meta-language, 
 the function |eval0| is ill-typed. The line |B b|
-says that the function returns a boolean, whereas the next line says
-the result is a function. Clearly, the result of |eval0|
-can't be both of these types. 
+says that |eval0| returns a boolean, whereas the next line says
+the result is a function. All branches of a pattern-match form must
+yield values of the same type, however. 
 A related problem is the type of the environment |env|: since variables
 in the language may be either of boolean or function types, a regular
 OCaml list cannot be used for holding the corresponding values. 
@@ -265,7 +274,8 @@ val test1r : u = UB true
 
 Unfortunately, the result is tagged: |UB true| rather than just
 |true|. We also note that the eval function is partial in two
-respects: first there is an inexhaustive pattern-matching in the 
+respects: first there is an inexhaustive pattern-matching 
+|match ... with UA f -> ...| in the 
 line |A (e1,e2)|.
 Second, the occurrences of |List.hd| and |List.tl|.
 The failure of the latter corresponds to the evaluation of `open'
@@ -329,8 +339,8 @@ approach):
 
 \begin{code}
   let b (bv:bool) env  = bv
-  let varZ (vc,_)      = vc
-  let varS vp (_,envr) = vp envr
+  let varZ env         = fst env
+  let varS vp env      = vp (snd env)
   let app e1 e2 env    = (e1 env) (e2 env)
   let lam e env        = fun x -> e (x,env)
 \end{code}
@@ -384,7 +394,8 @@ In the above code, the interpreter is wired in, directly built into the
 functions |b|, |app|, etc.  In the remainder of this paper, 
 we explain how to abstract the interpreter,
 to make it possible to ``evaluate'' the same term in many different
-ways: interpretation, compilation, compute the size (or depth), etc.
+ways: interpretation, compilation, partial evaluation, size
+computation, etc.
 
 \subsection{Contributions}\label{contributions}
 
@@ -513,9 +524,9 @@ object-level terms.\oleg{Should we perhaps move this up, in the
   intro? To justify why typed-metalanguages and the typed DSL are
   good. Or keep the explanation here but refer to it from the Introduction.}
 
-We have also embedded our DSL in (Meta)OCaml, replacing type classes with
-functors, via a module type.  For this section, the following simple
-signature will be sufficient:
+We have also embedded our DSL in (Meta)OCaml, replacing type classes
+and instances with signatures and structures. For this and the 
+following sections, the following simple signature suffices:
 
 \begin{code}
 module type Symantics = sig
@@ -597,7 +608,8 @@ module R  = struct
 end;;
 \end{code}
 
-This interpreter is patently tagless: the operation |add| is really
+This interpreter is patently tagless, using neither Universal type nor
+any pattern-matching: the operation |add| is really
 OCaml's addition, and |app| is OCaml's application. We can run our
 examples by instatiating the |EX| functor with |R|.
 \noindent
@@ -607,19 +619,18 @@ examples by instatiating the |EX| functor with |R|.
 
 \noindent and so |EXR.test1 ()| evaluates to the untagged boolean value |true|.
 In Haskell, we define a\\
-|newtype R a = R a| and |instance Symantics R|
+|newtype R a = R{unR::a}| and |instance Symantics R|
 with a straightforward implementation. We must stress that |R| is
 a |newtype|. Although it may look like a tag, it has no run-time
 representation (erased during compilation) and pattern-matching
 against |R| cannot ever fail and so is operationally an identity and
-compiled that way.
-
-Note that the interpreter uses no Universal type nor pattern
-matching, and it is obvious to the compiler that non-termination can
-only result from interpreting |fix|.
+compiled that way. In both cases, the absense of pattern-match
+failures is obvious to the compiler, because there are no
+pattern-matching. The failure to yield a value
+may only result from interpreting |fix|.
 
 \begin{prop}
-If the term |e| in the meta-language has type
+If the term |e| encoded in the meta-language has type
 |t|, evaluation of that term in the interpreter R will either continue
 indefinitely or termninate with a value of the same type |t|.
 \end{prop}
@@ -746,13 +757,13 @@ We want to combine the interpreter |R| and the compiler |C| to produce
 an (online) partial evaluator.  We defer the discussion of the 
 choice of online/offline partial evaluation until after we have presented our
 solution in~\ref{S:PE-solution}.
-The partial evaluator (PE) is also an interpreter: it
+The partial evaluator (PE) is too an interpreter: it
 evaluates a term either to an immediate (or, `static' or present-stage)
 value or to a `dynamic', future-stage value, or `code' (of the sort
 produced by the compiler C). The interpreter attempts to perform all
 possible computations (i.e., computations whose operarands are
-present-stage values) as the present-stage. Our first attempt is
-straightforward: we introduce
+present-stage values) as the present-stage. Our first attempt, in
+Haskell, is straightforward: we introduce
 \begin{code}
 data P1 t = S1 (R t) (C t) | E1 (C t)
 \end{code}
@@ -808,7 +819,7 @@ static value or a dynamic value -- but which? Unlike |add| or |if_|,
 |lam| cannot really examine its operand. The arguments of |add| are 
 of type |P1 int|, which we can examine by pattern-matching and so 
 determine if they are static or dynamic. The argument of |lam| is a 
-higher-order function, which is not introspectible. One may only 
+function, which is not introspectible. One may only 
 apply |f| to a particular static or dynamic value, and receive another 
 value in return. Alas, as in the case |lam (\x -> mul x dynval)|, 
 applying the same function to different static values may give 
@@ -818,7 +829,7 @@ solution is to be conservative and always use the |C| compiler to
 compile |f| to the future-stage expression, which we can tag with
 E1. But that defeats the purpose of partial evaluation as we may miss
 many opportunities for static computations and simplifications, such
-as multiplication by zero in the example above. Another solution is to
+as multiplication by zero in the example above. A better solution is to
 delay the binding-type-analysis (BTA) until the function |f| is
 applied to a particular argument (that is, until the result of |lam f|
 appears as the argument of |app|). That means, we have to find a way
@@ -834,7 +845,7 @@ typecase (ref? Gibbons?).
 
 The problem we encountered here is quite akin to typed CPS
 transform. When transforming abstractions, we come across
-non-factorialness. The connection with CPS is not an accident, as we
+non-functorialness. The connection with CPS is not an accident, as we
 shall see below (in Section XXX).
 
 \subsection{GADT -- not quite tagless PE}
@@ -843,7 +854,7 @@ shall see below (in Section XXX).
 Two common ways of providing typecase in Haskell is by using either
 generalized algebraic data types (GADT) or type-class functions
 (implemented via typeclasses with functional dependencies). These
-methods are equivalent; here we show the GADT; please see |incope1.ml|
+methods are equivalent; here we show the GADT; please see |incope1.hs|
 in the accompanying source code for the latter.
 
 We introduce the following GADT
@@ -918,11 +929,13 @@ would ideally like is to write
 \begin{code}
 data P t = S (repr_pe t) (C t) | E (C t)
 \end{code}
-where |repr_pe| is a type function, defined inductively as 
+where |repr_pe| is a type function, defined inductively
+% inductively because P below depends on repr_pe
+as 
 \begin{code}
 repr_pe Int    = Int
 repr_pe Bool   = Bool
-repr_pe (a->b) = (repr_pr a) -> (repr_pe b)
+repr_pe (a->b) = P a -> P b
 \end{code}
 Although we can use typeclasses to define that type function
 in Haskell, that is not portable to MetaOCaml. We notice however that
@@ -964,13 +977,13 @@ end;;
 The interpreters |R|, |L| and |C| above only relied on the last
 argument of the |repr| type, which is unchanged. And so is their
 implementation; the newly added argument |'sv| will be phantom.
-For example, we would have write, in the case of the |C| interpreter,
+For example, we would now write the interpreter |C| as
 \begin{code}
 module C = struct
   type ('c,'sv,'dv) repr = ('c,'dv) code
   (* the rest is the same *)
 \end{code}
-When writing the partial evaluator however, we make use of that
+When writing the partial evaluator however, we make use of the
 type argument |'sv|. Here's the corresponding instance of the
 Symantics:
 
@@ -1124,10 +1137,6 @@ that enables the PE is exactly the same type function that enables
 CPS....
 
 
-We must formulate some propositions: a typed term makes progress in
-any interpreter. The reason it is typed in any interpreter:
-|forall r. Symantics r => r tau| directly says that in every model the
-term is typed. 
 
 The PE in incope is really a mixture of online and off-line; it looks 
 online, but it has a sort of "just in time" binding-time analysis built in.
@@ -1143,6 +1152,12 @@ then |Symantics repr| implies |Functor repr|. We can write then
 \end{code}
 
 \subsection{Translucent types}
+
+We must formulate some propositions: a typed term makes progress in
+any interpreter. The reason it is typed in any interpreter:
+|forall r. Symantics r => r tau| directly says that in every model the
+term is typed. 
+
 The crucial role of the higher-order type parameter r
 
 The type constructor "r" above represents a particular interpreter.  The
@@ -1196,6 +1211,8 @@ seems the inference is possible, as our Haskell and OCaml code
 constructively illustrates. Perhaps we need to characterize our
 fragment.
 
+The attempt to encode self-interpreter brings the |*->*| polymorphism
+the the forefront, as we shall now see.
 
 \section{Self-interpretation}\cite{selfinterp}
 
