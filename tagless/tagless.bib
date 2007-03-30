@@ -1,13 +1,15 @@
+@STRING{j_hosc			= "Higher-Order and Symbolic Computation" }
+@STRING{proc_icfp_1		= "{ICFP} '" }
+@STRING{proc_icfp_2		= ": Proceedings of the {ACM} International Conference on Functional Programming" }
+@STRING{pub_acm			= "{ACM} {P}ress" }
+@STRING{pub_acm_addr		= "{N}ew {Y}ork" }
+
 @inproceedings{WalidICFP02,
-  author    = {Emir Pasalic and
-               Walid Taha and
-               Tim Sheard},
-  title     = {Tagless staged interpreters for typed languages.},
-  booktitle = {ICFP},
-  year      = {2002},
-  pages     = {218-229},
-  ee        = {http://doi.acm.org/10.1145/581478.581499},
-  bibsource = {DBLP, http://dblp.uni-trier.de}
+  author	= "Emir Pa{\v s}ali{\'c} and Walid Taha and Tim Sheard",
+  title		= "Tagless Staged Interpreters for Typed Languages",
+  pages		= "157--166",
+  crossref	= "icfp2002",
+  url		= "http://www.cs.rice.edu/~taha/publications/conference/icfp02.dvi http://www.cs.rice.edu/~taha/publications/conference/icfp02.ps http://www.cs.rice.edu/~taha/publications/conference/icfp02.pdf"
 }
 
 @inproceedings{WalidPOPL03,
@@ -62,3 +64,53 @@
   bibsource = {DBLP, http://dblp.uni-trier.de}
 }
 
+@InProceedings{	reynolds-definitional-notes,
+  author	= "John C. Reynolds",
+  title		= "Definitional Interpreters for Higher-Order Programming Languages",
+  pages		= "717--740",
+  crossref	= "acm1972",
+  note		= "Reprinted as \cite{reynolds-definitional}",
+  volume	= 2,
+  abstract	= "Higher-order programming languages (i.e., languages in which procedures or labels can occur as values) are usually defined by interpreters which are themselves written in a programming language based on the lambda
+		  calculus (i.e., an applicative language such as pure LISP). Examples include McCarthy's definition of LISP, Landin's SECD machine, the Vienna definition of PL/I, Reynolds' definitions of GEDANKEN, and recent unpublished
+		  work by L. Morris and C. Wadsworth. Such definitions can be classified according to whether the interpreter contains higher-order functions, and whether the order of application (i.e., call-by-value versus call-by-name) in
+		  the defined language depends upon the order of application in the defining language. As an example, we consider the definition of a simple applicative programming language by means of an interpreter written in a similar
+		  language. Definitions in each of the above classifications are derived from one another by informal but constructive methods. The treatment of imperative features such as jumps and assignment is also discussed."
+}
+
+@Article{	reynolds-definitional,
+  author	= "John C. Reynolds",
+  title		= "Definitional Interpreters for Higher-Order Programming Languages",
+  journal	= j_hosc,
+  year		= 1998,
+  volume	= 11,
+  number	= 4,
+  pages		= "363--397",
+  url		= "ftp://ftp.cs.cmu.edu/user/jcr/defint.ps.gz",
+  abstract	= "Higher-order programming languages (i.e., languages in which procedures or labels can occur as values) are usually defined by interpreters that are themselves written in a programming language based on the lambda calculus
+		  (i.e., an applicative language such as pure LISP). Examples include McCarthy's definition of LISP, Landin's SECD machine, the Vienna definition of PL/I, Reynolds' definitions of GEDANKEN, and recent unpublished work by L.
+		  Morris and C. Wadsworth. Such definitions can be classified according to whether the interpreter contains higher-order functions, and whether the order of application (i.e., call by value versus call by name) in the
+		  defined language depends upon the order of application in the defining language. As an example, we consider the definition of a simple applicative programming language by means of an interpreter written in a similar
+		  language. Definitions in each of the above classifications are derived from one another by informal but constructive methods. The treatment of imperative features such as jumps and assignment is also discussed.",
+  keywords	= "programming language, language definition, interpreter, lambda calculus, applicative language, higher-order function, closure, order of application, continuation, LISP, GEDANKEN, PAL, SECD machine, J-operator, reference"
+}
+
+@Proceedings{	acm1972,
+  key		= "{\relax ACM}",
+  title		= "Proceedings of the {ACM} National Conference",
+  booktitle	= "Proceedings of the {ACM} National Conference",
+  address	= pub_acm_addr,
+  publisher	= pub_acm,
+  year		= 1972,
+  location	= "Boston"
+}
+
+@Proceedings{	icfp2002,
+  key		= "{\relax ICFP}",
+  title		= proc_icfp_1 # "02"  # proc_icfp_2,
+  booktitle	= proc_icfp_1 # "02"  # proc_icfp_2,
+  address	= pub_acm_addr,
+  publisher	= pub_acm,
+  year		= 2002,
+  location	= "Pittsburgh, PA"
+}

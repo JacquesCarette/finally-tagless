@@ -1,15 +1,15 @@
 \documentclass[preprint]{sigplanconf}
 \usepackage{amsmath,amssymb}
-\usepackage{natbib1}
 \usepackage{comment}
+\usepackage{hyphenat}
 \usepackage{url}
+\usepackage{prooftree1}
 
 \newcommand{\jacques}[1]{{\it [Jacques says: #1]}}
 \newcommand{\oleg}[1]{{\it [Oleg says: #1]}}
 \newcommand{\ccshan}[1]{{\it [Ken says: #1]}}
 
 \usepackage{natbib1}
-\bibpunct();A{},
 \let\cite=\citep
 
 \usepackage[compact]{fancyvrb1}
@@ -20,6 +20,29 @@
 
 \newcommand{\ZZ}{\mathbb{Z}}
 \newcommand{\BB}{\mathbb{B}}
+
+\newcommand{\fun}[1]{\mathopen{\lambda\mathord{#1}.\,}}
+\newcommand{\fix}[1]{\mathopen{\mathrm{fix\,}\mathord{#1}.\,}}
+\newcommand{\Forall}[1]{\mathopen{\forall\mathord{#1}.\,}}
+\newcommand{\Exists}[1]{\mathopen{\exists\mathord{#1}.\,}}
+\newcommand{\cond}[3]{\mathrm{if\,}#1\mathrm{\,then\,}#2\mathrm{\,else\,}#3}
+
+% Make space around section headings no less than space around theorems
+\makeatletter
+\@tempdima\topsep \advance\@tempdima\parsep
+\ifdim\@sectionbelowskip   <\topsep \@sectionbelowskip   \topsep \fi
+\ifdim\@subsectionbelowskip<\topsep \@subsectionbelowskip\topsep \fi
+\makeatother
+
+% Match the rule inserted by \@makecaption in sigplanconf.cls
+\setproofrulebreadth .33pt
+\newenvironment{floatrule}
+    {\hrule width \hsize height .33pt \vspace{.5pc}}
+    {\par\addvspace{1ex}}
+
+% Make some Rel symbols into Bin symbols instead
+\DeclareMathSymbol{\to}{\mathbin}{symbols}{"21}
+\DeclareMathSymbol{:}{\mathbin}{operators}{"3A}
 
 \begin{document}
 
@@ -76,12 +99,40 @@ never get stuck.
 
 \section{Introduction}\label{intro}
 
-See Section 1 of Walid02. Our subject area is that of a definitional DSL
-interpreter. 
-Define Staging, meta-language and object language. (Walid uses
-`subject' language).
-\jacques{\emph{subject} and \emph{object} are both used in the current
-write-up; should we define them to be equivalent, or just stick to one?}
+A popular way to define and implement a programming language is to embed it in
+another \citep{reynolds-definitional}.  The embedded language is called the
+\emph{object} or \emph{subject} language, whereas the embedding language is the
+\emph{metalanguage}.  Embedding is especially appropriate for domain\hyp
+specific object languages because it supports rapid prototyping and integration
+with the host environment.  If the metalanguage supports \emph{staging}, then
+the embedding can compile object programs to the metalanguage and avoid the
+overhead of interpreting them on the fly \citep{WalidICFP02}.  A staged
+definitional interpreter is thus a promising way to build a domain\hyp specific
+language.
+
+\begin{figure}
+    \begin{floatrule}
+    \begin{proofrules}
+        \[ \[ [x:t_1] \proofoverdots e:t_2 \] \justifies \fun{x}e:t_1\to t_2 \]
+        \[ \[ [f:t_1\to t_2] \proofoverdots e:t_1\to t_2 \] \justifies \fix{f}e:t_1\to t_2 \]
+        \[ e_1:t_1\to t_2 \quad e_2:t_1 \justifies e_1 e_2: t_2 \]
+        \[ \text{$n$ is an integer} \justifies n:\ZZ \]
+        \[ \text{$b$ is a Boolean} \justifies b:\BB \]
+        \[ e_1:\ZZ \quad e_2:\ZZ \justifies e_1+e_2:\ZZ \]
+        \[ e_1:\ZZ \quad e_2:\ZZ \justifies e_1 \times e_2:\ZZ \]
+        \[ e_1:\ZZ \quad e_2:\ZZ \justifies e_1 \le e_2:\BB \]
+        \[ e:\BB \quad e_1:t \quad e_2:t \justifies \cond{e}{e_1}{e_2}:t \]
+    \end{proofrules}
+    \end{floatrule}
+    \caption{Our typed object language}
+    \label{fig:object}
+\end{figure}
+
+We focus on embedding a typed object language into a typed metalanguage.
+\ccshan{Collect reasons to type here.}
+
+
+
 
 We have programmed our interpreters in OCaml/MetaOCaml (\cite{metaocaml})
 and Haskell. The complete code is available 
@@ -96,7 +147,7 @@ patently obvious in one implementation, while requiring more argumentation
 in the other.
 
 \oleg{should say somewhere in the Introduction that we are interested
-  in the typed subject language embedded in the typed
+  in the typed object language embedded in the typed
   meta-language. Refer to Sec 2 (see the remark below) why this is
   good. We assume the DSL setting: we enter EDSL terms in the
   meta-language program (e.g., GHCi or (Meta)OCaml top-level). A
@@ -140,7 +191,7 @@ be made obvious to the compiler. That also exlains unoptimality.
 
 Consider a language with abstraction, application and boolean
 literals with de Bruin indices as variables. This is the language used
-in the body of \cite{WalidIFCP02}, from which we borrow the first part of 
+by \citet{WalidICFP02}, from which we borrow the first part of 
 this example.
 
 The language can be described by the following grammar (using OCaml
@@ -448,17 +499,17 @@ signature.  We however prefer if the typechecker of the meta-language
 avoid the |()| argument by switching off the monomophism restriction
 with a compiler flag.
 
-Note that the subject language is typed. If we make a mistake
+Note that the object language is typed. If we make a mistake
 (for example, replace |int 7| with |bool True| in |testpowfix7|, the
 compiler will highlight that term and complain that it couldn't match
 the expected |Int| against the inferred |Bool|. A type error
 also results when entering |lam (\x -> app x x)|, with the compiler
 complaining about an infinite type. The type-checker of the
-meta-language will flag meaningless subject level terms --
+meta-language will flag meaningless object level terms --
 before any of their evaluation. If we forget, for example, |app| in
 some of the terms above, we get an error message with a precise
 location. So the type-checker also flags syntactically invalid
-subject-level terms.\oleg{Should we perhaps move this up, in the
+object-level terms.\oleg{Should we perhaps move this up, in the
   intro? To justify why typed-metalanguages and the typed DSL are
   good. Or keep the explanation here but refer to it from the Introduction.}
 
@@ -1441,6 +1492,6 @@ hole they will be plugged into. Formulate this as a prop?
 We would like to thank Martin Sulzmann and Walid Taha 
 for helpful discussions.
 
-\bibliographystyle{plainnat}
+\bibliographystyle{mcbride}
 \bibliography{tagless}
 \end{document}

@@ -1,0 +1,30 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{prooftree1}[2007/02/15 Improved prooftree by ccshan]
+\RequirePackageWithOptions{prooftree}
+
+% Don't override \shift inside prooftree (use \shiftleft and \shiftright)
+% and don't override \leadsto either (use \proofoverdots)
+\def\patchprooftree#1\let\leadsto#2#3\let\shift#4#5\patchprooftree
+    {\def\prooftree{#1#3#5}}%
+\expandafter\patchprooftree\prooftree\patchprooftree
+
+% Define proofrules environment
+\newdimen\proofruleslineskip \proofruleslineskip\proofrulebaseline
+\newenvironment{proofrules}[1][]{%
+    \par
+    \lineskiplimit\proofruleslineskip
+    \lineskip\proofruleslineskip
+    \raggedright #1\par
+    \centering
+    \emergencystretch 0pt
+    \def\[{\begingroup \xspaceskip0pt \spaceskip0pt \normalbaselines \prooftree}%
+    \def\]{\endprooftree\endgroup}%
+    \everymath{\xspaceskip0pt \spaceskip0pt \normalbaselines }%
+    \let\vcenter\vbox
+    \xspaceskip 3em plus.5em minus1.25em
+    \spaceskip 2em plus.5em minus1.25em
+    \linepenalty 1000
+    \hbadness 10000
+}{%
+    \ifhmode \unskip \par \fi
+}
