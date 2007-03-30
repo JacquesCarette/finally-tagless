@@ -69,26 +69,34 @@
 \maketitle
 
 \begin{abstract}
-We have built a (family of) tagless partial evaluator(s) for a typed object
-language (embedded DSL), placing minimal requirements on
-the type system of the meta-language:
-we need let-bound polymorphism and staging, but not dependent
-types, generalized algebraic data types, nor a tag elimination 
-postprocessing step.
+We have built a family of tagless embeddings (interpretations) for a
+higher-order typed object
+language in a typed metalanguage (current Haskell and ML), 
+requiring neither dependent
+types, nor generalized algebraic data types, nor a tag elimination 
+postprocessing step. That has prevously considered an open problem
+(impossible). 
+Our family of evaluators (interpreters, embeddings?) contains 
+an interpreter, a compiler, a partial
+evaluator, a term-size evaluator and a CPS call-by-name transformer.
+We take advantage of staging when available.
 
 The main tool is to take functions seriously: we encode the
-higher-order abstract syntax of object terms not by using constructors for
+deBruijn or higher-order abstract syntax  of object terms 
+not by using constructors for
 an algebraic data type but rather by invoking cogen functions, which occur as
 free variables in the encoded term.  In other words, we eschew initial
 algebras for the wilder world of final algebras.
-Our family of evaluators contains an interpreter, a compiler, a partial
-evaluator, a term-size evaluator and a CPS call-by-name transformer.
+(Or: we expose the co-algebraic structure of the object language).
 Our approach highlights the importance of order-2 type constructors
-(rank-2 polymorphism), which lets us encode DSL terms with
+(rank-2 polymorphism), available with ML functors and
+Haskell98 constructor classes. This lets us encode object terms with
 translucent types: enough abstraction is available to interpret the
 terms in various ways, and yet enought type information is available 
 to typecheck the terms and statically assure their interpretation will
 never get stuck.
+
+\oleg{If we talk about self-interpreter, mention let-bound polymorphism}
 \end{abstract}
 
 %\category{CR-number}{subcategory}{third-level}
@@ -99,10 +107,11 @@ never get stuck.
 
 A popular way to define and implement a programming language is to embed it in
 another \citep{reynolds-definitional}.  The embedded language is called the
-\emph{object} or \emph{subject} language, whereas the embedding language is the
+\emph{object} or \emph{subject} language, whereas the host language is the
 \emph{metalanguage}.  Embedding is especially appropriate for domain\hyp
 specific object languages because it supports rapid prototyping and integration
-with the host environment.  If the metalanguage supports \emph{staging}, then
+with the host environment \oleg{Cite Hudaks' survey and perhaps say a
+  couple of more words}.  If the metalanguage supports \emph{staging}, then
 the embedding can compile object programs to the metalanguage and avoid the
 overhead of interpreting them on the fly \citep{WalidICFP02}.  A staged
 definitional interpreter is thus a promising way to build a domain\hyp specific
@@ -130,19 +139,25 @@ We focus on embedding a typed object language into a typed metalanguage.
 \ccshan{Collect reasons to type here.}
 
 
+    At POPL 2003, Taha et al~\cite{TahaPOPL03} and Xi et al~\cite{XiPOPL03}
+both
+interpreter of a typed language in a typed language is an interesting
+problem. The known solutions include the use of the Universal type, or
+GADTs. The former is not quite satisfactory for performance reasons;
+and also because of the presence of partial pattern matching in the
+interpreter; the inexhaustiveness of the pattern matching should never
+be triggered when executing a well-typed term. Alas, this fact cannot
+be made obvious to the compiler. That also exlains unoptimality.
 
-
-We have programmed our interpreters in OCaml/MetaOCaml (\cite{metaocaml})
-and Haskell. The complete code is available 
-\footnote{the URL will appear in the final version of the paper.}
-% connot give URL in the ICFP paper due to double-blind reviews
-in the supplemental material to the paper. We will use both
-(Meta)OCaml and Haskell for our examples throughout the paper.
-Each language has its strength and weaknesses; this dual implementation
-forced us to clarify our own ideas.  We will continually leverage the
-respective strengths of these languages, as certain of our claims are
-patently obvious in one implementation, while requiring more argumentation
-in the other.
+ The problem of typed direct
+  intrepreter of a typed language is difficult and thought to require
+  GADT or dependent types. 
+  In fact, several papers introducing GADTs (Xi03 and SPJ) as well as 
+  (language in Walid03) and Concoqtion, written 2003-2007, used the 
+  typed tagless intrepreter as the motivating example.
+  Taha (in Jones optimality paper, I think) said that typed
+  interpreter of the typed language was not solved then.
+  Or, should we refer to Sec `Other solutions'.
 
 \oleg{should say somewhere in the Introduction that we are interested
   in the typed object language embedded in the typed
@@ -170,25 +185,25 @@ terms could be done this way, which would simplify things tremendously.}
 Should we mention some of these points in our contributions subsection
 below?
 
-    At POPL 2003, Taha et al~\cite{TahaPOPL03} and Xi et al~\cite{XiPOPL03}
-both
-interpreter of a typed language in a typed language is an interesting
-problem. The known solutions include the use of the Universal type, or
-GADTs. The former is not quite satisfactory for performance reasons;
-and also because of the presence of partial pattern matching in the
-interpreter; the inexhaustiveness of the pattern matching should never
-be triggered when executing a well-typed term. Alas, this fact cannot
-be made obvious to the compiler. That also exlains unoptimality.
-\oleg{Should say somewhere here that our code is surprisingly simple,
-  and, in the hindsight, obvious. The problem of typed direct
-  intrepreter of a typed language is difficult and thought to require
-  GADT or dependent types. 
-  In fact, several papers introducing GADTs (Xi03 and SPJ) as well as 
-  (language in Walid03) and Concoqtion, written 2003-2007, used the 
-  typed tagless intrepreter as the motivating example.
-  Taha (in Jones optimality paper, I think) said that typed
-  interpreter of the typed language was not solved then.
-  Or, should we refer to Sec `Other solutions'}
+
+
+We have programmed our interpreters in OCaml (and, for staging,
+MetaOCaml (\cite{metaocaml})) and Haskell. The complete code is available 
+\footnote{the URL will appear in the final version of the paper.}
+% connot give URL in the ICFP paper due to double-blind reviews
+in the supplemental material to the paper. We will use both
+(Meta)OCaml and Haskell for our examples throughout the paper.
+Each language has its strength and weaknesses; this dual implementation
+forced us to clarify our own ideas.  We will continually leverage the
+respective strengths of these languages, as certain of our claims are
+patently obvious in one implementation, while requiring more argumentation
+in the other.
+Our code is surprisingly simple, and, in the hindsight, obvious. We
+must emphasize however that direct typeful tagless interpretation of a typed
+language until now has thought to be impossible in plain ML and
+require extensions like GADT -- which we discuss in detail in Section
+XXX.
+
 
 
 
