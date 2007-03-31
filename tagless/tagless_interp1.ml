@@ -54,20 +54,20 @@ end;;
 
 module Tagless = struct
 
-let b (bv:bool) env = bv
 let varZ (vc,_) = vc
 let varS vp (_,envr) = vp envr
-let app e1 e2 env = (e1 env) (e2 env)
+let b (bv:bool) env = bv
 let lam e env = fun x -> e (x,env)
+let app e1 e2 env = (e1 env) (e2 env)
 
 let testf1 = app (lam varZ) (b true)
 let testf1r = testf1 ()
 (*   val testf1r : bool = true *)
 ;;
 
-let testf1bad = app (lam (varS varZ)) (b true)
+let testf3 = app (lam (varS varZ)) (b true)
 (* The following gives the type error!
- let testf1badr = testf1bad ();;
+ let testf3r = testf3 ();;
 *)
 
 end;;

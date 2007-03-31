@@ -152,7 +152,7 @@ compilation, partial evaluation, and other processing.
 a typed object language in a typed metalanguage as an interesting
 problem.  The known solutions to this problem store object terms and
 values in the metalanguage in a universal type, a generalized algebraic
-datatype (GADT), or a dependent type.  In the remainder of this section,
+data type (GADT), or a dependent type.  In the remainder of this section,
 we discuss these solutions, identify their drawbacks, then summarize our
 proposal and contributions.  No matter how we represent the object language in the
 metalanguage, the representation can be performed by hand or more
@@ -246,7 +246,7 @@ Second, the |lookup|
 function assumes a nonempty environment, so |eval| can fail if we
 evaluate an open term.
 \begin{code}
-let test3 = V VZ
+let test3 = A (L (V (VS VZ)), B true)
 let test3r = eval [] test3
 Exception: Match_failure in lookup
 \end{code}
@@ -261,7 +261,7 @@ and |UA| \citep[\S1.4]{WalidICFP02}.  In other words, the algebraic data
 types above fail to express in the metalanguage that the object program
 is well-typed.  This failure necessitates tagging and nonexhaustive
 pattern\hyp matching operations that incur a performance penalty in
-interpretation and impair optimality in partial evaluation
+interpretation \citep{WalidICFP02} and impair optimality in partial evaluation
 \citep{taha-tag}.  In short, the universal\hyp type solution is
 unsatisfactory because it does not preserve typing.
 
@@ -286,28 +286,63 @@ object term is well-typed and closed.
 
 \subsection{Our Final Proposal}\label{ourapproach}
 
-If we change the encoding of the term from data
-constructors to functions, we can encode a tagless interpreter for a
-typed object language into a metalanguage with a very simple type system.
+We represent object programs using ordinary functions rather than
+data constructors.  The interpreter below provides these functions.
+\begin{code}
+let varZ (x,env)    = x
+let varS vp (x,env) = vp env
+let b (bv:bool) env = bv
+let lam e env       = fun x -> e (x,env)
+let app e1 e2 env   = (e1 env) (e2 env)
+\end{code}
+These functions comprise the entire interpreter.
+We now represent our sample term $(\fun{x}x)\True$ as
+\begin{code}
+let testf1 = app (lam varZ) (b true)
+\end{code}
+This representation is almost the same as in \S\ref{tagproblem}, only
+written with lowercase identifiers. To evaluate an object term is to
+apply its representation to the empty environment.
+\begin{code}
+let testf1r = testf1 ()
+val testf1r : bool = true
+\end{code}
+The result has no tags---the interpreter patently uses no tags and no
+pattern matching. The term |b true| evaluates to a boolean and the term
+|lam varZ| evaluates to a function, both untagged. The |app| function
+applies |lam varZ| without pattern matching. What is more, evaluating an
+open term such as |testf3| below gives a type error rather than
+a run-time error.
+\begin{code}
+let testf3 = app (lam (varS varZ)) (b true)
+let testf3r = testf3 ()
+\end{code}
+The type error correctly complains
+that the initial environment should be a tuple rather than |()|.
+In other words, the term is open.
 
+In sum, by encoding terms using ordinary functions (the \emph{final}
+rather than \emph{initial} approach), we achieve a tagless interpreter
+for a typed object language, in a metalanguage with a very simple type
+system \citep{hindley-principal,milner-theory}.  All the run-time errors
+in \S\ref{tagproblem} (applying a nonfunction; evaluating an open term)
+are now reported at compile time. Because this new interpreter uses no
+pattern matching, it never results in a run-time error and is in fact
+total.  Because this totality is obvious not just to us but also to the
+metalanguage implementation, we avoid the serious performance penalty
+\citep{WalidICFP02} of error checking.
 
+The interpreter above is wired directly into the
+functions |b|, |lam|, and so on.  In the remainder of this paper, 
+we explain how to abstract the interpreter so as
+to ``evaluate'' the same term in many different
+ways: interpretation, compilation, partial evaluation, size
+computation, and so forth.
 
-
-\jacques{I quite agree that the point that needs to be revisited is
-  that a \emph{direct} interpreter for a (typed) language "cannot" be
-  done. see discussion in related work about the direct interpreter,
-  with regards to Walid's paper. Perhaps bring some of it here?}
-\jacques{I have looked at a fair bit of the literature, and I have not
-  seen this done, especially not in the typed 'online' setting.  The
-  one question that seems to be open is, how accurate can we make the
-  PE without a tough BTA?}
-Should we mention some of these points in our contributions subsection
-below?
-
-
+\subsection{Contributions}\label{contributions}
 
 We have programmed our interpreters in OCaml (and, for staging,
-MetaOCaml (\cite{metaocaml})) and Haskell. The complete code is available 
+MetaOCaml \citep{metaocaml} and Haskell. The complete code is available 
 \footnote{the URL will appear in the final version of the paper.}
 % connot give URL in the ICFP paper due to double-blind reviews
 in the supplemental material to the paper. We will use both
@@ -323,73 +358,16 @@ language until now has thought to be impossible in plain ML and
 require extensions like GADT -- which we discuss in detail in Section
 XXX.
 
-Now, let us define our object language (embedded DSL) in a different
-way. Instead of using algebraic datatypes to encode the terms of the
-language in the meta-language (reminiscent to the \emph{initial algebra} 
-approach), we will be using functions as term constructors (the \emph{final}
-approach):
-
-\begin{code}
-  let b (bv:bool) env  = bv
-  let varZ env         = fst env
-  let varS vp env      = vp (snd env)
-  let app e1 e2 env    = (e1 env) (e2 env)
-  let lam e env        = fun x -> e (x,env)
-\end{code}
-
-\noindent That is all of the interpreter. Our sample term now reads
-\begin{code}
-  let testf1 = app (lam varZ) (b true)
-\end{code}
-which is almost the same as before, only written with lower-case
-identifiers. To evaluate a term, we merely need to apply 
-the term to the empty environment
-
-\begin{code}
-  let testf1r = testf1 ()
-  val testf1r : bool = true
-\end{code}
-
-The result now has no tags. The above functions |b|,
-|varZ|, |app| constitute the evaluator. It is patent that the
-interpreter has no tags and no pattern matching. The term |b true| is
-evaluated to a boolean and a term |lam varZ| is evaluated to a
-function, with no tags attached. The application rule applies that
-function without any need for pattern-matching. The evaluator has
-another feature: evaluation of open terms leads to a type error rather
-than a run-time error. Indeed, 
-
-\begin{code}
-  let testf1bad = app (lam (varS varZ)) (b true)
-  let testf1badr = testf1bad ()
-\end{code}
-gives a type error saying 
-that the initial environment should be a tuple rather than () --
-meaning the term requires a non-empty initial environment: the term is
-open.
-
-Thus all the errors that were previously reported at run-time (open terms,
-applications of non-functions) are now reported at compile
-time. Running of the interpreter will never result in run-time errors
-because its code uses no operations that could possibly raise such
-an error. In fact, our interpreter is total.
-
-Furthermore, it should be clear that we do not use any
-pattern-matching at all, and thus cannot have any pattern-matching
-errors.  This is clear not just to us, but also to the compiler.
-In other words in traditional approaches one can prove a meta-theorem
-that all pattern-matching is total, but this is nevertheless not
-apparent to the compiler, which thus still has to generate code for
-those cases.  This seriously hurts efficiency~\cite{WalidICFP02}.
-
-In the above code, the interpreter is wired in, directly built into the
-functions |b|, |app|, etc.  In the remainder of this paper, 
-we explain how to abstract the interpreter,
-to make it possible to ``evaluate'' the same term in many different
-ways: interpretation, compilation, partial evaluation, size
-computation, etc.
-
-\subsection{Contributions}\label{contributions}
+\jacques{I quite agree that the point that needs to be revisited is
+  that a \emph{direct} interpreter for a (typed) language "cannot" be
+  done. see discussion in related work about the direct interpreter,
+  with regards to Walid's paper. Perhaps bring some of it here?}
+\jacques{I have looked at a fair bit of the literature, and I have not
+  seen this done, especially not in the typed 'online' setting.  The
+  one question that seems to be open is, how accurate can we make the
+  PE without a tough BTA?}
+Should we mention some of these points in our contributions subsection
+below?
 
    We have realized that if we change the encoding of the term --
 from data constructors to functions, we can encode a tagless
