@@ -2,6 +2,7 @@
 \usepackage{amsmath,amssymb}
 \usepackage{mathptmx}
 %\usepackage{txfonts} \renewcommand{\ttdefault}{cmtt}
+\usepackage[T1]{fontenc}
 \usepackage{comment}
 \usepackage{hyphenat}
 \usepackage{url}
@@ -128,7 +129,7 @@ language.
         \[ \[ [f:t_1\to t_2] \proofoverdots e:t_1\to t_2 \] \justifies \fix{f}e:t_1\to t_2 \]
         \[ e_1:t_1\to t_2 \quad e_2:t_1 \justifies e_1 e_2: t_2 \]
         \[ \text{$n$ is an integer} \justifies n:\ZZ \]
-        \[ \text{$b$ is a Boolean} \justifies b:\BB \]
+        \[ \text{$b$ is a boolean} \justifies b:\BB \]
         \[ e:\BB \quad e_1:t \quad e_2:t \justifies \cond{e}{e_1}{e_2}:t \]
         \[ e_1:\ZZ \quad e_2:\ZZ \justifies e_1+e_2:\ZZ \]
         \[ e_1:\ZZ \quad e_2:\ZZ \justifies e_1 \times e_2:\ZZ \]
@@ -153,7 +154,7 @@ problem.  The known solutions to this problem store object terms and
 values in the metalanguage in a universal type, a generalized algebraic
 datatype (GADT), or a dependent type.  In the remainder of this section,
 we discuss these solutions, identify their drawbacks, then summarize our
-contributions.  No matter how we represent the object language in the
+proposal and contributions.  No matter how we represent the object language in the
 metalanguage, the representation can be performed by hand or more
 conveniently by a parser or preprocessor such as camlp4.  We leave aside
 the issue of whether to program a parser or preprocessor using dependent
@@ -195,116 +196,102 @@ let rec eval0 env = function
 | L e       -> fun x -> eval0 (x::env) e
 | A (e1,e2) -> (eval0 env e1) (eval0 env e2) 
 \end{code}
+
 If our OCaml-like metalanguage were untyped, the code above would be acceptable.
 The |L e| line exhibits interpretive overhead:
 |eval0| traverses the function body~|e| every time (the result of
 evaluating) |L e| is applied. Staging can be used to remove this
 interpretive overhead \cite[\S1.1--2]{WalidICFP02}.
 
-If we use OCaml or some other typed language as the meta-language, 
-the function |eval0| is ill-typed. The line |B b|
-says that |eval0| returns a boolean, whereas the next line says
-the result is a function. All branches of a pattern-match form must
-yield values of the same type, however. 
-A related problem is the type of the environment |env|: since variables
-in the language may be either of boolean or function types, a regular
-OCaml list cannot be used for holding the corresponding values. 
+However, the function |eval0| is ill-typed
+if we use OCaml or some other typed language as the metalanguage.
+The line |B b|
+says that |eval0| returns a boolean, whereas the next line |L e| says
+the result is a function, but all branches of a pattern-match form must
+yield values of the same type. 
+A related problem is the type of the environment |env|: a regular
+OCaml list cannot hold both boolean and function values. 
 
-The usual solution is to introduce a Universal type (section 1.3 of
-\cite{WalidICFP02}) which contains both of these:
-
+The usual solution is to introduce a universal type \citep[\S1.3]
+{WalidICFP02} containing both booleans and functions.
 \begin{code}
-  type u = UB of bool | UA of (u -> u)
+type u = UB of bool | UA of (u -> u) | ...
 \end{code}
-
-We can then write an interpreter which is accepted by the typecheker
+We can then write a typed interpreter
 \begin{code}
 let rec eval env = function
-  | V VZ -> List.hd env
-  | V (VS v) -> eval (List.tl env) (V v)
-  | B b -> UB b
-  | L e -> UA (fun x -> eval (x::env) e)
-  | A (e1,e2) -> match eval env e1 with UA f -> f (eval env e2)
+| V v       -> lookup env v
+| B b       -> UB b
+| L e       -> UA (fun x -> eval (x::env) e)
+| A (e1,e2) -> match eval env e1 with UA f ->
+               f (eval env e2)
 \end{code}
-and whose inferred type is |u list -> exp -> u|. Now we can evaluate
-our sample |test1| term:
-
+whose inferred type is |u list -> exp -> u|. Now we can evaluate
+our sample |test1| term.
 \begin{code}
 let test1r = eval [] test1
 val test1r : u = UB true 
 \end{code}
 
-Unfortunately, the result is tagged: |UB true| rather than just
-|true|. We also note that the eval function is partial in two
-respects: first there is an inexhaustive pattern-matching 
-|match ... with UA f -> ...| in the 
-line |A (e1,e2)|.
-Second, the occurrences of |List.hd| and |List.tl|.
-The failure of the latter corresponds to the evaluation of `open'
-terms. One can see that if all our terms are closed, |List.hd| and
-|List.tl| above will never be applied to the empty list. The partial
-pattern match in the |A (e1,e2)| line raises an exception when we try to
-evaluate something like |A (B true, B false)|, that is when the first
-operand is not a function. 
+The unfortunate tag |UB| in the result reflects that |eval| is a partial
+function, in two ways.  First, the pattern match |with UA f| in the line
+|A (e1,e2)| is not exhaustive, so |eval| can fail if we apply a boolean,
+as in the ill-typed term |A (B true, B false)|.
+\begin{code}
+let test2 = A (B true, B false)
+let test2r = eval [] test2
+Exception: Match_failure in eval
+\end{code}
+Second, the |lookup|
+function assumes a nonempty environment, so |eval| can fail if we
+evaluate an open term.
+\begin{code}
+let test3 = V VZ
+let test3r = eval [] test3
+Exception: Match_failure in lookup
+\end{code}
+After all, the type |exp| represents object
+terms both well-typed and ill-typed, both open and closed.
 
-Suppose our object language were typed too. Then terms like
-|A (B true, B false)| would be ill-typed. Thus, if our evaluator
-accepted only typed terms, the missing alternatives in the |A|
-line would not occur. Alas, what is obvious to us is not obvious to
-the meta-language. There is still a pattern match, and we still have
-to attach and eliminate the UB and UA tags, even when there is no
-longer a need for them. See \cite{WalidICFP02}, Section 1.4 for more details.
+If we evaluate only closed terms that have been type-checked, then
+|eval| would never fail. Alas, this soundness is not obvious to the
+metalanguage, whose type system we must still appease with the
+nonexhaustive pattern matching in |lookup| and |eval| and the tags |UB|
+and |UA| \citep[\S1.4]{WalidICFP02}.  In other words, the algebraic data
+types above fail to express in the metalanguage that the object program
+is well-typed.  This failure necessitates tagging and nonexhaustive
+pattern\hyp matching operations that incur a performance penalty in
+interpretation and impair optimality in partial evaluation
+\citep{taha-tag}.  In short, the universal\hyp type solution is
+unsatisfactory because it does not preserve typing.
 
-In short: It is not satisfactory
-to use a Universal type because tagging hurts performance and
-necessitates partial pattern matching in the metalanguage, even for a
-well-typed object term.  
+\subsection{Solutions Using Fancier Types}
 
-The universal type fails to express in the metalanguage
-that the object program is well-typed.  This failure gives rise to
-tagging and untagging (that is, apparently inexhaustive pattern\hyp
-matching) operations that incur a performance penalty in interpretation
-and impair optimality in partial evaluation.  In short, the
-universal\hyp type solution is not type\hyp preserving.
+It is commonly thought that to interpret a typed object language in
+a typed metalanguage while preserving types is difficult and requires
+GADTs or dependent types \citep{taha-tag}.  In fact, this problem
+motivated much work on GADTs \citep{xi-guarded,peyton-jones-simple} and
+on dependent types \citep{WalidICFP02,fogarty-concoqtion}.
 
-\subsection{Other solutions}
+For a metalanguage's type system to allow the well-typed object term
+|test1| but disallow the ill-typed object term |test2|, fancier types
+such as GADTs or dependent types seem necessary.  Yet other type systems
+have been proposed to distinguish closed terms like |test1| from open
+terms like |test3|
+\citep{WalidPOPL03,NanevskiICFP02,NanevskiJFP05,DaviesJACM01,nanevski-contextual},
+so that |lookup| never receives an empty environment.  We discuss these
+proposals further in \S\ref{related}; here we just note that many
+advanced type systems have been devised to ensure statically that an
+object term is well-typed and closed.
 
- The problem of typed direct
-  intrepreter of a typed language is difficult and thought to require
-  GADT or dependent types. 
-  In fact, several papers introducing GADTs (Xi03 and SPJ) as well as 
-  (language in Walid03) and Concoqtion, written 2003-2007, used the 
-  typed tagless intrepreter as the motivating example.
-  Taha (in Jones optimality paper, I think) said that typed
-  interpreter of the typed language was not solved then.
-  Or, should we refer to Sec `Other solutions'.
+\subsection{Our Final Proposal}\label{ourapproach}
 
-But how should one design a type system to type
-terms like |test1|? GADTs seem necessary. Similarly, how does one design a
-typesystem that can keep track of the open/closed status of terms, so that we
-can statically insure that only closed terms are passed to |eval| and that
-the empty list checking in |List.hd| and |List.tl| can be eliminated.
-The latter is an even more interesting problem requiring even
-more advanced type systems 
-(\cite{WalidPOPLo3,NanevskiICFP02,NanevskiJFP05,DaviesJACM01}
-\jacques{I hope that is the right Davies paper}
+If we change the encoding of the term from data
+constructors to functions, we can encode a tagless interpreter for a
+typed object language into a metalanguage with a very simple type system.
 
-This is also the main motivating problem (albeit in the context of
-a first-order language) for the introduction of GADTs 
-into Haskell \cite{PeytonJonesICFP2006}.  This was also a motivating
-factor behind the work of Xi on GADTs \cite{XiGADTs}, and some of the
-recent work on dependent types \cite{WalidICFP02,WalidConcoqtion}.
 
-See the Related Work section (\ref{related}) for a discussion of the other
-solutions to this problem.
-\oleg{I feel we need to give some details of the other solutions here, 
-to give the reader the feeling of
-how advanced solutions were proposed and how rarely they are
-implemented.}
-\jacques{I have rearranged this section so that it should be clear how
-to extend it to explain these other solutions}
 
-\subsection{The ``Final'' Proposal}\label{ourapproach}
 
 \jacques{I quite agree that the point that needs to be revisited is
   that a \emph{direct} interpreter for a (typed) language "cannot" be
@@ -335,10 +322,6 @@ must emphasize however that direct typeful tagless interpretation of a typed
 language until now has thought to be impossible in plain ML and
 require extensions like GADT -- which we discuss in detail in Section
 XXX.
-
-We have realized that if we change the encoding of the term from data
-constructors to functions, we can encode a tagless interpreter for a
-typed object language into a metalanguage with a very simple type system.
 
 Now, let us define our object language (embedded DSL) in a different
 way. Instead of using algebraic datatypes to encode the terms of the
@@ -471,7 +454,7 @@ with fixpoint, integers, booleans and comparison, whose BNF grammar is
 
 This time we use higher-order abstract syntax \cite{DaleMiller}
 rather than de Bruijn indices.  The
-language is close to the language of \cite{XiPOPL03}, without the polymorphic
+language is close to the language of \citet{xi-guarded}, without the polymorphic
 lift but with more constants so we can write better examples, enough to
 express Fibonacci, factorial, and power.
 

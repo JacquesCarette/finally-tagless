@@ -1,11 +1,16 @@
 @STRING{j_acmcs			= "{ACM} Computing Surveys" }
 @STRING{j_hosc			= "Higher-Order and Symbolic Computation" }
+@STRING{j_jacm			= "Journal of the {ACM}" }
+@STRING{j_jfp			= "Journal of Functional Programming" }
 @STRING{proc_icfp_1		= "{ICFP} '" }
 @STRING{proc_icfp_2		= ": Proceedings of the {ACM} International Conference on Functional Programming" }
 @STRING{proc_popl_1		= "{POPL} '" }
 @STRING{proc_popl_2		= ": Conference Record of the Annual {ACM} Symposium on Principles of Programming Languages" }
 @STRING{pub_acm			= "{ACM} {P}ress" }
 @STRING{pub_acm_addr		= "{N}ew {Y}ork" }
+@STRING{pub_sv			= "Springer-Verlag" }
+@STRING{pub_sv_addr		= "Berlin" }
+@STRING{s_lncs			= "{L}ecture {N}otes in {C}omputer {S}cience" }
 
 @inproceedings{WalidICFP02,
   author	= "Emir Pa{\v s}ali{\'c} and Walid Taha and Tim Sheard",
@@ -56,6 +61,29 @@
 		  achieved static type checking."
 }
 
+@InProceedings{	taha-tag,
+  author	= {Walid Taha and Henning Makholm and John Hughes},
+  title		= {Tag Elimination and {J}ones-Optimality},
+  pages		= {257--275},
+  crossref	= {pado2001},
+  url		= "http://www.cs.rice.edu/~taha/publications/conference/padoII.dvi http://www.cs.rice.edu/~taha/publications/conference/padoII.ps http://www.cs.rice.edu/~taha/publications/conference/padoII.pdf"
+}
+
+@InProceedings{	peyton-jones-simple,
+  author	= "Peyton Jones, Simon L. and Dimitrios Vytiniotis and Stephanie Weirich and Geoffrey Washburn",
+  title		= "Simple Unification-Based Type Inference for {GADT}s",
+  pages		= "50--61",
+  crossref	= "icfp2006",
+  url		= "http://research.microsoft.com/~simonpj/papers/gadt/"
+}
+
+@InProceedings{	fogarty-concoqtion,
+  author	= "Seth Fogarty and Emir Pasalic and Jeremy Siek and Walid Taha",
+  title		= "{C}oncoqtion: Indexed Types Now!",
+  crossref	= "pepm2007",
+  url		= "http://www.cs.rice.edu/~taha/publications/conference/pepm07b.pdf"
+}
+
 @misc{metaocaml,
   key = {metaocaml},
   note = {\url{http://www.metaocaml.org}}
@@ -63,38 +91,46 @@
 
 @inproceedings{NanevskiICFP02,
   author    = {Aleksandar Nanevski},
-  title     = {Meta-programming with names and necessity.},
-  booktitle = {ICFP},
-  year      = {2002},
-  pages     = {206-217},
-  ee        = {http://doi.acm.org/10.1145/581478.581498},
-  bibsource = {DBLP, http://dblp.uni-trier.de}
+  title     = {Meta-programming with Names and Necessity},
+  pages     = {206--217},
+  crossref  = "icfp2002"
 }
 
 @article{NanevskiJFP05,
   author    = {Aleksandar Nanevski and
                Frank Pfenning},
-  title     = {Staged computation with names and necessity.},
-  journal   = {J. Funct. Program.},
+  title     = {Staged Computation with Names and Necessity},
+  journal   = j_jfp,
   volume    = {15},
-  number    = {5},
+  number    = {6},
   year      = {2005},
   pages     = {893-939},
   ee        = {http://dx.doi.org/10.1017/S095679680500568X},
-  bibsource = {DBLP, http://dblp.uni-trier.de}
+  bibsource = {DBLP, http://dblp.uni-trier.de},
+  url = "http://www.eecs.harvard.edu/~aleks/papers/necessity/jfpnames02.ps"
 }
 
 @article{DaviesJACM01,
   author    = {Rowan Davies and
                Frank Pfenning},
-  title     = {A modal analysis of staged computation.},
-  journal   = {J. ACM},
+  title     = {A Modal Analysis of Staged Computation},
+  journal   = j_jacm,
   volume    = {48},
   number    = {3},
   year      = {2001},
   pages     = {555-604},
   ee        = {http://doi.acm.org/10.1145/382780.382785},
   bibsource = {DBLP, http://dblp.uni-trier.de}
+}
+
+@Article{	nanevski-contextual,
+  author	= "Aleksandar Nanevski and Frank Pfenning and Brigitte Pientka",
+  title		= "Contextual Modal Type Theory",
+  journal	= "Transactions on Computational Logic",
+  year		= 2007,
+  note		= "To appear",
+  url		= "http://www.cs.cmu.edu/~fp/papers/tocl07.pdf",
+  annote	= "Frank Pfenning's talk \cite{pfenning-contexts-talk}"
 }
 
 @InProceedings{	reynolds-definitional-notes,
@@ -148,6 +184,16 @@
   location	= "Pittsburgh, PA"
 }
 
+@Proceedings{	icfp2006,
+  key		= "{\relax ICFP}",
+  title		= proc_icfp_1 # "06"  # proc_icfp_2,
+  booktitle	= proc_icfp_1 # "06"  # proc_icfp_2,
+  address	= pub_acm_addr,
+  publisher	= pub_acm,
+  year		= 2006,
+  location	= "Portland, OR"
+}
+
 @Proceedings{	popl2003,
   key		= "{\relax POPL}",
   title		= proc_popl_1 # "03"  # proc_popl_2,
@@ -158,4 +204,27 @@
   isbn		= {1-58113-628-5},
   issn		= "0730-8566",
   location	= {New Orleans}
+}
+
+@Proceedings{	pado2001,
+  editor	= {Olivier Danvy and Andrzej Filinski},
+  title		= {Proceedings of {PADO} 2001: 2nd Symposium on Programs as Data Objects},
+  booktitle	= {Proceedings of {PADO} 2001: 2nd Symposium on Programs as Data Objects},
+  address	= pub_sv_addr,
+  publisher	= pub_sv,
+  year		= 2001,
+  month		= "21--23 "  # may,
+  number	= 2053,
+  series	= s_lncs,
+  isbn		= {3-540-42068-1},
+  location	= "Aarhus, Denmark"
+}
+
+@Proceedings{	pepm2007,
+  key		= "{\relax ACM}",
+  title		= "Proceedings of the 2007 {ACM} {SIG{\-}PLAN} Workshop on Partial Evaluation and Semantics-Based Program Manipulation",
+  booktitle	= "Proceedings of the 2007 {ACM} {SIG{\-}PLAN} Workshop on Partial Evaluation and Semantics-Based Program Manipulation",
+  address	= pub_acm_addr,
+  publisher	= pub_acm,
+  year		= 2007
 }
