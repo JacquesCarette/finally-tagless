@@ -545,20 +545,36 @@ module EXS(S: Symantics) = struct
     lam (fun x -> app (app (testpowfix ()) x) (int 7))
  let testpowfix72 = 
     app testpowfix7 (int 2)
+ (* A test to illustrate the difference between CBV and CBN *)
+ let diverg () = app (lam (fun x -> int 1)) 
+                     (app (fix (fun self -> self)) (int 2))
 end;;
 
 module EXRCN = EXS(RCN);;
 let rcntest1 = RCN.get_res (EXRCN.test1 ());;
 let rcntestpw = RCN.get_res (EXRCN.testpowfix ());;
 let rcntestpw72 = RCN.get_res (EXRCN.testpowfix72);;
+let ndiverg = RCN.get_res (EXRCN.diverg ());;
 
 module EXRCV = EXS(RCV);;
 let rcvtest1 = RCV.get_res (EXRCV.test1 ());;
 let rcvtestpw72 = RCV.get_res (EXRCV.testpowfix72);;
+(* diverges
+ let vdiverg = RCV.get_res (EXRCV.diverg ());;
+*)
+
+module EXSV = EXS(R);;
+let rstest1 = EXSV.test1 ();;
+let rstestpw72 = EXSV.testpowfix72;;
+(* diverges
+ let rsdiverg = EXSV.diverg ();;
+*)
+
 
 (* ------------------------------------------------------------------------ *)
 (* CPS transformers *)
 
+(* Simplified Symantics modules with no 'sv *)
 module type SymS = sig
   type ('c,+'dv) repr
   val int : int  -> ('c,int) repr
@@ -634,7 +650,7 @@ module CPST(S: Symantics) = struct
 end;;
 
 module T = struct
- module M = CPST(P1)
+ module M = CPST(P)
  open M
  let test1 () = app (lam (fun x -> x)) (bool true)
  (* let tfix () = app (fix (fun self -> self)) (int 1) *)
@@ -649,10 +665,10 @@ module T = struct
      if_ (leq n (int 0)) (fun () -> int 1)
          (fun () -> mul x (app self 
                                (add n (int (-1))))))))
-(*
- let testpowfix7 = 
-    lam (fun x -> app (app (testpowfix ()) x) (int 7))
 
+ let testpowfix7 = 
+    app (app (testpowfix ()) (int 2)) (int 7)
+(*
  let testpowfix72 = 
     app testpowfix7 (int 2)
 *)
