@@ -9,7 +9,8 @@
   B Bool |
   IF b e-then e-else
   
-  The language is just expressive enough for the Gibonacci function.
+  The language is just expressive enough for the Gibonacci and
+  power functions.
 
   The compiler, the interpreter and the source and target languages
   are *all* typed. The interpreter and the compiler use no tags.
@@ -18,28 +19,6 @@
 *)
 
 
-module type T = sig type ('a, 'b, 'c) repr end;;
-module Q(T:T) = struct
-  type ('c, 'sv, 'dv) pack = {
-   int  : int  -> ('c,int,int) T.repr;
-   bool : bool -> ('c,bool,bool) T.repr;
-   add  : ('c,int,int) T.repr -> ('c,int,int) T.repr -> ('c,int,int) T.repr;
-   mul  : ('c,int,int) T.repr -> ('c,int,int) T.repr -> ('c,int,int) T.repr;
-   leq  : ('c,int,int) T.repr -> ('c,int,int) T.repr -> ('c,bool,bool) T.repr;
-   eql  : ('c,'sv,'dv) T.repr -> ('c,'sv,'dv) T.repr -> ('c,bool,bool) T.repr;
-   if_ : ('c,bool,bool) T.repr ->
-             (unit -> ('c,'sv,'dv) T.repr) ->
-             (unit -> ('c,'sv,'dv) T.repr) -> ('c,'sv,'dv) T.repr;
-   lam : 'sa 'sb 'da 'db . (('c,'sa,'da) T.repr -> ('c,'sb,'db) T.repr)
-    -> ('c,(('c,'sa,'da) T.repr -> ('c,'sb,'db) T.repr),'da->'db) T.repr;
-   app : 'da 'db 'sa 'sb . 
-    ('c,(('c,'sa,'da) T.repr -> ('c,'sb,'db) T.repr),'da->'db) T.repr
-    -> ('c,'sa,'da) T.repr -> ('c,'sb,'db) T.repr;
-   fix : 'sa 'sb 'da 'db . 
-      (('c,(('c,'sa,'da) T.repr -> ('c,'sb,'db) T.repr) as 's,'da->'db) T.repr 
-             -> ('c,'s,'da->'db) T.repr)  -> ('c,'s,'da->'db) T.repr
-  }
-end ;;
 
 (* This class/type defines syntax (and its instances, semantics) 
    of our language
@@ -54,7 +33,7 @@ module type Symantics = sig
   val leq  : ('c,int,int) repr -> ('c,int,int) repr -> ('c,bool,bool) repr
   (* could be defined in terms of leq and if_ *)
   val eql  : ('c,'sa,'da) repr -> ('c,'sa,'da) repr -> ('c,bool,bool) repr
-  (* The last two arguments to if are functional terms.
+  (* The last two arguments to [if_] are functional terms.
      One of them is applied to unit.
      The reason for this charade is to prevent evaluation
      of both arguments of if_ in a CBV language.
@@ -85,6 +64,31 @@ module type Symantics = sig
 end
 ;;
 
+(* A more explicit version of the above, with explicit polymorphic records.
+*)
+
+module type T = sig type ('a, 'b, 'c) repr end;;
+module Q(T:T) = struct
+  type ('c, 'sv, 'dv) pack = {
+   int  : int  -> ('c,int,int) T.repr;
+   bool : bool -> ('c,bool,bool) T.repr;
+   add  : ('c,int,int) T.repr -> ('c,int,int) T.repr -> ('c,int,int) T.repr;
+   mul  : ('c,int,int) T.repr -> ('c,int,int) T.repr -> ('c,int,int) T.repr;
+   leq  : ('c,int,int) T.repr -> ('c,int,int) T.repr -> ('c,bool,bool) T.repr;
+   eql  : ('c,'sv,'dv) T.repr -> ('c,'sv,'dv) T.repr -> ('c,bool,bool) T.repr;
+   if_ : ('c,bool,bool) T.repr ->
+             (unit -> ('c,'sv,'dv) T.repr) ->
+             (unit -> ('c,'sv,'dv) T.repr) -> ('c,'sv,'dv) T.repr;
+   lam : 'sa 'sb 'da 'db . (('c,'sa,'da) T.repr -> ('c,'sb,'db) T.repr)
+    -> ('c,(('c,'sa,'da) T.repr -> ('c,'sb,'db) T.repr),'da->'db) T.repr;
+   app : 'da 'db 'sa 'sb . 
+    ('c,(('c,'sa,'da) T.repr -> ('c,'sb,'db) T.repr),'da->'db) T.repr
+    -> ('c,'sa,'da) T.repr -> ('c,'sb,'db) T.repr;
+   fix : 'sa 'sb 'da 'db . 
+      (('c,(('c,'sa,'da) T.repr -> ('c,'sb,'db) T.repr) as 's,'da->'db) T.repr 
+             -> ('c,'s,'da->'db) T.repr)  -> ('c,'s,'da->'db) T.repr
+  }
+end ;;
 
 (* Running example *)
 
@@ -250,8 +254,6 @@ module C = struct
   let app e1 e2 = .<.~e1 .~e2>.
   let fix f = .<let rec self n = .~(f .<self>.) n in self>.
   (* let unfold z s = .<let rec f n = if n <= 0 then .~z else .~s (f (n-1)) in f>. *)
-
-  let dyn_id (x : ('c,'sv,'dv) repr) : ('c,'sv1,'dv) repr = x
 end;;
 
 module EXC = EX(C);;
@@ -298,12 +300,12 @@ struct
 
   let app ef ea = match ef with
                     {st = Some f} -> f ea
-                  | _ -> pdyn (C.app (abstr ef)) (abstr ea)
+                  | _ -> pdyn (C.app (abstr ef) (abstr ea))
 
    (*
-     For now, to avoid divergence at the PE stage, we residualize
-    actually, we unroll the fixpoint exactly once, and then
-    residualize
+     For now, to avoid divergence at the PE stage, we residualize.
+     Actually, we unroll the fixpoint exactly once, and then
+     residualize
    *)
   let fix f = f (pdyn (C.fix (fun x -> abstr (f (pdyn x)))))
   (* this should allow us controlled unfolding *)
@@ -323,6 +325,9 @@ struct
       | _                -> RC (abstr t)
 end;;
 
+(* Alternatively, we process fix all the way, provided the computation
+   is static.
+*)
 module P1 =
 struct
   include P
@@ -479,6 +484,191 @@ end;;
 
 *)
 
+(* ------------------------------------------------------------------------ *)
+(* CPS CBN interpreter *)
+
+(* Pure CPS interpreter. *)
+(* We make the CPS to be fully polymorphic over the answer type.
+   We could have just as well put the answer type into the ST signature
+   below (as common in SML). But because we have higher-rank types
+   in OCaml, we may as well use them.
+*)
+
+(* Call-by-name interpreter *)
+module RCN = struct
+  type ('c,'sv,'dv) repr = {ko: 'w. ('sv -> 'w) -> 'w}
+  let int (x:int) = {ko = fun k -> k x}
+  let bool (b:bool) = {ko = fun k -> k b}
+  let add e1 e2 = 
+    {ko = fun k -> e1.ko (fun v1 -> e2.ko (fun v2 -> k (v1+v2)))}
+  let mul e1 e2 = 
+    {ko = fun k -> e1.ko (fun v1 -> e2.ko (fun v2 -> k (v1*v2)))}
+  let leq e1 e2 = 
+    {ko = fun k -> e1.ko (fun v1 -> e2.ko (fun v2 -> k (v1 <= v2)))}
+  let eql e1 e2 = 
+    {ko = fun k -> e1.ko (fun v1 -> e2.ko (fun v2 -> k (v1 = v2)))}
+  let if_ eb et ee = 
+    {ko = fun k -> eb.ko (fun vb -> if vb then (et ()).ko k else (ee ()).ko k)}
+
+  let lam f = {ko = fun k -> k f} (* weird CPS: it's actually a CBN CPS! *)
+
+  let app e1 e2 = {ko = fun k -> e1.ko (fun f -> (f e2).ko k)}
+  (* The following is the `imperative' part, dealing with the state *)
+  (* because our CPS is CBN, we have to force the evaluation of e2! *)
+  let lapp e2 e1 = 
+    {ko = fun k -> e2.ko (fun v -> (app (lam e1) {ko = fun k -> k v}).ko k)}
+
+  let fix f = let rec fx f n = app (f (lam (fx f))) n in lam(fx f)
+
+  let get_res x = x.ko (fun v -> v)
+end;;
+
+(* Emulating CBV my modifying the interpretation of lam to force
+   evaluation of the argument, always.
+*)
+module RCV = struct
+  include RCN
+  let lam f = {ko = 
+    fun k -> k (fun e -> e.ko (fun v -> f {ko = fun k -> k v}))}
+end;;
+
+(* A simpler test *)
+module EXS(S: Symantics) = struct
+ open S
+ let test1 () = app (lam (fun x -> x)) (bool true)
+ let testpowfix () = 
+   lam (fun x ->fix (fun self -> lam (fun n ->
+     if_ (leq n (int 0)) (fun () -> int 1)
+         (fun () -> mul x (app self 
+                               (add n (int (-1))))))))
+ let testpowfix7 = 
+    lam (fun x -> app (app (testpowfix ()) x) (int 7))
+ let testpowfix72 = 
+    app testpowfix7 (int 2)
+end;;
+
+module EXRCN = EXS(RCN);;
+let rcntest1 = RCN.get_res (EXRCN.test1 ());;
+let rcntestpw = RCN.get_res (EXRCN.testpowfix ());;
+let rcntestpw72 = RCN.get_res (EXRCN.testpowfix72);;
+
+module EXRCV = EXS(RCV);;
+let rcvtest1 = RCV.get_res (EXRCV.test1 ());;
+let rcvtestpw72 = RCV.get_res (EXRCV.testpowfix72);;
+
+(* ------------------------------------------------------------------------ *)
+(* CPS transformers *)
+
+module type SymS = sig
+  type ('c,+'dv) repr
+  val int : int  -> ('c,int) repr
+  val bool: bool -> ('c,bool) repr
+  val add : ('c,int) repr-> ('c,int) repr-> ('c,int) repr
+  val mul : ('c,int) repr-> ('c,int) repr-> ('c,int) repr
+  val leq : ('c,int) repr-> ('c,int) repr-> ('c,bool) repr
+  val if_ : ('c,bool) repr ->
+             (unit -> ('c,'da) repr) ->
+             (unit -> ('c,'da) repr) -> ('c,'da) repr 
+  val lam : (('c,'da) repr -> ('c,'db) repr) 
+          -> ('c,'da->'db) repr
+  val app : ('c,'da->'db) repr
+    -> ('c,'da) repr -> ('c,'db) repr
+  val fix : (('c,'da->'db) repr -> ('c,'da->'db) repr) 
+            -> ('c,'da->'db) repr
+end;;
+module RS = struct
+  type ('c,'dv) repr = 'dv    (* absolutely no wrappers *)
+  let int (x:int) = x
+  let bool (b:bool) = b
+  let add e1 e2 = e1 + e2
+  let mul e1 e2 = e1 * e2
+  let leq x y = x <= y
+  let eql x y = x = y
+  let if_ eb et ee = if eb then (et ()) else (ee ())
+
+  let lam f = f
+  let app e1 e2 = e1 e2
+  let fix f = let rec self n = f self n in self
+end;;
+
+module CS = struct
+  type ('c,'dv) repr = ('c,'dv) code
+  let int (x:int) = .<x>.
+  let bool (b:bool) = .<b>.
+  let add e1 e2 = .<.~e1 + .~e2>.
+  let mul e1 e2 = .<.~e1 * .~e2>.
+  let leq x y = .< .~x <= .~y >.
+  let eql x y = .< .~x = .~y >.
+  let if_ eb et ee = 
+    .<if .~eb then .~(et () ) else .~(ee () )>.
+
+  let lam f = .<fun x -> .~(f .<x>.)>.
+  let app e1 e2 = .<.~e1 .~e2>.
+  let fix f = .<let rec self n = .~(f .<self>.) n in self>.
+end;;
+
+
+module CPST(S: Symantics) = struct
+  type w = unit
+ (*  type ('c,'dv) repr = ('c, ('dv -> w)->w) S.repr *)
+  let int i = S.lam (fun k -> S.app k (S.int i))
+  let bool b = S.lam (fun k -> S.app k (S.bool b))
+  let add e1 e2 = S.lam (fun k ->
+    S.app e1 (S.lam (fun v1 ->
+    S.app e2 (S.lam (fun v2 -> S.app k (S.add v1 v2))))))
+  let mul e1 e2 = S.lam (fun k ->
+    S.app e1 (S.lam (fun v1 ->
+    S.app e2 (S.lam (fun v2 -> S.app k (S.mul v1 v2))))))
+  let leq e1 e2 = S.lam (fun k ->
+    S.app e1 (S.lam (fun v1 ->
+    S.app e2 (S.lam (fun v2 -> S.app k (S.leq v1 v2))))))
+  let if_ ec et ef = S.lam (fun k ->
+    S.app ec (S.lam (fun vc ->
+    S.if_ vc (fun () -> S.app (et ()) k) (fun () -> S.app (ef ()) k))))
+  let lam f = S.lam (fun k -> S.app k (S.lam (fun x ->
+    f (S.lam (fun k -> S.app k x)))))
+  let app e1 e2 = S.lam (fun k -> 
+    S.app e1 (S.lam (fun f ->
+    S.app e2 (S.lam (fun v -> S.app (S.app f v) k)))))
+  let fix f  = S.fix (fun self -> (f self))
+end;;
+
+module T = struct
+ module M = CPST(P1)
+ open M
+ let test1 () = app (lam (fun x -> x)) (bool true)
+ (* let tfix () = app (fix (fun self -> self)) (int 1) *)
+ let tif () = if_ (bool true) (fun () -> (add (int 2) (int 1)))
+                  (fun () -> int 2)
+ (*let tfix1 () = fix (fun self -> lam (fun n -> app self (add n (int 1)))) *)
+ let tfix1 () = fix (fun self -> (lam (fun m -> (int 1))))
+
+ let tfix3 () = app (tfix1 ()) (int 2)
+ let testpowfix () = 
+   lam (fun x ->fix (fun self -> lam (fun n ->
+     if_ (leq n (int 0)) (fun () -> int 1)
+         (fun () -> mul x (app self 
+                               (add n (int (-1))))))))
+(*
+ let testpowfix7 = 
+    lam (fun x -> app (app (testpowfix ()) x) (int 7))
+
+ let testpowfix72 = 
+    app testpowfix7 (int 2)
+*)
+end;;
+
+let ctest1 = T.test1 ();;
+(* let ctestfix = T.tfix ();; *)
+let ctestif = T.tif ();;
+let ctestfix = T.tfix1 ();;
+let ctestfix = T.testpowfix ();;
+(*
+let ctestfix = T.testpowfix7;;
+ let ctestfix = T.testpowfix72 (fun x -> x);;
+let ctestfix = T.testpowfix72;;
+*)
+
 
 (* Extension of S for an imperative language with a single piece of
    state.
@@ -587,6 +777,7 @@ end;;
 module RCPSI = RCPS(struct type state = int end);;
 module EXPSI = EX(RCPSI);;
 
+(*
 let cpsitest1 = (EXPSI.test1r ()) 100;;
 let cpsitest2 = (EXPSI.test2r ()) 100;;
 let cpsitest3 = (EXPSI.test3r ()) 100;;
@@ -594,7 +785,7 @@ let cpsitestg = (EXPSI.testgibr ()) 100;;
 let cpsitestg1 = (EXPSI.testgib1r ()) 100;;
 let cpsitestg2 = (EXPSI.testgib2r ()) 100;;
 let cpsitestp7 = (EXPSI.testpowfix7r ()) 100;;
-
+*)
 
 module EXPSI_INT = EXSI_INT(RCPSI);;
 let cpsitesti1 = RCPSI.get_res (EXPSI_INT.test1 ()) 100;; (* 102 *)
