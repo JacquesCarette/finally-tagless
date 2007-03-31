@@ -1,3 +1,4 @@
+\hyphenation{meta-language meta-languages}
 \documentclass[preprint]{sigplanconf}
 \usepackage{amsmath,amssymb}
 \usepackage{mathptmx}
@@ -7,6 +8,7 @@
 \usepackage{hyphenat}
 \usepackage{url}
 \usepackage{prooftree1}
+\usepackage{mdwlist}
 
 \newcommand{\jacques}[1]{{\it [Jacques says: #1]}}
 \newcommand{\oleg}[1]{{\it [Oleg says: #1]}}
@@ -173,7 +175,7 @@ type var = VZ | VS of var
 type exp = V of var | B of bool
          | L of exp | A of exp * exp | ...
 \end{code}
-We represent each variable using a unary de-Bruijn number.
+We represent each variable using a unary de Bruijn index.
 For example, we represent the object term $(\fun{x}x)\True$ as
 \begin{code}
 let test1 = A (L (V VZ), B true)
@@ -321,19 +323,22 @@ The type error correctly complains
 that the initial environment should be a tuple rather than |()|.
 In other words, the term is open.
 
-In sum, by encoding terms using ordinary functions (the \emph{final}
-rather than \emph{initial} approach), we achieve a tagless interpreter
-for a typed object language, in a metalanguage with a very simple type
-system \citep{hindley-principal,milner-theory}.  All the run-time errors
-in \S\ref{tagproblem} (applying a nonfunction; evaluating an open term)
-are now reported at compile time. Because this new interpreter uses no
+In sum, by Church\hyp encoding terms using ordinary functions,
+we achieve a tagless interpreter
+for a typed object language in a metalanguage with a simple type
+system \citep{hindley-principal,milner-theory}.  In this \emph{final}
+rather than \emph{initial} approach, both kinds of run-time errors
+in \S\ref{tagproblem} (applying a nonfunction and evaluating an open
+term) are reported at compile time. Because the new interpreter uses no
+universal type or
 pattern matching, it never results in a run-time error and is in fact
 total.  Because this totality is obvious not just to us but also to the
 metalanguage implementation, we avoid the serious performance penalty
 \citep{WalidICFP02} of error checking.
+\ccshan{Need to cite Thiemann here and in related work?}
 
 The interpreter above is wired directly into the
-functions |b|, |lam|, and so on.  In the remainder of this paper, 
+functions |b|, |lam|, |app|, and so on.  In the remainder of this paper, 
 we explain how to abstract the interpreter so as
 to ``evaluate'' the same term in many different
 ways: interpretation, compilation, partial evaluation, size
@@ -341,76 +346,54 @@ computation, and so forth.
 
 \subsection{Contributions}\label{contributions}
 
+The term ``constructor'' functions |b|, |lam|, |app|, and so on appear
+free in the encoding of an object term such as |testf1| above.  Defining
+these functions differently gives rise to different interpreters, that
+is, different folds on object programs.  Given the same term
+representation but varying the interpreter, we can
+\begin{itemize*}
+    \item evaluate the term to a value in the metalanguage;
+    \item measure the size or depth of the term;
+    \item compile the term, with staging support such as in MetaOCaml;
+    \item even partially evaluate the term, online; and
+    \item transform the term to continuation\hyp passing style (CPS),
+        including call-by-name (CBN).
+\end{itemize*}
 We have programmed our interpreters in OCaml (and, for staging,
-MetaOCaml \citep{metaocaml} and Haskell. The complete code is available 
-\footnote{the URL will appear in the final version of the paper.}
+\citet{metaocaml}) and standard Haskell. The complete code is available%
+\footnote{The URL will appear in the final version of the paper.}
 % connot give URL in the ICFP paper due to double-blind reviews
-in the supplemental material to the paper. We will use both
-(Meta)OCaml and Haskell for our examples throughout the paper.
-Each language has its strength and weaknesses; this dual implementation
-forced us to clarify our own ideas.  We will continually leverage the
-respective strengths of these languages, as certain of our claims are
-patently obvious in one implementation, while requiring more argumentation
-in the other.
-Our code is surprisingly simple, and, in the hindsight, obvious. We
-must emphasize however that direct typeful tagless interpretation of a typed
-language until now has thought to be impossible in plain ML and
-require extensions like GADT -- which we discuss in detail in Section
-XXX.
+to supplement the paper. Our examples below switch between (Meta)OCaml
+and Haskell even though we have implemented each example equivalently in
+both metalanguages, because some of our claims are more obvious in one
+metalanguage than the other.  For example, our OCaml evaluator obviously
+terminates except if the fixpoint combinator $\mathrm{fix}$ is present
+in the object program.
 
-\jacques{I quite agree that the point that needs to be revisited is
-  that a \emph{direct} interpreter for a (typed) language "cannot" be
-  done. see discussion in related work about the direct interpreter,
-  with regards to Walid's paper. Perhaps bring some of it here?}
-\jacques{I have looked at a fair bit of the literature, and I have not
-  seen this done, especially not in the typed 'online' setting.  The
-  one question that seems to be open is, how accurate can we make the
-  PE without a tough BTA?}
-Should we mention some of these points in our contributions subsection
-below?
+Our code ensures statically that an object term is well-typed and
+closed, yet is surprisingly simple and obvious in hindsight.  We stress
+that until now our achievement has been thought impossible: to
+interpret a typed object language in a typed metalanguage without
+tagging or type\hyp system extensions.  For example, \citet{taha-tag}
+states that ``expressing such an interpreter in a statically typed
+programming language is a rather subtle matter. In fact, it is only
+recently that some work on programming type-indexed values in ML
+\citep{yang-encoding} has given a hint of how such a function can be
+expressed.''  We further discuss related work in~\S\ref{related}.
 
-   We have realized that if we change the encoding of the term --
-from data constructors to functions, we can encode a tagless
-interpreter of a typed language in a typed language with no GADTs and
-a very simple type system. The interpreter uses no universal type, no
-pattern matching and it is patently obvious to the compiler that the
-only non-termination can come from interpreting the fixpoint
-combinator |fix|. If the source
-language is strongly normalizing, our interpreter is total.
-
-The term ``constructor'' functions lam, app, etc. look like free
-variables in the encoding of an object term.  Defining these functions
-differently gives rise to different interpreters.  Given the same term
-representation but varying the interpreters, we can
-	- evaluate the term to a value in the metalanguage
-	- determine the size or depth of a term
-    - compute a \emph{CBN} CPS transformation of a term
-	- `compile' the term. This requires staging, as in MetaOCaml.
-	- Surprisingly, it is also possible to write a partial evaluator! 
-
-\noindent We have implemented the above in (Meta)OCaml and Haskell.
-We view our contributions as:
+Our contributions are
 \begin{enumerate}
-\item we interpret/compile/partially-evaluate a typed source language
-   from within a typed language.  The requirements of the host type
-   system are \jacques{not so onerous?  simple?},
-\item a simple, clean implementation,
-\item a nicely comparable Haskell/MetaOCaml version,
-\item a functorial approach which deals with uniformly with all
-evaluators, from interpretation to partial evaluation to CBN CPS transform,
-\item clear and easy extensibility to more features,
-\item only well-typed and closed terms can be evaluated, and this is 
-checked statically,
-\item and an approach to self-interpretation which is compatible with the
-  above.  Self-interpretation turned out to be considerably harder than
-  we at first expected.
+\item to evaluate, compile, and partially evaluate a typed object language
+   in a typed metalanguage with a simple type system;
+\item to check statically for well-typed and closed object programs;
+\item clean, comparable implementations in MetaOCaml and Haskell;
+\item a functor signature that encompasses all our interpreters, from
+    evaluation and compilation to partial evaluation and CBN CPS
+    transformation;
+\item a clear way to extend the object language with more features;
+\item and an approach to self-interpretation compatible with the
+  above.  Self-interpretation turned out to be harder than expected.
 \end{enumerate}
-
-We want to reiterate that it was previously thought that insuring
-that types are well-typed \emph{or} closed required advanced type
-extensions, and we show that this can be done in a simple subset
-of both OCaml and Haskell.
-
 \jacques{can we state fairly clearly what type system we need?  I mean,
 Haskell98(?) and MetaOCaml with (objects, polymorphic variants, ...).
 With our let-polymorphism trick for self-interpretation, what do we really
@@ -419,22 +402,17 @@ need?}
 The structure of our paper is as follows. Section XXX ...
 We finally conclude.
 
-\section{Base language and its tagless interpreters}\label{language}
+\section{The base language and its tagless interpreters}\label{language}
 
-The language we will embed is a simply-typed lambda-calculus
-with fixpoint, integers, booleans and comparison, whose BNF grammar is
+Figure~\ref{fig:object} shows our object language, a simply-typed
+$\lambda$-calculus with fixpoint, integers, booleans, and comparison.
+The language is close to \citets{xi-guarded}, without their polymorphic
+lift but with more constants so as to express Fibonacci, factorial, and
+power.
 
-\begin{code}
-  e ::= Lam hoas_fn | App e e | Fix hoas_fn |
-  I int_literal | B bool_literal | Add e1 e2 | 
-  Mul e1 e2 | Leq e1 e2 | IF b e-then e-else
-\end{code}
-
-This time we use higher-order abstract syntax \cite{DaleMiller}
-rather than de Bruijn indices.  The
-language is close to the language of \citet{xi-guarded}, without the polymorphic
-lift but with more constants so we can write better examples, enough to
-express Fibonacci, factorial, and power.
+In the sequel, we encode binding in object programs using higher-order
+abstract syntax \citep{miller-manipulating,pfenning-higher-order}
+rather than de Bruijn indices.
 
 \subsection{How to make encoding flexible: abstract the interpreter}
 \label{encoding}

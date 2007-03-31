@@ -3,12 +3,17 @@
 @STRING{j_jacm			= "Journal of the {ACM}" }
 @STRING{j_jcss			= "Journal of Computer and System Sciences" }
 @STRING{j_jfp			= "Journal of Functional Programming" }
+@STRING{j_sigplan		= "{ACM} {SIG{\-}PLAN} Notices" }
 @STRING{proc_icfp_1		= "{ICFP} '" }
 @STRING{proc_icfp_2		= ": Proceedings of the {ACM} International Conference on Functional Programming" }
+@STRING{proc_pldi_1		= "{PLDI} '" }
+@STRING{proc_pldi_2		= ": Proceedings of the {ACM} Conference on Programming Language Design and Implementation" }
 @STRING{proc_popl_1		= "{POPL} '" }
 @STRING{proc_popl_2		= ": Conference Record of the Annual {ACM} Symposium on Principles of Programming Languages" }
 @STRING{pub_acm			= "{ACM} {P}ress" }
 @STRING{pub_acm_addr		= "{N}ew {Y}ork" }
+@STRING{pub_ieee		= "{IEEE} Computer Society Press" }
+@STRING{pub_ieee_addr		= "Washington, {DC}" }
 @STRING{pub_sv			= "Springer-Verlag" }
 @STRING{pub_sv_addr		= "Berlin" }
 @STRING{s_lncs			= "{L}ecture {N}otes in {C}omputer {S}cience" }
@@ -86,7 +91,7 @@
 }
 
 @misc{metaocaml,
-  key = {metaocaml},
+  key = {MetaOCaml},
   note = {\url{http://www.metaocaml.org}}
 }
 
@@ -184,6 +189,29 @@
   pages		= "348--375"
 }
 
+@InProceedings{	yang-encoding,
+  author	= {Zhe Yang},
+  title		= {Encoding Types in {ML}-Like Languages},
+  pages		= {289--300},
+  crossref	= "icfp1998",
+  url		= "http://cs.nyu.edu/zheyang/papers/YangZ--ICFP98.html http://cs.nyu.edu/zheyang/papers/YangZ--ICFP98.ps.gz"
+}
+
+@InProceedings{	pfenning-higher-order,
+  author	= {Frank Pfenning and Conal Elliott},
+  title		= {Higher-Order Abstract Syntax},
+  pages		= {199--208},
+  crossref	= "pldi1988",
+  url		= "http://www.cs.cmu.edu/~fp/papers/pldi88.pdf"
+}
+
+@InProceedings{	miller-manipulating,
+  author	= {Dale Miller and Gopalan Nadathur},
+  title		= {A Logic Programming Approach to Manipulating Formulas and Programs},
+  pages		= {379--388},
+  crossref	= "slp1987"
+}
+
 @Proceedings{	acm1972,
   key		= "{\relax ACM}",
   title		= "Proceedings of the {ACM} National Conference",
@@ -192,6 +220,20 @@
   publisher	= pub_acm,
   year		= 1972,
   location	= "Boston"
+}
+
+@Proceedings{	icfp1998,
+  key		= "{\relax ICFP}",
+  title		= proc_icfp_1 # "98"  # proc_icfp_2,
+  booktitle	= proc_icfp_1 # "98"  # proc_icfp_2,
+  address	= pub_acm_addr,
+  publisher	= pub_acm,
+  year		= 1998,
+  volume	= "34(1)",
+  series	= j_sigplan,
+  url		= "http://dblp.uni-trier.de/db/conf/icfp/icfp98.html",
+  isbn		= "0-58113-024-4",
+  location	= "Baltimore"
 }
 
 @Proceedings{	icfp2002,
@@ -247,4 +289,28 @@
   address	= pub_acm_addr,
   publisher	= pub_acm,
   year		= 2007
+}
+
+@Proceedings{	pldi1988,
+  key		= "{\relax PLDI}",
+  title		= proc_pldi_1 # "88"  # proc_pldi_2,
+  booktitle	= proc_pldi_1 # "88"  # proc_pldi_2,
+  address	= pub_acm_addr,
+  publisher	= pub_acm,
+  year		= 1988,
+  month		= "22--24 "  # jun,
+  volume	= "23(7)",
+  series	= j_sigplan,
+  location	= "Atlanta"
+}
+
+@Proceedings{	slp1987,
+  editor	= "Seif Haridi",
+  title		= "{IEEE} Symposium on Logic Programming",
+  booktitle	= "{IEEE} Symposium on Logic Programming",
+  address	= pub_ieee_addr,
+  publisher	= pub_ieee,
+  year		= 1987,
+  isbn		= "0-8186-0799-8",
+  location	= "San Francisco"
 }
