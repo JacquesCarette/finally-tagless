@@ -824,6 +824,81 @@ let cpsipow27 = RCPSI.get_res (EXPSI_INT.pow27 ()) 100;;
  is just lapp e1 (\x -> e2), which is an inverse application.
 
 *)
+module type SymSP = sig
+  include Symantics
+  type 'a rf
+  val newref : ('c,'sa,'da) repr -> ('c,'sa rf,'da rf) repr 
+  val deref : ('c,'sa rf,'da rf) repr -> ('c,'sa,'da) repr
+  val setref : ('c,'sa rf,'da rf) repr -> ('c,'sa,'da) repr
+              -> ('c,'sa,'da) repr
+  val lapp : ('c,'sa,'da) repr ->
+    (('c,'sa,'da) repr -> ('c,'sb,'db) repr)
+    -> ('c,'sb,'db) repr
+end;;
+
+module RR = struct
+  include R
+  type 'a rf = 'a ref
+  let newref v = ref v
+  let deref  v = ! v
+  let setref v nv = let ov = !v in v := nv; ov
+  let lapp e1 e2 = app (lam e2) e1
+end;;
+
+module CR = struct
+  include C
+  type 'a rf = 'a ref
+  let newref v = .<ref .~v>.
+  let deref  v = .<! (.~v)>.
+  let setref v nv = .<let rv = .~v in let ov = !rv in rv := .~nv; ov>.
+  let lapp e1 e2 = app (lam e2) e1
+end;;
+
+(* Doing PE with references may be problematic. It is not clear what
+  to do wif we encounter newref with the static code, but then need
+  to residualize. We have to `import' the reference and its contents.
+  We skip this for now.
+*)
+module EXSP(S: SymSP) = struct
+  open S
+
+  (* this program corresponds to 
+     let v0 = !state in
+       state := 2;
+       v0 + !state; *)
+  let testi1 () = lapp (newref (int 1)) (fun r ->
+                  lapp (deref r) (fun v0 -> 
+                  lapp (setref r (int 2)) (fun _ ->
+		   add v0 (deref r))))
+  (* the same but with the higher order *)
+  let testi2 () = lapp (newref (lam (fun x -> (add x (int 1))))) (fun r ->
+                  lapp (deref r) (fun v0 ->
+		  lapp (setref r (lam (fun x -> (mul x x)))) (fun _ ->
+		    add (app v0 (int 2)) (app (deref r) (int 4)))))
+      (* imperative power *)
+  let pow () = lam (fun x -> 
+               lapp (newref (int 1)) (fun r ->
+		  fix (fun self ->
+		  lam (fun n ->
+		    if_ (leq n (int 0)) (fun () -> deref r)
+			(fun () -> 
+			  lapp (setref r (mul (deref r) x)) (fun _ ->
+			    (app self (add n (int (-1))))))))))
+  let pow7 () = lam (fun x -> app (app (pow ()) x) (int 7))
+  let pow27 () = app (pow7 ()) (int 2)
+end;;
+
+module EXSPR = EXSP(RR);;
+let testi1 = EXSPR.testi1 ();;
+let testi2 = EXSPR.testi2 ();;
+let testi27 = EXSPR.pow27 ();;
+
+
+module EXSPC = EXSP(CR);;
+let testi1 = EXSPC.testi1 ();;
+let testi2 = EXSPC.testi2 ();;
+let testi27 = EXSPC.pow27 ();;
+
 (*
 module type SI = sig
   include S
