@@ -120,7 +120,9 @@ module EX(S: Symantics) = struct
                             (fun () -> e.mul x (e.app self (e.add n (e.int (-1))))))))
 
  let testpowfix7 e = e.lam (fun x -> e.app (e.app (testpowfix e) x) (e.int 7))
+ let testpowfix0 e = e.lam (fun x -> e.app (e.app (testpowfix e) (e.int 0)) x)
 
+ (* This is not really needed anymore 
  let interp prog =
      p.app (p.app (p.app (p.app (p.app (p.app (p.app (p.app (p.app (p.app prog
        (p.lam (fun (x:('a,int,int) S.repr) -> x)))
@@ -137,7 +139,6 @@ module EX(S: Symantics) = struct
            p.fix (fun fx -> p.lam (fun f -> p.lam (fun n -> 
               p.app (p.app f (p.app fx f)) n)))) f) n)))
 
- (* simple test of above *)
  let test1' e = 
      e.lam (fun int ->
      e.lam (fun bool ->
@@ -162,6 +163,7 @@ module EX(S: Symantics) = struct
  (* but it is not quite an interpreter, as
  let i3 e = i2 (test1' e)
     does not work.  Seems like the failure of rank-2 polymorphism again? *)
+ *)
 
  let runit t = t p
 
@@ -175,9 +177,7 @@ module EX(S: Symantics) = struct
 
  let testpowfixr () = runit testpowfix
  let testpowfix7r () = runit testpowfix7
-
- let testi1r () = runit i1
- let testi2r = p.lam i2 (* will give _a but that's ok *)
+ let testpowfix0r () = runit testpowfix0
 end;;
 
 
@@ -388,12 +388,21 @@ let ctestp7 = EXC.testpowfix7r ();;
 let ptestp7 = EXP.testpowfix7r ();;
 let ltestp7 = EXL.testpowfix7r ();;
 
+let itestp0 = EXR.testpowfix0r ();;
+let ctestp0 = EXC.testpowfix0r ();;
+let ptestp0 = EXP.testpowfix0r ();;
+let ltestp0 = EXL.testpowfix0r ();;
+
+(* these are no longer relevant, for now
 let itesti1 = EXR.testi1r ();;
 let ctesti1 = EXC.testi1r ();;
 let ptesti1 = EXP.testi1r ();;
-let ltesti1 = EXL.testi1r ();;
+let ltesti1 = EXL.testi1r ();; *)
 
 (* start encoding some of Ken's ideas on a self-interpreter *)
+(* Jacques: this is really all junk now because we know that 
+   we need let-polymorphism for all of this to work properly, so
+   this should likely all be deleted 
 let apply_to_si_R encoded_e =
     encoded_e R.int R.bool R.add R.app 
         R.mul R.leq R.eql (R.if_) (R.lam) (R.lam) (R.fix)
@@ -456,8 +465,7 @@ let testRp = apply_to_si_R an_ep ;;
 let testCp = apply_to_si_C an_ep ;;
 let testPp = apply_to_si_P an_ep ;;
 
-(* That's all folks. It seems to work... *)
-
+*)
 
 (* Remnants of an earlier idea: compile the PE: make a code, which,
 when run, will make a PE...
