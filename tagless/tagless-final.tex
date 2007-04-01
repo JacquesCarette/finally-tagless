@@ -1064,16 +1064,16 @@ See the monoid-driven simplifications!}
 \oleg{I'm inclined to ditch buildsimp. We miss an opportunity here:
   when multiplying anything by 0, the result is zero!}
 
-When doing PE on fix, we made a deliberate decision to `go all the
-way' -- so long as the computation can proceed at the PE stage
-(`static value'), we do that rather than residualizing. In the
+When doing partial evaluation on |fix|, we made a deliberate decision to `go all
+the way' -- so long as the computation can proceed at the PE stage,
+we do that rather than residualizing. In the
 accompanying source code, we have also implemented an alternative
-where fix is unrolled only once and them we residualize. We prefer the
-first approach, even though it (unlike the latter) may cause
+where |fix| is unrolled only once and then we residualize. We prefer the
+first approach, even though it may cause
 non-termination at the PE stage -- but \emph{only} if the computation
-we are partially evaluating is non-terminating and enough static
+we are partially evaluating is non-terminating, and enough static
 information is available to trigger this non-termination.  Our
-treatment of fix may lead to the code bloat in the residual
+treatment of |fix| may lead to code bloat in the residual
 program. That is an issue investigated elsewhere (cite our PEPM2006
 paper).
 
