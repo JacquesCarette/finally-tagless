@@ -535,6 +535,7 @@ is essentially the same as the |Symantics repr => | constraint in the case of
 the embedding of the DSL in Haskell.
 
 \subsection{Two tagless interpreters}
+\label{S:interpreter-RL}
 The first instantiation of the Symantics structure is an interpreter:
 evaluating the object (DSL) term to its value in the meta-language. 
 The following module essentially interprets (gives one-to-one
@@ -1069,26 +1070,14 @@ interpreter and the compiler.  \jacques{Perhaps cite a paper of Thiemann
 here, cogen in 6 lines?}
 
 \jacques{Comment on online/offline here}
+The PE in incope is really a mixture of online and off-line; it looks 
+online, but it has a sort of "just in time" binding-time analysis built in.
 
 
 \section{Variations and discussion}\label{discussion}
 
-state and imperative features
-
-CPS transformation (interpreting/compiling the term to CBN CPS)
-
-It's relation to PE and CPS. Currently, our CPS is CBN. Need to
-investigate CBV.
-The type-level function |'da -> 'sa| is important because it gives 
-the CPS transform. So, the type-function
-that enables the PE is exactly the same type function that enables
-CPS....
-
-
-
-The PE in incope is really a mixture of online and off-line; it looks 
-online, but it has a sort of "just in time" binding-time analysis built in.
-
+\oleg{where to put the following? Should we even mention this?
+If not, we should still keep this in comments.}
 If we just add a method 'lift' to Symantics with a type
 |lift :: a -> repr a| (cf polymorphic lift of Xi03, of MetaML and
 MetaOCaml: CSP)
@@ -1098,6 +1087,132 @@ then |Symantics repr| implies |Functor repr|. We can write then
   -- fmap :: (a->b) -> repr a -> repr b
   fmap f ra = app (lift f) ra
 \end{code}
+
+
+\subsection{Call-by-name CPS interpreters}
+
+The object language generally inherits the evaluation strategy from
+the metalanguage. Evaluating an application |e1 e2| in OCaml requires
+the evaluation of |e2| before performing the application. Therefore,
+when evaluating the encoding of the object language application 
+|app e1 e2|, |e2| will always have to be evaluated. One may wonder if it is
+possible then to represent a call-by-name (CBN) object language in a
+call-by-value (CBV) metalanguage. The answer, given back by Reynolds
+and Plotkin (cite) is CPS, which was specifically introduced by them
+to make the evaluation strategy of the definitional interpreter
+independent of the strategy of the metalanguage. We demonstrate the
+same independence in the typed setting \oleg{mention the quote from
+  Reynolds that typed setting would be nice?}. Specifically, we
+demonstrate a CBN evaluation of our object language in OCaml, which is
+CBV. We do so by building a CBN CPS interpreter for the object
+language.
+
+The CBN CPS interpretation was introduced by Plotkin (cite). As in the
+more familiar CBV CPS, the interpretation of a value is a function
+accepting the continuation argument |k| and yielding the answer
+returned by that continuation.
+\begin{code}
+let int (x:int) = fun k -> k x
+let add e1 e2 = 
+  fun k -> e1 (fun v1 -> e2 (fun v2 -> k (v1+v2)))
+\end{code}
+In the both cases, the returned value has the type 
+|(int -> 'w)->'w| where |'w| is the (polymorphic) answer type.
+
+The interpretation of abstraction and application in CBN CPS is
+different from CBV CPS and is as follows:
+\begin{code}
+let lam f = fun k -> k f
+let app e1 e2 = fun k -> e1 (fun f -> (f e2) k)
+\end{code}
+In the tell-tale sign of CBN, in interpreting the application
+we do not `evaluate' the argument e2, that is, we do apply it to the
+continuation. Rather, we pass the unevaluated |e2| to the abstraction.
+The result of |lam (fun x -> add x (int 1))| has the type
+|((((int->'w1)->'w1) -> ((int->'w1)->'w1)) -> 'w2) -> 'w2|.
+We want to collect the above interpretation functions into a module
+with the Symantics signature, so to fit the CBN CPS interpreter within our
+general framework. Alas, we encounter the same problem we had in
+Section~\ref{S:PE-problem}, in writing a type equation for the |repr|
+type that can represent both the type of |int i| and the type of 
+|lam f|. We cannot say that the the result of interpreting an object
+expression of the type |t| is |(t->'w)->'w| because if |t| happens to
+be an arrow type such as |int->int| in the above example, the result
+type obviously does not fit the desired pattern. We need a type
+function with a type-case distinction. In Section~\ref{S:PE-solution} we have
+shown the way to encode such a function, using the additional type
+argument |'sv| of the |repr| type. Furthermore, we notice that the type 
+function |repr_pe| needed for the partial evaluator,
+Section~\ref{S:PE-solution}, is precisely the same type function we
+need for CBN CPS. This gives us for the following CBN CPS interpreter,
+of the Symantics signature:
+
+\begin{code}
+module RCN = struct
+  type ('c,'sv,'dv) repr = 
+     {ko: 'w. ('sv -> 'w) -> 'w}
+  let int (x:int) = {ko = fun k -> k x}
+  let add e1 e2 = 
+    {ko = fun k -> e1.ko (fun v1 -> 
+                   e2.ko (fun v2 -> k (v1+v2)))}
+  let if_ eb et ee = 
+    {ko = fun k -> eb.ko 
+         (fun vb -> if vb then (et ()).ko k 
+                    else (ee ()).ko k)}
+  ...
+  let lam f = {ko = fun k -> k f}
+  let app e1 e2 = 
+     {ko = fun k -> e1.ko (fun f -> (f e2).ko k)}
+  let fix f = 
+     let rec fx f n = app (f (lam (fx f))) n in 
+     lam(fx f)
+
+  let get_res x = x.ko (fun v -> v)
+end
+\end{code}
+
+We have made our interpreter fully polymorphic over the answer type.
+We could have just as well made |RCN| a functor, parameterized over
+the answer type -- as is common when writing CPS in SML. In the
+present case, we chose to use higher-rank polymorphism of OCaml record
+types.
+
+Because |RCN| has the Semantics signature, we can instnatiate with it and run
+all of our previous examples. A more interesting is the following
+example.
+\begin{code}
+module EXS(S: Symantics) = struct
+ open S
+ let diverg () = 
+   app (lam (fun x -> int 1)) 
+       (app (fix (fun self -> self)) (int 2))
+end
+\end{code}
+
+If we interpret |EXS| with the |R| interpreter of
+Section~\ref{S:interpreter-RL} realized in OCaml
+\begin{code}
+let module M = EXS(R) in M.diverg ();;
+\end{code}
+we never get any result because of looping. In contrast, if we use
+the CBN interpreter
+\begin{code}
+let module M = EXS(RCN) in RCN.get_res (M.diverg ())
+\end{code}
+we get the result |1|.
+
+\oleg{mention some formal results? Like indifference theorems by
+  Plotkin? And say we generalized their result to the type setting?
+  Mention this in the conclusions?}
+
+
+\subsection{CBV CPS transformers}
+
+We can obtain CBV from CBN?
+
+\subsection{State and imperative features}
+
+
 
 \subsection{Translucent types}
 

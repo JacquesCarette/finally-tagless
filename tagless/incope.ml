@@ -489,9 +489,9 @@ end;;
 
 (* Pure CPS interpreter. *)
 (* We make the CPS to be fully polymorphic over the answer type.
-   We could have just as well put the answer type into the ST signature
-   below (as common in SML). But because we have higher-rank types
-   in OCaml, we may as well use them.
+   We could have just as well made RCN a functor, parameterized 
+   over the answer type (as is common in SML). But because we have 
+   higher-rank types in OCaml, we may as well use them.
 *)
 
 (* Call-by-name interpreter *)
