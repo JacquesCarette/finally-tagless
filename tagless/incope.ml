@@ -279,16 +279,12 @@ struct
   let buildsimp_monoid cast e f1 f2 = fun e1 e2 -> match (e1,e2) with
                  | ({st = Some e'}, _) when e = e' -> e2
                  | (_, {st = Some e'}) when e = e' -> e1
-                 | ({st = Some n1}, {st = Some n2}) -> cast (f1 n1 n2)
-                 | _ -> pdyn (f2 (abstr e1) (abstr e2))
+                 | _ -> build cast f1 f2 e1 e2
   (* same as above but for a ring structure instead of monoid *)
   let buildsimp_ring cast zero one f1 f2 = fun e1 e2 -> match (e1,e2) with
                  | ({st = Some e'}, _) when e' = zero -> e1
                  | (_, {st = Some e'}) when e' = zero -> e2
-                 | ({st = Some e'}, _) when e' = one -> e2
-                 | (_, {st = Some e'}) when e' = one -> e1
-                 | ({st = Some n1}, {st = Some n2}) -> cast (f1 n1 n2)
-                 | _ -> pdyn (f2 (abstr e1) (abstr e2))
+                 | _ -> buildsimp_monoid cast one f1 f2 e1 e2
 
   let add e1 e2 = buildsimp_monoid int 0 R.add C.add e1 e2
   let mul e1 e2 = buildsimp_ring int 0 1 R.mul C.mul e1 e2
