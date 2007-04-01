@@ -340,6 +340,7 @@ instance Functor P where
     fmap f = E . fmap f . abstr
 -}
 
+
 instance Symantics P where
     int x  = VI x
     bool b = VB b
@@ -363,11 +364,16 @@ instance Symantics P where
 
     fix f = pfix f -- need this charade for GADTs sake
 
-    add e1 e2 = case (e1,e2) of
-                 (VI n1,VI n2) -> VI (n1 + n2)
-                 _ -> E $ add (abstr e1) (abstr e2)
-
+    add e1 e2 = case (e1, e2) of
+                 (VI n1, _) | (n1 == 0) -> e2
+                 (_, VI n2) | (n2 == 0) -> e1
+                 (VI n1, VI n2) -> VI (n1 + n2)
+                 _              -> E $ add (abstr e1) (abstr e2)
     mul e1 e2 = case (e1,e2) of
+                 (VI n1, _) | (n1 == 0) -> e1
+                 (_, VI n2) | (n2 == 0) -> e2
+                 (VI n1, _) | (n1 == 1) -> e2
+                 (_, VI n2) | (n2 == 1) -> e1
                  (VI n1,VI n2) -> VI (n1 * n2)
                  _ -> E $ mul (abstr e1) (abstr e2)
 
