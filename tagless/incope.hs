@@ -296,26 +296,25 @@ ctestpw72 = compC  (app (testpowfix7 ()) (int 2))
 -- First attempt: works for the first-order fragment of our language,
 -- but stumbles on the higher-order fragment.
 
-data P1 t = S1 (R t) (C t) | E1 (C t)
+data P1 t = P1 (Maybe (R t)) (C t)
 
 abstr1 :: P1 t -> C t
-abstr1 (S1 _ dyn) = dyn
-abstr1 (E1 dyn)   = dyn
+abstr1 (P1 _ dyn) = dyn
 
 instance Symantics P1 where
-    int  x  = S1 (int x) (int x)
-    bool b  = S1 (bool b) (bool b)
-    add (S1 n1 _) (S1 n2 _) = int (unR (add n1 n2))
-    add e1 e2 = E1 (add (abstr1 e1) (abstr1 e2))
-    mul (S1 n1 _) (S1 n2 _) = int (unR (mul n1 n2))
-    mul e1 e2 = E1 (mul (abstr1 e1) (abstr1 e2))
-    leq (S1 n1 _) (S1 n2 _) = bool (unR (leq n1 n2))
-    leq e1 e2 = E1 (leq (abstr1 e1) (abstr1 e2))
-    if_ (S1 s _) et ef = if unR s then et else ef
-    if_ eb et ef = E1 (if_ (abstr1 eb) (abstr1 et) (abstr1 ef))
+    int  x = P1 (Just (int x)) (int x)
+    bool b = P1 (Just (bool b)) (bool b)
+    add (P1 (Just n1) _) (P1 (Just n2) _) = int (unR (add n1 n2))
+    add e1 e2 = P1 Nothing (add (abstr1 e1) (abstr1 e2))
+    mul (P1 (Just n1) _) (P1 (Just n2) _) = int (unR (mul n1 n2))
+    mul e1 e2 = P1 Nothing (mul (abstr1 e1) (abstr1 e2))
+    leq (P1 (Just n1) _) (P1 (Just n2) _) = bool (unR (leq n1 n2))
+    leq e1 e2 = P1 Nothing (leq (abstr1 e1) (abstr1 e2))
+    if_ (P1 (Just s) _) et ef = if unR s then et else ef
+    if_ eb et ef = P1 Nothing (if_ (abstr1 eb) (abstr1 et) (abstr1 ef))
 
 -- But the problem occurs when we try to implement lam. The result
--- of (lam f) must be either S1 _ _ or E1 _ value. Alas, we won't know
+-- of (lam f) must be P1 Nothing _ or P1 (Just _) _. Alas, we won't know
 -- which is which until we apply the function 'f' to a particular
 -- P1 value. 
 

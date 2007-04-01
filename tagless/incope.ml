@@ -41,15 +41,12 @@ module type Symantics = sig
      Or, at least it shouldn't take just (undelayed) terms.
   *)
   val if_ : ('c,bool,bool) repr ->
-             (unit -> ('c,'sa,'da) repr) ->
-             (unit -> ('c,'sa,'da) repr) -> ('c,'sa,'da) repr 
+             (unit -> 'x) ->
+             (unit -> 'x) -> (('c,'sa,'da) repr as 'x)
 
-  val lam : (('c,'sa,'da) repr -> ('c,'sb,'db) repr)
-    -> ('c,(('c,'sa,'da) repr -> ('c,'sb,'db) repr),'da->'db) repr
-  val app : ('c,(('c,'sa,'da) repr -> ('c,'sb,'db) repr),'da->'db) repr
-    -> ('c,'sa,'da) repr -> ('c,'sb,'db) repr
-  val fix : (('c,(('c,'sa,'da) repr -> ('c,'sb,'db) repr) as 's,'da->'db) repr 
-             -> ('c,'s,'da->'db) repr)  -> ('c,'s,'da->'db) repr
+  val lam : (('c,'sa,'da) repr -> ('c,'sb,'db) repr as 'x) -> ('c,'x,'da->'db) repr
+  val app : ('c,'x,'da->'db) repr -> (('c,'sa,'da) repr -> ('c,'sb,'db) repr as 'x)
+  val fix : ('x -> 'x) -> (('c, ('c,'sa,'da) repr -> ('c,'sb,'db) repr, 'da->'db) repr as 'x)
 (*
   val unfold : ('c,'s,'a) repr -> 
                ('c,('c,'s,'a) repr -> ('c,'s,'a) repr,'a->'a) repr -> 

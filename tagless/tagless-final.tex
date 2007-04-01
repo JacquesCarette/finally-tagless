@@ -63,6 +63,7 @@
 \title{Staged typed type-preserving tagless ``interpreters'', \emph{finally}}
 \subtitle{Subtitle Text, if any}
 
+\begin{comment}
 \authorinfo{Jacques Carette}
            {McMaster University}
            {carette@mcmaster.ca}
@@ -72,6 +73,8 @@
 \authorinfo{Chung-chieh Shan}
            {Rutgers University}
            {ccshan@cs.rutgers.edu}
+\end{comment}
+\authorinfo{}{}{}
 
 \maketitle
 
@@ -146,8 +149,8 @@ We focus on embedding a typed object language into a typed metalanguage.
 Types are useful as usual because they document the programmer's
 intentions and can be checked early by machine (see~\S\ref{encoding}).
 To be concrete, we use the typed object language in
-Figure~\ref{fig:object} throughout this paper.  We aim not just to
-interpret the object language in the narrow sense but also for
+Figure~\ref{fig:object} throughout this paper.  We aim not just for
+evaluation of object programs but also for
 compilation, partial evaluation, and other processing.
 
 \Citet{WalidICFP02} and \citet{xi-guarded} motivated interpreting
@@ -324,7 +327,7 @@ that the initial environment should be a tuple rather than |()|.
 In other words, the term is open.
 
 In sum, by Church\hyp encoding terms using ordinary functions,
-we achieve a tagless interpreter
+we achieve a tagless evaluator
 for a typed object language in a metalanguage with a simple type
 system \citep{hindley-principal,milner-theory}.  In this \emph{final}
 rather than \emph{initial} approach, both kinds of run-time errors
@@ -337,11 +340,11 @@ metalanguage implementation, we avoid the serious performance penalty
 \citep{WalidICFP02} of error checking.
 \ccshan{Need to cite Thiemann here and in related work?}
 
-The interpreter above is wired directly into the
-functions |b|, |lam|, |app|, and so on.  In the remainder of this paper, 
+The evaluator above is wired directly into the
+functions |b|, |lam|, |app|, and so on.  In the rest of this paper, 
 we explain how to abstract the interpreter so as
-to ``evaluate'' the same term in many different
-ways: interpretation, compilation, partial evaluation, size
+to process the same term in many other
+ways: compilation, partial evaluation, size
 computation, and so forth.
 
 \subsection{Contributions}\label{contributions}
@@ -390,8 +393,8 @@ Our contributions are
     evaluation and compilation to partial evaluation and CBN CPS
     transformation;
 \item a clear way to extend the object language with more features;
-\item and an approach to self-interpretation compatible with the
-  above.  Self-interpretation turned out to be harder than expected.
+\item and an approach to self\hyp interpretation compatible with the
+  above.  Self\hyp interpretation turned out to be harder than expected.
 \end{enumerate}
 \jacques{can we state fairly clearly what type system we need?  I mean,
 Haskell98(?) and MetaOCaml with (objects, polymorphic variants, ...).
@@ -636,7 +639,7 @@ let module E =EX1(L) in E.tfix ();;
 
 \section{A tagless compiler (or, a staged interpreter)}\label{compiler}
 
-We can also compile our object language
+Besides immediate evaluation, we can compile our object language
 into OCaml code using MetaOCaml's staging facilities. MetaOCaml
 represents future-stage expressions of type |t| at the
 present stage as values of type |('c,t) code| where |'c| is the
@@ -645,13 +648,13 @@ by a \emph{bracket} form |.<e>.|, which specifies that the expression |e| is to 
 evaluated at a future stage. The \emph{escape} |.~e| must occur
 within a bracket and specifies that the expression |e| must be evaluated
 at the current stage; its result, which must be a code value, is
-spliced into the code being built by the enclosing bracket. The \emph{run} form |.! e| evaluates
+spliced into the code being built by the enclosing bracket. The \emph{run} form |.!e| evaluates
 the future-stage code value~|e| by compiling and linking it at run-time.
 The bracket, escape, and run are akin to
 quasi-quotation, unquotation, and |eval| of Lisp.
 
-Inserting brackets and escapes appropriately into the evaluating
-interpreter~|R| above yields the compiling interpreter~|C| below.
+Inserting brackets and escapes appropriately into the
+evaluator~|R| above yields the compiler~|C| below.
 % this code does not have the 'sv parameter. It shows up later.
 \begin{code}
 module C = struct
@@ -677,7 +680,7 @@ end
 This is a completely straightforward staging of
 |module R|.
 This compiler simply produces
-residual code with no optimization. For example, evaluating our |test1|
+residual code with no optimization. For example, interpreting our |test1|
 \begin{code}
 let module E = EX(C) in E.test1 ()
 \end{code}
@@ -686,8 +689,8 @@ of inferred type |('c, bool) C.repr|.
 
 This compiler does not incur
 any interpretive overhead: the
-code produced for $\fun{x}x$ is simply |fun x_6 -> x_6| and contains no 
-  call to the evaluator, unlike the recursive calls to |eval0| and
+code produced for $\fun{x}x$ is simply |fun x_6 -> x_6| and does not
+  call the interpreter, unlike the recursive calls to |eval0| and
   |eval| in the |L e| lines in \S\ref{tagproblem}.
 The resulting code obviously contains no tags and no pattern matching.
 
@@ -705,82 +708,113 @@ where |Int| is the counter for creating fresh variable
 names. We define the compiler by making |C| an instance of the
 class |Symantics|. The implementation\footnote{The implementation uses
 GADTs because we also wanted to write a typed interpreter for 
-the \textsf{ByteCode} \emph{datatype}.} is quite similar (but slightly more
+the \textsf{ByteCode} \emph{data type}.} is quite similar (but slightly more
 verbose) than the corresponding MetaOCaml code given above. The
 accompanying code gives the full details.
 
 \section{A tagless partial evaluator}\label{PE}
 
-Surprisingly, it is also possible to write a partial evaluator!  The
+Surprisingly, we can write a partial evaluator using the idea above,
+namely to build object terms using ordinary functions rather than data
+constructors.  We present this partial evaluator in a sequence of four
+attempts, the last of which finally uses no universal type and no tags
+for object types.  We then discuss residualization and binding-time
+analysis.  Our partial evaluator is a modular extension to the evaluator
+in~\S\ref{S:interpreter-RL} and the compiler in~\S\ref{compiler}, in
+that it uses the former to reduce static terms and the latter to build
+dynamic terms.
+
+\ccshan{Move later:} The
 partial evaluator does have tags: \emph{binding time} or \emph{phase}
 tags, i.e. whether a value is static or dynamic.
-Pattern-matching on this phase tag is always exhaustive; we still
-have no universal type and no tags for object types.  The partial
-evaluator uses the previously mentioned compiler to ``interpret'' dynamic
-terms, and uses the interpreter to reduce static terms.  In this sense, 
-the partial evaluator is a modular extension to both the compiler and
-the interpreter. 
+Pattern-matching on this phase tag is always exhaustive.
 
-\subsection{The trouble with (opaque) functions}
-\label{S:PE-problem}
-We want to combine the interpreter |R| and the compiler |C| to produce
-an (online) partial evaluator.  We defer the discussion of the 
-choice of online/offline partial evaluation until after we have presented our
-solution in~\ref{S:PE-solution}.
-The partial evaluator (PE) is too an interpreter: it
-evaluates a term either to an immediate (or, `static' or present-stage)
-value or to a `dynamic', future-stage value, or `code' (of the sort
-produced by the compiler C). The interpreter attempts to perform all
-possible computations (i.e., computations whose operarands are
-present-stage values) as the present-stage. Our first attempt, in
-Haskell, is straightforward: we introduce
-\begin{code}
-data P1 t = S1 (R t) (C t) | E1 (C t)
-\end{code}
-as a `direct sum' of the interpreter |R| and the compiler |C|. The
-datatype |P1| has two \emph{phase} (not type!) tags |S1| 
-(for static) and |E1| for dynamic. The static value has both the
-present-stage and future-stage alternatives. The dynamic value does
-not have the present-stage component. We define
-\begin{code}
-abstr1 :: P1 t -> C t
-abstr1 (S1 _ dyn) = dyn
-abstr1 (E1 dyn)   = dyn
-\end{code}
-to extract the future-stage component. We then attempt to define the
-interpreter |P1| compositionally -- and it works for the first-order
-fragment of our DSL language.
+\subsection{Avoiding polymorphic lift}
 
+Roughly speaking, a partial evaluator interprets each object term either
+to a static (present-stage) term, as produced by the evaluator~|R|, or
+to a dynamic (future-stage) term, as produced by the compiler~|C|.  The
+interpreter computes as much as possible statically.  Thus one might try
+to define partial evaluation as the Haskell data type
 \begin{code}
-instance Symantics P1 where
-    int  x  = S1 (int x) (int x)
-    bool b  = S1 (bool b) (bool b)
-    add (S1 n1 _) (S1 n2 _) = int (unR (add n1 n2))
-    add e1 e2 = E1 (add (abstr1 e1) (abstr1 e2))
-    -- mul and leq are analogous and elided
-    if_ (S1 s _) et ef = if unR s then et else ef
-    if_ eb et ef = 
-       E1 (if_ (abstr1 eb) (abstr1 et) (abstr1 ef))
+data P0 t = S0 (R t) | E0 (C t)
+\end{code}
+To extract a dynamic term from this type, we create the functions
+\begin{code}
+abstrInt :: P0 Int -> C Int
+abstrInt (S0 r) = int (unR r)
+abstrInt (E0 c) = c
+
+abstrBool :: P0 Bool -> C Bool
+abstrBool (S0 r) = bool (unR r)
+abstrBool (E0 c) = c
+\end{code}
+We then start to define |P0| as an instance of the |Symantics| class.
+\begin{code}
+instance Symantics P0 where
+  int  x = S0 (int x) (int x)
+  bool x = S0 (bool x) (bool x)
+  add (S0 e1) (S0 e2) = S0 (add e1 e2)
+  add e1 e2 = E0 (add (abstrInt e1)
+                      (abstrInt e2))
 \end{code}
 Integer and boolean literals are obviously immediate, present-stage
-values. The result of adding two values is static only if both values
-are. If so, we use the evaluator |R| to add the values; the result is
-an essentially integer literal, which can be promoted to the future
-stage. If at least one of the operands to |add| is dynamic, we promote
-both operands to the future-stage and use the compiler |C| to
-`compile' the code for adding the operand expressions.  Because the
-static value includes as a component its future-stage variant, and
-because we build both components together, we are able to get by
-without the polymorphic `lift' operation (that is, lift the
-computation of any type from the present-stage to the future
-stage). We can do such a lifting only on type-by-type basis (for
-booleans and for integers). The problem with the polymorphic lift is
-that it inhibits true compilation, to assembler or other similar first
-order target language with no polymorphic (run-time reified) types.
-The representation of integers in the target language most likely
-differs from the representation of booleans or functions,
-etc. Therefore, without the intentional type analysis, the polymorphic
-lift is not compilable.
+values. Addition yields a static term if and only if both operands
+are static. If so, we use the evaluator~|R| to add the operands.
+If not, we extract dynamic terms from the operands and add them
+using the compiler~|C|.
+
+Whereas |mul| and |leq| are as easy to define as |add|, we encounter
+a problem with |if_|.  If the first argument to |if_| is a dynamic term
+(type |C Bool|) and the second and third arguments are a static term
+(type |R a|) and a dynamic term (type |C a|), then we need to convert
+the static term to dynamic, but there is no polymorphic ``lift''
+function |a -> C a| to send a value to the future stage.
+
+Our |Symantics| class includes only separate lifting methods |bool| and
+|int|, not a parametrically polymorphic lifting method, for good reason:
+When compiling to a first-order target language such as machine code,
+booleans, integers, and functions may well be represented differently.
+Thus polymorphic lift cannot be compiled without intensional type
+analysis.  To avoid the need for polymorphic lift, we turn to
+a technique due to Asai \ccshan{cite?}: build a dynamic term alongside
+every static term.
+
+\subsection{Delaying binding-time analysis}
+\label{S:PE-problem}
+
+We switch to the Haskell data type
+\begin{code}
+data P1 t = P1 (Maybe (R t)) (C t)
+\end{code}
+so that a partially evaluated term |P1 t| always contains a dynamic
+component and sometimes contains a static component.  The two
+alternative constructors of a |Maybe| value, |Just| and |Nothing|,
+tag each partially evaluated term with a phase: either present or
+future.  This tag is not an object type tag: all pattern matching below
+is exhaustive.  Because the future-stage component is always present, we
+can now define the polymorphic function
+\begin{code}
+abstr1 :: P1 t -> C t
+abstr1 (P1 _ dyn) = dyn
+\end{code}
+to extract it without requiring polymorphic lift into~|C|.  We then try
+to define the interpreter |P1|---and get as far as the first-order
+constructs of our object language, including |if_|.
+\begin{code}
+instance Symantics P1 where
+  int  x = P1 (Just (int x)) (int x)
+  bool b = P1 (Just (bool b)) (bool b)
+  add (P1 (Just n1) _) (P1 (Just n2) _)
+    = int (unR (add n1 n2))
+  add e1 e2 = P1 Nothing
+    (add (abstr1 e1) (abstr1 e2))
+  -- mul and leq are analogous and elided
+  if_ (P1 (Just s) _) et ef
+    = if unR s then et else ef
+  if_ eb et ef = P1 Nothing
+    (if_ (abstr1 eb) (abstr1 et) (abstr1 ef))
+\end{code}
 
 When we come to the higher-order fragment of our language, however, we
 stumble. Let us consider |lam f|. Here, |f| is a function from a
@@ -916,34 +950,33 @@ into the signature |Symantics|. Switching to MetaOCaml for
 portability, we recall from Section~\ref{encoding} that |repr| type
 had two arguments |type ('c,'dv) repr|. We add an extra argument,
 |'sv|, which is the result of applying |repr_pe| function above to the
-type |'dv|. The signature |Symantics| now reads
+type |'dv|. Figure~\ref{fig:ocaml} shows the new signature |Symantics|.
+\begin{figure*}
+\begin{floatrule}
 \begin{code}
 module type Symantics = sig
+
   type ('c,'sv,'dv) repr
-  val int  : int  -> ('c,int,int) repr
-  val bool : bool -> ('c,bool,bool) repr
-  val add  : ('c,int,int) repr -> 
-      ('c,int,int) repr -> ('c,int,int) repr
-  val mul  : ('c,int,int) repr -> 
-      ('c,int,int) repr -> ('c,int,int) repr
-  val leq  : ('c,int,int) repr -> 
-      ('c,int,int) repr -> ('c,bool,bool) repr
-  val if_  : ('c,bool,bool) repr ->
-             (unit -> ('c,'sa,'da) repr) ->
-             (unit -> ('c,'sa,'da) repr) -> 
-             ('c,'sa,'da) repr 
-  val lam : (('c,'sa,'da) repr -> ('c,'sb,'db) repr)
-    -> ('c,(('c,'sa,'da) repr -> ('c,'sb,'db) repr),
-           'da->'db) repr
-  val app : ('c,(('c,'sa,'da) repr -> ('c,'sb,'db) repr),
-             'da->'db) repr
-    -> ('c,'sa,'da) repr -> ('c,'sb,'db) repr
-  val fix : 
-    (('c,(('c,'sa,'da) repr -> ('c,'sb,'db) repr) as 's,
-         'da->'db) repr 
-    -> ('c,'s,'da->'db) repr)  -> ('c,'s,'da->'db) repr
-end;;
+
+  val int : int  -> ('c,int,int) repr
+  val bool: bool -> ('c,bool,bool) repr
+
+  val lam : (('c,'sa,'da) repr -> ('c,'sb,'db) repr as 'x) -> ('c,'x,'da->'db) repr
+  val app : ('c,'x,'da->'db) repr -> (('c,'sa,'da) repr -> ('c,'sb,'db) repr as 'x)
+  val fix : ('x -> 'x) -> (('c, ('c,'sa,'da) repr -> ('c,'sb,'db) repr, 'da->'db) repr as 'x)
+
+  val add : ('c,int,int) repr -> ('c,int,int) repr -> ('c,int,int) repr
+  val mul : ('c,int,int) repr -> ('c,int,int) repr -> ('c,int,int) repr
+  val leq : ('c,int,int) repr -> ('c,int,int) repr -> ('c,bool,bool) repr
+  val if_ : ('c,bool,bool) repr -> (unit -> 'x) -> (unit -> 'x) -> (('c,'sa,'da) repr as 'x)
+
+end
 \end{code}
+\end{floatrule}
+\caption{A (Meta)OCaml embedding of our object language that supports partial evaluation}
+\label{fig:ocaml}
+\end{figure*}
+
 The interpreters |R|, |L| and |C| above only relied on the last
 argument of the |repr| type, which is unchanged. And so is their
 implementation; the newly added argument |'sv| will be phantom.
