@@ -1208,11 +1208,120 @@ we get the result |1|.
 
 \subsection{CBV CPS transformers}
 
-We can obtain CBV from CBN?
+We can easily change our CBN CPS interpreter into a CBV CPS
+interpreter, by replacing only one definition:
+\begin{code}
+module RCV = struct
+  include RCN
+  let lam f = {ko = 
+    fun k -> k (fun e -> e.ko 
+         (fun v -> f {ko = fun k -> k v}))}
+end;;
+\end{code}
+Now when we apply an abstraction to an argument |e|, we always force
+the evaluation of that argument before proceeding. This approach is in
+line with Reynolds (cite) (albeit in a typed setting). The interpreter RCV is
+useful for achieving the CBV evaluation of the object language
+no matter whether the metalanguage is CBV or CBN.
+
+In this section however we show a more general approach to CBV CPS:
+CPS transformer. We take any implementation of Symantics (interpreter,
+compiler, partial evaluator) and make it evaluate the CPS language
+instead. We can view this transformation of interpreters as a
+transformation on the object language, from direct to
+continuation-passing style.
+
+The transformation is canonical, as the following (abbreviated) code
+shows
+\begin{code}
+module CPST(S: Symantics) = struct
+  let int i = S.lam (fun k -> S.app k (S.int i))
+  let add e1 e2 = S.lam (fun k ->
+    S.app e1 (S.lam (fun v1 ->
+    S.app e2 (S.lam (fun v2 -> S.app k (S.add v1 v2))))))
+  let if_ ec et ef = S.lam (fun k ->
+    S.app ec (S.lam (fun vc ->
+    S.if_ vc (fun () -> S.app (et ()) k) (fun () -> S.app (ef ())
+    k))))
+  ...
+  let lam f = S.lam (fun k -> S.app k (S.lam (fun x ->
+    f (S.lam (fun k -> S.app k x)))))
+  let app e1 e2 = S.lam (fun k -> 
+    S.app e1 (S.lam (fun f ->
+    S.app e2 (S.lam (fun v -> S.app (S.app f v) k)))))
+  let fix f  = S.fix (fun self -> (f self))
+end
+\end{code}
+The code literally establishes a mapping from CPS interpretations to
+(direct) interpretations, that latter performed by 
+the base interpreter |S|.
+
+A reader may notice that the above module does not define the type
+equation for |repr| and so it does not have the signature Symantics.
+The reason for that is again the result type of |lam f|. Whereas
+|int i| or |add e1 e2| have the (abbreviated) 
+type |('c,..., (int -> 'w) -> 'w) S.repr|,
+the result of |lam (fun x -> add x (int 1))| has the type
+|('c,...((int -> (int -> 'w1) -> 'w1) -> 'w2) -> 'w2) S.repr|. 
+Hence, to write the type equation for |CPST.repr| we need a 
+type case-discriminating
+function similar to the type function |repr_pe| of
+Section~\ref{S:PE-solution}. Alas, the function we need here is
+similar but not identical to |repr_pe|. Thus we need to add 
+another type variable to the |repr| type and modify the Symantics
+signature accodringly. Again, the terms in previous Symantics module
+stay unchanged, but the |repr| type equations in those structures have to
+account for a new (phantom, in that case) type variable.
+
+To save space, we show a simplified and less principal approach that
+lets us use the module |CPST| as it is. Because the module does not
+have the signature Symantics, we cannot apply the |EX| functor to it.
+But we can write the tests nevertheless:
+\begin{code}
+module T = struct
+ module M = CPST(C)
+ open M
+ let test1 () = app (lam (fun x -> x)) (bool true)
+ let testpowfix () = ... (* the same as before *)
+ let testpowfix7 = (* the same as before *)
+    lam (fun x -> app (app (testpowfix ()) x) (int 7))
+end;;
+\end{code}
+That is, we instantiate |CPST| with the desired base intrepreter (the
+compiler |C| in the case above) so that we can use the result |M| to
+interpret object level terms. The sample terms are \emph{exactly}
+as we used before. We just copied them over. That copying step is the
+price we pay for the simplified treatment. We shall encounter this
+copying when discussing the self-interpreter in the next section. We
+will see then that the copying step has a profound meaning of
+`plugging the hole', which is one of the faces of polymorphism.
+
+It is instructive to see the result of evaluating a few examples. With 
+|CPST| instantiated with a straightforward compiler |C| as above, our
+running test |T.test1 ()| gives
+\begin{code}
+.<fun x_5 -> ((fun x_2 -> 
+        (x_2 (fun x_3 -> fun x_4 -> (x_4 x_3))))
+        (fun x_6 -> ((fun x_1 -> (x_1 (true))) 
+        (fun x_7 -> ((x_6 x_7) x_5)))))>.
+\end{code}
+
+which shows the naive CPS transform of the original code. The result is
+quite unoptimal with several apparent $\beta$-redexes. We can reduce
+them by instantiating |CPST| with the |P| evaluator instead. Our
+running test gives then
+\begin{code}
+  P.repr = {P.st = Some <fun>; P.dy = .<fun x_5 -> (x_5 (true))>.}
+\end{code}
+
 
 \subsection{State and imperative features}
 
-
+We can easily modify the CBV CPS transform to pass a piece of state
+along with the continuation. This lets us support mutable state. We
+can also use reference variables of the metalanguage to emulate
+reference variables in the object language.
+\oleg{Should we have an example in the code?}
 
 \subsection{Translucent types}
 

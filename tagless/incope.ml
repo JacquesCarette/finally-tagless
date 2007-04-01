@@ -592,6 +592,7 @@ module type SymS = sig
   val fix : (('c,'da->'db) repr -> ('c,'da->'db) repr) 
             -> ('c,'da->'db) repr
 end;;
+
 module RS = struct
   type ('c,'dv) repr = 'dv    (* absolutely no wrappers *)
   let int (x:int) = x
@@ -625,7 +626,7 @@ end;;
 
 
 module CPST(S: Symantics) = struct
-  type w = unit
+ (*  type w = unit *)
  (*  type ('c,'dv) repr = ('c, ('dv -> w)->w) S.repr *)
   let int i = S.lam (fun k -> S.app k (S.int i))
   let bool b = S.lam (fun k -> S.app k (S.bool b))
@@ -653,6 +654,7 @@ module T = struct
  module M = CPST(P)
  open M
  let test1 () = app (lam (fun x -> x)) (bool true)
+ let test2 () = lam (fun x -> add x (int 1))
  (* let tfix () = app (fix (fun self -> self)) (int 1) *)
  let tif () = if_ (bool true) (fun () -> (add (int 2) (int 1)))
                   (fun () -> int 2)
@@ -665,13 +667,10 @@ module T = struct
      if_ (leq n (int 0)) (fun () -> int 1)
          (fun () -> mul x (app self 
                                (add n (int (-1))))))))
-
  let testpowfix7 = 
-    app (app (testpowfix ()) (int 2)) (int 7)
-(*
+    lam (fun x -> app (app (testpowfix ()) x) (int 7))
  let testpowfix72 = 
     app testpowfix7 (int 2)
-*)
 end;;
 
 let ctest1 = T.test1 ();;
