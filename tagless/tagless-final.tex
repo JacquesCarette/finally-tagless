@@ -1,4 +1,4 @@
-\hyphenation{meta-language meta-languages}
+\hyphenation{meta-language meta-languages Meta-OCaml}
 \documentclass[preprint]{sigplanconf}
 \usepackage{amsmath,amssymb}
 \usepackage{mathptmx}
@@ -144,8 +144,8 @@ language.
 
 We focus on embedding a typed object language into a typed metalanguage.
 Types are useful as usual because they document the programmer's
-intentions and can be checked early by machine.  \ccshan{Collect reasons
-to type here.}  To be concrete, we use the typed object language in
+intentions and can be checked early by machine (see~\S\ref{encoding}).
+To be concrete, we use the typed object language in
 Figure~\ref{fig:object} throughout this paper.  We aim not just to
 interpret the object language in the narrow sense but also for
 compilation, partial evaluation, and other processing.
@@ -366,9 +366,8 @@ We have programmed our interpreters in OCaml (and, for staging,
 to supplement the paper. Our examples below switch between (Meta)OCaml
 and Haskell even though we have implemented each example equivalently in
 both metalanguages, because some of our claims are more obvious in one
-metalanguage than the other.  For example, our OCaml evaluator obviously
-terminates except if the fixpoint combinator $\mathrm{fix}$ is present
-in the object program.
+metalanguage than the other.  For example, MetaOCaml provides
+convenient, typed staging facilities.
 
 Our code ensures statically that an object term is well-typed and
 closed, yet is surprisingly simple and obvious in hindsight.  We stress
@@ -402,7 +401,7 @@ need?}
 The structure of our paper is as follows. Section XXX ...
 We finally conclude.
 
-\section{The base language and its tagless interpreters}\label{language}
+\section{The object language and its tagless interpreters}\label{language}
 
 Figure~\ref{fig:object} shows our object language, a simply-typed
 $\lambda$-calculus with fixpoint, integers, booleans, and comparison.
@@ -416,198 +415,215 @@ rather than de Bruijn indices.
 
 \subsection{How to make encoding flexible: abstract the interpreter}
 \label{encoding}
-We have embedded the above language in (Meta)OCaml and Haskell.  In Haskell,
-the constructors of DSL terms are functions defined as methods in a type class
-Symantics. The name implies that the class interface gives the syntax for
-the source language and its instances give the semantics.
 
+We embed this language in (Meta)OCaml and Haskell.  In Haskell,
+the functions that construct object terms are methods in a type class
+|Symantics|. The class is so named because its interface gives the syntax for
+the object language and its instances give the semantics.
+The parameter |repr| to the class has the kind |* -> *|.
 \begin{code}
 class Symantics repr where
-  int :: Int   -> repr Int          -- int literal
-  bool :: Bool -> repr Bool         -- bool literal
 
-  lam :: (repr a -> repr b) -> repr (a->b)
-  app :: repr (a->b) -> repr a -> repr b
+  int  :: Int  -> repr Int
+  bool :: Bool -> repr Bool
+
+  lam :: (repr a -> repr b) -> repr (a -> b)
+  app :: repr (a -> b) -> repr a -> repr b
   fix :: (repr a -> repr a) -> repr a
 
-  add :: repr Int  -> repr Int -> repr Int
-  mul :: repr Int  -> repr Int -> repr Int
-  if_ :: repr Bool -> repr a   -> repr a -> repr a
-  leq :: repr Int  -> repr Int -> repr Bool
+  add :: repr Int -> repr Int -> repr Int
+  mul :: repr Int -> repr Int -> repr Int
+  leq :: repr Int -> repr Int -> repr Bool
+  if_ :: repr Bool -> repr a -> repr a -> repr a
 \end{code}
-
-\noindent |test1| now reads |app (lam (\x -> x)) (bool True)|,
+For example, we encode the term |test1|, or $(\fun{x}x)\True$, from
+\S\ref{tagproblem} above as |app (lam (\x -> x)) (bool True)|,
 whose inferred type is |Symantics repr => repr Bool|.
-For example, we can encode the classical |power| function, as well
-as the partial application |\x -> power x 7| as
-
+For another example, the classical $\mathit{power}$ function is
 \begin{code}
 testpowfix () = 
   lam (\x -> fix (\self -> lam (\n ->
-        if_ (leq n (int 0)) (int 1)
-            (mul x (app self (add n (int (-1))))))))
-testpowfix7 () = 
-  lam (\x -> app (app (testpowfix ()) x) (int 7))
+  if_ (leq n (int 0)) (int 1)
+      (mul x (app self (add n (int (-1))))))))
 \end{code}
-The dummy unit |()| argument above is to avoid the monomorphism
-restriction and so that the type of |testpowfix| and |testpowfix7|
-will remain polymorphic in |repr|. Instead of supplying this dummy
+and the partial application $\fun{x} \mathit{power}\;x\;7$ is
+\begin{code}
+testpowfix7 () = 
+  lam (\x -> app (app (testpowfix ()) x)
+                 (int 7))
+\end{code}
+The dummy argument |()| above is to avoid the monomorphism
+restriction, to keep the type of |testpowfix| and |testpowfix7|
+polymorphic in |repr|. Instead of supplying this dummy
 argument, we could have given the terms explicit polymorphic
-signature.  We however prefer if the typechecker of the meta-language
-(Haskell) infers the types of the object terms for us. We could also
-avoid the |()| argument by switching off the monomophism restriction
+signatures.  We however prefer for
+Haskell to infer the object types for us. We could also
+avoid the dummy argument by switching off the monomophism restriction
 with a compiler flag.
 
-Note that the object language is typed. If we make a mistake
-(for example, replace |int 7| with |bool True| in |testpowfix7|, the
-compiler will highlight that term and complain that it couldn't match
-the expected |Int| against the inferred |Bool|. A type error
-also results when entering |lam (\x -> app x x)|, with the compiler
-complaining about an infinite type. The type-checker of the
-meta-language will flag meaningless object level terms --
-before any of their evaluation. If we forget, for example, |app| in
-some of the terms above, we get an error message with a precise
-location. So the type-checker also flags syntactically invalid
-object-level terms.\oleg{Should we perhaps move this up, in the
-  intro? To justify why typed-metalanguages and the typed DSL are
-  good. Or keep the explanation here but refer to it from the Introduction.}
+Because the types in the |Symantics| class reflect the object language's type
+system, this representation admits only well-typed object terms for evaluation.
+If we make a mistake somewhere, say replace |int 7| with |bool True| in
+|testpowfix7|, Haskell will complain there that the expected type |Int| does not
+match the inferred |Bool|.  Similarly, the object term $\fun{x}xx$ and its
+encoding |lam (\x -> app x x)| both fail occurs-checks in type checking.
+Haskell's type checker also flags syntactically invalid object terms, such as if
+we forget |app| somewhere above.
 
-We have also embedded our DSL in (Meta)OCaml, replacing type classes
-and instances with signatures and structures. For this and the 
-following sections, the following simple signature suffices:
-
+\begin{figure*}
+\begin{floatrule}
 \begin{code}
 module type Symantics = sig
-  type ('c,'dv) repr
-  val int : int  -> ('c,int) repr
-  val bool: bool -> ('c,bool) repr
-  val add : ('c,int) repr-> ('c,int) repr-> ('c,int) repr
-  val mul : ('c,int) repr-> ('c,int) repr-> ('c,int) repr
-  val leq : ('c,int) repr-> ('c,int) repr-> ('c,bool) repr
-  val if_ : ('c,bool) repr ->
-             (unit -> ('c,'da) repr) ->
-             (unit -> ('c,'da) repr) -> ('c,'da) repr 
-  val lam : (('c,'da) repr -> ('c,'db) repr) 
-          -> ('c,'da->'db) repr
-  val app : ('c,'da->'db) repr
-    -> ('c,'da) repr -> ('c,'db) repr
-  val fix : (('c,'da->'db) repr -> ('c,'da->'db) repr) 
-            -> ('c,'da->'db) repr
-end;;
+
+  type ('c, 'dv) repr
+
+  val int : int  -> ('c, int) repr
+  val bool: bool -> ('c, bool) repr
+
+  val lam : (('c, 'da) repr -> ('c, 'db) repr) -> ('c, 'da -> 'db) repr
+  val app : ('c, 'da -> 'db) repr -> ('c, 'da) repr -> ('c, 'db) repr
+  val fix : (('c, 'da -> 'db) repr -> ('c, 'da -> 'db) repr) -> ('c, 'da -> 'db) repr
+
+  val add : ('c, int) repr -> ('c, int) repr -> ('c, int) repr
+  val mul : ('c, int) repr -> ('c, int) repr -> ('c, int) repr
+  val leq : ('c, int) repr -> ('c, int) repr -> ('c, bool) repr
+  val if_ : ('c, bool) repr -> (unit -> ('c, 'da) repr) -> (unit -> ('c, 'da) repr) -> ('c, 'da) repr
+
+end
 \end{code}
+\end{floatrule}
+\caption{A simple (Meta)OCaml embedding of our object language}
+\label{fig:ocaml-simple}
+\end{figure*}
 
-Some differences are in the additional type parameter |c| (the
-environment classifier from \cite{WalidPOPL03}) to be used later when we get to
-code generation (this is required by MetaOCaml as part of the type for the
-code). MetaOCaml is a call-by-value language, and thus we have to 
-$\eta$-expand
-the fix-point combinator and encapsulate the branches of the |if_|
-into thunks to prevent their evaluation. 
+To embed the same object language in (Meta)OCaml, we replace the type
+class |Symantics| and its instances by a module signature |Symantics|
+and its implementations.  Figure~\ref{fig:ocaml-simple} shows a simple
+signature that suffices for this and the following sections.
+Two differences between this signature and the |Symantics| class in
+Haskell are: the additional type parameter |c|, an
+environment classifier \citep{WalidPOPL03} required by MetaOCaml for
+code generation in~\S\ref{compiler}; and the $\eta$-expanded type for
+|fix| and thunk types in |if_| due to OCaml's being a call-by-value
+language.
 
-The power example and our sample term |test1| are encoded as
+The functor below encodes our examples |test1| and $\mathit{power}$.
 \begin{code}
 module EX(S: Symantics) = struct
- open S
- let test1 () = app (lam (fun x -> x)) (bool true)
- let testpowfix () = 
-   lam (fun x ->fix (fun self -> lam (fun n ->
-     if_ (leq n (int 0)) (fun () -> int 1)
-         (fun () -> mul x (app self 
-                               (add n (int (-1))))))))
- let testpowfix7 = 
-    lam (fun x -> app (app (testpowfix ()) x) (int 7))
+  open S
+  let test1 () =
+    app (lam (fun x -> x)) (bool true)
+  let testpowfix () = 
+    lam (fun x -> fix (fun self -> lam (fun n ->
+    if_ (leq n (int 0)) (fun () -> int 1)
+        (fun () -> mul x
+          (app self (add n (int (-1))))))))
+  let testpowfix7 = 
+     lam (fun x -> app (app (testpowfix ()) x)
+                       (int 7))
 end;;
 \end{code}
-The dummy unit argument in |testpowfix| is an artefact of MetaOCaml
-(which we will be using to compile our tests in Sections below),
-again related to monorphism. To be
-more precise, the environment qualifier (which appears as the |'c|
-type parameter in the signature of Symantic functions) must remain
-uninstantiated in order for us to `run' the code. That means the type
-must be polymorhic. The value restriction then dictates that
+The dummy argument to |test1| and |testpowfix| is an artefact of
+MetaOCaml, again related to monomorphism: in order for us to run a
+piece of generated code, it must be polymorphic in its environment
+classifier (the type variable |'c| in Figure~\ref{fig:ocaml-simple}).
+The value restriction then dictates that
 the definitions of our object terms must look syntactically like
 values. Alternatively to giving the |()| argument, we could have used
 the rank-2 record types of OCaml to maintain the necessary polymorphism.
 
-Thus the object expressions (expressions of the embedded DSL) have in
-OCaml the type of a functor from |Symantics| to the desired value. This
-is essentially the same as the |Symantics repr => | constraint in the case of
-the embedding of the DSL in Haskell.
+Thus we represent an object expression in
+OCaml as a functor from |Symantics|. This
+is essentially the same as the constraint |Symantics repr =>| in the
+Haskell embedding.
 
 \subsection{Two tagless interpreters}
 \label{S:interpreter-RL}
-The first instantiation of the Symantics structure is an interpreter:
-evaluating the object (DSL) term to its value in the meta-language. 
-The following module essentially interprets (gives one-to-one
-correspondence to) each operation of the object language as the
-corresponding operation in the meta-language.
+
+Having abstracted our term representation over the interpreter, we are
+now ready to present a series of interpreters.  Each interpreter is an
+instance of the |Symantics| class in Haskell and a module implementing
+the |Symantics| signature in MetaOCaml.
+
+The first interpreter evaluates the object term to its value in the
+metalanguage.  The module below interprets each object\hyp language
+operation as the corresponding metalanguage operation.
 \begin{code}
-module R  = struct
-  type ('c,'dv) repr = 'dv (* absolutely no wrappers *)
+module R = struct
+
+  (* absolutely no wrappers *)
+  type ('c,'dv) repr = 'dv
+
   let int  (x:int)  = x
   let bool (b:bool) = b
+
+  let lam  f        = f
+  let app  e1 e2    = e1 e2
+  let fix  f        =
+    let rec self n = f self n in self
+
   let add  e1 e2    = e1 + e2
   let mul  e1 e2    = e1 * e2
   let leq  x y      = x <= y
-  let if_  eb et ee = if eb then (et ()) else (ee ())
+  let if_  eb et ee = if eb then et () else ee ()
 
-  let lam f         = f
-  let app e1 e2     = e1 e2
-  let fix f         = let rec self n = f self n in self
-end;;
+end
 \end{code}
 
-This interpreter is patently tagless, using neither Universal type nor
-any pattern-matching: the operation |add| is really
-OCaml's addition, and |app| is OCaml's application. We can run our
-examples by instatiating the |EX| functor with |R|.
-\noindent
+As in~\S\ref{ourapproach},
+this interpreter is patently tagless, using neither a universal type nor
+any pattern matching: the operation |add| is really
+OCaml's addition, and |app| is OCaml's application. To run our
+examples, we instantiate the |EX| functor from~\S\ref{encoding} with this |R| module.
 \begin{code}
-  module EXR = EX(R);;
+module EXR = EX(R)
 \end{code}
-
-\noindent and so |EXR.test1 ()| evaluates to the untagged boolean value |true|.
-In Haskell, we define a\\
-|newtype R a = R{unR::a}| and |instance Symantics R|
-with a straightforward implementation. We must stress that |R| is
-a |newtype|. Although it may look like a tag, it has no run-time
-representation (erased during compilation) and pattern-matching
-against |R| cannot ever fail and so is operationally an identity and
-compiled that way. In both cases, the absense of pattern-match
-failures is obvious to the compiler, because there are no
-pattern-matching. The failure to yield a value
-may only result from interpreting |fix|.
-
+Thus |EXR.test1 ()| evaluates to the untagged boolean value |true|.
+In Haskell, we define
+\begin{code}
+newtype R a = R {unR::a}
+instance Symantics R where ...
+\end{code}
+Although |R| looks like a tag, it is only
+a |newtype|.  The types |a| and |R a| are represented differently
+only at compile time, not at run time.  Pattern matching against~|R|
+cannot ever fail and is compiled to no-op.
+In both OCaml and Haskell, it is obvious to the compiler that
+pattern matching cannot fail, because there is no
+pattern matching. Evaluation can only fail to yield a value
+due to interpreting |fix|.
+That is, the proposition below follows immediately from the soundness of
+the metalanguage's type system.
 \begin{prop}
-If the term |e| encoded in the meta-language has type
-|t|, evaluation of that term in the interpreter R will either continue
-indefinitely or termninate with a value of the same type |t|.
+If the term |e| encoded in the metalanguage has type~|t|,
+then evaluating~|e| in the interpreter~|R| either continues
+indefinitely or terminates with a value of the same type~|t|.
 \end{prop}
 
-We'd like show a different interpreter: it interprets each terms of
-the object language to its size (defined as the number of term
-constructors). The following is slightly abbreviated code (see the
+For variety, we show another interpreter, which measures the \emph{size}
+of each object term, defined as the number of term
+constructors. The following is slightly abbreviated code (see the
 accompanying source code for the complete definition).
- 
 \begin{code}
 module L = struct
   type ('c,'dv) repr = int
   let int (x:int)  = 1
+  let lam f        = f 0 + 1
+  let app e1 e2    = e1 + e2 + 1
+  let fix f        = f 0 + 1
   let mul e1 e2    = e1 + e2 + 1
   let if_ eb et ee = eb + et () + ee () + 1
-  let lam f        = (f 0) + 1
-  let app e1 e2    = e1 + e2 + 1
-  let fix f        = (f 0) + 1
 end;;
 \end{code}
-
-\noindent Now the expression
+Now the expression
 \begin{code}
-  let module E = EX(L) in E.test1 ()
+let module E = EX(L) in E.test1 ()
 \end{code}
-evaluates to |3|. This interpreter is not only tagless, it is also
-total. It ``evaluates'' even seemingly divergent terms like\\
-|app (fix (fun self -> self)) (int 1)|.
+evaluates to |3|. This interpreter is not only tagless but also
+total. It ``evaluates'' even seemingly divergent terms like
+\begin{code}
+app (fix (fun self -> self)) (int 1)
+\end{code}
 
 \begin{comment}
 module EX1(S: Symantics) = struct
@@ -618,77 +634,82 @@ let module E =EX1(R) in E.tfix ();;
 let module E =EX1(L) in E.tfix ();;
 \end{comment}
 
-\section{Tagless compiler (aka, staged interpreter)}\label{compiler}
+\section{A tagless compiler (or, a staged interpreter)}\label{compiler}
 
-We can also write a ``compiler'' from our lambda calculus directly
-into OCaml code, using MetaOCaml's staging facilities. Namely,
-future-stage expressions of the type |t| are represented at the
-present stage as values of the type |('a,t) code| where |'a| is the
-environment classifier \cite{WalidPOPL03,WalidESOP04}. Code values are created
-by a \emph{bracket} form: |.<e>.| specifies the expression |e| is to be
-evaluated at a future stage. The \emph{escape} |.~e|, which must occur
-within a bracket, specifies that the expression |e| must be evaluated
+We can also compile our object language
+into OCaml code using MetaOCaml's staging facilities. MetaOCaml
+represents future-stage expressions of type |t| at the
+present stage as values of type |('c,t) code| where |'c| is the
+environment classifier \cite{WalidPOPL03,calcagno-ml-like}. Code values are created
+by a \emph{bracket} form |.<e>.|, which specifies that the expression |e| is to be
+evaluated at a future stage. The \emph{escape} |.~e| must occur
+within a bracket and specifies that the expression |e| must be evaluated
 at the current stage; its result, which must be a code value, is
-spliced in into the code being built. The \emph{run} form |.! e|
-evaluates the code value, which involves run-time compilation and
-linking of the future-stage code. The bracket, escape and run are akin to
-quasi-quotation, unquotation and |eval| of Lisp.
+spliced into the code being built by the enclosing bracket. The \emph{run} form |.! e| evaluates
+the future-stage code value~|e| by compiling and linking it at run-time.
+The bracket, escape, and run are akin to
+quasi-quotation, unquotation, and |eval| of Lisp.
 
-
+Inserting brackets and escapes appropriately into the evaluating
+interpreter~|R| above yields the compiling interpreter~|C| below.
 % this code does not have the 'sv parameter. It shows up later.
 \begin{code}
 module C = struct
+
   type ('c,'dv) repr = ('c,'dv) code
+
   let int (x:int)   = .<x>.
   let bool (b:bool) = .<b>.
-  let add e1 e2     = .<.~e1 + .~e2>.
-  let mul e1 e2     = .<.~e1 * .~e2>.
-  let leq x y       = .< .~x <= .~y >.
-  let if_ eb et ee = 
-    .<if .~eb then .~(et () ) else .~(ee () )>.
+
   let lam f         = .<fun x -> .~(f .<x>.)>.
   let app e1 e2     = .<.~e1 .~e2>.
   let fix f = 
-     .<let rec self n = .~(f .<self>.) n in self>.
-end;;
+    .<let rec self n = .~(f .<self>.) n in self>.
+
+  let add e1 e2     = .<.~e1 + .~e2>.
+  let mul e1 e2     = .<.~e1 * .~e2>.
+  let leq x y       = .<.~x <= .~y>.
+  let if_ eb et ee = 
+    .<if .~eb then .~(et ()) else .~(ee ())>.
+
+end
 \end{code}
 This is a completely straightforward staging of
 |module R|.
-This compiler attempts no optimizations at all, it simply produces
-residual code. For example, the evaluation of our |test1|
+This compiler simply produces
+residual code with no optimization. For example, evaluating our |test1|
 \begin{code}
-  let module E = EX(C) in E.test1 ();;
+let module E = EX(C) in E.test1 ()
 \end{code}
-gives a value with inferred type |('a, bool) C.repr| which looks
-like |.<((fun x_6 -> x_6) (true))>.|. MetaOCaml can print the code
-values, that is, the corresponding future-stage code.
+gives the code value |.<(fun x_6 -> x_6) (true)>.|
+of inferred type |('c, bool) C.repr|.
 
-It is readily obvious that this compiler does not suffer
-any interpretive overhead whatsoever. Indeed, the
-  code produced for a function is simply |fun x_6 -> x_6| and has no 
-  embedded calls to the evaluator: cf. the evaluator of DSL functions
-  in Section~\ref{tagproblem}, the L-line.
-The resulting code obviously contains no tags and no pattern-matching.
+This compiler does not incur
+any interpretive overhead: the
+code produced for $\fun{x}x$ is simply |fun x_6 -> x_6| and contains no 
+  call to the evaluator, unlike the recursive calls to |eval0| and
+  |eval| in the |L e| lines in \S\ref{tagproblem}.
+The resulting code obviously contains no tags and no pattern matching.
 
-We have also implemented this ``compiler'' in Haskell. Since Haskell
+We have also implemented this compiler in Haskell. Since Haskell
 has no (convenient, typed) staging facilities, we had to emulate
 them. To be precise, we defined a data type |ByteCode| with
-constructors |Var|, |Lam|, |App|, |Fix|, |INT| etc. with the obvious
-meaning. Unlike our staging language (which is based on higher-order
-abstract syntax), our bytecode, to be realistic, uses integer-named
-variables. We then define 
+constructors such as |Var|, |Lam|, |App|, |Fix|, and |INT|.
+Whereas our representation of object terms uses higher-order
+abstract syntax, our bytecode uses integer-named
+variables to be realistic. We then define 
 \begin{code}
-  newtype C t = C (Int -> (ByteCode t, Int)) 
+newtype C t = C (Int -> (ByteCode t, Int)) 
 \end{code}
-where |Int| is the counter for the creation of fresh variable
-names. We define the compiler by making |C| to be an instance of the
+where |Int| is the counter for creating fresh variable
+names. We define the compiler by making |C| an instance of the
 class |Symantics|. The implementation\footnote{The implementation uses
 GADTs because we also wanted to write a typed interpreter for 
 the \textsf{ByteCode} \emph{datatype}.} is quite similar (but slightly more
 verbose) than the corresponding MetaOCaml code given above. The
 accompanying code gives the full details.
 
-\section{Tagless partial evaluator}\label{PE}
+\section{A tagless partial evaluator}\label{PE}
 
 Surprisingly, it is also possible to write a partial evaluator!  The
 partial evaluator does have tags: \emph{binding time} or \emph{phase}
