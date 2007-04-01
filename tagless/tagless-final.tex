@@ -734,6 +734,7 @@ tags, i.e. whether a value is static or dynamic.
 Pattern-matching on this phase tag is always exhaustive.
 
 \subsection{Avoiding polymorphic lift}
+\label{S:PE-lift}
 
 Roughly speaking, a partial evaluator interprets each object term either
 to a static (present-stage) term, as produced by the evaluator~|R|, or
@@ -964,20 +965,19 @@ type |'dv|. Figure~\ref{fig:ocaml} shows the new signature |Symantics|.
 \begin{code}
 module type Symantics = sig
 
- type ('c,'sv,'dv) repr
+  type ('c,'sv,'dv) repr
 
- val int : int  -> ('c,int,int) repr
- val bool: bool -> ('c,bool,bool) repr
+  val int : int  -> ('c,int,int) repr
+  val bool: bool -> ('c,bool,bool) repr
 
- val lam : (('c,'sa,'da) repr -> ('c,'sb,'db) repr as 'x) -> ('c,'x,'da->'db) repr
- val app : ('c,'x,'da->'db) repr -> (('c,'sa,'da) repr -> ('c,'sb,'db) repr as 'x)
- val fix : ('x -> 'x) -> (('c, ('c,'sa,'da) repr -> ('c,'sb,'db) repr, 'da->'db) repr as 'x)
+  val lam : (('c,'sa,'da) repr -> ('c,'sb,'db) repr as 'x) -> ('c,'x,'da->'db) repr
+  val app : ('c,'x,'da->'db) repr -> (('c,'sa,'da) repr -> ('c,'sb,'db) repr as 'x)
+  val fix : ('x -> 'x) -> (('c, ('c,'sa,'da) repr -> ('c,'sb,'db) repr, 'da->'db) repr as 'x)
 
- val add : ('c,int,int) repr -> ('c,int,int) repr -> ('c,int,int) repr
- val mul : ('c,int,int) repr -> ('c,int,int) repr -> ('c,int,int) repr
- val leq : ('c,int,int) repr -> ('c,int,int) repr -> ('c,bool,bool) repr
- val if_ : ('c,bool,bool) repr -> (unit -> 'x) -> (unit -> 'x) -> (('c,'sa,'da) repr as 'x)
-
+  val add : ('c,int,int) repr -> ('c,int,int) repr -> ('c,int,int) repr
+  val mul : ('c,int,int) repr -> ('c,int,int) repr -> ('c,int,int) repr
+  val leq : ('c,int,int) repr -> ('c,int,int) repr -> ('c,bool,bool) repr
+  val if_ : ('c,bool,bool) repr -> (unit -> 'x) -> (unit -> 'x) -> (('c,'sa,'da) repr as 'x)
 end
 \end{code}
 \end{floatrule}
@@ -1008,19 +1008,21 @@ module P = struct
   let int  (x:int)  = {st = Some (R.int x); dy = C.int x}
   let bool (x:bool) = {st = Some (R.bool x); dy = C.bool x}
 
-  let buildsimp cast e f1 f2 = fun e1 e2 -> 
-     match (e1,e2) with
-        | ({st = Some e'}, _) when e = e' -> e2
-        | (_, {st = Some e'}) when e = e' -> e1
-        | ({st=Some n1}, {st=Some n2})-> cast (f1 n1 n2)
-        | _ -> pdyn (f2 (abstr e1) (abstr e2))
+  let build cast f1 f2 = fun e1 -> fun e2 -> match (e1,e2) with
+                   ({st = Some n1}, {st = Some n2}) -> cast (f1 n1 n2)
+                 | _ -> pdyn (f2 (abstr e1) (abstr e2))
+  let buildsimp_monoid cast e f1 f2 = fun e1 e2 -> match (e1,e2) with
+                 | ({st = Some e'}, _) when e = e' -> e2
+                 | (_, {st = Some e'}) when e = e' -> e1
+                 | _ -> build cast f1 f2 e1 e2
+  let buildsimp_ring cast zero one f1 f2 = fun e1 e2 -> match (e1,e2) with
+                 | ({st = Some e'}, _) when e' = zero -> e1
+                 | (_, {st = Some e'}) when e' = zero -> e2
+                 | _ -> buildsimp_monoid cast one f1 f2 e1 e2
 
-  let add e1 e2 = buildsimp int 0 R.add C.add e1 e2
-  let mul e1 e2 = buildsimp int 1 R.mul C.mul e1 e2
-  let leq e1 e2 = 
-     match (e1,e2) with
-         ({st=Some n1},{st=Some n2})-> bool (R.leq n1 n2)
-        | _ -> pdyn (C.leq (abstr e1) (abstr e2))
+  let add e1 e2 = buildsimp_monoid int 0 R.add C.add e1 e2
+  let mul e1 e2 = buildsimp_ring int 0 1 R.mul C.mul e1 e2
+  let leq e1 e2 = build bool R.leq C.leq e1 e2
   let if_ eb et ee = match eb with
            {st = Some b} -> if b then et () else ee ()
          | _ -> pdyn (C.if_ (abstr eb) 
@@ -1056,20 +1058,19 @@ polymorphic `lift' function. The implementations of
 |add| and |mul| are a bit more sophisticated, taking advantage 
 respectively of the implicit monoid and ring structure of the 
 underlying domain.
-The function |buildsimp| checks to see if
+The function |build| checks to see if
 its two arguments |e1| and |e2| are static expressions. If so, the
 corresponding static computation (with the help of the intrepreter
-|R|) is performed. The function also checks if one argument is static
-and is the neutral element of the monoid structure 
-\jacques{Comment on the various nice generic things in the implementation,
-which are a little silly in this small version, but would really pay off
-in something bigger.  See the abstract interpretation hard at work!
-See the monoid-driven simplifications!}
-\oleg{I'm inclined to ditch buildsimp. We miss an opportunity here:
-  when multiplying anything by 0, the result is zero!}
+|R|) is performed. The function |buildsim_monoid| also checks if one argument
+is static and is the neutral element of the monoid structure.
+|buildsimp_ring| also worries about the full ring structure rather than
+just the monoid structure.  These are put here to illustrate how we 
+would go about writing general algebraic simplification routines that
+would mimic various compiler optimizations, and these would be quite
+beneficial in a large language with more base types.
 
-When doing partial evaluation on |fix|, we made a deliberate decision to `go all
-the way' -- so long as the computation can proceed at the PE stage,
+When doing partial evaluation on |fix|, we made a deliberate decision to `go
+all the way' -- so long as the computation can proceed at the PE stage,
 we do that rather than residualizing. In the
 accompanying source code, we have also implemented an alternative
 where |fix| is unrolled only once and then we residualize. We prefer the
@@ -1078,12 +1079,12 @@ non-termination at the PE stage -- but \emph{only} if the computation
 we are partially evaluating is non-terminating, and enough static
 information is available to trigger this non-termination.  Our
 treatment of |fix| may lead to code bloat in the residual
-program. That is an issue investigated elsewhere (cite our PEPM2006
-paper).
+program. The techniques of~\citet{SwadiTahaKiselyovPasalic2006} can
+be used to deal with this issue.
 
 Given the above Symantics, our running test now evaluates
 \begin{code}
-  let module E = EX(P) in E.test1 ();;
+let module E = EX(P) in E.test1 ();;
 \end{code}
 to
 \begin{code}
@@ -1091,68 +1092,55 @@ to
    {P.st = Some true; P.dy = .<(true)>.}
 \end{code}
 It is instructive to compare this result with that of the |C|
-evaluator. We observe the beta-redex that was apparent there is now
+evaluator. We observe that the beta-redex has now been 
 performed. The result is the static value |true|.
 More interesting is the partial evaluation of testpowfix7. The |C|
 interpreter evaluates |testpowfix7| to the future-stage code with many
 apparent beta-redexes.
 \begin{code}
-  let module E = EX(C) in E.testpowfix7;;
+let module E = EX(C) in E.testpowfix7;;
  - : ('_a, int -> int) C.repr =
-.<fun x_1 ->
-   (((fun x_2 ->
-       let rec self_3 =
-        fun n_4 ->
-         ((fun x_5 -> if (x_5 <= 0) then 1 
-                      else (x_2 * (self_3 (x_5 + (-1)))))
-           n_4) in
-       self_3) x_1) 7)>.
+.<fun x_1 -> (((fun x_2 ->
+  let rec self_3 =
+   fun n_4 ->
+    ((fun x_5 -> if (x_5 <= 0) then 1 
+                 else (x_2 * (self_3 (x_5 + (-1)))))
+      n_4) in
+  self_3) x_1) 7)>.
 \end{code}
 The result of the |P| interpreter is different:
 
 \begin{code}
-  let module E = EX(P) in E.testpowfix7;;
+let module E = EX(P) in E.testpowfix7;;
  - : ('_a, ('_a, int, int) P.repr -> ('_a, int, int) P.repr, 
       int -> int) P.repr = 
  {P.st = Some <fun>;
   P.dy = .<fun x_1 -> 
      (x_1 * (x_1 * (x_1 * (x_1 * (x_1 * (x_1 * x_1))))))>.}
 \end{code}
-
-which is what one would have expected from the power example.
+as expected from the power example.
 
 Unlike the GADT approach in the previous subsection, there is no
-longer any seemingly partial pattern-matching. The pattern-match only
-occurs in PE (to check if the code is static or dynamic), it is only a
-phase rather than a type tag match, and the pattern match is
+longer any seemingly partial pattern-matching. All pattern-matching
+occurs in the partial evaluator only (to check if the current value 
+is static or dynamic), and is 
+phase rather than a type tag match. Furthermore the matching
 \emph{patently} exhaustive. That is, totality is assured and it is
-assured \emph{syntactically}, in the way that is apparent to the
+assured \emph{syntactically}, in a way that is apparent to the
 compiler.
 
 One should note that the partial evaluator has fully reused the code
 of the compiler and the interpreter. It is truly the `composition' of the
-interpreter and the compiler.  \jacques{Perhaps cite a paper of Thiemann
-here, cogen in 6 lines?}
+interpreter and the compiler.   This is a simpler situation than
+in \citet{SperberThiemann:TwoForOne} where a partial evaluator and
+a compiler are `composed', but the general ideas are similar.
 
-\jacques{Comment on online/offline here}
-The PE in incope is really a mixture of online and off-line; it looks 
-online, but it has a sort of "just in time" binding-time analysis built in.
-
+Lastly, we should comment on the approach taken in the partial evaluator.
+It is an online, typed, polyvariant partial evaluator.  It has no
+termination analysis, and as written may diverge (but only on divergent
+programs) as we have decided to aggressively unroll loops.
 
 \section{Variations and discussion}\label{discussion}
-
-\oleg{where to put the following? Should we even mention this?
-If not, we should still keep this in comments.}
-If we just add a method 'lift' to Symantics with a type
-|lift :: a -> repr a| (cf polymorphic lift of Xi03, of MetaML and
-MetaOCaml: CSP)
-then |Symantics repr| implies |Functor repr|. We can write then
-\begin{code}
-  instance Semantics repr => Functor repr where
-  -- fmap :: (a->b) -> repr a -> repr b
-  fmap f ra = app (lift f) ra
-\end{code}
-
 
 \subsection{Call-by-name CPS interpreters}\label{S:CPS}
 
@@ -1387,6 +1375,23 @@ along with the continuation. This lets us support mutable state. We
 can also use reference variables of the metalanguage to emulate
 reference variables in the object language.
 \oleg{Should we have an example in the code?}
+
+\section{Lifting and Functor}
+
+It is perhaps worthwhile noting that 
+if we were to add a method 'lift' to |Symantics| with type
+|lift :: a -> repr a| (the polymorphic lift of \citet{xi-guarded}, 
+of MetaML and
+MetaOCaml: CSP)
+then |Symantics repr| implies |Functor repr|.  This can be seen from
+\begin{code}
+instance Semantics repr => Functor repr where
+  -- fmap :: (a->b) -> repr a -> repr b
+  fmap f ra = app (lift f) ra
+\end{code}
+Of course, as we have mentioned earlier in~\S\ref{S:PE-lift}, 
+addin such a polymorphic lift would appear to introduce more
+problems than it solves.
 
 \subsection{Translucent types}
 
