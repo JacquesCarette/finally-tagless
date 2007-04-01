@@ -4,6 +4,7 @@
 \usepackage{mathptmx}
 %\usepackage{txfonts} \renewcommand{\ttdefault}{cmtt}
 \usepackage[T1]{fontenc}
+\usepackage[override]{cmtt}
 \usepackage{comment}
 \usepackage{hyphenat}
 \usepackage{url}
@@ -79,20 +80,20 @@
 \maketitle
 
 \begin{abstract}
-We have built a family of tagless embeddings (interpretations) for a
+We have built a family of tagless interpretations for a
 higher-order typed object
-language in a typed metalanguage (current Haskell and ML), 
+language in a typed metalanguage (Haskell and ML), 
 requiring neither dependent
 types, nor generalized algebraic data types, nor a tag elimination 
-postprocessing step. That has prevously considered an open problem
-(i.e. impossible). 
-Our family of evaluators contains 
-an interpreter, a compiler, a partial
+postprocessing step. It has been considered an open (impossible)
+problem to do so.
+Our family of interpreters contains 
+an evaluator, a compiler, a partial
 evaluator, a term-size evaluator and a CPS call-by-name transformer.
 We take advantage of staging when available.
 
 The main tool is to take functions seriously: we encode the
-de Bruijn or higher-order abstract syntax  of object terms 
+de-Bruijn or higher-order abstract syntax  of object terms 
 not by using constructors for
 an algebraic data type but rather by invoking cogen functions, which occur as
 free variables in the encoded term.  In other words, we eschew initial
@@ -173,6 +174,8 @@ types \citep{WalidICFP02} or not \citep{baars-typing}.
 
 It is straightforward to create an algebraic data type, say in OCaml, to
 represent object terms such as those in Figure~\ref{fig:object}.
+For brevity, we elide treating integers, conditionals, and fixpoint in
+this section.
 \begin{code}
 type var = VZ | VS of var
 type exp = V of var | B of bool
@@ -195,7 +198,7 @@ let rec lookup (x::env) = function
 | VZ   -> x
 | VS v -> lookup env v
 
-let rec eval0 env = function 
+let rec eval0 env = function ...
 | V v       -> lookup env v
 | B b       -> b 
 | L e       -> fun x -> eval0 (x::env) e
@@ -224,7 +227,7 @@ type u = UB of bool | UA of (u -> u) | ...
 \end{code}
 We can then write a typed interpreter
 \begin{code}
-let rec eval env = function
+let rec eval env = function ...
 | V v       -> lookup env v
 | B b       -> UB b
 | L e       -> UA (fun x -> eval (x::env) e)
@@ -340,8 +343,8 @@ universal type or
 pattern matching, it never results in a run-time error and is in fact
 total.  Because this totality is obvious not just to us but also to the
 metalanguage implementation, we avoid the serious performance penalty
-\citep{WalidICFP02} of error checking.  See \citep{Gluck-jones-optimality}
-for deeper technical reasons which inevitably lead to these performance
+\citep{WalidICFP02} of error checking.  \Citet{Gluck-jones-optimality}
+explains deeper technical reasons that inevitably lead to these performance
 penalties.
 
 The evaluator above is wired directly into the
@@ -778,7 +781,7 @@ When compiling to a first-order target language such as machine code,
 booleans, integers, and functions may well be represented differently.
 Thus polymorphic lift cannot be compiled without intensional type
 analysis.  To avoid the need for polymorphic lift, we turn to
-a technique due to Asai \ccshan{cite?}\jacques{yes}: build a dynamic term
+a technique due to Asai \ccshan{cite}: build a dynamic term
 alongside every static term.
 
 \subsection{Delaying binding-time analysis}
@@ -817,51 +820,52 @@ instance Symantics P1 where
     (if_ (abstr1 eb) (abstr1 et) (abstr1 ef))
 \end{code}
 
-When we come to the higher-order fragment of our language, however, we
-stumble. Let us consider |lam f|. Here, |f| is a function from a
-|P1 a| value to a |P1 b| value. The result of |lam f| must be either a
-static value or a dynamic value -- but which? Unlike |add| or |if_|, 
-|lam| cannot really examine its operand. The arguments of |add| are 
-of type |P1 int|, which we can examine by pattern-matching and so 
-determine if they are static or dynamic. The argument of |lam| is a 
-function, whose structure cannot be observed. One may only 
-apply |f| to a particular static or dynamic value, and receive another 
-value in return. Alas, as in the case |lam (\x -> mul x dynval)|, 
-applying the same function to different static values may give 
-either static or dynamic results (in the example above, applying 
-the function to (int 0) gives a static value in return). One
-solution is to be conservative and always use the |C| compiler to
-compile |f| to a future-stage expression, which we can tag with
-E1. But this defeats the purpose of partial evaluation as we may miss
-many opportunities for static computations and simplifications, such
-as multiplication by zero in the example above. A better solution is to
-delay the binding-type-analysis (BTA) until the function |f| is
-applied to a particular argument (that is, until the result of |lam f|
-appears as the argument of |app|). In other words, we have to find a way
-to incorporate |f| as it is into the P1 data structure. We would like
-to write that when |t| is a particular type |a->b|, this data type
-should be 
-\begin{code}
-data P1 (a->b) = S1 (R (P1 a -> P1 b)) (C (a->b)) 
-               | E1 (C (a->b))
-\end{code}
-That is, we need a non-parametric data type, something akin to
-type-indexed functions and type-indexed types, as used in 
-\citet{Oliveira2005:TypeCase}, where it is dubbed the \emph{typecase}
-design pattern.
+When we come to functions, however, we stumble.  According to our
+definition of~|P1|, a partially evaluated object function, such as the
+identity $\fun{x}x$ embedded in Haskell as |lam (\x -> x)|\texttt{ ::
+}|P1 (a -> a)|, consists of a dynamic part (type |C1 (a -> a)|) and
+maybe a static part (type |R1 (a -> a)|).  The dynamic part is useful
+when this function is passed to another function that is only
+dynamically known, as in $\fun{k}k(\fun{x}x)$.  The static part is
+useful when this function is applied to a static argument, as in
+$(\fun{x}x)\True$.  Neither part, however, lets us \emph{partially}
+evaluate the function, that is, compute as much as possible statically
+when it is applied to a mix of static and dynamic inputs.  For example,
+the partial evaluator should turn $\fun{n}(\fun{x}x)n$ into $\fun{n}n$
+by substituting $n$ for~$x$ in the body of $\fun{x}x$ even though $n$ is
+not statically known.  Even the same static function, applied to
+different static arguments, can give both static and dynamic results: we
+want to simplify $(\fun{y}x\times y)0$ to~$0$ but $(\fun{y}x\times y)1$
+to~$x$.
 
-The problem we encountered here is quite akin to the typed CPS
-transform. When transforming abstractions, we come across
-non-functorialness. The connection with CPS is not an accident, as we
-shall see in~\S\ref{S:CPS}.
+To enable these simplifications, we delay binding-time analysis (BTA)
+for a static function until it is applied, that is, until |lam f|
+appears as the argument of |app|.  To do so, we have to incorporate |f|
+as it is into the |P1| data structure: applying the type constructor
+|P1| to a function type |a -> b| should yield one of
+\begin{code}
+data P1 (a -> b) = S1 (P1 a -> P1 b)
+                 | E1 (C (a->b))
+
+data P1 (a -> b) = P1 (Maybe (P1 a -> P1 b))
+                      (C (a -> b))
+\end{code}
+That is, we need a nonparametric data type, something akin to
+type-indexed functions and type-indexed types, which
+\citet{oliveira-typecase} dub the \emph{typecase} design pattern.
+
+Thus typed partial evaluation, like typed CPS transformation,
+inductively defines a map from source types to target types that
+performs case distinction on the source type.  The connection with CPS
+is not an accident, as we shall see in~\S\ref{S:CPS}.
 
 \subsection{GADT -- not quite tagless PE}
 \label{S:PE-GADT}
 
 Two common ways of providing typecase in Haskell is by using either
-generalized algebraic data types (GADT) or type-class functions
+GADT or type-class functions
 (implemented via typeclasses with functional dependencies)
-\citet{Oliveira2005:TypeCase}.  These
+\citep{oliveira-typecase}.  These
 methods are equivalent, and here we show the GADT; please see |incope1.hs|
 in the accompanying source code for the latter.
 
