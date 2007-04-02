@@ -3,7 +3,9 @@
 @STRING{j_jacm			= "Journal of the {ACM}" }
 @STRING{j_jcss			= "Journal of Computer and System Sciences" }
 @STRING{j_jfp			= "Journal of Functional Programming" }
+@STRING{j_ngc			= "New Generation Computing" }
 @STRING{j_sigplan		= "{ACM} {SIG{\-}PLAN} Notices" }
+@STRING{j_tcs			= "Theoretical Computer Science" }
 @STRING{proc_icfp_1		= "{ICFP} '" }
 @STRING{proc_icfp_2		= ": Proceedings of the {ACM} International Conference on Functional Programming" }
 @STRING{proc_pldi_1		= "{PLDI} '" }
@@ -241,6 +243,64 @@
   url		= {http://web.comlab.ox.ac.uk/oucl/work/bruno.oliveira/typecase.pdf}
 }
 
+@Article{	asai-binding-time,
+  author	= {Kenichi Asai},
+  title		= {Binding-Time Analysis for Both Static and Dynamic Expressions},
+  journal	= j_ngc,
+  year		= 2001,
+  volume	= 20,
+  number	= 1,
+  pages		= {27--52},
+  url		= {http://pllab.is.ocha.ac.jp/~asai/papers/ngc02.ps.gz}
+}
+
+@Article{	sumii-hybrid,
+  author	= "Eijiro Sumii and Naoki Kobayashi",
+  title		= "A Hybrid Approach to Online and Offline Partial Evaluation",
+  journal	= j_hosc,
+  year		= 2001,
+  month		= sep,
+  volume	= 14,
+  number	= "2--3",
+  pages		= "101--142",
+  url		= "http://www.kb.ecei.tohoku.ac.jp/~sumii/pub/onpe-hosc.dvi http://www.kb.ecei.tohoku.ac.jp/~sumii/pub/onpe-hosc.ps.gz http://www.kb.ecei.tohoku.ac.jp/~sumii/pub/onpe-hosc.pdf"
+}
+
+@InProceedings{	SwadiTahaKiselyovPasalic2006,
+  author	= "Kedar Swadi and Walid Taha and Oleg Kiselyov and Emir Pasalic",
+  title		= "A Monadic Approach for Avoiding Code Duplication When Staging Memoized Functions",
+  pages		= "160--169",
+  crossref	= "pepm2006",
+  url		= "http://www.cs.rice.edu/~taha/publications/conference/pepm06.dvi http://www.cs.rice.edu/~taha/publications/conference/pepm06.ps http://www.cs.rice.edu/~taha/publications/conference/pepm06.pdf"
+}
+
+@InProceedings{	SperberThiemann:TwoForOne,
+  author	= {Michael Sperber and Peter Thiemann},
+  title		= {Two for the Price of One: Composing Partial Evaluation and Compilation},
+  pages		= {215--225},
+  crossref	= "pldi1997",
+  url		= "http://www-pu.informatik.uni-tuebingen.de/users/sperber/papers/composing-pe-and-compilation.ps.gz http://www-pu.informatik.uni-tuebingen.de/users/sperber/papers/composing-pe-and-compilation.pdf"
+}
+
+@Article{	PlotkinCBN,
+  author	= "Gordon D. Plotkin",
+  title		= "Call-by-Name, Call-by-Value and the $\lambda$-Calculus",
+  journal	= j_tcs,
+  year		= 1975,
+  volume	= 1,
+  number	= 2,
+  pages		= "125--159",
+  url		= "http://homepages.inf.ed.ac.uk/gdp/publications/cbn_cbv_lambda.pdf"
+}
+
+@InProceedings{	reynolds-relation,
+  author	= "John C. Reynolds",
+  title		= "On the Relation between Direct and Continuation Semantics",
+  pages		= "141--156",
+  crossref	= "alp1974",
+  url		= "ftp://ftp.cs.cmu.edu/user/jcr/reldircont.pdf"
+}
+
 @Proceedings{	acm1972,
   key		= "{\relax ACM}",
   title		= "Proceedings of the {ACM} National Conference",
@@ -365,4 +425,38 @@
   year		= 2005,
   isbn		= {1-59593-071-X},
   location	= {Tallinn, Estonia}
+}
+
+@Proceedings{	pepm2006,
+  key		= "{\relax ACM}",
+  title		= "Proceedings of the 2006 {ACM} {SIG{\-}PLAN} Workshop on Partial Evaluation and Semantics-Based Program Manipulation",
+  booktitle	= "Proceedings of the 2006 {ACM} {SIG{\-}PLAN} Workshop on Partial Evaluation and Semantics-Based Program Manipulation",
+  address	= pub_acm_addr,
+  publisher	= pub_acm,
+  year		= 2006,
+  isbn		= "1-59593-196-1",
+  location	= "Charleston, SC"
+}
+
+@Proceedings{	pldi1997,
+  key		= "{\relax PLDI}",
+  title		= proc_pldi_1 # "97"  # proc_pldi_2,
+  booktitle	= proc_pldi_1 # "97"  # proc_pldi_2,
+  address	= pub_acm_addr,
+  publisher	= pub_acm,
+  year		= 1997,
+  month		= "16--18 "  # jun,
+  location	= "Las Vegas, NV"
+}
+
+@Proceedings{	alp1974,
+  editor	= "Jacques Loeckx",
+  title		= "Automata, Languages and Programming: 2nd Colloquium",
+  booktitle	= "Automata, Languages and Programming: 2nd Colloquium",
+  address	= pub_sv_addr,
+  publisher	= pub_sv,
+  year		= 1974,
+  number	= 14,
+  series	= s_lncs,
+  location	= "Saarbr{\"u}cken, Germany"
 }

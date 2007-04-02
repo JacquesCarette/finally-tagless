@@ -1,4 +1,4 @@
-\hyphenation{meta-language meta-languages Meta-OCaml}
+\hyphenation{meta-language meta-languages Meta-OCaml meta-cir-cu-lar}
 \documentclass[preprint]{sigplanconf}
 \usepackage{amsmath,amssymb}
 \usepackage{mathptmx}
@@ -209,7 +209,7 @@ If our OCaml-like metalanguage were untyped, the code above would be acceptable.
 The |L e| line exhibits interpretive overhead:
 |eval0| traverses the function body~|e| every time (the result of
 evaluating) |L e| is applied. Staging can be used to remove this
-interpretive overhead \cite[\S1.1--2]{WalidICFP02}.
+interpretive overhead \citep[\S1.1--2]{WalidICFP02}.
 
 However, the function |eval0| is ill-typed
 if we use OCaml or some other typed language as the metalanguage.
@@ -650,7 +650,7 @@ Besides immediate evaluation, we can compile our object language
 into OCaml code using MetaOCaml's staging facilities. MetaOCaml
 represents future-stage expressions of type |t| at the
 present stage as values of type |('c,t) code| where |'c| is the
-environment classifier \cite{WalidPOPL03,calcagno-ml-like}. Code values are created
+environment classifier \citep{WalidPOPL03,calcagno-ml-like}. Code values are created
 by a \emph{bracket} form |.<e>.|, which specifies that the expression |e| is to be
 evaluated at a future stage. The \emph{escape} |.~e| must occur
 within a bracket and specifies that the expression |e| must be evaluated
@@ -785,7 +785,8 @@ When compiling to a first-order target language such as machine code,
 booleans, integers, and functions may well be represented differently.
 Thus polymorphic lift cannot be compiled without intensional type
 analysis.  To avoid the need for polymorphic lift, we turn to
-a technique due to Asai \ccshan{cite}: build a dynamic term
+\citearound{'s technique}\citet[see also \citealp{sumii-hybrid}]{asai-binding-time}:
+build a dynamic term
 alongside every static term.
 
 \subsection{Delaying binding-time analysis}
@@ -1161,18 +1162,24 @@ when evaluating the encoding of the object language application
 |app e1 e2|, |e2| will always have to be evaluated. One may wonder if it is
 possible to represent a call-by-name (CBN) object language in a
 call-by-value (CBV) metalanguage. The answer, given already by 
-\cite{ReynoldsPlotkin} is continuation-passing style (CPS), which they
+\citet{reynolds-definitional,reynolds-relation} and \citet{PlotkinCBN}, is continuation-passing style (CPS), which they
 specifically introduced 
 to make the evaluation strategy of a definitional interpreter
 independent of the strategy of the metalanguage. We demonstrate the
 same independence in the typed setting \oleg{mention the quote from
 Reynolds that typed setting would be nice?}\jacques{I think so, but from
-which paper? The one ReynoldsPlotkin paper is typed}. Specifically, we
+which paper? The one ReynoldsPlotkin paper is typed}\ccshan{I think Oleg
+meant ``It should also be possible to define languages with a highly
+ refined syntactic type structure. Ideally, such a treatment should be
+ metacircular, in
+ the sense that the type structure used in the defined language should be adequate for the
+ defining language'' \citep{reynolds-definitional}, but perhaps Jacques
+ meant another paper by ``ReynoldsPlotkin''?}. Specifically, we
 demonstrate CBN evaluation for our object language in OCaml, which is
 call-by-value. We do so by building a CBN CPS interpreter for the object
 language.
 
-The CBN CPS interpretation was introduced by Plotkin \cite{PlotkinCBN}. As in
+The CBN CPS interpretation was introduced by \citet{PlotkinCBN}. As in
 the more familiar CBV CPS, the interpretation of a value is a function
 accepting a continuation argument |k| and yielding the answer
 returned by that continuation.
@@ -1286,7 +1293,7 @@ end;;
 \end{code}
 Now when we apply an abstraction to an argument |e|, we always force
 the evaluation of that argument before proceeding. This approach is in
-line with \cite{ReynoldsXXX} (albeit in a typed setting). The interpreter RCV
+line with \citet{reynolds-relation} (albeit in a typed setting). The interpreter RCV
 is useful for achieving CBV evaluation of the object language
 no matter whether the metalanguage is CBV or CBN.
 
@@ -1471,7 +1478,7 @@ fragment.
 The attempt to encode self-interpreter brings the |*->*| polymorphism
 the the forefront, as we shall now see.
 
-\section{Self-interpretation}\cite{selfinterp}
+\section{Self-interpretation}\label{selfinterp}
 
 A self-interpreter |si| is an
 object-language term such that, for any object-language term e,
@@ -1502,7 +1509,7 @@ didn't. Thus |add| is a special form, which is to be applied in the
 meta-language using the meta-language application syntax (i.e. white
 space) rather than in the object language (i.e. via |app|). 
 
-oleg{Mention the RR interpreter: for any term E, (RR E) is equivalent to E.
+\oleg{Mention the RR interpreter: for any term E, (RR E) is equivalent to E.
 RR is not an identity: it is an interpreter that encapsulates another
 interpreter. The RR interpreter can be made self if we treat RR as a
 special form and interpret it always with itself (similar to let and
@@ -1762,5 +1769,6 @@ We would like to thank Martin Sulzmann and Walid Taha
 for helpful discussions.
 
 \bibliographystyle{mcbride}
+\bibsep=0pt
 \bibliography{tagless}
 \end{document}
