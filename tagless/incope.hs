@@ -1,4 +1,4 @@
-{-# OPTIONS -fglasgow-exts #-}
+{-# OPTIONS -fglasgow-exts -W #-}
 
 -- Interpreter, Compiler, Partial Evaluator
 
@@ -134,8 +134,8 @@ newtype L a = L Int deriving Show
 unL (L x) = x
 
 instance Symantics L where
-    int x  = L 1
-    bool b = L 1
+    int _  = L 1
+    bool _ = L 1
 
     lam f = L( unL (f (L 0)) + 1 )
     app e1 e2 = L( unL e1 + unL e2 + 1 )
@@ -348,9 +348,8 @@ instance Symantics P where
     -- lam :: (repr a -> repr b) -> repr (a->b)
     lam = VF
     -- app :: repr (a->b) -> repr a -> repr b
-    app ef ea = case ef of
-                        VF f -> f ea
-                        E  f -> E (app f (abstr ea))
+    app (VF f) ea = f ea
+    app (E f)  ea = E (app f (abstr ea))
 
     -- fix :: (repr a -> repr a) -> repr a
     {- use to:
@@ -364,26 +363,22 @@ instance Symantics P where
 
     fix f = pfix f -- need this charade for GADTs sake
 
-    add e1 e2 = case (e1, e2) of
-                 (VI n1, _) | (n1 == 0) -> e2
-                 (_, VI n2) | (n2 == 0) -> e1
-                 (VI n1, VI n2) -> VI (n1 + n2)
-                 _              -> E $ add (abstr e1) (abstr e2)
-    mul e1 e2 = case (e1,e2) of
-                 (VI n1, _) | (n1 == 0) -> e1
-                 (_, VI n2) | (n2 == 0) -> e2
-                 (VI n1, _) | (n1 == 1) -> e2
-                 (_, VI n2) | (n2 == 1) -> e1
-                 (VI n1,VI n2) -> VI (n1 * n2)
-                 _ -> E $ mul (abstr e1) (abstr e2)
+    add (VI 0) e = e
+    add e (VI 0) = e
+    add (VI n1) (VI n2) = VI (n1 + n2)
+    add e1 e2 = E (add (abstr e1) (abstr e2))
+    mul e@(VI 0) _ = e
+    mul _ e@(VI 0) = e
+    mul (VI 1) e = e
+    mul e (VI 1) = e
+    mul (VI n1) (VI n2) = VI (n1 * n2)
+    mul e1 e2 = E (mul (abstr e1) (abstr e2))
 
-    leq e1 e2 = case (e1,e2) of
-                 (VI n1,VI n2) -> VB (n1 <= n2)
-                 _ -> E $ leq (abstr e1) (abstr e2)
+    leq (VI n1) (VI n2) = VB (n1 <= n2)
+    leq e1 e2 = E (leq (abstr e1) (abstr e2))
 
-    if_ be et ee = case be of
-                        (VB b1) -> if b1 then et else ee
-                        _ -> E $ if_ (abstr be) (abstr et) (abstr ee)
+    if_ (VB b1) et ee = if b1 then et else ee
+    if_ be      et ee = E (if_ (abstr be) (abstr et) (abstr ee))
 
 -- we need this signature to bind 'a'. That's why it can't be a method
 pfix :: forall a. (P a -> P a) -> P a
@@ -590,7 +585,7 @@ twice_inc_3_se () =
     let lam_ = lam (\f -> add (int 1) (app f (int 0)) ) in
     let app_ = lam (\f -> lam (\x -> add (int 1) (add f x))) in
     let add_ = lam (\m -> lam (\n -> add (int 1) (add m n))) in
-    let int_ = lam (\i -> int 1) in
+    let int_ = lam (\_ -> int 1) in
     -- The term in the following three lines is the object term
     --      let twice_ f x = f (f x) in let inc_ n = n + 1 in twice_ inc_ 3
     -- encoded in the object language then encoded in the metalanguage.

@@ -266,42 +266,45 @@ struct
   let abstr {dy = x} = x
   let pdyn x = {st = None; dy = x}
 
-  let int  (x:int)  = {st = Some (R.int x); dy = C.int x}
-  let bool (x:bool) = {st = Some (R.bool x); dy = C.bool x}
+  let int  (x:int)  = {st = Some (R.int x);
+                       dy = C.int x}
+  let bool (x:bool) = {st = Some (R.bool x);
+                       dy = C.bool x}
 
   (* generic build - takes a repr constructor, an interpreter function
      and a compiler function (all binary) and builds a PE version *)
-  let build cast f1 f2 = fun e1 -> fun e2 -> match (e1,e2) with
-                   ({st = Some n1}, {st = Some n2}) -> cast (f1 n1 n2)
-                 | _ -> pdyn (f2 (abstr e1) (abstr e2))
+  let build cast f1 f2 = function
+  | {st = Some m}, {st = Some n} -> cast (f1 m n)
+  | e1, e2 -> pdyn (f2 (abstr e1) (abstr e2))
   (* same as 'build' but takes care of the neutral element (e) simplification
      allowed via a monoid structure which is implicitly present *)
-  let buildsimp_monoid cast e f1 f2 = fun e1 e2 -> match (e1,e2) with
-                 | ({st = Some e'}, _) when e = e' -> e2
-                 | (_, {st = Some e'}) when e = e' -> e1
-                 | _ -> build cast f1 f2 e1 e2
+  let monoid cast one f1 f2 = function
+  | {st = Some e'}, e when e' = one -> e
+  | e, {st = Some e'} when e' = one -> e
+  | ee -> build cast f1 f2 ee
   (* same as above but for a ring structure instead of monoid *)
-  let buildsimp_ring cast zero one f1 f2 = fun e1 e2 -> match (e1,e2) with
-                 | ({st = Some e'}, _) when e' = zero -> e1
-                 | (_, {st = Some e'}) when e' = zero -> e2
-                 | _ -> buildsimp_monoid cast one f1 f2 e1 e2
+  let ring cast zero one f1 f2 = function
+  | ({st = Some e'} as e), _ when e' = zero -> e
+  | _, ({st = Some e'} as e) when e' = zero -> e
+  | ee -> monoid cast one f1 f2 ee
 
-  let add e1 e2 = buildsimp_monoid int 0 R.add C.add e1 e2
-  let mul e1 e2 = buildsimp_ring int 0 1 R.mul C.mul e1 e2
-  let leq e1 e2 = build bool R.leq C.leq e1 e2
-  let eql e1 e2 = build bool R.eql C.eql e1 e2
+  let add e1 e2 = monoid int 0 R.add C.add (e1,e2)
+  let mul e1 e2 = ring int 0 1 R.mul C.mul (e1,e2)
+  let leq e1 e2 = build bool R.leq C.leq (e1,e2)
+  let eql e1 e2 = build bool R.eql C.eql (e1,e2)
   let if_ eb et ee = match eb with
-                       {st = Some b} -> if b then et () else ee ()
-                     | _ -> pdyn (C.if_ (abstr eb) 
-                                      (fun () -> abstr (et ()))
-                                      (fun () -> abstr (ee ())))
+  | {st = Some b} -> if b then et () else ee ()
+  | _ -> pdyn (C.if_ (abstr eb) 
+                     (fun () -> abstr (et ()))
+                     (fun () -> abstr (ee ())))
 
-  let lam f = {st = Some f; 
-               dy = C.lam (fun x -> abstr (f (pdyn x)))}
+  let lam f =
+  {st = Some f; 
+   dy = C.lam (fun x -> abstr (f (pdyn x)))}
 
   let app ef ea = match ef with
-                    {st = Some f} -> f ea
-                  | _ -> pdyn (C.app (abstr ef) (abstr ea))
+  | {st = Some f} -> f ea
+  | _ -> pdyn (C.app (abstr ef) (abstr ea))
 
    (*
      For now, to avoid divergence at the PE stage, we residualize.
@@ -337,16 +340,12 @@ struct
   let abstr {dy = x} = x
   let pdyn x = {st = None; dy = x}
 *)
-  let fix f = 
-    let fdyn = C.fix (fun x -> abstr (f (pdyn x))) in
-    let fdynn e = pdyn (C.app fdyn e.dy) in
-    {st = Some (function {st = Some _} as e -> 
-                  let rec self n = 
-                    (match n.st with Some _ -> app (f (lam self)) n 
-                                     | _ ->  fdynn n) in 
-                  app (f (lam self)) e
-               | e  -> fdynn e);
-               dy = fdyn }
+  let fix f =
+    let fdyn = C.fix (fun x -> abstr (f (pdyn x)))
+    in let rec self = function
+       | {st = Some _} as e -> app (f (lam self)) e
+       | e -> pdyn (C.app fdyn (abstr e))
+       in {st = Some self; dy = fdyn}
 end;;
 
 
