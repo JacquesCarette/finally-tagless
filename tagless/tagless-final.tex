@@ -1656,50 +1656,51 @@ typecheckable terms (the evaluation still entails `duplication' so to
 speak -- which is one way how polymorphism is resolved).
 
 \section{Related work}\label{related}
-Walid's Jones optimality paper. See his own ICFP02 paper that
-described what he achieved then and what he \emph{did not}. He did not
-eliminate all the tags. Ken's and mine impression of it:
-(i) we can't write a \emph{direct} interpreter of the type language
-           -- the only known to them, and \emph{partial} solution, was 
-              that by Zhe Yang;
-(ii) we have to use indirect interpreter, which needs the universal
-           type and hence tagging;
-(iii) that means any self-interpreter must have tags
-(iv) that means not Jones-optimal.
-It seems we should attack the point1 (in which case we don't have to
-bother with self-interpreters). We say that we \emph{can} write the direct
-interpreter, and without GADT or their equivalents (typeclasses).
-Meta-language computes types, and the compiler and interpreter respect
-those types and needs no tags.
 
+Our initial motivation came from several papers 
+\citet{WalidICFP02,taha-tag,xi-guarded,peyton-jones-simple} which used
+embedded interpreters as a central example to justify looking 
+into advanced type systems.  While we admired all this technical work,
+there remained the issue that we were not convinced of the strength
+of their motivating example.
 
-Walid's ICFP02
+\citet{WalidICFP02}, when referring to the work of \citet{taha-tag},
+claims that this shows that self-interpretation is possible in a
+\emph{simply typed $\lambda$-calculus}, but this is somewhat misleading
+as their type system does not differentiate between the various ground
+types.  In other words, various constants (like \textsf{nil} and 
+\textsf{true}) both inhabit the same type $D$.  This is not very satisfying.
 
-Walid's PEPM07 (Concoqtion paper)? At leats at the Concoqtion
-presentation at WG2.11, Emir used tagless interpreter as the main and
-only example. \jacques{but at the PEPM07 presentation, Walid did not
-quite do it that way.  He presented Concoqtion more as an exploration
-of (an obvious but difficult) part of the design space for programming
-languages.}
+\oleg{He did not eliminate all the tags.}\jacques{can you show me?}
+From reading \citet{WalidICFP02,taha-tag,xi-guarded,peyton-jones-simple}, our 
+impression is that the claim is:
+\begin{enumerate}
+\item One needs to encode a typed language in a typed language based on
+a sum type,
+\item It is not possible to write a \emph{direct} interpreter for an typed
+language encoded this way, in a typed language, without either using a
+very advanced type system or incurring tagging/untagging overhead.
+\item Thus we have to use an indirect interpreter, which needs a universal
+  type (and hence tagging),
+\item Thus any self-interpreter must have tags.
+\item Hence the self-interpreter cannot be Jones-optimal.
+\end{enumerate}
+While the logic is sound, we showed that the premise in the first step
+was not valid.
 
-Danvy's self-interpreter
-Ken has read Danvy et al's paper and said that the paper
-doesn't seem to even make the claim that the source language is
-typed. The interpreter is typed, but the source language doesn't seem
-to be.
-In sharp contrast to Danvy's paper, all the evaluators in our case
-cannot produce any pattern-match error! Except for the partial
-evaluator, there are NO patterns to match. And this is critical for
-tag elimination -- pattern matching means there are no tags. And in
-PE, the pattern-match deals with phases rather than with types. Also,
-in our case the exhaustiveness of the pattern match is apparent to the
-compiler -- that's why there are no tags.
+\oleg{the only known to them, and \emph{partial} solution, was 
+  that by Zhe Yang;}\jacques{I cannot find that reference}
 
-Simon Peyton-Jones GADTs (the motivation for GADT is tagless
-interpreter, but only for the first-order language)
-
-Xi's POPL03 (He uses a higher-order language, one of the motivations
-for his GRDT)
+\citet{Danvy-tagging-encoding} discusses Jones optimality at length.
+There, the authors demonstrate the usefulness of HOAS for typed
+self-interpretation.  However, no claim is made that the source program
+is itself typed -- just that the interpreter is.  Our reading is that
+the source language is not typed.  However, in sharp contrast with 
+their interpreter, none of our evaluators can product pattern-match errors
+(unlike the code that accompanies \citet{Danvy-tagging-encoding}).
+In other words, their language (and interpreter) does use tags, however
+the shift to HOAS allows the partial evaluator to remove all the tags.
+In contrast, we have no tags at all.
 
 Asai; 
 It [dynamic part when dealing with bool, int, lam in PE] is
