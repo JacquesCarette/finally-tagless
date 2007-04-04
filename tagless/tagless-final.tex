@@ -896,73 +896,6 @@ is not an accident, as we shall see in~\S\ref{S:CPS}.
 \subsection{Eliminating tags from typecase}
 \label{S:PE-GADT}
 
-Two common ways to provide typecase in Haskell are
-GADTs and type-class functional dependencies
-\citep{oliveira-typecase}.  These
-methods are equivalent, and here we show the GADT way; |incope1.hs|
-in the accompanying source code shows the latter.
-
-We introduce a GADT with four data constructors.
-\begin{code}
-data P t where
-  VI :: Int  -> P Int
-  VB :: Bool -> P Bool
-  VF :: (P a -> P b) -> P (a -> b)
-  E  :: C t -> P t
-\end{code}
-The constructors |VI|, |VB|, and |VF| build static terms (like |S0|
-in~\S\ref{S:PE-lift}), and |E| builds dynamic terms (like |E0|).  However,
-the type |P t| is no longer parametric in~|t|: the constructor |VF| takes an
-operand of type |P a -> P b| rather than |a -> b|. As before, we define a
-function to extract a future-stage computation from a value of type |P t|.
-\begin{code}
-abstr :: P t -> C t
-abstr (VI i) = int i
-abstr (VB b) = bool b
-abstr (VF f) = lam (abstr . f . E)
-abstr (E x)  = x
-\end{code}
-The cases of this function |abstr| are type-indexed.  In particular, the |VF f|
-case uses the method |lam| of the |C| interpreter to compile~|f|.
-
-We may now make |P| an instance of
-|Symantics| and implement the partial evaluator as follows. We elide
-|mul|, |leq|, |if_|, and |fix|.
-\begin{code}
-instance Symantics P where
-  int x  = VI x
-  bool b = VB b
-  add (VI n1) (VI n2) = VI (n1 + n2)
-  add e1 e2 = E (add (abstr e1) (abstr e2))
-  lam = VF
-  app (VF f) ea = f ea
-  app (E f)  ea = E (app f (abstr ea))
-\end{code}
-The implementations of |int|, |bool|, and |add| are like
-in~\S\ref{S:PE-problem}.
-The interpretation of |lam f| just wraps the
-HOAS function |f| into the result. We can always compile |f| to a code value,
-but we delay it to apply |f| to concrete arguments. The interpretation of
-|app ef ea| checks to see if |ef| is such a delayed
-HOAS function |VF f|. If it is, we apply |f| to the
-concrete argument |ea|, giving us a chance to perform static
-computations (see example |testpowfix7| in~\S\ref{S:PE-solution}). If |ef| is a
-dynamic value |E f|, we residualize.
-
-This solution using GADTs works but is not quite satisfactory. First, it
-cannot be ported to MetaOCaml as GADTs are unavailable there.  Second,
-the problem of nonexhaustive pattern\hyp matching reappears in |app|
-above: the type |P t| has four constructors, of which pattern\hyp
-matching in |app| uses only |VF| and~|E|. One may say that the
-constructors |VI| and |VB| obviously cannot occur because they do not
-construct values of type |P (a -> b)| as required by the type of |app|.
-Indeed the compiler could reason thus, but it may not; GHC for one
-issues warnings.  Although this point may seem minor, it is the heart of
-the tagging problem and the purpose of tag elimination. A typed tagged
-interpreter contains many pattern\hyp matching forms that look partial
-but are total in reality. The goal is to make this totality
-\emph{syntactically} apparent.
-
 \begin{figure*}
 \begin{floatrule}
 \begin{code}
@@ -1037,6 +970,73 @@ end
 \caption{Our partial evaluator (\texttt{mul} and \texttt{leq} are elided)}
 \label{fig:pe}
 \end{figure}
+
+Two common ways to provide typecase in Haskell are
+GADTs and type-class functional dependencies
+\citep{oliveira-typecase}.  These
+methods are equivalent, and here we show the GADT way; |incope1.hs|
+in the accompanying source code shows the latter.
+
+We introduce a GADT with four data constructors.
+\begin{code}
+data P t where
+  VI :: Int  -> P Int
+  VB :: Bool -> P Bool
+  VF :: (P a -> P b) -> P (a -> b)
+  E  :: C t -> P t
+\end{code}
+The constructors |VI|, |VB|, and |VF| build static terms (like |S0|
+in~\S\ref{S:PE-lift}), and |E| builds dynamic terms (like |E0|).  However,
+the type |P t| is no longer parametric in~|t|: the constructor |VF| takes an
+operand of type |P a -> P b| rather than |a -> b|. As before, we define a
+function to extract a future-stage computation from a value of type |P t|.
+\begin{code}
+abstr :: P t -> C t
+abstr (VI i) = int i
+abstr (VB b) = bool b
+abstr (VF f) = lam (abstr . f . E)
+abstr (E x)  = x
+\end{code}
+The cases of this function |abstr| are type-indexed.  In particular, the |VF f|
+case uses the method |lam| of the |C| interpreter to compile~|f|.
+
+We may now make |P| an instance of
+|Symantics| and implement the partial evaluator as follows. We elide
+|mul|, |leq|, |if_|, and |fix|.
+\begin{code}
+instance Symantics P where
+  int x  = VI x
+  bool b = VB b
+  add (VI n1) (VI n2) = VI (n1 + n2)
+  add e1 e2 = E (add (abstr e1) (abstr e2))
+  lam = VF
+  app (VF f) ea = f ea
+  app (E f)  ea = E (app f (abstr ea))
+\end{code}
+The implementations of |int|, |bool|, and |add| are like
+in~\S\ref{S:PE-problem}.
+The interpretation of |lam f| just wraps the
+HOAS function |f| into the result. We can always compile |f| to a code value,
+but we delay it to apply |f| to concrete arguments. The interpretation of
+|app ef ea| checks to see if |ef| is such a delayed
+HOAS function |VF f|. If it is, we apply |f| to the
+concrete argument |ea|, giving us a chance to perform static
+computations (see example |testpowfix7| in~\S\ref{S:PE-solution}). If |ef| is a
+dynamic value |E f|, we residualize.
+
+This solution using GADTs works but is not quite satisfactory. First, it
+cannot be ported to MetaOCaml as GADTs are unavailable there.  Second,
+the problem of nonexhaustive pattern\hyp matching reappears in |app|
+above: the type |P t| has four constructors, of which pattern\hyp
+matching in |app| uses only |VF| and~|E|. One may say that the
+constructors |VI| and |VB| obviously cannot occur because they do not
+construct values of type |P (a -> b)| as required by the type of |app|.
+Indeed the metalanguage implementation could reason thus, but it may not; GHC for one
+issues warnings.  Although this point may seem minor, it is the heart of
+the tagging problem and the purpose of tag elimination. A typed tagged
+interpreter contains many pattern\hyp matching forms that look partial
+but are total in reality. The goal is to make this totality
+\emph{syntactically} apparent.
 
 \subsection{The ``final'' solution}
 \label{S:PE-solution}
@@ -1134,8 +1134,8 @@ gives
 as desired.
 
 Unlike the GADT approach in~\S\ref{S:PE-GADT}, all pattern\hyp matching
-in~|P| is \emph{syntactically} exhaustive, so it is \emph{patent} to the
-compiler that |P| is total.  Further, all pattern\hyp matching occurs
+in~|P| is \emph{syntactically} exhaustive, so it is patent to the metalanguage
+implementation that |P| is total.  Further, all pattern\hyp matching occurs
 during partial evaluation, only to check if a value is known statically,
 never what type it has.  In other words, our partial evaluator tags
 phases (with |Some| and |None|) but not object types.
