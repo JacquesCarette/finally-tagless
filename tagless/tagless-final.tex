@@ -392,7 +392,7 @@ closed, yet is surprisingly simple and obvious in hindsight.  We stress
 that until now it has been considered impossible to
 interpret a typed object language in a typed metalanguage without
 tagging or type\hyp system extensions.  For example, \citet{taha-tag}
-states that ``expressing such an interpreter in a statically typed
+state that ``expressing such an interpreter in a statically typed
 programming language is a rather subtle matter. In fact, it is only
 recently that some work on programming type-indexed values in ML
 \citep{yang-encoding} has given a hint of how such a function can be
@@ -400,19 +400,26 @@ expressed.''  We further discuss related work in~\S\ref{related}.
 
 Our contributions are
 \begin{enumerate}
-\item to evaluate, compile, and partially evaluate a typed object language
-   in a typed metalanguage with a simple type system;
-\item to check statically for well-typed and closed object programs;
+\item to evaluate in direct or continuation-passing styles, 
+  compile, and partially evaluate a typed higher-order object language
+   in a typed metalanguage with a simple type system. All these
+   interpreters have no type tags and never get stuck;
+\item a Hindley-Milner--typed partial evaluator with no 
+  polymorphic lift operation and with
+  the delayed binding-time analysis of functions . The partial
+  evaluator needs no advanced type systems such as GADT or intentional
+  type analysis;
+\item to check statically for well-typed and closed object programs
+      using the type system \oleg{typechecker?} of the metalanguage;
 \item clean, comparable implementations in MetaOCaml and Haskell;
 \item a functor signature that encompasses all our interpreters, from
-    evaluation and compilation to partial evaluation and CPS transformation;
-\item a clear way to extend the object language with more features;
+    evaluation and compilation to partial evaluation and CPS;
+\item a clear way to extend the object language with more features
+  such as state;
 \item and an approach to self\hyp interpretation compatible with the
   above.  Self\hyp interpretation turned out to be harder than expected.
 \end{enumerate}
 
-\jacques{we should probably be more explicit about the contributions of
-the discussion section}
 
 The structure of our paper is as follows. In the next Section, we
 define the OCaml and Haskell interfaces of the interpreter for our
@@ -439,9 +446,11 @@ The language is close to \citets{xi-guarded}, without their polymorphic
 lift but with more constants so as to express Fibonacci, factorial, and
 power.
 
-In the sequel, we encode binding in object programs using higher-order
+In contrast to \S\ref{tagproblem}, we encode 
+binding in object programs using higher-order
 abstract syntax (HOAS) \citep{miller-manipulating,pfenning-higher-order}
-rather than de Bruijn indices.
+rather than de Bruijn indices. This makes the encoding convenient and
+also ensures that our object programs are closed.
 
 \subsection{How to make encoding flexible: abstract the interpreter}
 \label{encoding}
@@ -529,7 +538,7 @@ end
 To embed the same object language in (Meta)OCaml, we replace the type
 class |Symantics| and its instances by a module signature |Symantics|
 and its implementations.  Figure~\ref{fig:ocaml-simple} shows a simple
-signature that suffices for this and the following sections.
+signature that suffices until \S\ref{PE}.
 Two differences between this signature and the |Symantics| class in
 Haskell are: the additional type parameter |c|, an
 environment classifier \citep{WalidPOPL03} required by MetaOCaml for
