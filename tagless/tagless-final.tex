@@ -347,8 +347,8 @@ term) are reported at compile time.
 \oleg{Jacques, do we use final and initial here correctly?}
 Because the new interpreter uses no
 universal type or
-pattern matching, it never results in a run-time error and is in fact
-total.  Because this totality is obvious not just to us but also to the
+pattern matching, it never results in a run-time error (and is in fact
+total).  Because this safety is obvious not just to us but also to the
 metalanguage implementation, we avoid the serious performance penalty
 \citep{WalidICFP02} of error checking.  \Citet{Gluck-jones-optimality}
 explains deeper technical reasons that inevitably lead to these performance
@@ -398,26 +398,25 @@ recently that some work on programming type-indexed values in ML
 \citep{yang-encoding} has given a hint of how such a function can be
 expressed.''  We further discuss related work in~\S\ref{related}.
 
-Our contributions are
+Our contributions are as follows.
 \begin{enumerate}
-\item to evaluate in direct or continuation-passing styles, 
+\item We build interpreters that evaluate (in direct or continuation\hyp passing styles),
   compile, and partially evaluate a typed higher-order object language
-   in a typed metalanguage with a simple type system. All these
-   interpreters have no type tags and never get stuck;
-\item a Hindley-Milner--typed partial evaluator with no 
-  polymorphic lift operation and with
-  the delayed binding-time analysis of functions . The partial
-  evaluator needs no advanced type systems such as GADT or intentional
-  type analysis;
-\item to check statically for well-typed and closed object programs
-      using the type system \oleg{typechecker?} of the metalanguage;
-\item clean, comparable implementations in MetaOCaml and Haskell;
-\item a functor signature that encompasses all our interpreters, from
-    evaluation and compilation to partial evaluation and CPS;
-\item a clear way to extend the object language with more features
-  such as state;
-\item and an approach to self\hyp interpretation compatible with the
-  above.  Self\hyp interpretation turned out to be harder than expected.
+   in a typed metalanguage.
+\item All these interpreters use no type tags, patently never get stuck,
+    and need no advanced type-system features such as GADTs, dependent types,
+    or intentional type analysis.
+\item The partial evaluator avoids polymorphic lift and delays binding-time
+    analysis.
+\item We use the type system of the metalanguage
+    to check statically for well-typed and closed object programs.
+\item We show clean, comparable implementations in MetaOCaml and Haskell.
+\item We specify a functor signature that encompasses all our interpreters, from
+    evaluation and compilation to partial evaluation and CPS transformation.
+\item We point a clear way to extend the object language with more features
+  such as state.
+\item We describe an approach to self\hyp interpretation compatible with the
+  above.  Self\hyp interpretation turned out harder than expected.
 \end{enumerate}
 
 
@@ -446,7 +445,7 @@ The language is close to \citets{xi-guarded}, without their polymorphic
 lift but with more constants so as to express Fibonacci, factorial, and
 power.
 
-In contrast to \S\ref{tagproblem}, we encode 
+In contrast to \S\ref{intro}, we henceforth encode 
 binding in object programs using higher-order
 abstract syntax (HOAS) \citep{miller-manipulating,pfenning-higher-order}
 rather than de Bruijn indices. This makes the encoding convenient and
@@ -503,22 +502,20 @@ with a compiler flag.
 The methods |add|, |mul|, and |leq| are quite similar, and so are
 |int| and |bool|. Therefore, we will frequently show implementations of
 only one method of each group and elide the rest, to save space. The
-accompanying code has the complete code.
+accompanying code has the complete implementations.
 
-Because the types in the |Symantics| class reflect the object language's type
-system, this representation admits only well-typed object terms for evaluation.
-\oleg{replace the above with the following?}
-The comparison of |Symantics| with Figure~\ref{fig:object} clearly
-shows that every typed, closed object term can be represented in the
-metalanguage. Moreover,
+Comparing |Symantics| with Figure~\ref{fig:object}
+shows how to represent every typed, closed object term in the
+metalanguage. Moreover, the representation preserves types, in the following
+sense.
 \begin{prop}
-If an object term has the object type |t|, its
+If an object term has the object type |t|, then its
 representation in the metalanguage has the type 
-|forall repr. Symantics repr => repr t|
-\oleg{or, has the type repr t for some repr. Meta-language embeds all
-  object types.}
+|forall repr.| |Symantics repr => repr t|.
 \end{prop}
-If we make a mistake somewhere, say replace |int 7| with |bool True| in
+Conversely, the type system of the metalanguage checks statically that the
+represented object term is well-typed and closed.
+If we err, say replace |int 7| with |bool True| in
 |testpowfix7|, Haskell will complain there that the expected type |Int| does not
 match the inferred |Bool|.  Similarly, the object term $\fun{x}xx$ and its
 encoding |lam (\x -> app x x)| both fail occurs-checks in type checking.
@@ -554,7 +551,7 @@ end
 To embed the same object language in (Meta)OCaml, we replace the type
 class |Symantics| and its instances by a module signature |Symantics|
 and its implementations.  Figure~\ref{fig:ocaml-simple} shows a simple
-signature that suffices until \S\ref{PE}.
+signature that suffices until~\S\ref{PE}.
 Two differences between this signature and the |Symantics| class in
 Haskell are: the additional type parameter |c|, an
 environment classifier \citep{WalidPOPL03} required by MetaOCaml for
@@ -576,7 +573,7 @@ module EX(S: Symantics) = struct
   let testpowfix7 = 
      lam (fun x -> app (app (testpowfix ()) x)
                        (int 7))
-end;;
+end
 \end{code}
 The dummy argument to |test1| and |testpowfix| is an artefact of
 MetaOCaml, again related to monomorphism: in order for us to run a
@@ -647,21 +644,21 @@ In OCaml, too, it is obvious to the compiler that
 pattern matching cannot fail, because there is no
 pattern matching. Evaluation can only fail to yield a value
 due to interpreting |fix|.
-That is, the proposition below follows immediately from the soundness of
-the metalanguage's type system.
 \begin{prop}
 If the term |e| encoded in the metalanguage has type~|t|,
 then evaluating~|e| in the interpreter~|R| either continues
 indefinitely or terminates with a value of the same type~|t|.
 \end{prop}
-In general, 
+Generalizing from~|R| to all interpreters, we have the following
+broader and more useful, if also more obvious, proposition.
 \begin{prop}
-  If the definitional interpreter implementing |Symantics| 
-  in the soundly typed metalanguage never gets stuck,
+  If an implementation of |Symantics| never gets stuck, then
   the type system of the object
   language is sound with respect to the dynamic semantics defined by
-  the interpreter.
+  that implementation.
 \end{prop}
+These propositions follow immediately from the soundness of the
+metalanguage's type system.
 
 For variety, we show another interpreter, which measures the \emph{size}
 of each object term, defined as the number of term
@@ -676,7 +673,7 @@ module L = struct
   let fix f        = f 0 + 1
   let mul e1 e2    = e1 + e2 + 1
   let if_ eb et ee = eb + et () + ee () + 1
-end;;
+end
 \end{code}
 Now the expression
 \begin{code}
@@ -791,7 +788,7 @@ accompanying code gives the full details.
 Surprisingly, we can write a partial evaluator using the idea above,
 namely to build object terms using ordinary functions rather than data
 constructors.  We present this partial evaluator in a sequence of four
-attempts, the last of which finally uses no universal type and no tags
+attempts. It uses no universal type and no tags
 for object types.  We then discuss residualization and binding-time
 analysis.  Our partial evaluator is a modular extension to the evaluator
 in~\S\ref{S:interpreter-RL} and the compiler in~\S\ref{compiler}, in
@@ -803,8 +800,8 @@ dynamic terms.
 
 Roughly speaking, a partial evaluator interprets each object term either
 to a static (present-stage) term, as produced by the evaluator~|R|, or
-to a dynamic (future-stage) term, as produced by the compiler~|C|.  The
-interpreter computes as much as possible statically.  Thus one might try
+to a dynamic (future-stage) term, as produced by the compiler~|C|.  To
+distinguish between static and dynamic terms, one might try
 to define partial evaluation as the Haskell data type
 \begin{code}
 data P0 t = S0 (R t) | E0 (C t)
@@ -822,8 +819,8 @@ abstrBool (E0 c) = c
 We then start to define |P0| as an instance of the |Symantics| class.
 \begin{code}
 instance Symantics P0 where
-  int  x = S0 (int x) (int x)
-  bool x = S0 (bool x) (bool x)
+  int  x = S0 (int x)
+  bool x = S0 (bool x)
   add (S0 e1) (S0 e2) = S0 (add e1 e2)
   add e1 e2 = E0 (add (abstrInt e1)
                       (abstrInt e2))
@@ -833,6 +830,8 @@ values. Addition yields a static term if and only if both operands
 are static. If so, we use the evaluator~|R| to add the operands.
 If not, we extract dynamic terms from the operands and add them
 using the compiler~|C|.
+Thus we use the overloaded functions |int| and |bool| from the |Symantics|
+instances for |R| and~|C| to define those for~|P0|.
 
 Whereas |mul| and |leq| are as easy to define as |add|, we encounter
 a problem with |if_|.  If the first argument to |if_| is a dynamic term
@@ -890,8 +889,8 @@ instance Symantics P1 where
 When we come to functions, however, we stumble.  According to our
 definition of~|P1|, a partially evaluated object function, such as the
 identity $\fun{x}x$ embedded in Haskell as |lam (\x -> x)|\texttt{ ::
-}|P1 (a -> a)|, consists of a dynamic part (type |C1 (a -> a)|) and
-maybe a static part (type |R1 (a -> a)|).  The dynamic part is useful
+}|P1 (a -> a)|, consists of a dynamic part (type |C (a -> a)|) and
+maybe a static part (type |R (a -> a)|).  The dynamic part is useful
 when this function is passed to another function that is only
 dynamically known, as in $\fun{k}k(\fun{x}x)$.  The static part is
 useful when this function is applied to a static argument, as in
@@ -1068,7 +1067,7 @@ Indeed the metalanguage implementation could reason thus, but it may not; GHC fo
 issues warnings.  Although this point may seem minor, it is the heart of
 the tagging problem and the purpose of tag elimination. A typed tagged
 interpreter contains many pattern\hyp matching forms that look partial
-but are total in reality. The goal is to make this totality
+but never fail in reality. The goal is to make this safety
 \emph{syntactically} apparent.
 
 \subsection{The ``final'' solution}
@@ -1168,7 +1167,7 @@ as desired.
 
 Unlike the GADT approach in~\S\ref{S:PE-GADT}, all pattern\hyp matching
 in~|P| is \emph{syntactically} exhaustive, so it is patent to the metalanguage
-implementation that |P| is total.  Further, all pattern\hyp matching occurs
+implementation that |P| never gets stuck.  Further, all pattern\hyp matching occurs
 during partial evaluation, only to check if a value is known statically,
 never what type it has.  In other words, our partial evaluator tags
 phases (with |Some| and |None|) but not object types.
@@ -1182,7 +1181,7 @@ evaluator and a compiler, but the general ideas are similar.
 
 We show that our |Symantics| and generally our approach accomodates
 a number of variants without any (new) difficulties.  In particular,
-we show how a a call-by-name CPS interpreter, a call-by-value CPS
+we show how a call-by-name CPS interpreter, a call-by-value CPS
 program transformation, as well as how to deal with imperative features.
 Finally, we comment on the requirements on the type system to support 
 our approach.
@@ -1196,7 +1195,7 @@ when evaluating the encoding of the object language application
 |app e1 e2|, |e2| will always have to be evaluated. One may wonder if it is
 possible to represent a call-by-name (CBN) object language in a
 call-by-value (CBV) metalanguage. The answer, given already by 
-\citet{reynolds-definitional,reynolds-relation} and \citet{PlotkinCBN}, is continuation-passing style (CPS), which they
+\citet{reynolds-definitional,reynolds-relation} and \citet{PlotkinCBN}, is yes thanks to CPS, which they
 specifically introduced 
 to make the evaluation strategy of a definitional interpreter
 independent of the strategy of the metalanguage. We demonstrate the
@@ -1214,13 +1213,13 @@ call-by-value. We do so by building a CBN CPS interpreter for the object
 language.
 
 The CBN CPS interpretation was introduced by \citet{PlotkinCBN}. As in
-the more familiar CBV CPS, the interpretation of a value is a function
-accepting a continuation argument |k| and yielding the answer
-returned by that continuation.
+CBV CPS, the interpretation of an object term is a function
+mapping a continuation~|k| to the answer
+returned by~|k|.
 \begin{code}
 let int (x:int) = fun k -> k x
-let add e1 e2 = 
-  fun k -> e1 (fun v1 -> e2 (fun v2 -> k (v1+v2)))
+let add e1 e2 = fun k ->
+  e1 (fun v1 -> e2 (fun v2 -> k (v1 + v2)))
 \end{code}
 In both cases, the returned value has type 
 |(int -> 'w)->'w| where |'w| is the (polymorphic) answer type.
@@ -1285,20 +1284,21 @@ OCaml record types.
 
 Because |RCN| has the signature |Symantics|, we can instantiate our previous
 examples with it, and all works as expected.  More interesting
-is the following example.
+is the example $(\fun{x}1)\bigl((\fix{f}f)\mathinner2\bigr)$, which terminates
+under CBN but not CBV\@.
 \begin{code}
 module EXS(S: Symantics) = struct
  open S
  let diverg () = 
    app (lam (fun x -> int 1)) 
-       (app (fix (fun self -> self)) (int 2))
+       (app (fix (fun f -> f)) (int 2))
 end
 \end{code}
 
 If we interpret |EXS| with the |R| interpreter of
 \S\ref{S:interpreter-RL} realized in OCaml
 \begin{code}
-let module M = EXS(R) in M.diverg ();;
+let module M = EXS(R) in M.diverg ()
 \end{code}
 we never get any result because the above diverges. In contrast, if we use
 the CBN interpreter
@@ -1323,7 +1323,7 @@ module RCV = struct
   let lam f = {ko = 
     fun k -> k (fun e -> e.ko 
          (fun v -> f {ko = fun k -> k v}))}
-end;;
+end
 \end{code}
 Now when we apply an abstraction to an argument |e|, we always force
 the evaluation of that argument before proceeding. This approach is in
@@ -1392,7 +1392,7 @@ module T = struct
  let testpowfix () = ... (* the same as before *)
  let testpowfix7 = (* the same as before *)
     lam (fun x -> app (app (testpowfix ()) x) (int 7))
-end;;
+end
 \end{code}
 That is, we instantiate |CPST| with the desired base intrepreter (the
 compiler |C| in the case above) so that we can use the result |M| to
@@ -1451,11 +1451,6 @@ problems than it solves.
 
 \subsection{Translucent types}
 
-We must formulate some propositions: a typed term makes progress in
-any interpreter. The reason it is typed in any interpreter:
-|forall r. Symantics r => r tau| directly says that in every model the
-term is typed. 
-
 The crucial role of the higher-order type parameter r
 
 The type constructor "r" above represents a particular interpreter.  The
@@ -1510,7 +1505,7 @@ constructively illustrates. Perhaps we need to characterize our
 fragment.
 
 The attempt to encode self-interpreter brings the |*->*| polymorphism
-the the forefront, as we shall now see.
+the forefront, as we shall now see.
 
 \section{Self-interpretation}\label{selfinterp}
 
