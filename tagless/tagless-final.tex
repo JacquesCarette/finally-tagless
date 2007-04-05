@@ -1048,7 +1048,7 @@ instance Symantics P where
 The implementations of |int|, |bool|, and |add| are like
 in~\S\ref{S:PE-problem}.
 The interpretation of |lam f| just wraps the
-HOAS function |f| into the result. We can always compile |f| to a code value,
+HOAS function |f|. We can always compile |f| to a code value,
 but we delay it to apply |f| to concrete arguments. The interpretation of
 |app ef ea| checks to see if |ef| is such a delayed
 HOAS function |VF f|. If it is, we apply |f| to the
@@ -1089,7 +1089,7 @@ Although we can use type classes to define this type function
 in Haskell, that is not portable to MetaOCaml. However,
 these three typecase alternatives are already present in existing
 methods of |Symantics|.
-A simple and more portable solution thus emerges: we bake |repr_pe| 
+A simple and portable solution thus emerges: we bake |repr_pe| 
 into the signature |Symantics|. Switching to MetaOCaml to demonstrate this
 portability, we recall from Figure~\ref{fig:ocaml-simple} in~\S\ref{encoding} that the |repr| type
 constructor took two arguments |'c| and~|'dv|. We add an argument
@@ -1681,6 +1681,8 @@ types.  In other words, various constants (like \textsf{nil} and
 \textsf{true}) both inhabit the same type $D$.  This is not very satisfying.
 
 \oleg{He did not eliminate all the tags.}\jacques{can you show me?}
+\oleg{WalidICFP02, the very end of p1 and the beginning of p2, first
+  column}
 From reading \citet{WalidICFP02,taha-tag,xi-guarded,peyton-jones-simple}, our 
 impression is that the claim is:
 \begin{enumerate}
@@ -1697,8 +1699,13 @@ very advanced type system or incurring tagging/untagging overhead.
 While the logic is sound, we showed that the premise in the first step
 was not valid.
 
-\oleg{the only known to them, and \emph{partial} solution, was 
-  that by Zhe Yang;}\jacques{I cannot find that reference}
+From the above:
+For example, \citet{taha-tag}
+state that ``expressing such an interpreter in a statically typed
+programming language is a rather subtle matter. In fact, it is only
+recently that some work on programming type-indexed values in ML
+\citep{yang-encoding} has given a hint of how such a function can be
+expressed.''
 
 \citet{Danvy-tagging-encoding} discusses Jones optimality at length.
 There, the authors demonstrate the usefulness of HOAS for typed
@@ -1738,6 +1745,10 @@ ideas there, and they are about issues of tagging (an lack thereof).''
 Typing Dep Typing plus two messages on Haskell-Cafe: typechecking 
 from untyped to the typed form, ready to be interpreted. Walid's ICFP02
 uses dependent types
+\url{http://www.haskell.org/pipermail/haskell-cafe/2006-October/019160.html}
+\url{http://www.haskell.org/pipermail/haskell-cafe/2006-October/019161.html}
+\url{http://www.haskell.org/pipermail/haskell-cafe/2006-October/019168.html}
+
 
 Regarding our implementation of the type-level function |'sv -> 'dv|.
 Gibbons et al paper on
@@ -1793,16 +1804,9 @@ in many other areas (e.g., ammortized heap analysis, TFP/TLCA paper).
 \oleg{I was told that speculation and informality is permitted in
   conclusions.}
 
-
-Our approach showed better the meaning of GADT and when they can be
-avoided.
-This shows also how a limited form of GADTs (the ones
-used for the sake of type-dependent representations) can be
-implemented with just functions. 
-
 separate compilation: separate
 typechecking of terms without knowing which particular
-hole they will be plugged into. Formulate this as a prop?
+hole they will be plugged into. 
 
 
 
