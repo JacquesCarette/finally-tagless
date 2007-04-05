@@ -500,8 +500,24 @@ Haskell to infer the object types for us. We could also
 avoid the dummy argument by switching off the monomophism restriction
 with a compiler flag.
 
+The methods |add|, |mul|, and |leq| are quite similar, and so are
+|int| and |bool|. Therefore, we will frequently show implementations of
+only one method of each group and elide the rest, to save space. The
+accompanying code has the complete code.
+
 Because the types in the |Symantics| class reflect the object language's type
 system, this representation admits only well-typed object terms for evaluation.
+\oleg{replace the above with the following?}
+The comparison of |Symantics| with Figure~\ref{fig:object} clearly
+shows that every typed, closed object term can be represented in the
+metalanguage. Moreover,
+\begin{prop}
+If an object term has the object type |t|, its
+representation in the metalanguage has the type 
+|forall repr. Symantics repr => repr t|
+\oleg{or, has the type repr t for some repr. Meta-language embeds all
+  object types.}
+\end{prop}
 If we make a mistake somewhere, say replace |int 7| with |bool True| in
 |testpowfix7|, Haskell will complain there that the expected type |Int| does not
 match the inferred |Bool|.  Similarly, the object term $\fun{x}xx$ and its
@@ -626,8 +642,8 @@ instance Symantics R where ...
 Although |R| looks like a tag, it is only
 a |newtype|.  The types |a| and |R a| are represented differently
 only at compile time, not at run time.  Pattern matching against~|R|
-cannot ever fail and is compiled away.
-In both OCaml and Haskell, it is obvious to the compiler that
+cannot ever fail and is assuredly compiled away.
+In OCaml, too, it is obvious to the compiler that
 pattern matching cannot fail, because there is no
 pattern matching. Evaluation can only fail to yield a value
 due to interpreting |fix|.
@@ -637,6 +653,14 @@ the metalanguage's type system.
 If the term |e| encoded in the metalanguage has type~|t|,
 then evaluating~|e| in the interpreter~|R| either continues
 indefinitely or terminates with a value of the same type~|t|.
+\end{prop}
+In general, 
+\begin{prop}
+  If the definitional interpreter implementing |Symantics| 
+  in the soundly typed metalanguage never gets stuck,
+  the type system of the object
+  language is sound with respect to the dynamic semantics defined by
+  the interpreter.
 \end{prop}
 
 For variety, we show another interpreter, which measures the \emph{size}
@@ -1762,6 +1786,18 @@ intensional representation of terms.  This nicely allows pattern matching,
 but as sits inside an extensional theory, ensuring that all traces 
 of these tags disappear seems quite difficult without a very powerful
 type system (enter GADTs).}
+
+
+The overarching theme of our approach -- representation of object terms in 
+\S\ref{ourapproach}, future-stage code in \S\ref{S:PE-lift} and static
+values in \S\ref{S:PE-solution} and CPS values in \S\ref{S:CPS} --
+demonstrates that pushing the computation towards the producers
+\oleg{or, constructors. Ken said: functionalization} generally
+requires simpler type systems (such as mere HM). The same idea appears
+in many other areas (e.g., ammortized heap analysis, TFP/TLCA paper).
+\oleg{I was told that speculation and informality is permitted in
+  conclusions.}
+
 
 Our approach showed better the meaning of GADT and when they can be
 avoided.
