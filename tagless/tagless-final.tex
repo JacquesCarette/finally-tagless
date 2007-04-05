@@ -1655,11 +1655,11 @@ speak -- which is one way how polymorphism is resolved).
 \section{Related work}\label{related}
 
 Our initial motivation came from several papers 
-\citet{WalidICFP02,taha-tag,xi-guarded,peyton-jones-simple} which used
+\citep{WalidICFP02,taha-tag,xi-guarded,peyton-jones-simple} which used
 embedded interpreters as a central example to justify looking 
-into advanced type systems.  While we admired all this technical work,
-there remained the issue that we were not convinced of the strength
-of their motivating example.
+into advanced type systems.  While we admire all this technical work,
+there remained the issue that we were not convinced that their 
+motivating example actually needed all this machinery.
 
 \citet{WalidICFP02}, when referring to the work of \citet{taha-tag},
 claims that this shows that self-interpretation is possible in a
@@ -1667,33 +1667,33 @@ claims that this shows that self-interpretation is possible in a
 as their type system does not differentiate between the various ground
 types.  In other words, various constants (like \textsf{nil} and 
 \textsf{true}) both inhabit the same type $D$.  This is not very satisfying.
+Furthermore, as is pointed out in the introduction to \citet{WalidICFP02},
+\citet{taha-tag} does not \emph{statically} guarantee that all tags will
+be removed - tag elimination must be performed at runtime.
 
-\oleg{He did not eliminate all the tags.}\jacques{can you show me?}
-\oleg{WalidICFP02, the very end of p1 and the beginning of p2, first
-  column}
 From reading \citet{WalidICFP02,taha-tag,xi-guarded,peyton-jones-simple}, our 
 impression is that the claim is:
 \begin{enumerate}
 \item One needs to encode a typed language in a typed language based on
-a sum type,
-\item It is not possible to write a \emph{direct} interpreter for an typed
-language encoded this way, in a typed language, without either using a
+a sum type (at some level of the hierarchy),
+\item It is not possible to write a \emph{direct} interpreter 
+for such an encoding of a typed language
+in a typed language, without either using a
 very advanced type system or incurring tagging/untagging overhead.
-\item Thus we have to use an indirect interpreter, which needs a universal
+\item Thus an indirect interpreter is necessary, which needs a universal
   type (and hence tagging),
 \item Thus any self-interpreter must have tags.
 \item Hence the self-interpreter cannot be Jones-optimal.
 \end{enumerate}
-While the logic is sound, we showed that the premise in the first step
+While the logic is sound, we showed that the premise in the very first step
 was not valid.
 
-From the above:
-For example, \citet{taha-tag}
-state that ``expressing such an interpreter in a statically typed
+In particular, \citet[\S5]{taha-tag}
+states that ``expressing such an interpreter in a statically typed
 programming language is a rather subtle matter. In fact, it is only
 recently that some work on programming type-indexed values in ML
 \citep{yang-encoding} has given a hint of how such a function can be
-expressed.''
+expressed.''  
 
 \citet{Danvy-tagging-encoding} discusses Jones optimality at length.
 There, the authors demonstrate the usefulness of HOAS for typed
@@ -1706,38 +1706,37 @@ In other words, their language (and interpreter) does use tags, however
 the shift to HOAS allows the partial evaluator to remove all the tags.
 In contrast, we have no tags at all.
 
-Asai; 
-It [dynamic part when dealing with bool, int, lam in PE] is
-Asai's trick for reducing the amount of reify/reflect back-and-forth
-in a PE for an untyped language that allows you back-and-forth.  Or at
-least that's how I read those papers.
-Asai's approach is related to our PE (emulating typelevel functions):
-Ken: ``In some sense we're just observing that Asai's code type-checks
--- in Hindley-Milner as soon as we deforest the static code
-representation.''
+We used a method from \citet{Asai-SAS99} to reduce the amount
+of back-and-forth between reify/reflect: in our PE we track both
+static and dynamic values in parallel (whenever possible).  In some sense,
+we are observing that this method type-checks in Hindley-Milner once we
+deforest the static code representation.  Put another way, we have
+manually applied type-level partial-evaluation to our typelevel 
+functions (see \S\ref{S:pe-solution}) to obtain simpler types 
+acceptable to MetaOCaml.  It is worthwhile to note that 
+\citet{Sumii-HOSC2001} also takes advanatage of this method
+\citep[of][]{Asai-SAS99} to get interesting results combining online
+and offline partial evaluation.  Like \citet{SperberThiemann:TwoForOne},
+we strive for modularity by reusing earlier stages.  It would be interesting
+to see if we could derive a \emph{cogen} \citep{Thiemann:cogeninsixlines}
+in the same manner.
 
-Sumii et al.
+The approach to HOAS via catamorphism and anamorphism of
+\citet{Washburn-Weirich-boxes} seems related to what we are doing.
+We have not investigated the relationship to any serious depth, but we
+feel that one could fruitfully combine their ideas with ours.
 
-"Boxes go Bananas" by Washburn and Weirich (intended or otherwise) Ken
-wrote about this: ``but a glance reveals no type classes.  Do you mean
-then that if we hide the definition |newtype R a = R a| from a client,
-and export only the interpreter |instance Symantics R R|, then the
-client would see R as an HOAS datatype a la Washburn and Weirich and
-only be able to create parametric ("non-exotic") terms?''  Jacques
-commented: ``I mean the HOAS parts, and how to deal with it (like in
-the instance for |Symantics R R|).  There are other nice tricks for
-dealing with HOAS in that paper worth a closer look.  It's all about
-plain polymorphism, not type classes, but there are still some clever
-ideas there, and they are about issues of tagging (an lack thereof).''
+A lot of effort has gone into finding ways to give precise types to untyped
+terms (see for example \citet{baars-typing,Guillemette-Monier-PLPV}
+as well as the messages \citet{haskell-019160,haskell-019161}).  There 
+take advantage of the host language's types to varying extents.  All 
+these approaches are very successful for proper terms, but less so for
+ill-typed terms, where error messages can be quite obscure.  We use the
+host's typing facilities to do all the work, and thus inherit the strengths
+and weaknesses of the host language.  While that may not be optimal, it is
+certainly much more modular.
 
-Typing Dep Typing plus two messages on Haskell-Cafe: typechecking 
-from untyped to the typed form, ready to be interpreted. Walid's ICFP02
-uses dependent types
-\url{http://www.haskell.org/pipermail/haskell-cafe/2006-October/019160.html}
-\url{http://www.haskell.org/pipermail/haskell-cafe/2006-October/019161.html}
-\url{http://www.haskell.org/pipermail/haskell-cafe/2006-October/019168.html}
-
-
+\jacques{Got to here}.
 Regarding our implementation of the type-level function |'sv -> 'dv|.
 Gibbons et al paper on
 the implementations of typecase may be relevant. I have not read it,
@@ -1760,7 +1759,7 @@ meta-circular interpreter -- rather than self-interpreter. We can
 claim to have implemented a far better interpreter for a far richer
 language.
 
-Thiemann, cogen in six lines (for the interpreter/compiler work)?
+co-algebra references.  Many.
 
 \section{Conclusions}\label{conclusion}
 
