@@ -1736,30 +1736,50 @@ host's typing facilities to do all the work, and thus inherit the strengths
 and weaknesses of the host language.  While that may not be optimal, it is
 certainly much more modular.
 
-\jacques{Got to here}.
-Regarding our implementation of the type-level function |'sv -> 'dv|.
-Gibbons et al paper on
-the implementations of typecase may be relevant. I have not read it,
-but I have the feeling some of their typecase designs may be
-relevant (at least to cite). 
-However, the typecase paper relies on having a 
-bijection between types -- our |'sv| and |'dv| in this case, which is not 
-our situation.  We have a one-sided view of things, where |'sv -> 'dv| is 
-easy, and |'dv| "perfectly reflects" an |'sv|, but you still can't get at 
-that |'sv|.  \jacques{Could we say that we have a meta-level Galois
-injection?  We have one direction completely covered at the object
-level (and so easy to lift), but 'dv to 'sv can only be done by
-an outside mechanism}
+When dealing with datatypes which are equivalent but have different
+representations, it is customary to use injection-projection pairs
+(used in the context of interpreters by \citet{Ramsey-ML-module-mania}
+and \citet{Benton-embedded-interpreters}, partial evaluation by
+\citet{Danvy-TDPE}, and type-level functions by
+\citet{oliveira-typecase}).  Na\"{\i}vely, this would appear to apply to
+our implementation of the type-level function |'sv -> 'dv|.  However, in most
+of these cases, it is important that this establishes a bijection (between
+|'sv| and |'dv| in our case).  Our approach is one-sided: we requite
+an operational definition of |'sv -> 'dv| (which is easy), and an
+implementation of |'dv| which ``perfectly reflects'' |'sv| without 
+however making this uniformly available.
 
+\citet{fiore:nbe-ppdp2002,balat:tdpe-popl2004} also deal with a 
+tagfree partial-evaluator using quite a lot of interesting 
+technology (amongst them powerful continuation-based control operators).
+While they use a reify-reflect injection-projection pair, this appears
+to be done ``lightly'', in the sense that the structure of compiled code
+is never examined.  The exact relation between their work and ours is 
+still a little mysterious to us, but we will continue to investigate it.
 
-Self-Interpretation and Reflection in a Statically Typed Language 
-\url{http://webpages.cs.luc.edu/~laufer/papers/reflection93.pdf}
-He uses the SK language and some typeclasses. Their interpreter is a
-meta-circular interpreter -- rather than self-interpreter. We can
-claim to have implemented a far better interpreter for a far richer
-language.
+We are not the first to implement a typed interpreter for a typed
+language -- \citet{laod93} use a typed version of the SK language
+(and typeclasses) to implement a meta-circular interpreter (rather than
+a self-interpreter).  Interestingly, their meta-circular interpreter
+appears to be tagfree!  However, they could not have implemented a
+compiler or a partial-evaluator in the same way since they rely quite
+heavily on having injection-projection pairs (through reflection and
+reification).  
 
-co-algebra references.  Many.
+We have been unable to find a direct reference that establishes that
+the typed $\lambda$-calculus possesses a final co-algebra structure.
+For the untyped $\lambda$-calculus, 
+\citet{HonsellLenisa,honsell99coinductive} establish several interesting
+results along this line.  Of particular interest is their use of
+contexts with a hole \citep[p.13]{honsell99coinductive} for the definition
+of \emph{observational equivalence}, which directly relates to our
+use of terms with a hole as a context for our self-interpreter 
+(\S\ref{selfinterp}).  The reader is directed to bibliography of
+\citet{honsell99coinductive} for references to the foundational work
+in this important area.
+
+\jacques{Dig through the last couple of emails I just got from the
+category theory list with references, and this section will be done.}
 
 \section{Conclusions}\label{conclusion}
 
