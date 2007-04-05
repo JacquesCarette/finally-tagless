@@ -838,7 +838,12 @@ a problem with |if_|.  If the first argument to |if_| is a dynamic term
 (type |C Bool|) and the second and third arguments are a static term
 (type |R a|) and a dynamic term (type |C a|), then we need to convert
 the static term to dynamic, but there is no polymorphic ``lift''
-function |a -> C a| to send a value to the future stage.
+function |a -> C a| to send a value to the future stage
+\citep{xi-guarded,WalidPOPL03}.\footnote{We note in passing that, if we
+were to add polymorphic \texttt{lift} to the type class
+\texttt{Symantics repr}, then \texttt{repr} would become an instance of
+\texttt{Applicative} and thus \texttt{Functor}:\quad\texttt{fmap
+f = app (lift f)}}
 
 Our |Symantics| class includes only separate lifting methods |bool| and
 |int|, not a parametrically polymorphic lifting method, for good reason:
@@ -1431,23 +1436,6 @@ reference variables in the object language.
 \oleg{Should we have an example in the code?}
 \jacques{In the code, yes.  Probably not in the paper, it is getting 
 long as it is}
-
-\subsection{Lifting and functor}
-
-It is perhaps worthwhile noting that 
-if we were to add a method 'lift' to |Symantics| with type
-|lift :: a -> repr a| (the polymorphic lift of \citet{xi-guarded}, 
-of MetaML and
-MetaOCaml: CSP)
-then |Symantics repr| implies |Functor repr|.  This can be seen from
-\begin{code}
-instance Semantics repr => Functor repr where
-  -- fmap :: (a->b) -> repr a -> repr b
-  fmap f ra = app (lift f) ra
-\end{code}
-Of course, as we have mentioned earlier in~\S\ref{S:PE-lift}, 
-addin such a polymorphic lift would appear to introduce more
-problems than it solves.
 
 \subsection{Translucent types}
 
