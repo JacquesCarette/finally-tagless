@@ -432,7 +432,7 @@ Our code is surprisingly simple and obvious in hindsight, but
 it has been an open problem to
 interpret a typed object language in a typed metalanguage without
 tagging or type\hyp system extensions.  For example, \citet{taha-tag}
-state that ``expressing such an interpreter in a statically typed
+say that ``expressing such an interpreter in a statically typed
 programming language is a rather subtle matter. In fact, it is only
 recently that some work on programming type-indexed values in ML
 \citep{yang-encoding} has given a hint of how such a function can be
@@ -785,23 +785,23 @@ dynamic terms.
 \subsection{Avoiding polymorphic lift}
 \label{S:PE-lift}
 
-Roughly speaking, a partial evaluator interprets each object term as either
-a static (present-stage) term (using the evaluator~|R|), or
-a dynamic (future-stage) term, (using the compiler~|C|).  To
-distinguish between static and dynamic terms, one might try
-to define partial evaluation via the Haskell data type
+Roughly, a partial evaluator interprets each object term to either
+a static (present-stage) term (using the evaluator~|R|) or
+a dynamic (future-stage) term (using the compiler~|C|).  To
+distinguish between static and dynamic terms, one might define
+the Haskell data type
 \begin{code}
 data P0 t = S0 (R t) | E0 (C t)
 \end{code}
 To extract a dynamic term from this type, we create the functions
 \begin{code}
-abstrInt :: P0 Int -> C Int
-abstrInt (S0 r) = int (unR r)
-abstrInt (E0 c) = c
+abstrI :: P0 Int -> C Int
+abstrI (S0 r) = int (unR r)
+abstrI (E0 c) = c
 
-abstrBool :: P0 Bool -> C Bool
-abstrBool (S0 r) = bool (unR r)
-abstrBool (E0 c) = c
+abstrB :: P0 Bool -> C Bool
+abstrB (S0 r) = bool (unR r)
+abstrB (E0 c) = c
 \end{code}
 We then start to define |P0| as an instance of the |Symantics| class.
 \begin{code}
@@ -809,19 +809,17 @@ instance Symantics P0 where
   int  x = S0 (int x)
   bool x = S0 (bool x)
   add (S0 e1) (S0 e2) = S0 (add e1 e2)
-  add e1 e2 = E0 (add (abstrInt e1)
-                      (abstrInt e2))
+  add e1 e2 = E0 (add (abstrI e1) (abstrI e2))
 \end{code}
 Integer and boolean literals are immediate, present-stage
-values. Addition yields a static term (via~|R|) if and only if both operands
-are static, otherwise we extract the dynamics terms from the operands and
-add them using the compiler~|C|.  Uniformly, we use
-the overloaded functions from the |Symantics|
-instances for |R| and~|C| to define those for~|P0|.
+values. Addition yields a static term (using~|R|) if and only if both operands
+are static; otherwise we extract the dynamic terms from the operands and
+add them using~|C|.  Thus the two uses of |add| above refer to
+|add| for~|R| and |add| for~|C|.
 
 Whereas |mul| and |leq| are as easy to define as |add|, we encounter
 a problem with |if_|.  If the first argument to |if_| is a dynamic term
-(type |C Bool| say) and the second and third arguments are a static term
+(type |C Bool|) and the second and third arguments are a static term
 (type |R a|) and a dynamic term (type |C a|), then we need to convert
 the static term to dynamic, but there is no polymorphic ``lift''
 function, of type |a -> C a|, to send a value to the future stage
@@ -1161,29 +1159,23 @@ compiler~|C| and the evaluator~|R| by composing them.  This situation is
 simpler than \citets{SperberThiemann:TwoForOne} composition of a partial
 evaluator and a compiler, but the general ideas are similar.
 
-\section{Variations}\label{variations}
+\section{Continuation\hyp passing style}\label{variations}
 
-We show that our |Symantics| and generally our approach accomodates
-a number of variants without any (new) difficulties.  In particular,
-we show how a call-by-name CPS interpreter, a call-by-value CPS
-program transformation.  Finally, we comment on the requirements on the type
-system to support our approach.
+Our approach accommodates
+several variants, including
+a call-by-name CPS interpreter and a call-by-value CPS
+transformation.
 
 \subsection{Call-by-name CPS interpreters}\label{S:CPS}
 
 The object language generally inherits the evaluation strategy from
-the metalanguage -- call-by-value (CBV) in OCaml, call-by-name (CBN) in Haskell.
-One may wonder if it is
-possible to represent a call-by-name object language in a
-call-by-value metalanguage. The answer, given already by 
-\citet{reynolds-definitional,reynolds-relation} and \citet{PlotkinCBN}, is yes
-thanks to CPS, which they specifically introduced 
-to make the evaluation strategy of a definitional interpreter
-independent of the strategy of the metalanguage. We demonstrate the
-same independence in the typed setting. Specifically, we
-demonstrate CBN evaluation for our object language in OCaml.
-We do so by building a CBN CPS interpreter for the object
-language.
+the metalanguage---call-by-value (CBV) in OCaml, call-by-name (CBN) in
+Haskell.  To represent a CBN object language in a CBV metalanguage,
+\citet{reynolds-definitional,reynolds-relation} and \citet{PlotkinCBN}
+introduce CPS to make the evaluation strategy of a definitional
+interpreter indifferent to that of the metalanguage. To achieve the same
+indifference in the typed setting, we build a CBN CPS interpreter for
+our object language in OCaml.
 
 The interpretation of an object term is a function
 mapping a continuation~|k| to the answer
@@ -1193,36 +1185,35 @@ let int (x:int) = fun k -> k x
 let add e1 e2 = fun k ->
   e1 (fun v1 -> e2 (fun v2 -> k (v1 + v2)))
 \end{code}
-In both cases, the returned value has type 
-|(int -> 'w)->'w| where |'w| is the (polymorphic) answer type.
+In both |int| and |add|, the interpretation has type 
+|(int -> 'w)|\texttt{ }|-> 'w|, where |'w| is the (polymorphic) answer type.
 
-The interpretation of abstraction and application in CBN CPS is
-different from CBV CPS and is as follows:
+Unlike CBV CPS, the CBN CPS interprets
+abstraction and application as follows:
 \begin{code}
 let lam f = fun k -> k f
-let app e1 e2 = fun k -> e1 (fun f -> (f e2) k)
+let app e1 e2 = fun k -> e1 (fun f -> f e2 k)
 \end{code}
-Charateristic of CBN, interpreting the application does not
-``evaluate'' the argument |e2|, that is, we do apply it to the
-continuation. Rather, we pass the unevaluated |e2| to the abstraction.
-The result of |lam (fun x -> add x (int 1))| has the type
-|((((int->'w1)->'w1) -> ((int->'w1)->'w1)) ->'w2)->'w2|.
+Charateristic of CBN, |app e1 e2|
+does not evaluate the argument~|e2| by applying it to the
+continuation~|k|. Rather, it passes |e2| unevaluated to the abstraction.
+Interpreting $\fun{x} x+1$ yields type
+\begin{code}
+((((int -> 'w1) -> 'w1) -> (int -> 'w1) -> 'w1)
+ -> 'w2) -> 'w2
+\end{code}
+
 We would like to collect those interpretation functions into a module
 with signature |Symantics|, to include the CBN CPS interpreter within our
-general framework. Alas, we encounter the same problem we had in
-\S\ref{S:PE-problem}.
-We cannot say that the result of interpreting an object
-expression of type |t| is |(t->'w)->'w| because if |t| happens to
-be an arrow type, the result
-type obviously does not fit the desired pattern. We need a type
-function with a typecase distinction.  Our previous solution 
-(\S\ref{S:PE-solution}) where we use an extra type
-argument |'sv| of the |repr| type, to encode such type-level functions,
-also works here.  Furthermore, we notice that the type 
-function |repr_pe| needed for the partial evaluator 
-(in~\S\ref{S:PE-solution}) is precisely the same type function we
-need for CBN CPS. 
-
+general framework. Alas, as in~\S\ref{S:PE-problem}, the type of
+an object term inductively determines the type of its interpretation:
+the interpretation of an object term of type~$t$ may not have type
+|(|$t$|->'w)->'w|, because $t$ may be a function type.  Again we
+simulate a type function with a typecase distinction, using an extra
+type argument to |repr|. Happily, the type function |repr_pe| needed for
+the partial evaluator 
+in~\S\ref{S:PE-solution} is precisely the same type function we
+need for CBN CPS\@.
 \begin{code}
 module RCN = struct
   type ('c,'sv,'dv) repr = 
@@ -1241,15 +1232,14 @@ module RCN = struct
   let fix f = 
     let rec fx f n = app (f (lam (fx f))) n in 
     lam (fx f)
-  let get_res x = x.ko (fun v -> v)
+  let run x = x.ko (fun v -> v)
 end
 \end{code}
 
-We have made our interpreter fully polymorphic over the answer type.
-We could have also made |RCN| a functor, parameterized over
-the answer type -- as is common when writing CPS in SML. Here
-we chose to use the higher-rank polymorphism offered by
-OCaml record types.
+This interpreter~|RCN| is fully polymorphic over the answer type,
+using higher-rank polymorphism through OCaml record types.
+It could also be a functor parameterized over
+the answer type.
 
 Because |RCN| has the signature |Symantics|, we can instantiate our previous
 examples with it, and all works as expected.  More interesting
@@ -1258,69 +1248,61 @@ under CBN but not CBV\@.
 \begin{code}
 module EXS(S: Symantics) = struct open S
  let diverg () = app (lam (fun x -> int 1)) 
-                     (app (fix (fun f -> f)) (int 2))
+                  (app (fix (fun f->f)) (int 2))
 end
 \end{code}
-If we interpret |EXS| with the |R| interpreter of
-\S\ref{S:interpreter-RL}
+Interpreting |EXS| with the |R| interpreter of
+\S\ref{S:interpreter-RL} does not terminate.
 \begin{code}
 let module M = EXS(R) in M.diverg ()
 \end{code}
-we never get any result because the above diverges. In contrast, if we use
-the CBN interpreter
+In contrast, the CBN interpreter gives the result~|1|.
 \begin{code}
-let module M = EXS(RCN) in RCN.get_res (M.diverg ())
+let module M = EXS(RCN) in RCN.run (M.diverg ())
 \end{code}
-we get the result |1|.
 
 \subsection{CBV CPS transformers}
 
-We can easily change our CBN CPS interpreter into a CBV CPS
-interpreter, by replacing only one definition:
+Changing one definition turns our CBN CPS interpreter into CBV\@.
 \begin{code}
-module RCV = struct
-  include RCN
+module RCV = struct include RCN
   let lam f = {ko = fun k -> k (fun e ->
     e.ko (fun v -> f {ko = fun k -> k v}))}
 end
 \end{code}
-Now when we apply an abstraction to an argument, we always force
-the evaluation of that argument before proceeding. This approach is in
-line with \citet{reynolds-relation} (albeit in a typed setting). The
-interpreter RCV is useful for achieving CBV evaluation of the object language
-whether the metalanguage is CBV or CBN.
+Now an applied abstraction
+evaluates its argument before proceeding. This approach is in
+line with \citets{reynolds-relation}, albeit typed. The
+interpreter~|RCV| is useful for CBV evaluation of the object language
+whether the metalanguage is CBV or CBN\@.
 
-In this section however we show a more general approach to CBV CPS:
-a CPS transformer. We take any implementation of |Symantics| (interpreter,
-compiler, partial evaluator) and make it evaluate the CPS language
-instead. We can view interpreter transformation as a
-transformation on the object language, from direct to
-continuation-passing style.
-
-The transformation is canonical, as the following (abbreviated) code
-shows
+We turn to a more general approach to CBV CPS: a CPS transformer that
+turns any implementation of |Symantics| into a CPS interpreter, whether
+it is an evaluator.  This functor on interpreters performs a textbook
+CPS transformation on the object language.
 \begin{code}
 module CPST(S: Symantics) = struct
   let int i = S.lam (fun k -> S.app k (S.int i))
   let add e1 e2 = S.lam (fun k ->
     S.app e1 (S.lam (fun v1 ->
-    S.app e2 (S.lam (fun v2 -> S.app k (S.add v1 v2))))))
-  ...
-  let lam f = S.lam (fun k -> S.app k (S.lam (fun x ->
-    f (S.lam (fun k -> S.app k x)))))
+    S.app e2 (S.lam (fun v2 ->
+    S.app k (S.add v1 v2))))))
+  let lam f = S.lam (fun k -> S.app k (S.lam
+    (fun x -> f (S.lam (fun k -> S.app k x)))))
   let app e1 e2 = S.lam (fun k -> 
     S.app e1 (S.lam (fun f ->
-    S.app e2 (S.lam (fun v -> S.app (S.app f v) k)))))
-  let fix f  = S.fix (fun self -> (f self))
+    S.app e2 (S.lam (fun v ->
+    S.app (S.app f v) k)))))
+  let fix f = S.fix (fun self -> (f self))
 end
 \end{code}
-The code explicitly establishes a mapping from CPS interpretations to
-(direct) interpretations, as performed by 
-the base interpreter |S|.
+The (abbreviated) code explicitly maps CPS interpretations to
+(direct) interpretations performed by 
+the base interpreter~|S|.
 
-A reader may notice that the above module does not define |repr|
+The module returned by |CPST| does not define |repr|
 and thus does not have signature |Symantics|.
-The reason for that is again the result type of |lam f|. Whereas
+The reason is again the result type of |lam f|. Whereas
 |int i| or |add e1 e2| have the (abbreviated) 
 type |('c,..., (int -> 'w) -> 'w) S.repr|,
 the result of |lam (fun x -> add x (int 1))| has type\\
@@ -1368,8 +1350,7 @@ It is instructive to evaluate a few examples. With
         (fun x_6 -> ((fun x_1 -> (x_1 (true))) 
         (fun x_7 -> ((x_6 x_7) x_5)))))>.
 \end{code}
-
-\noindent which shows the na\"{\i}ve CPS transformation of the original code.
+which shows the na\"{\i}ve CPS transformation of the original code.
 The result is sub-optimal with several apparent $\beta$-redexes. 
 By instantiating |CPST| with |P| instead, we get the expected
 \begin{code}
@@ -1576,7 +1557,7 @@ We type-check a pre-encoded term~$\encode{e}$ and its interpreter~$I[~]$
 only together, never separately.  This treatment has the drawback that
 we must duplicate a pre-encoded term in order to interpret it in
 multiple ways.  The meta-notions of contexts and plugging may seem ad
-hoc, but in fact they are just reflections of the type-class and module
+hoc, but in fact they just reflect the type-class and module
 machinery that we have been using in this paper all along.
 
 In the presence of let-bound polymorphism, we can understand a term
@@ -1696,18 +1677,18 @@ be removed - tag elimination must be performed at runtime.
 \Citet{WalidICFP02}, \citet{taha-tag}, \citet{xi-guarded}, and
 \citet{peyton-jones-simple} seem to argue as follows that a self\hyp
 interpreter of a typed language cannot be Jones\hyp optimal.
-\begin{enumerate}
+\begin{enumerate*}
 \item One needs to encode a typed language in a typed language based on
 a sum type (at some level of the hierarchy),
 \item It is not possible to write a \emph{direct} interpreter 
 for such an encoding of a typed language
-in a typed language, without either using a
-very advanced type system or incurring tagging/untagging overhead.
+in a typed language, without either an
+advanced type system or the overhead of tagging and untagging.
 \item Thus an indirect interpreter is necessary, which needs a universal
   type (and hence tagging),
 \item Thus any self-interpreter must have tags.
 \item Hence the self-interpreter cannot be Jones-optimal.
-\end{enumerate}
+\end{enumerate*}
 While the logic is sound, we showed that the premise in the very first step
 was not valid.
 
@@ -1743,8 +1724,7 @@ We have not investigated the relationship to any serious depth, but we
 feel that one could fruitfully combine their ideas with ours.
 
 A lot of effort has gone into finding ways to give precise types to untyped
-terms (see for example \citet{baars-typing,Guillemette-Monier-PLPV}
-as well as the messages \citet{haskell-list}).  These 
+terms \citep{baars-typing,Guillemette-Monier-PLPV,haskell-list}).  These 
 take advantage of the host language's types to varying extents.  While
 very successful for proper terms, results for
 ill-typed terms can produce rather obscure error messages.  We use the
@@ -1829,7 +1809,7 @@ from any interpreters it may be plugged into.
 We thank Martin Sulzmann and Walid Taha 
 for helpful discussions.  Sam Staton, Pieter Hofstra, and Bart Jacobs
 kindly provided some useful references on coalgebraic structures in the
-$\lambda$\hyp calculus
+$\lambda$\hyp calculus.
 
 \bibliographystyle{mcbride}
 \bibsep=0pt
