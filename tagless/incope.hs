@@ -558,6 +558,7 @@ htestgib1  = compH . testgib1 $ ()
 htestgib1r = eval . testgib1 $ ()
 
 -- ---------------------------------------------------------------------------
+-- Self-interpretation
 
 twice_inc_3_e () =
     -- The evaluation context in the following four lines is a self-interpreter
@@ -576,6 +577,12 @@ twice_inc_3_e () =
 test_inc3e_r = compR $ twice_inc_3_e ()
 test_inc3e_c = compC $ twice_inc_3_e ()
 test_inc3e_p = compP $ twice_inc_3_e ()
+-- to verify the Prop 5
+test_inc3p = compP $ (app (app
+                       (lam (\twice -> lam (\inc_ -> 
+                                              app (app twice inc_) (int 3))))
+                       (lam (\f -> lam (\x -> app f (app f x)))))
+                       (lam (\n -> add n (int 1))))
 -- 5
 
 -- This is for computing *size*.
@@ -652,6 +659,9 @@ test3_e () =
 test_t3_r = compR $ test3_e ()
 test_t3_c = compC $ test3_e ()
 test_t3_p = compP $ test3_e ()
+-- to verify the Prop 5
+test_t3p = compP $ lam (\x -> (add (app x (int 1)) (int 2)))
+
 
 {- And now something harder: powfix
 testpowfix () = lam (\x ->
@@ -671,8 +681,7 @@ testpowfix_e () =
     let leq_ = lam (\m -> lam (\n -> leq m n)) in
     let if__ = lam (\be -> lam (\ee -> lam (\te -> if_ be ee te))) in
     let int_ = lam (\i -> i) in
-    -- careful, trying to print something with fix_ can loop!
-    let fix_ = lam (\f -> app f (app fix_ f)) in
+    let fix_ = lam (\f -> fix (\self -> app f self)) in
     -- The term in the following three lines is the object term
     -- testpowfix above
     -- encoded in the object language then encoded in the metalanguage.
@@ -689,10 +698,13 @@ testpowfix_e () =
 
 test_pf_r = compR.fst $ testpowfix_e ()
 test_pf_c = compC.fst $ testpowfix_e ()
-test_pf_p = compP.fst $ testpowfix_e () -- don't print this one!
+test_pf_p = compP.fst $ testpowfix_e ()
 test_pf7_r = compR.snd $ testpowfix_e ()
 test_pf7_c = compC.snd $ testpowfix_e ()
-test_pf7_p = compP.snd $ testpowfix_e () -- this one's good
+test_pf7_p = compP.snd $ testpowfix_e ()
+-- to verify the Prop 5
+test_pfp = compP $ testpowfix ()
+test_pf7p = compP $ testpowfix7 ()
 
 -- start encoding some of Ken's ideas on a self-interpreter
 -- Comment (Jacques): I have left this in here because this is
