@@ -19,14 +19,6 @@ module Incope where
   are *all* typed. The interpreter and the compiler use no tags.
   There is no pattern-match failure possible: the evaluators never
   get stuck.
-
-  The implementation below is *almost* possible in OCaml. Indeed,
-  one can emulate Haskell typeclasses using explicit dictionary passing.
-  The dictionary will by a polymorphic (rank-2) record -- but it is OK,
-  OCaml permits it. Alas, The typeclass below uses higher-order type
-  constructors: repr is of a kind * -> *. OCaml does not support
-  higher-order polymorphism.
-
 -}
 
 -- This class defines syntax (and its instances, semantics) of our language
@@ -197,30 +189,6 @@ instance Show (ByteCode t) where
     show (IF be et ee)
         = "(if " ++ show be ++ 
           " then " ++ show et ++ " else " ++ show ee ++ ")"
-
--- An evaluator for the ByteCode: the virtual machine
--- The evaluator is partial: if we attempt to evaluate an open code
--- (a variable not found in the env), we will get an error.
--- We use Dynamic to `assure' that variables are properly typed,
--- that is, that the variable name (counter) witnesses its type.
--- A better assurance is to use STRef. Strange correspondence:
--- mutation and lambda application. The essence of both is sharing.
-{-
-type BEnv = [(Int,Dynamic)]
-
-eval :: Typeable t => BEnv -> ByteCode t -> t
-eval env (Var n) | Just dv <- lookup n env,
-		   Just v  <- fromDynamic dv = v
-eval env v@Var{} = error $ "Open code? variable not found: " ++ show v
-eval env (Lam v b) = \x -> eval ((v,toDyn x):env) b
-eval env (App e1 e2) = (eval env e1) (eval env e2)
--- eval1 (Fix n b) e = 
-eval env (INT n) = n
-eval env (BOOL n) = n
-eval env (Add e1 e2) = eval env e1 + eval env e2
--- eval1 (IF be et ee) e = 
--}
-
 
 -- Int is the variable counter
 -- for allocation of fresh variables
@@ -400,7 +368,7 @@ ptestpw7  = compP . testpowfix7 $ ()
 ptestpw72 = compP  (app (testpowfix7 ()) (int 2))
 
 
-{- GADTs, although work, are still not quite satsifactory:
+{- GADTs, although work, are still not quite satisfactory:
 let us look at the following lines in incope.hs
 
     app ef ea = case ef of

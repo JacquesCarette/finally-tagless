@@ -156,8 +156,6 @@ ctestg = compC . testgib1 $ ()
 -- The code below is NOT parametric. We could have used type-classes
 -- instead of GADTs. The code below could be re-functionalized,
 -- and so could in fact be translated into MetaOCaml.
--- Or, if we observe the correspondence between GADT and MetaOCaml <code>,
--- perhaps we can translate to MetaOCaml with an additional layer of code?
 
 data P cr t = PV cr | PE (C () t)
 

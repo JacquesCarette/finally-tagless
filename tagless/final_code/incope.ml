@@ -608,6 +608,9 @@ let ctestfix = T.testpowfix72;;
  Some may call it `bind'.
 *)
 
+(* The state here is assumed first order! Higher-order state needs a more
+   complex module.
+*)
 module type SymSI = sig
   include Symantics
   type state
@@ -716,7 +719,8 @@ let cpsipow = RCPSI.get_res (EXPSI_INT.pow ()) 100;;
 let cpsipow7 = RCPSI.get_res (EXPSI_INT.pow7 ()) 100;;
 let cpsipow27 = RCPSI.get_res (EXPSI_INT.pow27 ()) 100;;
 
-(* Extension of S for an imperative language
+(* Extension of S for an imperative language with arbitrary many
+   reference cells.
 
         let x = e1 in e2
         newref e
@@ -729,7 +733,6 @@ let cpsipow27 = RCPSI.get_res (EXPSI_INT.pow27 ()) 100;;
 
  Since we use higher-order abstract syntax, let x = e1 in e2
  is just lapp e1 (\x -> e2), which is an inverse application.
-
 *)
 module type SymSP = sig
   include Symantics
@@ -806,33 +809,3 @@ let testi1 = EXSPC.testi1 ();;
 let testi2 = EXSPC.testi2 ();;
 let testi27 = EXSPC.pow27 ();;
 
-(*
-module type SI = sig
-  include S
-  val lapp : ('c,'sa,'da) repr ->
-    ('c,(('c,'sa,'da) repr -> ('c,'sb,'db) repr),'da->'db) repr
-    -> ('c,'sb,'db) repr
-  val 
-*)
-
-(* The following shows that splitting a type variable doesn't
-   help for module subtyping. A split (constrained) type variable
-   is less polymorphic, so it won't pass where the signature demands
-   unconstrained variable.
-
-module type S1 = sig
-  type ('a,'v) rep
-  val vi : int -> ('a,int) rep
-end;;
-
-module R1 = struct
-  type ('a,'v) rep = ('b, ('v->'w) -> 'w) code constraint 'a = 'b * 'w
-  let vi (x:int) = .<fun k -> k x>.
-end;;
-
-module E1(S:S1) = struct
-  let t () = S.vi 1
-end;;
-
-module E11 = E1(R1);;
-*)
