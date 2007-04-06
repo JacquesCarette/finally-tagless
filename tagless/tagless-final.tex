@@ -1664,7 +1664,7 @@ Our initial motivation came from several papers
 \citep{WalidICFP02,taha-tag,xi-guarded,peyton-jones-simple} which used
 embedded interpreters as a central example to justify looking 
 into advanced type systems.  While we admire all this technical work,
-there remained the issue that we were not convinced that their 
+we were not convinced that their 
 motivating example actually needed all this machinery.
 
 \citet{WalidICFP02}, when referring to the work of \citet{taha-tag},
@@ -1689,26 +1689,27 @@ in a typed language, without either an
 advanced type system or the overhead of tagging and untagging.
 \item Thus an indirect interpreter is necessary, which needs a universal
   type (and hence tagging),
-\item Thus any self-interpreter must have tags.
-\item Hence the self-interpreter cannot be Jones-optimal.
+\item Thus any self-interpreter must have tags and hence cannot be 
+  Jones-optimal.
 \end{enumerate*}
 While the logic is sound, we showed that the premise in the very first step
 was not valid.
 
-\citet{Danvy-tagging-encoding} discuss Jones optimality at length.
-There, the authors demonstrate the usefulness of HOAS for typed
-self-interpretation.  However, no claim is made that the source program
-is itself typed -- just that the interpreter is.  Our reading is that
-the source language is not typed.  However, in sharp contrast with 
-their interpreter, none of our evaluators can product pattern-match errors
-(unlike the code that accompanies \citet{Danvy-tagging-encoding}).
-In other words, their language (and interpreter) does use tags, however
-the shift to HOAS allows the partial evaluator to remove all the tags.
-In contrast, we have no tags at all.
+\citet{Danvy-tagging-encoding} discuss Jones optimality at length and
+demonstrate the usefulness of HOAS for typed self-interpretation.
+However, no claim is made that the source program is itself typed --
+just that the interpreter is.  Our reading is that the source language
+is not typed. Therefore, object term encoding has tags and the
+interpreter (given in the code accompanying
+\citet{Danvy-tagging-encoding}) extensively uses partial
+pattern-matching. The shift to HOAS, however, lets the partial
+evaluator to remove all the tags. In contrast, our object encoding and
+evaluators do not have tags to start with and have no possibility of
+pattern-match errors.
 
 We used a method from \citet{asai-binding-time} to reduce the amount
 of back-and-forth between reify/reflect: in our PE we track both
-static and dynamic values in parallel (whenever possible).  In some sense,
+static and dynamic values in parallel.  In some sense,
 we are observing that this method type-checks in Hindley-Milner once we
 deforest the static code representation.  Put another way, we have
 manually applied type-level partial-evaluation to our typelevel 
