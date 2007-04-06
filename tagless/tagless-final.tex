@@ -67,11 +67,22 @@
 \copyrightyear{2007} 
 \copyrightdata{[to be supplied]} 
 
-\titlebanner{banner above paper title}        % These are ignored unless
-\preprintfooter{short description of paper}   % 'preprint' option specified.
+\makeatletter
+\titlebanner{Submitted to \@conferencename}        % These are ignored unless
+\preprintfooter{\rlap{\@titletext}}   % 'preprint' option specified.
+\def \@formatyear {\llap{\number\year/\number\month/\number\day}}
+\makeatother
 
-\title{Staged typed type-preserving tagless ``interpreters'', \emph{finally}}
-\subtitle{Subtitle Text, if any}
+\title{Finally Tagless Staged Interpreters for Simpler Typed Languages}
+%Staged typed type-preserving tagless ``interpreters'', \emph{finally}
+%Finally tagless, simply typed, partially evaluated
+\subtitle{\raisebox{-2.5em}[0pt][0pt]{\normalsize\it\begin{minipage}{30em}
+    It should also be possible to define languages with a highly
+    refined syntactic type structure. Ideally, such a treatment should
+    be metacircular, in the sense that the type structure used in the
+    defined language should be adequate for the defining language.
+    \hfill\rm\citep{reynolds-definitional}
+\end{minipage}}}
 
 \begin{comment}
 \authorinfo{Jacques Carette}
@@ -389,9 +400,31 @@ both metalanguages, because some of our claims are more obvious in one
 metalanguage than the other.  For example, MetaOCaml provides
 convenient, typed staging facilities.
 
-Our code ensures statically that an object term is well-typed and
-closed, yet is surprisingly simple and obvious in hindsight.  We stress
-that it has been an open problem to
+Our contributions are as follows.
+\begin{enumerate*}
+\item We build interpreters that evaluate (\S\ref{language}),
+    compile (or evaluate with staging) (\S\ref{compiler}), and partially evaluate (\S\ref{PE}) a typed higher-order object language
+   in a typed metalanguage, in direct and continuation\hyp passing styles
+   (\S\ref{discussion}).
+\item All these interpreters use no type tags, patently never get stuck,
+    and need no advanced type-system features such as GADTs, dependent types,
+    or intentional type analysis.
+\item The partial evaluator avoids polymorphic lift and delays binding-time
+    analysis.  It bakes a type-to-type map into the interpreter
+    interface to eliminate the need for GADTs and thus remain portable
+    across Haskell 98 and ML.
+\item We use the type system of the metalanguage
+    to check statically that an object program is well-typed and closed.
+\item We show clean, comparable implementations in MetaOCaml and Haskell.
+\item We specify a functor signature that encompasses all our interpreters, from
+    evaluation and compilation (\S\ref{language}) to partial evaluation and CPS transformation (\S\ref{PE}).
+\item We point a clear way to extend the object language with more features
+    such as state (\S\ref{state}).
+\item We describe an approach to self\hyp interpretation compatible with the
+  above (\S\ref{selfinterp}).  Self\hyp interpretation turned out harder than expected.
+\end{enumerate*}
+Our code is surprisingly simple and obvious in hindsight, but
+it has been an open problem to
 interpret a typed object language in a typed metalanguage without
 tagging or type\hyp system extensions.  For example, \citet{taha-tag}
 state that ``expressing such an interpreter in a statically typed
@@ -399,45 +432,6 @@ programming language is a rather subtle matter. In fact, it is only
 recently that some work on programming type-indexed values in ML
 \citep{yang-encoding} has given a hint of how such a function can be
 expressed.''  We further discuss related work in~\S\ref{related}.
-
-Our contributions are as follows.
-\begin{enumerate*}
-\item We build interpreters that evaluate (in direct or continuation\hyp passing styles),
-  compile, and partially evaluate a typed higher-order object language
-   in a typed metalanguage.
-\item All these interpreters use no type tags, patently never get stuck,
-    and need no advanced type-system features such as GADTs, dependent types,
-    or intentional type analysis.
-\item The partial evaluator avoids polymorphic lift and delays binding-time
-    analysis.
-\item We use the type system of the metalanguage
-    to check statically for well-typed and closed object programs.
-\item We show clean, comparable implementations in MetaOCaml and Haskell.
-\item We specify a functor signature that encompasses all our interpreters, from
-    evaluation and compilation to partial evaluation and CPS transformation.
-\item We point a clear way to extend the object language with more features
-  such as state.
-\item We describe an approach to self\hyp interpretation compatible with the
-  above.  Self\hyp interpretation turned out harder than expected.
-\end{enumerate*}
-
-
-The structure of our paper is as follows. In~\S\ref{language}, we
-define the OCaml and Haskell interfaces of the interpreter for our
-language and describe two instances, evaluating a term to a
-metalanguage value and computing term's size.
-In~\S\ref{compiler}, we stage the evaluator, obtaining the tagless
-compiler. \S\ref{PE} describes partial evaluation, in
-particular, the problem posed by the need to delay the 
-binding-time analysis of term abstractions and the apparent 
-need for a typecase. We then show two solutions. The first, imperfect
-one, uses GADT. The better and more portable solution bakes in the
-typecase idiom into the interpreter interface, eliminating the need for
-advanced type systems and permitting implementations in Haskell98 or OCaml.
-The discussion \S\ref{discussion} presents, inter alia, CBN CPS
-interpreter and the CBV CPS transformer. We then describe 
-self-interpretation (\S\ref{selfinterp}),
-discuss related work (\S\ref{related}) and then conclude.
 
 \section{The object language and its tagless interpreters}\label{language}
 
@@ -1163,13 +1157,12 @@ $\beta$-redexes in~\S\ref{compiler}, the partial evaluation
 \begin{code}
 let module E = EX(P) in E.testpowfix7
 \end{code}
-gives
+gives the desired result
 \begin{code}
 {P.st = Some <fun>;
  P.dy = .<fun x_1 -> x_1 * (x_1 * (x_1 * (x_1 *
                     (x_1 * (x_1 * x_1)))))>.}
 \end{code}
-as desired.
 
 Unlike the GADT approach in~\S\ref{S:PE-GADT}, all pattern\hyp matching
 in~|P| is \emph{syntactically} exhaustive, so it is patent to the metalanguage
@@ -1205,15 +1198,7 @@ call-by-value (CBV) metalanguage. The answer, given already by
 specifically introduced 
 to make the evaluation strategy of a definitional interpreter
 independent of the strategy of the metalanguage. We demonstrate the
-same independence in the typed setting \oleg{mention the quote from
-Reynolds that typed setting would be nice?}\jacques{I think so, but from
-which paper? The one ReynoldsPlotkin paper is typed}\ccshan{I think Oleg
-meant ``It should also be possible to define languages with a highly
- refined syntactic type structure. Ideally, such a treatment should be
- metacircular, in
- the sense that the type structure used in the defined language should be adequate for the
- defining language'' \citep{reynolds-definitional}, but perhaps Jacques
- meant another paper by ``ReynoldsPlotkin''?}. Specifically, we
+same independence in the typed setting. Specifically, we
 demonstrate CBN evaluation for our object language in OCaml, which is
 call-by-value. We do so by building a CBN CPS interpreter for the object
 language.
@@ -1261,7 +1246,7 @@ with the |Symantics| signature:
 \begin{code}
 module RCN = struct
   type ('c,'sv,'dv) repr = 
-     {ko: 'w. ('sv -> 'w) -> 'w}
+    {ko: 'w. ('sv -> 'w) -> 'w}
   let int (x:int) = {ko = fun k -> k x}
   let add e1 e2 = 
     {ko = fun k -> e1.ko (fun v1 -> 
@@ -1269,15 +1254,13 @@ module RCN = struct
   let if_ eb et ee = 
     {ko = fun k -> eb.ko 
          (fun vb -> if vb then (et ()).ko k 
-                    else (ee ()).ko k)}
-  ...
+                          else (ee ()).ko k)}
   let lam f = {ko = fun k -> k f}
   let app e1 e2 = 
-     {ko = fun k -> e1.ko (fun f -> (f e2).ko k)}
+    {ko = fun k -> e1.ko (fun f -> (f e2).ko k)}
   let fix f = 
-     let rec fx f n = app (f (lam (fx f))) n in 
-     lam(fx f)
-
+    let rec fx f n = app (f (lam (fx f))) n in 
+    lam (fx f)
   let get_res x = x.ko (fun v -> v)
 end
 \end{code}
@@ -1295,14 +1278,12 @@ under CBN but not CBV\@.
 \begin{code}
 module EXS(S: Symantics) = struct
  open S
- let diverg () = 
-   app (lam (fun x -> int 1)) 
-       (app (fix (fun f -> f)) (int 2))
+ let diverg () = app (lam (fun x -> int 1)) 
+                     (app (fix (fun f -> f)) (int 2))
 end
 \end{code}
-
 If we interpret |EXS| with the |R| interpreter of
-\S\ref{S:interpreter-RL} realized in OCaml
+\S\ref{S:interpreter-RL}
 \begin{code}
 let module M = EXS(R) in M.diverg ()
 \end{code}
@@ -1313,12 +1294,6 @@ let module M = EXS(RCN) in RCN.get_res (M.diverg ())
 \end{code}
 we get the result |1|.
 
-\oleg{mention some formal results? Like indifference theorems by
-  Plotkin? And say we generalized their result to the type setting?
-  Mention this in the conclusions?}
-\jacques{you have strayed outside what I know -- what Plotkin results?
-  I always consider mentionning formal results a good thing}
-
 \subsection{CBV CPS transformers}
 
 We can easily change our CBN CPS interpreter into a CBV CPS
@@ -1326,16 +1301,15 @@ interpreter, by replacing only one definition:
 \begin{code}
 module RCV = struct
   include RCN
-  let lam f = {ko = 
-    fun k -> k (fun e -> e.ko 
-         (fun v -> f {ko = fun k -> k v}))}
+  let lam f = {ko = fun k -> k (fun e ->
+    e.ko (fun v -> f {ko = fun k -> k v}))}
 end
 \end{code}
 Now when we apply an abstraction to an argument, we always force
 the evaluation of that argument before proceeding. This approach is in
 line with \citet{reynolds-relation} (albeit in a typed setting). The interpreter RCV
 is useful for achieving CBV evaluation of the object language
-no matter whether the metalanguage is CBV or CBN.
+whether the metalanguage is CBV or CBN.
 
 In this section however we show a more general approach to CBV CPS:
 a CPS transformer. We take any implementation of |Symantics| (interpreter,
@@ -1410,8 +1384,8 @@ will see then that the copying step is not frivolous, but represents
 a profound instance of 
 ``plugging the hole'', which is one of the many faces of polymorphism.
 
-It is instructive to see the result of evaluating a few examples. With 
-|CPST| instantiated with a straightforward compiler |C| as above, our
+It is instructive to evaluate a few examples. With 
+|CPST| instantiated with the compiler~|C| above, our
 running test |T.test1 ()| gives
 \begin{code}
 .<fun x_5 -> ((fun x_2 -> 
@@ -1430,6 +1404,7 @@ running test gives the expected
 \end{code}
 
 \subsection{State and imperative features}
+\label{state}
 
 We can modify the CBV CPS transformation to pass a piece of state along
 with the continuation. This technique lets us support mutable state. We
@@ -1575,7 +1550,7 @@ The pre-encoding of a let\hyp expression is trivial.
 \intertext{A \emph{context} is an object term with a hole~$[~]$.  The
 hole may occur under a binder, so plugging a term into the context may
 capture free variables of the term.  By pre-encoding a hole to a hole,
-we extend pre-encoding from a translation on terms to a translation on
+we extend pre-encoding from a translation on terms to one on
 contexts.}
     \encode{[~]} \quad &= \quad [~]
 \end{align*}
@@ -1746,8 +1721,9 @@ Furthermore, as is pointed out in the introduction to \citet{WalidICFP02},
 \citet{taha-tag} does not \emph{statically} guarantee that all tags will
 be removed - tag elimination must be performed at runtime.
 
-From reading \citet{WalidICFP02,taha-tag,xi-guarded,peyton-jones-simple}, our 
-impression is that the claim is:
+\Citet{WalidICFP02}, \citet{taha-tag}, \citet{xi-guarded}, and
+\citet{peyton-jones-simple} seem to argue as follows that a self\hyp
+interpreter of a typed language cannot be Jones\hyp optimal.
 \begin{enumerate}
 \item One needs to encode a typed language in a typed language based on
 a sum type (at some level of the hierarchy),
@@ -1762,13 +1738,6 @@ very advanced type system or incurring tagging/untagging overhead.
 \end{enumerate}
 While the logic is sound, we showed that the premise in the very first step
 was not valid.
-
-In particular, \citet[\S5]{taha-tag}
-states that ``expressing such an interpreter in a statically typed
-programming language is a rather subtle matter. In fact, it is only
-recently that some work on programming type-indexed values in ML
-\citep{yang-encoding} has given a hint of how such a function can be
-expressed.''  
 
 \citet{Danvy-tagging-encoding} discusses Jones optimality at length.
 There, the authors demonstrate the usefulness of HOAS for typed
