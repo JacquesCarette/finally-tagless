@@ -436,7 +436,7 @@ state that ``expressing such an interpreter in a statically typed
 programming language is a rather subtle matter. In fact, it is only
 recently that some work on programming type-indexed values in ML
 \citep{yang-encoding} has given a hint of how such a function can be
-expressed.''  We further discuss related work in~\S\ref{related}.
+expressed.''  We discuss related work in~\S\ref{related}.
 
 \section{The object language and its tagless interpreters}\label{language}
 
@@ -446,8 +446,7 @@ The language is close to \citets{xi-guarded}, without their polymorphic
 lift but with more constants so as to express Fibonacci, factorial, and
 power.
 
-In contrast to \S\ref{intro}, we henceforth encode 
-binding in object programs using higher-order
+In contrast to \S\ref{intro}, we encode binding using higher-order
 abstract syntax (HOAS) \citep{miller-manipulating,pfenning-higher-order}
 rather than de Bruijn indices. This makes the encoding convenient and
 also ensures that our object programs are closed.
@@ -455,14 +454,13 @@ also ensures that our object programs are closed.
 \subsection{How to make encoding flexible: abstract the interpreter}
 \label{encoding}
 
-We embed this language in (Meta)OCaml and Haskell.  In Haskell,
+We embed our language in (Meta)OCaml and Haskell.  In Haskell,
 the functions that construct object terms are methods in a type class
-|Symantics|. The class is so named because its interface gives the syntax for
-the object language and its instances give the semantics.
-The parameter |repr| to the class has kind |* -> *|.
+|Symantics| (with a parameter |repr| of kind |* -> *|). The class is so named
+because its interface gives the syntax of the object language and its
+instances give the semantics.
 \begin{code}
 class Symantics repr where
-
   int  :: Int  -> repr Int
   bool :: Bool -> repr Bool
 
@@ -513,7 +511,7 @@ If an object term has the object type~$t$, then its
 representation in the metalanguage has the type 
 |forall repr.| |Symantics repr => repr |$t$.
 \end{prop}
-Conversely, the type system of the metalanguage checks statically that the
+Conversely, the type system of the metalanguage statically checks that the
 represented object term is well-typed and closed.
 If we err, say replace |int 7| with |bool True| in
 |testpowfix7|, Haskell will complain there that the expected type |Int| does not
@@ -526,7 +524,6 @@ we forget |app| somewhere above.
 \begin{floatrule}
 \begin{code}
 module type Symantics = sig
-
   type ('c, 'dv) repr
 
   val int : int  -> ('c, int) repr
@@ -540,7 +537,6 @@ module type Symantics = sig
   val mul : ('c, int) repr -> ('c, int) repr -> ('c, int) repr
   val leq : ('c, int) repr -> ('c, int) repr -> ('c, bool) repr
   val if_ : ('c, bool) repr -> (unit -> ('c, 'da) repr) -> (unit -> ('c, 'da) repr) -> ('c, 'da) repr
-
 end
 \end{code}
 \end{floatrule}
@@ -551,12 +547,11 @@ end
 To embed the same object language in (Meta)OCaml, we replace the type
 class |Symantics| and its instances by a module signature |Symantics|
 and its implementations.  Figure~\ref{fig:ocaml-simple} shows a simple
-signature that suffices until~\S\ref{PE}.
-Two differences between this signature and the |Symantics| class in
-Haskell are: the additional type parameter |c|, an
-environment classifier \citep{WalidPOPL03} required by MetaOCaml for
-code generation in~\S\ref{compiler}; and the $\eta$-expanded type for
-|fix| and thunk types in |if_| due to OCaml's being a call-by-value
+signature that suffices until~\S\ref{PE}.  The two differences are:
+the additional type parameter |c|, an
+environment classifier \citep{WalidPOPL03} (required by MetaOCaml for
+code generation in~\S\ref{compiler}); and the $\eta$-expanded type for
+|fix| and thunk types in |if_| since OCaml is a call-by-value
 language.
 
 The functor below encodes our running examples |test1| and $\mathit{power}$.
@@ -576,12 +571,12 @@ module EX(S: Symantics) = struct
 end
 \end{code}
 The dummy argument to |test1| and |testpowfix| is an artefact of
-MetaOCaml, again related to monomorphism: in order for us to run a
+MetaOCaml, related to monomorphism: in order for us to run a
 piece of generated code, it must be polymorphic in its environment
 classifier (the type variable |'c| in Figure~\ref{fig:ocaml-simple}).
-The value restriction then dictates that
+The value restriction dictates that
 the definitions of our object terms must look syntactically like
-values. Alternatively to giving the |()| argument, we could have used
+values. Alternatively, we could have used
 the rank-2 record types of OCaml to maintain the necessary polymorphism.
 
 Thus we represent an object expression in
@@ -602,8 +597,7 @@ metalanguage.  The module below interprets each object\hyp language
 operation as the corresponding metalanguage operation.
 \begin{code}
 module R = struct
-  (* absolutely no wrappers *)
-  type ('c,'dv) repr = 'dv
+  type ('c,'dv) repr = 'dv (* no wrappers *)
 
   let int  (x:int)  = x
   let bool (b:bool) = b
@@ -617,7 +611,6 @@ module R = struct
   let mul  e1 e2    = e1 * e2
   let leq  x y      = x <= y
   let if_  eb et ee = if eb then et () else ee ()
-
 end
 \end{code}
 
@@ -625,8 +618,7 @@ As in~\S\ref{ourapproach},
 this interpreter is patently tagless, using neither a universal type nor
 any pattern matching: the operation |add| is really
 OCaml's addition, and |app| is OCaml's application. To run our
-examples, we instantiate the |EX| functor from~\S\ref{encoding} with this |R|
-module.
+examples, we instantiate the |EX| functor from~\S\ref{encoding} with |R|.
 \begin{code}
 module EXR = EX(R)
 \end{code}
@@ -711,11 +703,10 @@ The bracket, escape, and run are akin to
 quasi-quotation, unquotation, and |eval| of Lisp.
 
 Inserting brackets and escapes appropriately into the
-evaluator~|R| above yields the compiler~|C| below.
+evaluator~|R| above yields the simple compiler~|C| below.
 % this code does not have the 'sv parameter. It shows up later.
 \begin{code}
 module C = struct
-
   type ('c,'dv) repr = ('c,'dv) code
 
   let int (x:int)   = .<x>.
@@ -725,13 +716,11 @@ module C = struct
   let app e1 e2     = .<.~e1 .~e2>.
   let fix f = 
     .<let rec self n = .~(f .<self>.) n in self>.
-
   let add e1 e2     = .<.~e1 + .~e2>.
   let mul e1 e2     = .<.~e1 * .~e2>.
   let leq x y       = .<.~x <= .~y>.
   let if_ eb et ee = 
     .<if .~eb then .~(et ()) else .~(ee ())>.
-
 end
 \end{code}
 This is a straightforward staging of
@@ -742,21 +731,19 @@ unoptimized code. For example, interpreting our |test1|
 let module E = EX(C) in E.test1 ()
 \end{code}
 gives the code value |.<(fun x_6 -> x_6) true>.|
-of inferred type |('c, bool) C.repr|.  Similarly, interpreting |testpowfix7|
+of inferred type |('c, bool) C.repr|.  Interpreting |testpowfix7|
 with
 \begin{code}
 let module E = EX(C) in E.testpowfix7
 \end{code}
-gives the code value
+gives a code value with many apparent $\beta$-redexes:
 \begin{code}
 .<fun x_1 -> (fun x_2 ->
   let rec self_3 = fun n_4 ->
    (fun x_5 -> if x_5 <= 0 then 1 
                else x_2 * (self_3 (x_5 + (-1))))
-   n_4
-  in self_3) x_1 7>.
+   n_4 in self_3) x_1 7>.
 \end{code}
-with many apparent $\beta$-redexes.
 
 This compiler does not incur
 any interpretive overhead: the
@@ -780,7 +767,7 @@ names. We define the compiler by making |C| an instance of the
 class |Symantics|. The implementation\footnote{The implementation uses
 GADTs because we also wanted to write a typed interpreter for 
 the \texttt{ByteCode} \emph{data type}.} is quite similar (but slightly more
-verbose) than the corresponding MetaOCaml code given above. The
+verbose) than the corresponding MetaOCaml code above. The
 accompanying code gives the full details.
 
 \section{A tagless partial evaluator}\label{PE}
@@ -790,7 +777,7 @@ namely to build object terms using ordinary functions rather than data
 constructors.  We present this partial evaluator in a sequence of four
 attempts. It uses no universal type and no tags
 for object types.  We then discuss residualization and binding-time
-analysis.  Our partial evaluator is a modular extension to the evaluator
+analysis.  Our partial evaluator is a modular extension of the evaluator
 in~\S\ref{S:interpreter-RL} and the compiler in~\S\ref{compiler}, in
 that it uses the former to reduce static terms and the latter to build
 dynamic terms.
@@ -798,11 +785,11 @@ dynamic terms.
 \subsection{Avoiding polymorphic lift}
 \label{S:PE-lift}
 
-Roughly speaking, a partial evaluator interprets each object term either
-to a static (present-stage) term, as produced by the evaluator~|R|, or
-to a dynamic (future-stage) term, as produced by the compiler~|C|.  To
+Roughly speaking, a partial evaluator interprets each object term as either
+a static (present-stage) term (using the evaluator~|R|), or
+a dynamic (future-stage) term, (using the compiler~|C|).  To
 distinguish between static and dynamic terms, one might try
-to define partial evaluation as the Haskell data type
+to define partial evaluation via the Haskell data type
 \begin{code}
 data P0 t = S0 (R t) | E0 (C t)
 \end{code}
@@ -825,17 +812,16 @@ instance Symantics P0 where
   add e1 e2 = E0 (add (abstrInt e1)
                       (abstrInt e2))
 \end{code}
-Integer and boolean literals are obviously immediate, present-stage
-values. Addition yields a static term if and only if both operands
-are static. If so, we use the evaluator~|R| to add the operands.
-If not, we extract dynamic terms from the operands and add them
-using the compiler~|C|.
-Thus we use the overloaded functions |int| and |bool| from the |Symantics|
+Integer and boolean literals are immediate, present-stage
+values. Addition yields a static term (via~|R|) if and only if both operands
+are static, otherwise we extract the dynamics terms from the operands and
+add them using the compiler~|C|.  Uniformly, we use
+the overloaded functions from the |Symantics|
 instances for |R| and~|C| to define those for~|P0|.
 
 Whereas |mul| and |leq| are as easy to define as |add|, we encounter
 a problem with |if_|.  If the first argument to |if_| is a dynamic term
-(type |C Bool|) and the second and third arguments are a static term
+(type |C Bool| say) and the second and third arguments are a static term
 (type |R a|) and a dynamic term (type |C a|), then we need to convert
 the static term to dynamic, but there is no polymorphic ``lift''
 function, of type |a -> C a|, to send a value to the future stage
@@ -943,7 +929,6 @@ in the accompanying source code shows the latter.
 \begin{floatrule}
 \begin{code}
 module type Symantics = sig
-
   type ('c,'sv,'dv) repr
 
   val int : int  -> ('c,int,int) repr
@@ -957,7 +942,6 @@ module type Symantics = sig
   val mul : ('c,int,int) repr -> ('c,int,int) repr -> ('c,int,int) repr
   val leq : ('c,int,int) repr -> ('c,int,int) repr -> ('c,bool,bool) repr
   val if_ : ('c,bool,bool) repr -> (unit -> 'x) -> (unit -> 'x) -> (('c,'sa,'da) repr as 'x)
-
 end
 \end{code}
 \end{floatrule}
@@ -1056,10 +1040,8 @@ Figure~\ref{fig:ocaml} shows the new |Symantics| signature.
 \begin{floatrule}
 \begin{code}
 module P = struct
-
   type ('c,'sv,'dv) repr = {st: 'sv option;
                             dy: ('c,'dv) code}
-
   let abstr {dy = x} = x
   let pdyn x = {st = None; dy = x}
 
@@ -1078,7 +1060,6 @@ module P = struct
   | _ -> pdyn (C.if_ (abstr eb) 
                      (fun () -> abstr (et ()))
                      (fun () -> abstr (ee ())))
-
   let lam f =
   {st = Some f; 
    dy = C.lam (fun x -> abstr (f (pdyn x)))}
@@ -1093,7 +1074,6 @@ module P = struct
        | {st = Some _} as e -> app (f (lam self)) e
        | e -> pdyn (C.app fdyn (abstr e))
        in {st = Some self; dy = fdyn}
-
 end
 \end{code}
 \end{floatrule}
@@ -1785,6 +1765,14 @@ an operational definition of |'sv -> 'dv| (which is easy), and an
 implementation of |'dv| which ``perfectly reflects'' |'sv| but without 
 requiring an implementation.
 
+We are not the first to implement a typed interpreter for a typed
+language -- \citet{laod93} use a typed version of the SK language
+(and typeclasses) to implement a meta-circular interpreter (rather than
+a self-interpreter).  Interestingly, their meta-circular interpreter
+appears to be tagfree!  However, they could not have implemented a
+compiler or a partial-evaluator in the same way since they rely quite
+heavily on having injection-projection pairs.
+
 \citet{fiore:nbe-ppdp2002,balat:tdpe-popl2004} also deal with a 
 tagfree partial-evaluator using quite a lot of interesting 
 technology (amongst them powerful continuation-based control operators).
@@ -1793,24 +1781,14 @@ to be done ``lightly'', in the sense that the structure of compiled code
 is never examined.  The exact relation between their work and ours is 
 still a little mysterious to us, but we will continue to investigate it.
 
-We are not the first to implement a typed interpreter for a typed
-language -- \citet{laod93} use a typed version of the SK language
-(and typeclasses) to implement a meta-circular interpreter (rather than
-a self-interpreter).  Interestingly, their meta-circular interpreter
-appears to be tagfree!  However, they could not have implemented a
-compiler or a partial-evaluator in the same way since they rely quite
-heavily on having injection-projection pairs (through reflection and
-reification).  
-
-We have been unable to find a direct reference that establishes that
+We have been unable to find work that establishes that
 the \emph{typed} $\lambda$-calculus possesses a final coalgebra structure.
 For the untyped $\lambda$-calculus, 
 \citet{HonsellLenisa,honsell99coinductive} establish several interesting
 results along this line.  Of particular interest is their use of
 contexts with a hole \citep[p.13]{honsell99coinductive} for the definition
-of \emph{observational equivalence}, which directly relates to our
-use of terms with a hole as a context for our self-interpreter 
-(\S\ref{selfinterp}).  The reader is directed to bibliography of
+of \emph{observational equivalence}
+(see \S\ref{selfinterp}).  The reader is directed to bibliography of
 \citet{honsell99coinductive} for references to the foundational work
 in this important area.  Particularly intriguing is the link to the
 coinductive aspects of B\"{o}hm trees, as pointed out by
