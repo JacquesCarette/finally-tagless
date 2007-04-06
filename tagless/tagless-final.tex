@@ -14,9 +14,15 @@
 \usepackage{mdwtab}
 \usepackage{dblfloatfix}
 
-\newcommand{\jacques}[1]{{\it [Jacques says: #1]}}
-\newcommand{\oleg}[1]{{\it [Oleg says: #1]}}
-\newcommand{\ccshan}[1]{{\it [Ken says: #1]}}
+% Set pdftex paper size
+\ifx\pdfoutput\undefined\else \ifx\pdfoutput\relax\else \ifcase\pdfoutput\else
+    \setlength{\pdfpagewidth}{8.5in}
+    \setlength{\pdfpageheight}{11in}
+\fi \fi \fi
+
+%\newcommand{\jacques}[1]{{\it [Jacques says: #1]}}
+%\newcommand{\oleg}[1]{{\it [Oleg says: #1]}}
+%\newcommand{\ccshan}[1]{{\it [Ken says: #1]}}
 
 \usepackage{natbib1}
 \let\cite=\citep
@@ -80,8 +86,8 @@
 \def \@formatyear {\llap{\number\year/\number\month/\number\day}}
 \makeatother
 
-\title{Finally tagless, partially evaluated}
-\subtitle{Tagless staged interpreters for simpler typed languages}
+\title{Finally Tagless, Partially Evaluated}
+\subtitle{Tagless Staged Interpreters for Simpler Typed Languages}
 %Staged typed type-preserving tagless ``interpreters'', \emph{finally}
 
 \begin{comment}
@@ -96,13 +102,13 @@
            {ccshan@cs.rutgers.edu}
 \end{comment}
 \authorinfo
-{\smash{\normalsize\it\begin{minipage}{30em}
+{\hspace*{-15em}\smash{\normalsize\it\begin{minipage}[t]{30em}
     It should also be possible to define languages with a highly
     refined syntactic type structure. Ideally, such a treatment should
     be metacircular, in the sense that the type structure used in the
     defined language should be adequate for the defining language.
     \hfill\rm\citep{reynolds-definitional}
-\end{minipage}}}{}{}
+\end{minipage}}\hspace*{-15em}}{}{}
 
 \maketitle
 
@@ -495,7 +501,7 @@ polymorphic in |repr|. Instead of supplying this dummy
 argument, we could have given the terms explicit polymorphic
 signatures.  We however prefer for
 Haskell to infer the object types for us. We could also
-avoid the dummy argument by switching off the monomophism restriction
+avoid the dummy argument by switching off the monomorphism restriction
 with a compiler flag.
 
 The methods |add|, |mul|, and |leq| are quite similar, and so are
@@ -571,7 +577,7 @@ module EX(S: Symantics) = struct
                       (int 7))
 end
 \end{code}
-The dummy argument to |test1| and |testpowfix| is an artefact of
+The dummy argument to |test1| and |testpowfix| is an artifact of
 MetaOCaml, related to monomorphism: in order for us to run a
 piece of generated code, it must be polymorphic in its environment
 classifier (the type variable |'c| in Figure~\ref{fig:ocaml-simple}).
@@ -1195,7 +1201,7 @@ abstraction and application as follows:
 let lam f = fun k -> k f
 let app e1 e2 = fun k -> e1 (fun f -> f e2 k)
 \end{code}
-Charateristic of CBN, |app e1 e2|
+Characteristic of CBN, |app e1 e2|
 does not evaluate the argument~|e2| by applying it to the
 continuation~|k|. Rather, it passes |e2| unevaluated to the abstraction.
 Interpreting $\fun{x} x+1$ yields type

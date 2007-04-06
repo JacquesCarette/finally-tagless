@@ -3,9 +3,13 @@
 
 export BIBTEX := bibtex -min-crossrefs=9999
 
-all: tagless-final.dvi
+all: tagless-final.dvi tagless-final.pdf tagless-final.zip
 
 tagless-final.dvi tagless-final.pdf: tagless.bib
+
+tagless-final.zip: final_code/*
+	rm -f $@
+	zip $@ $^
 
 xdvi: tagless-final.dvi
 	xdvi -paper us $<
