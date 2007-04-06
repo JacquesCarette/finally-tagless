@@ -79,16 +79,9 @@
 \def \@formatyear {\llap{\number\year/\number\month/\number\day}}
 \makeatother
 
-\title{Finally Tagless Staged Interpreters for Simpler Typed Languages}
+\title{Finally tagless, partially evaluated}
+\subtitle{Tagless Staged Interpreters for Simpler Typed Languages}
 %Staged typed type-preserving tagless ``interpreters'', \emph{finally}
-%Finally tagless, simply typed, partially evaluated
-\subtitle{\raisebox{-2.5em}[0pt][0pt]{\normalsize\it\begin{minipage}{30em}
-    It should also be possible to define languages with a highly
-    refined syntactic type structure. Ideally, such a treatment should
-    be metacircular, in the sense that the type structure used in the
-    defined language should be adequate for the defining language.
-    \hfill\rm\citep{reynolds-definitional}
-\end{minipage}}}
 
 \begin{comment}
 \authorinfo{Jacques Carette}
@@ -101,7 +94,14 @@
            {Rutgers University}
            {ccshan@cs.rutgers.edu}
 \end{comment}
-\authorinfo{}{}{}
+\authorinfo
+{\smash{\normalsize\it\begin{minipage}{30em}
+    It should also be possible to define languages with a highly
+    refined syntactic type structure. Ideally, such a treatment should
+    be metacircular, in the sense that the type structure used in the
+    defined language should be adequate for the defining language.
+    \hfill\rm\citep{reynolds-definitional}
+\end{minipage}}}{}{}
 
 \maketitle
 
@@ -1296,7 +1296,7 @@ module CPST(S: Symantics) = struct
   let fix f = S.fix (fun self -> (f self))
 end
 \end{code}
-The (abbreviated) code explicitly maps CPS interpretations to
+This (abbreviated) code explicitly maps CPS interpretations to
 (direct) interpretations performed by 
 the base interpreter~|S|.
 
@@ -1353,9 +1353,9 @@ With
   (fun x_6 -> (fun x_1 -> x_1 true)
               (fun x_7 -> x_6 x_7 x_5))>.
 \end{code}
-This output is the na\"{\i}ve CPS transformation of $(\fun{x}x)\True$,
+This output is a na\"{\i}ve CPS transformation of $(\fun{x}x)\True$,
 containing several apparent $\beta$-redexes.  To eliminate these
-redexes, we simply change~|T| to instantiate |CPST| with |P| instead.
+redexes, we just change~|T| to instantiate |CPST| with |P| instead.
 \begin{code}
 {P.st = Some <fun>;
  P.dy = .<fun x_5 -> x_5 true>.}
@@ -1661,9 +1661,9 @@ fragment.
 \section{Related work}\label{related}
 
 Our initial motivation came from several papers 
-\citep{WalidICFP02,taha-tag,xi-guarded,peyton-jones-simple} which used
-embedded interpreters as a central example to justify looking 
-into advanced type systems.  While we admire all this technical work,
+\citep{WalidICFP02,taha-tag,xi-guarded,peyton-jones-simple} that used
+embedded interpreters to justify
+advanced type systems.  While we admire all this technical work,
 we were not convinced that their 
 motivating example actually needed all this machinery.
 
