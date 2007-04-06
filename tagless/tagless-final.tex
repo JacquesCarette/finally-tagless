@@ -1427,7 +1427,7 @@ running test |T.test1 ()| gives
         (fun x_7 -> ((x_6 x_7) x_5)))))>.
 \end{code}
 
-which shows the naive CPS transform of the original code. The result is
+which shows the naive CPS transformation of the original code. The result is
 quite unoptimal with several apparent $\beta$-redexes. 
 By instantiating |CPST| with the |P| evaluator instead, our
 running test gives the expected
@@ -1438,13 +1438,11 @@ running test gives the expected
 
 \subsection{State and imperative features}
 
-We can easily modify the CBV CPS transform to pass a piece of state
-along with the continuation. This lets us support mutable state. We
-can also use reference variables of the metalanguage to emulate
-reference variables in the object language.
-\oleg{Should we have an example in the code?}
-\jacques{In the code, yes.  Probably not in the paper, it is getting 
-long as it is}
+We can modify the CBV CPS transformation to pass a piece of state along
+with the continuation. This technique lets us support mutable state. We
+can also add mutable references to the object language using mutable
+references of the metalanguage.  The accompanying code illustrates these
+extensions.
 
 \section{Self-interpretation}\label{selfinterp}
 
@@ -1867,42 +1865,31 @@ category theory list with references, and this section will be done.}
 
 \section{Conclusions}\label{conclusion}
 
-We were dissatisfied with current approaches to DSL embedding: either
-the performance was hurt by tagging/untagging and other interpretive
-overhead, or the offered solutions required too much expressive power
-from the host language's type system.  By shifting from an initial
-algebra approach to one which leverages the natural co-algebraic structure
-of the $\lambda$-calculus, we show that both of these issues can be 
-simultaneously dealt with.
+We solve the problem of embedding a typed object language in a typed
+metalanguage without using GADTs, dependent types, or a universal type.
+Our family of interpreters include an evaluator, a compiler, a partial
+evaluator, and CPS transformers.  It is patent that they never get stuck,
+because we represent object types as metalanguage types.  This work
+makes it safer and more efficient to embed domain\hyp specific languages
+in practical metalanguages such as Haskell and ML\@.
 
-% We show how to do many things without tags, in a simple type system, 
-% essentially by avoiding any (inductive) types.  
+Our main idea is to represent object programs not in an initial algebra
+but using the existing coalgebraic structure of the $\lambda$-calculus.
+More generally, to squeeze more invariants out of a type system as
+simple as Hindley-Milner, we shift the burden of representation and
+computation from consumers to producers: encoding object terms as calls
+to metalanguage functions (\S\ref{ourapproach}); build dynamic terms
+alongside static ones (\S\ref{S:PE-lift}); simulating type functions for
+partial evaluation (\S\ref{S:PE-solution}) and CPS
+transformation~(\S\ref{S:CPS}).  This shift also underlies fusion,
+functionalization, and amortized complexity analysis.
 
-\jacques{Should we mention that algebraic type tags give us a partly
-intensional representation of terms.  This nicely allows pattern matching,
-but as sits inside an extensional theory, ensuring that all traces 
-of these tags disappear seems quite difficult without a very powerful
-type system (enter GADTs).}
+When the metalanguage does provide higher-rank and higher-kind
+polymorphism, we can type-check and compile an object term separately
+from any interpreters it may be plugged into.
 
-
-The overarching theme of our approach -- representation of object terms in 
-\S\ref{ourapproach}, future-stage code in \S\ref{S:PE-lift} and static
-values in \S\ref{S:PE-solution} and CPS values in \S\ref{S:CPS} --
-demonstrates that pushing the computation towards the producers
-\oleg{or, constructors. Ken said: functionalization} generally
-requires simpler type systems (such as mere HM). The same idea appears
-in many other areas (e.g., ammortized heap analysis, TFP/TLCA paper).
-\oleg{I was told that speculation and informality is permitted in
-  conclusions.}
-
-separate compilation: separate
-typechecking of terms without knowing which particular
-hole they will be plugged into. 
-
-
-
-\subsection*{Acknowledgments}
-We would like to thank Martin Sulzmann and Walid Taha 
+\acks%\subsection*{Acknowledgments}
+We thank Martin Sulzmann and Walid Taha 
 for helpful discussions.
 
 \bibliographystyle{mcbride}
