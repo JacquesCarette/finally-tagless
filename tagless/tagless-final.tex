@@ -1788,16 +1788,16 @@ In other words, their language (and interpreter) does use tags, however
 the shift to HOAS allows the partial evaluator to remove all the tags.
 In contrast, we have no tags at all.
 
-We used a method from \citet{Asai-SAS99} to reduce the amount
+We used a method from \citet{asai-binding-time} to reduce the amount
 of back-and-forth between reify/reflect: in our PE we track both
 static and dynamic values in parallel (whenever possible).  In some sense,
 we are observing that this method type-checks in Hindley-Milner once we
 deforest the static code representation.  Put another way, we have
 manually applied type-level partial-evaluation to our typelevel 
-functions (see \S\ref{S:pe-solution}) to obtain simpler types 
+functions (see \S\ref{S:PE-solution}) to obtain simpler types 
 acceptable to MetaOCaml.  It is worthwhile to note that 
-\citet{Sumii-HOSC2001} also takes advanatage of this method
-\citep[of][]{Asai-SAS99} to get interesting results combining online
+\citet{sumii-hybrid} also takes advantage of this method
+\citep[of][]{asai-binding-time} to get interesting results combining online
 and offline partial evaluation.  Like \citet{SperberThiemann:TwoForOne},
 we strive for modularity by reusing earlier stages.  It would be interesting
 to see if we could derive a \emph{cogen} \citep{Thiemann:cogeninsixlines}
@@ -1810,7 +1810,7 @@ feel that one could fruitfully combine their ideas with ours.
 
 A lot of effort has gone into finding ways to give precise types to untyped
 terms (see for example \citet{baars-typing,Guillemette-Monier-PLPV}
-as well as the messages \citet{haskell-019160,haskell-019161}).  There 
+as well as the messages \citet{haskell-list}).  There 
 take advantage of the host language's types to varying extents.  All 
 these approaches are very successful for proper terms, but less so for
 ill-typed terms, where error messages can be quite obscure.  We use the

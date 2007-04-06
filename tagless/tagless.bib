@@ -14,12 +14,15 @@
 @STRING{proc_popl_2		= ": Conference Record of the Annual {ACM} Symposium on Principles of Programming Languages" }
 @STRING{pub_acm			= "{ACM} {P}ress" }
 @STRING{pub_acm_addr		= "{N}ew {Y}ork" }
+@STRING{pub_elsevier		= "Elsevier Science" }
+@STRING{pub_elsevier_addr	= "Amsterdam" }
 @STRING{pub_ph			= "Prentice-Hall" }
 @STRING{pub_ph_addr		= "Englewood Cliffs, NJ" }
 @STRING{pub_ieee		= "{IEEE} Computer Society Press" }
 @STRING{pub_ieee_addr		= "Washington, {DC}" }
 @STRING{pub_sv			= "Springer-Verlag" }
 @STRING{pub_sv_addr		= "Berlin" }
+@STRING{s_entcs			= "Electronic Notes in Theoretical Computer Science" }
 @STRING{s_lncs			= "{L}ecture {N}otes in {C}omputer {S}cience" }
 
 @inproceedings{WalidICFP02,
@@ -324,8 +327,8 @@
 }
 
 @InProceedings{laod93,
-  author     = {K. L{\"{a}}ufer and M. Odersky},
-  booktitle  = {Proc. OOPSLA Workshop on Reflection and Metalevel Architectures},
+  author	= "Konstantin L{\"a}ufer and Martin Odersky",
+  booktitle	= "Proceedings of the 4th Annual {OOPSLA}\slash {ECOOP} Workshop on Object-Oriented Reflection and Metalevel Architectures",
   month      = oct,
   organization  = {ACM},
   title      = {Self-Interpretation and Reflection in a Statically Typed Language},
@@ -335,13 +338,16 @@
 
 @inproceedings{HonsellLenisa,
  author = {Furio Honsell and Marina Lenisa},
+  editor	= "Mariangiola Dezani-Ciancaglini and Gordon D. Plotkin",
  title = {Final Semantics for untyped lambda-calculus},
- booktitle = {TLCA '95: Proceedings of the Second International Conference on Typed Lambda Calculi and Applications},
+ booktitle = {TLCA '95: Proceedings of the 2nd International Conference on Typed Lambda Calculi and Applications},
  year = {1995},
  isbn = {3-540-59048-X},
  pages = {249--265},
- publisher = {Springer-Verlag},
- address = {London, UK},
+ publisher = pub_sv,
+ address = pub_sv_addr,
+  number	= 902,
+  series	= s_lncs
  }
 
 @article{ honsell99coinductive,
@@ -356,19 +362,79 @@
 
 @inproceedings{fiore:nbe-ppdp2002,
    author = "Marcelo P. Fiore",
-   title = "Semantic analysis of normalisation by evaluation for typed lambda calculus",
-   booktitle = "Principles and Practice of Declarative Programming (PPDP 2002)",
+   title = "Semantic Analysis of Normalisation by Evaluation for Typed Lambda Calculus",
+  booktitle	= {Proceedings of the 4th International Conference on Principles and Practice of Declarative Programming},
+  address	= pub_acm_addr,
+  publisher	= pub_acm,
+  pages		= "26--37",
    month = "October",
    year = "2002",
    url = "http://repository.readscheme.org/ftp/papers/fiore-nbe-ppdp2002.pdf"
 }
 
 @inproceedings{balat:tdpe-popl2004,
-   author = "Vincent Balat, Roberto Di Cosmo and Marcelo P. Fiore",
-   title = "Extensional Normalisation and Type Directed Partial Evaluation for Typed Lambda Calculus with Sums",
-   booktitle = "ACM SIGPLAN - SIGACT Symposium POPL 2004",
-   year = "2004",
+   author = "Vincent Balat and Di Cosmo, Roberto and Marcelo P. Fiore",
+   title = "Extensional Normalisation and Type-Directed Partial Evaluation for Typed Lambda Calculus with Sums",
+   crossref="popl2004",
+  pages		= "64--76",
    url = "http://repository.readscheme.org/ftp/papers/balat-tdpe-popl2004.pdf"
+}
+
+@InProceedings{	Ramsey-ML-module-mania,
+  author	= "Norman Ramsey",
+  title		= "{ML} Module Mania: A Type-Safe, Separately Compiled, Extensible Interpreter",
+  crossref	= "ml2005",
+  url		= "http://www.eecs.harvard.edu/~nr/pubs/maniaws-abstract.html http://www.eecs.harvard.edu/~nr/pubs/maniaws.ps http://www.eecs.harvard.edu/~nr/pubs/maniaws.pdf http://www.eecs.harvard.edu/~nr/pubs/maniaws.dvi"
+}
+
+@InProceedings{	Washburn-Weirich-boxes,
+  author	= {Geoffrey Washburn and Stephanie Weirich},
+  title		= {Boxes Go Bananas: Encoding Higher-Order Abstract Syntax with Parametric Polymorphism},
+  pages		= {249--262},
+  crossref	= "icfp2003"
+}
+
+@InProceedings{	Danvy-TDPE,
+  author	= "Olivier Danvy",
+  title		= "Type-Directed Partial Evaluation",
+  pages		= "242--257",
+  crossref	= "popl1996",
+  url		= "ftp://ftp.daimi.au.dk/pub/empl/danvy/Papers/danvy-popl96.ps.gz"
+}
+
+@Article{	Benton-embedded-interpreters,
+  author	= "P. Nick Benton",
+  title		= "Embedded Interpreters",
+  journal	= j_jfp,
+  year		= 2005,
+  month		= jul,
+  volume	= 15,
+  number	= 4,
+  pages		= "503--542",
+  url		= "http://research.microsoft.com/~nick/benton03.pdf http://research.microsoft.com/~nick/benton03.ps"
+}
+
+@InProceedings{	Thiemann:cogeninsixlines,
+  author	= {Peter Thiemann},
+  title		= {Cogen in Six Lines},
+  pages		= "180--189",
+  crossref	= "icfp1996",
+  url		= "http://www.informatik.uni-freiburg.de/~thiemann/papers/icfp96.ps.gz"
+}
+
+@InProceedings{	Guillemette-Monier-PLPV,
+  author	= "Louis-Julien Guillemette and Stefan Monnier",
+  title		= "Statically Verified Type-Preserving Code Transformations in {H}askell",
+  pages		= "40--53",
+  crossref	= "plpv2006"
+}
+
+@Misc{haskell-list,
+    author="Joost Visser and Dimitrios Vytiniotis",
+    title="Simple {GADT} Parser for the Eval Example",
+    howpublished="Haskell-Cafe mailing list. \url{http://www.haskell.org/pipermail/haskell-cafe/2006-October/019160.html}
+    \url{http://www.haskell.org/pipermail/haskell-cafe/2006-October/019161.html}",
+    year=2006
 }
 
 % After this, only procedings etc
@@ -544,4 +610,79 @@
   series	= s_lncs,
   isbn		= "3-540-00886-1",
   location	= "Warsaw"
+}
+
+@Proceedings{	popl2004,
+  key		= "{\relax POPL}",
+  title		= proc_popl_1 # "04"  # proc_popl_2,
+  booktitle	= proc_popl_1 # "04"  # proc_popl_2,
+  address	= pub_acm_addr,
+  publisher	= pub_acm,
+  year		= 2004,
+  location	= {Venice, Italy}
+}
+
+@Proceedings{	ml2005,
+  key		= "{\relax ML}",
+  title		= "Proceedings of the 2005 Workshop on {ML}",
+  booktitle	= "Proceedings of the 2005 Workshop on {ML}",
+  address	= pub_elsevier_addr,
+  publisher	= pub_elsevier,
+  year		= 2005,
+  month		= sep,
+  series	= s_entcs,
+  url		= "http://ttic.uchicago.edu/~blume/ml05/",
+  annote	= "To be published as a volume of ENTCS",
+  location	= "Tallinn"
+}
+
+@Proceedings{	icfp2003,
+  key		= "{\relax ICFP}",
+  title		= proc_icfp_1 # "03"  # proc_icfp_2,
+  booktitle	= proc_icfp_1 # "03"  # proc_icfp_2,
+  address	= pub_acm_addr,
+  publisher	= pub_acm,
+  year		= 2003,
+  volume	= "38(9)",
+  series	= j_sigplan,
+  isbn		= {1-58113-756-7},
+  location	= "Uppsala, Sweden"
+}
+
+@Proceedings{	popl1996,
+  key		= "{\relax POPL}",
+  title		= proc_popl_1 # "96"  # proc_popl_2,
+  booktitle	= proc_popl_1 # "96"  # proc_popl_2,
+  address	= pub_acm_addr,
+  publisher	= pub_acm,
+  year		= 1996,
+  isbn		= {0-89791-769-3},
+  issn		= "0730-8566",
+  location	= "St.~Petersburg Beach, FL"
+}
+
+@Proceedings{	icfp1996,
+  key		= "{\relax ICFP}",
+  title		= proc_icfp_1 # "96"  # proc_icfp_2,
+  booktitle	= proc_icfp_1 # "96"  # proc_icfp_2,
+  address	= pub_acm_addr,
+  publisher	= pub_acm,
+  year		= 1996,
+  volume	= "31(6)",
+  series	= j_sigplan,
+  url		= "http://www.cs.indiana.edu/icfp96/ http://dblp.uni-trier.de/db/conf/icfp/icfp96.html",
+  isbn		= "0-89791-770-7",
+  issn		= "0362-1340",
+  location	= "Philadelphia"
+}
+
+@Proceedings{	plpv2006,
+  editor	= "Aaron Stump and Hongwei Xi",
+  title		= {{PLPV} 2006: Programming Languages Meet Program Verification},
+  booktitle	= {{PLPV} 2006: Programming Languages Meet Program Verification},
+  address	= pub_elsevier_addr,
+  publisher	= pub_elsevier,
+  year		= 2006,
+  series	= s_entcs,
+  location	= "Seattle, WA"
 }
