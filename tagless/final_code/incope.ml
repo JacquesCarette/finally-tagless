@@ -9,11 +9,12 @@
   B Bool |
   IF b e-then e-else
   
-  The language is just expressive enough for the Gibonacci and
+  The language is just expressive enough for the Fibonacci and
   power functions.
 
   The compiler, the interpreter and the source and target languages
   are *all* typed. The interpreter and the compiler use no tags.
+  The only tags in the PE are staging tags.
   There is no pattern-match failure possible: the evaluators never
   get stuck.
 *)
@@ -250,14 +251,12 @@ module C = struct
   let lam f = .<fun x -> .~(f .<x>.)>.
   let app e1 e2 = .<.~e1 .~e2>.
   let fix f = .<let rec self n = .~(f .<self>.) n in self>.
-  (* let unfold z s = .<let rec f n = if n <= 0 then .~z else .~s (f (n-1)) in f>. *)
 end;;
 
 module EXC = EX(C);;
 
 (* ------------------------------------------------------------------------ *)
 (* Partial evaluator *)
-(* Inspired by Ken's solution *)
 
 module P =
 struct
@@ -391,106 +390,6 @@ let itestp0 = EXR.testpowfix0r ();;
 let ctestp0 = EXC.testpowfix0r ();;
 let ptestp0 = EXP.testpowfix0r ();;
 let ltestp0 = EXL.testpowfix0r ();;
-
-(* these are no longer relevant, for now
-let itesti1 = EXR.testi1r ();;
-let ctesti1 = EXC.testi1r ();;
-let ptesti1 = EXP.testi1r ();;
-let ltesti1 = EXL.testi1r ();; *)
-
-(* start encoding some of Ken's ideas on a self-interpreter *)
-(* Jacques: this is really all junk now because we know that 
-   we need let-polymorphism for all of this to work properly, so
-   this should likely all be deleted 
-let apply_to_si_R encoded_e =
-    encoded_e R.int R.bool R.add R.app 
-        R.mul R.leq R.eql (R.if_) (R.lam) (R.lam) (R.fix)
-    ;;
-
-let apply_to_si_C encoded_e =
-    encoded_e C.int C.bool C.add C.app
-        C.mul C.leq C.eql C.if_ C.lam C.lam C.fix
-    ;;
-
-let apply_to_si_P encoded_e =
-    encoded_e P1.int P1.bool P1.add P1.app
-        P1.mul P1.leq P1.eql P1.if_ P1.lam P1.lam P1.fix
-    ;;
-
-let itesti2 = EXR.testi2r;;
-let ctesti2 = EXC.testi2r;;
-let ptesti2 = EXP.testi2r;;
-let ltesti2 = EXL.testi2r;;
-
-(* actually run some of the above tests *)
-let ctest2' = let res =  (.< .~(EXC.test2r ()) 5 >.) in .! res;;
-let ctest3' = let f = (fun x -> x+17) in
-    let res = (.< .~(EXC.test3r ()) f >.) in .! res;;
-let ctestg1' = let res = .< .~(EXC.testgib1r ())>. in .! res;;
-
-let an_e1 = (fun _int -> (fun _bool -> (fun _add -> (fun _app ->
-            (fun _mul -> (fun _leq -> (fun _eql -> (fun _if_ ->
-            (fun _lam1 -> (fun _lam2 -> (fun _fix -> 
-            (_add (_int 1) (_int 2))
-            ))))))))))) ;;
-
-let an_e2 = (fun _int -> (fun _bool -> (fun _add -> (fun _app ->
-            (fun _mul -> (fun _leq -> (fun _eql -> (fun _if_ ->
-            (fun _lam1 -> (fun _lam2 -> (fun _fix ->
-            _lam1 (fun x -> _add x x)
-            ))))))))))) ;;
-
-let an_ep = (fun _int -> (fun _bool -> (fun _add -> (fun _app ->
-            (fun _mul -> (fun _leq -> (fun _eql -> (fun _if_ ->
-            (fun _lam1 -> (fun _lam2 -> (fun _fix -> 
-            _lam1 (fun x ->
-                  _fix (fun self -> _lam2 (fun n ->
-                    _if_ (_leq n (_int 0)) (fun () -> _int 1)
-                        (fun () -> _mul x (_app self (_add n (_int (-1))))))))
-            ))))))))))) ;;
-
-(* an_e1 - compute 3 three ways *)
-let testR1 = apply_to_si_R an_e1 ;;
-let testC1 = apply_to_si_C an_e1 ;;
-let testP1 = apply_to_si_P an_e1 ;;
-
-(* an_e2 - compute x+x three ways *)
-let testR2 = apply_to_si_R an_e2 ;;
-let testC2 = apply_to_si_C an_e2 ;;
-let testP2 = apply_to_si_P an_e2 ;;
-
-(* an_ep - compute power three ways *)
-let testRp = apply_to_si_R an_ep ;;
-let testCp = apply_to_si_C an_ep ;;
-let testPp = apply_to_si_P an_ep ;;
-
-*)
-
-(* Remnants of an earlier idea: compile the PE: make a code, which,
-when run, will make a PE...
-*)
-
-
-(*
-module P = struct
-  let abstr = function (RL x) -> .<x>. | RC x -> x
-  let int (x:int) = .<RL x>.
-  let add e1 e2 = .<
-    match (e1,e2) with
-      (RL n1, RL n2) -> RL (n1+n2)
-    | _              -> RC (C.add (abstr e1) (abstr e2))>.
-(*
-  let ifeq ie1 ie2 et ee = 
-    .<let i1 = .~ie1 in if i1 = .~ie2 then .~et i1 else .~ee i1>.
-
-  let lam f = .<fun x -> .~(f .<x>.)>.
-  let app e1 e2 = .<.~e1 .~e2>.
-  let fix f = .<fun n -> let rec self n = .~(f .<self>.) n in self n>.
-  let get_res x = .! x
-*)
-end;;
-
-*)
 
 (* ------------------------------------------------------------------------ *)
 (* CPS CBN interpreter *)
@@ -878,7 +777,7 @@ module EXSP(S: SymSP) = struct
                   lapp (deref r) (fun v0 -> 
                   lapp (setref r (int 2)) (fun _ ->
 		   add v0 (deref r))))
-  (* the same but with the higher order *)
+  (* the same but with higher order *)
   let testi2 () = lapp (newref (lam (fun x -> (add x (int 1))))) (fun r ->
                   lapp (deref r) (fun v0 ->
 		  lapp (setref r (lam (fun x -> (mul x x)))) (fun _ ->

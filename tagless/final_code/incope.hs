@@ -73,8 +73,6 @@ testpowfix7 () = lam (\x -> app (app (testpowfix ()) x) (int 7))
 -- It is a typed, tagless interpreter: R is not a tag. The interpreter
 -- never gets stuck, because it evaluates typed terms only
 
--- Note that everything going on in the interpreter is straight out of
--- "Boxes go Bananas" by Washburn and Weirich (intended or otherwise)
 newtype R a = R a deriving Show
 unR (R x) = x
 
@@ -161,23 +159,18 @@ ltestpw   = compL . testpowfix $ ()
 ltestpw7  = compL . testpowfix7 $ ()
 ltestpw72 = compL (app (testpowfix7 ()) (int 2))
 
-
-
 -- ------------------------------------------------------------------------
 -- The compiler
 -- We compile to GADT, to be understood as a typed assembly language
--- (typed bytecode). The GADT does _not_ use the higher-order abstract
+-- (typed bytecode). The GADT does _not_ use higher-order abstract
 -- syntax. We could have used template Haskell. Alas, its expressions
 -- are untyped.
 -- Note how ByteCode represents MetaOCaml's `code'. Thus the compiler
 -- below neatly maps to the MetaOCaml (with no GADTs).
 -- Also note, that like MetaOCaml `code', we never pattern-match on
 -- ByteCode!
--- Note how the compiler never raises any exception and matches no tags
+-- Furthermore the compiler never raises any exception and matches no tags
 -- (no generated code has any tags)
-
--- The LIFT bytecode operation is used only during evaluation and for fmap
--- it corresponds to a CSP in MetaOCaml.
 
 data ByteCode t where
     Var :: Int -> ByteCode t                -- variables identified by numbers
@@ -190,7 +183,6 @@ data ByteCode t where
     Mul :: ByteCode Int -> ByteCode Int -> ByteCode Int
     Leq :: ByteCode t1 -> ByteCode t1 -> ByteCode Bool
     IF  :: ByteCode Bool -> ByteCode t -> ByteCode t -> ByteCode t
-    LIFT :: t -> ByteCode t                 -- Used only for eval and fmap
 
 instance Show (ByteCode t) where
     show (Var n) = "V" ++ show n
@@ -236,6 +228,7 @@ newtype C t = C (Int -> (ByteCode t, Int))
 unC (C t) vc0 = t vc0
 
 {-
+-- If we had a polymorphic LIFT function, we could do:
 instance Functor C where
     fmap f = app (C(\vc -> (LIFT f, vc)))
 -}
@@ -291,7 +284,7 @@ ctestpw72 = compC  (app (testpowfix7 ()) (int 2))
 -- ------------------------------------------------------------------------
 -- The partial evaluator: the combination of the interpreter (R) and
 -- the compiler (C).
--- We need no Lift byte-code instruction: no parametric CSP. That is great!
+-- We need no Lift instruction: no parametric CSP. That is great!
 
 -- First attempt: works for the first-order fragment of our language,
 -- but stumbles on the higher-order fragment.
@@ -318,7 +311,6 @@ instance Symantics P1 where
 -- which is which until we apply the function 'f' to a particular
 -- P1 value. 
 
-
 -- The code below is NOT parametric. We could have used type-classes
 -- instead of GADTs (see incope1.hs, where we did just that). 
 -- See also the GADT-less solution below.
@@ -340,7 +332,6 @@ instance Functor P where
     fmap f = E . fmap f . abstr
 -}
 
-
 instance Symantics P where
     int x  = VI x
     bool b = VB b
@@ -358,7 +349,7 @@ instance Symantics P where
     -- residualize
     fix f = f (E (fix (abstr . f . E)))
     -}
-    -- Now, we just go all the way (see Jacques' point)
+    -- Now, we just go all the way 
     -- provided `fixing' produces static results...
 
     fix f = pfix f -- need this charade for GADTs sake
@@ -431,10 +422,7 @@ apparent.
 -- ------------------------------------------------------------------------
 -- A partial evaluator that does not use GADTs (except in using C)
 
--- Ken thinks that, without GADTs, it's not possible to explain in Haskell or
--- MetaOCaml how PE is an instance of Symantics (unless Symantics is 
--- generalized to carry both `static' and `dynamic' parts). But we can 
--- still explain PE by itself. In some sense we're just observing 
+-- In some sense we are just observing 
 -- that Asai's code type-checks in Hindley-Milner as soon as we
 -- deforest the static code representation.
 
@@ -470,8 +458,6 @@ ztestgib1 = zapp (zapp (zapp ztestgib (zint 1)) (zint 1)) (zint 5)
 
 -- "show ptest3' == show (compC (dynamic ztestgib1'))" is True
 
-
-
 -- ------------------------------------------------------------------------
 -- The HOAS bytecode compiler
 -- We compile to GADT, to be understood as a typed assembly language
@@ -483,7 +469,7 @@ ztestgib1 = zapp (zapp (zapp ztestgib (zint 1)) (zint 1)) (zint 5)
 -- syntax for functions.
 -- Also note, that like MetaOCaml `code', we never pattern-match on
 -- HByteCode!
--- Note how the compiler never raises any exception and matches no tags
+-- Furthermore, the compiler never raises any exception and matches no tags
 -- (no generated code has any tags)
 
 -- The HVar bytecode operation is used only during evaluation
@@ -532,7 +518,6 @@ eval (HAdd e1 e2) = eval e1 + eval e2
 eval (HMul e1 e2) = eval e1 * eval e2
 eval (HLeq e1 e2) = eval e1 <= eval e2
 eval (HIF be et ee) = if (eval be) then eval et else eval ee
-
 
 instance Symantics HByteCode where
     int  = HINT
@@ -705,166 +690,6 @@ test_pf7_p = compP.snd $ testpowfix_e ()
 -- to verify the Prop 5
 test_pfp = compP $ testpowfix ()
 test_pf7p = compP $ testpowfix7 ()
-
--- start encoding some of Ken's ideas on a self-interpreter
--- Comment (Jacques): I have left this in here because this is
--- what we would really like to do, but it doesn't quite work
--- because of polymorphism issues.
-an_ep :: (Int  -> repr Int)
-      -> (Bool -> repr Bool)
-      -> (repr Int -> repr Int -> repr Int)  -- add
-      -> (repr Int -> repr Int -> repr Int)  -- mul
-      -> (forall a b. repr (a->b) -> repr a -> repr b)             -- app
-      -> (repr Int -> repr Int -> repr Bool) -- leq
-      -> (forall a. repr Bool -> repr a  -> repr a  -> repr a)     -- if
-      -> (forall a b. (repr a -> repr b) -> repr (a->b))	   -- lam
-      -> (forall a. (repr a -> repr a) -> repr a)	           -- fix
-      -> repr (Int -> Int -> Int)
-an_ep = (\ _int _bool _add _mul _app _leq _if_ _lam _fix -> 
-            _lam (\x ->
-                  _fix (\self -> _lam (\n ->
-                    _if_ (_leq n (_int 0)) (_int 1)
-                        (_mul x (_app self (_add n (_int (-1)))))))))
-
-
-test_epr = compR (an_ep int bool add mul app leq if_ lam fix)
-test_epc = compC (an_ep int bool add mul app leq if_ lam fix)
-test_epp = compP (an_ep int bool add mul app leq if_ lam fix)
-
-{-
-  The self-interpreter seems to want this instance to exist
-  or at least it did at one point!   And that was usually 
-  a sign of a bug, so this should not be allowed in, even
-  though it is a rather fun instance.
-instance Functor ((->) t) where
-    fmap f = \y -> f . y
-
-instance Symantics ((->) t) where
-    int x = \y -> x
-    bool b = \y -> b
-
-    lam f = \t -> \a -> let ta = const a in (f ta) t
-    app e1 e2 = \t -> (e1 t) (e2 t)
-
-    add e1 e2 = \y -> (e1 y) + (e2 y)
-    mul e1 e2 = \y -> (e1 y) * (e2 y)
-    leq e1 e2 = \y -> (e1 y) <= (e2 y)
-    if_ be et ee = \y -> if (be y) then (et y) else (ee y)
--}
-
--- A plain interpreter, with the right type
-interp :: (Symantics repr) => 
-         ((Int -> repr Int)
-      -> (Bool -> repr Bool)
-      -> (repr Int -> repr Int -> repr Int)  -- add
-      -> (repr Int -> repr Int -> repr Int)  -- mul
-      -> (forall a b. repr (a->b) -> repr a -> repr b)             -- app
-      -> (repr Int -> repr Int -> repr Bool) -- leq
-      -> (forall a. repr Bool -> repr a  -> repr a  -> repr a)     -- if
-      -> (forall a b. (repr a -> repr b) -> repr (a->b))	   -- lam
-      -> (forall a. (repr a -> repr a) -> repr a)              -- fix
-      -> a ) -> a
-interp prog = (prog int bool add mul app leq if_ lam fix)
-
-type Foo c = (Symantics repr) =>
-         (Int -> repr Int)
-      -> (Bool -> repr Bool)
-      -> (repr Int -> repr Int -> repr Int)  -- add
-      -> (repr Int -> repr Int -> repr Int)  -- mul
-      -> (forall a b. repr (a->b) -> repr a -> repr b)             -- app
-      -> (repr Int -> repr Int -> repr Bool) -- leq
-      -> (forall a. repr Bool -> repr a  -> repr a  -> repr a)     -- if
-      -> (forall a b. (repr a -> repr b) -> repr (a->b))	   -- lam
-      -> (forall a. (repr a -> repr a) -> repr a)              -- fix
-      -> repr c
--- simple tests, but they need signatures else they don't work
-int1 :: Foo Int
-int1 = \ _int _bool _add _mul _app _leq _if_ _lam _fix -> 
-    _add (_int 1) (_int 2)
-int2 :: Foo (Int -> Int)
-int2 = \ _int _bool _add _mul _app _leq _if_ _lam _fix -> 
-    _lam (\x -> _add x x)
-int3 :: Foo ((Int -> Int) -> Int)
-int3 = \ _int _bool _add _mul _app _leq _if_ _lam _fix -> 
-    _lam (\x -> _add (_app x (_int 1)) (_int 2))
-
--- monomorphism restriction means we need signatures
-t_int1 :: Symantics repr => repr Int
-t_int1 = interp int1
-t_int2 :: Symantics repr => repr (Int -> Int)
-t_int2 = interp int2
-t_int3 :: Symantics repr => repr ((Int -> Int) -> Int)
-t_int3 = interp int3
-
-class Self repr where
-    lift :: a -> repr a
-
-sinterp :: (Symantics repr, Self repr) => 
-      repr (
-         (Int -> repr Int)
-      -> (Bool -> repr Bool)
-      -> (repr Int -> repr Int -> repr Int)  -- add
-      -> (repr Int -> repr Int -> repr Int)  -- mul
-      -> (forall a b. repr (a->b) -> repr a -> repr b)             -- app
-      -> (repr Int -> repr Int -> repr Bool) -- leq
-      -> (forall a. repr Bool -> repr a  -> repr a  -> repr a)     -- if
-      -> (forall a b. (repr a -> repr b) -> repr (a->b))	   -- lam
-      -> (forall a. (repr a -> repr a) -> repr a)	           -- fix
-      -> a)
-      -> repr a
-sinterp prog = 
-       app (app (app (app (app (app (app (app (app prog
-       (lam (\x -> lift x)))
-       (lam (\b -> lift b)))
-       (lift add ))
-       (lift mul))
-       (lift (\f x -> app f x)))
-       (lift leq))
-       (lift (\be te ee -> if_ be te ee)))
-       (lift (\f -> lam f)))
-       (lift (\f -> fix f))
-
-type SFoo c = (Symantics repr, Self repr) => repr (
-         (Int -> repr Int)
-      -> (Bool -> repr Bool)
-      -> (repr Int -> repr Int -> repr Int)  -- add
-      -> (repr Int -> repr Int -> repr Int)  -- mul
-      -> (forall a b. repr (a->b) -> repr a -> repr b)             -- app
-      -> (repr Int -> repr Int -> repr Bool) -- leq
-      -> (forall a. repr Bool -> repr a  -> repr a  -> repr a)     -- if
-      -> (forall a b. (repr a -> repr b) -> repr (a->b))	   -- lam
-      -> (forall a. (repr a -> repr a) -> repr a)             -- fix
-      -> repr c)
-testi :: SFoo Int
-testi = lift (\ _int _bool _add _mul _app _leq _if_ _lam _fix -> 
-     _add (int 1) (int 3))
-
-{-  This is so tentalizingly close!
-i1 :: (Symantics repr, Self repr) => repr Int
-i1 = app (lam sinterp) (testi)
-i1r = compR i1 -- 3
-i1c = compC i1
-i1p = compP i1 -- 3
--}
-
-{-
-si prog = 
-     lam (\_int ->
-     lam (\_bool ->
-     lam (\_add ->
-     lam (\_mul ->
-     lam (\_leq ->
-     lam (\_if_ ->
-     lam (\_lam ->
-     lam (\_app ->
-     lam (\_fix ->
-       app (app (app (app (app (app (app (app (app prog
-       _int) _bool) _add) _mul) _leq) _if_) _lam) _app) _fix
-     )))))))))
-
--- i2 prog = (si interp) prog
--}
-
 
 -- The following doesn't work because "repr" and "forall a." quite reasonably
 -- do not commute
