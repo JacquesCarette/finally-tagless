@@ -10,6 +10,7 @@
 \usepackage{url}
 \usepackage{prooftree1}
 \usepackage{mdwlist}
+\usepackage{mdwtab}
 \usepackage{dblfloatfix}
 
 \newcommand{\jacques}[1]{{\it [Jacques says: #1]}}
@@ -33,8 +34,15 @@
 \newcommand{\Forall}[1]{\mathopen{\forall\mathord{#1}.\,}}
 \newcommand{\Exists}[1]{\mathopen{\exists\mathord{#1}.\,}}
 \newcommand{\cond}[3]{\mathrm{if\ }#1\mathrm{\ then\ }#2\mathrm{\ else\ }#3}
+\newcommand{\be}[1]{\mathrm{let\ }#1\mathrm{\ in\ }}
 \newcommand{\True}{\mathinner{\mathrm{true}}}
 \newcommand{\False}{\mathinner{\mathrm{false}}}
+\newcommand{\Encode}[1]{\mathinner{\mathopen{\text{``}}#1\mathclose{\text{''}}}}
+\newcommand{\encode}[1]{\mathinner{\mathopen{\text{`}}#1\mathclose{\text{'}}}}
+\newcommand{\ident}[1]{\mathinner{\text{\textit{#1\/}}}}
+\newcommand{\subst}[3]{#1\left\{#2\mapsto#3\right\}}
+\DeclareMathOperator{\pe}{PE}
+\DeclareMathOperator{\si}{SI}
 
 % Make space around section headings no less than space around theorems
 \makeatletter
@@ -509,9 +517,9 @@ shows how to represent every typed, closed object term in the
 metalanguage. Moreover, the representation preserves types, in the following
 sense.
 \begin{prop}
-If an object term has the object type |t|, then its
+If an object term has the object type~$t$, then its
 representation in the metalanguage has the type 
-|forall repr.| |Symantics repr => repr t|.
+|forall repr.| |Symantics repr => repr |$t$.
 \end{prop}
 Conversely, the type system of the metalanguage checks statically that the
 represented object term is well-typed and closed.
@@ -645,9 +653,9 @@ pattern matching cannot fail, because there is no
 pattern matching. Evaluation can only fail to yield a value
 due to interpreting |fix|.
 \begin{prop}
-If the term |e| encoded in the metalanguage has type~|t|,
-then evaluating~|e| in the interpreter~|R| either continues
-indefinitely or terminates with a value of the same type~|t|.
+If an object term~$e$ encoded in the metalanguage has type~$t$,
+then evaluating~$e$ in the interpreter~|R| either continues
+indefinitely or terminates with a value of the same type~$t$.
 \end{prop}
 Generalizing from~|R| to all interpreters, we have the following
 broader and more useful, if also more obvious, proposition.
@@ -698,15 +706,15 @@ let module E =EX1(L) in E.tfix ();;
 
 Besides immediate evaluation, we can compile our object language
 into OCaml code using MetaOCaml's staging facilities. MetaOCaml
-represents future-stage expressions of type |t| at the
-present stage as values of type |('c,t) code| where |'c| is the
+represents future-stage expressions of type~$t$ at the
+present stage as values of type |('c,|$t$|) code| where |'c| is the
 environment classifier \citep{WalidPOPL03,calcagno-ml-like}. Code values are created
-by a \emph{bracket} form |.<e>.|, which specifies that the expression |e| is to be
-evaluated at a future stage. The \emph{escape} |.~e| must occur
-within a bracket and specifies that the expression |e| must be evaluated
+by a \emph{bracket} form |.<|$e$|>.|, which specifies that the expression~$e$ is to be
+evaluated at a future stage. The \emph{escape} |.~|$e$ must occur
+within a bracket and specifies that the expression~$e$ must be evaluated
 at the current stage; its result, which must be a code value, is
-spliced into the code being built by the enclosing bracket. The \emph{run} form |.!e| evaluates
-the future-stage code value~|e| by compiling and linking it at run-time.
+spliced into the code being built by the enclosing bracket. The \emph{run} form |.!|$e$ evaluates
+the future-stage code value~$e$ by compiling and linking it at run-time.
 The bracket, escape, and run are akin to
 quasi-quotation, unquotation, and |eval| of Lisp.
 
@@ -734,14 +742,14 @@ module C = struct
 
 end
 \end{code}
-This is a completely straightforward staging of
+This is a straightforward staging of
 |module R|.
-This compiler simply produces
-residual code with no optimization. For example, interpreting our |test1|
+This compiler produces
+unoptimized code. For example, interpreting our |test1|
 \begin{code}
 let module E = EX(C) in E.test1 ()
 \end{code}
-gives the code value |.<(fun x_6 -> x_6) (true)>.|
+gives the code value |.<(fun x_6 -> x_6) true>.|
 of inferred type |('c, bool) C.repr|.  Similarly, interpreting |testpowfix7|
 with
 \begin{code}
@@ -766,8 +774,8 @@ code produced for $\fun{x}x$ is simply |fun x_6 -> x_6| and does not
 The resulting code obviously contains no tags and no pattern matching.
 
 We have also implemented this compiler in Haskell. Since Haskell
-has no (convenient, typed) staging facilities, we had to emulate
-them. To be precise, we defined a data type |ByteCode| with
+has no (convenient, typed) staging facility, we had to emulate
+it. To be precise, we defined a data type |ByteCode| with
 constructors such as |Var|, |Lam|, |App|, |Fix|, and |INT|.
 Whereas our representation of object terms uses HOAS,
 our bytecode uses integer-named
@@ -779,7 +787,7 @@ where |Int| is the counter for creating fresh variable
 names. We define the compiler by making |C| an instance of the
 class |Symantics|. The implementation\footnote{The implementation uses
 GADTs because we also wanted to write a typed interpreter for 
-the \textsf{ByteCode} \emph{data type}.} is quite similar (but slightly more
+the \texttt{ByteCode} \emph{data type}.} is quite similar (but slightly more
 verbose) than the corresponding MetaOCaml code given above. The
 accompanying code gives the full details.
 
@@ -838,7 +846,7 @@ a problem with |if_|.  If the first argument to |if_| is a dynamic term
 (type |C Bool|) and the second and third arguments are a static term
 (type |R a|) and a dynamic term (type |C a|), then we need to convert
 the static term to dynamic, but there is no polymorphic ``lift''
-function |a -> C a| to send a value to the future stage
+function, of type |a -> C a|, to send a value to the future stage
 \citep{xi-guarded,WalidPOPL03}.\footnote{We note in passing that, if we
 were to add polymorphic \texttt{lift} to the type class
 \texttt{Symantics repr}, then \texttt{repr} would become an instance of
@@ -933,6 +941,12 @@ is not an accident, as we shall see in~\S\ref{S:CPS}.
 \subsection{Eliminating tags from typecase}
 \label{S:PE-GADT}
 
+Two common ways to provide typecase in Haskell are
+GADTs and type-class functional dependencies
+\citep{oliveira-typecase}.  These
+methods are equivalent, and here we show the GADT way; |incope1.hs|
+in the accompanying source code shows the latter.
+
 \begin{figure*}
 \begin{floatrule}
 \begin{code}
@@ -958,61 +972,6 @@ end
 \caption{A (Meta)OCaml embedding of our object language that supports partial evaluation}
 \label{fig:ocaml}
 \end{figure*}
-
-\begin{figure}
-\begin{floatrule}
-\begin{code}
-module P = struct
-
-  type ('c,'sv,'dv) repr = {st: 'sv option;
-                            dy: ('c,'dv) code}
-
-  let abstr {dy = x} = x
-  let pdyn x = {st = None; dy = x}
-
-  let int  (x:int)  = {st = Some (R.int x);
-                       dy = C.int x}
-  let bool (x:bool) = {st = Some (R.bool x);
-                       dy = C.bool x}
-
-  let add e1 e2 = match e1, e2 with
-  | {st = Some 0}, e | e, {st = Some 0} -> e
-  | {st = Some m}, {st = Some n} -> int (R.add m n)
-  | _ -> pdyn (C.add (abstr e1) (abstr e2))
-
-  let if_ eb et ee = match eb with
-  | {st = Some b} -> if b then et () else ee ()
-  | _ -> pdyn (C.if_ (abstr eb) 
-                     (fun () -> abstr (et ()))
-                     (fun () -> abstr (ee ())))
-
-  let lam f =
-  {st = Some f; 
-   dy = C.lam (fun x -> abstr (f (pdyn x)))}
-
-  let app ef ea = match ef with
-  | {st = Some f} -> f ea
-  | _ -> pdyn (C.app (abstr ef) (abstr ea))
-
-  let fix f = 
-    let fdyn = C.fix (fun x -> abstr (f (pdyn x)))
-    in let rec self = function
-       | {st = Some _} as e -> app (f (lam self)) e
-       | e -> pdyn (C.app fdyn (abstr e))
-       in {st = Some self; dy = fdyn}
-
-end
-\end{code}
-\end{floatrule}
-\caption{Our partial evaluator (\texttt{mul} and \texttt{leq} are elided)}
-\label{fig:pe}
-\end{figure}
-
-Two common ways to provide typecase in Haskell are
-GADTs and type-class functional dependencies
-\citep{oliveira-typecase}.  These
-methods are equivalent, and here we show the GADT way; |incope1.hs|
-in the accompanying source code shows the latter.
 
 We introduce a GADT with four data constructors.
 \begin{code}
@@ -1100,6 +1059,55 @@ portability, we recall from Figure~\ref{fig:ocaml-simple} in~\S\ref{encoding} th
 constructor took two arguments |'c| and~|'dv|. We add an argument
 |'sv| for the result of applying |repr_pe| to~|'dv|.
 Figure~\ref{fig:ocaml} shows the new |Symantics| signature.
+
+\begin{figure}
+\begin{floatrule}
+\begin{code}
+module P = struct
+
+  type ('c,'sv,'dv) repr = {st: 'sv option;
+                            dy: ('c,'dv) code}
+
+  let abstr {dy = x} = x
+  let pdyn x = {st = None; dy = x}
+
+  let int  (x:int)  = {st = Some (R.int x);
+                       dy = C.int x}
+  let bool (x:bool) = {st = Some (R.bool x);
+                       dy = C.bool x}
+
+  let add e1 e2 = match e1, e2 with
+  | {st = Some 0}, e | e, {st = Some 0} -> e
+  | {st = Some m}, {st = Some n} -> int (R.add m n)
+  | _ -> pdyn (C.add (abstr e1) (abstr e2))
+
+  let if_ eb et ee = match eb with
+  | {st = Some b} -> if b then et () else ee ()
+  | _ -> pdyn (C.if_ (abstr eb) 
+                     (fun () -> abstr (et ()))
+                     (fun () -> abstr (ee ())))
+
+  let lam f =
+  {st = Some f; 
+   dy = C.lam (fun x -> abstr (f (pdyn x)))}
+
+  let app ef ea = match ef with
+  | {st = Some f} -> f ea
+  | _ -> pdyn (C.app (abstr ef) (abstr ea))
+
+  let fix f = 
+    let fdyn = C.fix (fun x -> abstr (f (pdyn x)))
+    in let rec self = function
+       | {st = Some _} as e -> app (f (lam self)) e
+       | e -> pdyn (C.app fdyn (abstr e))
+       in {st = Some self; dy = fdyn}
+
+end
+\end{code}
+\end{floatrule}
+\caption{Our partial evaluator (\texttt{mul} and \texttt{leq} are elided)}
+\label{fig:pe}
+\end{figure}
 
 The interpreters |R|, |L| and~|C| above only use the old
 type arguments |'c| and~|'dv|, which are treated by the new signature
@@ -1330,7 +1338,7 @@ module RCV = struct
          (fun v -> f {ko = fun k -> k v}))}
 end
 \end{code}
-Now when we apply an abstraction to an argument |e|, we always force
+Now when we apply an abstraction to an argument, we always force
 the evaluation of that argument before proceeding. This approach is in
 line with \citet{reynolds-relation} (albeit in a typed setting). The interpreter RCV
 is useful for achieving CBV evaluation of the object language
@@ -1424,7 +1432,8 @@ quite unoptimal with several apparent $\beta$-redexes.
 By instantiating |CPST| with the |P| evaluator instead, our
 running test gives the expected
 \begin{code}
-  P.repr = {P.st = Some <fun>; P.dy = .<fun x_5 -> (x_5 (true))>.}
+  P.repr = {P.st = Some <fun>;
+            P.dy = .<fun x_5 -> (x_5 (true))>.}
 \end{code}
 
 \subsection{State and imperative features}
@@ -1452,7 +1461,7 @@ able to represent both R and L (the latter returns only Int as the
 values) in the same framework.
 
 We encode a term like |add 1 2| as
-|app _add (app _int 1) (app _int 2)| where |_add| and |_int| are just
+\texttt{app \_add (app \_int 1) (app \_int 2)} where |_add| and |_int| are just
 `free variables'. Now, how to typecheck such a term? Some type should
 be assigned to these free variables. The goal is to complete the work
 without needing any type annotations (so we don't have to introduce any
@@ -1468,7 +1477,6 @@ all the types.
 The only approach that does seem to work
 is the one in incope.hs or incope.ml. If we de-sugar away records and
 type-classes, the type of a term L of the inferred type tau is
-
 $$ 
   (\ZZ \rightarrow r \ZZ) \rightarrow
   (\BB \rightarrow r \BB) \rightarrow
@@ -1497,141 +1505,209 @@ the forefront, as we shall now see.
 
 \section{Self-interpretation}\label{selfinterp}
 
-A self-interpreter |si| is an
-object-language term such that, for any object-language term e,
+We turn to interpreting the object language in the object language, to
+clarify how expressive our typed object language can be and to argue that our
+partial evaluator is Jones\hyp optimal.
 
-\begin{code}
-  si "e"    is observationally equivalent to    e
-\end{code}
+Given an \emph{encoding} of each object term~$e$ as an \emph{object} term~$\Encode{e}$,
+a \emph{self\hyp interpreter} is usually defined as an object
+function~$\si$ such that any object term~$e$ is observationally
+equivalent to the object application $\si\Encode{e}$
+\citep{jones-partial,taha-tag,Danvy-tagging-encoding}.
+A partial evaluator~$\pe$ maps object terms~$e$ to observationally
+equivalent object terms~$\pe(e)$.  It is said to be
+\emph{optimal} with respect to~|si| if $\pe(\si\Encode{e})$
+is equal to~$e$ (up to $\alpha$\hyp conversion, or in some accounts, no
+less efficient than~$e$).
 
-where |"e"| is an encoding of |e|.  In our approach, we want to encode
-each object-language term as a function from a record%
-\footnote{Thanks to currying, the object language need not actually support
-records.}  of interpreter methods to a generated representation.  
-In the case of a self-interpreter, that
-record is simply |si|!  So we should define a self-interpreter |si| to be an
-object-language term such that, for any object-language term |e|,
+Intuitively, self\hyp interpretation is straightforward in our
+framework: the functions comprising the interpreters
+in~\S\ref{S:interpreter-RL} may just as well be written in our object
+language.  In particular, the following \emph{object} functions implement an
+evaluator.  (We use the number~$0$ in lieu of a unit value.)
+\begin{align*}
+    \ident{int} &= \fun{x} x &
+    \ident{lam} &= \fun{f} f \\
+    \ident{add} &= \fun{x} \fun{y} x+y &
+    \ident{app} &= \fun{f} \fun{x} fx \\
+    \ident{if\_}&= \fun{b} \fun{t} \fun{e} \cond{b}{t\,0}{e\,0} &
+    \ident{fix} &= \fun{g} \fix{f} \fun{x} gfx
+\end{align*}
+We thus map each object terms~$e$ to an object term~$\encode{e}$ as follows.
+We call this mapping \emph{pre-encoding}.
+\begin{align*}
+    \encode{x} &= x &
+    \encode{\fun{x}e} &= \ident{lam} (\fun{x} \encode{e}) \\
+    \encode{n} &= \ident{int}\, n &
+    \encode{fx} &= \ident{app} \encode{f} \encode{x} \\
+    \encode{e_1 + e_2} &= \ident{add} \encode{e_1} \encode{e_2} &
+    \encode{\fix{f}e} &= \ident{fix} (\fun{f} \encode{e}) \\
+    \encode{\cond{b}{t}{e}} &= \rlap{$\ident{if\_} \encode{b}
+        \left(\fun{\_}\encode{t}\right) \left(\fun{\_}\encode{e}\right)$}
+\end{align*}
+The metavariables $x$ and~$n$ stand for a variable and an integer,
+respectively.
+This pre-encoding is just like how we represent object terms in the
+metalanguage in the preceding sections, but it produces
+terms in the object language rather than metalanguage.
 
-\begin{code}
-  "e" si    is observationally equivalent to    e
-\end{code}
+To evaluate~$\encode{e}$, then, we
+instantiate the free variables in~$\encode{e}$ such as $\ident{int}$,
+$\ident{lam}$, and $\ident{add}$ by their definitions above.  For
+example, the familiar object term $(\fun{x}x)\True$ pre-encodes to
+\begin{equation*}
+    \encode{(\fun{x}x)\True} = \ident{app}
+    (\ident{lam} (\fun{x} x))\, (\ident{bool} \True),
+\end{equation*}
+and to evaluate this pre-encoded term is to evaluate the object term
+\begin{equation*}
+    (\fun{f} \fun{x} fx) \,
+    ((\fun{f} f) (\fun{x} x))\, ((\fun{b} b) \True).
+\end{equation*}
+Because the evaluator above mostly consists of glorified identity
+functions, we expect even our simple partial evaluator to reduce the
+result of this instantiation to~$e$.  In general, to
+interpret~$\encode{e}$ using an interpreter is to instantiate these free
+variables by that interpreter's definitions.
 
-A self-interpreter is then just like the interpreter
-|R| in Section 2, except written at the object rather than the meta level.
+\subsection{Avoiding higher-rank polymorphism}
 
-It is wortwhile noting that, in our class |Symantics|, |add|
-is not a term since it does not have type |repr t| for any |t|. We could
-have introduced |add| to be of type |repr (Int->Int->Int)| -- but we
-didn't. Thus |add| is a special form, which is to be applied in the
-meta-language using the meta-language application syntax (i.e. white
-space) rather than in the object language (i.e. via |app|). 
+Any approach to self\hyp interpretation needs to spell out first how to
+encode object terms~$e$ to object terms~$\Encode{e}$, and then how to
+interpret~$\Encode{e}$ in the object language.  For our approach, we
+want to define encoding in terms of pre-encoding, and interpretation
+using some notion of instantiation.  Unfortunately, the simple type
+structure of our object language hinders both tasks.  To continue with
+the example term above, we could try to define
+\begin{equation*}
+    \Encode{e} =
+    \fun{\ident{app}} \fun{\ident{lam}} \fun{\ident{bool}} \encode{e},
+\end{equation*}
+in particular
+\begin{equation*}
+    \Encode{(\fun{x}x)\True} =
+    \fun{\ident{app}} \fun{\ident{lam}} \fun{\ident{bool}}
+    \ident{app} (\ident{lam} (\fun{x} x))\, (\ident{bool} \True).
+\end{equation*}
+To type-check this encoded term, we give the variable $\ident{lam}$ the
+simple type $(\BB\to\BB)\to\BB\to\BB$.
+We then define the self\hyp interpreter
+\begin{equation*}
+    \si = \fun{e} e
+    (\fun{f} \fun{x} fx)
+    (\fun{f} f)
+    (\fun{b} b)
+\end{equation*}
+and apply it to the encoded term.  The result is the object term
+\begin{multline*}
+    \bigl(\fun{e} e (\fun{f} \fun{x} fx) (\fun{f} f) (\fun{b} b)\bigr)
+\\
+    \bigl(
+    \fun{\ident{app}} \fun{\ident{lam}} \fun{\ident{bool}}
+    \ident{app} (\ident{lam} (\fun{x} x))\, (\ident{bool} \True)
+    \bigr),
+\end{multline*}
+which partially evaluates to~$\True$ easily.
+However, encoding fails on an term with multiple $\lambda$\hyp
+abstractions at different types.  For example, the pre-encoding
+\begin{equation*}
+    \encode{\fun{f}\fun{x}fx}
+    = \ident{lam} (\fun{f} \ident{lam} (\fun{x} \ident{app} f x))
+\end{equation*}
+does not type-check in any typing environment, because $\ident{lam}$ needs
+to take two incompatible types.  In sum, we need polymorphism in the
+object type system to type $\ident{lam}$, $\ident{app}$, $\ident{fix}$,
+and~$\ident{if\_}$ (and $\Encode{e}$ and~$\si$).
+(The polytypes in |Symantics| are where Haskell type classes and OCaml
+modules supply this polymorphism.)  Moreover, we need to encode any
+polymorphism in the object language into the object language to achieve
+self\hyp interpretation.
 
-\oleg{Mention the RR interpreter: for any term E, (RR E) is equivalent to E.
-RR is not an identity: it is an interpreter that encapsulates another
-interpreter. The RR interpreter can be made self if we treat RR as a
-special form and interpret it always with itself (similar to let and
-hole below).}
+\subsection{Introducing let-bound polymorphism}
 
-Self-interpretation in our framework is somewhat
-tricky due to the need for more polymorphism than is easily available
-in the meta-language.  An encoded term should
-be polymorphic in the interpreter type-constructor "r".  Furthermore, the
-functions "lam", "app", etc. should be polymorphic in the object
-types "a" and "b".  Thus the object language seems to require rank-2
-polymorphism; and so type annotations will be inevitable.
+Instead of adding higher-rank polymorphism to our object language (along
+with polymorphism over kinds), we add let-bound polymorphism.  As usual,
+we can add a new typing rule
+\begin{equation*}
+    \begin{prooftree}
+        e_1:t_1 \quad \subst{e_2}{x}{e_1}:t_2
+        \justifies \be{x=e_1} e_2 : t_2
+    \end{prooftree}
+    .
+\end{equation*}
+The pre-encoding of a let\hyp expression is trivial.
+\begin{align*}
+    \encode{\be{x=e_1}e_2} \quad &= \quad \be{x=\encode{e_1}} \encode{e_2}
+\intertext{A \emph{context} is an object term with a hole~$[~]$.  The
+hole may occur under a binder, so plugging a term into the context may
+capture free variables of the term.  By pre-encoding a hole to a hole,
+we extend pre-encoding from a translation on terms to a translation on
+contexts.}
+    \encode{[~]} \quad &= \quad [~]
+\end{align*}
+We define an interpreter in the object language to be not a term but
+a context.  For example, the evaluator is the context
+\begin{align*}
+    \si[~] &=
+    \begin{tabular}[t]{@{}Ml@{}>{{}}Ml@{}Ml@{}}
+        \be{\ident{int} &= \fun{x} x&} \\
+        \be{\ident{add} &= \fun{x} \fun{y} x+y&} \\
+        \be{\ident{if\_}&= \fun{b} \fun{t} \fun{e} \cond{b}{t\,0}{e\,0}&} \\
+        \be{\ident{lam} &= \fun{f} f&} \\
+        \be{\ident{app} &= \fun{f} \fun{x} fx&} \\
+        \be{\ident{fix} &= \fun{g} \fix{f} \fun{x} gfx&} [~],
+    \end{tabular}
+\intertext{and the size\hyp measurer is the context}
+    \mathrm{SZ}[~] &=
+    \begin{tabular}[t]{@{}Ml@{}>{{}}Ml@{}Ml@{}}
+        \be{\ident{int} &= \fun{x} 1&} \\
+        \be{\ident{add} &= \fun{x} \fun{y} x+y+1&} \\
+        \be{\ident{if\_}&= b + t\,0 + e\,0&} \\
+        \be{\ident{lam} &= \fun{f} f\,0 + 1&} \\
+        \be{\ident{app} &= \fun{f} \fun{x} f + x + 1&} \\
+        \be{\ident{fix} &= \fun{g} g\,0 + 1&} [~].
+    \end{tabular}
+\end{align*}
+To interpret an object term~$e$ using an interpreter $I[~]$ is to
+evaluate the object term~$I[\encode{e}]$.  $\si$ is
+a self\hyp interpreter in the following sense.
+\begin{prop}
+    $\si[\encode{e}]$ is observationally equivalent to~$e$.
+\end{prop}
+As a corollary, we can pre-encode the self\hyp interpreter itself as
+a context: the term $\si[\encode{\si[\encode{e}]}]$ is observationally
+equivalent to $\si[\encode{e}]$, and in turn to~$e$.  In other words,
+$\si$ can interpret itself.
 
-To neatly bypass the need for rank-2 polymorphism, we use the notion
-of let-polymorphism and a `hole', as follows.  A partial evaluator (or
-a compiler or interpreter) is an evaluation context that (let-)binds
-variables named "app", "lam", etc.  For the object language to
-take advantage of let-bound polymorphism in the metalanguage, it
-is crucial that we encode the object-level "let" using the meta "let".  
+Our partial evaluator is optimal with respect to the self\hyp
+interpreter~$\si$.
+\begin{prop}
+    Let $\pe$ be the partial evaluator~|P| in~\S\ref{S:PE-solution}.
+    Then the object terms $\pe(\si[\encode{e}])$ and~$\pe(e)$ are
+    either both undefined or both defined and
+    equal up to $\alpha$\hyp conversion.
+    \ccshan{Check this}
+\end{prop}
 
-We also (unfortunately need to) define a self-interpreter slightly
-differently.  A self-interpreter |SI[]| is an object expression with a
-hole |[]| waiting to be plugged with the encoding of an object expression.
-The self-interpreter binds the free variables |_lam|, |_app|, |_int|, |_bool|,
-etc. in the plugged encoding.  We require |SI["E"]| to be equivalent to |E|,
-where |"E"| is the object encoding of the object expression |E|.
+\subsection{Contexts clarify polymorphism}
 
-This strategy of course limits what kinds of processing on encoded
-object expressions can be expressed in the object language.  For
-example, unlike if we had simply defined |"E"| to be the \emph{identity
-encoding} E, we \emph{can} write a size-measure interpreter |SZ[]|, 
-which like |SI[]| is
-an object expression with a hole |[]| waiting to be plugged with 
-an |"E"|.
-However, this notion of size cannot distinguish |let x = E1 in E2[x]|
-from |"E2[E1]"|.  Recall that one way to type-check polymorphic let is:
-\begin{code}
-        E1:T    E2[E1]:T'
-    ------------------------
-    let x = E1 in E2[x] : T'
-\end{code}
-That analogy shows that the self-interpreter with a hole is a
-euphemism for a higher-rank abstraction. That makes it clear where
-the difficulty lies, and how to simulate the higher-rank application
-(that is, higher-rank arrow elimination) `by hand'.
+We type-check a pre-encoded term~$\encode{e}$ and its interpreter~$I[~]$
+only together, never separately.  This treatment has the drawback that
+we must duplicate a pre-encoded term in order to interpret it in
+multiple ways.  The meta-notions of contexts and plugging may seem ad
+hoc, but in fact they are explications of the type-class and module
+machinery that we have been using in this paper all along.
 
-We also need to duplicate the encoding of an object expression if we
-want to process the same object expression in multiple ways (e.g., both
-measure its size and interpret it).  But all this is consistent with (in
-fact, amplifies) our `coalgebraic/final/cogen' spirit, so our revised
-notion of self-interpretation (and, some might say, of size measurement)
-may just squeak by the reader's skepticism as we explain our desire for
-kind polymorphism.
+In the presence of let-bound polymorphism, we can understand a term
+waiting to be plugged into a context as a higher-rank abstraction over
+the context.  Whereas our object language does not support higher-rank
+abstraction, our metalanguages do, so they can type-check an object term
+separately from its interpreter---as a functor from a |Symantics| module
+(in OCaml) or a value with a |Symantics| constraint (in Haskell).  Thus
+``context'' is a euphemism for a polymorphic argument, and ``plugging''
+is a euphemism for application.
 
-\oleg{I guess the let-and-hole argument works out if we don't typecheck the
-encoded terms. We can't typecheck the interpreter with the hole
-either. We insert the encoded term into the interpreter -- and then
-typecheck the whole thing. That'll work. Yet a bit unsatisfactory...}
-
-We achieve
-self-interpretation in that the following evaluation context in the
-object language defines an interpreter for encoded object terms.
-\begin{code}
-  let lam = \f -> f in
-  let app = \f x -> f x in
-  let add = \m n -> m + n in
-  let int = \i -> i in
-  [hole]
-\end{code}
-The obvious notion of optimality in this setup is easy to achieve.  For
-example, given the context above, our partial evaluator turns
-\begin{code}
-  app (lam (\x -> add x (int 1))) (int 3)
-\end{code}
-into the number 4, as desired.  We can also encode the self-interpreter
-as the following evaluation context in the object language.
-\begin{code}
-  let lam = lam (\f -> f) in
-  let app = lam (\f -> lam (\x -> app f x)) in
-  let add = lam (\m -> lam (\n -> add m n)) in
-  let int = lam (\i -> i) in
-  [hole]
-\end{code}
-The "let" and the hole "[hole]" are meta-constructions, which must map to
-themselves in any interpretation.  
-
-The 'result' of applying an interpreter to itself needs to be an 
-interpreter too!  In fact, if it is Jones-optimal, then you should be 
-able to apply it to itself again and get the same answer.  
-Our code does that. First, let |twice_inc_3_e| be the
-metalanguage encoding of the object term |si["e"]|,
-where si is the self-interpreter for the needed components of the object
-language (only |lam|, |app|, |add|, and |int| in this case), |""| means the
-object-to-object encoding, and |e| is the object term
-\begin{code}
-  let twice_ f x = f (f x) in let inc_ n = n + 1 in twice_ inc_ 3
-\end{code}
-Second, |twice_inc_3_ee| is the metalanguage encoding of the object term
-|si["si[e]"]|
-which is the same as
-|si["si"["e"]]|.
-The partial evaluator yields 5 on both |twice_inc_3_e| and 
-|twice_inc_3_ee|,
-as desired.
-
+\begin{comment}
 \jacques{But how 
 to you create, in either Haskell or MetaOCaml, an untypechecked 
 interpreter-with-a-hole [UIH] ?}
@@ -1651,6 +1727,13 @@ proceed. So, |repr| is the representation of the polymorphic
 interpreter context with the hole, which permits separately
 typecheckable terms (the evaluation still entails `duplication' so to
 speak -- which is one way how polymorphism is resolved).
+
+\oleg{Mention the RR interpreter: for any term E, (RR E) is equivalent to E.
+RR is not an identity: it is an interpreter that encapsulates another
+interpreter. The RR interpreter can be made self if we treat RR as a
+special form and interpret it always with itself (similar to let and
+hole below).}
+\end{comment}
 
 \section{Related work}\label{related}
 
