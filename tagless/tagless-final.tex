@@ -8,7 +8,7 @@
 \usepackage{comment}
 \usepackage{hyphenat}
 \usepackage{url}
-\usepackage{prooftree1}
+\usepackage{prooftree1} \proofrulebaseline=1.5ex \proofdotseparation=.75ex
 \usepackage{mdwlist}
 \usepackage{mdwtab}
 \usepackage{dblfloatfix}
@@ -89,38 +89,32 @@
 \maketitle
 
 \begin{abstract}
-We have built a family of tagless interpretations for a
+We have built the first family of tagless interpretations for a
 higher-order typed object
-language in a typed metalanguage (Haskell and ML), 
-requiring neither dependent
-types, nor generalized algebraic data types, nor a tag elimination 
-postprocessing step. That has been an open problem.
-Our family of interpreters contains 
-an evaluator, a (byte-)compiler and staged evaluator, a partial
-evaluator, a term-size evaluator, and call-by-name and
+language in a typed metalanguage (Haskell or ML) that
+require no dependent
+types, generalized algebraic data types, or
+postprocessing to eliminate tags.
+The interpretations include
+an evaluator, a compiler (or staged evaluator), a partial
+evaluator, and call-by-name and
 call-by-value CPS transformers.
 
-The main tool is to take functions seriously: we encode the
-de Bruijn or higher-order abstract syntax  of object terms 
-not by using constructors for
-an algebraic data type but rather by invoking cogen functions, which occur as
-free variables in the encoded term.  In other words, we eschew initial
-algebras for the wilder world of final algebras.
-\oleg{Or: we expose the co-algebraic structure of the object language.}
-Our approach highlights the importance of order-2 type constructors
-(rank-2 polymorphism), available with ML functors and
-Haskell98 constructor classes. This lets us encode object terms with
-translucent types: enough abstraction is available to interpret the
-terms in various ways, and yet enought type information is available 
-to typecheck the terms and statically assure their interpretation
-never gets stuck.
+Our main idea is to encode
+de Bruijn or higher-order abstract syntax
+using cogen functions rather than data constructors.
+In other words, we represent object terms not in an initial algebra
+but using the coalgebraic structure of the $\lambda$-calculus.
+Our representation also simulates inductive maps from types to
+types, which are required for typed partial evaluation and CPS transformations.
 
-The encoding of a self-interpreter clarifies our technique 
-\oleg{and rank-2 polymorphism?} 
-as the
-interpretation \oleg{evaluation?} of a term plugged into the context
-of let-polymorphic definitions.
-\oleg{Discuss on Fri, along with the colclusions.}
+Our encoding of an object term abstracts over the various ways to
+interpret it yet statically assures that the interpreters never get
+stuck.  To achieve self\hyp interpretation and show Jones\hyp
+optimality, we relate this exemplar of higher-rank and higher-kind
+polymorphism (provided by ML functors and Haskell~98 constructor
+classes) to plugging a term into a context of let\hyp polymorphic
+bindings.
 \end{abstract}
 
 %\category{CR-number}{subcategory}{third-level}
@@ -129,7 +123,7 @@ of let-polymorphic definitions.
 
 \section{Introduction}\label{intro}
 
-A popular way to define and implement a programming language is to embed it in
+A popular way to define and implement a language is to embed it in
 another \citep{reynolds-definitional}.  Embedding means to represent
 terms and values of the \emph{object language} as terms and values in the
 \emph{metalanguage}.  Embedding is especially appropriate for domain\hyp
@@ -178,8 +172,8 @@ proposal and contributions.
 No matter how we represent the object language in the
 metalanguage, the representation can be created either by hand (for example, by
 entering object terms at a metalanguage interpreter's prompt) or
-by a parser or type checker reading from a text string.
-We leave aside the solved problem of writing such a parser or type checker,
+by a parser\slash type\hyp checker reading from a text string.
+We leave aside the solved problem of writing such a parser\slash type\hyp checker,
 whether using dependent types \citep{WalidICFP02} or not \citep{baars-typing}.
 
 \subsection{The tag problem}\label{tagproblem}
@@ -397,7 +391,7 @@ convenient, typed staging facilities.
 
 Our code ensures statically that an object term is well-typed and
 closed, yet is surprisingly simple and obvious in hindsight.  We stress
-that until now it has been considered impossible to
+that it has been an open problem to
 interpret a typed object language in a typed metalanguage without
 tagging or type\hyp system extensions.  For example, \citet{taha-tag}
 state that ``expressing such an interpreter in a statically typed
@@ -407,7 +401,7 @@ recently that some work on programming type-indexed values in ML
 expressed.''  We further discuss related work in~\S\ref{related}.
 
 Our contributions are as follows.
-\begin{enumerate}
+\begin{enumerate*}
 \item We build interpreters that evaluate (in direct or continuation\hyp passing styles),
   compile, and partially evaluate a typed higher-order object language
    in a typed metalanguage.
@@ -425,25 +419,25 @@ Our contributions are as follows.
   such as state.
 \item We describe an approach to self\hyp interpretation compatible with the
   above.  Self\hyp interpretation turned out harder than expected.
-\end{enumerate}
+\end{enumerate*}
 
 
-The structure of our paper is as follows. In the next Section, we
+The structure of our paper is as follows. In~\S\ref{language}, we
 define the OCaml and Haskell interfaces of the interpreter for our
 language and describe two instances, evaluating a term to a
-metalanguage value and computing term's size. In
-Section~\ref{compiler}, we stage the evaluator, obtaining the tagless
-compiler. Section~\ref{PE} describes partial evaluation, in
+metalanguage value and computing term's size.
+In~\S\ref{compiler}, we stage the evaluator, obtaining the tagless
+compiler. \S\ref{PE} describes partial evaluation, in
 particular, the problem posed by the need to delay the 
 binding-time analysis of term abstractions and the apparent 
 need for a typecase. We then show two solutions. The first, imperfect
 one, uses GADT. The better and more portable solution bakes in the
 typecase idiom into the interpreter interface, eliminating the need for
 advanced type systems and permitting implementations in Haskell98 or OCaml.
-The discussion Section~\ref{discussion} presents, inter alia, CBN CPS
+The discussion \S\ref{discussion} presents, inter alia, CBN CPS
 interpreter and the CBV CPS transformer. We then describe 
-self-interpretation (Section~\ref{selfinterp}),
-discuss related work (Section~\ref{related}) and then conclude.
+self-interpretation (\S\ref{selfinterp}),
+discuss related work (\S\ref{related}) and then conclude.
 
 \section{The object language and its tagless interpreters}\label{language}
 
@@ -495,8 +489,7 @@ testpowfix () =
 and the partial application $\fun{x} \mathit{power}\;x\;7$ is
 \begin{code}
 testpowfix7 () = 
-  lam (\x -> app (app (testpowfix ()) x)
-                 (int 7))
+ lam (\x -> app (app (testpowfix ()) x) (int 7))
 \end{code}
 The dummy argument |()| above is to avoid the monomorphism
 restriction, to keep the type of |testpowfix| and |testpowfix7|
