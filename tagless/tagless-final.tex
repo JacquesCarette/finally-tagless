@@ -1446,63 +1446,6 @@ reference variables in the object language.
 \jacques{In the code, yes.  Probably not in the paper, it is getting 
 long as it is}
 
-\subsection{Translucent types}
-
-The crucial role of the higher-order type parameter r
-
-The type constructor "r" above represents a particular interpreter.  The
-meta-type "r tau" hides how the interpreter represents the object type
-"tau" yet exposes enough of the type information so we can type-check
-the encoding of an object term without knowing what "r" is.  The checked
-term is then well-typed in any interpreter.  Each instance of Symantics
-instantiates "r" to interpret terms in a particular way. The L
-interpreter is quite illustrative. We need the above semantics to be
-able to represent both R and L (the latter returns only Int as the
-values) in the same framework.
-
-We encode a term like |add 1 2| as
-\texttt{app \_add (app \_int 1) (app \_int 2)} where |_add| and |_int| are just
-`free variables'. Now, how to typecheck such a term? Some type should
-be assigned to these free variables. The goal is to complete the work
-without needing any type annotations (so we don't have to introduce any
-type language), with all types inferred and all terms typed. It seems
-the second-order type R neatly separates the typechecking part from
-the representation of R: it hides aspects that depend on the
-particular interpreter, and yet lets enough type information through
-(via its type argument) to permit the typechecking of terms, and infer
-all the types. 
-
-
-
-The only approach that does seem to work
-is the one in incope.hs or incope.ml. If we de-sugar away records and
-type-classes, the type of a term L of the inferred type tau is
-$$ 
-  (\ZZ \rightarrow r \ZZ) \rightarrow
-  (\BB \rightarrow r \BB) \rightarrow
-  \forall \alpha \beta. (r \alpha \rightarrow r \beta)
-      \rightarrow r (\alpha\rightarrow\beta) \rightarrow ... r \tau
-$$
-% (Int -> r Int) ->
-% (Bool -> r Bool) ->
-% (forall alpha beta. (r alpha -> r beta) -> r (alpha->beta)) -> ... r tau
-
-or, if we denote the sequence of initial arguments as S r, terms have
-the type |S r -> r tau|
-The interpreter has the type
-|(forall r. S r -> r tau) -> r' tau|
-
-The higher-order type (variable) of kind |*->*| seems essential. So, at
-least we need some fragment of Fw (somehow our OCaml code manages to
-avoid the full Fw; probably because the module language is separated
-from the term language). Thus, we seem to need a fragment of Fw. It
-seems the inference is possible, as our Haskell and OCaml code
-constructively illustrates. Perhaps we need to characterize our
-fragment.
-
-The attempt to encode self-interpreter brings the |*->*| polymorphism
-the forefront, as we shall now see.
-
 \section{Self-interpretation}\label{selfinterp}
 
 We turn to interpreting the object language in the object language, to
@@ -1570,7 +1513,7 @@ result of this instantiation to~$e$.  In general, to
 interpret~$\encode{e}$ using an interpreter is to instantiate these free
 variables by that interpreter's definitions.
 
-\subsection{Avoiding higher-rank polymorphism}
+\subsection{Avoiding higher polymorphism}
 
 Any approach to self\hyp interpretation needs to spell out first how to
 encode object terms~$e$ to object terms~$\Encode{e}$, and then how to
@@ -1625,7 +1568,7 @@ self\hyp interpretation.
 
 \subsection{Introducing let-bound polymorphism}
 
-Instead of adding higher-rank polymorphism to our object language (along
+Instead of adding higher-rank and higher-kind polymorphism to our object language (along
 with polymorphism over kinds), we add let-bound polymorphism.  As usual,
 we can add a new typing rule
 \begin{equation*}
@@ -1699,11 +1642,13 @@ hoc, but in fact they are explications of the type-class and module
 machinery that we have been using in this paper all along.
 
 In the presence of let-bound polymorphism, we can understand a term
-waiting to be plugged into a context as a higher-rank abstraction over
-the context.  Whereas our object language does not support higher-rank
+waiting to be plugged into a context as a higher-rank and higher-kind abstraction over
+the context.  Whereas our object language does not support higher
 abstraction, our metalanguages do, so they can type-check an object term
-separately from its interpreter---as a functor from a |Symantics| module
-(in OCaml) or a value with a |Symantics| constraint (in Haskell).  Thus
+separately from its interpreter---either as a functor from a |Symantics| module
+containing a type constructor
+(in OCaml), or a value with a |Symantics| constraint over a type
+constructor (in Haskell).  Thus
 ``context'' is a euphemism for a polymorphic argument, and ``plugging''
 is a euphemism for application.
 
@@ -1733,6 +1678,62 @@ RR is not an identity: it is an interpreter that encapsulates another
 interpreter. The RR interpreter can be made self if we treat RR as a
 special form and interpret it always with itself (similar to let and
 hole below).}
+\end{comment}
+
+\begin{comment}
+
+The crucial role of the higher-order type parameter r
+
+The type constructor "r" above represents a particular interpreter.  The
+meta-type "r tau" hides how the interpreter represents the object type
+"tau" yet exposes enough of the type information so we can type-check
+the encoding of an object term without knowing what "r" is.  The checked
+term is then well-typed in any interpreter.  Each instance of Symantics
+instantiates "r" to interpret terms in a particular way. The L
+interpreter is quite illustrative. We need the above semantics to be
+able to represent both R and L (the latter returns only Int as the
+values) in the same framework.
+
+We encode a term like |add 1 2| as
+\texttt{app \_add (app \_int 1) (app \_int 2)} where |_add| and |_int| are just
+`free variables'. Now, how to typecheck such a term? Some type should
+be assigned to these free variables. The goal is to complete the work
+without needing any type annotations (so we don't have to introduce any
+type language), with all types inferred and all terms typed. It seems
+the second-order type R neatly separates the typechecking part from
+the representation of R: it hides aspects that depend on the
+particular interpreter, and yet lets enough type information through
+(via its type argument) to permit the typechecking of terms, and infer
+all the types. 
+
+
+
+The only approach that does seem to work
+is the one in incope.hs or incope.ml. If we de-sugar away records and
+type-classes, the type of a term L of the inferred type tau is
+$$ 
+  (\ZZ \rightarrow r \ZZ) \rightarrow
+  (\BB \rightarrow r \BB) \rightarrow
+  \forall \alpha \beta. (r \alpha \rightarrow r \beta)
+      \rightarrow r (\alpha\rightarrow\beta) \rightarrow ... r \tau
+$$
+% (Int -> r Int) ->
+% (Bool -> r Bool) ->
+% (forall alpha beta. (r alpha -> r beta) -> r (alpha->beta)) -> ... r tau
+
+or, if we denote the sequence of initial arguments as S r, terms have
+the type |S r -> r tau|
+The interpreter has the type
+|(forall r. S r -> r tau) -> r' tau|
+
+The higher-order type (variable) of kind |*->*| seems essential. So, at
+least we need some fragment of Fw (somehow our OCaml code manages to
+avoid the full Fw; probably because the module language is separated
+from the term language). Thus, we seem to need a fragment of Fw. It
+seems the inference is possible, as our Haskell and OCaml code
+constructively illustrates. Perhaps we need to characterize our
+fragment.
+
 \end{comment}
 
 \section{Related work}\label{related}
