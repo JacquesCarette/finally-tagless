@@ -51,6 +51,12 @@
 \ifdim\@subsectionbelowskip<\topsep \@subsectionbelowskip\topsep \fi
 \makeatother
 
+% Allow things to flow a little more tightly around figures
+\renewcommand\floatpagefraction{.95}
+\renewcommand\topfraction{.95}
+\renewcommand\bottomfraction{.95}
+\renewcommand\textfraction{.05}   
+
 % Match the rule inserted by \@makecaption in sigplanconf.cls
 \setproofrulebreadth .33pt
 \newenvironment{floatrule}
@@ -1811,7 +1817,7 @@ heavily on having injection-projection pairs (through reflection and
 reification).  
 
 We have been unable to find a direct reference that establishes that
-the typed $\lambda$-calculus possesses a final co-algebra structure.
+the \emph{typed} $\lambda$-calculus possesses a final co-algebra structure.
 For the untyped $\lambda$-calculus, 
 \citet{HonsellLenisa,honsell99coinductive} establish several interesting
 results along this line.  Of particular interest is their use of
@@ -1820,10 +1826,15 @@ of \emph{observational equivalence}, which directly relates to our
 use of terms with a hole as a context for our self-interpreter 
 (\S\ref{selfinterp}).  The reader is directed to bibliography of
 \citet{honsell99coinductive} for references to the foundational work
-in this important area.
+in this important area.  Particularly intriguing is the link to the
+coinductive aspects of B\"{o}hm trees, as pointed out by
+\citet{berarducci-models} and \citet[Example 4.3.4]{jacobs-coalgebra}.
 
-\jacques{Dig through the last couple of emails I just got from the
-category theory list with references, and this section will be done.}
+One way to interpret some of our results is that we eschew sums (at either the
+term or type, or even kind level) for our terms, but instead use a record type 
+(via Functors in OCaml and typeclasses in Haskell).
+For the self-interpreter, we then proceed to use a Church encoding for
+recursive data types \citep{bohm-automatic}.
 
 \section{Conclusions}\label{conclusion}
 
@@ -1852,7 +1863,9 @@ from any interpreters it may be plugged into.
 
 \acks%\subsection*{Acknowledgments}
 We thank Martin Sulzmann and Walid Taha 
-for helpful discussions.
+for helpful discussions.  Sam Staton, Pieter Hofstra, and Bart Jacobs
+kindly provided some useful references on co-algebraic structures in the
+$\lambda$\hyp calculus
 
 \bibliographystyle{mcbride}
 \bibsep=0pt
