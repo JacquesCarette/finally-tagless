@@ -363,7 +363,6 @@ system \citep{hindley-principal,milner-theory}.  In this \emph{final}
 rather than \emph{initial} approach, both kinds of run-time errors
 in \S\ref{tagproblem} (applying a nonfunction and evaluating an open
 term) are reported at compile time. 
-\oleg{Jacques, do we use final and initial here correctly?}
 Because the new interpreter uses no
 universal type or
 pattern matching, it never results in a run-time error (and is in fact
@@ -1601,7 +1600,9 @@ interpreter~$\si$.
     Then the object terms $\pe(\si[\encode{e}])$ and~$\pe(e)$ are
     either both undefined or both defined and
     equal up to $\alpha$\hyp conversion.
-    \ccshan{Check this}
+%    \ccshan{Check this}
+%    \jacques{seems correct.  If it said that the results are operationally
+%    equivalent to e itself, then that would be less clear.}
 \end{prop}
 
 \subsection{Contexts clarify polymorphism}
@@ -1693,7 +1694,7 @@ $$
 % (Bool -> r Bool) ->
 % (forall alpha beta. (r alpha -> r beta) -> r (alpha->beta)) -> ... r tau
 
-or, if we denote the sequence of initial arguments as S r, terms have
+or, if we denote the sequence of initial arguments as |S r|, terms have
 the type |S r -> r tau|
 The interpreter has the type
 |(forall r. S r -> r tau) -> r' tau|
@@ -1817,7 +1818,7 @@ heavily on having injection-projection pairs (through reflection and
 reification).  
 
 We have been unable to find a direct reference that establishes that
-the \emph{typed} $\lambda$-calculus possesses a final co-algebra structure.
+the \emph{typed} $\lambda$-calculus possesses a final coalgebra structure.
 For the untyped $\lambda$-calculus, 
 \citet{HonsellLenisa,honsell99coinductive} establish several interesting
 results along this line.  Of particular interest is their use of
@@ -1864,7 +1865,7 @@ from any interpreters it may be plugged into.
 \acks%\subsection*{Acknowledgments}
 We thank Martin Sulzmann and Walid Taha 
 for helpful discussions.  Sam Staton, Pieter Hofstra, and Bart Jacobs
-kindly provided some useful references on co-algebraic structures in the
+kindly provided some useful references on coalgebraic structures in the
 $\lambda$\hyp calculus
 
 \bibliographystyle{mcbride}
