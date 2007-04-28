@@ -1,15 +1,26 @@
+2007-04-22  Lydia van Dijk  <lvandijk@freenet.de>
+
+	* README (Contents): Add cc.ml, cc.mli, and test-cc.ml.
+	(Emacs): Move patch for tuareg mode into separate file.
+	* tuareg-1.45.2.el.patch: New file.
+	* tuareg-1.46.2.el.patch: Rename from "tuareg-1.46.2-pa_monad.patch".
+	* Makefile: Cosmetic changes.
+	(VERSION): Bump forward.
+	* cc.ml, cc.mli, test-cc.ml: Cosmetic changes.
+
 2007-04-10  Jacques Carette  <carette@mcmaster.ca>
 
-    * README: Add patch for tuareg 1.46.2 (from Vasile Gaburici)
+	* README: Add patch for Emacs tuareg-mode in version 1.46.2 (from
+	Vasile Gaburici).
 
 2006-06-26  Jacques Carette  <carette@mcmaster.ca>
 
-	* cc.ml: Fix 2 typos in the comments
+	* cc.ml: Fix two typos in the comments.
 
-2006-06-19  Oleg  <oleg@okmij.org>
+2006-06-19  Oleg Kiselyov  <oleg@okmij.org>
 
-	* cc.ml, cc.mli, test-cc.ml: Delimited continuation monad
-	(multi-prompt shift/reset) and the test cases.
+	* cc.ml, cc.mli, test-cc.ml: New files.  Delimited continuation
+	monad (multi-prompt shift/reset) and the test cases.
 
 2006-06-16  Lydia van Dijk  <lvandijk@freenet.de>
 

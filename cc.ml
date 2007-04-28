@@ -1,27 +1,27 @@
 (* Delimited continuations: multi-prompt shift/reset with
    the polymorphic answertype and variously typed prompts.
 
-  This code uses neither existentials nor universals, and relies on
-  NO unsafe operations like Obj.magic.
+   This code uses neither existentials nor universals, and relies on NO
+   unsafe operations like Obj.magic.
 
-  This code was a part of a constructive proof that if 
-  reference cells are available, then the single-prompt shift/reset
-  without polymoprhic answertype is sufficient to implement
-  multi-prompt shift/reset with the polymorphic answertype --
-  while fully preserving strong typing.
-  In other words, if a type system is strong enough to support
-  reference cells, it shall support multi-prompt delimited continuations.
+   This code was a part of a constructive proof that if reference
+   cells are available, then the single-prompt shift/reset without
+   polymoprhic answertype is sufficient to implement multi-prompt
+   shift/reset with the polymorphic answertype -- while fully
+   preserving strong typing.  In other words, if a type system is
+   strong enough to support reference cells, it shall support
+   multi-prompt delimited continuations.
 
-  So, given typed delimited continuations one can get typed
-  reference cells, and vice versa -- preserving the typing. This code
-  proves the vice versa direction.
+   So, given typed delimited continuations one can get typed reference
+   cells, and vice versa -- preserving the typing. This code proves
+   the vice versa direction.
 
-  This code is given with no explanations whatsoever. There is no
-  published explanation. The one that exists is considered ``terse''
-  by one of the co-authors. We are planning to submit the technique
-  to a suitable venue. We are not sure which.
+   This code is given with no explanations whatsoever. There is no
+   published explanation. The one that exists is considered ``terse''
+   by one of the co-authors. We are planning to submit the technique
+   to a suitable venue. We are not sure which.
 
-  This is joint work with Chung-chieh Shan and Amr Sabry.
+   This is joint work with Chung-chieh Shan and Amr Sabry.
 *)
 
 (* Haskell's Cont monad _without_ the answer-type polymorphism *)
@@ -40,21 +40,21 @@ let id x = x
 let compose f g = fun x -> f (g x)
 
 
-(* From  http://www.haskell.org/hawiki/MonadCont 
+(* From  http://www.haskell.org/hawiki/MonadCont
 
 reset :: (Monad m) => ContT a m a -> ContT r m a
 reset e = ContT $ \k -> runContT e return >>= k
 
 shift :: (Monad m) =>
-	 ((a -> ContT r m b) -> ContT b m b) 
+         ((a -> ContT r m b) -> ContT b m b)
           -> ContT b m a
-shift e = ContT $ \k -> 
+shift e = ContT $ \k ->
             runContT (e $ \v -> ContT $ \c -> k v >>= c) return
 
 *)
 
 let reset e = {cont = fun k -> k (e.cont id)}
-let shift e = {cont = fun k -> 
+let shift e = {cont = fun k ->
    (e (fun v -> {cont = fun c -> c (k v)})).cont id}
 
 
@@ -70,7 +70,7 @@ type 'a prompt = PromptFP of (bool * (unit -> 'a)) ref
 
 let set'prompt (PromptFP p) v = lset p (false, fun () -> v)
 let get'prompt (PromptFP p) = fmap (fun x -> snd x ()) (lget p)
-let check'prompt (PromptFP p) 
+let check'prompt (PromptFP p)
     = lget p >>= (fun (mark,v) ->
                    if mark then (lset p (false, v) >> return true)
                    else return false)
@@ -79,7 +79,7 @@ let set'mark (PromptFP p) = lget p >>= (fun (mark,v) -> lset p (true,v))
 
 type 'a cc1 = (unit,'a) CONT.mc
 type univs = unit
-type hfp = HFP of (univs cc1 -> hfp cc1) * 
+type hfp = HFP of (univs cc1 -> hfp cc1) *
                   ((univs cc1 -> univs cc1) -> univs cc1)
          | HVFP of univs
 type promptF0 = hfp ref
@@ -91,23 +91,23 @@ let oShift (p0:promptF0) f =
    shift (fun g -> f (fun v -> (g v) >> lget p0) >>= lset p0) >>= id
 
 
-let rec 
-  pushPFP' p0 p m = hrStopF p0 p 
-		   (oReset p0 (m >>= (fun x -> return (HVFP x))))
+let rec
+  pushPFP' p0 p m = hrStopF p0 p
+                   (oReset p0 (m >>= (fun x -> return (HVFP x))))
  and
   hrStopF p0 p m = m >>= hrStopF' p0 p
- and 
-  hrStopF' p0 p = function (HVFP v) -> return v 
+ and
+  hrStopF' p0 p = function (HVFP v) -> return v
   | HFP (f, c) ->
-   let handle = pushPFP' p0 p (c (compose (hrStopF p0 p) f)) 
-   and relay = oShift p0 
-               (fun g -> return 
+   let handle = pushPFP' p0 p (c (compose (hrStopF p0 p) f))
+   and relay = oShift p0
+               (fun g -> return
                            (HFP ((compose g (compose (hrStopF p0 p) f)), c)))
    in
    check'prompt p >>= fun v -> if v then handle else relay
 
 
-let shiftFP' p0 p f = 
+let shiftFP' p0 p f =
      (lnewref (fun () -> failwith "undefined")) >>=
      (fun ans ->
        let f' k =
@@ -115,7 +115,7 @@ let shiftFP' p0 p f =
                      >> get'prompt p
           in (f k1) >>= set'prompt p
        in
-       (set'mark p) >> 
+       (set'mark p) >>
        (oShift p0 (fun k -> return (HFP (k, f')))) >>
        (lget ans >>= (fun vc -> return (vc ()))))
 
@@ -137,8 +137,8 @@ let run m =
   let () = m.cont (fun v -> ans := (fun () -> v)) in
   !ans ()
 
-let new_prompt () = 
-  CONT.(>>=) 
+let new_prompt () =
+  CONT.(>>=)
     (lnewref (false, fun () -> failwith "undefined"))
     (fun x -> CONT.return (PromptFP x))
 

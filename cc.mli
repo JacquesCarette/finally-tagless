@@ -24,16 +24,16 @@ val run: 'a m -> 'a
 
 (** {4 Specific monad morphisms} *)
 
-(** [new_prompt ()] 
+(** [new_prompt ()]
     create a new prompt that corresponds to the value of the type ['a] *)
 val new_prompt: unit ->  ('a prompt) m
 
-(** [pushP prompt m] 
+(** [pushP prompt m]
     Push the [prompt] and execute the computation [m] *)
 val pushP: 'a prompt -> 'a m -> 'a m
 
 (** [shiftP prompt f]
-    Capture the delimited continuation up to the dynamically closest 
+    Capture the delimited continuation up to the dynamically closest
     occurrence of [prompt], remove that continuation and execute
     [f c], where [c] is the reified captured continuation enclosed in
     its own [prompt]. *)

@@ -1,5 +1,5 @@
                       Syntactic Sugar for Monads
-                             January 2006
+                             April 2007
 
 
 * Contents
@@ -9,6 +9,8 @@ ChangeLog               -  Recent changes
 META.in                 -  Configuration information for findlib
 Makefile                -  GNU make build rules for the extension and the test frame
 README                  -  This file
+cc.ml                   -  Interface of delimited continuation monad
+cc.mli                  -  Implementation of delimited continuation monad
 exception.ml            -  Implementation of exception monad
 exception.mli           -  Interface of exception monad
 io.ml                   -  Implementation of I/O-monad
@@ -16,10 +18,13 @@ io.mli                  -  Interface of I/O-monad
 monadic-io.ml           -  Example of input/output with the I/O-monad
 pa_monad.ml             -  Camlp4 syntax extension for Objective Caml
 pythagorean-triples.ml  -  Nondeterminism monad (backtracking) coded with "pa_monad.ml"
+test-cc.ml              -  Test of delimited continuation monad
 test-exception.ml       -  Test of the exception monad
 test-monad.ml           -  Simple test frame for "pa_monad.ml"
 test-rec.ml             -  Test of recursive-binding features
 test-syntax.ml          -  Thorough test of the syntax extension
+tuareg-1.45.2.el.patch  -  Patch for Emacs tuareg-mode version 1.45.2 and later
+tuareg-1.46.2.el.patch  -  Patch for Emacs tuareg-mode version 1.46.2
 utest.ml                -  Implementation of the unit-test framework
 utest.mli               -  Interface of the unit-test framework
 
@@ -122,89 +127,10 @@ After installation, findlib users cast the usual spell
 
 * Emacs - Tuareg Mode
 
-The following patch against Tuareg-mode version 1.45.2 makes "perform"
-a keyword with the correct indentation behavior.  [See below for 1.46]
+We have included two patches against Tuareg-mode version 1.45.2 and
+version 1.46.2 that make "perform" a keyword with the correct
+indentation behavior.
 
-
---- tuareg.el.orig	2006-01-09 10:33:32.000000000 +0100
-+++ tuareg.el		2006-01-09 10:35:01.000000000 +0100
-@@ -881,7 +881,7 @@
- (defvar tuareg-font-lock-keywords
-   (append
-   (list
--   (list "\\<\\(external\\|open\\|include\\|rule\\|s\\(ig\\|truct\\)\\|module\\|functor\\|with[ \t\n]+\\(type\\|module\\)\\|val\\|type\\|method\\|virtual\\|constraint\\|class\\|in\\|inherit\\|initializer\\|let\\|rec\\|and\\|begin\\|object\\|end\\)\\>"
-+   (list "\\<\\(external\\|open\\|include\\|rule\\|s\\(ig\\|truct\\)\\|module\\|functor\\|with[ \t\n]+\\(type\\|module\\)\\|val\\|type\\|method\\|virtual\\|constraint\\|class\\|in\\|inherit\\|initializer\\|perform\\|let\\|rec\\|and\\|begin\\|object\\|end\\)\\>"
- 	 0 'tuareg-font-lock-governing-face nil nil)
-    (list "\\.<\\|>\\.\\|\\.~\\|\\.!"
- 	 0 'tuareg-font-lock-multistage-face nil nil)
-@@ -1263,7 +1263,7 @@
- ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
- ;;                               Indentation stuff
- 
--(defconst tuareg-keyword-regexp "\\<\\(object\\|initializer\\|and\\|c\\(onstraint\\|lass\\)\\|m\\(atch\\|odule\\|ethod\\|utable\\)\\|s\\(ig\\|truct\\)\\|begin\\|e\\(lse\\|x\\(ception\\|ternal\\)\\)\\|t\\(o\\|hen\\|ry\\|ype\\)\\|v\\(irtual\\|al\\)\\|w\\(h\\(ile\\|en\\)\\|ith\\)\\|i\\(f\\|n\\(herit\\)?\\)\\|f\\(or\\|un\\(ct\\(or\\|ion\\)\\)?\\)\\|let\\|do\\(wnto\\)?\\|parser?\\|rule\\|of\\)\\>\\|->\\|[;,|]"
-+(defconst tuareg-keyword-regexp "\\<\\(object\\|initializer\\|and\\|c\\(onstraint\\|lass\\)\\|m\\(atch\\|odule\\|ethod\\|utable\\)\\|s\\(ig\\|truct\\)\\|begin\\|e\\(lse\\|x\\(ception\\|ternal\\)\\)\\|t\\(o\\|hen\\|ry\\|ype\\)\\|v\\(irtual\\|al\\)\\|w\\(h\\(ile\\|en\\)\\|ith\\)\\|i\\(f\\|n\\(herit\\)?\\)\\|f\\(or\\|un\\(ct\\(or\\|ion\\)\\)?\\)\\|let\\|do\\(wnto\\)?\\|parser?\\|perform\\|rule\\|of\\)\\>\\|->\\|[;,|]"
-   "Regexp for all recognized keywords.")
- 
- (defconst tuareg-match-|-keyword-regexp
-@@ -1332,6 +1332,7 @@
-     ("mutable" . tuareg-default-indent)
-     ("external" . tuareg-default-indent)
-     ("in" . tuareg-in-indent)
-+    ("perform" . tuareg-default-indent)
-     ("of" . tuareg-default-indent)
-     ("to" . tuareg-default-indent)
-     ("downto" . tuareg-default-indent)
-@@ -1382,7 +1383,7 @@
-     (if found kwop (goto-char (point-min)) nil)))
- 
- (defconst tuareg-find-kwop-regexp
--  (concat tuareg-matching-keyword-regexp "\\|\\<\\(for\\|while\\|do\\|if\\|begin\\|s\\(ig\\|truct\\)\\|object\\)\\>\\|[][(){}]\\|\\.<\\|>\\.\\|\\*)"))
-+  (concat tuareg-matching-keyword-regexp "\\|\\<\\(for\\|while\\|do\\|if\\|begin\\|s\\(ig\\|truct\\)\\|object\\|perform\\)\\>\\|[][(){}]\\|\\.<\\|>\\.\\|\\*)"))
- (defun tuareg-make-find-kwop-regexp (kwop-regexp)
-   (concat tuareg-find-kwop-regexp "\\|" kwop-regexp))
- 
-
-
-The above does not appear to work in recent version, use the following
-instead [thanks to Vasile Gaburichi for pointing this out]
-
---- tuareg.el.orig	2006-12-05 04:32:15.000000000 -0500
-+++ tuareg.el	2007-04-05 19:46:30.000000000 -0400
-@@ -1177,7 +1177,7 @@
-  	       0 'tuareg-font-lock-governing-face nil nil))
-       ())
-     (list
--     (list "\\<\\(external\\|open\\|include\\|rule\\|s\\(ig\\|truct\\)\\|module\\|functor\\|with[ \t\n]+\\(type\\|module\\)\\|val\\|type\\|method\\|virtual\\|constraint\\|class\\|in\\|inherit\\|initializer\\|let\\|rec\\|object\\|and\\|begin\\|end\\)\\>"
-+     (list "\\<\\(external\\|open\\|include\\|rule\\|s\\(ig\\|truct\\)\\|module\\|functor\\|with[ \t\n]+\\(type\\|module\\)\\|val\\|type\\|method\\|virtual\\|constraint\\|class\\|in\\|inherit\\|initializer\\|perform\\|let\\|rec\\|object\\|and\\|begin\\|end\\)\\>"
- 	   0 'tuareg-font-lock-governing-face nil nil))
-     (if tuareg-support-metaocaml
- 	(list
-@@ -1351,7 +1351,7 @@
-       tuareg-extra-unindent-regexp-ls3
-     tuareg-extra-unindent-regexp))
- 
--(defconst tuareg-keyword-regexp "\\<\\(object\\|initializer\\|and\\|c\\(onstraint\\|lass\\)\\|m\\(atch\\|odule\\|ethod\\|utable\\)\\|s\\(ig\\|truct\\)\\|begin\\|e\\(lse\\|x\\(ception\\|ternal\\)\\)\\|t\\(o\\|hen\\|ry\\|ype\\)\\|v\\(irtual\\|al\\)\\|w\\(h\\(ile\\|en\\)\\|ith\\)\\|i\\(f\\|n\\(herit\\)?\\)\\|f\\(or\\|un\\(ct\\(or\\|ion\\)\\)?\\)\\|let\\|do\\(wnto\\)?\\|parser?\\|rule\\|of\\)\\>\\|->\\|[;,|]"
-+(defconst tuareg-keyword-regexp "\\<\\(object\\|initializer\\|and\\|c\\(onstraint\\|lass\\)\\|m\\(atch\\|odule\\|ethod\\|utable\\)\\|s\\(ig\\|truct\\)\\|begin\\|e\\(lse\\|x\\(ception\\|ternal\\)\\)\\|t\\(o\\|hen\\|ry\\|ype\\)\\|v\\(irtual\\|al\\)\\|w\\(h\\(ile\\|en\\)\\|ith\\)\\|i\\(f\\|n\\(herit\\)?\\)\\|f\\(or\\|un\\(ct\\(or\\|ion\\)\\)?\\)\\|let\\|do\\(wnto\\)?\\|parser?\\|perform\\|rule\\|of\\)\\>\\|->\\|[;,|]"
-   "Regexp for all recognized keywords.")
- 
- (defconst tuareg-keyword-regexp-ls3
-@@ -1415,7 +1415,7 @@
- 
- (defconst tuareg-find-kwop-regexp
-   (concat tuareg-matching-keyword-regexp
--	  "\\|\\<\\(for\\|while\\|do\\|if\\|begin\\|s\\(ig\\|truct\\)\\|object\\)\\>\\|[][(){}]\\|\\*)"))
-+	  "\\|\\<\\(for\\|while\\|do\\|if\\|begin\\|s\\(ig\\|truct\\)\\|object\\|perform\\)\\>\\|[][(){}]\\|\\*)"))
- 
- (defconst tuareg-find-kwop-regexp-ls3
-   (concat tuareg-find-kwop-regexp "\\|\\<\\(where\\|automaton\\|present\\|match\\)\\>"))
-@@ -1479,6 +1479,7 @@
-     ("until" . tuareg-find-done-match)
-     ("every" . tuareg-find-done-match)
-     ("in" . tuareg-find-in-match)
-+    ("perform" . tuareg-default-indent)
-     ("where" . tuareg-find-in-match)
-     ("with" . tuareg-find-with-match)
-     ("else" . tuareg-find-else-match)
 
 * Useful Literature On Monads
 

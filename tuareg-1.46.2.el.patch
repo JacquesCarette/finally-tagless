@@ -1,0 +1,37 @@
+--- tuareg.el.orig	2006-12-05 04:32:15.000000000 -0500
++++ tuareg.el	2007-04-05 19:46:30.000000000 -0400
+@@ -1177,7 +1177,7 @@
+  	       0 'tuareg-font-lock-governing-face nil nil))
+       ())
+     (list
+-     (list "\\<\\(external\\|open\\|include\\|rule\\|s\\(ig\\|truct\\)\\|module\\|functor\\|with[ \t\n]+\\(type\\|module\\)\\|val\\|type\\|method\\|virtual\\|constraint\\|class\\|in\\|inherit\\|initializer\\|let\\|rec\\|object\\|and\\|begin\\|end\\)\\>"
++     (list "\\<\\(external\\|open\\|include\\|rule\\|s\\(ig\\|truct\\)\\|module\\|functor\\|with[ \t\n]+\\(type\\|module\\)\\|val\\|type\\|method\\|virtual\\|constraint\\|class\\|in\\|inherit\\|initializer\\|perform\\|let\\|rec\\|object\\|and\\|begin\\|end\\)\\>"
+ 	   0 'tuareg-font-lock-governing-face nil nil))
+     (if tuareg-support-metaocaml
+ 	(list
+@@ -1351,7 +1351,7 @@
+       tuareg-extra-unindent-regexp-ls3
+     tuareg-extra-unindent-regexp))
+ 
+-(defconst tuareg-keyword-regexp "\\<\\(object\\|initializer\\|and\\|c\\(onstraint\\|lass\\)\\|m\\(atch\\|odule\\|ethod\\|utable\\)\\|s\\(ig\\|truct\\)\\|begin\\|e\\(lse\\|x\\(ception\\|ternal\\)\\)\\|t\\(o\\|hen\\|ry\\|ype\\)\\|v\\(irtual\\|al\\)\\|w\\(h\\(ile\\|en\\)\\|ith\\)\\|i\\(f\\|n\\(herit\\)?\\)\\|f\\(or\\|un\\(ct\\(or\\|ion\\)\\)?\\)\\|let\\|do\\(wnto\\)?\\|parser?\\|rule\\|of\\)\\>\\|->\\|[;,|]"
++(defconst tuareg-keyword-regexp "\\<\\(object\\|initializer\\|and\\|c\\(onstraint\\|lass\\)\\|m\\(atch\\|odule\\|ethod\\|utable\\)\\|s\\(ig\\|truct\\)\\|begin\\|e\\(lse\\|x\\(ception\\|ternal\\)\\)\\|t\\(o\\|hen\\|ry\\|ype\\)\\|v\\(irtual\\|al\\)\\|w\\(h\\(ile\\|en\\)\\|ith\\)\\|i\\(f\\|n\\(herit\\)?\\)\\|f\\(or\\|un\\(ct\\(or\\|ion\\)\\)?\\)\\|let\\|do\\(wnto\\)?\\|parser?\\|perform\\|rule\\|of\\)\\>\\|->\\|[;,|]"
+   "Regexp for all recognized keywords.")
+ 
+ (defconst tuareg-keyword-regexp-ls3
+@@ -1415,7 +1415,7 @@
+ 
+ (defconst tuareg-find-kwop-regexp
+   (concat tuareg-matching-keyword-regexp
+-	  "\\|\\<\\(for\\|while\\|do\\|if\\|begin\\|s\\(ig\\|truct\\)\\|object\\)\\>\\|[][(){}]\\|\\*)"))
++	  "\\|\\<\\(for\\|while\\|do\\|if\\|begin\\|s\\(ig\\|truct\\)\\|object\\|perform\\)\\>\\|[][(){}]\\|\\*)"))
+ 
+ (defconst tuareg-find-kwop-regexp-ls3
+   (concat tuareg-find-kwop-regexp "\\|\\<\\(where\\|automaton\\|present\\|match\\)\\>"))
+@@ -1479,6 +1479,7 @@
+     ("until" . tuareg-find-done-match)
+     ("every" . tuareg-find-done-match)
+     ("in" . tuareg-find-in-match)
++    ("perform" . tuareg-default-indent)
+     ("where" . tuareg-find-in-match)
+     ("with" . tuareg-find-with-match)
+     ("else" . tuareg-find-else-match)
