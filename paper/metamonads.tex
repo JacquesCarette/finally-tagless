@@ -186,10 +186,12 @@ as our running example. Specifically, our contributions:
       such as loops and conditionals. The extension is non-trivial
       because of control dependencies and because
       let-insertion, as we argue, is a control effect on its own.
+\begin{comment}
       : e.g.,\\
       |let x = exp in ...| has a different \emph{effect} within a
       conditional branch.
-    \item Implementation of the |perform|-notation (patterned after
+\end{comment}
+    \item Implementation of the |doM|-notation (patterned after
       |do|-notation of Haskell) to make monadic code readable.
     \item Use of functors (including higher-order functors) to
       modularize the generator, express aspects (including results of
@@ -220,25 +222,33 @@ We build code generators out of primitive ones using code generation
 combinators. MetaOCaml, as an instance of a multi-stage
 programming system \cite{TahaThesis}, provides exactly the needed
 features: to construct a code expression, to combine them, and to
-execute them. The following shows the simplest code generator |one|,
-and the simplest code combinators\footnote{%
-$\Longrightarrow$ under an expression shows the result of its evaluation}:
+execute them. Figure~\ref{easycode} shows the simplest code generator |one|,
+as well as more complex generators.
 
+\begin{figure}
 \begin{code}
 let one = .<1>. and plus x y = .<.~x + .~y>.
 let simplest_code = let gen x y = plus x (plus y one) in
   .<fun x y -> .~(gen .<x>. .<y>.)>.
 \evalresult{.<fun x_1 -> fun y_2 -> (x_1 + (y_2 + 1))>.}
+let simplest_param_code plus one = let gen x y = plus x (plus y one) in
+  .<fun x y -> .~(gen .<x>. .<y>.)>.
+let param_code1 plus one =
+  let gen x y = plus (plus y one) (plus x (plus y one)) in
+  .<fun x y -> .~(gen .<x>. .<y>.)>.
+let param_code1' plus one =
+  let gen x y = let ce = (plus y one) in  plus ce (plus x ce) in
+  .<fun x y -> .~(gen .<x>. .<y>.)>.
+param_code1' plus one
+\evalresult{.<fun x_1 -> fun y_2 -> ((y_2 + 1) + (x_1 + (y_2 + 1)))>.}
 \end{code}
+\caption{Code generation and combinators. $\Longrightarrow$ under an
+  expression shows the result of its evaluation}\label{easycode}
+\end{figure}
 
 We use MetaOCaml brackets |.<...>.| to generate code expressions,
-i.e., to construct future-stage computations. MetaOCaml provides only
-one mechanism of combining code expressions, by inlining
-\oleg{splicing?} one into
-another. The power of that operation, called escape |.~|, comes from
-the fact that the expression to be spliced in (inlined) can be
-computed: escape lets us perform an arbitrary immediate code-generating
-computation \emph{while} we are
+i.e., to construct future-stage computations. We use escapes |.~| to
+perform an immediate code generating computation \emph{while} we are
 building the future-stage computation. The immediate computation in
 |simplest_code| is the evaluation of the function |gen|, which in turn
 applies |plus|. The function |gen| receives code expressions |.<x>.|
@@ -256,62 +266,26 @@ integers, which we can apply: |(.! simplest_code) 1 2|. The original
 expression.
 
 To see the benefit of code generation, we notice that we can easily
-parameterize our code:
+parameterize our code, |simplest_param_code|, and use it to generate
+code that operates on integers, floating point numbers or booleans --
+in general, any domain that implements |plus| and |one|.
 
-\begin{code}
-let simplest_param_code plus one =
-  let gen x y = plus x (plus y one) in
-  .<fun x y -> .~(gen .<x>. .<y>.)>.
-\end{code}
-and use it to generate code that operates on integers, floating point
-numbers or booleans -- in general, any domain that implements |plus|
-and |one|:
-\begin{code}
-let plus x y = .<.~x +. .~y>. and one = .<1.0>. in
-  simplest_param_code plus one
-let plus x y = .<.~x || .~y>. and one = .<true>. in
-  simplest_param_code plus one
-\end{code}
-Running the former expression yields the function on |float|s, whereas
-the latter expression is the code expression for a boolean function.
-This clearly shows the separation of concerns, namely of that for domain
-operations.
-
-Let us consider a more complex expression:
-\begin{code}
-let param_code1 plus one =
-  let gen x y = plus (plus y one) (plus x (plus y one)) in
-  .<fun x y -> .~(gen .<x>. .<y>.)>.
-\end{code}
-with two occurrences of |plus y one|,
+The generator |param_code1| has two occurrences of |plus y one|,
 which may be quite a complex computation and so we would rather not do
 it twice. We may be tempted to rely on the compiler's
 common-subexpression elimination optimization. When the generated code is
 very complex, however, the compiler may overlook common subexpressions.  Or the
 subexpressions may occur in such an imperative context where the compiler
 might not be able to determine if lifting them is sound. So, being
-conservative, the optimizer will leave the duplicates as they are. 
-We may attempt to eliminate subexpressions as follows: 
-\begin{code}
-let param_code1' plus one =
-  let gen x y = let ce = (plus y one) in  plus ce (plus x ce) in
-  .<fun x y -> .~(gen .<x>. .<y>.)>.
-param_code1' plus one
-\evalresult{.<fun x_1 -> fun y_2 -> ((y_2 + 1) + (x_1 + (y_2 + 1)))>.}
-\end{code}
-However,
+conservative, the optimizer will leave the duplicates as they are. We
+may attempt to eliminate subexpressions as in |param_code1'|. However,
 the result of |param_code1' plus one| still exhibits duplicate
 sub-expressions.  Our |let|-insertion optimization saved the
 computation at the generating stage.  We need a combinator that
 inserts the |let| expression in the generat\emph{ed} code. We need a
-combinator |letgen| to be used as
-\begin{code}
-let ce = letgen (plus y one) in plus ce (plus x ce)
-\end{code}
-yielding the code like 
-\begin{code}
-.<let t = y + 1 in t + (x + t)>.
-\end{code}
+combinator |letgen| to be used as\\
+|let ce = letgen (plus y one) in plus ce (plus x ce)|
+yielding the code like |.<let t = y + 1 in t + (x + t)>.| 
 But that seems impossible because |letgen exp| has to generate
 the expression |.<let t = exp in body>.| but |letgen| does not
 have the |body| yet. The body needs a temporary identifier |.<t>.|
@@ -336,18 +310,12 @@ param_code2 plus one
 \evalresult{.<fun x_1 -> fun y_2 -> let t_3 = (y_2 + 1) in (t_3 + (x_1 + t_3))>.}
 \end{code}
 
-\subsection{Monadic notation, making CPS code clear}\label{monadicnotation}
-
-Comparison of the code that did let-insertion at the generating stage
-\begin{code}
-let ce = (plus y one) in  plus ce (plus x ce)
-\end{code}
-with the corresponding code inserting let at the generated code stage
-\begin{code}
-letgen (plus y one) (fun ce -> k (plus ce (plus x ce)))
-\end{code}
+\noindent Comparison of the code that did let-insertion at the generating stage\\
+|let ce = (plus y one) in  plus ce (plus x ce)|\\
+with the corresponding code inserting let at the generated code stage\\
+|letgen (plus y one) (fun ce -> k (plus ce (plus x ce)))|\\
 clearly shows the difference between  direct-style and CPS code.
-What was |let ce = init in ...| in direct style became
+What was\\ |let ce = init in ...| in direct style became
 |init' (fun ce -> ...)| in CPS. For one thing, |let| became
 ``inverted''. For another, what used to be an expression that yields
 a value, |init|, became an expression that takes an extra argument,
@@ -386,8 +354,8 @@ let fetch s k = k s s  and  store v s k = k (v::s) ()
 let k0 s v = v
 let runM m = m [] k0
 
-let l1 f = fun x -> perform \{ t <-- x; f t\}
-let l2 f = fun x y -> perform \{ tx <-- x; ty <-- y; f tx ty\}
+let l1 f = fun x -> doM \{ t <-- x; f t\}
+let l2 f = fun x y -> doM \{ tx <-- x; ty <-- y; f tx ty\}
 
 let retN a = fun s k -> .<let t = .~a in .~(k s .<t>.)>.
 
@@ -433,37 +401,18 @@ the monad and returns its result, which in our case is the code
 expression. We run the monad by passing it the initial state and the
 initial continuation |k0|. We can now re-write our |param_code2|
 example of the previous section as |param_code3|.
+
+\begin{figure}
 \begin{code}
 let param_code3 plus one =
   let gen x y = bind (retN (plus y one)) (fun ce -> 
                 ret (plus ce (plus x ce)))
   in .<fun x y -> .~(runM (gen .<x>. .<y>.))>.
-\end{code}
-% param_code3 plus one;;
-%
-That does not seem like much of an improvement. With the help of
-camlp4 pre-processor, we introduce the |perform|-notation \cite{metamonadsURL},
-patterned after the |do|-notation of Haskell. 
-\begin{code}
 let param_code4 plus one =
-  let gen x y = mdo \{ ce <-- retN (plus y one);
+  let gen x y = doM \{ ce <-- retN (plus y one);
                       ret (plus ce (plus x ce)) \}
   in .<fun x y -> .~(runM (gen .<x>. .<y>.))>.
-\end{code}
-The function
-|param_code4|, written in the |perform|-notation, is equivalent to
-|param_code3| -- in fact, the camlp4 preprocessor will convert the
-former into the latter. And yet, |param_code4| looks far more
-conventional, as if it were indeed in direct style.
-
-\subsection{Generating control statements}
-We can write operations that generate code other than let-statements,
-e.g., conditionals: see |ifL| in Figure~\ref{ourmonad}. The function |ifL|, 
-albeit straightforward, is not as general as we wish: its arguments are
-already generated pieces of code rather than monadic values. We
-``lift it'', see |ifM'|. 
-\begin{code}
-let ifM' test th el = perform \{
+let ifM' test th el = doM \{
   testc <-- test; thc <-- th; elc <-- el;
   ifL testc thc elc\}
 let gen a i = ifM' (ret .<(.~i) >= 0>.) 
@@ -477,13 +426,26 @@ let gen a i = ifM (ret .<(.~i) >= 0>.)
 \evalresult{.<fun a_1 i_2 -> 
 if (i_2 >= 0) then let t_3 = (Some a_1.(i_2)) in t_3 else None>.}
 \end{code}
-%
-We define functions |l1|,
+\end{figure}
+% param_code3 plus one;;
+
+That does not seem like much of an improvement. With the help of
+camlp4 pre-processor, we introduce the |doM|-notation \cite{metamonadsURL},
+patterned after the |do|-notation of Haskell. The function
+|param_code4|, written in the |doM|-notation, is equivalent to
+|param_code3| -- in fact, the camlp4 preprocessor will convert the
+former into the latter. And yet, |param_code4| looks far more
+conventional, as if it were indeed in direct style.
+
+We can write operations that generate code other than let-statements,
+e.g., conditionals: see |ifL| in Figure~\ref{ourmonad}. The function |ifL|, 
+albeit straightforward, is not as general as we wish: its arguments are
+already generated pieces of code rather than monadic values. We
+``lift it'', see |ifM'|. We define functions |l1|,
 |l2|, |l3| (analogues of |liftM|, |liftM2|, |liftM3| of Haskell) 
 to make such a lifting generic. However we also need
 another |ifM| function, with the same
-interface (see Figure~\ref{ourmonad}).
-The difference between them is
+interface (see Figure~\ref{ourmonad}). The difference between them is
 apparent: in the code above with |ifM'|, the let-insertion
 happened \emph{before} the if-expression, that is, before the test that
 the index |i| is positive. If |i| turned out
@@ -496,10 +458,9 @@ effects when generating control constructions such as conditionals.
 The form |ifM| handles such effects correctly. We
 need similar operators for other OCaml control forms: for generating
 case-matching statements and |for|- and |while|-loops.
-\oleg{put them here?}
-
 
 \section{Aspects and Functors}\label{functors}
+
 The monad represents finer-scale code generation. We need tools for
 larger-scale modularization; we can use any abstraction
 mechanisms we want to structure our code generators, as long as none
@@ -542,7 +503,8 @@ the following variations occur:
     \item \textbf{Pivoting}: Whether to use no, 
         column-wise, or full pivoting.
     \item \textbf{Augmented Matrices}: Whether all or only some
-      columns of the matrix participate in elimination.
+      columns of the matrix participate in elimination. We currently
+        do not implement this aspect.
 \end{enumerate}
 \noindent In addition to the above variations, there are two aspects that 
 recur frequently:
@@ -663,7 +625,7 @@ module OutDetRank(Dom:DOMAIN)(C: CONTAINER2D)
   type contr = Ctr.contr
   type res = contr * Det.outdet * int
   module D = Det   module R = Rank   module P = DiscardPivot
-  let make_result b = perform \{ det  <-- D.fin ();  rank <-- R.fin ();
+  let make_result b = doM \{ det  <-- D.fin ();  rank <-- R.fin ();
     ret .< ( .~b, .~det, .~rank ) >. \}
 end
 \end{code2}
@@ -725,16 +687,16 @@ module Gen(Dom: DOMAIN)(C: CONTAINER2D)(PivotF: PIVOT)
     module Pivot = PivotF(Dom)(C)(Out.D)
     let gen =
       let zerobelow b r c m n brc =
-        let innerbody i = perform \{
+        let innerbody i = doM \{
             bic <-- Ctr.get b i c;
             whenM (l1 LogicCode.not (LogicCode.equal bic Dom.zero ))
                 (seqM (retLoopM (Idx.succ c) (Idx.pred m)
                           (fun k -> Update.update b r c i k) )
                       (Ctr.set b i c Dom.zero)) \} in 
-        perform \{
+        doM \{
               seqM (retLoopM (Idx.succ r) (Idx.pred n) innerbody) 
                    (Update.update_det brc) \} in
-      let dogen a = perform \{
+      let dogen a = doM \{
           r <-- Out.R.decl ();
           c <-- retN (liftRef Idx.zero);
           b <-- retN (Ctr.mapper Dom.normalizerf (Ctr.copy a));
@@ -745,7 +707,7 @@ module Gen(Dom: DOMAIN)(C: CONTAINER2D)(PivotF: PIVOT)
           seqM 
             (retWhileM (LogicCode.and_ (Idx.less (liftGet c) m)
                                        (Idx.less (liftGet r) n) )
-               ( perform \{
+               ( doM \{
                rr <-- retN (liftGet r);
                cc <-- retN (liftGet c);
                pivot <-- l1 retN (Pivot.findpivot b rr m cc n);
@@ -936,9 +898,6 @@ helpful suggestions.
 
 \bibliography{metamonads}
 \bibliographystyle{plain}
-\section{Appendix 0}
-\oleg{grammar of our perform monad. Thank Lydia}
-
 \section{Appendix A}
 The code generated for |GenIV5|, fraction-free GE of the integer matrix
 represented by a flat vector, full pivoting, returning the |U|-factor,
