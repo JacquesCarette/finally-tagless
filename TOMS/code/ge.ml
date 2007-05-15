@@ -68,7 +68,7 @@ end
 module TrackRank = 
   struct
   type 'a lstate = ('a, int ref) abstract
-	(* some magic for the proper visibility of identifiers *)
+    (* some magic for the proper visibility of identifiers *)
   type 'a tag_lstate_ = [`TRan of 'a lstate ]
   type 'a tag_lstate = 'a tag_lstate_
   type ('b,'v) lm = ('a,'v,'s,'w) cmonad
@@ -509,7 +509,7 @@ struct
         (match (C.Dom.better_thanL) with
          Some sel -> 
               Iters.row_iter mat.matrix pos.colpos pos.rowpos
-	      (Idx.pred mat.numrow) C.getL (fun j bjc ->
+          (Idx.pred mat.numrow) C.getL (fun j bjc ->
               whenM (Logic.notequalL bjc C.Dom.zeroL )
                   (matchM (liftGet pivot)
                     (fun pv ->
@@ -691,7 +691,8 @@ module Out_L_U(OD : OUTPUTDEP) = struct
   module IF = struct
       module R   = NoRank
       module P   = KeepPivot(OD.PivotRep)
-      module L   = SeparateLower end
+      module L   = SeparateLower 
+  end
   type res = C.contr * C.contr * IF.P.perm_rep
   let make_result m = perform
     pivmat <-- IF.P.fin ();
@@ -757,7 +758,7 @@ module GenGE(F : FEATURES) = struct
     let can_pack   = 
         let module U = F.Update(F.Det) in
         (U.upd_kind = DivisionBased)
-	(* some more pre-flight tests *)
+    (* some more pre-flight tests *)
     let _ = ensure ((not wants_pack) || can_pack) 
            "Cannot return a packed L in this case"
 
@@ -768,7 +769,7 @@ module GenGE(F : FEATURES) = struct
             whenM (Logic.notequalL bjc C.Dom.zeroL ) (perform
                 det <-- F.Det.get ();
                 optSeqM (Iters.col_iter mat.matrix j (Idx.succ pos.p.colpos) 
-			   (Idx.pred mat.numcol) C.getL
+               (Idx.pred mat.numcol) C.getL
                       (fun k bjk -> perform
                       brk <-- ret (C.getL mat.matrix pos.p.rowpos k);
                       U.update bjc pos.curval brk bjk 
@@ -778,7 +779,7 @@ module GenGE(F : FEATURES) = struct
                           (C.Dom.divL bjc pos.curval))) in
         perform
               seqM (Iters.row_iter mat.matrix pos.p.colpos
-		      (Idx.succ pos.p.rowpos)
+              (Idx.succ pos.p.rowpos)
               (Idx.pred mat.numrow) C.getL innerbody UP) 
                    (U.update_det pos.curval)
 
@@ -805,7 +806,7 @@ module GenGE(F : FEATURES) = struct
              rr <-- retN (liftGet r);
              cc <-- retN (liftGet c);
              let cp  = {rowpos=rr; colpos=cc} in
-	         let module Pivot = F.PivotF(F.Det)(IF.P) in
+             let module Pivot = F.PivotF(F.Det)(IF.P) in
              pivot <-- l1 retN (Pivot.findpivot mat cp);
              seqM (matchM pivot (fun pv -> 
                       seqM (zerobelow mat {p=cp; curval=pv} )
@@ -886,7 +887,7 @@ end
 module GenSolve(F : FEATURES) = struct
     (* module Verify = Test(F)  that does the pre-flight test *)
 
-	(* some more pre-flight tests *)
+    (* some more pre-flight tests *)
     let _ = ensure (C.Dom.kind = Domains_sig.Domain_is_Field)
         "Cannot Solve in a non-field"
     (* more to be filled in *)
