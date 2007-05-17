@@ -211,8 +211,11 @@ as our running example. Specifically, our contributions:
       various types) and \emph{assure composability of aspects} even
       for aspects that use state and have to be accounted in many
       places in the generated code.
-    \item Use functor type sharing constraints to encode domain-specific
-      knowledge.
+    \item Encode domain-specific knowledge in the generators which 
+      will catch domain-specific instantiation errors at generation
+      time.
+    \item Provide a thorough breakdown of the family of LU decomposition
+      algorithms.
 \end{itemize}
 
 The rest of this paper is structured as follows: The next section
@@ -221,7 +224,7 @@ generation, and continuation-passing style (CPS) as a general
 solution.  We also introduce the monad and the issues of generating
 control statements. Section~\ref{functors} describes the use of
 parametrized modules of OCaml to encode all of the aspects of the
-Gaussian Elimination algorithm family in completely separate,
+LU decomposition algorithm family in completely separate,
 independent modules.  We briefly discuss related work in
 section~\ref{related}. We then outline the future work and conclude.
 Appendices give samples of the generated code (which is available in
@@ -515,7 +518,7 @@ case-matching statements and |for|- and |while|-loops.
 
 
 \section{Aspects and Functors}\label{functors}
-The monad represents finer-scale code generation. We need tools for
+The monad represents fine-scale code generation. We need tools for
 larger-scale modularization; we can use any abstraction
 mechanisms we want to structure our code generators, as long as none
 of those abstractions infiltrate the generated code.
@@ -532,7 +535,7 @@ to which these concerns are independent.
 A study of Gaussian Elimination \cite{carette04} shows that
 the following variations occur:
 \begin{enumerate}
-\vspace*{-6pt}
+%\vspace*{-6pt}
     \item \textbf{Domain}: In which (algebraic) domain do the
       matrix elements belong to.  Sometimes the domains are very
       specific (e.g., $\mathbb{Z}, \mathbb{Q}, \mathbb{Z}_p$ and
@@ -945,8 +948,7 @@ investigating statically typed one.
 \subsection*{Acknowledgments}
 We wish to thank Cristiano Calgano for his help in adapting camlp4 for
 use with MetaOCaml. Many helpful discussions with Walid Taha are very
-appreciated. We are grateful to anonymous reviewers for many
-helpful suggestions.
+appreciated. 
 
 
 \bibliography{metamonads}
