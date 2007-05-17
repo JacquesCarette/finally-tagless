@@ -1,4 +1,4 @@
-\documentclass{llncs}
+\documentclass[draft]{elsart}
 
 % Reduce display spacing
 \divide\abovedisplayskip 2
@@ -25,12 +25,12 @@
 
 \usepackage{fancyvrb}
 \DefineShortVerb{\|}
-\DefineVerbatimEnvironment{code}{Verbatim}{xleftmargin=\mathindent,commandchars=\\\{\},fontsize=\small}
-\DefineVerbatimEnvironment{code2}{Verbatim}{xleftmargin=\mathindent,commandchars=\\\{\},fontsize=\footnotesize}
+\DefineVerbatimEnvironment{code}{Verbatim}{xleftmargin=\ourmathindent,commandchars=\\\{\},fontsize=\small}
+\DefineVerbatimEnvironment{code2}{Verbatim}{xleftmargin=\ourmathindent,commandchars=\\\{\},fontsize=\footnotesize}
 \newcommand{\evalresult}[1]{\ensuremath{\Longrightarrow}\textcolor{red}{#1}}
 % \setlength{\parskip}{0pt}
-\newlength{\mathindent}
-\setlength{\mathindent}{1em}
+\newlength{\ourmathindent}
+\setlength{\ourmathindent}{1em}
 
 % \usepackage[backref,colorlinks,bookmarks=true]{hyperref}
 
@@ -44,12 +44,12 @@
 %% \@@listi
 %% \makeatother
 
-\parskip 0pt plus 1pt minus 2pt
+% \parskip 0pt plus 1pt minus 2pt
 \textfloatsep 4pt plus 2pt minus 3pt % Less space around figures
-\abovecaptionskip 0pt plus 0pt minus 2pt
-\belowcaptionskip 0pt plus 0pt minus 2pt
+%\abovecaptionskip 0pt plus 0pt minus 2pt
+%\belowcaptionskip 0pt plus 0pt minus 2pt
 
-\intextsep 2pt plus 0pt minus 1pt
+% \intextsep 2pt plus 0pt minus 1pt
 
 \renewcommand\floatpagefraction{.95}
 \renewcommand\topfraction{.95}
@@ -63,29 +63,34 @@
 \newcommand{\oleg}[1]{{\it [Oleg says: #1]}}
 \newcommand{\jacques}[1]{{\it [Jacques says: #1]}}
 
+\journal{Science of Computer Programming}
+
 \begin{document}
 %\title{Functors, CPS and monads, or how to generate efficient
 %code from abstract designs}
+\begin{frontmatter}
 \title{Multi-stage programming with functors and monads:
 eliminating abstraction overhead from generic code}
-\author{Jacques Carette\inst{1}
- \and
-Oleg Kiselyov\inst{2}
-}
-\institute{McMaster University,
-1280 Main St. West, Hamilton, Ontario Canada L8S 4K1
-\and
-FNMOC, Monterey, CA 93943}
+\author{Jacques Carette\thanksref{1}}
+\address{McMaster University,
+1280 Main St. West, Hamilton, Ontario Canada L8S 4K1}
+\ead{carette@mcmaster.ca}
+\ead[url]{http://www.cas.mcmaster.ca/\textasciitilde carette}
+\author{Oleg Kiselyov}
+\address{FNMOC, Monterey, CA 93943}
+\ead{oleg@pobox.com}
+\ead[url]{http://pobox.com/\textasciitilde oleg/ftp/}
 
-\maketitle
+\thanks[1]{Supported in part by NSERC Discovery Grant RPG262084-03.}
 
 \begin{abstract}
-With Gaussian Elimination as a representative family of numerical
-and symbolic
-algorithms, we use multi-stage programming, monads and Ocaml's
-advanced module system to demonstrate the complete elimination of the
-abstraction overhead while avoiding any inspection of the generated
-code.  We parameterize our Gaussian Elimination code to a great extent
+we use multi-stage programming, monads and Ocaml's
+advanced module system to demonstrate how to eliminate all
+abstraction overhead while avoiding any inspection of the resulting
+code.  We demonstrate this clearly with LU decomposition as a 
+representative family of symbolic and numerical algorithms, and also
+include an application to ODE solving (via a Runge-Kutta algorithm).
+We parameterize our code to a great extent
 (over domain, matrix representations, determinant tracking, 
 pivoting policies, result types, etc) at no run-time cost.  Because
 the resulting code is generated just right and not changed afterwards,
@@ -99,6 +104,13 @@ be statically rejected by the compiler when processing the generator
 rather than the generated code.
 \end{abstract}
 
+\begin{keyword}
+MetaOcaml \sep linear algebra \sep genericity \sep generative \sep staging
+\sep Functor \sep symbolic.
+\end{keyword}
+% Should use either PACS or MSC scheme
+\end{frontmatter}
+
 % previous introduction is saved at the end
 \section{Introduction}
 
@@ -107,20 +119,21 @@ well-known issue of balancing between maximal performance and the
 level of abstraction at which code is written.  Furthermore, already
 in linear algebra, there is a wealth of different aspects that
 \emph{may} need to be addressed. For example, implementations of the
-widely used Gaussian Elimination (GE) algorithm --- the running
+widely used LU decomposition algorithm (which subsumes Gaussian 
+Elimination (GE)) --- the running
 example of our paper --- may need to account for the representation of
 the matrix, whether to compute and return the determinant or rank, how
 and whether search for pivot, etc. Furthermore, current architectures
 demand more and more frequent tweaks which, in general, cannot be done by the
 compiler because the tweaking often involves domain knowledge. 
 A survey \cite{carette04} of
-Gaussian elimination implementations in an industrial package Maple
+Gaussian elimination implementations in the industrial package Maple
 found 6 different aspects and 35 different implementations of the
 algorithm, as well as 45 implementations of directly related
-algorithms.  We can manually write each of these implementations
-optimizing for particular aspects and using cut-and-paste to ``share''
-similar pieces of code.
-We can write a very generic GE procedure that accounts for
+algorithms (LU decomposition, Cholesky decomposition, etc).  We can manually
+write each of these implementations optimizing for particular aspects and using
+cut-and-paste to ``share'' similar pieces of code.
+Or we can write a very generic procedure that accounts for
 all the aspects with appropriate abstractions \cite{Axiom}. The
 abstraction mechanisms however -- be they procedure, method or a
 function call -- have a significant cost, especially for
@@ -130,27 +143,28 @@ A more appealing approach is generative programming
 \cite{Czarnecki,Veldhuizen:1998:ISCOPE,musser94algorithmoriented,BOOST,POOMA,ATLAS}.
 The approach is not without problems, e.g., making sure that the
 generated code is well-formed. This is a challenge in string-based
-generation systems, which generally do not offer such guarantees and
+generation systems, which generally do not offer any guarantees and
 therefore make it very difficult to determine which part of the
 generator is at fault when the generated code cannot be parsed. Other
 problems is preventing accidental variable capture (so-called hygiene
 \cite{HygienicMacros}) and ensuring the generated code is
-well-typed. Lisp-style macros, Scheme hygienic macros, camlp4
-preprocessor \cite{camlp4}, C++ template meta-programming, Template
+well-typed. Lisp-style macros, Scheme hygienic macros, the camlp4
+preprocessor \cite{camlp4}, C++ template meta-programming, and Template
 Haskell \cite{conf/dagstuhl/CzarneckiOST03} solve some of the above
 problems. Of the widely available maintainable languages, only
 MetaOCaml \cite{CTHL03,metaocaml-org}  solves all the above problems
-including the well-typing of the generated code \cite{TahaSheard97,TahaThesis}.
+including the well-typing of both the generator and 
+the generated code \cite{TahaSheard97,TahaThesis}.
 
 But more difficult problems remain. Is the generated code optimal? Do
-we still need post-processing to eliminate common subexpressions and
-fold constants, remove redundant bindings? Is the generator readable,
-resembling the original algorithm, and extensible? Are the aspects
+we still need post-processing to eliminate common subexpressions,
+fold constants, and remove redundant bindings? Is the generator readable,
+resembling the original algorithm? Is the generator extensible? Are the aspects
 truly modular? Can we add another aspect to it or another instance of
 the existing aspect without affecting the existing ones? Finally, can
 we express domain-specific knowledge, e.g., one should not attempt to
 use full division when dealing with matrices of exact integers, nor is
-it worthwhile to use full pivoting on a matrix over $\mathbb Q $.
+it worthwhile to use full pivoting on a matrix over $\mathbb Q$.
 
 MetaOCaml is \emph{generative}: generated code can only be treated as
 a black box: it cannot be inspected and it cannot be post-processed
@@ -177,9 +191,10 @@ unreadable.  But this is needed for proper name generation.
 The problems of compositionality of code generators, expressing
 dependencies among them and domain-specific knowledge remain.
 
-In this paper we report on progress of solving these problems using GE
+In this paper, we report on our continued progress \cite{CaretteKiselyov05}
+solving these problems using linear solving and LU decomposition
 as our running example. Specifically, our contributions:
-\vspace*{-2pt}
+%\vspace*{-2pt}
 \begin{itemize}
     \item Extending a let-insertion, memoizing monad of
       \cite{MSP:PADL04,KiselyovTaha} for generating control structures
@@ -935,7 +950,7 @@ helpful suggestions.
 
 
 \bibliography{metamonads}
-\bibliographystyle{plain}
+\bibliographystyle{elsart-num}
 \section{Appendix 0}
 \oleg{grammar of our perform monad. Thank Lydia}
 
