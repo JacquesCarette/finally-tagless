@@ -1,0 +1,10 @@
+
+Reviewer 2 wrote: ``For the staging facility for Haskell you emulate
+it via a ByteCode GADT. I was rather hoping it could have been
+emulated via TemplateHaskell... I realise TH is untyped and a
+compile-time staging system. The claim would have been that the TH
+code produces will always be type correct.''
+As a matter of fact, we have done precisely that last August, with
+exactly the same claim. We showed the working code to some people, who
+didn't seem to be too excited (perhaps due to the use of TH), so we
+never mentioned that development in the paper.
