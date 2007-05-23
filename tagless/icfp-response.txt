@@ -1,4 +1,12 @@
 
+Ken said: It seems that we should appeal especially to the second reviewer, and
+acknowledge that the individual techniques we use are not new (and
+thank the reviewers for the references), but we use them together to
+solve an important and previously unsolved problem (which, granted, has
+never been defined in full generality).  The simplicity ("[not] enough
+originality") of our solution speaks in favor of our approach, not
+against!
+
 Reviewer 2 wrote: ``For the staging facility for Haskell you emulate
 it via a ByteCode GADT. I was rather hoping it could have been
 emulated via TemplateHaskell... I realise TH is untyped and a
@@ -6,5 +14,20 @@ compile-time staging system. The claim would have been that the TH
 code produces will always be type correct.''
 As a matter of fact, we have done precisely that last August, with
 exactly the same claim. We showed the working code to some people, who
-didn't seem to be too excited (perhaps due to the use of TH), so we
-never mentioned that development in the paper.
+didn't seem to be excited (perhaps due to the use of TH), so we
+never mentioned that development in the paper. That code was one of
+the motivations of the present paper.
+
+
+
+Rev3 wrote: "For example, can you implement a transformation that
+eliminates eta-expansions from a term?"
+
+Rev3 wrote: "This continual modification of your framework is disturbing. Is
+there a general case that parameterizes the type by three types---the
+case for int, the case for bool and the case for arrow?"
+
+
+
+
+
