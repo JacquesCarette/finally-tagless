@@ -584,8 +584,8 @@ The simplest parametrization is to make the domain abstract. As it
 turns out, we need the following to exist in our domains: $0$, $1$,
 $+$, $*$, (unary and binary) $-$, at least \emph{exact} division,
 normalization, and potentially a relative size measure. The simplest
-case of such domain abstraction is |param_code1| in
-Fig.~\ref{easycode}. There, code-generators such as |plus| and |one|
+case of such domain abstraction is |param_code1|.
+There, code-generators such as |plus| and |one|
 were passed as arguments. We need far more than
 two parameters, so we have to group them. Instead of the grouping
 offered by regular records, we use OCaml \emph{structures} (i.e.,
