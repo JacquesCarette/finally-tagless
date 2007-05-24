@@ -1,3 +1,44 @@
+It appears our paper raises a question as to what is an acceptable
+contribution: should solving a known open problem with existing,
+elementary means count as a contribution? Or we must necessarily
+strive for a complex solution, and propose new methods?
+
+Indeed most of the components of our solution are well-known. Indeed
+the solution is trivial, in the hindsight. Yet the problem of a
+tagless interpreter, as formulated in the recent public record -- Pasalic
+etal (ICFP02, PEPM07) and Xi etal (POPL03) -- has been declared open
+and thought to require argued to require major extension to the
+language, such as GADT or dependent types. The extension to tagless
+partial evaluation was open too (Walid Tagless) and the solution
+proposed there did not eliminate all tags. Again, the fact that our
+solution is elementary and uses only existing known tools to give a
+previously not known solution to an important problem should not be
+counted as a disadvantage.
+
+We did not claim to invent a new method (of partial evaluation or of
+interpretation). Rather, we claim that existing, old methods, when
+properly combined, can solve problem that was publicly declared to be
+unsolvable with the existing, old means.
+
+We aimed solve the problem stated in Walid02 (presented at ICFP),
+and Xi (POPL2003), and extended it with partial evaluation. The problem was
+claimed to be open and argued to require major extension to
+the language, such as dependent types. However useful these
+extensions may be, we demonstrated the the stated _open_
+problem and its extensions can be solved trivially using
+existing means. 
+
+Some parts of our solution have been known before; we mention that in
+the paper and reviewers point more references. However, none of the
+parts have been combined to solve the open problem stated as open in
+the recent published literature Walid03 and WalidTagless.
+
+
+Regarding GADTs: we again wish to strongly emphasize that GADTs are
+not available in the released ML distributions; the implementation of
+GADT in the released version of GHC is, as publicly stated by Simon
+Peyton Jones, is not fully correct.
+
 
 Ken said: It seems that we should appeal especially to the second reviewer, and
 acknowledge that the individual techniques we use are not new (and
@@ -26,8 +67,4 @@ eliminates eta-expansions from a term?"
 Rev3 wrote: "This continual modification of your framework is disturbing. Is
 there a general case that parameterizes the type by three types---the
 case for int, the case for bool and the case for arrow?"
-
-
-
-
 

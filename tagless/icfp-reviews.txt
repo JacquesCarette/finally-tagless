@@ -156,5 +156,3 @@ This continual modification of your framework is disturbing. Is there a
 general case that parameterizes the type by three types---the case
 for int, the case for bool and the case for arrow?
 
-
-
