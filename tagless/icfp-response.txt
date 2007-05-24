@@ -1,3 +1,70 @@
+The draft response to the reviewers is immediately below. Next follows
+the (very) draft message to Norman, should we chose to send it. Next
+follows some other material. Please see notes marked XXX
+
+------------------------------------------------------------------------
+
+Reviewer 1 questions if we solve the original problem. He writes
+``Looking at section 1.3 I see a compiler, not an interpreter. Or in
+other language, the solution here is to replace a deep embedding (an
+interpreter) with a shallow embedding (compiling the object language
+into the metalanguage).''
+We take the problem as formulated in PasalicICFP02 and XiPOPL03, their
+notions of interpreter and staging. We specifically use their running
+example and achieve the result they call desirable.
+
+
+
+Rev1 writes
+``Furthermore, of course, shallow embeddings of this kind are not
+exactly new. Even the idea of having multiple interpretations of the
+pervasives of a standard language (as in the Symantics structure) has
+been exploited by many (see e.g. the Lava and Hawk work, Augustsson's
+clever two-level re-interpretation of Haskell (to generate residual
+functions in Excel (!)), Rhiger's thesis, and many DSLs.''
+XXX: do they strongly typed and tagless. Do Excel functions even
+typed? So, our response is: we draw attention to the fact that our
+interpretation is typed and tagless (no universal type). Augustsson's
+work nor Lava (check!) fit into that category. None of them deal with PE,
+
+
+Rev3 writes:
+the basic idea of this paper...appeared many years ago in: Metacircularity in
+the polymorphic lambda-calculus, Frank Pfenning and Peter Lee.
+Type-indexed types have been around since at least Harper &
+Morrisett's Compiling Polymorphism Using Intensional Type Analysis,
+POPL 1995. They also were supported by Generic Haskell.
+
+The reviewer mentions several works -- all use facilities like 
+(third-order lambda-calculus in PfenningLee?) and none implemented in
+the mainstream ML and Haskell distributions. Generic Haskell si not a
+mainstream Haskell distribution.  We do not claim to have
+solved the problem of tagless typed (staged) interpretation:
+PasalicICFP02 and other works have done so. We believe we are the
+first to do so using the facilities available in the mainstream ML
+distributions (basically, HM and simple modules, or Haskell98,
+specifically, constructor classes). References of teh reviwer
+reinforce our point that the problem is believed to require facilities
+that go beyond what's available in mainstream ML or Haskell. We seem
+to be the first to show a counter-example.
+
+
+Rev3 writes: ``GADTs are simply more flexible and easier to use.''
+that may as well be. However, GADTs are
+not available in the released ML distributions; the implementation of
+GADT in the released version of GHC is, as publicly stated by Simon
+Peyton Jones, is not fully correct.
+
+
+
+
+
+
+------------------------------------------------------------------------
+
+
+
+
 It appears our paper raises a question as to what is an acceptable
 contribution: should solving a known open problem with existing,
 elementary means count as a contribution? Or we must necessarily
@@ -34,10 +101,6 @@ parts have been combined to solve the open problem stated as open in
 the recent published literature Walid03 and WalidTagless.
 
 
-Regarding GADTs: we again wish to strongly emphasize that GADTs are
-not available in the released ML distributions; the implementation of
-GADT in the released version of GHC is, as publicly stated by Simon
-Peyton Jones, is not fully correct.
 
 
 Ken said: It seems that we should appeal especially to the second reviewer, and
