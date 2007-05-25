@@ -18,8 +18,9 @@ simple combination of these ideas solves a problem formulated and left
 open by Pasalic et al. (ICFP 2002) and Xi et al. (POPL 2003).
 
 The references provided by the reviewers reflect the "originality"
-of this combination.  On this point, we must correct some statements
-in the reviews that imply related work to be prior art.  First (in
+of this combination.  
+
+First (in
 response to reviewer 1), our interpretations are both typed and tagless,
 specifically using no universal type and type tags.  In contrast:  Lava
 defines universal type for Bit and NumSig.  Excel functions are untyped.
@@ -27,17 +28,17 @@ Rhiger uses universal types throughout (Raw, Term, etc.) and numerous
 type tags in Section 3.  Rhiger even specifically says his encoding
 cannot do typed CPS transformation, unlike ours.  The simplicity of our
 encoding enables trivial proofs of soundness and completeness compared
-to Rhiger's.  It also makes self-interpretation trivial, which is a
+to Rhiger's.  It also makes self-interpretation simple, which is a
 strength of our work.
 
 Second (in response to reviewer 3), our interpretations require no
 extension to the type system of mainstream ML and Haskell.  Pfenning
-and Lee move beyond the second-order polymorphic lambda-calculus to
+and Lee move beyond second-order polymorphic lambda-calculus to
 third-order and higher.  Generic Haskell is not mainstream.  Xi et al.
 point out why intensional type analysis cannot handle HOAS.  Although
 GADTs may be "more flexible and easier to use", they are not available
 in mainstream ML, and GHC as released does not implement them correctly
-(as Simon Peyton Jones admits publicly).  Whereas Pasalic et al. have
+(as Simon Peyton-Jones admits publicly).  Whereas Pasalic et al. have
 already solved the problem of tagless typed (staged) interpretation, our
 solution is the first to use only facilities available in mainstream
 ML and Haskell, namely Hindley-Milner and either simple modules or
@@ -52,17 +53,15 @@ and staging.  We use their running example and achieve the result they
 call desirable.
 
 Reviewer 2 hopes to achieve staging using Template Haskell.  We actually
-did precisely that last August and claimed exactly "that [the code TH
-produces] will always be type correct".  We showed our working code to
-some people, who seemed unimpressed (perhaps due to the use of TH), so
-we never mentioned it in the paper, but it definitely motivates the
+did precisely that, and claimed exactly "that [the code TH
+produces] will always be type correct".  When we showed our working code to
+some people, they seemed unimpressed (perhaps due to the use of TH), so
+we never mentioned it in the paper, but it definitely motivated the
 paper.
 
 
-
-
 ------------------------------------------------------------------------
-Letter no Norman
+Letter to Norman
 
 We point out that references pointed out by the reviewers as being
 precedents to our work are in fact not. Alas, we don't have space to
@@ -79,15 +78,15 @@ elementary means count as a contribution? Or we must necessarily
 strive for a complex solution, and propose new methods?
 
 Indeed most of the components of our solution are well-known. Indeed
-the solution is trivial, in the hindsight. Yet the problem of a
+the solution is simple, in hindsight. Yet the problem of a
 tagless interpreter, as formulated in the recent public record -- Pasalic
 etal (ICFP02, PEPM07) and Xi etal (POPL03) -- has been declared open
-and thought to require argued to require major extension to the
-language, such as GADT or dependent types. The extension to tagless
-partial evaluation was open too (Walid Tagless) and the solution
+and it is argued that the solution requires major extension to the
+language, such as GADTs or dependent types. The extension to tagless
+partial evaluation was open too (Walid Taha, Tagless ...) and the solution
 proposed there did not eliminate all tags. Again, the fact that our
 solution is elementary and uses only existing known tools to give a
-previously not known solution to an important problem should not be
+previously unknown solution to an important problem should not be
 counted as a disadvantage.
 
 We did not claim to invent a new method (of partial evaluation or of
@@ -95,32 +94,28 @@ interpretation). Rather, we claim that existing, old methods, when
 properly combined, can solve problem that was publicly declared to be
 unsolvable with the existing, old means.
 
-We aimed solve the problem stated in Walid02 (presented at ICFP),
-and Xi (POPL2003), and extended it with partial evaluation. The problem was
-claimed to be open and argued to require major extension to
-the language, such as dependent types. However useful these
-extensions may be, we demonstrated the the stated _open_
-problem and its extensions can be solved trivially using
+However useful these extensions may be, we demonstrated that the problem
+described there as _open_ its extensions can be solved using
 existing means. 
 
 Some parts of our solution have been known before; we mention that in
 the paper and reviewers point more references. However, none of the
-parts have been combined to solve the open problem stated as open in
+parts have been combined to solve the problem stated as open in
 the recent published literature Walid03 and WalidTagless.
 
 Our stress on using only mainstream distributions of ML and Haskell is
-legitimate. We are all have first-hand industrial experience, and can
+legitimate. We all have first-hand industrial experience, and can
 vouch that industrial programming is not the place to try experimental
 languages or features. We need stability and maturity. One may come
 across a similar requirement in education, when designing a stable
 course. 
 
-We understand the emotional response our paper may provoke, by showing
-that new and exciting features are not absolutely necessary for
-originally claimed problems. The new features may be deservingly
-exciting and suitable. We do not wish to stop the progress. We merely
-wish to set the record as to which problem can be solved with which
-minimal and widely available tools.
+We understand the emotional response our paper may provoke, by showing that new
+and exciting features are not absolutely necessary to solve some problems which
+were claimed to require these features.  The new features may be deservingly
+exciting and suitable. We do not wish to stop progress. We merely wish to set
+the record straight as to which problem can be solved with which minimal and
+widely available tools.
 
 
 
