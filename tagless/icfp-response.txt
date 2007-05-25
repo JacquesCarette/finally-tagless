@@ -17,17 +17,18 @@ are not new ideas, but we take it to be a strength of our work that a
 simple combination of these ideas solves a problem formulated and left
 open by Pasalic et al. (ICFP 2002) and Xi et al. (POPL 2003).
 
-The references provided by the reviewers reflect the "originality" of
-this combination.  On this point, we must correct some implications
-about related work in the reviews.  First (in response to reviewer 1),
-our interpretations are both typed and tagless, specifically using no
-universal type and type tags.  In contrast:  Lava defines universal
-type for Bit and NumSig.  Excel functions are untyped.  Rhiger uses
-universal types throughout (Raw, Term, etc.) and numerous type tags in
-Section 3.  Rhiger even specifically says his encoding cannot do typed
-CPS transformation, unlike ours.  The simplicity of our encoding enables
-trivial proofs of soundness and completeness compared to Rhiger's.  It
-also makes self-interpretation trivial, which is a strength of our work.
+The references provided by the reviewers reflect the "originality"
+of this combination.  On this point, we must correct some statements
+in the reviews that imply related work to be prior art.  First (in
+response to reviewer 1), our interpretations are both typed and tagless,
+specifically using no universal type and type tags.  In contrast:  Lava
+defines universal type for Bit and NumSig.  Excel functions are untyped.
+Rhiger uses universal types throughout (Raw, Term, etc.) and numerous
+type tags in Section 3.  Rhiger even specifically says his encoding
+cannot do typed CPS transformation, unlike ours.  The simplicity of our
+encoding enables trivial proofs of soundness and completeness compared
+to Rhiger's.  It also makes self-interpretation trivial, which is a
+strength of our work.
 
 Second (in response to reviewer 3), our interpretations require no
 extension to the type system of mainstream ML and Haskell.  Pfenning
