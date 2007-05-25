@@ -1,6 +1,3 @@
-
-
-
 The draft response to the reviewers is immediately below. Next follows
 the (very) draft message to Norman, should we chose to send it. Next
 follows some other material. Please see notes marked XXX
@@ -9,27 +6,27 @@ follows some other material. Please see notes marked XXX
 
 We thank the reviewers for their comments and especially references.
 We reiterate that we contribute the first typed tagless family of
-interpreters, partial evaluators and CPS transformations, implemented in
-the type system of mainstream ML and Haskell.  We agree that "shallow
+interpreters, partial evaluators and CPS transformations, implemented
+in the type system of mainstream ML and Haskell.  Indeed, "shallow
 embeddings", "multiple interpretations of the pervasives of a standard
 language", and "the encoding of the term GADT as its elimination form"
-are not new ideas, but we take it to be a strength of our work that a
-simple combination of these ideas solves a problem formulated and left
-open by Pasalic et al. (ICFP 2002) and Xi et al. (POPL 2003).
+are not new ideas, but it is a strength of our work that a simple
+combination of these ideas solves a problem that Pasalic et al. (ICFP
+2002), Xi et al. (POPL 2003) and others formulated and believed to
+demand their type-system extensions.
 
-The references provided by the reviewers reflect the "originality"
+The references provided by the reviewers confirm the "originality"
 of this combination.  
 
-First (in
-response to reviewer 1), our interpretations are both typed and tagless,
-specifically using no universal type and type tags.  In contrast:  Lava
-defines universal type for Bit and NumSig.  Excel functions are untyped.
-Rhiger uses universal types throughout (Raw, Term, etc.) and numerous
-type tags in Section 3.  Rhiger even specifically says his encoding
-cannot do typed CPS transformation, unlike ours.  The simplicity of our
-encoding enables trivial proofs of soundness and completeness compared
-to Rhiger's.  It also makes self-interpretation simple, which is a
-strength of our work.
+First (in response to reviewer 1), our interpretations are both typed
+and tagless, specifically using no universal type and type tags.  In
+contrast: Lava defines universal type for Bit and NumSig.  Excel
+functions are untyped.  Rhiger uses universal types throughout (Raw,
+Term, etc.) and numerous type tags in Section 3.  Rhiger even
+specifically says his encoding cannot do typed CPS transformation,
+unlike ours.  The simplicity of our encoding enables trivial proofs of
+soundness and completeness compared to Rhiger's.  It also makes
+self-interpretation simple, which is a strength of our work.
 
 Second (in response to reviewer 3), our interpretations require no
 extension to the type system of mainstream ML and Haskell.  Pfenning
@@ -37,20 +34,21 @@ and Lee conclude that partial evaluation and program transformations
 "do not seem to be expressible" even using their extension to F-omega,
 perhaps because their avoidance of general recursive types compels
 them to include the polymorphic lift that we avoid in our Section 4.1.
-Generic Haskell is not mainstream.  Xi et al. point out why intensional
-type analysis cannot handle HOAS.  Although GADTs may be "more flexible
-and easier to use", they are not available in mainstream ML, and GHC as
-released does not implement them correctly (as Simon Peyton-Jones admits
-publicly).  Whereas Pasalic et al. have already solved the problem of
-tagless typed (staged) interpretation, our solution is the first to
-use only facilities available in mainstream ML and Haskell, namely
+Generic Haskell is not mainstream.  Xi et al. point out why
+intensional type analysis cannot handle HOAS with fix.  Although GADTs
+may indeed be "more flexible and easier to use", they are not
+available in mainstream ML, and GHC as released does not implement
+them correctly (as Simon Peyton-Jones admits publicly).  Whereas
+Pasalic et al. have already solved the problem of tagless typed
+(staged) interpretation, our solution is the first to use only
+facilities available in mainstream ML and Haskell, namely
 Hindley-Milner and either simple modules or constructor classes.  The
-simplicity of these facilities is again a strength of our work: it makes
-embedded DSLs more practical to build.
+simplicity of these facilities is again a strength of our work: it
+makes embedded DSLs more practical to build.
 
 Reviewer 1 questions if we solve "the original problem".  We solve the
 problem formulated by Pasalic et al. (ICFP 2002) and Xi et al. (POPL
-2003).  In particular (in response to "Looking at section 1.3 I see a
+2003).  In particular (responding to "Looking at section 1.3 I see a
 compiler, not an interpreter"), we adopt their notions of interpreter
 and staging.  We use their running example and achieve the result they
 call desirable.
