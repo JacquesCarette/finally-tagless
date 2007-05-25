@@ -33,17 +33,20 @@ strength of our work.
 
 Second (in response to reviewer 3), our interpretations require no
 extension to the type system of mainstream ML and Haskell.  Pfenning
-and Lee move beyond second-order polymorphic lambda-calculus to
-third-order and higher.  Generic Haskell is not mainstream.  Xi et al.
-point out why intensional type analysis cannot handle HOAS.  Although
-GADTs may be "more flexible and easier to use", they are not available
-in mainstream ML, and GHC as released does not implement them correctly
-(as Simon Peyton-Jones admits publicly).  Whereas Pasalic et al. have
-already solved the problem of tagless typed (staged) interpretation, our
-solution is the first to use only facilities available in mainstream
-ML and Haskell, namely Hindley-Milner and either simple modules or
-constructor classes.  The simplicity of these facilities is again a
-strength of our work: it makes embedded DSLs more practical to build.
+and Lee conclude that partial evaluation and program transformations
+"do not seem to be expressible" even using their extension to F-omega,
+perhaps because their avoidance of general recursive types compels
+them to include the polymorphic lift that we avoid in our Section 4.1.
+Generic Haskell is not mainstream.  Xi et al. point out why intensional
+type analysis cannot handle HOAS.  Although GADTs may be "more flexible
+and easier to use", they are not available in mainstream ML, and GHC as
+released does not implement them correctly (as Simon Peyton-Jones admits
+publicly).  Whereas Pasalic et al. have already solved the problem of
+tagless typed (staged) interpretation, our solution is the first to
+use only facilities available in mainstream ML and Haskell, namely
+Hindley-Milner and either simple modules or constructor classes.  The
+simplicity of these facilities is again a strength of our work: it makes
+embedded DSLs more practical to build.
 
 Reviewer 1 questions if we solve "the original problem".  We solve the
 problem formulated by Pasalic et al. (ICFP 2002) and Xi et al. (POPL
