@@ -4,6 +4,52 @@ follows some other material. Please see notes marked XXX
 
 ------------------------------------------------------------------------
 
+We must correct factual errors.
+Rev1 writes
+``Furthermore, of course, shallow embeddings of this kind are not
+exactly new. Even the idea of having multiple interpretations of the
+pervasives of a standard language (as in the Symantics structure) has
+been exploited by many (see e.g. the Lava and Hawk work, Augustsson's
+clever two-level re-interpretation of Haskell (to generate residual
+functions in Excel (!)), Rhiger's thesis, and many DSLs.''
+
+We emphasize our interpretations are both typed and tagless,
+specifically using no universal type and type tags. 
+(check XXX? excel functions are untyped) Lava defines universal
+type for Bit and NumSig; Rhiger thesis uses universal type throughout:
+Raw, Term, etc.  and numerous type tags in Sec 3.  Rhiger specifically
+says his encoding cannot do typed CPS transformation -- whereas our
+does. The marked benefit of our encoding is trivial soundness and
+completeness proofs, especially compared to his. Thus our main claim that
+we showed the first typed tagless family of interpreters, PE and CPS
+implemented in mainstream ML and Haskell stands.
+
+Rev3 writes:
+the basic idea of this paper...appeared many years ago in: Metacircularity in
+the polymorphic lambda-calculus, Frank Pfenning and Peter Lee.
+Type-indexed types have been around since at least Harper &
+Morrisett's Compiling Polymorphism Using Intensional Type Analysis,
+POPL 1995. They also were supported by Generic Haskell.
+
+The reviewer mentions several works -- all use facilities like 
+(third-order lambda-calculus in PfenningLee?) and none implemented in
+the mainstream ML and Haskell distributions. Generic Haskell is not a
+mainstream Haskell distribution.  We do not claim to have
+solved the problem of tagless typed (staged) interpretation:
+PasalicICFP02 and other works have done so. We believe we are the
+first to do so using the facilities available in the mainstream ML
+distributions (basically, HM and simple modules, or Haskell98,
+specifically, constructor classes)(PS: without the immaterial ByteCode in
+incope.hs, our code is Haskell98). References of the reviewer
+reinforce our point that the problem is believed to require facilities
+that go beyond what's available in mainstream ML or Haskell. We seem
+to be the first to show a counter-example.
+
+Regarding intensional type analysis: XiPOPL2003 points out why HOAS AST
+(used in his and our work) cannot be handled via intensional type
+analysis.
+
+
 Reviewer 1 questions if we solve the original problem. He writes
 ``Looking at section 1.3 I see a compiler, not an interpreter. Or in
 other language, the solution here is to replace a deep embedding (an
@@ -15,55 +61,42 @@ example and achieve the result they call desirable.
 
 
 
-Rev1 writes
-``Furthermore, of course, shallow embeddings of this kind are not
-exactly new. Even the idea of having multiple interpretations of the
-pervasives of a standard language (as in the Symantics structure) has
-been exploited by many (see e.g. the Lava and Hawk work, Augustsson's
-clever two-level re-interpretation of Haskell (to generate residual
-functions in Excel (!)), Rhiger's thesis, and many DSLs.''
-XXX: do they strongly typed and tagless. Do Excel functions even
-typed? So, our response is: we draw attention to the fact that our
-interpretation is typed and tagless (no universal type). Augustsson's
-work nor Lava (check!) fit into that category. None of them deal with PE,
-
-
-Rev3 writes:
-the basic idea of this paper...appeared many years ago in: Metacircularity in
-the polymorphic lambda-calculus, Frank Pfenning and Peter Lee.
-Type-indexed types have been around since at least Harper &
-Morrisett's Compiling Polymorphism Using Intensional Type Analysis,
-POPL 1995. They also were supported by Generic Haskell.
-
-The reviewer mentions several works -- all use facilities like 
-(third-order lambda-calculus in PfenningLee?) and none implemented in
-the mainstream ML and Haskell distributions. Generic Haskell si not a
-mainstream Haskell distribution.  We do not claim to have
-solved the problem of tagless typed (staged) interpretation:
-PasalicICFP02 and other works have done so. We believe we are the
-first to do so using the facilities available in the mainstream ML
-distributions (basically, HM and simple modules, or Haskell98,
-specifically, constructor classes). References of teh reviwer
-reinforce our point that the problem is believed to require facilities
-that go beyond what's available in mainstream ML or Haskell. We seem
-to be the first to show a counter-example.
-
-
 Rev3 writes: ``GADTs are simply more flexible and easier to use.''
-that may as well be. However, GADTs are
-not available in the released ML distributions; the implementation of
-GADT in the released version of GHC is, as publicly stated by Simon
-Peyton Jones, is not fully correct.
+That may as well be. However, GADTs are not available in the
+mainstream released ML distributions; the implementation of GADT in
+the released version of GHC is, by public admission by Simon Peyton
+Jones, is not fully correct. Both in industry and education it is
+common to come across the requirement to use only mature, stable,
+mainstream distributions. Our stress on using mainstream Haskell and
+ML withour any experimental extensions is deliberate and legitimate.
 
 
+
+Reviewer 2 wrote: ``For the staging facility for Haskell you emulate
+it via a ByteCode GADT. I was rather hoping it could have been
+emulated via TemplateHaskell... I realise TH is untyped and a
+compile-time staging system. The claim would have been that the TH
+code produces will always be type correct.''
+As a matter of fact, we have done precisely that last August, with
+exactly the same claim. We showed the working code to some people, who
+didn't seem to be excited (perhaps due to the use of TH), so we
+never mentioned that development in the paper. That code was one of
+the motivations of the present paper.
 
 
 
 
 ------------------------------------------------------------------------
+Letter no Norman
 
-
-
+We point out that references pointed out by the reviewers as being
+precedents to our work are in fact not. Alas, we don't have space to
+show where exactly in the references pointed out by the reviwer there is a
+definition of the universal type or tag -- which we explicitly do not
+have. We have this information, but we don't have space to present it.
+Despite what reviewers 1 and 3 claim -- the problem as formulated (not by us!
+-- but in PasalicICFP02, for example) has not been solved using
+mainstream ML or Haskell. 
 
 It appears our paper raises a question as to what is an acceptable
 contribution: should solving a known open problem with existing,
@@ -100,6 +133,51 @@ the paper and reviewers point more references. However, none of the
 parts have been combined to solve the open problem stated as open in
 the recent published literature Walid03 and WalidTagless.
 
+Our stress on using only mainstream distributions of ML and Haskell is
+legitimate. We are all have first-hand industrial experience, and can
+vouch that industrial programming is not the place to try experimental
+languages or features. We need stability and maturity. One may come
+across a similar requirement in education, when designing a stable
+course. 
+
+We understand the emotional response our paper may provoke, by showing
+that new and exciting features are not absolutely necessary for
+originally claimed problems. The new features may be deservingly
+exciting and suitable. We do not wish to stop the progress. We merely
+wish to set the record as to which problem can be solved with which
+minimal and widely available tools.
+
+
+
+
+------------------------------------------------------------------------
+
+Rhiger's thesis is actually good! We should refer to it in related
+work.
+
+
+
+Augustsson's
+work (check? excel functions are untyped) 
+nor Lava (it has universal type for Bit and NumSig and correspondent
+tag matching: it is not tagless: see Sec 32 of Lava: Hardware Design
+in Haskell (1998)) fit into that category. 
+Rhiger's  thesis
+http://www.brics.dk/DS/01/4/index.html
+It6 is presty good. But Fig 2.2, p33: universal type Raw. 
+They use phantom type upon the Exp datatype. But that is cheating:
+phantom type means essentially we can easily do coerce. We use real
+types.
+That's why
+he had to do tedious proofs in Sec 2 of soundness and completeness of
+embedding. Whereas our proofs are obvious.
+His sec 3 is based on data representation of terms. They have type
+tags.  We do nothing of
+that kind: See Sec 3.1.2. See numerous "data Term" in Sec3, which is
+the U type. In Sec 3.3.4 (p76) Rhiger specifically says that his
+encoding cannot do typed CPS transformation -- whereas our does. BTW, Rhiger thesis contains the definitions
+of the interpreter and the compiler, in the beginning. Use this in
+response to Rev1)
 
 
 
@@ -111,16 +189,6 @@ never been defined in full generality).  The simplicity ("[not] enough
 originality") of our solution speaks in favor of our approach, not
 against!
 
-Reviewer 2 wrote: ``For the staging facility for Haskell you emulate
-it via a ByteCode GADT. I was rather hoping it could have been
-emulated via TemplateHaskell... I realise TH is untyped and a
-compile-time staging system. The claim would have been that the TH
-code produces will always be type correct.''
-As a matter of fact, we have done precisely that last August, with
-exactly the same claim. We showed the working code to some people, who
-didn't seem to be excited (perhaps due to the use of TH), so we
-never mentioned that development in the paper. That code was one of
-the motivations of the present paper.
 
 
 
