@@ -256,69 +256,6 @@ end;;
 module EXC = EX(C);;
 
 (* ------------------------------------------------------------------------ *)
-(* Pure eta-elimination compiler *)
-
-module CWE = struct
-  type ('c,'sv,'dv) repr = 
-      { dy: ('c,'dv) code; (* generated code, as by the `C' compiler. *)
-	st: 'sv option}
-
-  type rr = Var of ('a->('c,'a) code) | Cd0 of ('c,'b) code
-            | Cd of ('a -> ('c,'b) code)
-
-
-
-fun x y
-  let int (x:int) = .<x>.
-  let bool (b:bool) = .<b>.
-  let add e1 e2 = .<.~e1 + .~e2>.
-  let mul e1 e2 = .<.~e1 * .~e2>.
-  let leq x y = .< .~x <= .~y >.
-  let eql x y = .< .~x = .~y >.
-  let if_ eb et ee = 
-    .<if .~eb then .~(et () ) else .~(ee () )>.
-
-  let lam f = .<fun x -> .~(f .<x>.)>.
-  let app e1 e2 = .<.~e1 .~e2>.
-  let fix f = .<let rec self n = .~(f .<self>.) n in self>.
-  (* let unfold z s = .<let rec f n = if n <= 0 then .~z else .~s (f (n-1)) in f>. *)
-end;;
-
-type tn
-type ('h,'t) tc
-;;
-
-type ('c,'a,'hyps,'b) rr = { var: ('a -> ('c,'a) code) option;
-              cd0 : ('c,'b) code option;
-              cdh : 'a -> ('c,'hyps1,'b) rr}
-;;
-
-let int (x:int) = {dy = .<fun _ -> x>.; cd0 = Some .<x>.; var = None};;
-let add e1 e2 = match (e1,e2) with
-    ({cd0 = Some e1},{cd0 = Some e2}) -> 
-      {dy = .<fun _ -> .~e1 + .~e2>.;
-       cd0 = Some .<.~e1 + .~e2>.;
-       var = None}
-| ({dy = e1},{dy = e2}) -> {dy = .<fun x -> (.~e1 x) + (.~e2 x)>.;
-                            cd0=None; var=None}
-;;
-
-let lam f = f {dy = .<fun x -> x>.; var = Some .<fun x -> x>.;
-               cd0 = None};;
-
-let app e1 e2 = match (e1,e2) with
-    ({cd0 = Some e1},{cd0 = Some e2}) -> 
-      {dy = .<fun _ -> .~e1 .~e2>.;
-       cd0 = Some .<.~e1 .~e2>.;
-       var = None}
-| (_,{var = Some _}) -> e1
-| ({dy = e1},{dy = e2}) -> {dy = .<fun x -> (.~e1 x)  (.~e2 x)>.;
-                            cd0=None; var=None}
-;;
-
-
-
-(* ------------------------------------------------------------------------ *)
 (* Partial evaluator *)
 (* Inspired by Ken's solution *)
 
