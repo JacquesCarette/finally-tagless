@@ -20,9 +20,9 @@
     \setlength{\pdfpageheight}{11in}
 \fi \fi \fi
 
-%\newcommand{\jacques}[1]{{\it [Jacques says: #1]}}
-%\newcommand{\oleg}[1]{{\it [Oleg says: #1]}}
-%\newcommand{\ccshan}[1]{{\it [Ken says: #1]}}
+\newcommand{\jacques}[1]{{\it [Jacques says: #1]}}
+\newcommand{\oleg}[1]{{\it [Oleg says: #1]}}
+\newcommand{\ccshan}[1]{{\it [Ken says: #1]}}
 
 \usepackage{natbib1}
 \let\cite=\citep
@@ -75,6 +75,8 @@
 \DeclareMathSymbol{:}{\mathbin}{operators}{"3A}
 
 \begin{document}
+
+% http://flint.cs.yale.edu/aplas2007/
 
 \conferenceinfo{ICFP '07}{Freiburg, Germany} 
 \copyrightyear{2007} 
@@ -147,6 +149,12 @@ bindings.
 
 \section{Introduction}\label{intro}
 
+\oleg{Emphasize somewhere in the Intro that we solved the problem
+exactly as posed in Walid's, Xi's, and SPJ's papers. And we obtain the
+result in the form those papers declare desirable.
+We use their running example and achieve the result they
+call desirable.}
+
 A popular way to define and implement a language is to embed it in
 another \citep{reynolds-definitional}.  Embedding means to represent
 terms and values of the \emph{object language} as terms and values in the
@@ -177,7 +185,8 @@ language.
     \label{fig:object}
 \end{figure}
 
-We focus on embedding a typed object language into a typed metalanguage.
+We focus on embedding a \emph{typed} object language into a 
+\emph{typed} metalanguage.
 The benefit of types in this setting is to rule out meaningless object terms,
 thus enabling faster interpretation and assuring that our interpreters
 do not get stuck.
@@ -202,9 +211,9 @@ whether using dependent types \citep{WalidICFP02} or not \citep{baars-typing}.
 
 \subsection{The tag problem}\label{tagproblem}
 
-%\oleg{see tagless\_interp1.ml, module Tagfull for the complete code.
-%  If you change the code in here, please adjust the .ml file
-%  accordingly. Let the paper and the accompanying code be in sync.}
+% see tagless\_interp1.ml, module Tagfull for the complete code.
+% If you change the code in here, please adjust the .ml file
+% accordingly. Let the paper and the accompanying code be in sync.
 
 It is straightforward to create an algebraic data type, say in OCaml, to
 represent object terms such as those in Figure~\ref{fig:object}.
@@ -379,6 +388,13 @@ metalanguage implementation, we avoid the serious performance penalty
 explains deeper technical reasons that inevitably lead to these performance
 penalties.
 
+\oleg{We must stress that we do not Church-encode a universal type
+(or the solution in the previous section). The latter will not be
+patently total because we have to provide error continuatiuons and we
+have to argue why they will not be called. A compiler is mots likely
+incapable of such an argument and so has to compile them in. Here, we do
+not have any error continuations at all.}
+
 The evaluator above is wired directly into the
 functions |b|, |lam|, |app|, and so on.  In the rest of this paper, 
 we explain how to abstract the interpreter so as
@@ -444,6 +460,39 @@ programming language is a rather subtle matter. In fact, it is only
 recently that some work on programming type-indexed values in ML
 \citep{yang-encoding} has given a hint of how such a function can be
 expressed.''  We discuss related work in~\S\ref{related}.
+
+
+\oleg{We must stress that: of course all parts of our solution are
+known. That was the whole point. The problem was claimed to be
+unsolvable with the existing means, and so new techniques have been
+proposed. We showed that regardless of the merits, power and convenience of
+those new techniques, the existing, old solutions were sufficient for
+the stated problem -- thus correcting the public record (of ICFP and
+POPL conferences). We don't say GADT, etc. are useless -- but we wish
+to show to what extent the existing old methods suffice.}
+\oleg{Our contribution that we make do with a very restricted polymorphism
+(HM plus the module system) which guarantees inference in ML and
+Haskell.}
+\oleg{So, our thrust is: there is public (ICFP, POPL) record of the problem
+being open and claims that solving it requires various
+extensions. We show that the problem as formulated in the literature
+can be solved with the existing means. We claim the novelty of this,
+essentially negative, result. We specifically disclaim any new
+inventions.}
+
+Again, the fact that our
+solution is elementary and uses only existing known tools to give a
+previously unknown solution to an important problem should not be
+counted as a disadvantage.
+We did not claim to invent a new method (of partial evaluation or of
+interpretation). Rather, we claim that existing, old methods, when
+properly combined, can solve problem that was publicly declared to be
+unsolvable with the existing, old means.
+Some parts of our solution have been known before; we mention that in
+the paper and reviewers point more references. However, none of the
+parts have been combined to solve the problem stated as open in
+the recent published literature Walid03 and WalidTagless.
+
 
 \section{The object language and its tagless interpreters}\label{language}
 
@@ -759,7 +808,13 @@ code produced for $\fun{x}x$ is simply |fun x_6 -> x_6| and does not
   |eval| in the |L e| lines in \S\ref{tagproblem}.
 The resulting code obviously contains no tags and no pattern matching.
 
-We have also implemented this compiler in Haskell. Since Haskell
+We have also implemented this compiler in Haskell. 
+\oleg{mention TH solution in footnote. ``I was rather hoping it could
+have been emulated via TemplateHaskell. I realise TH is untyped and a
+compile-time staging system. The claim would have been that the TH
+code produces will always be type correct. We could still map the
+typed ByteCode data type to untyped TH abstract syntax.''}
+Since Haskell
 has no (convenient, typed) staging facility, we had to emulate
 it. To be precise, we defined a data type |ByteCode| with
 constructors such as |Var|, |Lam|, |App|, |Fix|, and |INT|.
@@ -1014,6 +1069,14 @@ the tagging problem and the purpose of tag elimination. A typed tagged
 interpreter contains many pattern\hyp matching forms that look partial
 but never fail in reality. The goal is to make this safety
 \emph{syntactically} apparent.
+
+\oleg{Rev3:In 4.3, please carefully distinguish the limitation of GHC's
+implementation of GADTs from the type theory. The pattern match in 4.3
+is statically exhaustive, and can be shown so in other systems. If
+this code were implemented using inductive families Coq, for example,
+the user would be able to (and in fact required) to prove that the
+other cases could not occur.}
+
 
 \subsection{The ``final'' solution}
 \label{S:PE-solution}
@@ -1668,6 +1731,110 @@ fragment.
 
 \section{Related work}\label{related}
 
+Stress typed.
+
+The new features may be deservingly
+exciting and suitable. We do not wish to stop progress. We merely wish to set
+the record straight as to which problem can be solved with which minimal and
+widely available tools.
+
+
+
+Even the idea of having multiple interpretations of the
+pervasives of a standard language (as in the Symantics structure) has
+been exploited by many (see e.g. the Lava and Hawk work, Augustsson's
+clever two-level re-interpretation of Haskell (to generate residual
+functions in Excel (!)), Rhiger's thesis, and many DSLs.
+
+Stress differences from phantom types.
+Use of phantom types is popular: see Lava 
+Lava: Hardware Design in Haskell (1998)) and Rhiger's thesis.
+(Lava: has universal type for Bit and NumSig and correspondent
+tag matching: it is not tagless).
+
+Rhiger's But Fig 2.2, p33: universal type Raw.  He uses phantom type
+upon the Exp datatype. But that is cheating: phantom type means
+essentially we can easily do coerce. We use real types.  That's why he
+had to do tedious proofs in Sec 2 of soundness and completeness of
+embedding. Whereas our proofs are obvious.  His sec 3 is based on data
+representation of terms. They have type tags.  We do nothing of that
+kind: See Sec 3.1.2. See numerous "data Term" in Sec3, which is the U
+type.  In Sec 3.3.4 (p76) Rhiger specifically says that his encoding
+cannot do typed CPS transformation -- whereas our does. BTW, Rhiger
+thesis contains the definitions of the interpreter and the compiler,
+in the beginning. Use this in response to Rev1)
+OR:
+The simplicity of our encoding enables trivial proofs of
+soundness and completeness compared to Rhiger's.  It also makes
+self-interpretation simple, which is a strength of our work.
+
+
+
+
+first approach that gives typed CPS in a HM language. We also need to
+cite the paper by Stefan Monnier at PLPV2006 where they say, I think,
+that typed CPS is impossible without GADT or like.
+
+
+
+the basic idea of this paper (the encoding of the term
+GADT as its elimination form, i.e. as a coalgebraic structure) is not
+new to this work. It appeared many years ago in: Metacircularity in
+the polymorphic lambda-calculus, Frank Pfenning and Peter Lee.
+Theoretical Computer Science 89 (1991) 137-159. (Other encodings of
+GADTs have appeared since Pfenning and Lee's work, for example, in
+work on generic programming.)
+BTW,
+many GADT encodings I've seen (Sulzmann's et al) require existentials,
+which are not available in ML. The only GADT encodings I've seen in ML
+use unsafe operations.
+
+
+It seems that Pfenning and Lee embed $F_2$ with type constructions in 
+(pure) $F_3$.  We embed $F_1$ in (weak?) $F_2$, as I see it.  In a way, what 
+we do is very similar to what they do (Figure 1, p.152), except that we 
+do it in standard programming languges.  It is unclear if their work can 
+be implemented (yet) in any language.  And we preserve type-inference, 
+while their solution needs explcit types!
+The following line of their conclusion is worth citing: "... this does 
+not imply that the same language is also suitable for type 
+metaprogramming. ... such as partial evaluation... do not seem to be 
+expressible".
+I suspect you're right, but I'm still reading the paper.  See also page
+146: "for a term M in $F_1$ (a simply-typed term), the representation
+$\bar{M}$ will be in $F_2$".  The move from $F_2$ to $F_3$ 
+and beyond reminds me
+strongly of our attempts at self-interpretation without the notion of a
+syntactic hole.
+    Pfenning and Lee conclude that partial evaluation and program
+    transformations "do not seem to be expressible" even using their
+    extension to F-omega, perhaps because their avoidance of general
+    recursive types compels them to include the polymorphic lift that we
+    avoid in our Section 4.1.
+
+
+ Although GADTs
+may indeed be "more flexible and easier to use", they are not
+available in mainstream ML, and GHC as released does not implement
+them correctly (as Simon Peyton-Jones admits publicly).  Whereas
+Pasalic et al. have already solved the problem of tagless typed
+(staged) interpretation, our solution is the first to use only
+facilities available in mainstream ML and Haskell, namely
+Hindley-Milner and either simple modules or constructor classes.  The
+simplicity of these facilities is again a strength of our work: it
+makes embedded DSLs more practical to build.
+
+
+Type-indexed types have been around since at least Harper and
+Morrisett's Compiling Polymorphism Using Intensional Type Analysis,
+POPL 1995. They also were supported by Generic Haskell (Hinze,
+Juering, Loeh, Type Indexed Datatypes, SCP 2004).
+Generic Haskell is not mainstream.  Xi et al. point out why
+intensional type analysis cannot handle HOAS with fix. 
+
+
+
+
 Our initial motivation came from several papers 
 \citep{WalidICFP02,taha-tag,xi-guarded,peyton-jones-simple} that used
 embedded interpreters to justify
@@ -1810,11 +1977,21 @@ When the metalanguage does provide higher-rank and higher-kind
 polymorphism, we can type-check and compile an object term separately
 from any interpreters it may be plugged into.
 
+\oleg{From Rev3}This representation limited to primitive
+recursive folds over the datatype (as that is the elimination form
+provided.) That means that some operations are easy implement
+(interpretation, size calculation, etc.), some can be done with effort
+(one-pass cps, and other mutually recursive functions), and perhaps
+some cannot be implemented at all (those that are not primitive
+recursive). For example, can you implement a transformation that
+eliminates eta-expansions from a term?
+
 \acks%\subsection*{Acknowledgments}
 We thank Martin Sulzmann and Walid Taha 
 for helpful discussions.  Sam Staton, Pieter Hofstra, and Bart Jacobs
 kindly provided some useful references on coalgebraic structures in the
-$\lambda$\hyp calculus.
+$\lambda$\hyp calculus. We thank anonymous reviewers for pointing out
+related work.
 
 \bibliographystyle{mcbride}
 \bibsep=0pt
