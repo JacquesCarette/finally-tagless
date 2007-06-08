@@ -1,97 +1,3 @@
-\listfiles
-\hyphenation{meta-language meta-languages Meta-OCaml meta-cir-cu-lar type-case}
-\documentclass[preprint]{sigplanconf}
-\usepackage{amsmath,amssymb}
-\usepackage{mathptmx}
-%\usepackage{txfonts} \renewcommand{\ttdefault}{cmtt}
-\usepackage[T1]{fontenc}
-\usepackage[override]{cmtt}
-\usepackage{comment}
-\usepackage{hyphenat}
-\usepackage{url}
-\usepackage{prooftree1} \proofrulebaseline=1.5ex \proofdotseparation=.75ex
-\usepackage{mdwlist}
-\usepackage{mdwtab}
-\usepackage{dblfloatfix}
-
-% Set pdftex paper size
-\ifx\pdfoutput\undefined\else \ifx\pdfoutput\relax\else \ifcase\pdfoutput\else
-    \setlength{\pdfpagewidth}{8.5in}
-    \setlength{\pdfpageheight}{11in}
-\fi \fi \fi
-
-\newcommand{\jacques}[1]{{\it [Jacques says: #1]}}
-\newcommand{\oleg}[1]{{\it [Oleg says: #1]}}
-\newcommand{\ccshan}[1]{{\it [Ken says: #1]}}
-
-\usepackage{natbib1}
-\let\cite=\citep
-
-\usepackage[compact]{fancyvrb1}
-\DefineShortVerb{\|}
-\DefineVerbatimEnvironment{code}{Verbatim}{xleftmargin=\parindent}
-
-\newtheorem{prop}{Proposition}
-
-\newcommand{\ZZ}{\mathbb{Z}}
-\newcommand{\BB}{\mathbb{B}}
-
-\newcommand{\fun}[1]{\mathopen{\lambda\mathord{#1}.\,}}
-\newcommand{\fix}[1]{\mathopen{\mathrm{fix\,}\mathord{#1}.\,}}
-\newcommand{\Forall}[1]{\mathopen{\forall\mathord{#1}.\,}}
-\newcommand{\Exists}[1]{\mathopen{\exists\mathord{#1}.\,}}
-\newcommand{\cond}[3]{\mathrm{if\ }#1\mathrm{\ then\ }#2\mathrm{\ else\ }#3}
-\newcommand{\be}[1]{\mathrm{let\ }#1\mathrm{\ in\ }}
-\newcommand{\True}{\mathinner{\mathrm{true}}}
-\newcommand{\False}{\mathinner{\mathrm{false}}}
-\newcommand{\Encode}[1]{\mathinner{\mathopen{\text{``}}#1\mathclose{\text{''}}}}
-\newcommand{\encode}[1]{\mathinner{\mathopen{\text{`}}#1\mathclose{\text{'}}}}
-\newcommand{\ident}[1]{\mathinner{\text{\textit{#1\/}}}}
-\newcommand{\subst}[3]{#1\left\{#2\mapsto#3\right\}}
-\DeclareMathOperator{\pe}{PE}
-\DeclareMathOperator{\si}{SI}
-
-% Make space around section headings no less than space around theorems
-\makeatletter
-\@tempdima\topsep \advance\@tempdima\parsep
-\ifdim\@sectionbelowskip   <\topsep \@sectionbelowskip   \topsep \fi
-\ifdim\@subsectionbelowskip<\topsep \@subsectionbelowskip\topsep \fi
-\makeatother
-
-% Allow things to flow a little more tightly around figures
-\renewcommand\floatpagefraction{.95}
-\renewcommand\topfraction{.95}
-\renewcommand\bottomfraction{.95}
-\renewcommand\textfraction{.05}   
-
-% Match the rule inserted by \@makecaption in sigplanconf.cls
-\setproofrulebreadth .33pt
-\newenvironment{floatrule}
-    {\hrule width \hsize height .33pt \vspace{.5pc}}
-    {\par\addvspace{1ex}}
-
-% Make some Rel symbols into Bin symbols instead
-\DeclareMathSymbol{\to}{\mathbin}{symbols}{"21}
-\DeclareMathSymbol{:}{\mathbin}{operators}{"3A}
-
-\begin{document}
-
-% http://flint.cs.yale.edu/aplas2007/
-
-\conferenceinfo{ICFP '07}{Freiburg, Germany} 
-\copyrightyear{2007} 
-\copyrightdata{[to be supplied]} 
-
-\makeatletter
-\titlebanner{Submitted to \@conferencename}        % These are ignored unless
-\preprintfooter{\rlap{\@titletext}}   % 'preprint' option specified.
-\def \@formatyear {\llap{\number\year/\number\month/\number\day}}
-\makeatother
-
-\title{Finally Tagless, Partially Evaluated}
-\subtitle{Tagless Staged Interpreters for Simpler Typed Languages}
-%Staged typed type-preserving tagless ``interpreters'', \emph{finally}
-
 \begin{comment}
 \authorinfo{Jacques Carette}
            {McMaster University}
@@ -103,16 +9,6 @@
            {Rutgers University}
            {ccshan@cs.rutgers.edu}
 \end{comment}
-\authorinfo
-{\hspace*{-15em}\smash{\normalsize\it\begin{minipage}[t]{30em}
-    It should also be possible to define languages with a highly
-    refined syntactic type structure. Ideally, such a treatment should
-    be metacircular, in the sense that the type structure used in the
-    defined language should be adequate for the defining language.
-    \hfill\rm\citep{reynolds-definitional}
-\end{minipage}}\hspace*{-15em}}{}{}
-
-\maketitle
 
 \begin{abstract}
 We have built the first family of tagless interpretations for a
@@ -142,6 +38,14 @@ polymorphism (provided by ML functors and Haskell~98 constructor
 classes) to plugging a term into a context of let\hyp polymorphic
 bindings.
 \end{abstract}
+
+\begin{quote}
+    It should also be possible to define languages with a highly
+    refined syntactic type structure. Ideally, such a treatment should
+    be metacircular, in the sense that the type structure used in the
+    defined language should be adequate for the defining language.
+    \hfill\rm\citep{reynolds-definitional}
+\end{quote}
 
 %\category{CR-number}{subcategory}{third-level}
 %\terms term1, term2
@@ -562,11 +466,11 @@ Comparing |Symantics| with Figure~\ref{fig:object}
 shows how to represent every typed, closed object term in the
 metalanguage. Moreover, the representation preserves types, in the following
 sense.
-\begin{prop}
+\begin{proposition}
 If an object term has the object type~$t$, then its
 representation in the metalanguage has the type 
 |forall repr.| |Symantics repr => repr |$t$.
-\end{prop}
+\end{proposition}
 Conversely, the type system of the metalanguage statically checks that the
 represented object term is well-typed and closed.
 If we err, say replace |int 7| with |bool True| in
@@ -692,19 +596,19 @@ In OCaml, too, it is obvious to the compiler that
 pattern matching cannot fail, because there is no
 pattern matching. Evaluation can only fail to yield a value
 due to interpreting |fix|.
-\begin{prop}
+\begin{proposition}
 If an object term~$e$ encoded in the metalanguage has type~$t$,
 then evaluating~$e$ in the interpreter~|R| either continues
 indefinitely or terminates with a value of the same type~$t$.
-\end{prop}
+\end{proposition}
 Generalizing from~|R| to all interpreters, we have the following
 broader and more useful, if also more obvious, proposition.
-\begin{prop}
+\begin{proposition}
   If an implementation of |Symantics| never gets stuck, then
   the type system of the object
   language is sound with respect to the dynamic semantics defined by
   that implementation.
-\end{prop}
+\end{proposition}
 These propositions follow immediately from the soundness of the
 metalanguage's type system.
 
@@ -1609,20 +1513,20 @@ a context.  For example, the evaluator is the context
 To interpret an object term~$e$ using an interpreter $I[~]$ is to
 evaluate the object term~$I[\encode{e}]$.  $\si$ is
 a self\hyp interpreter in the following sense.
-\begin{prop}
+\begin{proposition}
     $\si[\encode{e}]$ is observationally equivalent to~$e$.
-\end{prop}
+\end{proposition}
 As a corollary, we can pre-encode the self\hyp interpreter itself as
 a context: the term $\si[\encode{\si[\encode{e}]}]$ is observationally
 equivalent to $\si[\encode{e}]$, and in turn to~$e$.  In other words,
 $\si$ can interpret itself.  Our partial evaluator is optimal with respect to
 the self\hyp interpreter~$\si$.
-\begin{prop}
+\begin{proposition}
     Let $\pe$ be the partial evaluator~|P| in~\S\ref{S:PE-solution}.
     Then the object terms $\pe(\si[\encode{e}])$ and~$\pe(e)$ are
     either both undefined or both defined and
     equal up to $\alpha$\hyp conversion.
-\end{prop}
+\end{proposition}
 
 \subsection{Contexts clarify polymorphism}
 \label{S:clarify}
@@ -1986,12 +1890,8 @@ some cannot be implemented at all (those that are not primitive
 recursive). For example, can you implement a transformation that
 eliminates eta-expansions from a term?
 
-\acks%\subsection*{Acknowledgments}
-We thank Martin Sulzmann and Walid Taha 
-for helpful discussions.  Sam Staton, Pieter Hofstra, and Bart Jacobs
-kindly provided some useful references on coalgebraic structures in the
-$\lambda$\hyp calculus. We thank anonymous reviewers for pointing out
-related work.
+\section*{Acknowledgments}
+\ourthanks
 
 \bibliographystyle{mcbride}
 \bibsep=0pt

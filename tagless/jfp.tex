@@ -1,0 +1,21 @@
+\listfiles
+\documentclass{jfp}
+\input{preamble}
+
+\usepackage{natbib1}
+\let\cite=\citep
+\renewcommand\bibsection{\section*{\refname}}
+
+\newtheorem{proposition}{Proposition}
+
+\begin{document}
+
+\title{Finally Tagless, Partially Evaluated}
+\subtitle{Tagless Staged Interpreters for Simpler Typed Languages}
+\author{Jacques Carette, Oleg Kiselyov and Chung-chieh Shan}
+\def\draftnote{}
+
+\maketitle
+\input{tagless-final}
+
+\end{document}

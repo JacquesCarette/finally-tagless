@@ -1,0 +1,55 @@
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{comment}
+\usepackage{hyphenat}
+\usepackage{url}
+\usepackage{prooftree1} \proofrulebaseline=1.5ex \proofdotseparation=.75ex
+\usepackage{mdwlist}
+\usepackage{mdwtab}
+
+% Set pdftex paper size
+\ifx\pdfoutput\undefined\else \ifx\pdfoutput\relax\else \ifcase\pdfoutput\else
+    \setlength{\pdfpagewidth}{8.5in}
+    \setlength{\pdfpageheight}{11in}
+\fi \fi \fi
+
+\usepackage[compact]{fancyvrb1}
+\DefineShortVerb{\|}
+\DefineVerbatimEnvironment{code}{Verbatim}{xleftmargin=\parindent}
+
+\DeclareMathOperator{\pe}{PE}
+\DeclareMathOperator{\si}{SI}
+
+% Make some Rel symbols into Bin symbols instead
+\DeclareMathSymbol{\to}{\mathbin}{symbols}{"21}
+\DeclareMathSymbol{:}{\mathbin}{operators}{"3A}
+
+\hyphenation{meta-language meta-languages Meta-OCaml meta-cir-cu-lar type-case}
+
+\newcommand{\jacques}[1]{{\it [Jacques says: #1]}}
+\newcommand{\oleg}[1]{{\it [Oleg says: #1]}}
+\newcommand{\ccshan}[1]{{\it [Ken says: #1]}}
+
+\newcommand{\ZZ}{\mathbb{Z}}
+\newcommand{\BB}{\mathbb{B}}
+
+\newcommand{\fun}[1]{\mathopen{\lambda\mathord{#1}.\,}}
+\newcommand{\fix}[1]{\mathopen{\mathrm{fix\,}\mathord{#1}.\,}}
+\newcommand{\Forall}[1]{\mathopen{\forall\mathord{#1}.\,}}
+\newcommand{\Exists}[1]{\mathopen{\exists\mathord{#1}.\,}}
+\newcommand{\cond}[3]{\mathrm{if\ }#1\mathrm{\ then\ }#2\mathrm{\ else\ }#3}
+\newcommand{\be}[1]{\mathrm{let\ }#1\mathrm{\ in\ }}
+\newcommand{\True}{\mathinner{\mathrm{true}}}
+\newcommand{\False}{\mathinner{\mathrm{false}}}
+\newcommand{\Encode}[1]{\mathinner{\mathopen{\text{``}}#1\mathclose{\text{''}}}}
+\newcommand{\encode}[1]{\mathinner{\mathopen{\text{`}}#1\mathclose{\text{'}}}}
+\newcommand{\ident}[1]{\mathinner{\text{\textit{#1\/}}}}
+\newcommand{\subst}[3]{#1\left\{#2\mapsto#3\right\}}
+
+\newenvironment{floatrule}{}{}
+
+\newcommand{\ourthanks}{We thank Martin Sulzmann and Walid Taha 
+for helpful discussions.  Sam Staton, Pieter Hofstra, and Bart Jacobs
+kindly provided some useful references on coalgebraic structures in the
+$\lambda$\hyp calculus. We thank anonymous reviewers for pointing out
+related work.}

@@ -1,0 +1,22 @@
+\documentclass[oribibl,orivec]{llncs}
+\parskip=0pt
+
+% http://flint.cs.yale.edu/aplas2007/
+\input{preamble}
+
+\usepackage[numbers,sectionbib,sort&compress]{natbib1}
+\let\bibname\refname
+
+\begin{document}
+
+\title{Finally Tagless, Partially Evaluated\thanks{\ourthanks}}
+\subtitle{Tagless Staged Interpreters for Simpler Typed Languages}
+\author{Jacques Carette\inst{1} \and Oleg Kiselyov\inst{2} \and Chung-chieh Shan\inst{3}}
+\institute{McMaster University\enspace\email{carette@mcmaster.edu} \and
+           FNMOC\enspace\email{oleg@pobox.com} \and
+           Rutgers University\enspace\email{ccshan@rutgers.edu}}
+
+\maketitle
+\input{tagless-final}
+
+\end{document}

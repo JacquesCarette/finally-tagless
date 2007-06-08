@@ -3,16 +3,9 @@
 
 export BIBTEX := bibtex -min-crossrefs=9999
 
-all: tagless-final.dvi tagless-final.pdf tagless-final.zip
+all: jfp.dvi jfp.pdf aplas.dvi aplas.pdf
 
-tagless-final.dvi tagless-final.pdf: tagless.bib
-
-tagless-final.zip: final_code/*
-	rm -f $@
-	zip $@ $^
-
-xdvi: tagless-final.dvi
-	xdvi -paper us $<
+jfp.dvi jfp.pdf aplas.dvi aplas.pdf: tagless-final.tex
 
 .tex.dvi:
 	if texi2dvi $<; then killall -USR1 xdvi.bin; true; fi
