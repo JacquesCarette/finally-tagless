@@ -463,6 +463,117 @@
   url		= "http://flint.cs.yale.edu/flint/publications/fullsig.ps.gz http://flint.cs.yale.edu/flint/publications/fullsig.pdf"
 }
 
+@PhDThesis{	Rhiger-thesis,
+  author	= "Morten Rhiger",
+  title		= "{H}igher-{O}rder Program Generation",
+  booktitle	= "{H}igher-{O}rder Program Generation",
+  school        = "{BRICS} {Ph.D.} School. Department of Computer Science,
+                   University of Aarhus, Denmark",
+  year		= 2001,
+  url = "http://www.brics.dk/DS/01/4/index.html",
+  abstract	= {
+This dissertation addresses the challenges of embedding programming languages,
+specializing generic programs to specific parameters, and generating
+specialized instances of programs directly as executable code. Our main tools
+are higher-order programming techniques and automatic program generation. It is
+our thesis that they synergize well in the development of customizable
+software.
+\par
+Recent research on domain-specific languages propose to embed them into
+existing general-purpose languages. Typed higher-order languages have proven
+especially useful as meta languages because they provide a rich infrastructure
+of higher-order functions, types, and modules. Furthermore, it has been
+observed that embedded programs can be restricted to those having simple types
+using a technique called ``phantom types''. We prove, using an idealized
+higher-order language, that such an embedding is sound (i.e., when all
+object-language terms that can be embedded into the meta language are simply
+typed) and that it is complete (i.e., when all simply typed object-language
+terms can be embedded into the meta language). The soundness proof is shown by
+induction over meta-language terms using a Kripke logical relation. The
+completeness proof is shown by induction over object-language terms.
+Furthermore, we address the use of Haskell and Standard ML as meta-languages.
+\par
+Normalization functions, as embodied in type-directed partial evaluation, map a
+simply-typed higher-order value into a representation of its long beta-eta
+normal form. However, being dynamically typed, the original Scheme
+implementation of type-directed partial evaluation does not restrict input
+values to be typed at all. Furthermore, neither the original Scheme
+implementation nor the original Haskell implementation guarantee that
+type-directed partial evaluation preserves types. We present three
+implementations of type-directed partial evaluation in Haskell culminating with
+a version that restricts the input to typed values and for which the proofs of
+type-preservation and normalization are automated.
+\par
+Partial evaluation provides a solution to the disproportion between general
+programs that can be executed in several contexts and their specialized
+counterparts that can be executed efficiently. However, stand-alone partial
+evaluation is usually too costly when a program must be specialized at run
+time. We introduce a collection of byte-code combinators for OCaml, a dialect
+of ML, that provides run-time code generation for OCaml programs. We apply
+these byte-code combinators in semantics-directed compilation for an imperative
+language and in run-time specialization using type-directed partial evaluation.
+\par
+Finally, we present an approach to compiling goal-directed programs, i.e.,
+programs that backtrack and generate successive results: We first specify the
+semantics of a goal-directed language using a monadic semantics and a spectrum
+of monads. We then compile goal-directed programs by specializing their
+interpreter (i.e., by using the first Futamura projection), using type-directed
+partial evaluation. Through various back ends, including a run-time code
+generator, we generate ML code, C code, and OCaml byte code.
+}
+}
+
+
+@inproceedings{Lava,
+  author    = {Per Bjesse and
+               Koen Claessen and
+               Mary Sheeran and
+               Satnam Singh},
+  title     = {Lava: Hardware Design in {H}askell},
+  pages     = {174-184},
+  crossref	= "icfp1998",
+  ee        = {http://doi.acm.org/10.1145/289423.289440},
+  bibsource = {DBLP, http://dblp.uni-trier.de}
+}
+
+@article{Pfenning-Lee,
+  author    = {Frank Pfenning and
+               Peter Lee},
+  title     = {Metacircularity in the Polymorphic lambda-{C}alculus},
+  journal   = {Theor. Comput. Sci.},
+  volume    = {89},
+  number    = {1},
+  year      = {1991},
+  pages     = {137-159},
+  bibsource = {DBLP, http://dblp.uni-trier.de}
+}
+
+@inproceedings{Morrisett-intensional,
+  author    = {Robert Harper and
+               J. Gregory Morrisett},
+  title     = {Compiling Polymorphism Using Intensional Type Analysis},
+  booktitle = {POPL},
+  year      = {1995},
+  pages     = {130-141},
+  bibsource = {DBLP, http://dblp.uni-trier.de}
+}
+
+@article{Generic-Haskell,
+  author    = {Ralf Hinze and
+               Johan Jeuring and
+               Andres L{\"o}h},
+  title     = {Type-indexed data types},
+  journal   = {Sci. Comput. Program.},
+  volume    = {51},
+  number    = {1-2},
+  year      = {2004},
+  pages     = {117-151},
+  ee        = {http://dx.doi.org/10.1016/j.scico.2003.07.001},
+  bibsource = {DBLP, http://dblp.uni-trier.de}
+}
+
+
+%------------------------------------------------------------------------
 % After this, only procedings etc
 
 @Proceedings{	acm1972,
