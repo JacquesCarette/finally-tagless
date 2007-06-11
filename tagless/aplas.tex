@@ -7,6 +7,23 @@
 \usepackage[numbers,sectionbib,sort&compress]{natbib1}
 \let\bibname\refname
 
+\setlength{\textfloatsep}{3pt plus 2pt minus 3pt}  % Less space around figures
+\setlength{\floatsep}{4pt plus 2pt minus 2pt}
+\setlength{\intextsep}{4pt plus 2pt minus 3pt}
+\abovecaptionskip 0pt plus 0pt minus 2pt
+\belowcaptionskip 0pt plus 0pt minus 2pt
+
+% Reduce display spacing
+\divide\abovedisplayskip 2
+\divide\belowdisplayskip 2
+\divide\abovedisplayshortskip 2
+\divide\belowdisplayshortskip 2
+
+\renewcommand\floatpagefraction{.95}
+\renewcommand\topfraction{.95}
+\renewcommand\bottomfraction{.95}
+\renewcommand\textfraction{.05}
+
 \begin{document}
 
 \title{Finally Tagless, Partially Evaluated\thanks{\ourthanks}}

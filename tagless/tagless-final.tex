@@ -115,19 +115,16 @@ whether using dependent types \cite{WalidICFP02} or not \cite{baars-typing}.
 
 \begin{figure}
 %
-(a)\vspace{-10pt}
-\begin{code}
+(a) \begin{code2}
 type var = VZ | VS of var
 type exp = V of var | B of bool | L of exp | A of exp * exp
-\end{code}
-%
-(b)\vspace{-10pt}
-\begin{code}
+\end{code2}
+
+(b) \begin{code2}
 let test1 = A (L (V VZ), B true)
-\end{code}
-%
-(c)\vspace{-10pt}
-\begin{code}
+\end{code2}
+
+(c) \begin{code2}
 let rec lookup (x::env) = function
 | VZ   -> x
 | VS v -> lookup env v
@@ -137,42 +134,36 @@ let rec eval0 env = function
 | B b       -> b 
 | L e       -> fun x -> eval0 (x::env) e
 | A (e1,e2) -> (eval0 env e1) (eval0 env e2) 
-\end{code}
-%
-(d)\vspace{-10pt}
-\begin{code}
+\end{code2}
+
+(d) \begin{code2}
 type u = UB of bool | UA of (u -> u)
-\end{code}
-%
-(e)\vspace{-10pt}
-\begin{code}
+\end{code2}
+
+(e) \begin{code2}
 let rec eval env = function
 | V v       -> lookup env v
 | B b       -> UB b
 | L e       -> UA (fun x -> eval (x::env) e)
 | A (e1,e2) -> match eval env e1 with UA f -> f (eval env e2)
-\end{code}
-%
-(f)\vspace{-10pt}
-\begin{code}
+\end{code2}
+
+(f) \begin{code2}
 let test1r = eval [] test1
 val test1r : u = UB true 
-\end{code}
-%
-(g)\vspace{-10pt}
-\begin{code}
+\end{code2}
+
+(g) \begin{code2}
 let test2 = A (B true, B false)
 let test2r = eval [] test2
 Exception: Match_failure in eval
-\end{code}
-%
-(h)\vspace{-10pt}
-\begin{code}
+\end{code2}
+
+(h) \begin{code2}
 let test3 = A (L (V (VS VZ)), B true)
 let test3r = eval [] test3
 Exception: Match_failure in lookup
-\end{code}
-%
+\end{code2}
 \caption{OCaml code illustrating the tag problem.}
 \label{fig:tag-problem}
 \end{figure}
@@ -318,32 +309,27 @@ that the initial environment should be a tuple rather than |()|.
 In other words, the term is open.
 \begin{figure}
 %
-(a)\vspace{-10pt}
-\begin{code}
+(a) \begin{code2}
 let varZ env        = fst env
 let varS vp env     = vp (snd env)
 let b (bv:bool) env = bv
 let lam e env       = fun x -> e (x,env)
 let app e1 e2 env   = (e1 env) (e2 env)
-\end{code}
-%
-(b)\vspace{-10pt}
-\begin{code}
+\end{code2}
+
+(b) \begin{code2}
 let testf1 = app (lam varZ) (b true)
-\end{code}
-%
-(c)\vspace{-10pt}
-\begin{code}
+\end{code2}
+
+(c) \begin{code2}
 let testf1r = testf1 ()
 val testf1r : bool = true
-\end{code}
-%
-(d)\vspace{-10pt}
-\begin{code}
+\end{code2}
+
+(d) \begin{code2}
 let testf3 = app (lam (varS varZ)) (b true)
 let testf3r = testf3 ()
-\end{code}
-%
+\end{code2}
 \caption{OCaml code illustrating our final proposal.}
 \label{fig:tag-final-proposal}
 \end{figure}
@@ -496,8 +482,7 @@ because its interface gives the syntax of the object language and its
 instances give the semantics.
 \begin{figure}
 %
-(a)\vspace{-10pt}
-\begin{code}
+(a) \begin{code2}
 class Symantics repr where
   int  :: Int  -> repr Int
   bool :: Bool -> repr Bool
@@ -510,20 +495,17 @@ class Symantics repr where
   mul :: repr Int -> repr Int -> repr Int
   leq :: repr Int -> repr Int -> repr Bool
   if_ :: repr Bool -> repr a -> repr a -> repr a
-\end{code}
-%
-(b)\vspace{-10pt}
-\begin{code}
+\end{code2}
+
+(b) \begin{code2}
 testpowfix () = lam (\x -> fix (\self -> lam (\n ->
                  if_ (leq n (int 0)) (int 1)
                      (mul x (app self (add n (int (-1))))))))
-\end{code}
-%
-(c)\vspace{-10pt}
-\begin{code}
+\end{code2}
+
+(c) \begin{code2}
 testpowfix7 () = lam (\x -> app (app (testpowfix ()) x) (int 7))
-\end{code}
-%
+\end{code2}
 \caption{Symantics in Haskell.}
 \label{fig:symantics-haskell}
 \end{figure}
@@ -587,8 +569,7 @@ module type Symantics = sig
   val leq : ('c, int) repr -> ('c, int) repr -> ('c, bool) repr
   val if_ : ('c, bool) repr-> (unit-> ('c, 'da) repr)-> (unit-> ('c, 'da) repr)-> ('c, 'da) repr
 end
-\end{code}
-\begin{code}
+
 module EX(S: Symantics) = struct
   open S
   let test1 () = app (lam (fun x -> x)) (bool true)
@@ -646,9 +627,7 @@ operation as the corresponding metalanguage operation%
 % fig:interpreter-R part (a) was here
 %
 \begin{figure}
-%
-(a)\vspace{-10pt}
-\begin{code}
+(a) \begin{code2}
 module R = struct
   type ('c,'dv) repr = 'dv (* no wrappers *)
 
@@ -664,19 +643,16 @@ module R = struct
   let leq  x y      = x <= y
   let if_  eb et ee = if eb then et () else ee ()
 end
-\end{code}
-%
-(b)\vspace{-10pt}
-\begin{code}
+\end{code2}
+
+(b) \begin{code2}
 module EXR = EX(R)
-\end{code}
-%
-(c)\vspace{-10pt}
-\begin{code}
+\end{code2}
+
+(c) \begin{code2}
 newtype R a = R {unR::a}
 instance Symantics R where ...
-\end{code}
-%
+\end{code2}
 \caption{The tagless interpreter \texttt{R}.}
 \label{fig:interpreter-R}
 \end{figure}
@@ -786,10 +762,8 @@ evaluator~|R| above yields the simple compiler~|C| below%
 % fig:interpreter-C part (a) was here
 %
 \begin{figure}[t]
-%
-(a)\vspace{-10pt}
 % this code does not have the 'sv parameter. It shows up later.
-\begin{code}
+(a) \begin{code2}
 module C = struct
   type ('c,'dv) repr = ('c,'dv) code
 
@@ -804,26 +778,22 @@ module C = struct
   let leq x y       = .<.~x <= .~y>.
   let if_ eb et ee  = .<if .~eb then .~(et ()) else .~(ee ())>.
 end
-\end{code}
-%
-(b)\vspace{-10pt}
-\begin{code}
+\end{code2}
+
+(b) \begin{code2}
 let module E = EX(C) in E.test1 ()
-\end{code}
-%
-(c)\vspace{-10pt}
-\begin{code}
+\end{code2}
+
+(c) \begin{code2}
 let module E = EX(C) in E.testpowfix7
-\end{code}
-%
-(d)\vspace{-10pt}
-\begin{code}
+\end{code2}
+
+(d) \begin{code2}
 .<fun x_1 -> (fun x_2 ->
   let rec self_3 = fun n_4 ->
    (fun x_5 -> if x_5 <= 0 then 1  else x_2 * (self_3 (x_5 + (-1))))
    n_4 in self_3) x_1 7>.
-\end{code}
-%
+\end{code2}
 \caption{The tagless staged interpreter \texttt{C}.}
 \label{fig:interpreter-C}
 \end{figure}
