@@ -23,7 +23,8 @@ evaluator, and call-by-name and
 call-by-value CPS transformers.
 
 Our main idea is to encode
-de Bruijn or higher-order abstract syntax
+% de Bruijn or higher-order abstract syntax
+HOAS
 using cogen functions rather than data constructors.
 In other words, we represent object terms not in an initial algebra
 but using the coalgebraic structure of the $\lambda$-calculus.
@@ -45,7 +46,7 @@ bindings.
     refined syntactic type structure. Ideally, such a treatment should
     be metacircular, in the sense that the type structure used in the
     defined language should be adequate for the defining language.
-    \hfill\rm\citep{reynolds-definitional}
+    \hfill\rm John Reynolds~\citep{reynolds-definitional}
 \end{quote}
 
 %\category{CR-number}{subcategory}{third-level}
@@ -101,19 +102,28 @@ values in the metalanguage in a universal type, a generalized algebraic
 data type (GADT), or a dependent type.  In the remainder of this section,
 we discuss these solutions, identify their drawbacks, then summarize our
 proposal and contributions.  
+%aplas
+\begin{comment}
 No matter how we represent the object language in the
 metalanguage, the representation can be created either by hand (for example, by
 entering object terms at a metalanguage interpreter's prompt) or
 by a parser\slash type\hyp checker reading from a text string.
 We leave aside the solved problem of writing such a parser\slash type\hyp checker,
 whether using dependent types \cite{WalidICFP02} or not \cite{baars-typing}.
+\end{comment}
+%aplas-else
+We leave aside the solved problem of writing a parser\slash type\hyp checker,
+for embedding object language objects into the metalanguage
+(whether using dependent types \cite{WalidICFP02} or not \cite{baars-typing}),
+and just enter them by hand.
+%aplas
 
 \subsection{The tag problem}\label{tagproblem}
 
 % see tagless\_interp1.ml, module Tagfull for the complete code.
 % If you change the code in here, please adjust the .ml file
 % accordingly. Let the paper and the accompanying code be in sync.
-It is straightforward to create an algebraic data type, say in OCaml%
+It is straightforward to create an algebraic data type, say in OCaml~%
 %aplas-specific
 Fig.~\ref{fig:tag-problem}(a)%
 , to
@@ -292,13 +302,11 @@ object term is well-typed and closed.
 
 We represent object programs using ordinary functions rather than
 data constructors.  The interpreter below provides these functions
-\begin{code3}
-let varZ env        = fst env
-let varS vp env     = vp (snd env)
-let b (bv:bool) env = bv
-let lam e env       = fun x -> e (x,env)
-let app e1 e2 env   = (e1 env) (e2 env)
-\end{code3}
+\begin{code4}
+let varZ env    = fst env       let b (bv:bool) env = bv
+let varS vp env = vp (snd env)  let app e1 e2 env   = (e1 env) (e2 env)
+let lam e env   = fun x -> e (x,env)
+\end{code4}
 which comprise the entire interpreter.
 We now represent our sample term $(\fun{x}x)\True$ as
 %aplas-specific
@@ -345,8 +353,7 @@ In sum, by Church\hyp encoding terms using ordinary functions, we
 achieve a tagless evaluator for a typed object language in a
 metalanguage with a simple 
 %aplas
-Hindley-Milner 
-type system
+Hindley-Milner type system
 %aplas \cite{hindley-principal,milner-theory}
 .  In this \emph{final} rather
 than \emph{initial} approach, both kinds of run-time errors in
@@ -361,19 +368,19 @@ inevitably lead to these performance penalties.
 
 Our solution is emphatically distinct from Church-encoding of the
 universal type. Church-encoding of the type |u|, \S\ref{tagproblem},
-requires two continuations; the interpreter like |app| above would
+requires two continuations; the interpreter (see |app| above) would
 have to provide both to the encoding of |e1|. The continuation
 corresponding to the |UB| branch of |u| must either raise an error or
 loop. For a well-typed object term that error continuation is never
 invoked, yet it must be supplied. Our interpreter has no error
-continuations at all.
+continuation at all.
 
 The evaluator above is wired directly into the
-functions |b|, |lam|, |app|, and so on.  In the rest of this paper, 
-we explain how to abstract the interpreter so as
-to process the same term in many other
-ways: compilation, partial evaluation, size
-computation, and so forth.
+functions |b|, |lam|, |app|, and so on.  %In the rest of this paper, 
+We explain how to abstract the interpreter so as
+to process the \emph{same} term in many other
+ways: compilation, partial evaluation, CPS
+conversion, and so forth.
 
 \subsection{Contributions}\label{contributions}
 
@@ -391,8 +398,8 @@ representation but varying the interpreter, we can
         including call-by-name (CBN) CPS, so to isolate the evaluation
         order of the object language from that of the metalanguage
 %aplas
-\footnote{Due to the most severe lack of space, we cannot describe
-these features and refer the reader to the accompanying code.}%
+\footnote{Due to serious lack of space, 
+we refer the reader to the accompanying code for this.}%
 .
 \end{itemize*}
 We have programmed our interpreters in OCaml (and, for staging,
@@ -436,7 +443,7 @@ result they call desirable.  Our contributions are as follows.
     such as state%
 %aplas (\S\ref{state})%
 %aplas
-\footnotemark[\value{footnote}]
+\footnote{again, see code}
 .
 \item We describe an approach to self\hyp interpretation compatible with the
   above%
@@ -483,7 +490,6 @@ $\lambda$-calculus with fixpoint, integers, booleans, and comparison.
 The language is close to \citets{xi-guarded}, without their polymorphic
 lift but with more constants so as to express Fibonacci, factorial, and
 power.
-
 In contrast to \S\ref{intro}, we encode binding using higher-order
 abstract syntax (HOAS) \cite{miller-manipulating,pfenning-higher-order}
 rather than de Bruijn indices. This makes the encoding convenient and
@@ -491,7 +497,6 @@ also ensures that our object programs are closed.
 
 \subsection{How to make encoding flexible: abstract the interpreter}
 \label{encoding}
-
 We embed our language in (Meta)OCaml and Haskell.  In Haskell,
 the functions that construct object terms are methods in a type class
 |Symantics| (with a parameter |repr| of kind |* -> *|)%
@@ -504,9 +509,7 @@ instances give the semantics.
 %
 (a) \begin{code2}
 class Symantics repr where
-  int  :: Int  -> repr Int
-  bool :: Bool -> repr Bool
-
+  int  :: Int  -> repr Int       bool :: Bool -> repr Bool
   lam :: (repr a -> repr b) -> repr (a -> b)
   app :: repr (a -> b) -> repr a -> repr b
   fix :: (repr a -> repr a) -> repr a
@@ -553,10 +556,9 @@ The methods |add|, |mul|, and |leq| are quite similar, and so are
 only one method of each group and elide the rest, to save space. The
 accompanying code has the complete implementations.
 
-Comparing |Symantics| with Figure~\ref{fig:object}
+Comparing |Symantics| with Fig.~\ref{fig:object}
 shows how to represent \emph{every} typed, closed object term in the
-metalanguage. Moreover, the representation preserves types, in the following
-sense.
+metalanguage. Moreover, the representation preserves types.
 \begin{proposition}
 If an object term has the object type~$t$, then its
 representation in the metalanguage has the type 
@@ -574,9 +576,7 @@ such as if we forget |app| somewhere above.
 \begin{figure*}[t]
 \begin{floatrule}
 \begin{code}
-module type Symantics = sig
-  type ('c, 'dv) repr
-
+module type Symantics = sig type ('c, 'dv) repr
   val int : int  -> ('c, int) repr
   val bool: bool -> ('c, bool) repr
 
@@ -590,8 +590,7 @@ module type Symantics = sig
   val if_ : ('c, bool) repr-> (unit-> ('c, 'da) repr)-> (unit-> ('c, 'da) repr)-> ('c, 'da) repr
 end
 
-module EX(S: Symantics) = struct
-  open S
+module EX(S: Symantics) = struct open S
   let test1 () = app (lam (fun x -> x)) (bool true)
   let testpowfix () =  lam (fun x -> fix (fun self -> lam (fun n ->
                          if_ (leq n (int 0)) (fun () -> int 1)
@@ -603,7 +602,6 @@ end
 \caption{A simple (Meta)OCaml embedding of our object language}
 \label{fig:ocaml-simple}
 \end{figure*}
-
 To embed the same object language in (Meta)OCaml, we replace the type
 class |Symantics| and its instances by a module signature |Symantics|
 and its implementations.  Figure~\ref{fig:ocaml-simple} shows a simple
@@ -642,8 +640,7 @@ The first interpreter evaluates an object term to its value in the
 metalanguage.  The module below interprets each object\hyp language
 operation as the corresponding metalanguage operation
 \begin{code3}
-module R = struct
-  type ('c,'dv) repr = 'dv (* no wrappers *)
+module R = struct type ('c,'dv) repr = 'dv (* no wrappers *)
   let int  (x:int)  = x         let bool (b:bool) = b
   let lam  f        = f         let app  e1 e2    = e1 e2
   let fix  f        = let rec self n = f self n in self
@@ -765,8 +762,7 @@ evaluator~|R| above yields the simple compiler~|C| below%
 \begin{figure}[t]
 % this code does not have the 'sv parameter. It shows up later.
 (a) \begin{code2}
-module C = struct
-  type ('c,'dv) repr = ('c,'dv) code
+module C = struct type ('c,'dv) repr = ('c,'dv) code
   let int (x:int)   = .<x>.           let bool (b:bool) = .<b>.
   let lam f         = .<fun x -> .~(f .<x>.)>.
   let app e1 e2     = .<.~e1 .~e2>.
@@ -1135,11 +1131,12 @@ data P t = P (Maybe (repr_pe t)) (C t)
 \end{comment}
 where |repr_pe| is the type function defined
 % inductively because P below depends on repr_pe
-by
+by\vspace*{-0.8em}
 \begin{code3}
 repr_pe Int      = Int          repr_pe Bool     = Bool
 repr_pe (a -> b) = P a -> P b
 \end{code3}
+\vspace*{-0.8em}
 Although we can use type classes to define this type function
 in Haskell, that is not portable to MetaOCaml. However,
 these three typecase alternatives are already present in existing
@@ -1154,8 +1151,7 @@ Figure~\ref{fig:ocaml} shows the new |Symantics| signature.
 \begin{figure*}
 \begin{floatrule}
 \begin{code}
-module type Symantics = sig
-  type ('c,'sv,'dv) repr
+module type Symantics = sig type ('c,'sv,'dv) repr
   val int : int  -> ('c,int,int) repr
   val lam : (('c,'sa,'da) repr -> ('c,'sb,'db) repr as 'x) -> ('c,'x,'da->'db) repr
   val app : ('c,'x,'da->'db) repr -> (('c,'sa,'da) repr -> ('c,'sb,'db) repr as 'x)
@@ -1197,7 +1193,6 @@ end
 \end{figure*}
 \end{comment}
 
-
 % aplas: abberviated figure here. The original is in teh comments
 % right down below
 \begin{figure}
@@ -1218,7 +1213,6 @@ module P = struct
   | _ -> pdyn (C.if_ (abstr eb) (fun () -> abstr (et ()))
                                 (fun () -> abstr (ee ())))
   let lam f = {st = Some f; dy = C.lam (fun x -> abstr (f (pdyn x)))}
-
   let app ef ea = match ef with {st = Some f} -> f ea
                   | _ -> pdyn (C.app (abstr ef) (abstr ea)) end
 \end{code}
