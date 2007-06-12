@@ -639,7 +639,7 @@ the |Symantics| signature in MetaOCaml.
 The first interpreter evaluates an object term to its value in the
 metalanguage.  The module below interprets each object\hyp language
 operation as the corresponding metalanguage operation
-\begin{code3}
+\vspace*{-0.8em}\begin{code3}
 module R = struct type ('c,'dv) repr = 'dv (* no wrappers *)
   let int  (x:int)  = x         let bool (b:bool) = b
   let lam  f        = f         let app  e1 e2    = e1 e2
@@ -648,6 +648,7 @@ module R = struct type ('c,'dv) repr = 'dv (* no wrappers *)
   let leq  x y      = x <= y
   let if_  eb et ee = if eb then et () else ee () end
 \end{code3}
+\vspace*{-0.8em}
 %
 As in~\S\ref{ourapproach},
 this interpreter is patently tagless, using neither a universal type nor
@@ -683,22 +684,26 @@ due to interpreting |fix|.
 %aplas-specific
 (The source code shows a total interpreter |L| that measures
 the size of each object term).
-%
+%aplas-specific (cont)
+We can also generalize from~|R| to all interpreters; the proof
+of these propositions follow immediately from the soundness of the
+metalanguage's type system.
+%end aplas-specific
 \begin{proposition}
 If an object term~$e$ encoded in the metalanguage has type~$t$,
 then evaluating~$e$ in the interpreter~|R| either continues
 indefinitely or terminates with a value of the same type~$t$.
 \end{proposition}
-Generalizing from~|R| to all interpreters, we have the following
-broader and more useful, if also more obvious, proposition.
+% Generalizing from~|R| to all interpreters, we have the following
+% broader and more useful, if also more obvious, proposition.
 \begin{proposition}
   If an implementation of |Symantics| never gets stuck, then
   the type system of the object
   language is sound with respect to the dynamic semantics defined by
   that implementation.
 \end{proposition}
-These propositions follow immediately from the soundness of the
-metalanguage's type system.
+% These propositions follow immediately from the soundness of the
+% metalanguage's type system.
 % aplas-commented
 \begin{comment}
 For variety, we show another interpreter, which measures the \emph{size}
@@ -808,12 +813,13 @@ Fig.~\ref{fig:interpreter-C}(d).
 % fig:interpreter-C part (d) was here
 This compiler does not incur
 any interpretive overhead: the
-code produced for $\fun{x}x$ is simply |fun x_6 -> x_6| and does not
-  call the interpreter, unlike the recursive calls to |eval0| and
-  |eval| in the |L e| lines in \S\ref{tagproblem}.
+code produced for $\fun{x}x$ is simply |fun x_6 -> x_6| 
+% aplas: and does not
+% call the interpreter, unlike the recursive calls to |eval0| and
+% |eval| in the |L e| lines in \S\ref{tagproblem}.
 The resulting code obviously contains no tags and no pattern matching.
 %aplas: the line is for aplas. The original paragraph commented out
-The accompanying code shows the corresponding Haskell implemention. 
+The accompanying code shows the Haskell implementation. 
 \begin{comment}
 We have also implemented this compiler in Haskell. 
 Since Haskell
@@ -855,10 +861,9 @@ dynamic terms.
 \label{S:PE-lift}
 
 Roughly, a partial evaluator interprets each object term to either
-a static (present-stage) term (using the evaluator~|R|) or
-a dynamic (future-stage) term (using the compiler~|C|).  To
+a static (present-stage) term (using~|R|) or
+a dynamic (future-stage) term (using~|C|).  To
 distinguish between static and dynamic terms, one might define
-the Haskell data type 
 %aplas-specific
 \texttt{data P0 t = S0 (R t) $\mid$ E0 (C t)}.
 We then start to define |P0| as an instance of the |Symantics| class.
@@ -915,12 +920,12 @@ were to add polymorphic \texttt{lift} to the type class
 f = app (lift f)}}
 \end{comment}
 
-Our |Symantics| class includes only separate lifting methods |bool| and
-|int|, not a parametrically polymorphic lifting method, for good reason:
+Our |Symantics| class only includes separate lifting methods |bool| and
+|int|, not a parametrically polymorphic lifting method:
 When compiling to a first-order target language such as machine code,
 booleans, integers, and functions may well be represented differently.
 Thus polymorphic lift cannot be compiled without intensional type
-analysis.  To avoid the need for polymorphic lift, we turn to
+analysis.  To avoid this, we turn to
 \citearound{'s technique}\citet[see also \citealp{sumii-hybrid}]{asai-binding-time}:
 build a dynamic term
 alongside every static term.
@@ -940,12 +945,12 @@ data P1 t = P1 (Maybe (R t)) (C t)
 so that a partially evaluated term |P1 t| always contains a dynamic
 component and sometimes contains a static component.  The two
 alternative constructors of a |Maybe| value, |Just| and |Nothing|,
-tag each partially evaluated term with a phase: either present or
+tag each term with a phase: present or
 future.  This tag is not an object type tag: all pattern matching below
 is exhaustive.  Because the future-stage component is always present, we
 can now define the polymorphic function
 %aplas-specific
-|abstr1 (P1 _ dyn) = dyn| of the type
+|abstr1 (P1 _ dyn) = dyn| of type
 |abstr1 :: P1 t -> C t|
 %aplas-else
 \begin{comment}
@@ -957,6 +962,7 @@ abstr1 (P1 _ dyn) = dyn
 to extract it without requiring polymorphic lift into~|C|.  We then try
 to define the interpreter |P1|---and get as far as the first-order
 constructs of our object language, including |if_|.
+\vspace*{-0.7em}
 \begin{code3}
 instance Symantics P1 where
   int  x = P1 (Just (int x)) (int x)
@@ -965,6 +971,7 @@ instance Symantics P1 where
   if_ (P1 (Just s) _) et ef = if unR s then et else ef
   if_ eb et ef = P1 Nothing (if_ (abstr1 eb) (abstr1 et) (abstr1 ef))
 \end{code3}
+\vspace*{-0.7em}
 When we come to functions, however, we stumble.  According to our
 definition of~|P1|, a partially evaluated object function, such as the
 identity $\fun{x}x$ embedded in Haskell as |lam (\x -> x)|\texttt{ ::
@@ -988,10 +995,12 @@ for a static function until it is applied, that is, until |lam f|
 appears as the argument of |app|.  To do so, we have to incorporate |f|
 as it is into the |P1| data structure: applying the type constructor
 |P1| to a function type |a -> b| should yield one of
+\vspace*{-0.7em}
 \begin{code3}
 data P1 (a -> b) = S1 (P1 a -> P1 b) | E1 (C (a -> b))
 data P1 (a -> b) = P1 (Maybe (P1 a -> P1 b)) (C (a -> b))
 \end{code3}
+\vspace*{-0.7em}
 That is, we need a nonparametric data type, something akin to
 type-indexed functions and type-indexed types, which
 \citet{oliveira-typecase} dub the \emph{typecase} design pattern.
@@ -1013,16 +1022,17 @@ is not an accident, as we shall see in~\S\ref{S:CPS}.
 Two common ways to provide typecase in Haskell are
 GADTs and type-class functional dependencies
 \cite{oliveira-typecase}.  These
-methods are equivalent, and here we show the GADT way; |incope1.hs|
+methods are equivalent, and here we use GADTs; |incope1.hs|
 in the accompanying source code shows the latter.
 %aplas: the original text is in comments below. Here's a greatly
 % abbreaviated text
-We introduce a GADT with four data constructors.
+\vspace*{-0.7em}
 \begin{code3}
 data P t where
   VI :: Int  -> P Int;                VB :: Bool -> P Bool
   VF :: (P a -> P b) -> P (a -> b);   E  :: C t -> P t
 \end{code3}
+\vspace*{-0.7em}
 The constructors |VI|, |VB|, and |VF| build static terms (like |S0|
 in~\S\ref{S:PE-lift}), and |E| builds dynamic terms (like |E0|).  However,
 the type |P t| is no longer parametric in~|t|: the constructor |VF| takes an
@@ -1033,16 +1043,18 @@ in~\S\ref{S:PE-problem}.
 The interpretation of |lam f = VF f| just wraps the HOAS function |f|. 
 We can always compile |f| to a code value,
 but we delay it to apply |f| to concrete arguments. The interpretation of
+\vspace*{-0.7em}
 \begin{code3}
 app (VF f) ea = f ea;  app (E f)  ea = E (app f (abstr ea))
 \end{code3}
+\vspace*{-0.7em}
 checks to see if |ef| is such a delayed
 HOAS function |VF f|. If it is, we apply |f| to the
 concrete argument |ea|, giving us a chance to perform static
 computations (see example |testpowfix7| in~\S\ref{S:PE-solution}). If |ef| is a
 dynamic value |E f|, we residualize.
 This solution using GADTs works but is not quite satisfactory. First, it
-cannot be ported to MetaOCaml as GADTs are unavailable there.  Second,
+cannot be ported to MetaOCaml.  Second,
 the problem of nonexhaustive pattern\hyp matching reappears in
 |app|. Although Coq or logical
 frameworks with canonical forms could prove pattern-matching
@@ -1051,7 +1063,7 @@ make this exhaustiveness \emph{syntactically} apparent.
 
 \begin{comment}
 We introduce a GADT with four data constructors.
-\begin{code3}
+\vspace*{-0.7em}
 data P t where
   VI :: Int  -> P Int
   VB :: Bool -> P Bool
@@ -1142,11 +1154,11 @@ in Haskell, that is not portable to MetaOCaml. However,
 these three typecase alternatives are already present in existing
 methods of |Symantics|.
 A simple and portable solution thus emerges: we bake |repr_pe| 
-into the signature |Symantics|. Switching to MetaOCaml to demonstrate this
-portability, we recall from Figure~\ref{fig:ocaml-simple} in~\S\ref{encoding} that the |repr| type
+into the signature |Symantics|. Switching to MetaOCaml to demonstrate this,
+we recall from Figure~\ref{fig:ocaml-simple} in~\S\ref{encoding} that the |repr| type
 constructor took two arguments |'c| and~|'dv|. We add an argument
 |'sv| for the result of applying |repr_pe| to~|'dv|.
-Figure~\ref{fig:ocaml} shows the new |Symantics| signature.
+Figure~\ref{fig:ocaml} shows the new signature.
 % aplas: abbreviated figure
 \begin{figure*}
 \begin{floatrule}
@@ -1298,10 +1310,15 @@ elided) to simplify the generated code using the monoid (and ring)
 structure of~|int|: not only is addition performed statically
 (using~|R|) when both operands are statically known, but it is
 eliminated when one operand is statically~$0$; similarly for
-multiplication by~$0$ or~$1$.  Such algebraic simplifications are easy
+multiplication by~$0$ or~$1$.  
+\begin{comment}
+Such algebraic simplifications are easy
 to abstract over the specific domain (such as monoid or ring) where they
 apply.  These simplifications and abstractions help a lot in a large
 language with more base types and primitive operations.
+\end{comment}
+%aplas-specific
+In large languages, this can be quite effective.
 
 %aplas: abbreviated paragraph. The original is commented below
 Any partial evaluator must decide how much to unfold recursion. The code in
@@ -1337,10 +1354,12 @@ interestingly, whereas |testpowfix7| compiles to a code value with many
 $\beta$-redexes in~\S\ref{compiler}, the partial evaluation
 \texttt{let module E = EX(P) in E.testpowfix7}
 gives the desired result
+\vspace*{-0.7em}
 \begin{code3}
 {P.st = Some <fun>;
  P.dy = .<fun x_1 -> x_1 * (x_1 * (x_1 * (x_1 * (x_1 * (x_1 * x_1)))))>.}
 \end{code3}
+\vspace*{-0.7em}
 
 \begin{comment}
 Given this implementation of~|P|, our running example
@@ -2093,9 +2112,7 @@ seems related to \citearound{'s approach to HOAS via catamorphism and
 We could not find work that establishes that
 the \emph{typed} $\lambda$-calculus possesses a final coalgebra structure.
 % aplas: abbreviated. The original text is in comments
-\Citet{honsell99coinductive}
-investigate the untyped $\lambda$-calculus,
-along this line.
+(see \Citet{honsell99coinductive} for the untyped case).
 % aplas: comment
 \begin{comment}
 \Citet{HonsellLenisa,honsell99coinductive}
@@ -2135,7 +2152,8 @@ metalanguage without using GADTs, dependent types, or a universal type.
 Our family of interpreters include an evaluator, a compiler, a partial
 evaluator, and CPS transformers.  It is patent that they never get stuck,
 because we represent object types as metalanguage types.  This work
-makes it safer and more efficient to embed domain\hyp specific languages
+makes it safer and more efficient to embed %domain\hyp specific languages
+DSLs
 in practical metalanguages such as Haskell and ML\@.
 
 Our main idea is to represent object programs not in an initial algebra
@@ -2159,11 +2177,12 @@ polymorphism, we can type-check and compile an object term separately
 from any interpreters it may be plugged into.
 \end{comment}
 
-Our representation of object terms in the elimination form encodes
-primitive recursive folds over the terms. This makes operations like
-interpretation and size calculations trivial to implement. It remains
-the subject of the current work to see if and how non-primitively 
-recursive operations can be supported in our approach.
+Our representation of object terms in elimination form encodes
+primitive recursive folds over the terms. 
+%aplas This makes operations like interpretation trivial to implement. 
+We still
+have to understand if and how non-primitively 
+recursive operations can be supported.
 
 % aplas: acknowledgments are at the beginning
 % \section*{Acknowledgments}
