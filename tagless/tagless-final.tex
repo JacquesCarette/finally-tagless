@@ -113,61 +113,6 @@ whether using dependent types \cite{WalidICFP02} or not \cite{baars-typing}.
 % see tagless\_interp1.ml, module Tagfull for the complete code.
 % If you change the code in here, please adjust the .ml file
 % accordingly. Let the paper and the accompanying code be in sync.
-
-\begin{figure}
-%
-(a) \begin{code2}
-type var = VZ | VS of var
-type exp = V of var | B of bool | L of exp | A of exp * exp
-\end{code2}
-
-(b) \begin{code2}
-let test1 = A (L (V VZ), B true)
-\end{code2}
-
-(c) \begin{code2}
-let rec lookup (x::env) = function
-| VZ   -> x
-| VS v -> lookup env v
-
-let rec eval0 env = function
-| V v       -> lookup env v
-| B b       -> b 
-| L e       -> fun x -> eval0 (x::env) e
-| A (e1,e2) -> (eval0 env e1) (eval0 env e2) 
-\end{code2}
-
-(d) \begin{code2}
-type u = UB of bool | UA of (u -> u)
-\end{code2}
-
-(e) \begin{code2}
-let rec eval env = function
-| V v       -> lookup env v
-| B b       -> UB b
-| L e       -> UA (fun x -> eval (x::env) e)
-| A (e1,e2) -> match eval env e1 with UA f -> f (eval env e2)
-\end{code2}
-
-(f) \begin{code2}
-let test1r = eval [] test1
-val test1r : u = UB true 
-\end{code2}
-
-(g) \begin{code2}
-let test2 = A (B true, B false)
-let test2r = eval [] test2
-Exception: Match_failure in eval
-\end{code2}
-
-(h) \begin{code2}
-let test3 = A (L (V (VS VZ)), B true)
-let test3r = eval [] test3
-Exception: Match_failure in lookup
-\end{code2}
-\caption{OCaml code illustrating the tag problem.}
-\label{fig:tag-problem}
-\end{figure}
 It is straightforward to create an algebraic data type, say in OCaml%
 %aplas-specific
 Fig.~\ref{fig:tag-problem}(a)%
@@ -179,19 +124,56 @@ this section.
 We represent each variable using a unary de Bruijn index.
 For example, we represent the object term $(\fun{x}x)\True$ as
 %aplas-specific
-in Fig.~\ref{fig:tag-problem}(b)%
-% fig:tag-problem part (b) was here
- 
+\texttt{let test1 = A (L (V VZ), B true)}.
+%aplas-else
+\begin{comment}
+\begin{code}
+let test1 = A (L (V VZ), B true)
+\end{code}
+\end{comment}
+
+\begin{figure}
+%
+(a) \begin{code2}
+type var = VZ | VS of var
+type exp = V of var | B of bool | L of exp | A of exp * exp
+\end{code2}
+
+(b) \begin{code2}
+let rec lookup (x::env) = function | VZ   -> x
+                                   | VS v -> lookup env v
+let rec eval0 env = function
+| V v       -> lookup env v
+| B b       -> b 
+| L e       -> fun x -> eval0 (x::env) e
+| A (e1,e2) -> (eval0 env e1) (eval0 env e2) 
+\end{code2}
+
+(c) \begin{code2}
+type u = UB of bool | UA of (u -> u)
+\end{code2}
+
+(d) \begin{code2}
+let rec eval env = function
+| V v       -> lookup env v
+| B b       -> UB b
+| L e       -> UA (fun x -> eval (x::env) e)
+| A (e1,e2) -> match eval env e1 with UA f -> f (eval env e2)
+\end{code2}
+\caption{OCaml code illustrating the tag problem.}
+\label{fig:tag-problem}
+\end{figure}
+% 
 Following \cite{WalidICFP02},
 we try to implement an interpreter function |eval0|%
 %aplas-specific
-, Fig.~\ref{fig:tag-problem}(c)%
+, Fig.~\ref{fig:tag-problem}(b)%
 . It takes
 an object term such as |test1| above and gives us its value.
 The first argument to |eval0| is the environment, initially empty,
 which is the list of values bound to free variables in the
 interpreted code.
-% fig:tag-problem part (c) was here
+% fig:tag-problem part (b) was here
 If our OCaml-like metalanguage were untyped, the code above would be 
 acceptable.
 The |L e| line exhibits interpretive overhead:
@@ -211,36 +193,56 @@ OCaml list cannot hold both boolean and function values.
 The usual solution is to introduce a universal type \citep[\S1.3]
 {WalidICFP02} containing both booleans and functions%
 %aplas-specific
-, Fig.~\ref{fig:tag-problem}(d)%
+, Fig.~\ref{fig:tag-problem}(c)%
 .
-% fig:tag-problem part (d) was here
+% fig:tag-problem part (c) was here
 We can then write a typed interpreter%
 %aplas-specific
-, Fig.~\ref{fig:tag-problem}(e)%
-% fig:tag-problem part (e) was here
+, Fig.~\ref{fig:tag-problem}(d)
+% fig:tag-problem part (d) was here
 whose inferred type is |u list -> exp -> u|. Now we can evaluate
-our sample |test1| term%
 %aplas-specific
-, Fig.~\ref{fig:tag-problem}(f)%
-.
+\texttt{eval [] test1} obtaining |UB true|.
+%aplas-else
+\begin{comment}
+\begin{code}
+let test1r = eval [] test1
+val test1r : u = UB true 
+\end{code}
+\end{comment}
 % fig:tag-problem part (f) was here
 The unfortunate tag |UB| in the result reflects that |eval| is a partial
-function.  First, the pattern match |with UA f| in the line
-|A (e1,e2)| is not exhaustive, so |eval| can fail%
+function.  
 %aplas-specific
-, Fig.~\ref{fig:tag-problem}(g), 
-if we apply a boolean,
+First, the pattern match |with UA f| in the line |A (e1,e2)| is not 
+exhaustive, so |eval| can fail if we apply a boolean,
 as in the ill-typed term |A (B true, B false)|.
-% fig:tag-problem part (g) was here
 Second, the |lookup|
 function assumes a nonempty environment, so |eval| can fail if we
-evaluate an open term%
-%aplas-specific
-, Fig.~\ref{fig:tag-problem}(h)%
-.
-% fig:tag-problem part (h) was here
+evaluate an open term |A (L (V (VS VZ)), B true)|.
 After all, the type |exp| represents object
 terms both well-typed and ill-typed, both open and closed.
+%aplas-else
+\begin{comment}
+First, the pattern match |with UA f| in the line
+|A (e1,e2)| is not exhaustive, so |eval| can fail if we apply a boolean,
+as in the ill-typed term |A (B true, B false)|.
+\begin{code}
+let test2 = A (B true, B false)
+let test2r = eval [] test2
+Exception: Match_failure in eval
+\end{code}
+Second, the |lookup|
+function assumes a nonempty environment, so |eval| can fail if we
+evaluate an open term
+\begin{code}
+let test3 = A (L (V (VS VZ)), B true)
+let test3r = eval [] test3
+Exception: Match_failure in lookup
+\end{code}
+After all, the type |exp| represents object
+terms both well-typed and ill-typed, both open and closed.
+\end{comment}
 
 If we evaluate only closed terms that have been type-checked, then
 |eval| would never fail. Alas, this soundness is not obvious to the
@@ -254,87 +256,91 @@ interpretation \cite{WalidICFP02} and impair optimality in partial evaluation
 \cite{taha-tag}.  In short, the universal\hyp type solution is
 unsatisfactory because it does not preserve typing.
 
+%aplas-else
+\begin{comment}
 \subsection{Solutions using fancier types}
+\end{comment}
 
 It is commonly thought that to interpret a typed object language in
 a typed metalanguage while preserving types is difficult and requires
 GADTs or dependent types \citep{taha-tag}.  In fact, this problem
 motivated much work on GADTs \cite{xi-guarded,peyton-jones-simple} and
 on dependent types \cite{WalidICFP02,fogarty-concoqtion}.
-
+%aplas-else
+\begin{comment}
 For a metalanguage's type system to allow the well-typed object term
 |test1| but disallow the ill-typed object term |test2|, fancier types
-such as GADTs or dependent types seem necessary.  Yet other type systems
+such as GADTs or dependent types seem necessary.  
+\end{comment}
+Yet other type systems
 have been proposed to distinguish closed terms like |test1| from open
 terms like |test3|
 %aplas \cite{WalidPOPL03,NanevskiICFP02,NanevskiJFP05,DaviesJACM01,nanevski-contextual},
 \cite{WalidPOPL03,NanevskiJFP05,DaviesJACM01},
 so that |lookup| never receives an empty environment.  We discuss these
-proposals further in \S\ref{related}; here we just note that many
+proposals further in \S\ref{related}%
+%aplas-specific
+.
+%aplas-else
+\begin{comment}
+; here we just note that many
 advanced type systems have been devised to ensure statically that an
 object term is well-typed and closed.
+\end{comment}
 
 \subsection{Our final proposal}\label{ourapproach}
 
 We represent object programs using ordinary functions rather than
-data constructors.  The interpreter below provides these functions%
-%aplas-specific
-, Fig.~\ref{fig:tag-final-proposal}(a)%
-.
-% fig:tag-final-proposal part (a) was here
-These functions comprise the entire interpreter.
-We now represent our sample term $(\fun{x}x)\True$ as
-%aplas-specific
-Fig.~\ref{fig:tag-final-proposal}(b)%
-.
-% fig:tag-final-proposal part (b) was here
-This representation is almost the same as in \S\ref{tagproblem}, only
-written with lowercase identifiers. To evaluate an object term is to
-apply its representation to the empty environment%
-%aplas-specific
-, Fig.~\ref{fig:tag-final-proposal}(c)%
-.
-% fig:tag-final-proposal part (c) was here
-The result has no tags: the interpreter patently uses no tags and no
-pattern matching. The term |b true| evaluates to a boolean and the term
-|lam varZ| evaluates to a function, both untagged. The |app| function
-applies |lam varZ| without pattern matching. What is more, evaluating an
-open term such as |testf3| below gives a type error rather than
-a run-time error
-%aplas-specific
-, Fig.~\ref{fig:tag-final-proposal}(d)%
-.
-% fig:tag-final-proposal part (d) was here
-The type error correctly complains
-that the initial environment should be a tuple rather than |()|.
-In other words, the term is open.
-\begin{figure}
-%
-(a) \begin{code2}
+data constructors.  The interpreter below provides these functions
+\begin{code3}
 let varZ env        = fst env
 let varS vp env     = vp (snd env)
 let b (bv:bool) env = bv
 let lam e env       = fun x -> e (x,env)
 let app e1 e2 env   = (e1 env) (e2 env)
-\end{code2}
-
-(b) \begin{code2}
+\end{code3}
+which comprise the entire interpreter.
+We now represent our sample term $(\fun{x}x)\True$ as
+%aplas-specific
+\texttt{let testf1 = app (lam varZ) (b true)}
+%aplas-else
+\begin{comment}
+\begin{code}
 let testf1 = app (lam varZ) (b true)
-\end{code2}
-
-(c) \begin{code2}
+\end{code}
+\end{comment}
+This representation is almost the same as in \S\ref{tagproblem}, only
+written with lowercase identifiers. To evaluate an object term is to
+apply its representation to the empty environment%
+%aplas-specific
+, |testf1 ()|, obtaining |true|.
+%aplas-else
+\begin{comment}
+\begin{code}
 let testf1r = testf1 ()
 val testf1r : bool = true
-\end{code2}
-
-(d) \begin{code2}
+\end{code}
+\end{comment}
+The result has no tags: the interpreter patently uses no tags and no
+pattern matching. The term |b true| evaluates to a boolean and the term
+|lam varZ| evaluates to a function, both untagged. The |app| function
+applies |lam varZ| without pattern matching. What is more, evaluating an
+%aplas-specific
+open term such as \texttt{app (lam (varS varZ)) (b true)}
+gives a type- rather than a run-time error.
+%aplas-else
+\begin{comment}
+\begin{code}
+open term such as |testf3| below gives a type error rather than
+a run-time error
 let testf3 = app (lam (varS varZ)) (b true)
 let testf3r = testf3 ()
-\end{code2}
-\caption{OCaml code illustrating our final proposal.}
-\label{fig:tag-final-proposal}
-\end{figure}
-%
+\end{code}
+\end{comment}
+The type error correctly complains
+that the initial environment should be a tuple rather than |()|.
+In other words, the term is open.
+
 In sum, by Church\hyp encoding terms using ordinary functions, we
 achieve a tagless evaluator for a typed object language in a
 metalanguage with a simple 
@@ -526,7 +532,7 @@ testpowfix7 () = lam (\x -> app (app (testpowfix ()) x) (int 7))
 % fig:symantics-haskell part (a) was here
 For example, we encode the term |test1|, or $(\fun{x}x)\True$, from
 \S\ref{tagproblem} above as |app (lam (\x -> x)) (bool True)|,
-whose inferred type is |Symantics repr => repr Bool|.
+whose inferred type is \texttt{Symantics repr => repr Bool}.
 For another example, the classical $\mathit{power}$ function is
 %aplas-specific
 in Fig.~\ref{fig:symantics-haskell}(b)
@@ -677,6 +683,10 @@ It is obvious to the compiler that
 pattern matching cannot fail, because there is no
 pattern matching. Evaluation can only fail to yield a value
 due to interpreting |fix|.
+%aplas-specific
+(The source code shows a total interpreter |L| that measures
+the size of each object term).
+%
 \begin{proposition}
 If an object term~$e$ encoded in the metalanguage has type~$t$,
 then evaluating~$e$ in the interpreter~|R| either continues
@@ -692,12 +702,7 @@ broader and more useful, if also more obvious, proposition.
 \end{proposition}
 These propositions follow immediately from the soundness of the
 metalanguage's type system.
-
-% aplas-specific
-For variety, the source code shows another interpreter, |L|, which measures
-the \emph{size} of each object term, defined as the number of term
-constructors. This interpreter is not only tagless but also total. It
-``evaluates'' even seemingly divergent terms.
+% aplas-commented
 \begin{comment}
 For variety, we show another interpreter, which measures the \emph{size}
 of each object term, defined as the number of term
@@ -803,9 +808,8 @@ Fig.~\ref{fig:interpreter-C}(c),
 % fig:interpreter-C part (c) was here
 gives a code value with many apparent $\beta$-redexes
 %aplas-specific
-Fig.~\ref{fig:interpreter-C}(d)
+Fig.~\ref{fig:interpreter-C}(d).
 % fig:interpreter-C part (d) was here
-
 This compiler does not incur
 any interpretive overhead: the
 code produced for $\fun{x}x$ is simply |fun x_6 -> x_6| and does not
@@ -858,7 +862,23 @@ Roughly, a partial evaluator interprets each object term to either
 a static (present-stage) term (using the evaluator~|R|) or
 a dynamic (future-stage) term (using the compiler~|C|).  To
 distinguish between static and dynamic terms, one might define
-the Haskell data type
+the Haskell data type 
+%aplas-specific
+\texttt{data P0 t = S0 (R t) $\mid$ E0 (C t)}.
+We then start to define |P0| as an instance of the |Symantics| class.
+Integer and boolean literals are immediate, present-stage
+values. Addition yields a static term (using~|R|) if and only if both operands
+are static; otherwise we extract the dynamic terms from the operands and
+add them using~|C|.
+Whereas |mul| and |leq| are as easy to define as |add|, we encounter
+a problem with |if_|.  If the first argument to |if_| is a dynamic term
+(type |C Bool|) and the second and third arguments are a static term
+(type |R a|) and a dynamic term (type |C a|), then we need to convert
+the static term to dynamic, but there is no polymorphic ``lift''
+function, of type |a -> C a|, to send a value to the future stage
+\cite{xi-guarded,WalidPOPL03}.
+%aplas-else
+\begin{comment}
 \begin{code}
 data P0 t = S0 (R t) | E0 (C t)
 \end{code}
@@ -897,6 +917,7 @@ were to add polymorphic \texttt{lift} to the type class
 \texttt{Symantics repr}, then \texttt{repr} would become an instance of
 \texttt{Applicative} and thus \texttt{Functor}:\quad\texttt{fmap
 f = app (lift f)}}
+\end{comment}
 
 Our |Symantics| class includes only separate lifting methods |bool| and
 |int|, not a parametrically polymorphic lifting method, for good reason:
@@ -912,9 +933,14 @@ alongside every static term.
 \label{S:PE-problem}
 
 We switch to the Haskell data type
+%aplas-specific
+|data P1 t = P1 (Maybe (R t)) (C t)|
+%aplas-else
+\begin{comment}
 \begin{code}
 data P1 t = P1 (Maybe (R t)) (C t)
 \end{code}
+\end{comment}
 so that a partially evaluated term |P1 t| always contains a dynamic
 component and sometimes contains a static component.  The two
 alternative constructors of a |Maybe| value, |Just| and |Nothing|,
@@ -922,26 +948,27 @@ tag each partially evaluated term with a phase: either present or
 future.  This tag is not an object type tag: all pattern matching below
 is exhaustive.  Because the future-stage component is always present, we
 can now define the polymorphic function
+%aplas-specific
+|abstr1 (P1 _ dyn) = dyn| of the type
+|abstr1 :: P1 t -> C t|
+%aplas-else
+\begin{comment}
 \begin{code}
 abstr1 :: P1 t -> C t
 abstr1 (P1 _ dyn) = dyn
 \end{code}
+\end{comment}
 to extract it without requiring polymorphic lift into~|C|.  We then try
 to define the interpreter |P1|---and get as far as the first-order
 constructs of our object language, including |if_|.
-\begin{code}
+\begin{code3}
 instance Symantics P1 where
   int  x = P1 (Just (int x)) (int x)
-  bool b = P1 (Just (bool b)) (bool b)
-  add (P1 (Just n1) _) (P1 (Just n2) _)
-    = int (unR (add n1 n2))
+  add (P1 (Just n1) _) (P1 (Just n2) _) = int (unR (add n1 n2))
   add e1 e2 = P1 Nothing (add (abstr1 e1) (abstr1 e2))
-  -- mul and leq are analogous and elided
   if_ (P1 (Just s) _) et ef = if unR s then et else ef
-  if_ eb et ef = P1 Nothing
-    (if_ (abstr1 eb) (abstr1 et) (abstr1 ef))
-\end{code}
-
+  if_ eb et ef = P1 Nothing (if_ (abstr1 eb) (abstr1 et) (abstr1 ef))
+\end{code3}
 When we come to functions, however, we stumble.  According to our
 definition of~|P1|, a partially evaluated object function, such as the
 identity $\fun{x}x$ embedded in Haskell as |lam (\x -> x)|\texttt{ ::
@@ -1948,14 +1975,16 @@ evaluator remove all the tags. In contrast, our object encoding and
 interpreters do not have tags to start with and obviously cannot
 raise run-time errors.
 
-
-A lot of effort has gone into ``typing dynamic typing'': to statically
-type-check dynamically\hyp typed values
-\cite{baars-typing,haskell-list},
-using the host language's type system to varying extents.
-Our object terms are statically typed, so we would
-need one of these techniques to interpret dynamically\hyp typed
-terms such as those read from a file.
+%aplas-else
+\begin{comment}
+  A lot of effort has gone into ``typing dynamic typing'': to statically
+  type-check dynamically\hyp typed values
+  \cite{baars-typing,haskell-list},
+  using the host language's type system to varying extents.
+  Our object terms are statically typed, so we would
+  need one of these techniques to interpret dynamically\hyp typed
+  terms such as those read from a file.
+\end{comment}
 
 
 Our partial evaluator establishes a bijection |repr_pe| between static
@@ -2123,12 +2152,18 @@ computation from consumers to producers: encoding object terms as calls
 to metalanguage functions (\S\ref{ourapproach}); build dynamic terms
 alongside static ones (\S\ref{S:PE-lift}); simulating type functions for
 partial evaluation (\S\ref{S:PE-solution}) and CPS
-transformation~(\S\ref{S:CPS}).  This shift also underlies fusion,
+transformation%
+%aplas
+.
+%aplas-else ~(\S\ref{S:CPS}).
+This shift also underlies fusion,
 functionalization, and amortized complexity analysis.
-
+%aplas-else
+\begin{comment}
 When the metalanguage does provide higher-rank and higher-kind
 polymorphism, we can type-check and compile an object term separately
 from any interpreters it may be plugged into.
+\end{comment}
 
 Our representation of object terms in the elimination form encodes
 primitive recursive folds over the terms. This makes operations like
