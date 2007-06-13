@@ -1,4 +1,8 @@
 (* Tagless staged interpreter *)
+(* Code accompanying the paper by
+    Jacques Carette, Oleg Kiselyov, and Chung-chieh Shan
+*)
+
 (* The language is simply typed lambda-calculus with booleans and
    other base types, the fixpoint, and the higher-order abstract syntax.
    type exp =  A of exp * exp | L of (exp -> exp) | Fix of (exp -> exp)
