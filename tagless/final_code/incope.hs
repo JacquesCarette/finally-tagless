@@ -1,6 +1,9 @@
 {-# OPTIONS -fglasgow-exts -W #-}
 
 -- Interpreter, Compiler, Partial Evaluator
+-- Code accompanying the paper by
+--   Jacques Carette, Oleg Kiselyov, and Chung-chieh Shan
+
 
 module Incope where
 

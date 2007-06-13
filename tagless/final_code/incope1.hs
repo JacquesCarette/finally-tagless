@@ -2,6 +2,10 @@
 {-# OPTIONS -fallow-undecidable-instances #-}
 
 -- Interpreter, Compiler, Partial Evaluator
+-- The Partial Evaluator is implemented with typeclasses instead of GADTs
+--
+-- Code accompanying the paper by
+--   Jacques Carette, Oleg Kiselyov, and Chung-chieh Shan
 
 module Incope1 where
 

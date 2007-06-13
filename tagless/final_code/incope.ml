@@ -1,5 +1,9 @@
 (* Interpreter, Compiler, Partial Evaluator *)
 
+(* Code accompanying the paper by
+    Jacques Carette, Oleg Kiselyov, and Chung-chieh Shan
+*)
+
 (*
   The language is simply-typed lambda-calculus with fixpoint,
   integers [plus basic operations], booleans [ditto] and comparison.
