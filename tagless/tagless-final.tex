@@ -284,7 +284,8 @@ such as GADTs or dependent types seem necessary.
 \end{comment}
 Yet other type systems
 have been proposed to distinguish closed terms like |test1| from open
-terms like |test3|
+terms 
+%aplas-comment: like |test3|
 %aplas \cite{WalidPOPL03,NanevskiICFP02,NanevskiJFP05,DaviesJACM01,nanevski-contextual},
 \cite{WalidPOPL03,NanevskiJFP05,DaviesJACM01},
 so that |lookup| never receives an empty environment.  We discuss these
@@ -353,7 +354,7 @@ In sum, by Church\hyp encoding terms using ordinary functions, we
 achieve a tagless evaluator for a typed object language in a
 metalanguage with a simple 
 %aplas
-Hindley-Milner type system
+Hindley-Milner type system%
 %aplas \cite{hindley-principal,milner-theory}
 .  In this \emph{final} rather
 than \emph{initial} approach, both kinds of run-time errors in
@@ -427,7 +428,7 @@ result they call desirable.  Our contributions are as follows.
     and need no advanced type-system features such as GADTs, dependent types,
     or intentional type analysis.
 \item The partial evaluator avoids polymorphic lift and delays binding-time
-    analysis.  It bakes a type-to-type map into the interpreter
+    ana-lysis.  It bakes a type-to-type map into the interpreter
     interface to eliminate the need for GADTs and thus remain portable
     across Haskell 98 and ML.
 \item We use the type system of the metalanguage
@@ -509,7 +510,7 @@ instances give the semantics.
 %
 (a) \begin{code2}
 class Symantics repr where
-  int  :: Int  -> repr Int       bool :: Bool -> repr Bool
+  int  :: Int  -> repr Int;       bool :: Bool -> repr Bool
   lam :: (repr a -> repr b) -> repr (a -> b)
   app :: repr (a -> b) -> repr a -> repr b
   fix :: (repr a -> repr a) -> repr a
