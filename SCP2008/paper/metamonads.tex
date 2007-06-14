@@ -84,24 +84,24 @@ eliminating abstraction overhead from generic code}
 \thanks[1]{Supported in part by NSERC Discovery Grant RPG262084-03.}
 
 \begin{abstract}
-we use multi-stage programming, monads and Ocaml's
+We use multi-stage programming, monads and Ocaml's
 advanced module system to demonstrate how to eliminate all
 abstraction overhead while avoiding any inspection of the resulting
 code.  We demonstrate this clearly with LU decomposition as a 
-representative family of symbolic and numerical algorithms, and also
+representative family of symbolic and numeric algorithms, and also
 include an application to ODE solving (via a Runge-Kutta algorithm).
 We parameterize our code to a great extent
 (over domain, matrix representations, determinant tracking, 
 pivoting policies, result types, etc) at no run-time cost.  Because
 the resulting code is generated just right and not changed afterwards,
-we enjoy MetaOCaml's guaranty that the generated code is well-typed.
+MetaOCaml guarantees that the generated code is well-typed.
 We further demonstrate that various abstraction parameters (aspects)
 can be made orthogonal and compositional, even in the presence of
-name-generation for temporaries and other bindings and
+name-generation for temporaries, and 
 ``interleaving'' of aspects.  We also show how to encode some
 domain-specific knowledge so that ``clearly wrong'' compositions can
-be statically rejected by the compiler when processing the generator
-rather than the generated code.
+be rejected by the compiler at generation time rather than at a later
+stage.
 \end{abstract}
 
 \begin{keyword}
@@ -114,25 +114,26 @@ MetaOcaml \sep linear algebra \sep genericity \sep generative \sep staging
 % previous introduction is saved at the end
 \section{Introduction}
 
-In high-performance, symbolic, and numeric computing, there is a
+In high-performance symbolic and numeric computing, there is a
 well-known issue of balancing between maximal performance and the
 level of abstraction at which code is written.  Furthermore, already
 in linear algebra, there is a wealth of different aspects that
-\emph{may} need to be addressed. For example, implementations of the
+\emph{may} need to be addressed. Implementations of the
 widely used LU decomposition algorithm (which subsumes Gaussian 
 Elimination (GE)) --- the running
 example of our paper --- may need to account for the representation of
 the matrix, whether to compute and return the determinant or rank, how
-and whether search for pivot, etc. Furthermore, current architectures
+and whether search for a pivot, etc. Furthermore, current architectures
 demand more and more frequent tweaks which, in general, cannot be done by the
 compiler because the tweaking often involves domain knowledge. 
+
 A survey \cite{carette04} of
 Gaussian elimination implementations in the industrial package Maple
-found 6 different aspects and 35 different implementations of the
-algorithm, as well as 45 implementations of directly related
-algorithms (LU decomposition, Cholesky decomposition, etc).  We can manually
-write each of these implementations optimizing for particular aspects and using
-cut-and-paste to ``share'' similar pieces of code.
+found 6 clearly identifiable aspects and 35 different implementations of the
+algorithm, as well as 45 implementations of directly related algorithms such as
+LU decomposition, Cholesky decomposition, and so on.  We could
+manually write each of these implementations optimizing for particular aspects
+and using cut-and-paste to ``share'' similar pieces of code.
 Or we can write a very generic procedure that accounts for
 all the aspects with appropriate abstractions \cite{Axiom}. The
 abstraction mechanisms however -- be they procedure, method or a
