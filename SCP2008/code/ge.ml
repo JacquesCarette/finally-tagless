@@ -2,9 +2,10 @@ open StateCPSMonad
 open Prelude
 
 type update_kind = FractionFree | DivisionBased
+
 (* It used to be that we used an option type to encode some domain
    information, like the need to compute a Determinant, Rank or Pivot.
-   Not this is done directly with an exception instead, so these routines
+   Now this is done directly with an exception instead, so these routines
    are no longer needed.
    For more detail, see the message
 http://caml.inria.fr/pub/ml-archives/caml-list/2006/11/df527bcc780e6f3106889e2d5e8b5e2a.en.html
