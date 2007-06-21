@@ -1,8 +1,8 @@
 # name:          Makefile
 # synopsis:      Construction rules for monadic "do" syntax extension
 # authors:       Chris L. Spiel (nifty stuff), Lydia E. van Dijk (boring rest)
-# last revision: Sun Apr 22 07:21:44 UTC 2007
-# ocaml version: 3.09.0
+# last revision: Thu Jun 21 18:13:57 UTC 2007
+# ocaml version: 3.10.0
 
 
 ########################################################################
@@ -46,7 +46,7 @@ ADDITIONAL-DOCUMENTED-MODULES := cc.ml exception.ml io.ml utest.ml
 
 
 # Pre-Precessor-Pretty-Printer for OCaml
-CAMLP4 := camlp4o
+CAMLP4 := camlp4orf
 
 
 # Option to feed OCaml sources through the pre-processor. This
@@ -58,7 +58,7 @@ PP := -pp '$(CAMLP4) -I . $(SYNTAX-EXTENSION)'
 # Option to feed OCaml sources through the pre-processor.  This
 # particular incantation is used to compile a syntax extension for the
 # OCaml language.
-PP-EXT := -pp '$(CAMLP4) -I . pa_extend.cmo q_MLast.cmo'
+PP-EXT := -pp $(CAMLP4)
 
 
 # Directory for the html documentation
@@ -118,7 +118,7 @@ DISTNAME := monad-syntax-extension
 
 
 # Version number of the tarball.  (See DISTNAME.)
-VERSION := 4.2
+VERSION := 5.0pre1
 
 
 # Name of the package for findlib
