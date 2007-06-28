@@ -6,11 +6,11 @@
 #
 ########################################################################
 
-SYNTAX_EXTENSION := ../camlp4/pa_monad.cmo
+SYNTAX_EXTENSION := ../../camlp4/pa_monad.cmo
 
 PP := camlp4o -I . $(SYNTAX_EXTENSION)
 
-INFRA := prelude.cmo coderep.cmi 
+INFRA := prelude.cmo coderep.cmi
 BASE := stateCPSMonad.cmo domains_sig.cmo domains_common.cmo \
 	domains_code.cmo \
 	code.cmo ge.cmo
@@ -88,6 +88,7 @@ ge_direct.out: test-ge_direct.ml $(BASE2) ge.cmo mytop test-ge-common.ml
 
 ge.cmo :  stateCPSMonad.cmo prelude.cmo coderep.cmi domains_sig.cmo
 domains_common.cmo : domains_sig.cmo
+openRecord.cmo : openRecord.cmi
 domains_code.cmo : domains_sig.cmo domains_common.cmo
 test-ge.ml : ge.cmo code.cmo domains_code.cmo test-ge-common.ml
 test-ge-small.ml : ge.cmo code.cmo domains_code.cmo test-ge-common-small.ml

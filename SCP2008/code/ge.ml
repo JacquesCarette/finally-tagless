@@ -35,10 +35,23 @@ end
 
 (* Monad used in this module: 
    (abstract) code generation monad with open union state *)
-type ('a,'v,'s,'w) cmonad = (('a,'v) abstract, 's list, ('a,'w) abstract) monad
+type ('pc,'v) cmonad = 
+    ('p,('a,'v) abstract) monad
+      constraint
+	  'p = <state : 's list;
+                answer : ('a,'w) abstract>
+      constraint
+          'pc = <classif : 'a; answer : 'w; state : 's; ..>
+       
 (* We also use this variant, where we _might_ generate code *)
-type ('a,'v,'s,'w) omonad = (('a,'v) abstract option, 
-                 's list, ('a,'w) abstract) monad
+type ('pc,'v) omonad = 
+    ('p,('a,'v) abstract option) monad
+      constraint
+	  'p = <state : 's list;
+                answer : ('a,'w) abstract>
+      constraint
+          'pc = <classif : 'a; answer : 'w; state : 's; ..>
+
 
 (* moved from Infra (now Domains) so that the former uses no monads.
   The following code is generic over the containers anyway.
@@ -58,6 +71,13 @@ module Iters = struct
     in  loopM low high newbody d
 end
 
+module Foo(S:sig type 'a tags end) = struct
+  type ('pc,'v) lm = ('pc,'v) cmonad
+    constraint 'pc = <state : 'a S.tags; classif : 'a; ..>
+  type ('pc,'v) om = ('pc,'v) omonad
+    constraint 'pc = <state : 'a S.tags; classif : 'a; ..>
+end
+
 (* Here are the various design aspects of GE-type algorithms *)
 
 (* Rank is container-independent *)
@@ -72,9 +92,8 @@ module TrackRank =
     (* some magic for the proper visibility of identifiers *)
   type 'a tag_lstate_ = [`TRan of 'a lstate ]
   type 'a tag_lstate = 'a tag_lstate_
-  type ('b,'v) lm = ('a,'v,'s,'w) cmonad
-    constraint 's = [> 'a tag_lstate]
-    constraint 'b = 'a * 's * 'w
+  type ('pc,'v) lm = ('pc,'v) cmonad
+    constraint 'pc = <state : [> 'a tag_lstate]; classif : 'a; ..>
   (* In 3.09, no need for any coercion at all, type inference works! *)
   let rec fetch_iter s =
     match (List.hd s) with
@@ -154,19 +173,20 @@ module type TRACKPIVOT = sig
   type 'a fra
   type 'a pra
   type 'a lstate
-  type 'a tag_lstate = [`TPivot of 'a lstate ]
-    (* Here, parameter 'b accounts for all the extra polymorphims *)
-  type ('b,'v) lm = ('a,'v,'s,'w) cmonad
-    constraint 's = [> 'a tag_lstate]
-    constraint 'b = 'a * 's * 'w
+  type ('pc,'v) lm = ('pc,'v) cmonad
+    constraint 'pc = <state : [> `TPivot of 'a lstate ]; classif : 'a; ..>
   val rowrep : 'a ira -> 'a ira -> 'a fra
   val colrep : 'a ira -> 'a ira -> 'a fra
-  val decl : ('a, int) abstract -> ('a*'s*'w, unit) lm
-  val add : 'a fra ->
+  val decl : ('a, int) abstract -> (<classif : 'a; ..>, unit) lm
+  val add : 'a fra -> 
+    (<classif : 'a; state : [> `TPivot of 'a lstate ]; ..>, unit) omonad
+    (*
     (('a,unit) abstract option,[> 'a tag_lstate] list,('a,'w) abstract) monad
+    *)
   val fin : unit -> ('b,perm_rep) lm
 end
 
+   
 module PivotCommon(PK:PIVOTKIND) = 
   struct
   type perm_rep = PK.perm_rep
@@ -174,10 +194,12 @@ module PivotCommon(PK:PIVOTKIND) =
   type 'a fra = 'a PK.fra
   type 'a pra = 'a PK.pra
   type 'a lstate = ('a, PK.perm_rep ref) abstract
-  type 'a tag_lstate = [`TPivot of 'a lstate ]
-  type ('b,'v) lm = ('a,'v,'s,'w) cmonad
-    constraint 's = [> 'a tag_lstate]
-    constraint 'b = 'a * 's * 'w
+  type ('pc,'v) lm = ('pc,'v) cmonad
+    constraint 'pc = <state : [> `TPivot of 'a lstate ]; classif : 'a; ..>
+(*
+  type ('pc,'v) lm = ('pc,'v) cmonad
+    constraint 'pc = <state : [> 'a tag_lstate]; classif : 'a; ..>
+*)
   let rowrep = PK.rowrep
   let colrep = PK.colrep
 end
@@ -231,20 +253,16 @@ type 'a curposval = {p: 'a curpos; curval: ('a, C.Dom.v) abstract}
 module type DETERMINANT = sig
   type tdet = C.Dom.v ref
   type 'a lstate
-  type 'a tag_lstate = [`TDet of 'a lstate ]
-    (* Here, parameter 'b accounts for all the extra polymorphims *)
-  type ('b,'v) lm = ('a,'v,'s,'w) cmonad
-    constraint 's = [> 'a tag_lstate]
-    constraint 'b = 'a * 's * 'w
-  type ('b,'v) om = ('a,'v,'s,'w) omonad
-    constraint 's = [> 'a tag_lstate]
-    constraint 'b = 'a * 's * 'w
+  type ('pc,'v) lm = ('pc,'v) cmonad
+    constraint 'pc = <state : [> `TDet of 'a lstate ]; classif : 'a; ..>
+  type ('pc,'v) om = ('pc,'v) omonad
+    constraint 'pc = <state : [> `TDet of 'a lstate ]; classif : 'a; ..>
   val decl : unit -> ('b,unit) lm (* could be unit rather than unit code...*)
   val upd_sign  : unit -> ('b,unit) om
   val zero_sign : unit -> ('b,unit) lm
-  val acc       : ('a,C.Dom.v) abstract -> ('a * 's * 'w,unit) lm
+  val acc       : ('a,C.Dom.v) abstract -> (<classif : 'a; ..>,unit) lm
   val get       : unit -> ('b,tdet) lm
-  val set       : ('a,C.Dom.v) abstract -> ('a * 's * 'w,unit) lm
+  val set       : ('a,C.Dom.v) abstract -> (<classif : 'a; ..>,unit) lm
   val fin       : unit -> ('b,C.Dom.v) lm
 end
 
@@ -259,7 +277,9 @@ module type PIVOT =
     When we permute the rows of columns, we update the sign of the det.
  *)
  val findpivot : 'a wmatrix -> 'a curpos ->
-   ('a,C.Dom.v option,[> 'a D.tag_lstate | 'a P.tag_lstate],'w) cmonad
+   (<classif : 'a; 
+     state : [> `TDet of 'a D.lstate | `TPivot of 'a P.lstate ]; ..>, C.Dom.v option) cmonad
+(* [> 'a D.tag_lstate | 'a P.tag_lstate] *)
 end
 
 (* In the case of a non-fraction-free algorithm with no Det
@@ -278,13 +298,10 @@ module NoDet =
   let get () = ret (liftRef C.Dom.zeroL) (* hack alert! *)
   let set _ = unitL
   let fin () = failwith "Determinant is needed but not computed"
-  type 'a tag_lstate = [`TDet of 'a lstate ]
-  type ('b,'v) lm = ('a,'v,'s,'w) cmonad
-    constraint 's = [> 'a tag_lstate]
-    constraint 'b = 'a * 's * 'w
-  type ('b,'v) om = ('a,'v,'s,'w) omonad
-    constraint 's = [> 'a tag_lstate]
-    constraint 'b = 'a * 's * 'w
+  type ('pc,'v) lm = ('pc,'v) cmonad
+    constraint 'pc = <state : [> `TDet of 'a lstate ]; classif : 'a; ..>
+  type ('pc,'v) om = ('pc,'v) omonad
+    constraint 'pc = <state : [> `TDet of 'a lstate ]; classif : 'a; ..>
 end
 
 module AbstractDet =
@@ -294,13 +311,13 @@ module AbstractDet =
   (* the first part of the state is an integer: which is +1, 0, -1:
      the sign of the determinant *)
   type 'a lstate = ('a,int ref) abstract * ('a,tdet) abstract
-  type 'a tag_lstate = [`TDet of 'a lstate ]
-  type ('b,'v) lm = ('a,'v,'s,'w) cmonad
-    constraint 's = [> 'a tag_lstate]
-    constraint 'b = 'a * 's * 'w
-  type ('b,'v) om = ('a,'v,'s,'w) omonad
-    constraint 's = [> 'a tag_lstate]
-    constraint 'b = 'a * 's * 'w
+  type ('pc,'v) lm = ('pc,'v) cmonad
+    constraint 'pc = <state : [> `TDet of 'a lstate ]; classif : 'a; ..>
+  type ('pc,'v) om = ('pc,'v) omonad
+    constraint 'pc = <state : [> `TDet of 'a lstate ]; classif : 'a; ..>
+(* check later: XXX
+  include Foo(struct type 'a tags = private [> `TDet of 'a lstate ] end)
+*)
   let rec fetch_iter s =
     match (List.hd s) with
       `TDet x -> x
@@ -346,8 +363,9 @@ module type UPDATE =
         val update : 
             'a in_val -> 'a in_val -> 'a in_val -> 'a in_val -> 
           ('a in_val -> ('a, unit) abstract) ->
-          ('a, C.Dom.v ref) abstract -> ('a, unit, 's, 'w) cmonad
-        val update_det : 'a in_val -> ('a * 's * 'w,unit) D.lm
+          ('a, C.Dom.v ref) abstract -> 
+          (<classif : 'a; ..>, unit) cmonad
+        val update_det : 'a in_val -> (<classif : 'a; ..>,unit) D.lm
 (* this is only needed if we try to deal with FractionFree LU,
    which is really tough, especially since the L Matrix still has
    to be over the fraction field, which we don't have available.
@@ -402,14 +420,12 @@ end
    not generate any code *)
 module type LOWER = sig
   type 'a lstate = ('a, C.contr) abstract
-  type 'a tag_lstate = [`TLower of 'a lstate ]
-  type ('b,'v) lm = ('a,'v,'s,'w) cmonad
-    constraint 's = [> 'a tag_lstate]
-    constraint 'b = 'a * 's * 'w
+  type ('pc,'v) lm = ('pc,'v) cmonad
+    constraint 'pc = <state : [> `TLower of 'a lstate ]; classif : 'a; ..>
   val mfetch : unit -> ('b, C.contr) lm
-  val decl   : ('a, C.contr) abstract -> ('a*'s*'w, C.contr) lm
+  val decl   : ('a, C.contr) abstract -> (<classif : 'a; ..>, C.contr) lm
   val updt   : 'a C.vc -> ('a,int) abstract -> ('a,int) abstract -> 'a C.vo -> 
-            'a C.Dom.vc -> ('a*'s*'w, unit) lm option
+            'a C.Dom.vc -> (<classif : 'a;..>, unit) lm option
   val fin    : unit -> ('a,  C.contr) lm
   val wants_pack : bool
 end
@@ -418,10 +434,8 @@ end
 module TrackLower = 
   struct
   type 'a lstate = ('a, C.contr) abstract
-  type 'a tag_lstate = [`TLower of 'a lstate ]
-  type ('b,'v) lm = ('a,'v,'s,'w) cmonad
-    constraint 's = [> 'a tag_lstate]
-    constraint 'b = 'a * 's * 'w
+  type ('pc,'v) lm = ('pc,'v) cmonad
+    constraint 'pc = <state : [> `TLower of 'a lstate ]; classif : 'a; ..>
   (* In 3.09, no need for any coercion at all, type inference works! *)
   let rec fetch_iter s =
     match (List.hd s) with
@@ -481,8 +495,8 @@ end
 module type INPUT = sig
     type inp
     val get_input : ('a, inp) abstract ->
-        (('a, C.contr) abstract * ('a, int) abstract * bool, 's, ('a, 'w)
-        abstract) monad
+    (<classif : 'a; ..>, ('a, C.contr) abstract * ('a, int) abstract * bool)
+   monad
 end 
 
 (* What is the input *)
@@ -736,8 +750,15 @@ module type OUTPUT = functor(OD : OUTPUTDEP) -> sig
   module IF : INTERNAL_FEATURES
   type res
   val make_result : 'a wmatrix ->
+   (<classif : 'a; 
+     state : [> `TDet of 'a OD.Det.lstate |
+                'a IF.R.tag_lstate |
+                `TPivot of 'a IF.P.lstate |
+                `TLower of 'a IF.L.lstate]; ..>,res) cmonad
+   (*
     ('a,res,[> 'a OD.Det.tag_lstate | 'a IF.R.tag_lstate 
              | 'a IF.P.tag_lstate   | 'a IF.L.tag_lstate],'w) cmonad
+      *)
 end
 
 (* The `keyword' list of all the present external features *)
@@ -835,8 +856,7 @@ module type INPUT = sig
     type inp
     type rhs = C.contr
     val get_input : ('a, inp) abstract ->
-        (('a, C.contr) abstract * ('a, rhs) abstract, 's, ('a, 'w)
-        abstract) monad
+      (<classif : 'a;..>, ('a, C.contr) abstract * ('a, rhs) abstract) monad
 end 
 
 (* What is the input *)
@@ -854,7 +874,7 @@ module type OUTPUT = sig
   type res
   val make_result : ('a, C.contr) abstract -> ('a, C.contr) abstract ->
       ('a, int) abstract -> ('a, int) abstract -> ('a, int) abstract ->
-      ('a, res, 's, 'w) cmonad
+      (<classif : 'a;..>, res) cmonad
 end
 
 module OutJustAnswer = struct
