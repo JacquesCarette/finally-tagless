@@ -8,13 +8,13 @@
  (* duplicate all tests from test-monad3 first *)
 let test_simple_expression () =
     let ret x = x in
-  doM ret true
+  perform ret true
 
 let brt = .< 0 >. ;;
 
 let test_brackets () =
   let ret x = x and bind x f = x in
-    doM y <-- .< 0 >. ;
+    perform y <-- .< 0 >. ;
           ret y
 
 let test_state1 () =
@@ -24,7 +24,7 @@ let test_state1 () =
   and update newval = fun state -> state, newval
   and fetch = fun state -> state, state in
     let multiplier factor =
-      doM result <-- fetch ;
+      perform result <-- fetch ;
         update (factor * result);
         ret result in
         multiplier 2 3
@@ -36,7 +36,7 @@ let test_state2 () =
   and update newval = fun state -> state, newval
   and fetch = fun state -> state, state in
     let multiplier factor =
-      doM result <-- fetch ;
+      perform result <-- fetch ;
         _ <-- update (factor * result);
         fetch in
         multiplier 2 3
@@ -49,7 +49,7 @@ let test_state21 () =
   and update newval = fun state -> state, newval
   and fetch = fun state -> state, state in
     let multiplier factor =
-      doM result <-- fetch ;
+      perform result <-- fetch ;
         let updater f = update (f * result) in ;
         x <-- updater factor;
         fetch in
@@ -58,7 +58,7 @@ let test_state21 () =
 let test_two_element_list () =
   let ret x = [x]
   and bind xs f = List.concat (List.map f xs) in
-    doM a <-- [1; 2; 3] ;
+    perform a <-- [1; 2; 3] ;
         b <-- [3; 4; 5] ;
         ret (a-b) (* negation is not commutative, and more illustrative*)
 
@@ -89,12 +89,12 @@ let test_state3 () =
 
 let simple_mdo () =
     let ret x = x and bind a f = f a in
-  doM _ <-- 1+2 ;
+  perform _ <-- 1+2 ;
       ret 2
 
 let simple_let_mdo () =
     let ret x = x and bind a f = f a in
-  doM let a = 1 and b = 2 in;
+  perform let a = 1 and b = 2 in;
       _ <-- a+b ;
       ret b
 
@@ -125,16 +125,16 @@ let test_nondet () =
         | Cons (a,b) -> (a::run (n-1) b)
   in
   (* Note the Left recursion! *)
-  let rec numb () = InC (mplus (doM n <-- numb; ret (n+1)) (ret 0)) in
+  let rec numb () = InC (mplus (perform n <-- numb; ret (n+1)) (ret 0)) in
   (* Don't try this in Prolog or in Haskell's MonadPlus! *)
-  let tst = doM
+  let tst = perform
                   i <-- numb;
                   guard (i>0);
                   j <-- numb;
                   guard (j>0);
                   k <-- numb;
                   guard (k>0);
-                  (* Just to illustrate the `let' form within doM *)
+                  (* Just to illustrate the `let' form within perform *)
                   let test x = x*x = j*j + k*k in;
                   guard (test i);
           ret (i,j,k)
@@ -155,7 +155,7 @@ let testM_state1 () =
   and update newval = fun state -> state, newval
   and fetch = fun state -> state, state in
     let multiplier factor =
-      doM StateMonad in
+      perform StateMonad in
         result <-- fetch ;
         update (factor * result);
         ret result in
@@ -166,7 +166,7 @@ let testM_state2 () =
   and update newval = fun state -> state, newval
   and fetch = fun state -> state, state in
     let multiplier factor =
-      doM StateMonad in
+      perform StateMonad in
         result <-- fetch ;
         _ <-- update (factor * result);
         fetch in
@@ -178,7 +178,7 @@ let testM_state21 () =
   and update newval = fun state -> state, newval
   and fetch = fun state -> state, state in
     let multiplier factor =
-      doM StateMonad in
+      perform StateMonad in
         result <-- fetch ;
         let updater f = update (f * result) in ;
         x <-- updater factor;
@@ -191,7 +191,7 @@ end
 
 let testM_two_element_list () =
   let ret x = [x] in
-    doM ListMonad in
+    perform ListMonad in
         a <-- [1; 2; 3] ;
         b <-- [3; 4; 5] ;
         ret (a-b) (* negation is not commutative, and more illustrative*)

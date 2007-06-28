@@ -6,14 +6,14 @@
 
 let test_simple_expression () =
     let ret x = x in
-  mdo { ret true }
+  perform  ret true 
 
 let brt : ('a, int) code = .< 0 >. ;;
 
 let test_brackets =
   let ret x = x and bind x f = f x in
-    mdo { y <-- .< 0 >. ;
-          ret y }
+    perform  y <-- .< 0 >. ;
+          ret y 
 
 let test_escape =
   let x = .< 1 >. in

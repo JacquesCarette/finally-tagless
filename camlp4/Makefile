@@ -12,7 +12,7 @@
 #
 ########################################################################
 
-SYNTAX_EXTENSION := pa_monad3.cmo
+SYNTAX_EXTENSION := pa_monad.cmo
 
 PP := camlp4o -I . $(SYNTAX_EXTENSION)
 
@@ -64,7 +64,7 @@ pa_%.cmo: pa_%.ml
 	ocamlc -c -pp 'camlp4o pa_extend.cmo q_MLast.cmo' -I +camlp4 $<
 
 pa-%.cmo: pa-%.ml
-	ocamlc -verbose -c -pp 'camlp4o pa_extend.cmo q_MLast.cmo' -I +camlp4 $<
+	metaocamlc -verbose -c -pp 'camlp4o pa_extend.cmo q_MLast.cmo' -I +camlp4 $<
 
 test-lift%.txt: test-lift%.ml
 	camlp4o -I . pa-lift.cmo pr_o.cmo $<
@@ -81,8 +81,8 @@ test3.cmo: test3.ml pa_monad.cmo
 tt: tt.ml test3.cmo
 	metaocamlc ./test3.cmo -o $@ $<
 
-%: %.ml
-	metaocamlc -pp '$(PP)' -o $@ $<
+#%: %.ml
+#	metaocamlc -pp '$(PP)' -o $@ $<
 
 ########################################################################
 #
