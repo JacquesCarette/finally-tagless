@@ -14,6 +14,33 @@ let fromJust = function Some x -> x | None -> failwith "Can't happen"
 let notNone v str = match v with None -> failwith str | Some _ -> () *)
 let ensure cond str = if not cond then failwith str else ()
 
+
+(* A few utility functions to handle `open records', lists of variants *)
+(* Each `field' is characterized by a triple: injection, projection functions
+   and the name. The latter is used for printing error messages.
+*)
+let rec lookup ((_,prj,_) as ip) = 
+   function [] -> raise Not_found
+   | (h::t) -> (match prj h with Some x -> x | _ -> lookup ip t)
+
+let orec_store ((inj,_,name) as ip) v s =
+  let () = 
+    try let _ = lookup ip s in 
+        failwith ("The field of an open record is already present: " ^ name)
+    with Not_found -> () in
+  (inj v)::s
+
+let orec_find ((_,_,name) as ip) s =
+  try lookup ip s 
+  with Not_found -> failwith ("Failed to locate orec field: " ^ name)
+
+let mo_extend ip v = 
+  perform s <-- fetch; store (orec_store ip v s)
+
+let mo_lookup ip =
+  perform s <-- fetch; ret (orec_find ip s)
+
+
 (* A lot of "Linear Algebra" is generic, so structure things 
    to leverage that.  Some modules are container-independent,
    so these are pulled out.
@@ -71,12 +98,6 @@ module Iters = struct
     in  loopM low high newbody d
 end
 
-module Foo(S:sig type 'a tags end) = struct
-  type ('pc,'v) lm = ('pc,'v) cmonad
-    constraint 'pc = <state : 'a S.tags; classif : 'a; ..>
-  type ('pc,'v) om = ('pc,'v) omonad
-    constraint 'pc = <state : 'a S.tags; classif : 'a; ..>
-end
 
 (* Here are the various design aspects of GE-type algorithms *)
 
@@ -94,26 +115,20 @@ module TrackRank =
   type 'a tag_lstate = 'a tag_lstate_
   type ('pc,'v) lm = ('pc,'v) cmonad
     constraint 'pc = <state : [> 'a tag_lstate]; classif : 'a; ..>
-  (* In 3.09, no need for any coercion at all, type inference works! *)
-  let rec fetch_iter s =
-    match (List.hd s) with
-      `TRan x -> x
-    |  _ -> fetch_iter (List.tl s)
-  let rfetch () = perform s <-- fetch; (* unit for monomorphism restriction *)
-                          ret (fetch_iter s)
-  let rstore v = store (`TRan v)
+
+  let ip = (fun x -> `TRan x), (function `TRan x -> Some x | _ -> None),
+           "TrackRank"
   let decl () = perform
       rdecl <-- retN (liftRef Idx.zero);
-      rstore rdecl;
+      mo_extend ip rdecl;
       ret rdecl
   let succ () = perform
-   r <-- rfetch ();
+   r <-- mo_lookup ip;
    assignM r (Idx.succ (liftGet r))
 
       (* The signature of the above *)
   module type RANK = sig
     type 'a tag_lstate = 'a tag_lstate_
-    val rfetch : unit -> ('b, int ref) lm
     val decl   : unit -> ('b, int ref) lm
     val succ   : unit -> ('b, unit) lm
     val fin    : unit -> ('b, int) lm
@@ -123,7 +138,7 @@ end
 module Rank = struct
   include TrackRank
   let fin () = perform
-      r <-- rfetch ();
+      r <-- mo_lookup ip;
       ret (liftGet r)
 end
 
@@ -196,32 +211,23 @@ module PivotCommon(PK:PIVOTKIND) =
   type 'a lstate = ('a, PK.perm_rep ref) abstract
   type ('pc,'v) lm = ('pc,'v) cmonad
     constraint 'pc = <state : [> `TPivot of 'a lstate ]; classif : 'a; ..>
-(*
-  type ('pc,'v) lm = ('pc,'v) cmonad
-    constraint 'pc = <state : [> 'a tag_lstate]; classif : 'a; ..>
-*)
   let rowrep = PK.rowrep
   let colrep = PK.colrep
+  let ip = (fun x -> `TPivot x), (function `TPivot x -> Some x | _ -> None),
+           "Pivot"
 end
 
 module KeepPivot(PK:PIVOTKIND) = struct
   include PivotCommon(PK)
-  let rec fetch_iter s =
-    match (List.hd s) with
-      `TPivot x -> x
-    |  _ -> fetch_iter (List.tl s)
-  let pfetch () = perform s <-- fetch; (* unit for monomorphism restriction *)
-                        ret (fetch_iter s)
-  let pstore v = store (`TPivot v)
   let decl n = perform
       pdecl <-- retN (liftRef (PK.empty n));
-      pstore pdecl;
+      mo_extend ip pdecl;
       unitL
   let add v = perform
-   p <-- pfetch ();
+   p <-- mo_lookup ip;
    ret (Some (assign p (PK.add v (liftGet p))))
   let fin  () = perform
-      p <-- pfetch ();
+      p <-- mo_lookup ip;
       ret (liftGet p)
 end
 
@@ -278,7 +284,8 @@ module type PIVOT =
  *)
  val findpivot : 'a wmatrix -> 'a curpos ->
    (<classif : 'a; 
-     state : [> `TDet of 'a D.lstate | `TPivot of 'a P.lstate ]; ..>, C.Dom.v option) cmonad
+     state : [> `TDet of 'a D.lstate | `TPivot of 'a P.lstate ]; ..>, 
+    C.Dom.v option) cmonad
 (* [> 'a D.tag_lstate | 'a P.tag_lstate] *)
 end
 
@@ -315,43 +322,35 @@ module AbstractDet =
     constraint 'pc = <state : [> `TDet of 'a lstate ]; classif : 'a; ..>
   type ('pc,'v) om = ('pc,'v) omonad
     constraint 'pc = <state : [> `TDet of 'a lstate ]; classif : 'a; ..>
+  let ip = (fun x -> `TDet x), (function `TDet x -> Some x | _ -> None), "Det"
 (* check later: XXX
   include Foo(struct type 'a tags = private [> `TDet of 'a lstate ] end)
 *)
-  let rec fetch_iter s =
-    match (List.hd s) with
-      `TDet x -> x
-    |  _ -> fetch_iter (List.tl s)
-  let dfetch () = perform s <-- fetch; (* unit for monomorphism restriction *)
-                     ret (fetch_iter s)
-  let dstore v = store (`TDet v)
   let decl () = perform
       ddecl <-- retN (liftRef oneL);
       dsdecl <-- retN (liftRef Idx.one);
-      dstore (dsdecl,ddecl);
+      mo_extend ip (dsdecl,ddecl);
       unitL
   let upd_sign () = perform
-      det <-- dfetch ();
+      det <-- mo_lookup ip;
       det1 <-- ret (fst det);
       ret (Some (assign det1 (Idx.uminus (liftGet det1))))
   let zero_sign () = perform
-      det <-- dfetch ();
+      det <-- mo_lookup ip;
       det1 <-- ret (fst det);
       assignM det1 Idx.zero
-  let acc v = perform
-      det <-- dfetch ();
-      det2 <-- ret (snd det);
-      r <-- ret ((liftGet det2) *^ v);
-      assignM det2 r
   let get () = perform
-      det <-- dfetch ();
+      det <-- mo_lookup ip;
       ret (snd det)
   let set v = perform
-      det <-- dfetch ();
-      det2 <-- ret (snd det);
+      det2 <-- get ();
       assignM det2 v
+  let acc v = perform
+      det2 <-- get ();
+      r <-- ret ((liftGet det2) *^ v);
+      assignM det2 r
   let fin = fun () -> perform
-      (det_sign,det) <-- dfetch ();
+      (det_sign,det) <-- mo_lookup ip;
       ifM (Logic.equalL (liftGet det_sign) Idx.zero) (ret zeroL)
       (ifM (Logic.equalL (liftGet det_sign) Idx.one) (ret (liftGet det))
           (ret (uminusL (liftGet det))))
@@ -422,7 +421,6 @@ module type LOWER = sig
   type 'a lstate = ('a, C.contr) abstract
   type ('pc,'v) lm = ('pc,'v) cmonad
     constraint 'pc = <state : [> `TLower of 'a lstate ]; classif : 'a; ..>
-  val mfetch : unit -> ('b, C.contr) lm
   val decl   : ('a, C.contr) abstract -> (<classif : 'a; ..>, C.contr) lm
   val updt   : 'a C.vc -> ('a,int) abstract -> ('a,int) abstract -> 'a C.vo -> 
             'a C.Dom.vc -> (<classif : 'a;..>, unit) lm option
@@ -430,20 +428,15 @@ module type LOWER = sig
   val wants_pack : bool
 end
 
+
 (* Do we keep the lower part? *)
 module TrackLower = 
   struct
   type 'a lstate = ('a, C.contr) abstract
   type ('pc,'v) lm = ('pc,'v) cmonad
     constraint 'pc = <state : [> `TLower of 'a lstate ]; classif : 'a; ..>
-  (* In 3.09, no need for any coercion at all, type inference works! *)
-  let rec fetch_iter s =
-    match (List.hd s) with
-      `TLower x -> x
-    |  _ -> fetch_iter (List.tl s)
-  let mfetch () = perform s <-- fetch; (* unit for monomorphism restriction *)
-                          ret (fetch_iter s)
-  let mstore v = store (`TLower v)
+  let ip = (fun x -> `TLower x), (function `TLower x -> Some x | _ -> None), 
+           "TrackLower"
 end
 
 (* Even this form cannot be done with FractionFree, because in
@@ -454,17 +447,15 @@ module SeparateLower = struct
   include TrackLower
   let decl c = perform
       udecl <-- retN c;
-      mstore udecl;
+      mo_extend ip udecl;
       ret udecl
   (* also need to 'set' lower! *)
   let updt mat row col defval nv = Some( perform
-      lower <-- mfetch ();
+      lower <-- mo_lookup ip;
       l1 <-- ret (C.col_head_set lower row col nv);
       l2 <-- ret (C.col_head_set mat row col defval);
       ret (seq l1 l2) )
-  let fin () = perform
-      m <-- mfetch ();
-      ret m
+  let fin () = mo_lookup ip
   let wants_pack = false
 end
 
@@ -474,12 +465,10 @@ module PackedLower = struct
   include TrackLower
   let decl c = perform
       udecl <-- ret c;
-      mstore udecl;
+      mo_extend ip udecl;
       ret udecl
   let updt  _ _ _ _ _ = None
-  let fin () = perform
-      m <-- mfetch ();
-      ret m
+  let fin () = mo_lookup ip
   let wants_pack = true
 end
 

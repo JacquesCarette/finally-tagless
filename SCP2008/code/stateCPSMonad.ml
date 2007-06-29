@@ -19,5 +19,5 @@ let l3 f = fun x y z -> perform tx <-- x; ty <-- y; tz <-- z; f tx ty tz
 
 (* The monad has 2 parts: the continuation and the state.  For the
    state part, we only use 2 morphisms *)
-let fetch s k = k s s  and  store v s k = k (v::s) ()
+let fetch s k = k s s  and  store v _ k = k v ()
 
