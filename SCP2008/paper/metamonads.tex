@@ -397,22 +397,24 @@ the present paper and shows its implementation.
 
 \begin{figure}
 \begin{code}
-type ('v,'s,'w) monad = 's -> ('s -> 'v -> 'w) -> 'w
-let ret (a :'v) : ('v,'s,'w) monad = fun s k -> k s a
+type ('p,'v) monad = 's -> ('s -> 'v -> 'w) -> 'w
+    constraint 'p = <state : 's; answer : 'w; ..>
+
+let ret (a :'v) : ('p,'v) monad = fun s k -> k s a
 let bind a f = fun s k -> a s (fun s' b -> f b s' k)
-let fetch s k = k s s  and  store v s k = k (v::s) ()
+let fetch s k = k s s  and  store v _ k = k v ()
 
-let k0 s v = v
-let runM m = m [] k0
+let k0 _ v = v
+let runM m = fun s0 -> m s0 k0 
 
-let l1 f = fun x -> perform \{ t <-- x; f t\}
-let l2 f = fun x y -> perform \{ tx <-- x; ty <-- y; f tx ty\}
+let l1 f = fun x     -> perform t <-- x; f t
+let l2 f = fun x y   -> perform tx <-- x; ty <-- y; f tx ty
 
 let retN a = fun s k -> .<let t = .~a in .~(k s .<t>.)>.
 
 let ifL test th el = ret .< if .~test then .~th else .~el >.
-let ifM test th el = fun s k ->
-  k s .< if .~(test s k0) then .~(th s k0) else .~(el s k0) >.
+let ifM test th el = fun s k -> 
+  k s .< if .~test then .~(th s k0) else .~(el s k0) >.
 \end{code}
 \caption{Our monad}\label{ourmonad}
 \end{figure}
@@ -436,9 +438,7 @@ the basic
 monadic operations |ret| and |bind| is conventional and clearly
 satisfies the monadic laws. Other monadic operations
 construct computations that do have specific effects.  Operations |fetch| and
-|store v| construct computations that read and write the state. In our
-case the state is a list (of polymorphic variants), which models an
-open discriminated union, as we shall see later.
+|store v| construct computations that read and write the state. 
 
 The operation |retN a| is the let-insertion operation, whose simpler
 version we called |letgen| earlier. It is the first computation with
@@ -447,7 +447,8 @@ result of invoking its continuation |k|. Rather, its result is a |let|
 code expression. Such a behavior is symptomatic of control operators
 (in particular, |abort|).
 
-Finally, |runM| runs our monad, that is, performs the computation of
+Finally, |runM| runs our monad, that is, given the initial state,
+performs the computation of
 the monad and returns its result, which in our case is the code
 expression. We run the monad by passing it the initial state and the
 initial continuation |k0|. We can now re-write our |param_code2|
@@ -456,7 +457,7 @@ example of the previous section as |param_code3|.
 let param_code3 plus one =
   let gen x y = bind (retN (plus y one)) (fun ce -> 
                 ret (plus ce (plus x ce)))
-  in .<fun x y -> .~(runM (gen .<x>. .<y>.))>.
+  in .<fun x y -> .~(runM (gen .<x>. .<y>.) ())>.
 \end{code}
 % param_code3 plus one;;
 %
@@ -465,9 +466,9 @@ camlp4 pre-processor, we introduce the |perform|-notation \cite{metamonadsURL},
 patterned after the |do|-notation of Haskell. 
 \begin{code}
 let param_code4 plus one =
-  let gen x y = mdo \{ ce <-- retN (plus y one);
-                      ret (plus ce (plus x ce)) \}
-  in .<fun x y -> .~(runM (gen .<x>. .<y>.))>.
+  let gen x y = perform ce <-- retN (plus y one);
+                        ret (plus ce (plus x ce))
+  in .<fun x y -> .~(runM (gen .<x>. .<y>.) ())>.
 \end{code}
 The function
 |param_code4|, written in the |perform|-notation, is equivalent to
@@ -482,17 +483,17 @@ albeit straightforward, is not as general as we wish: its arguments are
 already generated pieces of code rather than monadic values. We
 ``lift it'', see |ifM'|. 
 \begin{code}
-let ifM' test th el = perform \{
+let ifM' test th el = perform
   testc <-- test; thc <-- th; elc <-- el;
-  ifL testc thc elc\}
+  ifL testc thc elc
 let gen a i = ifM' (ret .<(.~i) >= 0>.) 
                    (retN .<Some (.~a).(.~i)>.) (ret .<None>.)
- in .<fun a i -> .~(runM (gen .<a>. .<i>.))>.
+ in .<fun a i -> .~(runM (gen .<a>. .<i>.) ())>.
 \evalresult{.<fun a_1 i_2 -> \protect\newline
 let t_3 = (Some a_1.(i_2)) in if (i_2 >= 0) then t_3 else None>.}
 let gen a i = ifM (ret .<(.~i) >= 0>.) 
                   (retN .<Some (.~a).(.~i)>.) (ret .<None>.)
- in .<fun a i -> .~(runM (gen .<a>. .<i>.))>.
+ in .<fun a i -> .~(runM (gen .<a>. .<i>.) ())>.
 \evalresult{.<fun a_1 i_2 -> 
 if (i_2 >= 0) then let t_3 = (Some a_1.(i_2)) in t_3 else None>.}
 \end{code}
@@ -515,7 +516,92 @@ effects when generating control constructions such as conditionals.
 The form |ifM| handles such effects correctly. We
 need similar operators for other OCaml control forms: for generating
 case-matching statements and |for|- and |while|-loops.
-\oleg{put them here?}
+
+\begin{code}
+let loopM low high body = function
+  | UP -> (fun s k -> 
+      k s .< for j = .~low to .~high do .~(body .<j>. s k0) done >. )
+  | DOWN -> (fun s k -> 
+      k s .< for j = .~low downto .~high do .~(body .<j>. s k0) done >. )
+
+let whileM cond body = fun s k -> 
+  k s .< while .~(cond) do .~(body s k0) done >.
+
+let matchM x som non = fun s k -> k s .< match .~x with
+           | Some i -> .~(som .<i>. s k0)
+           | None   -> .~(non s k0) >.
+
+let genrecloop gen rtarg = fun s k -> 
+  k s .<let rec loop j = .~(gen .<loop>. .<j>. s k0) in loop .~rtarg>.
+\end{code}
+
+
+|loopM| is the analogue of the for-loop.
+
+
+(* We now define a lot of infrastructure.  We will be quite
+   thorough, and define base abstraction and lifted abstractions,
+   This will involve a lot of boilerplate code, which unfortunately 
+   cannot be so easily automated in MetaOCaml -- that would require 
+   introspection.  It could be done in camlp4, but that seems too 
+   much as well.  This 'base' could be elided, but when we decide
+   to make more use of Abstract Interpretation, we'll regret it,
+   so do it now. *)
+
+\begin{code}
+let lift x = .< x >.
+
+let liftRef x = .< ref .~x >. 
+let liftGet x = .< ! .~x >. 
+let unitL = fun s k -> k s .< () >.
+
+let liftPair x = (.< fst .~x >., .< snd .~x >.)
+
+(* logic code combinators - plain and monadic *)
+module Logic = struct
+  let notL a        = .< not .~a >.
+  let equalL a b    = .< .~a = .~ b >.
+  let notequalL a b = .< .~a <> .~ b >.
+  let andL a b     = .< .~a && .~b >. 
+end
+
+(* operations on code indices *)
+module Idx = struct
+  let zero = .< 0 >.
+  let one = .< 1 >.
+  let minusone = .< -1 >.
+  let succ a = .< .~a + 1 >.
+  let pred a = .< .~a - 1 >.
+  let less a b = .< .~a < .~b >.
+  let uminus a = .< - .~a >.
+  let add a b = .< .~a + .~b >.
+
+let cunit = .< () >.
+let update a f = let b = f (liftGet a) in .< .~a := .~b >.
+let assign a b = .< .~a := .~b >.
+let apply  f x = .< .~f .~x >.
+let updateM a f = ret (update a f)
+let assignM a b = ret (assign a b)
+let applyM  f x = ret (apply f x)
+\end{code}
+
+maintauining the state
+
+cf Atlas: no unbound variable.
+state-changing monad...
+extensible object... No worry about init
+lots of infrastructure...
+
+mention MLTon.
+The reason openrec are so challenging in Ocaml is
+because we want to store pieces of code, and exceptions
+can't be polymorphic...
+The benefit of explicit tags: no need to care about
+sharing of modules like Tracking, etc. fewer errors.
+
+In our
+case the state is a list (of polymorphic variants), which models an
+open discriminated union, as we shall see later.
 
 
 \section{Aspects and Functors}\label{functors}
@@ -597,25 +683,79 @@ We define the type of the domain, the signature |DOMAIN|, which
 different domains must satisfy:
 \begin{figure}[h]
 \begin{code}
+type domain_kind = Domain_is_Ring | Domain_is_Field
+
+module S(T:
+  sig
+	(* Representation type of values,  to be specified *)
+    type ('a, 'b) rep
+  end) = struct
+
+open T
+
 module type DOMAIN = sig
-  type v    type 'a vc = ('a,v) code
-  type kind (* Field or Ring ? *)
-  val zero : 'a vc   val one : 'a vc
-  val plus : 'a vc -> 'a vc -> ('a vc, 's, 'w) monad
-  (* times, minus, uminus, div elided for brevity *)
-  val better_than : ('a vc -> 'a vc -> 
-      (('a,bool) code, 's, 'w) monad) option
-  val normalizerf : (('a,v -> v) code ) option
+  type v
+  val kind : domain_kind
+  val zero : v
+  val one : v
+  val plus : v -> v -> v
+  val times : v -> v -> v
+  val minus : v -> v -> v
+  val uminus : v -> v
+  val div : v -> v -> v
+  val better_than : (v -> v -> bool) option
+  val normalizer : (v -> v) option
 end 
-module IntegerDomain : DOMAIN = struct
-  type v = int  type kind = domain_is_ring
-  type 'a vc = ('a,v) code
-  let zero = .< 0 >.  and one = .< 1 >. 
-  let plus x y = ret .<.~x + .~y>. 
-  let better_than = Some (fun x y -> ret .<abs .~x > abs .~y >. )
-  let normalizerf = None
-  ...
+
+module type DOMAINL = sig
+  include DOMAIN
+  type 'a vc = ('a,v) rep
+  val zeroL : 'a vc
+  val oneL : 'a vc
+  val ( +^ ) : 'a vc -> 'a vc -> 'a vc
+  val ( *^ ) : 'a vc -> 'a vc -> 'a vc
+  val ( -^ ) : 'a vc -> 'a vc -> 'a vc
+  val uminusL : 'a vc -> 'a vc
+  val divL : 'a vc -> 'a vc -> 'a vc
+  val better_thanL : ('a vc -> 'a vc -> ('a,bool) rep) option
+  val normalizerL : ('a vc -> 'a vc) option
+end 
+
+module IntegerDomain = struct
+    type v = int
+    let kind = Domain_is_Ring
+    let zero = 0
+    let one = 1
+    let plus x y = x + y
+    let times x y = x * y
+    let minus x y = x - y
+    let uminus x = -x
+    let div x y = x / y
+    let normalizer = None
+    let better_than = Some (fun x y -> abs x > abs y)
 end
+
+module T = Domains_sig.S(struct type ('a, 'b) rep = ('a, 'b) code end)
+open T
+
+open Domains_common
+(* because the operations are "syntactic" to a certain extent,
+   we have to repeat ourselves a lot *)
+module IntegerDomainL = struct
+    include IntegerDomain
+    type 'a vc = ('a,v) code
+    let zeroL = .< 0 >.  
+    let oneL = .< 1 >. 
+    let (+^) x y = .<.~x + .~y>. 
+    let ( *^ ) x y = .<.~x * .~y>.
+    let ( -^ ) x y = .<.~x - .~y>.
+    let uminusL x = .<- .~x>.
+    let divL x y = .<.~x / .~y>. 
+    let normalizerL = None
+    let better_thanL = Some (fun x y -> .<abs .~x > abs .~y >. )
+end
+
+
 \end{code}
 \end{figure}
 
@@ -667,23 +807,40 @@ algorithm as a 3-tuple |contr * Det.outdet * int| of the U-factor, the
 determinant and the rank.
 
 \begin{code2}
-module type OUTPUT = sig
-  type contr  type res
-  module D : DETERMINANT   module R : RANK   module P : TRACKPIVOT
-  val make_result : ('a,contr) code -> 
-    (('a,res) code,
-     [> `TDet of 'a D.lstate | `TRan of 'a R.lstate | `TPivot of 'a P.lstate]
-       list, ('a,'w) code) monad
+(* The `keyword' list of all the present internal features *)
+module type INTERNAL_FEATURES = sig
+  module R      : TrackRank.RANK
+  module P      : TRACKPIVOT
+  module L      : LOWER
 end
-module OutDetRank(Dom:DOMAIN)(C: CONTAINER2D)
-    (Det : DETERMINANT with type indet = Dom.v and type outdet = Dom.v)
-    (Rank : RANK) = struct
-  module Ctr = C(Dom)
-  type contr = Ctr.contr
-  type res = contr * Det.outdet * int
-  module D = Det   module R = Rank   module P = DiscardPivot
-  let make_result b = perform \{ det  <-- D.fin ();  rank <-- R.fin ();
-    ret .< ( .~b, .~det, .~rank ) >. \}
+
+module type OUTPUT = functor(OD : OUTPUTDEP) -> sig
+  module IF : INTERNAL_FEATURES
+  type res
+  val make_result : 'a wmatrix ->
+   (<classif : 'a; 
+     state : [> `TDet of 'a OD.Det.lstate |
+                'a IF.R.tag_lstate |
+                `TPivot of 'a IF.P.lstate |
+                `TLower of 'a IF.L.lstate]; ..>,res) cmonad
+   (*
+    ('a,res,[> 'a OD.Det.tag_lstate | 'a IF.R.tag_lstate 
+             | 'a IF.P.tag_lstate   | 'a IF.L.tag_lstate],'w) cmonad
+      *)
+end
+module OutDetRank(OD : OUTPUTDEP) = struct
+  module IF = struct
+      module R   = Rank
+      module P   = DiscardPivot
+      module L   = NoLower end
+  type res = C.contr * C.Dom.v * int
+  let make_result m = perform
+    det  <-- OD.Det.fin ();
+    rank <-- IF.R.fin ();
+    ret (Tuple.tup3 m.matrix det rank)
+  (* Initialization: check the preconditions of instantiation of this struct*)
+  let _ = OD.Det.fin ()
+  let _ = IF.R.fin ()
 end
 \end{code2}
 
@@ -734,47 +891,88 @@ appeared to be the easiest way to implement such a union, in a purely
 functional way). This lets us freely compose determinant-tracking,
 rank-tracking, and other aspects.
 
+\begin{code}
+(* The `keyword' list of all the present external features *)
+module type FEATURES = sig
+  module Det       : DETERMINANT
+  module PivotF    : PIVOT
+  module PivotRep  : PIVOTKIND
+  module Update    : UPDATE
+  module Input     : INPUT
+  module Output    : OUTPUT
+end
+\end{code}
+
 \begin{figure}
 \begin{code2}
-module Gen(Dom: DOMAIN)(C: CONTAINER2D)(PivotF: PIVOT)
-          (Update: UPDATE with type baseobj = Dom.v and type ctr = C(Dom).contr)
-          (Out: OUTPUT with type contr = C(Dom).contr and type D.indet = Dom.v 
-                        and type 'a D.lstate = 'a Update.D.lstate) = struct
-    module Ctr = C(Dom)
-    module Pivot = PivotF(Dom)(C)(Out.D)
-    let gen =
-      let zerobelow b r c m n brc =
-        let innerbody i = perform \{
-            bic <-- Ctr.get b i c;
-            whenM (l1 LogicCode.not (LogicCode.equal bic Dom.zero ))
-                (seqM (retLoopM (Idx.succ c) (Idx.pred m)
-                          (fun k -> Update.update b r c i k) )
-                      (Ctr.set b i c Dom.zero)) \} in 
-        perform \{
-              seqM (retLoopM (Idx.succ r) (Idx.pred n) innerbody) 
-                   (Update.update_det brc) \} in
-      let dogen a = perform \{
-          r <-- Out.R.decl ();
+module GenGE(F : FEATURES) = struct
+    module O = F.Output(F)
+
+    let wants_pack = O.IF.L.wants_pack
+    let can_pack   = 
+        let module U = F.Update(F.Det) in
+        (U.upd_kind = DivisionBased)
+    (* some more pre-flight tests *)
+    let _ = ensure ((not wants_pack) || can_pack) 
+           "Cannot return a packed L in this case"
+
+    let zerobelow mat pos = 
+        let module IF = O.IF in
+        let module U = F.Update(F.Det) in
+        let innerbody j bjc = perform
+            whenM (Logic.notequalL bjc C.Dom.zeroL ) (perform
+                det <-- F.Det.get ();
+                optSeqM (Iters.col_iter mat.matrix j (Idx.succ pos.p.colpos) 
+               (Idx.pred mat.numcol) C.getL
+                      (fun k bjk -> perform
+                      brk <-- ret (C.getL mat.matrix pos.p.rowpos k);
+                      U.update bjc pos.curval brk bjk 
+                          (fun ov -> C.col_head_set mat.matrix j k ov) det) UP )
+                      (IF.L.updt mat.matrix j pos.p.colpos C.Dom.zeroL 
+                          (* this makes no sense outside a field! *)
+                          (C.Dom.divL bjc pos.curval))) in
+        perform
+              seqM (Iters.row_iter mat.matrix pos.p.colpos
+              (Idx.succ pos.p.rowpos)
+              (Idx.pred mat.numrow) C.getL innerbody UP) 
+                   (U.update_det pos.curval)
+
+   let init input = perform
+        let module IF = O.IF in
+          (a,rmar,augmented) <-- F.Input.get_input input;
+          r <-- IF.R.decl ();
           c <-- retN (liftRef Idx.zero);
-          b <-- retN (Ctr.mapper Dom.normalizerf (Ctr.copy a));
-          m <-- retN (Ctr.dim1 a);
-          n <-- retN (Ctr.dim2 a);
-          () <-- Update.D.decl ();
-          () <-- Out.P.decl ();
+          b <-- retN (C.mapper C.Dom.normalizerL (C.copy a));
+          m <-- retN (C.dim1 a);
+          rmar <-- retN rmar;
+          n <-- if augmented then retN (C.dim2 a) else ret rmar;
+          F.Det.decl ();
+          IF.P.decl rmar;
+          _ <-- IF.L.decl (if wants_pack then b else C.identity rmar m);
+          let mat = {matrix=b; numrow=n; numcol=m} in
+          ret (mat, r, c, rmar)
+
+   let forward_elim (mat, r, c, rmar) = perform
+        let module IF = O.IF in
+          whileM (Logic.andL (Idx.less (liftGet c) mat.numcol)
+                              (Idx.less (liftGet r) rmar) )
+             ( perform
+             rr <-- retN (liftGet r);
+             cc <-- retN (liftGet c);
+             let cp  = {rowpos=rr; colpos=cc} in
+             let module Pivot = F.PivotF(F.Det)(IF.P) in
+             pivot <-- l1 retN (Pivot.findpivot mat cp);
+             seqM (matchM pivot (fun pv -> 
+                      seqM (zerobelow mat {p=cp; curval=pv} )
+                           (IF.R.succ ()) )
+                      (F.Det.zero_sign () ))
+                  (updateM c Idx.succ) )
+
+   let gen input = perform
+          (mat, r, c, rmar) <-- init input;
           seqM 
-            (retWhileM (LogicCode.and_ (Idx.less (liftGet c) m)
-                                       (Idx.less (liftGet r) n) )
-               ( perform \{
-               rr <-- retN (liftGet r);
-               cc <-- retN (liftGet c);
-               pivot <-- l1 retN (Pivot.findpivot b rr m cc n);
-               seqM (retMatchM pivot (fun pv -> 
-                        seqM (zerobelow b rr cc m n pv)
-                             (Out.R.succ ()) )
-                        (Update.D.zero_sign () ))
-                    (Code.update c Idx.succ) \} ))
-            (Out.make_result b) \} in
-    .<fun a -> .~(runM (dogen .<a>.)) >.
+            (forward_elim (mat, r, c, rmar))
+            (O.make_result mat)
 end
 \end{code2}
 \end{figure}
@@ -949,8 +1147,8 @@ investigating statically typed one.
 \subsection*{Acknowledgments}
 We wish to thank Cristiano Calgano for his help in adapting camlp4 for
 use with MetaOCaml. Many helpful discussions with Walid Taha are very
-appreciated. 
-
+appreciated. The implementation of the monadic notation, |perform|,
+was the joint work with Lydia van Dijk.
 
 \bibliography{metamonads}
 \bibliographystyle{elsart-num}
