@@ -26,7 +26,7 @@
 \usepackage{fancyvrb}
 \DefineShortVerb{\|}
 \DefineVerbatimEnvironment{code}{Verbatim}{xleftmargin=\ourmathindent,commandchars=\\\{\},fontsize=\small}
-\DefineVerbatimEnvironment{code2}{Verbatim}{xleftmargin=\ourmathindent,commandchars=\\\{\},fontsize=\footnotesize}
+\DefineVerbatimEnvironment{code2}{Verbatim}{xleftmargin=\ourmathindent,commandchars=\\\{\},fontsize=\small}
 \newcommand{\evalresult}[1]{\ensuremath{\Longrightarrow}\textcolor{red}{#1}}
 % \setlength{\parskip}{0pt}
 \newlength{\ourmathindent}
@@ -84,12 +84,13 @@ eliminating abstraction overhead from generic code}
 \thanks[1]{Supported in part by NSERC Discovery Grant RPG262084-03.}
 
 \begin{abstract}
-We use multi-stage programming, monads and Ocaml's
+We use multi-stage programming, monads and OCaml's
 advanced module system to demonstrate how to eliminate all
 abstraction overhead while avoiding any inspection of the resulting
 code.  We demonstrate this clearly with LU decomposition as a 
 representative family of symbolic and numeric algorithms, and also
-include an application to ODE solving (via a Runge-Kutta algorithm).
+include an application to solving ordinary differential equations 
+(via a Runge-Kutta algorithm).
 We parameterize our code to a great extent
 (over domain, matrix representations, determinant tracking, 
 pivoting policies, result types, etc) at no run-time cost.  Because
@@ -100,12 +101,12 @@ can be made orthogonal and compositional, even in the presence of
 name-generation for temporaries, and 
 ``interleaving'' of aspects.  We also show how to encode some
 domain-specific knowledge so that ``clearly wrong'' compositions can
-be rejected by the compiler at generation time rather than at a later
-stage.
+be rejected at or before generation time rather than during
+the compilation or running of the generated code.
 \end{abstract}
 
 \begin{keyword}
-MetaOcaml \sep linear algebra \sep genericity \sep generative \sep staging
+MetaOCaml \sep linear algebra \sep genericity \sep generative \sep staging
 \sep Functor \sep symbolic.
 \end{keyword}
 % Should use either PACS or MSC scheme
@@ -184,8 +185,8 @@ Therefore, in MetaOCaml, code must be generated just right (see
 \cite{TahaThesis} for many simple examples).  For more complex
 examples, new techniques are necessary, e.g., abstract interpretation
 \cite{KiselyovTaha}.  But more problems remain
-\cite{Padua:MetaOcaml:04}: generating binding statements (``names''),
-especially when generating loop bodies or conditional branches; making
+\cite{Padua:MetaOcaml:04}: generating binding forms (``names'')
+when generating loop bodies or conditional branches; making
 continuation-passing style (CPS) code clear.  Many authors
 understandably shy away from CPS code as it quickly becomes
 unreadable.  But this is needed for proper name generation.
@@ -193,9 +194,16 @@ The problems of compositionality of code generators, expressing
 dependencies among them and domain-specific knowledge remain.
 
 In this paper, we report on our continued progress \cite{CaretteKiselyov05}
+\oleg{should we say in the footnote: ``compared to the earlier,
+  conference version of this paper we describe a different
+  version of our generator dealing with the complete LU decomposition
+  and solving. We worked out previously missing aspects of in-place
+  updates, representaing permutation matrix, augmented input matrix,
+  and back-propagation. We have changed the representation of
+  domain-specific knowledge about permissible compositions of aspects.''}
+the code generating LU decomposition and solving 
 solving these problems using linear solving and LU decomposition
 as our running example. Specifically, our contributions:
-%\vspace*{-2pt}
 \begin{itemize}
     \item Extending a let-insertion, memoizing monad of
       \cite{MSP:PADL04,KiselyovTaha} for generating control structures
@@ -226,7 +234,9 @@ solution.  We also introduce the monad and the issues of generating
 control statements. Section~\ref{functors} describes the use of
 parametrized modules of OCaml to encode all of the aspects of the
 LU decomposition algorithm family in completely separate,
-independent modules.  We briefly discuss related work in
+independent modules.  Section~\ref{s:ode} describes generating
+Runge-Kutta solvers for ordinary differential equations (ODE).
+We briefly discuss related work in
 section~\ref{related}. We then outline the future work and conclude.
 Appendices give samples of the generated code (which is available in
 full at \cite{metamonadsURL}).
@@ -348,7 +358,8 @@ code.
 \begin{code}
 let letgen exp k = .<let t = .~exp in .~(k .<t>.)>.
 let param_code2 plus one =
-  let gen x y k = letgen (plus y one) (fun ce -> k (plus ce (plus x ce)))
+  let gen x y k = letgen (plus y one)
+                         (fun ce -> k (plus ce (plus x ce)))
   and k0 x = x
   in .<fun x y -> .~(gen .<x>. .<y>. k0)>.
 param_code2 plus one
@@ -357,17 +368,18 @@ param_code2 plus one
 
 \subsection{Monadic notation, making CPS code clear}\label{monadicnotation}
 
-Comparison of the code that did let-insertion at the generating stage
+Comparison of the let-insertion in the generator
 \begin{code}
 let ce = (plus y one) in  plus ce (plus x ce)
 \end{code}
-with the corresponding code inserting let at the generated code stage
+with the corresponding code generating let-insertion for the future
+stage
 \begin{code}
 letgen (plus y one) (fun ce -> k (plus ce (plus x ce)))
 \end{code}
 clearly shows the difference between  direct-style and CPS code.
 What was |let ce = init in ...| in direct style became
-|init' (fun ce -> ...)| in CPS. For one thing, |let| became
+|init' (fun ce -> ...)| in CPS. For one, |let| became
 ``inverted''. For another, what used to be an expression that yields
 a value, |init|, became an expression that takes an extra argument,
 the continuation, and invokes it. The differences look negligible in
@@ -431,14 +443,34 @@ is implemented as a function of two
 arguments: the state (of type |s|) and the continuation. The
 continuation receives the current state and the value, and
 yields the answer of the type |w|.  The monad is polymorphic over the
-three type parameters.  Other implementations are
-possible. Except for the code in Figure~\ref{ourmonad}, the rest of our code
-treats the monad as a truly abstract data type. The implementation of
-the basic
-monadic operations |ret| and |bind| is conventional and clearly
-satisfies the monadic laws. Other monadic operations
-construct computations that do have specific effects.  Operations |fetch| and
-|store v| construct computations that read and write the state. 
+three type parameters, which would require |monad| to be a type
+constructor with three arguments. When we use this monad for code
+generation, we will need yet another type variable, environment
+classifier \oleg{cite Walid03?}. With type constructors taking more
+and more arguments, it becomes more difficult to read and write
+types -- which we will be doing extensively when writing module
+signatures in Section XXX. The fact that OCaml renames all type
+variables when printing out types confuses matters further. An elegant
+solution to these kinds of problems has been suggested by 
+Garrigue on the Caml mailing list 
+(cited from
+\url{http://groups.google.com/group/fa.caml/msg/e80b1245702d6b24}
+no date, no exact ref). We use a single type parameter |'p| to
+represent all parameters of our monad (all parameters but the type of
+the monadic value |'v|). The type variable |'p| is constrained to be
+the type of an object with methods (fields) |state| and |answer|. The
+object may include more fields, represented by |..|. Values of that
+type are not part of our computations and need not exist. We merely
+use the object type, as an convenient way to specify extensible
+\emph{type-level} records in OCaml.     
+
+Our monad could be implemented in other ways. Except for the code in
+Figure~\ref{ourmonad}, the rest of our code treats the monad as a
+truly abstract data type. The implementation of the basic monadic
+operations |ret| and |bind| is conventional and clearly satisfies the
+monadic laws. Other monadic operations construct computations that do
+have specific effects.  Operations |fetch| and |store v| construct
+computations that read and write the state.
 
 The operation |retN a| is the let-insertion operation, whose simpler
 version we called |letgen| earlier. It is the first computation with
@@ -463,7 +495,7 @@ let param_code3 plus one =
 %
 That does not seem like much of an improvement. With the help of
 camlp4 pre-processor, we introduce the |perform|-notation \cite{metamonadsURL},
-patterned after the |do|-notation of Haskell. 
+patterned after the |do|-notation of Haskell (see App.~\ref{app:perform}).
 \begin{code}
 let param_code4 plus one =
   let gen x y = perform ce <-- retN (plus y one);
@@ -481,30 +513,33 @@ We can write operations that generate code other than let-statements,
 e.g., conditionals: see |ifL| in Figure~\ref{ourmonad}. The function |ifL|, 
 albeit straightforward, is not as general as we wish: its arguments are
 already generated pieces of code rather than monadic values. We
-``lift it'', see |ifM'|. 
+``lift it'':
 \begin{code}
 let ifM' test th el = perform
   testc <-- test; thc <-- th; elc <-- el;
   ifL testc thc elc
-let gen a i = ifM' (ret .<(.~i) >= 0>.) 
-                   (retN .<Some (.~a).(.~i)>.) (ret .<None>.)
- in .<fun a i -> .~(runM (gen .<a>. .<i>.) ())>.
-\evalresult{.<fun a_1 i_2 -> \protect\newline
-let t_3 = (Some a_1.(i_2)) in if (i_2 >= 0) then t_3 else None>.}
-let gen a i = ifM (ret .<(.~i) >= 0>.) 
-                  (retN .<Some (.~a).(.~i)>.) (ret .<None>.)
- in .<fun a i -> .~(runM (gen .<a>. .<i>.) ())>.
-\evalresult{.<fun a_1 i_2 -> 
-if (i_2 >= 0) then let t_3 = (Some a_1.(i_2)) in t_3 else None>.}
 \end{code}
-%
 We define functions |l1|,
 |l2|, |l3| (analogues of |liftM|, |liftM2|, |liftM3| of Haskell) 
 to make such a lifting generic. However we also need
 another |ifM| function, with the same
 interface (see Figure~\ref{ourmonad}).
 The difference between them is
-apparent: in the code above with |ifM'|, the let-insertion
+apparent from the following example:
+\begin{code}
+let gen a i = ifM' (ret .<(.~i) >= 0>.) 
+                   (retN .<Some (.~a).(.~i)>.) (ret .<None>.)
+ in .<fun a i -> .~(runM (gen .<a>. .<i>.) ())>.
+\evalresult{.<fun a_1 i_2 ->}
+\textcolor{red}{      let t_3 = (Some a_1.(i_2)) in if (i_2 >= 0) then t_3 else None>.}
+let gen a i = ifM (ret .<(.~i) >= 0>.) 
+                  (retN .<Some (.~a).(.~i)>.) (ret .<None>.)
+ in .<fun a i -> .~(runM (gen .<a>. .<i>.) ())>.
+\evalresult{.<fun a_1 i_2 ->}
+\textcolor{red}{      if (i_2 >= 0) then let t_3 = (Some a_1.(i_2)) in t_3 else None>.}
+\end{code}
+%
+If we use |ifM'| to generate guarded array access code, the let-insertion
 happened \emph{before} the if-expression, that is, before the test that
 the index |i| is positive. If |i| turned out
 negative, |a.(i)| would generate an out-of-bound array access
@@ -513,16 +548,13 @@ when we have verified that the index is non-negative. This example
 makes it clear that the code generation (such as the one in |retN|) is 
 truly an effect and we have to be clear about the sequencing of
 effects when generating control constructions such as conditionals.
-The form |ifM| handles such effects correctly. We
-need similar operators for other OCaml control forms: for generating
-case-matching statements and |for|- and |while|-loops.
+The form |ifM| handles such effects correctly. 
 
+We need similar operators for other OCaml control forms: for
+generating sequencing, case-matching statements and |for|- and |while|-loops.
 \begin{code}
-let loopM low high body = function
-  | UP -> (fun s k -> 
-      k s .< for j = .~low to .~high do .~(body .<j>. s k0) done >. )
-  | DOWN -> (fun s k -> 
-      k s .< for j = .~low downto .~high do .~(body .<j>. s k0) done >. )
+let seqM a b = fun s k -> 
+  k s .< begin .~(a s k0) ; .~(b s k0) end >.
 
 let whileM cond body = fun s k -> 
   k s .< while .~(cond) do .~(body s k0) done >.
@@ -536,73 +568,6 @@ let genrecloop gen rtarg = fun s k ->
 \end{code}
 
 
-|loopM| is the analogue of the for-loop.
-
-
-(* We now define a lot of infrastructure.  We will be quite
-   thorough, and define base abstraction and lifted abstractions,
-   This will involve a lot of boilerplate code, which unfortunately 
-   cannot be so easily automated in MetaOCaml -- that would require 
-   introspection.  It could be done in camlp4, but that seems too 
-   much as well.  This 'base' could be elided, but when we decide
-   to make more use of Abstract Interpretation, we'll regret it,
-   so do it now. *)
-
-\begin{code}
-let lift x = .< x >.
-
-let liftRef x = .< ref .~x >. 
-let liftGet x = .< ! .~x >. 
-let unitL = fun s k -> k s .< () >.
-
-let liftPair x = (.< fst .~x >., .< snd .~x >.)
-
-(* logic code combinators - plain and monadic *)
-module Logic = struct
-  let notL a        = .< not .~a >.
-  let equalL a b    = .< .~a = .~ b >.
-  let notequalL a b = .< .~a <> .~ b >.
-  let andL a b     = .< .~a && .~b >. 
-end
-
-(* operations on code indices *)
-module Idx = struct
-  let zero = .< 0 >.
-  let one = .< 1 >.
-  let minusone = .< -1 >.
-  let succ a = .< .~a + 1 >.
-  let pred a = .< .~a - 1 >.
-  let less a b = .< .~a < .~b >.
-  let uminus a = .< - .~a >.
-  let add a b = .< .~a + .~b >.
-
-let cunit = .< () >.
-let update a f = let b = f (liftGet a) in .< .~a := .~b >.
-let assign a b = .< .~a := .~b >.
-let apply  f x = .< .~f .~x >.
-let updateM a f = ret (update a f)
-let assignM a b = ret (assign a b)
-let applyM  f x = ret (apply f x)
-\end{code}
-
-maintauining the state
-
-cf Atlas: no unbound variable.
-state-changing monad...
-extensible object... No worry about init
-lots of infrastructure...
-
-mention MLTon.
-The reason openrec are so challenging in Ocaml is
-because we want to store pieces of code, and exceptions
-can't be polymorphic...
-The benefit of explicit tags: no need to care about
-sharing of modules like Tracking, etc. fewer errors.
-
-In our
-case the state is a list (of polymorphic variants), which models an
-open discriminated union, as we shall see later.
-
 
 \section{Aspects and Functors}\label{functors}
 The monad represents fine-scale code generation. We need tools for
@@ -615,7 +580,7 @@ vocabulary for describing modularity ideas, the guiding principles for
 modular designs has not changed since they were first articulated by
 Parnas~\cite{journals/cacm/parnas72a} and Dijkstra~
 \cite{EWD:EWD447}: information hiding and separation of concerns.  To
-apply these principles to the study of Gaussian Elimination, we need
+apply these principles to the study of LU decomposition, we need
 to understand what are the changes between different implementations, and 
 what concerns need to be addressed.  We also need to study the degree
 to which these concerns are independent.
@@ -638,7 +603,7 @@ the following variations occur:
     \item \textbf{Output choices}: Whether just the reduced
       matrix, or additionally the rank, the determinant, and the
       pivoting matrix are to be returned. In the larger algorithm
-      family, routines like Maple's
+      family, routines like Maple's\\
       \texttt{LinearAlgebra:-LUDecomposition} have up to $2^6 +
       2^5 + 2^2 = 100$ outputs.
     \item \textbf{Fraction-free}: Whether the Gaussian Elimination
@@ -681,17 +646,9 @@ so we can take advantage of extensibility, type abstraction and constraints,
 and especially parameterized structures (\emph{functors}).
 We define the type of the domain, the signature |DOMAIN|, which
 different domains must satisfy:
-\begin{figure}[h]
+
 \begin{code}
 type domain_kind = Domain_is_Ring | Domain_is_Field
-
-module S(T:
-  sig
-	(* Representation type of values,  to be specified *)
-    type ('a, 'b) rep
-  end) = struct
-
-open T
 
 module type DOMAIN = sig
   type v
@@ -707,6 +664,29 @@ module type DOMAIN = sig
   val normalizer : (v -> v) option
 end 
 
+module IntegerDomain : DOMAIN = struct
+    type v = int
+    let kind = Domain_is_Ring
+    let zero = 0
+    let one = 1
+    let plus x y = x + y
+    let times x y = x * y
+    let minus x y = x - y
+    let uminus x = -x
+    let div x y = x / y
+    let normalizer = None
+    let better_than = Some (fun x y -> abs x > abs y)
+end
+\end{code}
+
+\begin{code}
+module S(T:
+  sig
+	(* Representation type of values,  to be specified *)
+    type ('a, 'b) rep
+  end) = struct
+
+open T
 module type DOMAINL = sig
   include DOMAIN
   type 'a vc = ('a,v) rep
@@ -720,20 +700,6 @@ module type DOMAINL = sig
   val better_thanL : ('a vc -> 'a vc -> ('a,bool) rep) option
   val normalizerL : ('a vc -> 'a vc) option
 end 
-
-module IntegerDomain = struct
-    type v = int
-    let kind = Domain_is_Ring
-    let zero = 0
-    let one = 1
-    let plus x y = x + y
-    let times x y = x * y
-    let minus x y = x - y
-    let uminus x = -x
-    let div x y = x / y
-    let normalizer = None
-    let better_than = Some (fun x y -> abs x > abs y)
-end
 
 module T = Domains_sig.S(struct type ('a, 'b) rep = ('a, 'b) code end)
 open T
@@ -754,15 +720,57 @@ module IntegerDomainL = struct
     let normalizerL = None
     let better_thanL = Some (fun x y -> .<abs .~x > abs .~y >. )
 end
-
-
 \end{code}
-\end{figure}
+
+We now define a lot of infrastructure.  We will be quite thorough, and
+define base abstraction and lifted abstractions, This will involve a
+lot of boilerplate code, which unfortunately cannot be so easily
+automated in MetaOCaml -- that would require introspection.  It could
+be done in camlp4, but that seems too much as well.  This 'base' could
+be elided, but when we decide to make more use of Abstract
+Interpretation, we'll regret it, so do it now.
+\begin{code}
+let lift x = .< x >.
+
+let liftRef x = .< ref .~x >. 
+let liftGet x = .< ! .~x >. 
+let unitL = fun s k -> k s .< () >.
+
+let liftPair x = (.< fst .~x >., .< snd .~x >.)
+
+(* logic code combinators - plain and monadic *)
+module Logic = struct
+  let notL a        = .< not .~a >.
+  let equalL a b    = .< .~a = .~ b >.
+  let notequalL a b = .< .~a <> .~ b >.
+  let andL a b     = .< .~a && .~b >. 
+end
+
+(* operations on code indices *)
+module Idx = struct
+  let zero = .< 0 >.
+  let one = .< 1 >.
+  let minusone = .< -1 >.
+  let succ a = .< .~a + 1 >.
+  let pred a = .< .~a - 1 >.
+  let less a b = .< .~a < .~b >.
+  let uminus a = .< - .~a >.
+  let add a b = .< .~a + .~b >.
+
+let cunit = .< () >.
+let update a f = let b = f (liftGet a) in .< .~a := .~b >.
+let assign a b = .< .~a := .~b >.
+let apply  f x = .< .~f .~x >.
+let updateM a f = ret (update a f)
+let assignM a b = ret (assign a b)
+let applyM  f x = ret (apply f x)
+\end{code}
+
 
 \noindent  The types above are
 generally lifted twice: once from the value domain |v| to the code
 domain |'a vc|, and once more from values to monadic computations
-|('a vc, 's, 'w) monad|. 
+|('p,'a vc) monad|. 
 
 One particular domain instance is |IntegerDomain|. The notation\\
 |module IntegerDomain : DOMAIN| makes the compiler verify that our
@@ -771,8 +779,9 @@ signature. The constraint |DOMAIN| may be omitted; in that case, the
 compiler will verify the type when we try to use that structure as a
 |DOMAIN|. In any case, the errors such as missing ``methods'' or
 methods with incorrect types will be caught statically, even
-\emph{before} any code generation takes place. The abstract type
-|domain_is_ring| encodes a semantic constraint that the full division
+\emph{before} any code generation takes place. The variant
+|domain_is_ring| of |domain_kind| encodes a semantic constraint 
+that the full division
 is not available. While the |DOMAIN| type may have looked daunting to
 some, the implementation is quite straightforward.  Other domains such
 as |float| and arbitrary precision exact rational numbers |Num.num|
@@ -793,7 +802,7 @@ containers with efficiency details.
 
 The use of a |functor| for making a container parametric is fairly
 straightforward.  More interesting is the aspect of what to return
-from the GE algorithm.  One could create an algebraic data type (as
+from the LU algorithm.  One could create an algebraic data type (as
 was done in \cite{carette04}) to encode the various choices: the
 matrix, the matrix and the rank, the matrix and the determinant, the
 matrix, rank and determinant, and so on. This is wholly unsatisfying
@@ -802,7 +811,7 @@ possible, yet any routine which calls the generated code must deal
 with these unreachable options.  Instead we use a module type with an
 \emph{abstract} type |res| for the result type; different instances of
 the signature set the result type differently. Given below is this
-module type and one instantiation, which specifies the output of a GE
+module type and one instantiation, which specifies the output of a LU
 algorithm as a 3-tuple |contr * Det.outdet * int| of the U-factor, the
 determinant and the rank.
 
@@ -844,8 +853,48 @@ module OutDetRank(OD : OUTPUTDEP) = struct
 end
 \end{code2}
 
+
+
+\subsection{Maintaining the state}
+another title: representing extensible state
+
+different aspects may need to keep their own state. We wish to assure
+modularity. One approach: using objects. The state is an object, each
+aspect is an instnace variable with some particular name. The problem
+is how to represent the initial `empty' state. Need to create the
+object with all fields set to None. But we need to know the names of
+all fields; as we add an aspect, our function that runs the generator
+must change to account for the different initial object with different
+slots.
+
+A better approach: property list (ref MLTon). Property list represents
+an extensible object. The initial object is just the empty list. Alas,
+the literal MLton's approach doesn't apply to us well. First of all,
+due to the environment classifiers, we need universes parameterized by
+classifiers. Also, the propoerty names are generated automatically in
+MLton approach, based on generativity of exceptions or reference
+cells. That means if some particular aspect happens to be included
+twice, the state will be incompatible. We will have to worry about
+sharing or the lack of sharing of our aspects. We would rather prefer
+our aspects to be stateless and work the same way whether two
+instances of the aspect are shared or not. So, we find polymorphic
+unions to be ideal. Manifest naming 
+
+Encoding an object by its dual,
+list of polymorphic variants.
+
+Currently, we check at genertor-time that one cannot add a slot which
+already exists (already the part of the state) nor we can obtain the
+value of a non-existing slot. These problems may occur if our genetor
+is wrong (calls fin method before decl method of an aspect). It is
+possible to make these checks static (TFP2007, state-variable monad?)
+state-changing monad...
+
+
+\subsection{tracking}
+
 As is apparent from the output choices, several different quantities
-\emph{may} need to be tracked in a particular GE implementation.  We
+\emph{may} need to be tracked in a particular LU implementation.  We
 therefore need to be able to conditionally generate variables
 representing the tracking state, and weave in corresponding tracking
 code. We may need to (independently) keep track of the rank, the
@@ -870,13 +919,13 @@ end
 for: defining variables used for tracking (|decl|),
 updating the sign or the absolute
 value of the determinant, converting the tracking state
-to the final determinant value of the type |outdet|. GE of a
+to the final determinant value of the type |outdet|. LU of a
 floating-point matrix with no determinant tracking uses the
 instantiation of |DETERMINANT| where |outdet| is |unit| and all the
 functions of that module generate no code. For integer matrices, we
 have to track some aspects of the determinant, even if we don't output
 it. The determinant tracking aspect is complex because tracking
-variables, if any, are to be declared at the beginning of GE; the sign
+variables, if any, are to be declared at the beginning of LU; the sign
 of the determinant has to be updated on each row or column
 permutation; the value of the determinant should be updated per each
 pivoting. We use |lstate| to pass the tracking state, e.g., a piece of
@@ -977,7 +1026,7 @@ end
 \end{code2}
 \end{figure}
 
-The GE generator functor itself is 
+The LU generator functor itself is 
 parameterized by the domain, container, pivoting policy (full, row,
 nonzero, no pivoting), update policy (with either `fraction-less'
 or full division), and the result specification. Some of the
@@ -1033,7 +1082,7 @@ code, e.g., by printing |GenFA1.gen|. The code can then be ``compiled'' as
 |!. GenFA1.gen| or with off-shoring. The code for |GenIV5| (Appendix A) shows
 full pivoting, determinant and rank tracking. The code for all these aspects is
 fully inlined; no extra functions are invoked and no tests other than those
-needed by the GE algorithm itself are performed. The GE function returns a
+needed by the LU algorithm itself are performed. The GE?? function returns a
 triple |int array * int * int| of the U-factor, determinant and the rank. The
 code generated by |GenFA1| (Appendix B) shows absolutely no traces of
 determinant tracking: no declaration of spurious variables, no extra tests,
@@ -1042,6 +1091,8 @@ at all. The generated code for the above and other instantiations of
 |Gen| can be examined at \cite{metamonadsURL}. The website also 
 contains benchmark code and timing comparisons.
 
+\section{Runge-Kutta solvers}
+\label{s:ode}
 
 \section{Related and future work}\label{related}
 
@@ -1063,18 +1114,24 @@ composition errors) are detected only when compiling the generated
 code. It is immensely difficult to correlate errors (e.g., line
 numbers) to the ones in the generator itself.
 
-ATLAS \cite{ATLAS} is another successful project in this area.  However
-they use much simpler weaving technology, which leads them to note
-that \emph{generator complexity tends to go up along with flexibility, 
-so that these routines become almost insurmountable barriers to 
-outside contribution}.  Our results show how to surmount this barrier,
-by building modular, composable generators.
-SPIRAL \cite{Pueschel:05} is another such even more ambitious project.
-But SPIRAL does intentional code analysis, relying on a set of code
-transformation ``rules'' which make sense, but which are not proved 
-to be either complete or confluent.  The strength of both of these
-project relies on their platform-specific optimizations performed
-via search techniques, something we have not attempted here.
+ATLAS \cite{ATLAS} is another successful project in this area.
+However they use much simpler weaving technology, which leads them to
+note that \emph{generator complexity tends to go up along with
+  flexibility, so that these routines become almost insurmountable
+  barriers to outside contribution}. Our results show how to surmount
+this barrier, by building modular, composable generators. A
+significant part of ATLAS' complexity is that the generator is
+extremely error-prone and difficult to debug.  Indeed, when generating
+C code in C using |printf|, nothing prevents producing code that
+misses semicolons, open or close parentheses or variable
+bindings. MetaOCaml gives us assurance that these errors, and more
+subtle type errors, shall not occur in the generated code.  SPIRAL
+\cite{Pueschel:05} is another such even more ambitious project.  But
+SPIRAL does intentional code analysis, relying on a set of code
+transformation ``rules'' which make sense, but which are not proved to
+be either complete or confluent.  The strength of both of these
+project relies on their platform-specific optimizations performed via
+search techniques, something we have not attempted here.
 
 The highly parametric version of our Gaussian Elimination is directly
 influenced by the generic implementations available in Axiom
@@ -1153,10 +1210,11 @@ was the joint work with Lydia van Dijk.
 \bibliography{metamonads}
 \bibliographystyle{elsart-num}
 \section{Appendix 0}
+\label{app:perform}
 \oleg{grammar of our perform monad. Thank Lydia}
 
 \section{Appendix A}
-The code generated for |GenIV5|, fraction-free GE of the integer matrix
+The code generated for |GenIV5|, fraction-free LU of the integer matrix
 represented by a flat vector, full pivoting, returning the |U|-factor,
 the determinant and the rank.
 \begin{code2}
@@ -1228,7 +1286,7 @@ the determinant and the rank.
     else (~- (! t_411)), (! t_406))>.
 \end{code2}
 \section{Appendix B}
-The code generated for |GenFA1|, GE of the floating point matrix
+The code generated for |GenFA1|, LU of the floating point matrix
 represented by a 2D array, row pivoting, returning just the |U|-factor.
 \begin{code2}
 # val resFA1 : ('a,
