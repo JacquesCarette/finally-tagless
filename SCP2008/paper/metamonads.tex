@@ -679,48 +679,67 @@ module IntegerDomain : DOMAIN = struct
 end
 \end{code}
 
+One particular domain instance is |IntegerDomain|. The notation\\
+|module IntegerDomain : DOMAIN| makes the compiler verify that our
+|IntegerDomain| is indeed a |DOMAIN|, that is, satisfies the required
+signature. The constraint |DOMAIN| may be omitted; in that case, the
+compiler will verify the type when we try to use that structure as a
+|DOMAIN|. In any case, the errors such as missing ``methods'' or
+methods with incorrect types will be caught statically, even
+\emph{before} any code generation takes place. The variant
+|domain_is_ring| of |domain_kind| encodes a semantic constraint 
+that the full division
+is not available. While the |DOMAIN| type may have looked daunting to
+some, the implementation is quite straightforward.  Other domains such
+as |float| and arbitrary precision exact rational numbers |Num.num|
+are equally simple.
+
+
+A more complex domain: |Zp|
 \begin{code}
-module S(T:
-  sig
-	(* Representation type of values,  to be specified *)
-    type ('a, 'b) rep
-  end) = struct
-
-open T
-module type DOMAINL = sig
-  include DOMAIN
-  type 'a vc = ('a,v) rep
-  val zeroL : 'a vc
-  val oneL : 'a vc
-  val ( +^ ) : 'a vc -> 'a vc -> 'a vc
-  val ( *^ ) : 'a vc -> 'a vc -> 'a vc
-  val ( -^ ) : 'a vc -> 'a vc -> 'a vc
-  val uminusL : 'a vc -> 'a vc
-  val divL : 'a vc -> 'a vc -> 'a vc
-  val better_thanL : ('a vc -> 'a vc -> ('a,bool) rep) option
-  val normalizerL : ('a vc -> 'a vc) option
-end 
-
-module T = Domains_sig.S(struct type ('a, 'b) rep = ('a, 'b) code end)
-open T
-
-open Domains_common
-(* because the operations are "syntactic" to a certain extent,
-   we have to repeat ourselves a lot *)
-module IntegerDomainL = struct
-    include IntegerDomain
-    type 'a vc = ('a,v) code
-    let zeroL = .< 0 >.  
-    let oneL = .< 1 >. 
-    let (+^) x y = .<.~x + .~y>. 
-    let ( *^ ) x y = .<.~x * .~y>.
-    let ( -^ ) x y = .<.~x - .~y>.
-    let uminusL x = .<- .~x>.
-    let divL x y = .<.~x / .~y>. 
-    let normalizerL = None
-    let better_thanL = Some (fun x y -> .<abs .~x > abs .~y >. )
+module ZpMake(P:sig val p:int end) = struct
+    type v = int
+    let kind = Domain_is_Field
+    let zero = 0 and one = 1
+    let plus x y = (x + y) mod P.p
+    let times x y = (x * y) mod P.p
+    \dots
+    let normalizer = None and better_than = None
+    let () = assert (is_prime P.p)
 end
 \end{code}
+
+This domain is parametrized by a an integer number |p|, the
+(modulus?). Thus, ZpMake is a functor. It creates a domain that is a
+field, but with no defined order. Hence
+|normalizer| and |better_than| are set to |None|. However, |Zp| forms
+a field only when |p| is prime. Therefore, we must make this check,
+see the last line of that code. The expression 
+|assert (is_prime P.p)| is the initializing expression. It is executed
+when the correspo0nding module is instantaited
+\begin{code}
+module Z19 = ZpMakeL(struct let p = 19 end)
+\end{code}
+if we replace |19| with |9| above, we receive an error. That is a
+run-time error. It is raised however as we instantiate and
+combine modules that will eventually make the generator. Thus,
+although the error is reported at run-time rather than compile time as
+one might have hoped, the error is raised when \emph{generating the
+generator} -- well before the generation of the target code could
+begin. In our code we make extensive use of these so-called preflight 
+checks performed as part of module initialization. The checks seem to
+offer a good compromise: they are dynamic and so do not require
+complicated type systems; on the other hand, the checks are performed
+quite early, when buiding code generators, and so ensure that no 
+code violating the corresponding \emph{semantic} constraints 
+will be generated. Although some may frown on the use of the module
+initializing expressions (since that requires careful attention to the
+sharing and problems of multiple instantiation of a module), these
+concerns do not apply to our case: our preflight tests are all idempotent
+and maintain no state.
+
+
+Lifting:
 
 We now define a lot of infrastructure.  We will be quite thorough, and
 define base abstraction and lifted abstractions, This will involve a
@@ -772,33 +791,109 @@ generally lifted twice: once from the value domain |v| to the code
 domain |'a vc|, and once more from values to monadic computations
 |('p,'a vc) monad|. 
 
-One particular domain instance is |IntegerDomain|. The notation\\
-|module IntegerDomain : DOMAIN| makes the compiler verify that our
-|IntegerDomain| is indeed a |DOMAIN|, that is, satisfies the required
-signature. The constraint |DOMAIN| may be omitted; in that case, the
-compiler will verify the type when we try to use that structure as a
-|DOMAIN|. In any case, the errors such as missing ``methods'' or
-methods with incorrect types will be caught statically, even
-\emph{before} any code generation takes place. The variant
-|domain_is_ring| of |domain_kind| encodes a semantic constraint 
-that the full division
-is not available. While the |DOMAIN| type may have looked daunting to
-some, the implementation is quite straightforward.  Other domains such
-as |float| and arbitrary precision exact rational numbers |Num.num|
-are equally simple.
+\begin{code}
+module S(T:
+  sig
+	(* Representation type of values,  to be specified *)
+    type ('a, 'b) rep
+  end) = struct
+
+open T
+module type DOMAINL = sig
+  include DOMAIN
+  type 'a vc = ('a,v) rep
+  val zeroL : 'a vc
+  val oneL : 'a vc
+  val ( +^ ) : 'a vc -> 'a vc -> 'a vc
+  val ( *^ ) : 'a vc -> 'a vc -> 'a vc
+  val ( -^ ) : 'a vc -> 'a vc -> 'a vc
+  val uminusL : 'a vc -> 'a vc
+  val divL : 'a vc -> 'a vc -> 'a vc
+  val better_thanL : ('a vc -> 'a vc -> ('a,bool) rep) option
+  val normalizerL : ('a vc -> 'a vc) option
+end 
+
+module T = Domains_sig.S(struct type ('a, 'b) rep = ('a, 'b) code end)
+open T
+
+open Domains_common
+(* because the operations are "syntactic" to a certain extent,
+   we have to repeat ourselves a lot *)
+module IntegerDomainL = struct
+    include IntegerDomain
+    type 'a vc = ('a,v) code
+    let zeroL = .< 0 >.  
+    let oneL = .< 1 >. 
+    let (+^) x y = .<.~x + .~y>. 
+    let ( *^ ) x y = .<.~x * .~y>.
+    let ( -^ ) x y = .<.~x - .~y>.
+    let uminusL x = .<- .~x>.
+    let divL x y = .<.~x / .~y>. 
+    let normalizerL = None
+    let better_thanL = Some (fun x y -> .<abs .~x > abs .~y >. )
+end
+\end{code}
+
+
+
+\begin{code}
+module type CONTAINER2D = sig
+  module Dom:DOMAINL
+  type contr
+  type 'a vc = ('a,contr) rep
+  type 'a vo = ('a,Dom.v) rep
+  val getL : 'a vc -> ('a,int) rep -> ('a,int) rep -> 'a vo
+  val dim1 : 'a vc -> ('a,int) rep
+  val dim2 : 'a vc -> ('a,int) rep
+  val mapper : ('a vo -> 'a vo) option -> 'a vc -> 'a vc
+  val copy : 'a vc -> 'a vc
+  val init : ('a,int) rep -> ('a, int) rep -> 'a vc
+  val augment : 'a vc -> ('a,int) rep -> ('a, int) rep -> 'a vc ->
+                ('a, int) rep -> 'a vc
+  val identity : ('a,int) rep -> ('a, int) rep -> 'a vc
+  val swap_rows_stmt : 'a vc -> ('a, int) rep -> ('a, int) rep -> 
+                       ('a,unit) rep
+  val swap_cols_stmt : 'a vc -> ('a, int) rep -> ('a, int) rep -> 
+                       ('a,unit) rep
+  val row_head : 'a vc -> ('a, int) rep -> ('a, int) rep -> 'a vo
+  val col_head_set : 'a vc -> ('a,int) rep -> ('a,int) rep -> 'a vo -> 
+            ('a,unit) rep
+end
+\end{code}
 
 Parameterizing by the kind of container representing a matrix is
-almost as straightforward.  Our containers are  parametric
-over a |DOMAIN|, i.e., functors from a |DOMAIN| module
-to the actual implementation of a container. The functor signature
-|CONTAINER2D| specifies that a container must provide functions |dim1|
-and |dim2| to extract the dimensions, functions |get| and |set| to
-generate container getter and setters, the cloning generator |copy|
-and functions that generate code for row and column swapping. The
-inclusion of these functions in the signature of all containers makes
-it simpler to optimize the relevant functions depending on the actual
-representation of the container while not burdening the users of
-containers with efficiency details. 
+almost as straightforward.  The type of our containers include the
+lifted domain |Dom| as one of the component. Particular containers are
+Our containers are  parametric
+over a |DOMAINL|, i.e., functors from a |DOMAINL| module
+to the actual implementation of a container. For example, the
+following functor defines a matrix container represented as arrays of
+rows. 
+
+\begin{code}
+module GenericArrayContainer(Dom:DOMAINL) =
+  struct
+  module Dom = Dom
+  type contr = Dom.v array array (* Array of rows *)
+  type 'a vc = ('a,contr) code
+  type 'a vo = ('a,Dom.v) code
+  let getL x n m = .< (.~x).(.~n).(.~m) >.
+  let dim2 x = .< Array.length .~x >.       (* number of rows *)
+  let dim1 x = .< Array.length (.~x).(0) >. (* number of cols *)
+  \dots
+\end{code}
+%
+We also have containers wheer elements are stored in a 1D array, in a
+row-wise (C-like) or column-wise (Fortran-like) modes.
+
+The signature |CONTAINER2D| specifies that a container must provide
+functions |dim1| and |dim2| to extract the dimensions, functions |getL|
+to generate container getters, the cloning
+generator |copy| and functions that generate code for row and column
+swapping. The inclusion of these functions in the signature of all
+containers makes it simpler to optimize the relevant functions
+depending on the actual representation of the container while not
+burdening the users of containers with efficiency details.
 
 The use of a |functor| for making a container parametric is fairly
 straightforward.  More interesting is the aspect of what to return
@@ -816,6 +911,10 @@ algorithm as a 3-tuple |contr * Det.outdet * int| of the U-factor, the
 determinant and the rank.
 
 \begin{code2}
+module type OUTPUTDEP = sig 
+    module PivotRep : PIVOTKIND 
+    module Det      : DETERMINANT
+end
 (* The `keyword' list of all the present internal features *)
 module type INTERNAL_FEATURES = sig
   module R      : TrackRank.RANK
@@ -826,16 +925,7 @@ end
 module type OUTPUT = functor(OD : OUTPUTDEP) -> sig
   module IF : INTERNAL_FEATURES
   type res
-  val make_result : 'a wmatrix ->
-   (<classif : 'a; 
-     state : [> `TDet of 'a OD.Det.lstate |
-                'a IF.R.tag_lstate |
-                `TPivot of 'a IF.P.lstate |
-                `TLower of 'a IF.L.lstate]; ..>,res) cmonad
-   (*
-    ('a,res,[> 'a OD.Det.tag_lstate | 'a IF.R.tag_lstate 
-             | 'a IF.P.tag_lstate   | 'a IF.L.tag_lstate],'w) cmonad
-      *)
+  val make_result : 'a wmatrix -> (\dots,res) monad
 end
 module OutDetRank(OD : OUTPUTDEP) = struct
   module IF = struct
@@ -852,6 +942,32 @@ module OutDetRank(OD : OUTPUTDEP) = struct
   let _ = IF.R.fin ()
 end
 \end{code2}
+
+We have several Rank aspects:
+\begin{code2}
+module Rank = struct
+  include TrackRank
+  let fin () = perform
+      r <-- mo_lookup ip;
+      ret (liftGet r)
+end
+
+module NoRank = struct
+  include TrackRank
+  let fin () = failwith "Rank is needed but is not computed"
+end
+\end{code2}
+
+Both contain the |fin ()| function to generate the code representing
+the computed rank. Only the |NoRank| does not track any rank, and so 
+|fin ()| raises an error. The code 
+|let _ = IF.R.fin ()| in |OutDetRank| invokes that fin function, which
+will produce the monadic code generating action, or raise teh
+error. We do not run the action at that time -- we only make sure
+there is an action to run. This is the preflight check again, to rule
+out the semantic error when the user specified that rank should be
+computed and returned and yet specified the |NoRank| aspects which
+computes no rank at all. 
 
 
 
