@@ -943,31 +943,9 @@ module OutDetRank(OD : OUTPUTDEP) = struct
 end
 \end{code2}
 
-We have several Rank aspects:
-\begin{code2}
-module Rank = struct
-  include TrackRank
-  let fin () = perform
-      r <-- mo_lookup ip;
-      ret (liftGet r)
-end
+The initialization expressions |OD.Det.fin ()| and |IF.R.fin ()| are
+the pre-flight tests, to be explained in Section XXX.
 
-module NoRank = struct
-  include TrackRank
-  let fin () = failwith "Rank is needed but is not computed"
-end
-\end{code2}
-
-Both contain the |fin ()| function to generate the code representing
-the computed rank. Only the |NoRank| does not track any rank, and so 
-|fin ()| raises an error. The code 
-|let _ = IF.R.fin ()| in |OutDetRank| invokes that fin function, which
-will produce the monadic code generating action, or raise teh
-error. We do not run the action at that time -- we only make sure
-there is an action to run. This is the preflight check again, to rule
-out the semantic error when the user specified that rank should be
-computed and returned and yet specified the |NoRank| aspects which
-computes no rank at all. 
 
 
 
@@ -1022,13 +1000,19 @@ contain any abstraction artifacts, it is important to make this state
 modular.  For example,
 \begin{code}
 module type DETERMINANT = sig
-  type indet  type outdet  type 'a lstate
-  type tdet = outdet ref   
-  val decl : unit -> 
-    (unit, [> `TDet of 'a lstate ] list, ('a,'b) code) monad
-  val upd_sign : unit -> 
-    (('a,unit) code, [> `TDet of 'a lstate ] list, ('a,'b) code) monad
-  ...
+  type tdet = C.Dom.v ref
+  type 'a lstate
+  type ('pc,'v) lm = ('pc,'v) cmonad
+    constraint 'pc = <state : [> `TDet of 'a lstate ]; classif : 'a; ..>
+  type ('pc,'v) om = ('pc,'v) omonad
+    constraint 'pc = <state : [> `TDet of 'a lstate ]; classif : 'a; ..>
+  val decl : unit -> ('b,unit) lm (* could be unit rather than unit code...*)
+  val upd_sign  : unit -> ('b,unit) om
+  val zero_sign : unit -> ('b,unit) lm
+  val acc       : ('a,C.Dom.v) abstract -> (<classif : 'a; ..>,unit) lm
+  val get       : unit -> ('b,tdet) lm
+  val set       : ('a,C.Dom.v) abstract -> (<classif : 'a; ..>,unit) lm
+  val fin       : unit -> ('b,C.Dom.v) lm
 end
 \end{code}
 \noindent  to track determinant we should be able to generate code
@@ -1056,6 +1040,52 @@ appeared to be the easiest way to implement such a union, in a purely
 functional way). This lets us freely compose determinant-tracking,
 rank-tracking, and other aspects.
 
+We have several instances of Det
+\begin{code}
+module NoDet =
+  struct
+  type tdet = C.Dom.v ref
+  type 'a lstate = unit
+  let decl () = unitL
+  let upd_sign () = ret None
+  let zero_sign () = unitL
+  let acc _ = unitL
+  let get () = ret (liftRef C.Dom.zeroL) (* hack alert! *)
+  let set _ = unitL
+  let fin () = failwith "Determinant is needed but not computed"
+  type ('pc,'v) lm = ('pc,'v) cmonad
+    constraint 'pc = <state : [> `TDet of 'a lstate ]; classif : 'a; ..>
+  type ('pc,'v) om = ('pc,'v) omonad
+    constraint 'pc = <state : [> `TDet of 'a lstate ]; classif : 'a; ..>
+end
+
+module AbstractDet =
+  struct
+  open C.Dom
+  type tdet = v ref
+  (* the first part of the state is an integer: which is +1, 0, -1:
+     the sign of the determinant *)
+  type 'a lstate = ('a,int ref) abstract * ('a,tdet) abstract
+  let fin = fun () -> perform
+      (det_sign,det) <-- mo_lookup ip;
+      ifM (Logic.equalL (liftGet det_sign) Idx.zero) (ret zeroL)
+      (ifM (Logic.equalL (liftGet det_sign) Idx.one) (ret (liftGet det))
+          (ret (uminusL (liftGet det))))
+end
+\end{code}
+
+
+Both contain the |fin ()| function to generate the code representing
+the computed rank. Only the |NoRank| does not track any rank, and so 
+|fin ()| raises an error. The code 
+|let _ = IF.R.fin ()| in |OutDetRank| invokes that fin function, which
+will produce the monadic code generating action, or raise teh
+error. We do not run the action at that time -- we only make sure
+there is an action to run. This is the preflight check again, to rule
+out the semantic error when the user specified that rank should be
+computed and returned and yet specified the |NoRank| aspects which
+computes no rank at all. 
+
 \begin{code}
 (* The `keyword' list of all the present external features *)
 module type FEATURES = sig
@@ -1068,7 +1098,6 @@ module type FEATURES = sig
 end
 \end{code}
 
-\begin{figure}
 \begin{code2}
 module GenGE(F : FEATURES) = struct
     module O = F.Output(F)
@@ -1140,7 +1169,6 @@ module GenGE(F : FEATURES) = struct
             (O.make_result mat)
 end
 \end{code2}
-\end{figure}
 
 The LU generator functor itself is 
 parameterized by the domain, container, pivoting policy (full, row,
@@ -1183,16 +1211,44 @@ some cases we can use module types for ``semantic'' constraints
 that cannot normally be expressed via the types of module members.
 \vspace*{-5pt}
 \begin{code}
-module GenIV5 = Gen(IntegerDomain)
-   (GenericVectorContainer)(FullPivot)
-   (FractionFreeUpdate(IntegerDomain)(GenericVectorContainer)(IDet))
-   (OutDetRank(IntegerDomain)(GenericVectorContainer)(IDet)(Rank))
-module GenFA1 = Gen(FloatDomain)
-   (GenericArrayContainer)(RowPivot)
-   (DivisionUpdate(FloatDomain)(GenericArrayContainer)(NoDet(FloatDomain)))
-   (OutJustMatrix(FloatDomain)(GenericArrayContainer)(NoDet(FloatDomain)))
+module GVC_I = GenericVectorContainer(IntegerDomainL)
+module G_GVC_I = GenLA(GVC_I)
+open G_GVC_I
+open G_GVC_I.GE
+module GenIV5 = GenGE(struct 
+    module Det = AbstractDet
+    module PivotF = FullPivot
+    module PivotRep = PermList
+    module Update = FractionFreeUpdate
+    module Input = InpJustMatrix
+    module Output = OutDetRank end)
+
+module GAC_F = GenericArrayContainer(FloatDomainL)
+module G_GAC_F = GenLA(GAC_F)
+open G_GAC_F
+open G_GAC_F.GE
+
+module GenFA1 = GenGE(struct
+    module Det = NoDet
+    module PivotF = RowPivot
+    module PivotRep = PermList
+    module Update = DivisionUpdate
+    module Input = InpJustMatrix 
+    module Output = OutJustMatrix end)
+module GenFA9 = GenGE(struct 
+    module Det = NoDet
+    module PivotF = RowPivot
+    module PivotRep = PermList
+    module Update = DivisionUpdate
+    module Input = InpJustMatrix
+    module Output = Out_LU_Packed end)
+
+let resIV5 = instantiate GenIV5.gen ;;
+let rIV5 = runit {pf =  resIV5 };;
+
 \end{code}
-\vspace*{-5pt}
+|GenFA1| is no-frills GE; GenFA9 has LU part
+
 We can instantiate the |Gen| functor as shown above and inspect the generated
 code, e.g., by printing |GenFA1.gen|. The code can then be ``compiled'' as 
 |!. GenFA1.gen| or with off-shoring. The code for |GenIV5| (Appendix A) shows
@@ -1327,127 +1383,245 @@ was the joint work with Lydia van Dijk.
 \bibliographystyle{elsart-num}
 \section{Appendix 0}
 \label{app:perform}
-\oleg{grammar of our perform monad. Thank Lydia}
+Grammar of our perform monad
+We support four different constructs to introduce a monadic
+expressions.
+
+\begin{code}
+  perform exp
+  perform exp1; exp2
+  perform x <-- exp1; exp2
+  perform let x = foo in exp
+\end{code}
+
+which is almost literally the grammar of the Haskell's "do"-notation,
+with the differences that Haskell uses |do| and |<-| where we use
+|perform| and |<--|.
+
+We support not only |let x = foo in ...|  expressions but arbitrarily
+complex let-expressions, including |let rec| and |let module|.
+
+The actual bind function of the monad defaults to |bind| and the
+match-failure function to |failwith| (only used for refutable
+patterns; see below).  To select a different function, use the
+extended forms of |perform|. For example, use the function named 
+|bind| from module |Mod|.  In
+addition use the module's |failwith|-function in refutable patterns.
+\begin{code}
+        perform with module Mod in exp2
+\end{code}
+The code has full explanation...
 
 \section{Appendix A}
 The code generated for |GenIV5|, fraction-free LU of the integer matrix
 represented by a flat vector, full pivoting, returning the |U|-factor,
 the determinant and the rank.
 \begin{code2}
-# val resIV5 : ('a,
-   Funct4.GenIV5.Ctr.contr ->
-   Funct4.OutDetRank(Funct4.IntegerDomain)(Funct4.GenericVectorContainer)
-                    (Funct4.IDet)(Funct4.Rank).res) code =
-  .<fun a_405 ->
-   let t_406 = (ref 0) in let t_407 = (ref 0) in
-   let t_408 = {arr = (Array.copy a_405.arr)} (a_405) in
-   let t_409 = a_405.m in let t_410 = a_405.n in
-   let t_411 = (ref 1) in let t_412 = (ref 1) in
-   while (((! t_407) < t_409) && ((! t_406) < t_410)) do
-    let t_413 = (! t_406) in let t_414 = (! t_407) in
-    let t_415 = (ref (None)) in
-    let t_435 =
-     begin  (* full pivoting *)
-      for j_431 = t_413 to (t_410 - 1) do
-       for j_432 = t_414 to (t_409 - 1) do
-        let t_433 = (t_408.arr).((j_431 * t_408.m) + j_432) in
-        if (not (t_433 = 0)) then
-         (match (! t_415) with
-          | Some (i_434) ->
-             if ((abs (snd i_434)) > (abs t_433)) then
-              (t_415 := (Some ((j_431, j_432), t_433))) else ()
-          | None -> (t_415 := (Some ((j_431, j_432), t_433))))
+val resIV5 : ('a, GVC_I.contr -> GenIV5.O.res) code =
+  .<fun a_1 ->
+   let t_2 = (ref 0) in
+   let t_3 = (ref 0) in
+   let t_4 = {arr = (Array.copy a_1.arr)} (a_1) in
+   let t_5 = a_1.m in
+   let t_6 = a_1.n in
+   let t_7 = (ref 1) in
+   let t_8 = (ref 1) in
+   while (((! t_3) < t_5) && ((! t_2) < t_6)) do
+    let t_13 = (! t_2) in
+    let t_14 = (! t_3) in
+    let t_15 = (ref (None)) in
+    let t_34 =
+     begin (* full pivoting *)
+      for j_30 = t_13 to (t_6 - 1) do
+       for j_31 = t_14 to (t_5 - 1) do
+        let t_32 = (t_4.arr).((j_30 * t_4.m) + j_31) in
+        if (t_32 <> 0) then
+         (match (! t_15) with
+          | Some (i_33) ->
+             if ((abs (snd i_33)) > (abs t_32)) then
+              (t_15 := (Some ((j_30, j_31), t_32)))
+             else ()
+          | None -> (t_15 := (Some ((j_30, j_31), t_32))))
         else ()
        done
       done;
-      (match (! t_415) with
-       | Some (i_416) ->  (* swapping of columns *)
-          if ((snd (fst i_416)) <> t_414) then begin
-           let a_424 = t_408.arr and nm_425 = (t_408.n * t_408.m)
-           and m_426 = t_408.m in
-           let rec loop_427 =
-            fun i1_428 -> fun i2_429 ->
-              if (i2_429 < nm_425) then
-               let t_430 = a_424.(i1_428) in
-               a_424.(i1_428) <- a_424.(i2_429);
-               a_424.(i2_429) <- t_430;
-               (loop_427 (i1_428 + m_426) (i2_429 + m_426))
+      (match (! t_15) with
+       | Some (i_16) -> (* swapping of columns *)
+          if ((snd (fst i_16)) <> t_14) then begin
+           let a_23 = t_4.arr
+           and nm_24 = (t_4.n * t_4.m)
+           and m_25 = t_4.m in
+           let rec loop_26 =
+            fun i1_27 ->
+             fun i2_28 ->
+              if (i2_28 < nm_24) then
+               let t_29 = a_23.(i1_27) in
+               a_23.(i1_27) <- a_23.(i2_28);
+               a_23.(i2_28) <- t_29;
+               (loop_26 (i1_27 + m_25) (i2_28 + m_25))
               else () in
-           (loop_427 t_414 (snd (fst i_416)));
-           (t_412 := (~- (! t_412))) (* adjust the sign of det *)
-          end else (); (* swapping of rows elided *)
-          (Some (snd i_416))
+           (loop_26 t_14 (snd (fst i_16)));
+           (t_8 := (~- (! t_8))) (* adjust the sign of det *)
+          end else ();
+          if ((fst (fst i_16)) <> t_13) then begin (* swapping of rows?*)
+           let a_17 = t_4.arr
+           and m_18 = t_4.m in
+           let i1_19 = (t_13 * m_18)
+           and i2_20 = ((snd (fst i_16)) * m_18) in
+           for i_21 = 0 to (m_18 - 1) do
+            let t_22 = a_17.(i1_19 + i_21) in
+            a_17.(i1_19 + i_21) <- a_17.(i2_20 + i_21);
+            a_17.(i2_20 + i_21) <- t_22
+           done;
+           (t_8 := (~- (! t_8)))
+          end else ();
+          (Some (snd i_16))
        | None -> (None))
      end in
-    (match t_435 with
-     | Some (i_436) ->
+    (match t_34 with
+     | Some (i_35) ->
         begin (* elimination loop *)
-         for j_437 = (t_413 + 1) to (t_410 - 1) do
-          if (not ((t_408.arr).((j_437 * t_408.m) + t_414) = 0)) then begin
-           for j_438 = (t_414 + 1) to (t_409 - 1) do
-            (t_408.arr).((j_437 * t_408.m) + j_438) <-
-             ((((t_408.arr).((j_437 * t_408.m) + j_438) * (* elided *)
+         for j_36 = (t_13 + 1) to (t_6 - 1) do
+          let t_37 = (t_4.arr).((j_36 * t_4.m) + t_14) in
+          if (t_37 <> 0) then begin
+           for j_38 = (t_14 + 1) to (t_5 - 1) do
+            (t_4.arr).((j_36 * t_4.m) + j_38) <-
+             ((((t_4.arr).((j_36 * t_4.m) + j_38) * i_35) -
+                ((t_4.arr).((t_13 * t_4.m) + j_38) * t_37)) / (! t_7))
            done;
-           (t_408.arr).((j_437 * t_408.m) + t_414) <- 0
+           (t_4.arr).((j_36 * t_4.m) + t_14) <- 0
           end else ()
-         done; (t_411 := i_436)
+         done;
+         (t_7 := i_35)
         end;
-        (t_406 := ((! t_406) + 1)) (* advance the rank *)
-     | None -> (t_412 := 0));
-    (t_407 := ((! t_407) + 1))
+        (t_2 := ((! t_2) + 1)) (* advance the rank *)
+     | None -> (t_8 := 0));
+    (t_3 := ((! t_3) + 1))
    done;
-   (t_408, 
-    if ((! t_412) = 0) then 0 (* adjust the sign of the determinant *)
-    else if ((! t_412) = 1) then (! t_411)
-    else (~- (! t_411)), (! t_406))>.
+   (t_4,
+    if ((! t_8) = 0) then 0 (* adjust the sign of the determinant *)
+    else if ((! t_8) = 1) then (! t_7)
+    else (~- (! t_7)), (! t_2))>.
 \end{code2}
 \section{Appendix B}
 The code generated for |GenFA1|, LU of the floating point matrix
 represented by a 2D array, row pivoting, returning just the |U|-factor.
 \begin{code2}
-# val resFA1 : ('a,
-   Funct4.GenFA1.Ctr.contr ->
-   Funct4.OutJustMatrix(Funct4.FloatDomain)(Funct4.GenericArrayContainer)
-                       (Funct4.NoDet(Funct4.FloatDomain)).res) code =
+val resFA1 : ('a, GAC_F.contr -> GenFA1.O.res) code =
   .<fun a_1 ->
-   let t_2 = (ref 0) in let t_3 = (ref 0) in
+   let t_2 = (ref 0) in
+   let t_3 = (ref 0) in
    let t_5 = (Array.map (fun x_4 -> (Array.copy x_4)) (Array.copy a_1)) in
    let t_6 = (Array.length a_1.(0)) in
    let t_7 = (Array.length a_1) in
    while (((! t_3) < t_6) && ((! t_2) < t_7)) do
-    let t_8 = (! t_2) in let t_9 = (! t_3) in
-    let t_10 = (ref (None)) in
-    let t_16 =
+    let t_10 = (! t_2) in
+    let t_11 = (! t_3) in
+    let t_12 = (ref (None)) in
+    let t_18 =
      begin  (* row pivoting *)
-      for j_13 = t_8 to (t_7 - 1) do
-       let t_14 = (t_5.(j_13)).(t_9) in
-       if (not (t_14 = 0.)) then
-        (match (! t_10) with
-         | Some (i_15) ->
-            if ((abs_float (snd i_15)) < (abs_float t_14)) then
-             (t_10 := (Some (j_13, t_14)))
+      for j_15 = t_10 to (t_7 - 1) do
+       let t_16 = (t_5.(j_15)).(t_11) in
+       if (t_16 <> 0.) then
+        (match (! t_12) with
+         | Some (i_17) ->
+            if ((abs_float (snd i_17)) < (abs_float t_16)) then
+             (t_12 := (Some (j_15, t_16)))
             else ()
-         | None -> (t_10 := (Some (j_13, t_14))))
+         | None -> (t_12 := (Some (j_15, t_16))))
        else ()
       done;
-      (match (! t_10) with
-       | Some (i_11) -> (* swapping of rows *)
-          if ((fst i_11) <> t_8) then begin
-           let t_12 = t_5.(t_8) in
-           t_5.(t_8) <- t_5.(fst i_11);
-           t_5.(fst i_11) <- t_12; () end else ();
-          (Some (snd i_11))
+      (match (! t_12) with (* swapping of rows *)
+       | Some (i_13) ->
+          if ((fst i_13) <> t_10) then
+           let t_14 = t_5.(t_10) in
+           t_5.(t_10) <- t_5.(fst i_13);
+           t_5.(fst i_13) <- t_14
+          else ();
+          (Some (snd i_13))
        | None -> (None))
      end in
-    (match t_16 with
-     | Some (i_17) ->
-        begin (* elimination loop, elided *) end;
+    (match t_18 with
+     | Some (i_19) -> (* elimination loop, elided?? *)
+        begin
+         for j_20 = (t_10 + 1) to (t_7 - 1) do
+          let t_21 = (t_5.(j_20)).(t_11) in
+          if (t_21 <> 0.) then begin
+           for j_22 = (t_11 + 1) to (t_6 - 1) do
+            (t_5.(j_20)).(j_22) <-
+             ((t_5.(j_20)).(j_22) -. ((t_21 /. i_19) *. (t_5.(t_10)).(j_22)))
+           done;
+           (t_5.(j_20)).(t_11) <- 0.
+          end else ()
+         done;
+         ()
+        end;
         (t_2 := ((! t_2) + 1))
      | None -> ());
     (t_3 := ((! t_3) + 1))
    done;
    t_5>.
 \end{code2}
+
+
+\begin{code2}
+val resFA9 : ('a, GAC_F.contr -> GenFA9.O.res) code =
+  .<fun a_1 ->
+   let t_2 = (ref 0) in
+   let t_3 = (ref 0) in
+   let t_5 = (Array.map (fun x_4 -> (Array.copy x_4)) (Array.copy a_1)) in
+   let t_6 = (Array.length a_1.(0)) in
+   let t_7 = (Array.length a_1) in
+   let t_8 = (ref ([])) in
+   while (((! t_3) < t_6) && ((! t_2) < t_7)) do
+    let t_9 = (! t_2) in
+    let t_10 = (! t_3) in
+    let t_11 = (ref (None)) in
+    let t_17 =
+     begin
+      for j_14 = t_9 to (t_7 - 1) do
+       let t_15 = (t_5.(j_14)).(t_10) in
+       if (t_15 <> 0.) then
+        (match (! t_11) with
+         | Some (i_16) ->
+            if ((abs_float (snd i_16)) < (abs_float t_15)) then
+             (t_11 := (Some (j_14, t_15)))
+            else ()
+         | None -> (t_11 := (Some (j_14, t_15))))
+       else ()
+      done;
+      (match (! t_11) with
+       | Some (i_12) ->
+          if ((fst i_12) <> t_9) then begin
+           let t_13 = t_5.(t_9) in
+           t_5.(t_9) <- t_5.(fst i_12);
+           t_5.(fst i_12) <- t_13;
+           (t_8 := ((RowSwap ((fst i_12), t_9)) :: (! t_8)))
+          end else ();
+          (Some (snd i_12))
+       | None -> (None))
+     end in
+    (match t_17 with
+     | Some (i_18) ->
+        begin
+         for j_19 = (t_9 + 1) to (t_7 - 1) do
+          let t_20 = (t_5.(j_19)).(t_10) in
+          if (t_20 <> 0.) then
+           for j_21 = (t_10 + 1) to (t_6 - 1) do
+            (t_5.(j_19)).(j_21) <-
+             ((t_5.(j_19)).(j_21) -. ((t_20 /. i_18) *. (t_5.(t_9)).(j_21)))
+           done
+          else ()
+         done;
+         ()
+        end;
+        (t_2 := ((! t_2) + 1))
+     | None -> ());
+    (t_3 := ((! t_3) + 1))
+   done;
+   (t_5, (! t_8))>.
+\end{code2}
+
 \end{document}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
