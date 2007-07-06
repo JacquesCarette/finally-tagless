@@ -63,6 +63,12 @@
 \newcommand{\oleg}[1]{{\it [Oleg says: #1]}}
 \newcommand{\jacques}[1]{{\it [Jacques says: #1]}}
 
+%
+% Useful abbreviations
+%
+\newcommand{\floats}{\mathbb{F}}
+\newcommand{\reals}{\mathbb{R}}
+
 \journal{Science of Computer Programming}
 
 \begin{document}
@@ -112,7 +118,6 @@ MetaOCaml \sep linear algebra \sep genericity \sep generative \sep staging
 % Should use either PACS or MSC scheme
 \end{frontmatter}
 
-% previous introduction is saved at the end
 \section{Introduction}
 
 In high-performance symbolic and numeric computing, there is a
@@ -228,9 +233,11 @@ as our running example. Specifically, our contributions:
 \end{itemize}
 
 The rest of this paper is structured as follows: The next section
+gives an overview of the design space of LU decomposition algorithms,
+as well as the methodology we follow.  Then section~\ref{CPS}
 introduces code generation in MetaOCaml, the problem of name
 generation, and continuation-passing style (CPS) as a general
-solution.  We also introduce the monad and the issues of generating
+solution.  We also present a key monad and the issues of generating
 control statements. Section~\ref{functors} describes the use of
 parametrized modules of OCaml to encode all of the aspects of the
 LU decomposition algorithm family in completely separate,
@@ -241,6 +248,134 @@ section~\ref{related}. We then outline the future work and conclude.
 Appendices give samples of the generated code (which is available in
 full at \cite{metamonadsURL}).
 
+\section{The design space}\label{design}
+
+Before studying the details of the technologies involved in the 
+implementation, it is worthwhile to carefully study the design space involved.
+A preliminary study~\cite{carette04} revealed a number of aspects of the 
+family of Gaussian Elimination algorithms.  In the present work, we outline
+a number of additional aspects involved in the faimily of LU decomposition 
+algorithms.  These will first be presented in a somewhat ad hoc manner, 
+roughly coresponding to the order in which they were ``discovered''.  These
+will then be reorganized into sets of semantically related aspects, which will
+form the basis of our design.  Finally, we will extract a methodology from
+our experience.  
+
+Throughout, we assume that the reader is familiar with the basic LU
+decomposition algorithm, which factors a invertible matrix $A$ into a unit
+lower triangular matrix $L$ and (usually) an upper triangular matrix $U$,
+such that $A = LU$.  When pivoting is used, we get a unitary matrix $P$ such
+that the factorization is now $A = PLU$.  The case of numeric matrices is well
+covered in~\cite{Golub-vanLoan}.  When $A$ is singular, one can still get
+a $PLU$ decomposition, with $L$ remaining unit lower-triangular but with a
+$U$ which is no longer upper triangular but instead ``staggered''
+in the upper triangle.
+
+\subsection{Aspects}
+
+We reuse the english word ``aspect'' for the various facets of the family
+of LU decomposition algorithms.  While this use if very much in the same 
+spirit as in aspect-oriented programming (AOP)~\cite{Kiczales}, our 
+implementation methodology is radically different.  We firmly believe that
+our typed generative methodogy is much better suited to the functional
+programming paradigm than attempting to graft the program-trace-based
+methodology of object-oriented versions of AOP.  
+
+At this point in time, it is better to think of aspects as purely
+design-time entities.  Here we are firmly influenced by Parnas' original
+view of modules and information hiding~\cite{journals/cacm/parnas72a} as well
+as his view of product families \cite{Parnas??}, and by Dijkstra's ideas on
+separation of concerns \cite{EWD:EWD447}.
+To apply these principles to the study of LU decomposition, we need
+to understand what are the changes between different implementations, and 
+what concerns need to be addressed.  We also need to study the degree
+to which these concerns are independent.
+
+The various aspects listed below all come from variations found in actual
+implementations (in various languages and settings).
+
+\begin{enumerate}
+	\item \textbf{Domain}: In which (algebraic) domain do the matrix
+		elements belong to.  Some implementations were very specific
+		($\mathbb{Z}, \mathbb{Q}, \mathbb{Z_p}, 
+		\mathbb{Z}_p\left[\alpha_1,\ldots,\alpha_n\right], 
+		\mathbb{Z}\left[x\right]$, $\mathbb{Q}\left(x\right)$, 
+		$\mathbb{Q}\left[\alpha\right]$, and floating point numbers 
+		($\floats$) for 
+		example), while others were generic for elements of a field,
+		multivariate polynomials over a field, or elements of a division ring
+		with possibly undecidable zero-equivalence.  In the roughly 85 pieces
+		of code we surveyed, 20 different domains were encountered.
+	\item \textbf{Representation of the matrix}: Whether the matrix
+		was represented as an array of arrays, a one-dimensional array,
+		a hash table, etc.  For the case of a one-dimensional array,
+		whether indexing was done in C or Fortran style.  Additionally,
+		if a particular representation had a special mechanism for efficient
+		row exchanges, this was sometimes used.
+	\item \textbf{Fraction-free}: Whether the 
+		algorithm is allowed to use unrestricted division, or only
+		exact (remainder-free) division.
+	\item \textbf{Length measure (for pivoting)}:  For stability reasons
+		(whether numerical or coefficient growth), if a domain possesses
+		an appropriate length measure, this was sometimes used to choose
+		an ``optimal'' pivot.  Not all domains have such a measure.
+	\item \textbf{Full division}: Whether the input domain supports full
+		division (i.e. is a \emph{field} or pretends to be ($\floats$)) 
+		or only exact division (i.e. a \emph{division ring}).
+	\item \textbf{Domain normalization}: Whether the arithmetic operations
+		of the base domain keep the results in normal form, or whether
+		an extra normalization step is required.  For example, some 
+		representations of polynomials require an extra step for
+		zero-testing.
+	\item \textbf{Output choices}:  Whether just the reduced matrix
+		(the `U' factor), both L and U, as well as
+		the rank, the determinant, and/or the sequence of 
+		pivots is to be returned.  For example, Maple's
+		\texttt{LinearAlgebra:-LUDecomposition} routine has
+		$2^6 + 2^5 + 2^2 = 100$ possible outputs, depending on whether
+		one chooses a $PLU$, $PLU^{1}R$ or \emph{Cholesky} 
+		decomposition.  We chose to only consider $PLU$ for now.
+	\item \textbf{Rank}: Whether to explicitly track the rank of the matrix
+		as the algorithm proceeds.
+	\item \textbf{Determinant}:  Whether to explicitly track the determinant
+		of the matrix as the algorithm proceeds.
+	\item \textbf{Code representation}: Whether we are actually generating
+		code or we are in fact representation the algorithm in ``direct
+		style'', albeit with a lot of abstraction overhead.
+	\item \textbf{Zero-equivalence}: Whether the 
+		arithmetic operations require a specialized zero-equivalence 
+		routine needs to be used.  It turns out that for certain classes
+		of \emph{expressions}, it is convenient to use a zero-equivalence
+		test which is separate from the domain normalization.  This is
+		usually the case when zero-equivalence is formally undecidable
+		but semi-algorithms or probabilistic algorithms do exist.
+		See~\cite{ZhCaJeMo07} for an example.
+    \item \textbf{Pivoting}: Whether to use no, 
+        column-wise, or full pivoting.
+    \item \textbf{Augmented Matrices}: Whether all or only some
+      columns of the matrix participate in elimination.
+	\item \textbf{Pivot representation}: Whether the pivot is represented
+	  as a list of row (and/or column) exchanges, as a unitary matrix,
+	  or as a permutation vector.
+  \item \textbf{Lower matrix}: whether the matrix $L$ should be tracked
+	  as the algorithm proceeds, reconstructed at the end of the
+	  algorithm, or not tracked at all.
+  \item \textbf{Input choices}: Whether the input matrix is an augmented
+	  matrix or not, and if so, where is the end of the main matrix.
+  \item \textbf{Packed}: Whether the output matrices $L$ and $U$ are
+	  packed into a single matrix for output.
+\end{enumerate}
+
+\noindent \jacques{Absorb this in the above} These are separated out from the
+others as they are cross-cutting concerns: in the case of the length measure, a
+property of the domain will influence the pivoting method \emph{if} pivoting is
+to be performed.\jacques{Also, should mention a few more aspects like
+inplace, errors-on-singular, logging, sparsity, as things that are not
+implemented}
+
+\subsection{Organizing aspects}
+
+\subsection{Methodology}
 
 \section{Generating binding statements, CPS, and monad}\label{CPS}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -570,69 +705,17 @@ let genrecloop gen rtarg = fun s k ->
 
 
 \section{Aspects and Functors}\label{functors}
+
 The monad represents fine-scale code generation. We need tools for
 larger-scale modularization; we can use any abstraction
 mechanisms we want to structure our code generators, as long as none
 of those abstractions infiltrate the generated code.
 
-While the Object-Oriented Design community has acquired an extensive
-vocabulary for describing modularity ideas, the guiding principles for
-modular designs has not changed since they were first articulated by
-Parnas~\cite{journals/cacm/parnas72a} and Dijkstra~
-\cite{EWD:EWD447}: information hiding and separation of concerns.  To
-apply these principles to the study of LU decomposition, we need
-to understand what are the changes between different implementations, and 
-what concerns need to be addressed.  We also need to study the degree
-to which these concerns are independent.
-A study of Gaussian Elimination \cite{carette04} shows that
-the following variations occur:
-\begin{enumerate}
-%\vspace*{-6pt}
-    \item \textbf{Domain}: In which (algebraic) domain do the
-      matrix elements belong to.  Sometimes the domains are very
-      specific (e.g., $\mathbb{Z}, \mathbb{Q}, \mathbb{Z}_p$ and
-      floating point numbers), while in other cases the domains
-      were left generic, e.g., multivariate polynomials over a
-      field.  In the roughly 85 pieces of code surveyed
-      \cite{carette04} 20 different domains were encountered.
-    \item \textbf{Container}: Whether the matrix is represented as
-      an array of arrays, a one-dimensional array, a hash table, a
-      sparse matrix, etc., and whether indexing is done in C or
-      Fortran style.  Additionally, if a particular representation
-      had a special mechanism for efficient row exchanges.
-    \item \textbf{Output choices}: Whether just the reduced
-      matrix, or additionally the rank, the determinant, and the
-      pivoting matrix are to be returned. In the larger algorithm
-      family, routines like Maple's\\
-      \texttt{LinearAlgebra:-LUDecomposition} have up to $2^6 +
-      2^5 + 2^2 = 100$ outputs.
-    \item \textbf{Fraction-free}: Whether the Gaussian Elimination
-        algorithm is allowed to use unrestricted division, or only
-        exact (remainder-free) division.
-    \item \textbf{Pivoting}: Whether to use no, 
-        column-wise, or full pivoting.
-    \item \textbf{Augmented Matrices}: Whether all or only some
-      columns of the matrix participate in elimination.
-\end{enumerate}
-\noindent In addition to the above variations, there are two aspects that 
-recur frequently:
-\vspace*{-6pt}
-\begin{enumerate}
-    \item \textbf{Length measure}:  For stability reasons
-        (numerical or coefficient growth), if a domain
-      possesses
-        an appropriate length measure, this is sometimes used to choose
-        an ``optimal'' pivot.
-    \item \textbf{Normalization and zero-equivalence}: Whether the
-      arithmetic operations of the domain give normalized results, and
-      whether a specialized zero-equivalence routine is to be used.
-\end{enumerate}
-\noindent These are separated out from the others as they are cross-cutting
-concerns: in the case of the length measure, a property of the domain
-will influence the pivoting method \emph{if} pivoting is to be
-performed.
-
-The simplest parametrization is to make the domain abstract. As it
+Reviewing the various aspects outlined in section~\ref{aspects},
+the simplest parametrization is to make the domain abstract. 
+\jacques{This whole section needs to be edited to take into account
+the different organization of the material}.
+As it
 turns out, we need the following to exist in our domains: $0$, $1$,
 $+$, $*$, (unary and binary) $-$, at least \emph{exact} division,
 normalization, and potentially a relative size measure. The simplest
