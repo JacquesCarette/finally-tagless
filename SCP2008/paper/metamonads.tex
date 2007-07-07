@@ -711,24 +711,24 @@ larger-scale modularization; we can use any abstraction
 mechanisms we want to structure our code generators, as long as none
 of those abstractions infiltrate the generated code.
 
-Reviewing the various aspects outlined in section~\ref{aspects},
-the simplest parametrization is to make the domain abstract. 
+
 \jacques{This whole section needs to be edited to take into account
 the different organization of the material}.
-As it
-turns out, we need the following to exist in our domains: $0$, $1$,
-$+$, $*$, (unary and binary) $-$, at least \emph{exact} division,
+
+\subsection{Domains}
+Reviewing the various aspects outlined in section~\ref{aspects}, the
+simplest parametrization is to make the domain abstract.  As it turns
+out, we need the following to exist in our domains: $0$, $1$, $+$,
+$*$, (unary and binary) $-$, at least \emph{exact} division,
 normalization, and potentially a relative size measure. The simplest
-case of such domain abstraction is |param_code1|.
-There, code-generators such as |plus| and |one|
-were passed as arguments. We need far more than
-two parameters, so we have to group them. Instead of the grouping
-offered by regular records, we use OCaml \emph{structures} (i.e.,
-modules)
-so we can take advantage of extensibility, type abstraction and constraints,
-and especially parameterized structures (\emph{functors}).
-We define the type of the domain, the signature |DOMAIN|, which
-different domains must satisfy:
+case of such domain abstraction is |param_code1|.  There,
+code-generators such as |plus| and |one| were passed as arguments. We
+need far more than two parameters, so we have to group them. Instead
+of the grouping offered by regular records, we use OCaml
+\emph{structures} (i.e., modules) so we can take advantage of
+extensibility, type abstraction and constraints, and especially
+parameterized structures (\emph{functors}).  We define the type of the
+domain, the signature |DOMAIN|, which different domains must satisfy:
 
 \begin{code}
 type domain_kind = Domain_is_Ring | Domain_is_Field
@@ -750,13 +750,10 @@ end
 module IntegerDomain : DOMAIN = struct
     type v = int
     let kind = Domain_is_Ring
-    let zero = 0
-    let one = 1
-    let plus x y = x + y
-    let times x y = x * y
-    let minus x y = x - y
+    let zero = 0 and one = 1
+    let plus x y = x + y  and  minus x y = x - y
+    let times x y = x * y and  div x y = x / y
     let uminus x = -x
-    let div x y = x / y
     let normalizer = None
     let better_than = Some (fun x y -> abs x > abs y)
 end
@@ -770,15 +767,15 @@ compiler will verify the type when we try to use that structure as a
 |DOMAIN|. In any case, the errors such as missing ``methods'' or
 methods with incorrect types will be caught statically, even
 \emph{before} any code generation takes place. The variant
-|domain_is_ring| of |domain_kind| encodes a semantic constraint 
+|Domain_is_Ring| of |IntegerDomain.domain_kind| encodes a semantic constraint 
 that the full division
 is not available. While the |DOMAIN| type may have looked daunting to
 some, the implementation is quite straightforward.  Other domains such
 as |float| and arbitrary precision exact rational numbers |Num.num|
 are equally simple.
 
-
-A more complex domain: |Zp|
+A more complex domain is |Zp| of the field of integers in prime
+modulus:
 \begin{code}
 module ZpMake(P:sig val p:int end) = struct
     type v = int
@@ -791,56 +788,69 @@ module ZpMake(P:sig val p:int end) = struct
     let () = assert (is_prime P.p)
 end
 \end{code}
-
-This domain is parametrized by a an integer number |p|, the
-(modulus?). Thus, ZpMake is a functor. It creates a domain that is a
-field, but with no defined order. Hence
-|normalizer| and |better_than| are set to |None|. However, |Zp| forms
+This domain is parametrized by an integer number |p|, the
+(modulus?). To be more precise, the structure |ZpMake| is
+parameterized over another structure of the type described by
+signature P; that argument structure has one field, the int value |p|.
+Such a parameterized structure (or, a function from structures to
+structures) is a \emph{functor}. The result of |ZpMake| is a domain that is a
+field with no defined order. Hence
+|normalizer| and |better_than| are set to |None|. |Zp| forms
 a field only when |p| is prime. Therefore, we must make this check,
-see the last line of that code. The expression 
-|assert (is_prime P.p)| is the initializing expression. It is executed
-when the correspo0nding module is instantaited
+in the last line of the above code. That line differs from the other 
+bindings in |ZpMake| in that it neither defines a function, such as
+|plus|, nor binds a value, such as |zero|. Therefore, the non-value
+expression |assert (is_prime P.p)| will be evaluated
+when the corresponding module is instantiated, like the following
 \begin{code}
-module Z19 = ZpMakeL(struct let p = 19 end)
+module Z19 = ZpMake(struct let p = 19 end)
 \end{code}
-if we replace |19| with |9| above, we receive an error. That is a
-run-time error. It is raised however as we instantiate and
-combine modules that will eventually make the generator. Thus,
-although the error is reported at run-time rather than compile time as
-one might have hoped, the error is raised when \emph{generating the
-generator} -- well before the generation of the target code could
-begin. In our code we make extensive use of these so-called preflight 
-checks performed as part of module initialization. The checks seem to
-offer a good compromise: they are dynamic and so do not require
-complicated type systems; on the other hand, the checks are performed
-quite early, when buiding code generators, and so ensure that no 
-code violating the corresponding \emph{semantic} constraints 
-will be generated. Although some may frown on the use of the module
-initializing expressions (since that requires careful attention to the
-sharing and problems of multiple instantiation of a module), these
-concerns do not apply to our case: our preflight tests are all idempotent
-and maintain no state.
+We will call such an expression an initializing expression.  if we
+replace |p = 19| with |p = 9| above, we receive an error, a run-time
+error. It is raised however as we instantiate and combine modules that
+will eventually make the generator.  Although the error is reported at
+run-time rather than compile time as one might have hoped, the error
+is raised when \emph{generating the generator} -- well before the
+generation of the target code could begin. In our code we make
+extensive use of these so-called preflight checks performed as part of
+module initialization. The checks seem to offer a good compromise:
+they are dynamic and so do not require complicated type systems; on
+the other hand, the checks are performed quite early, when buiding
+code generators, and so ensure that no code violating the
+corresponding \emph{semantic} constraints will be generated. Although
+some may frown on the use of module initializing expressions (since
+that requires careful attention to sharing and multiple instantiations
+of a module), these concerns do not apply in our case: our preflight
+tests are all idempotent and maintain no state.
 
+\subsection{Abstract code and lifted domains}
+We will be using MetaOCaml operations to build code expressions, values
+of the type |('a,'v) code|. However, we wish to make our generators
+abstract over the particular code representations. Therefore, in the
+following Sections (in the rest of the paper?) rather than 
+MetaOCaml brackets and escapes, we will be using code combinators
+described below. These combinators are functions that produce and
+combine values of the type of abstract code. 
 
-Lifting:
+This abstraction lets us vary the output form of our generated LU
+programs. We may use thunks rather than MetaOCaml |('a,'v) code|
+values, for benchmarking purposes. We could use code combinators that
+produce C or Fortran code.
 
-We now define a lot of infrastructure.  We will be quite thorough, and
-define base abstraction and lifted abstractions, This will involve a
-lot of boilerplate code, which unfortunately cannot be so easily
-automated in MetaOCaml -- that would require introspection.  It could
-be done in camlp4, but that seems too much as well.  This 'base' could
-be elided, but when we decide to make more use of Abstract
-Interpretation, we'll regret it, so do it now.
+Our code combinator library includes operations to create, dereference
+and mutate reference cells, compare values, manipulate values used
+for indexing arrays. The following is the implementation of a sample
+combinators, in the case of the abstract code being MetaOCaml code values. 
 \begin{code}
 let lift x = .< x >.
 
-let liftRef x = .< ref .~x >. 
-let liftGet x = .< ! .~x >. 
+let cunit = .< () >.
 let unitL = fun s k -> k s .< () >.
 
+let liftRef x = .< ref .~x >. 
+let liftGet x = .< ! .~x >. 
 let liftPair x = (.< fst .~x >., .< snd .~x >.)
 
-(* logic code combinators - plain and monadic *)
 module Logic = struct
   let notL a        = .< not .~a >.
   let equalL a b    = .< .~a = .~ b >.
@@ -848,18 +858,14 @@ module Logic = struct
   let andL a b     = .< .~a && .~b >. 
 end
 
-(* operations on code indices *)
 module Idx = struct
-  let zero = .< 0 >.
-  let one = .< 1 >.
-  let minusone = .< -1 >.
+  let zero = .< 0 >. and one = .< 1 >. and minusone = .< -1 >.
   let succ a = .< .~a + 1 >.
   let pred a = .< .~a - 1 >.
   let less a b = .< .~a < .~b >.
   let uminus a = .< - .~a >.
   let add a b = .< .~a + .~b >.
 
-let cunit = .< () >.
 let update a f = let b = f (liftGet a) in .< .~a := .~b >.
 let assign a b = .< .~a := .~b >.
 let apply  f x = .< .~f .~x >.
@@ -874,13 +880,11 @@ generally lifted twice: once from the value domain |v| to the code
 domain |'a vc|, and once more from values to monadic computations
 |('p,'a vc) monad|. 
 
+We now convert the domains of values from teh previous section into
+lifted domains, of abstract code values. We define the signature
+|DOMAINL| 
 \begin{code}
-module S(T:
-  sig
-	(* Representation type of values,  to be specified *)
-    type ('a, 'b) rep
-  end) = struct
-
+module S(T: sig type ('a, 'b) rep  end) = struct
 open T
 module type DOMAINL = sig
   include DOMAIN
@@ -895,13 +899,19 @@ module type DOMAINL = sig
   val better_thanL : ('a vc -> 'a vc -> ('a,bool) rep) option
   val normalizerL : ('a vc -> 'a vc) option
 end 
+\end{code}
+(part of the larger module |Domains_sig|) which is parameterised by
+the type of the abstract code, |('a, 'b) rep|. The line |include DOMAIN|
+says that lifted domains include all members of non-lifted domains,
+including the initializing expressions with pre-flight checks.
+non-lifted 
 
+The following is a particular instance of |DOMAINL|, the lifted
+version of |IntegerDomain| of the previous section, in the particular
+case of abstract code being MetaOCaml code values |('a, 'b) code|:
+\begin{code}
 module T = Domains_sig.S(struct type ('a, 'b) rep = ('a, 'b) code end)
 open T
-
-open Domains_common
-(* because the operations are "syntactic" to a certain extent,
-   we have to repeat ourselves a lot *)
 module IntegerDomainL = struct
     include IntegerDomain
     type 'a vc = ('a,v) code
@@ -918,6 +928,7 @@ end
 \end{code}
 
 
+\subsection{Containers}
 
 \begin{code}
 module type CONTAINER2D = sig
@@ -1346,8 +1357,12 @@ at all. The generated code for the above and other instantiations of
 |Gen| can be examined at \cite{metamonadsURL}. The website also 
 contains benchmark code and timing comparisons.
 
+\oleg{We should mention somewhere that we have implemented not only GE
+  but Solvers as well.}
+
 \section{Runge-Kutta solvers}
 \label{s:ode}
+\oleg{Drop this? no space}
 
 \section{Related and future work}\label{related}
 
@@ -1430,8 +1445,7 @@ even more direct-style, and potentially clearer.
 We also would like to extend our monad to a monad transformer.
 
 There are many more aspects which can also be handled:
-Input variations (augmented
-matrices), error reporting (i.e. asking for the determinant of a 
+error reporting (i.e. asking for the determinant of a 
 non-square matrix), memory hierarchy issues, loop-unrolling
 \cite{Padua:MetaOcaml:04},
 warnings when zero-testing is undecidable and
@@ -1485,8 +1499,8 @@ We support not only |let x = foo in ...|  expressions but arbitrarily
 complex let-expressions, including |let rec| and |let module|.
 
 The actual bind function of the monad defaults to |bind| and the
-match-failure function to |failwith| (only used for refutable
-patterns; see below).  To select a different function, use the
+pattern-match--failure function to |failwith| (only used for refutable
+patterns).  To select a different function, use the
 extended forms of |perform|. For example, use the function named 
 |bind| from module |Mod|.  In
 addition use the module's |failwith|-function in refutable patterns.
@@ -1504,9 +1518,9 @@ val resIV5 : ('a, GVC_I.contr -> GenIV5.O.res) code =
   .<fun a_1 ->
    let t_2 = (ref 0) in
    let t_3 = (ref 0) in
-   let t_4 = {arr = (Array.copy a_1.arr)} (a_1) in
-   let t_5 = a_1.m in
-   let t_6 = a_1.n in
+   let t_4 = (a_1) \{arr = (Array.copy a_1.arr)\} in
+   let t_5 = a_1.m in  (* magnitude of det *)
+   let t_6 = a_1.n in  (* sign of the det *)
    let t_7 = (ref 1) in
    let t_8 = (ref 1) in
    while (((! t_3) < t_5) && ((! t_2) < t_6)) do
@@ -1514,7 +1528,7 @@ val resIV5 : ('a, GVC_I.contr -> GenIV5.O.res) code =
     let t_14 = (! t_3) in
     let t_15 = (ref (None)) in
     let t_34 =
-     begin (* full pivoting *)
+     begin (* full pivoting, search for the pivot *)
       for j_30 = t_13 to (t_6 - 1) do
        for j_31 = t_14 to (t_5 - 1) do
         let t_32 = (t_4.arr).((j_30 * t_4.m) + j_31) in
@@ -1546,7 +1560,7 @@ val resIV5 : ('a, GVC_I.contr -> GenIV5.O.res) code =
            (loop_26 t_14 (snd (fst i_16)));
            (t_8 := (~- (! t_8))) (* adjust the sign of det *)
           end else ();
-          if ((fst (fst i_16)) <> t_13) then begin (* swapping of rows?*)
+          if ((fst (fst i_16)) <> t_13) then begin (* swapping of rows *)
            let a_17 = t_4.arr
            and m_18 = t_4.m in
            let i1_19 = (t_13 * m_18)
@@ -1581,72 +1595,14 @@ val resIV5 : ('a, GVC_I.contr -> GenIV5.O.res) code =
      | None -> (t_8 := 0));
     (t_3 := ((! t_3) + 1))
    done;
-   (t_4,
+   (t_4, (* matrix with the U factor *)
     if ((! t_8) = 0) then 0 (* adjust the sign of the determinant *)
     else if ((! t_8) = 1) then (! t_7)
     else (~- (! t_7)), (! t_2))>.
 \end{code2}
 \section{Appendix B}
-The code generated for |GenFA1|, LU of the floating point matrix
+The code generated for |GenFA9|, LU of the floating point matrix
 represented by a 2D array, row pivoting, returning just the |U|-factor.
-\begin{code2}
-val resFA1 : ('a, GAC_F.contr -> GenFA1.O.res) code =
-  .<fun a_1 ->
-   let t_2 = (ref 0) in
-   let t_3 = (ref 0) in
-   let t_5 = (Array.map (fun x_4 -> (Array.copy x_4)) (Array.copy a_1)) in
-   let t_6 = (Array.length a_1.(0)) in
-   let t_7 = (Array.length a_1) in
-   while (((! t_3) < t_6) && ((! t_2) < t_7)) do
-    let t_10 = (! t_2) in
-    let t_11 = (! t_3) in
-    let t_12 = (ref (None)) in
-    let t_18 =
-     begin  (* row pivoting *)
-      for j_15 = t_10 to (t_7 - 1) do
-       let t_16 = (t_5.(j_15)).(t_11) in
-       if (t_16 <> 0.) then
-        (match (! t_12) with
-         | Some (i_17) ->
-            if ((abs_float (snd i_17)) < (abs_float t_16)) then
-             (t_12 := (Some (j_15, t_16)))
-            else ()
-         | None -> (t_12 := (Some (j_15, t_16))))
-       else ()
-      done;
-      (match (! t_12) with (* swapping of rows *)
-       | Some (i_13) ->
-          if ((fst i_13) <> t_10) then
-           let t_14 = t_5.(t_10) in
-           t_5.(t_10) <- t_5.(fst i_13);
-           t_5.(fst i_13) <- t_14
-          else ();
-          (Some (snd i_13))
-       | None -> (None))
-     end in
-    (match t_18 with
-     | Some (i_19) -> (* elimination loop, elided?? *)
-        begin
-         for j_20 = (t_10 + 1) to (t_7 - 1) do
-          let t_21 = (t_5.(j_20)).(t_11) in
-          if (t_21 <> 0.) then begin
-           for j_22 = (t_11 + 1) to (t_6 - 1) do
-            (t_5.(j_20)).(j_22) <-
-             ((t_5.(j_20)).(j_22) -. ((t_21 /. i_19) *. (t_5.(t_10)).(j_22)))
-           done;
-           (t_5.(j_20)).(t_11) <- 0.
-          end else ()
-         done;
-         ()
-        end;
-        (t_2 := ((! t_2) + 1))
-     | None -> ());
-    (t_3 := ((! t_3) + 1))
-   done;
-   t_5>.
-\end{code2}
-
-
 \begin{code2}
 val resFA9 : ('a, GAC_F.contr -> GenFA9.O.res) code =
   .<fun a_1 ->
@@ -1655,13 +1611,13 @@ val resFA9 : ('a, GAC_F.contr -> GenFA9.O.res) code =
    let t_5 = (Array.map (fun x_4 -> (Array.copy x_4)) (Array.copy a_1)) in
    let t_6 = (Array.length a_1.(0)) in
    let t_7 = (Array.length a_1) in
-   let t_8 = (ref ([])) in
+   let t_8 = (ref ([])) in  (* accumulate permutations in a list *)
    while (((! t_3) < t_6) && ((! t_2) < t_7)) do
     let t_9 = (! t_2) in
     let t_10 = (! t_3) in
     let t_11 = (ref (None)) in
     let t_17 =
-     begin
+     begin   (* row pivoting *)
       for j_14 = t_9 to (t_7 - 1) do
        let t_15 = (t_5.(j_14)).(t_10) in
        if (t_15 <> 0.) then
@@ -1673,18 +1629,18 @@ val resFA9 : ('a, GAC_F.contr -> GenFA9.O.res) code =
          | None -> (t_11 := (Some (j_14, t_15))))
        else ()
       done;
-      (match (! t_11) with
+      (match (! t_11) with  (* swapping of rows *)
        | Some (i_12) ->
           if ((fst i_12) <> t_9) then begin
            let t_13 = t_5.(t_9) in
            t_5.(t_9) <- t_5.(fst i_12);
-           t_5.(fst i_12) <- t_13;
+           t_5.(fst i_12) <- t_13;  (* and accumulate permutations *)
            (t_8 := ((RowSwap ((fst i_12), t_9)) :: (! t_8)))
           end else ();
           (Some (snd i_12))
        | None -> (None))
      end in
-    (match t_17 with
+    (match t_17 with  (* elimination loop *)
      | Some (i_18) ->
         begin
          for j_19 = (t_9 + 1) to (t_7 - 1) do
@@ -1702,7 +1658,7 @@ val resFA9 : ('a, GAC_F.contr -> GenFA9.O.res) code =
      | None -> ());
     (t_3 := ((! t_3) + 1))
    done;
-   (t_5, (! t_8))>.
+   (t_5, (! t_8))>. (* return both L and U factors, list permutations *)
 \end{code2}
 
 \end{document}
