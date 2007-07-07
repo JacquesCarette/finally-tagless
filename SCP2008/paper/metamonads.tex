@@ -930,6 +930,15 @@ end
 
 \subsection{Containers}
 
+The signature |CONTAINER2D| specifies that a container must provide
+functions |dim1| and |dim2| to extract the dimensions, functions |getL|
+to generate container getters, the cloning
+generator |copy| and functions that generate code for row and column
+swapping. The inclusion of these functions in the signature of all
+containers makes it simpler to optimize the relevant functions
+depending on the actual representation of the container while not
+burdening the users of containers with efficiency details.
+
 \begin{code}
 module type CONTAINER2D = sig
   module Dom:DOMAINL
@@ -955,14 +964,13 @@ module type CONTAINER2D = sig
 end
 \end{code}
 
-Parameterizing by the kind of container representing a matrix is
-almost as straightforward.  The type of our containers include the
-lifted domain |Dom| as one of the component. Particular containers are
-Our containers are  parametric
-over a |DOMAINL|, i.e., functors from a |DOMAINL| module
-to the actual implementation of a container. For example, the
-following functor defines a matrix container represented as arrays of
-rows. 
+The type of our containers include the lifted domain |Dom| as one of
+the component. This is quite convenient since operations on containers
+are usually accompanied by the operations on the retrieved and stored
+values. Our containers are parametric over a |DOMAINL|, i.e., functors
+from a |DOMAINL| module to the actual implementation of a
+container. For example, the following functor defines a matrix
+container represented as arrays of rows.
 
 \begin{code}
 module GenericArrayContainer(Dom:DOMAINL) =
@@ -977,20 +985,225 @@ module GenericArrayContainer(Dom:DOMAINL) =
   \dots
 \end{code}
 %
-We also have containers wheer elements are stored in a 1D array, in a
+The accompanying code includes containers whose
+elements are stored in a 1D array, in a
 row-wise (C-like) or column-wise (Fortran-like) modes.
 
-The signature |CONTAINER2D| specifies that a container must provide
-functions |dim1| and |dim2| to extract the dimensions, functions |getL|
-to generate container getters, the cloning
-generator |copy| and functions that generate code for row and column
-swapping. The inclusion of these functions in the signature of all
-containers makes it simpler to optimize the relevant functions
-depending on the actual representation of the container while not
-burdening the users of containers with efficiency details.
 
-The use of a |functor| for making a container parametric is fairly
-straightforward.  More interesting is the aspect of what to return
+\subsection{Maintaining the extensible state}
+
+Various aspects of our LU generator such as determinant
+computation, rank, permutation list may need to keep a state during
+the code generation. For example, the initializing section of the LU
+generator will invoke the |decl| of the determinant aspect so that the
+latter may generate let-binding for reference cells that track the
+magnitude and the sign of the determinant. The generator of the
+row-swapping code will notify the determinant aspect so that the
+latter may insert the code that flips the sign of the tracked
+determinant. Finally, the final section of the generator will ask the
+determinant aspect to generator code producing the final, signed value
+of the determinant. Clearly the determinant aspect needs to maintain
+state from one invocation of its methods to another; this state should
+include the `names' of mutable variables accumulating the sign and the
+magnitude of the determinant.
+
+The simplest method of keeping the state of the generator is by using
+mutable variables private to the Deteminant module (aspect). That,
+however, makes our aspects stateful. Although we are generating
+imperative code, we would like to keep our generators stateless and
+pure functional, for ease of comprehension and reasoning. Also, if a
+module is stateless, we do not have to worry about sharing, aliasing
+and multiple instances. Our main program may include several LU
+generators, which may refer to the Determinant aspect -- which may be
+present in one shared instance or in several. It is irrelevant for us
+which is which. With stateful modules, the issues of aliasing or
+separate instantiation are the source of very subtle problems.
+
+We chose therefore a different way of maintaining the generator state,
+using a monad. We need monad anyway for let-insertion; we add state as
+an additional monad parameter (Fig.~\ref{our-monad}) and monadic
+actions |fetch| and |store| to access that monadic state. The state is
+threaded throughout the entire code-generation computation. 
+
+This monadic state has to accommodate several pieces of state, for
+various aspects. We should be able to add a new aspect, which may need
+to keep its own state as part of teh overall monadic state, without
+modifying or even recompiling the rest of the code. Thus our monadic
+state should be extensible. One way of achieving is via an extensible
+record, or OCaml object. Each aspect will have its own field; record
+subtyping will assure modularity. Alas, this approach makes it
+difficult to create the initial state, to pass to the monad's |runM|
+method. We should know the names of all fields and should know the
+proper initial value for these fields. This breaks the modularity.
+
+A better approach of property list has been suggested my the MLTon
+team \oleg{cite MLTon}.  Encoding an object by its dual, list of
+polymorphic variants.  Property list represents an extensible
+object. The initial object is just the empty list. Alas, the MLton's
+approach does not literally apply to us. First of all, due to
+the environment classifiers, we need universes parameterized by
+classifiers. Also, the property names are generated automatically
+in MLton approach, based on generativity of exceptions or reference
+cells. That means if some particular aspect happens to be included
+twice, the state will be incompatible. We will have to worry about
+sharing or the lack of sharing of our aspects. We would rather
+prefer our aspects to be stateless and work the same way whether two
+instances of the aspect are shared or not. Fortunately, OCaml offers a
+way to build open unions using polymorphic variants. Each variant is
+identified by a manifest tag, e.g., `Tdet, and may include a
+value. The tags are not generative and provide the form of manifest
+naming (somewhat similar to symbols of Lisp and Scheme).
+
+Below is the implementation of our open records with manifest
+naming, functions |orec_store| to add a new field to the open record
+and |orec_find| to obtain the value associated with a particular field
+name. Each `field' is characterized by a triple: injection, 
+projection functions and the string name. The latter is used for 
+printing error messages. For example, for the
+determinant tracking aspect, this triple has the form
+\begin{code}
+  let ip = (fun x -> `TDet x), 
+           (function `TDet x -> Some x | _ -> None), 
+           "Det"
+\end{code}
+We combine these functions with monadic
+actions to access monadic state and so obtain 
+|mo_extend| and |mo_lookup| to store and retrieve one particular value
+of the monadic state.
+\begin{code}
+let rec lookup ((_,prj,_) as ip) = 
+   function [] -> raise Not_found
+   | (h::t) -> (match prj h with Some x -> x | _ -> lookup ip t)
+
+let orec_store ((inj,_,name) as ip) v s =
+  let () = 
+    try let _ = lookup ip s in 
+        failwith ("The field of an open record is already present: " ^ name)
+    with Not_found -> () in
+  (inj v)::s
+
+let orec_find ((_,_,name) as ip) s =
+  try lookup ip s 
+  with Not_found -> failwith ("Failed to locate orec field: " ^ name)
+
+let mo_extend ip v = 
+  perform s <-- fetch; store (orec_store ip v s)
+
+let mo_lookup ip =
+  perform s <-- fetch; ret (orec_find ip s)
+\end{code}
+
+Currently, we check at generator-time that one cannot add a slot which
+already exists (already the part of the state) nor we can obtain the
+value of a non-existing slot. These problems may occur if our genetor
+is wrong (calls fin method before decl method of an aspect). It is
+possible to make these checks static (TFP2007, state-variable monad?)
+state-changing monad...
+
+
+
+
+\subsection{Determinant aspect}
+
+To track determinant we should be able to generate code
+for: defining variables used for tracking (|decl|),
+updating the sign or the absolute
+value of the determinant, converting the tracking state
+to the final determinant value of the type |outdet|. LU of a
+floating-point matrix with no determinant tracking uses the
+instantiation of |DETERMINANT| where |outdet| is |unit| and all the
+functions of that module generate no code. For integer matrices, we
+have to track some aspects of the determinant, even if we don't output
+it. The determinant tracking aspect is complex because tracking
+variables, if any, are to be declared at the beginning of LU; the sign
+of the determinant has to be updated on each row or column
+permutation; the value of the determinant should be updated per each
+pivoting. We use |lstate| to pass the tracking state, e.g., a piece of
+code for the value of the type |Dom.v ref|, among
+various determinant-tracking functions. The |lstate| is a part of the
+overall monadic state. 
+
+Other aspects follow a similar outline
+
+\begin{code}
+module type DETERMINANT = sig
+  type tdet = C.Dom.v ref
+  type 'a lstate
+  type ('pc,'v) lm = ('pc,'v) cmonad
+    constraint 'pc = <state : [> `TDet of 'a lstate ]; classif : 'a; ..>
+  type ('pc,'v) om = ('pc,'v) omonad
+    constraint 'pc = <state : [> `TDet of 'a lstate ]; classif : 'a; ..>
+  val decl : unit -> ('b,unit) lm (* could be unit rather than unit code...*)
+  val upd_sign  : unit -> ('b,unit) om
+  val zero_sign : unit -> ('b,unit) lm
+  val acc       : ('a,C.Dom.v) abstract -> (<classif : 'a; ..>,unit) lm
+  val get       : unit -> ('b,tdet) lm
+  val set       : ('a,C.Dom.v) abstract -> (<classif : 'a; ..>,unit) lm
+  val fin       : unit -> ('b,C.Dom.v) lm
+end
+\end{code}
+
+We have two instances of |Det|. The first one is used when the user
+requested that no determinant tracking is needed, and so no code is
+generated. The methods just return without executing any
+code-generation action.
+\begin{code}
+module NoDet =
+  struct
+  type tdet = C.Dom.v ref
+  type 'a lstate = unit
+  let decl () = unitL
+  let upd_sign () = ret None
+  let zero_sign () = unitL
+  let acc _ = unitL
+  let get () = ret (liftRef C.Dom.zeroL)
+  let set _ = unitL
+  let fin () = failwith "Determinant is needed but not computed"
+  type ('pc,'v) lm = ('pc,'v) cmonad
+    constraint 'pc = <state : [> `TDet of 'a lstate ]; classif : 'a; ..>
+  type ('pc,'v) om = ('pc,'v) omonad
+    constraint 'pc = <state : [> `TDet of 'a lstate ]; classif : 'a; ..>
+end
+\end{code}
+
+The following instance does track the determinant. The |decl| method
+generates two let-bindings for mutable variables tracking the
+magnitude and the sign of the determinant, and places the names of
+these variables in the monadic state. The |upd_sign| method, invoked
+from row- or column-swap generators, retrieves the name of the
+sign-accumulating variable and generates the code to update the
+sign. The |fin| method retrieves the names of both accumulators and
+generates code to compute the final, signed determinant value.
+\begin{code}
+module AbstractDet =
+  struct
+  open C.Dom
+  type tdet = v ref
+  (* the first part of the state is an integer: which is +1, 0, -1:
+     the sign of the determinant *)
+  type 'a lstate = ('a,int ref) abstract * ('a,tdet) abstract
+  let decl () = perform
+      ddecl <-- retN (liftRef oneL);
+      dsdecl <-- retN (liftRef Idx.one);
+      mo_extend ip (dsdecl,ddecl);
+      unitL
+  let upd_sign () = perform
+      det <-- mo_lookup ip;
+      det1 <-- ret (fst det);
+      ret (Some (assign det1 (Idx.uminus (liftGet det1))))
+  let fin = fun () -> perform
+      (det_sign,det) <-- mo_lookup ip;
+      ifM (Logic.equalL (liftGet det_sign) Idx.zero) (ret zeroL)
+      (ifM (Logic.equalL (liftGet det_sign) Idx.one) (ret (liftGet det))
+          (ret (uminusL (liftGet det))))
+  \dots
+end
+\end{code}
+
+
+\subsection{Output}
+
+More interesting is the aspect of what to return
 from the LU algorithm.  One could create an algebraic data type (as
 was done in \cite{carette04}) to encode the various choices: the
 matrix, the matrix and the rank, the matrix and the determinant, the
@@ -1040,148 +1253,21 @@ end
 The initialization expressions |OD.Det.fin ()| and |IF.R.fin ()| are
 the pre-flight tests, to be explained in Section XXX.
 
+Both instances of |Det| contain the |fin ()| function to generate the
+code representing the computed determinant. Only the |NoDet| does not
+track any determinant, and so |fin ()| raises an error. The code 
+|let _ = OD.Det.fin ()| in |OutDetRank| invokes that |fin| function, which will
+produce the monadic code generating action, or raise the error. We do
+not run the action at that time -- we only make sure there is an
+action to run. This is the preflight check again, to rule out the
+semantic error when the user specified that determinant should be computed
+and returned and yet specified the |NoDet| aspect which tracks no
+determinant at all.
 
-
-
-\subsection{Maintaining the state}
-another title: representing extensible state
-
-different aspects may need to keep their own state. We wish to assure
-modularity. One approach: using objects. The state is an object, each
-aspect is an instnace variable with some particular name. The problem
-is how to represent the initial `empty' state. Need to create the
-object with all fields set to None. But we need to know the names of
-all fields; as we add an aspect, our function that runs the generator
-must change to account for the different initial object with different
-slots.
-
-A better approach: property list (ref MLTon). Property list represents
-an extensible object. The initial object is just the empty list. Alas,
-the literal MLton's approach doesn't apply to us well. First of all,
-due to the environment classifiers, we need universes parameterized by
-classifiers. Also, the propoerty names are generated automatically in
-MLton approach, based on generativity of exceptions or reference
-cells. That means if some particular aspect happens to be included
-twice, the state will be incompatible. We will have to worry about
-sharing or the lack of sharing of our aspects. We would rather prefer
-our aspects to be stateless and work the same way whether two
-instances of the aspect are shared or not. So, we find polymorphic
-unions to be ideal. Manifest naming 
-
-Encoding an object by its dual,
-list of polymorphic variants.
-
-Currently, we check at genertor-time that one cannot add a slot which
-already exists (already the part of the state) nor we can obtain the
-value of a non-existing slot. These problems may occur if our genetor
-is wrong (calls fin method before decl method of an aspect). It is
-possible to make these checks static (TFP2007, state-variable monad?)
-state-changing monad...
-
-
-\subsection{tracking}
-
-As is apparent from the output choices, several different quantities
-\emph{may} need to be tracked in a particular LU implementation.  We
-therefore need to be able to conditionally generate variables
-representing the tracking state, and weave in corresponding tracking
-code. We may need to (independently) keep track of the rank, the
-determinant and the permutation list.  The tracking state variables
-then become part of the \emph{state} that is tracked by our monad.  To
-have all this choice when needed, and yet have our code be modular and
-composable as well as ensuring that the generated code does not
-contain any abstraction artifacts, it is important to make this state
-modular.  For example,
+\subsection{Main generation}
+We combine all aspects in a record. This record is like a keyword
+argument list to the |GenGE| functor below.
 \begin{code}
-module type DETERMINANT = sig
-  type tdet = C.Dom.v ref
-  type 'a lstate
-  type ('pc,'v) lm = ('pc,'v) cmonad
-    constraint 'pc = <state : [> `TDet of 'a lstate ]; classif : 'a; ..>
-  type ('pc,'v) om = ('pc,'v) omonad
-    constraint 'pc = <state : [> `TDet of 'a lstate ]; classif : 'a; ..>
-  val decl : unit -> ('b,unit) lm (* could be unit rather than unit code...*)
-  val upd_sign  : unit -> ('b,unit) om
-  val zero_sign : unit -> ('b,unit) lm
-  val acc       : ('a,C.Dom.v) abstract -> (<classif : 'a; ..>,unit) lm
-  val get       : unit -> ('b,tdet) lm
-  val set       : ('a,C.Dom.v) abstract -> (<classif : 'a; ..>,unit) lm
-  val fin       : unit -> ('b,C.Dom.v) lm
-end
-\end{code}
-\noindent  to track determinant we should be able to generate code
-for: defining variables used for tracking (|decl|),
-updating the sign or the absolute
-value of the determinant, converting the tracking state
-to the final determinant value of the type |outdet|. LU of a
-floating-point matrix with no determinant tracking uses the
-instantiation of |DETERMINANT| where |outdet| is |unit| and all the
-functions of that module generate no code. For integer matrices, we
-have to track some aspects of the determinant, even if we don't output
-it. The determinant tracking aspect is complex because tracking
-variables, if any, are to be declared at the beginning of LU; the sign
-of the determinant has to be updated on each row or column
-permutation; the value of the determinant should be updated per each
-pivoting. We use |lstate| to pass the tracking state, e.g., a piece of
-code for the value of the type |Dom.v ref|, among
-various determinant-tracking functions. The |lstate| is a part of the
-overall monadic state. Other aspects, e.g., rank tracking, may use the
-monadic state for passing of rank tracking variables. To be able to
-compose determinant and rank tracking functors -- each of which may
-(or may not) use the monadic state for passing its own data -- we make
-extensive use of open records (a list of polymorphic variants
-appeared to be the easiest way to implement such a union, in a purely
-functional way). This lets us freely compose determinant-tracking,
-rank-tracking, and other aspects.
-
-We have several instances of Det
-\begin{code}
-module NoDet =
-  struct
-  type tdet = C.Dom.v ref
-  type 'a lstate = unit
-  let decl () = unitL
-  let upd_sign () = ret None
-  let zero_sign () = unitL
-  let acc _ = unitL
-  let get () = ret (liftRef C.Dom.zeroL) (* hack alert! *)
-  let set _ = unitL
-  let fin () = failwith "Determinant is needed but not computed"
-  type ('pc,'v) lm = ('pc,'v) cmonad
-    constraint 'pc = <state : [> `TDet of 'a lstate ]; classif : 'a; ..>
-  type ('pc,'v) om = ('pc,'v) omonad
-    constraint 'pc = <state : [> `TDet of 'a lstate ]; classif : 'a; ..>
-end
-
-module AbstractDet =
-  struct
-  open C.Dom
-  type tdet = v ref
-  (* the first part of the state is an integer: which is +1, 0, -1:
-     the sign of the determinant *)
-  type 'a lstate = ('a,int ref) abstract * ('a,tdet) abstract
-  let fin = fun () -> perform
-      (det_sign,det) <-- mo_lookup ip;
-      ifM (Logic.equalL (liftGet det_sign) Idx.zero) (ret zeroL)
-      (ifM (Logic.equalL (liftGet det_sign) Idx.one) (ret (liftGet det))
-          (ret (uminusL (liftGet det))))
-end
-\end{code}
-
-
-Both contain the |fin ()| function to generate the code representing
-the computed rank. Only the |NoRank| does not track any rank, and so 
-|fin ()| raises an error. The code 
-|let _ = IF.R.fin ()| in |OutDetRank| invokes that fin function, which
-will produce the monadic code generating action, or raise teh
-error. We do not run the action at that time -- we only make sure
-there is an action to run. This is the preflight check again, to rule
-out the semantic error when the user specified that rank should be
-computed and returned and yet specified the |NoRank| aspects which
-computes no rank at all. 
-
-\begin{code}
-(* The `keyword' list of all the present external features *)
 module type FEATURES = sig
   module Det       : DETERMINANT
   module PivotF    : PIVOT
@@ -1191,6 +1277,53 @@ module type FEATURES = sig
   module Output    : OUTPUT
 end
 \end{code}
+
+\oleg{describe how generation proceeds}
+We first instantiate the container |GVC_I| for the vector over an
+integer domain. We pass the container to the main functor |GenLA|,
+since all the linear algebra aspects are parameterized by the
+container and the domain included in it. We open the |G_GVC_I| module
+to make all its components easily available. One of thos components is
+the GE generrator, |GE| (which we open as well). The module |G_GVC_I|
+also inlcudes the generator for GE solvers. The module |GE| includes
+the functor |GenGE| that is the generator. We instantiate the
+generator by passing the functor the `record' of various aspects (the
+order is irrelevant, but all aspects like |Det|, etc. must be
+specified). In the code below, we request generation with full pivot,
+fraction-free update, operate on non-augmented matrix and return the
+|U| factor, determinant and the rank. We run the monad passing the
+initial state |[]| and obtain the code in App A.
+
+\begin{code}
+module GVC_I = GenericVectorContainer(IntegerDomainL)
+module G_GVC_I = GenLA(GVC_I)
+open G_GVC_I
+open G_GVC_I.GE
+module GenIV5 = GenGE(struct 
+    module Det = AbstractDet
+    module PivotF = FullPivot
+    module PivotRep = PermList
+    module Update = FractionFreeUpdate
+    module Input = InpJustMatrix
+    module Output = OutDetRank end)
+let instantiate gen =
+    .<fun a -> .~(runM (gen .<a>.) []) >.;;
+let resIV5 = instantiate GenIV5.gen ;;
+let rIV5 = .! resIV5;;
+
+module GAC_F = GenericArrayContainer(FloatDomainL)
+module G_GAC_F = GenLA(GAC_F)
+open G_GAC_F
+open G_GAC_F.GE
+module GenFA9 = GenGE(struct 
+    module Det = NoDet
+    module PivotF = RowPivot
+    module PivotRep = PermList
+    module Update = DivisionUpdate
+    module Input = InpJustMatrix
+    module Output = Out_LU_Packed end)
+\end{code}
+
 
 \begin{code2}
 module GenGE(F : FEATURES) = struct
@@ -1269,88 +1402,34 @@ parameterized by the domain, container, pivoting policy (full, row,
 nonzero, no pivoting), update policy (with either `fraction-less'
 or full division), and the result specification. Some of the
 argument modules such as |PIVOT| are functors themselves (parameterized
-by the domain, the container, and the determinant functor). The sharing
-constraints express obvious constraints on the instantiation of |Gen|,
-for example, pivoting, determinant etc. components all use the same
-domain. It must be stressed that all structures (i.e., module
-instances) are stateless, and so we never have to worry that different
-aspect functors (such as |CONTAINER2D| and |PIVOT|) are instantiated
-with different but type-compatible instances of |DOMAIN|. That is, we
-are not concerned at all about value sharing. Aspects such as
-determinant tracking may be stateful so that the determinant update
-code have access to the determinant tracking variables declared
-previously. But that state is handled via the monadic state. As we
-have shown, open unions make the overall monadic state compositional
-with respect to the state of various aspects.
+by the domain, the container, and the determinant functor). 
 
-In addition to the ``regular'' type sharing constraints shown in the
-|Gen| functor, there are also ``semantic'' sharing constraints, shown
+There are more pre-flight checks for various ``semantic'' 
+constraints, shown
 in the following structure of the |UPDATE| signature:
 \vspace*{-5pt}\begin{code}
-module DivisionUpdate
-  (Dom:DOMAIN with type kind = domain_is_field)
-  (C:CONTAINER2D)
-  (Det:DETERMINANT with type indet=Dom.v) = struct ... end
+module DivisionUpdate(Det:DETERMINANT) =
+  struct
+  open C.Dom = struct 
+  let _ = assert (C.Dom.kind = Domains_sig.Domain_is_Field)
+end
 \end{code}
-\vspace*{-4pt} 
+%
 This structure implements an update policy of using
 |Dom.div| operation without restrictions -- which is possible only if
 the domain has such an unrestricted operation. A domain such as the integer
 domain may still provide |Dom.div| of the same type, but that operation may
-only be used when we are sure that the division is exact. Our type
-sharing constraint expresses such domain-specific knowledge:
-instantiating |DivisionUpdate| with |IntegerDomain| leads to a
-compile-time error, when compiling the \emph{generator} code. Thus, in
-some cases we can use module types for ``semantic'' constraints
-that cannot normally be expressed via the types of module members.
-\vspace*{-5pt}
-\begin{code}
-module GVC_I = GenericVectorContainer(IntegerDomainL)
-module G_GVC_I = GenLA(GVC_I)
-open G_GVC_I
-open G_GVC_I.GE
-module GenIV5 = GenGE(struct 
-    module Det = AbstractDet
-    module PivotF = FullPivot
-    module PivotRep = PermList
-    module Update = FractionFreeUpdate
-    module Input = InpJustMatrix
-    module Output = OutDetRank end)
+only be used when we are sure that the division is exact. 
 
-module GAC_F = GenericArrayContainer(FloatDomainL)
-module G_GAC_F = GenLA(GAC_F)
-open G_GAC_F
-open G_GAC_F.GE
-
-module GenFA1 = GenGE(struct
-    module Det = NoDet
-    module PivotF = RowPivot
-    module PivotRep = PermList
-    module Update = DivisionUpdate
-    module Input = InpJustMatrix 
-    module Output = OutJustMatrix end)
-module GenFA9 = GenGE(struct 
-    module Det = NoDet
-    module PivotF = RowPivot
-    module PivotRep = PermList
-    module Update = DivisionUpdate
-    module Input = InpJustMatrix
-    module Output = Out_LU_Packed end)
-
-let resIV5 = instantiate GenIV5.gen ;;
-let rIV5 = runit {pf =  resIV5 };;
-
-\end{code}
-|GenFA1| is no-frills GE; GenFA9 has LU part
 
 We can instantiate the |Gen| functor as shown above and inspect the generated
-code, e.g., by printing |GenFA1.gen|. The code can then be ``compiled'' as 
-|!. GenFA1.gen| or with off-shoring. The code for |GenIV5| (Appendix A) shows
+code, e.g., by printing |resIV5|. The code can then be ``compiled'' as 
+|!. resIV5| or with off-shoring. The code for |resIV5| (Appendix A) shows
 full pivoting, determinant and rank tracking. The code for all these aspects is
 fully inlined; no extra functions are invoked and no tests other than those
 needed by the LU algorithm itself are performed. The GE?? function returns a
 triple |int array * int * int| of the U-factor, determinant and the rank. The
-code generated by |GenFA1| (Appendix B) shows absolutely no traces of
+code generated by |GenFA9| (Appendix B) shows absolutely no traces of
 determinant tracking: no declaration of spurious variables, no extra tests,
 etc. The code appears as if the determinant tracking aspect did not exist
 at all. The generated code for the above and other instantiations of
@@ -1601,8 +1680,12 @@ val resIV5 : ('a, GVC_I.contr -> GenIV5.O.res) code =
     else (~- (! t_7)), (! t_2))>.
 \end{code2}
 \section{Appendix B}
-The code generated for |GenFA9|, LU of the floating point matrix
-represented by a 2D array, row pivoting, returning just the |U|-factor.
+The code generated for |GenFA9|, LU of the floating point
+non-augmented matrix
+represented by a 2D array, row pivoting, returning the complete
+factorization: |L| and |U|
+factors packed in a single matrix and the permutation matrix
+represented as the list of row number exchanges.
 \begin{code2}
 val resFA9 : ('a, GAC_F.contr -> GenFA9.O.res) code =
   .<fun a_1 ->
