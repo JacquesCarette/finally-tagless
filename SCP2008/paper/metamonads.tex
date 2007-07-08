@@ -133,7 +133,7 @@ and whether search for a pivot, etc. Furthermore, current architectures
 demand more and more frequent tweaks which, in general, cannot be done by the
 compiler because the tweaking often involves domain knowledge. 
 
-A survey \cite{carette04} of
+A survey \cite{Carette06} of
 Gaussian elimination implementations in the industrial package Maple
 found 6 clearly identifiable aspects and 35 different implementations of the
 algorithm, as well as 45 implementations of directly related algorithms such as
@@ -144,10 +144,10 @@ Or we can write a very generic procedure that accounts for
 all the aspects with appropriate abstractions \cite{Axiom}. The
 abstraction mechanisms however -- be they procedure, method or a
 function call -- have a significant cost, especially for
-high-performance numerical computing \cite{carette04}. 
+high-performance numerical computing \cite{Carette06}. 
 
 A more appealing approach is generative programming
-\cite{Czarnecki,Veldhuizen:1998:ISCOPE,musser94algorithmoriented,BOOST,POOMA,ATLAS}.
+\cite{Czarnecki,Veldhuizen:1998:ISCOPE,musser89generic,musser94algorithmoriented,BOOST,POOMA,ATLAS}.
 The approach is not without problems, e.g., making sure that the
 generated code is well-formed. This is a challenge in string-based
 generation systems, which generally do not offer any guarantees and
@@ -199,16 +199,19 @@ The problems of compositionality of code generators, expressing
 dependencies among them and domain-specific knowledge remain.
 
 In this paper, we report on our continued progress \cite{CaretteKiselyov05}
-\oleg{should we say in the footnote: ``compared to the earlier,
-  conference version of this paper we describe a different
-  version of our generator dealing with the complete LU decomposition
-  and solving. We worked out previously missing aspects of in-place
-  updates, representaing permutation matrix, augmented input matrix,
-  and back-propagation. We have changed the representation of
-  domain-specific knowledge about permissible compositions of aspects.''}
-the code generating LU decomposition and solving 
-solving these problems using linear solving and LU decomposition
-as our running example. Specifically, our contributions:
+\footnote{We describe here an improved version of our generator
+  dealing with the complete LU decomposition algorithm, as well as
+  linear solving. We worked out previously missing aspects of in-place
+  updates, representing permutation matrices, dealing with augmented 
+  input matrix, and back-propagation. We have also changed the representation
+  of domain-specific knowledge about permissible compositions of aspects.
+  Also included is a careful description of all the aspects involved, as
+  well as documenting our development methodology for highly parametric
+  scientific software.}
+in using code generation for scientific (both numeric and symbolic)
+software.  We will use the algorithm family of LU decomposition 
+and linear system solving as our running examples to demonstrate our
+techniques.  Specifically, our contributions:
 \begin{itemize}
     \item Extending a let-insertion, memoizing monad of
       \cite{MSP:PADL04,KiselyovTaha} for generating control structures
@@ -219,11 +222,11 @@ as our running example. Specifically, our contributions:
       |let x = exp in ...| has a different \emph{effect} within a
       conditional branch.
     \item Implementation of the |perform|-notation (patterned after
-      |do|-notation of Haskell) to make monadic code readable.
+      the |do|-notation of Haskell) to make monadic code readable.
     \item Use of functors (including higher-order functors) to
       modularize the generator, express aspects (including results of
-      various types) and \emph{assure composability of aspects} even
-      for aspects that use state and have to be accounted in many
+      various types) and \emph{insure composability of aspects} even
+      for aspects that use state and have to be accounted for in many
       places in the generated code.
     \item Encode domain-specific knowledge in the generators which 
       will catch domain-specific instantiation errors at generation
@@ -252,7 +255,7 @@ full at \cite{metamonadsURL}).
 
 Before studying the details of the technologies involved in the 
 implementation, it is worthwhile to carefully study the design space involved.
-A preliminary study~\cite{carette04} revealed a number of aspects of the 
+A preliminary study~\cite{Carette06} revealed a number of aspects of the 
 family of Gaussian Elimination algorithms.  In the present work, we outline
 a number of additional aspects involved in the faimily of LU decomposition 
 algorithms.  These will first be presented in a somewhat ad hoc manner, 
@@ -275,8 +278,10 @@ in the upper triangle.
 
 We reuse the english word ``aspect'' for the various facets of the family
 of LU decomposition algorithms.  While this use if very much in the same 
-spirit as in aspect-oriented programming (AOP)~\cite{Kiczales}, our 
-implementation methodology is radically different.  We firmly believe that
+spirit as in aspect-oriented programming (AOP)~\cite{kiczales97aspectoriented},
+our implementation methodology is radically different\footnote{However it seems
+that we are closer to the original ideas on AOP~\cite{709568,mendhekar97rg}
+which were also concerned with scientific software}.  We firmly believe that
 our typed generative methodogy is much better suited to the functional
 programming paradigm than attempting to graft the program-trace-based
 methodology of object-oriented versions of AOP.  
@@ -284,8 +289,8 @@ methodology of object-oriented versions of AOP.
 At this point in time, it is better to think of aspects as purely
 design-time entities.  Here we are firmly influenced by Parnas' original
 view of modules and information hiding~\cite{journals/cacm/parnas72a} as well
-as his view of product families \cite{Parnas??}, and by Dijkstra's ideas on
-separation of concerns \cite{EWD:EWD447}.
+as his view of product families \cite{journals/tse/Parnas76}, and by
+Dijkstra's ideas on separation of concerns \cite{EWD:EWD447}.
 To apply these principles to the study of LU decomposition, we need
 to understand what are the changes between different implementations, and 
 what concerns need to be addressed.  We also need to study the degree
@@ -333,7 +338,7 @@ implementations (in various languages and settings).
 		pivots is to be returned.  For example, Maple's
 		\texttt{LinearAlgebra:-LUDecomposition} routine has
 		$2^6 + 2^5 + 2^2 = 100$ possible outputs, depending on whether
-		one chooses a $PLU$, $PLU^{1}R$ or \emph{Cholesky} 
+		one chooses a $PLU$, $PLUR$ or \emph{Cholesky} 
 		decomposition.  We chose to only consider $PLU$ for now.
 	\item \textbf{Rank}: Whether to explicitly track the rank of the matrix
 		as the algorithm proceeds.
@@ -349,7 +354,7 @@ implementations (in various languages and settings).
 		test which is separate from the domain normalization.  This is
 		usually the case when zero-equivalence is formally undecidable
 		but semi-algorithms or probabilistic algorithms do exist.
-		See~\cite{ZhCaJeMo07} for an example.
+		See~\cite{ZhCaJeMo06a} for an example.
     \item \textbf{Pivoting}: Whether to use no, 
         column-wise, or full pivoting.
     \item \textbf{Augmented Matrices}: Whether all or only some
@@ -397,8 +402,8 @@ let simplest_code = let gen x y = plus x (plus y one) in
 
 We use MetaOCaml brackets |.<...>.| to generate code expressions,
 i.e., to construct future-stage computations. MetaOCaml provides only
-one mechanism of combining code expressions, by inlining
-\oleg{splicing?} one into
+one mechanism of combining code expressions, by splicing one
+piece of code into
 another. The power of that operation, called escape |.~|, comes from
 the fact that the expression to be spliced in (inlined) can be
 computed: escape lets us perform an arbitrary immediate code-generating
@@ -487,8 +492,9 @@ complete.
 The key is to use continuation-passing style (CPS). Its benefits were
 first pointed out by \cite{Bondorf:92} in the context of partial
 evaluation, and extensively used by \cite{MSP:PADL04,KiselyovTaha} for
-code generation. Now, |param_code2 plus one| gives us the desired
-code.
+code generation. Like \cite{conf/pepm/BondorfD94}, we use this in the 
+context of writing a cogen by hand.  Now, |param_code2 plus one| gives us the
+desired code.
 
 \begin{code}
 let letgen exp k = .<let t = .~exp in .~(k .<t>.)>.
@@ -716,7 +722,7 @@ of those abstractions infiltrate the generated code.
 the different organization of the material}.
 
 \subsection{Domains}
-Reviewing the various aspects outlined in section~\ref{aspects}, the
+Reviewing the various aspects outlined in section~\ref{design}, the
 simplest parametrization is to make the domain abstract.  As it turns
 out, we need the following to exist in our domains: $0$, $1$, $+$,
 $*$, (unary and binary) $-$, at least \emph{exact} division,
@@ -1021,7 +1027,7 @@ separate instantiation are the source of very subtle problems.
 
 We chose therefore a different way of maintaining the generator state,
 using a monad. We need monad anyway for let-insertion; we add state as
-an additional monad parameter (Fig.~\ref{our-monad}) and monadic
+an additional monad parameter (Fig.~\ref{ourmonad}) and monadic
 actions |fetch| and |store| to access that monadic state. The state is
 threaded throughout the entire code-generation computation. 
 
@@ -1205,7 +1211,7 @@ end
 
 More interesting is the aspect of what to return
 from the LU algorithm.  One could create an algebraic data type (as
-was done in \cite{carette04}) to encode the various choices: the
+was done in \cite{Carette06}) to encode the various choices: the
 matrix, the matrix and the rank, the matrix and the determinant, the
 matrix, rank and determinant, and so on. This is wholly unsatisfying
 as we know that for any single use, only one of the choices is ever
@@ -1442,6 +1448,10 @@ contains benchmark code and timing comparisons.
 \section{Runge-Kutta solvers}
 \label{s:ode}
 \oleg{Drop this? no space}
+\jacques{We should drop this as a whole section, but I still think we 
+should mention it as something that we have done.  Mostly to say that
+things ``extend'' to other families too, and that no new difficulties 
+were encountered.}
 
 \section{Related and future work}\label{related}
 
