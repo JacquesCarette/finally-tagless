@@ -299,6 +299,7 @@ to which these concerns are independent.
 The various aspects listed below all come from variations found in actual
 implementations (in various languages and settings).
 
+\newcounter{naspects}
 \begin{enumerate}
 	\item \textbf{Domain}: In which (algebraic) domain do the matrix
 		elements belong to.  Some implementations were very specific
@@ -369,14 +370,53 @@ implementations (in various languages and settings).
 	  matrix or not, and if so, where is the end of the main matrix.
   \item \textbf{Packed}: Whether the output matrices $L$ and $U$ are
 	  packed into a single matrix for output.
+\setcounter{naspects}{\value{enumi}}
 \end{enumerate}
 
-\noindent \jacques{Absorb this in the above} These are separated out from the
-others as they are cross-cutting concerns: in the case of the length measure, a
-property of the domain will influence the pivoting method \emph{if} pivoting is
-to be performed.\jacques{Also, should mention a few more aspects like
-inplace, errors-on-singular, logging, sparsity, as things that are not
-implemented}
+There are other aspects which we have not (yet) implemented, but that have
+been seen in different implementations.  In particular,
+\begin{enumerate}
+\setcounter{enumi}{\value{naspects}}
+\item \textbf{Logging}: This is a classical cross-cutting concern, which
+is also useful in this context.  Of course, there are many different
+parts of the algorithm which could be ``logged'', and ensuring fine control
+over this is a thorny issue.
+\item \textbf{Sparsity}: If a matrix is known to be sparse, the traversal
+(at least) should be sparse.  Additionally, it would better still if
+care was taken to minimize fill-in.
+\item \textbf{Other structure}: For example, if a matrix is known in
+advance to be real symmetric tri-diagonal, then LU decomposition can be
+done in $O(n^2)$ time (instead of $O(n^3)$; the main difficulty in 
+implementing this kind of reduction is the fact that this version of 
+LU requires $O(n)$ extra storage (unlike all other versions).
+\item \textbf{Warnings}: In the case of LU decomposition of a matrix over
+a domain for which we only have a heuristic algorithm for zero
+testing, it is customary to issue a warning (or otherwise log) when 
+a potentially zero pivot is chosen.
+\item \textbf{In-place}: When it is possible, it would be good to have the
+option to re-use the input matrix as the storage space for the output.
+\item \textbf{Error-on-singular}: There are instances where we are only
+interested in an LU decomposition for a non-singular matrix, and would
+prefer to get an exception when a singular matrix is encountered.
+\setcounter{naspects}{\value{enumi}}
+\end {enumerate}
+
+Clearly the above $\thenaspects$ aspects have a rather complex 
+dependency graph.  While some aspects are purely orthogonal to others, 
+most are inter-dependent.  For example, if one wants the determinant of
+the matrix as part of the output, then the determinant has to be tracked
+during the algorithm; a priori, it is possible to make incompatible choices,
+and our implementation has to insure that this is in fact impossible.
+More precisely, our goal is to make sure that this is detected long
+before the algorithm could be run.
+
+There are other kinds of dependencies: for example, whether or not a 
+domain has a length measure will influence pivoting, \emph{if} pivoting
+is to be performed.  While there are no circular dependencies, there is
+no clear directed graph of dependencies.  In other words, one cannot 
+simply use product, co-products, and compositions of the various aspects 
+to build the resulting algorithm.  We will get back to this point when
+we describe the details of the implementation.
 
 \subsection{Organizing aspects}
 
