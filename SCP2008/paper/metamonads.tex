@@ -627,7 +627,7 @@ yields the answer of the type |w|.  The monad is polymorphic over the
 three type parameters, which would require |monad| to be a type
 constructor with three arguments. When we use this monad for code
 generation, we will need yet another type variable, environment
-classifier \oleg{cite Walid03?}. With type constructors taking more
+classifier \cite{taha-environment}. With type constructors taking more
 and more arguments, it becomes more difficult to read and write
 types -- which we will be doing extensively when writing module
 signatures in Section XXX. The fact that OCaml renames all type
@@ -1082,8 +1082,8 @@ difficult to create the initial state, to pass to the monad's |runM|
 method. We should know the names of all fields and should know the
 proper initial value for these fields. This breaks the modularity.
 
-A better approach of property list has been suggested my the MLTon
-team \oleg{cite MLTon}.  Encoding an object by its dual, list of
+A better approach of property list has been suggested my the MLton
+team \cite{mlton-proplist}.  Encoding an object by its dual, list of
 polymorphic variants.  Property list represents an extensible
 object. The initial object is just the empty list. Alas, the MLton's
 approach does not literally apply to us. First of all, due to
@@ -1492,6 +1492,8 @@ contains benchmark code and timing comparisons.
 should mention it as something that we have done.  Mostly to say that
 things ``extend'' to other families too, and that no new difficulties 
 were encountered.}
+\oleg{Ok, so we mention Runge-Kutta only in the introduction, and drop
+  this section then, right? Do you want to do that?}
 
 \section{Related and future work}\label{related}
 
