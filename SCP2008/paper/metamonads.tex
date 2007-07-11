@@ -135,13 +135,14 @@ compiler because the tweaking often involves domain knowledge.
 
 A survey \cite{Carette06} of
 Gaussian elimination implementations in the industrial package Maple
+\cite{Monagan:2001:M7P}
 found 6 clearly identifiable aspects and 35 different implementations of the
 algorithm, as well as 45 implementations of directly related algorithms such as
 LU decomposition, Cholesky decomposition, and so on.  We could
 manually write each of these implementations optimizing for particular aspects
 and using cut-and-paste to ``share'' similar pieces of code.
 Or we can write a very generic procedure that accounts for
-all the aspects with appropriate abstractions \cite{Axiom}. The
+all the aspects with appropriate abstractions \cite{Gruntz:1994:IG,Axiom}. The
 abstraction mechanisms however -- be they procedure, method or a
 function call -- have a significant cost, especially for
 high-performance numerical computing \cite{Carette06}. 
@@ -235,6 +236,14 @@ techniques.  Specifically, our contributions:
       algorithms.
 \end{itemize}
 
+We also used the same technology to implement a Runge-Kutta solver for
+ordinary differential equations, as well as a reimplementation of
+the FFT algorithm from~\cite{KiselyovTaha}.  The technology presented
+here was amply sufficient for these implementations.  Since our current
+implementations of these algorithms are rather straightforward compared to 
+our versions of LU Decomposition, these will not be mentioned further
+in this paper.
+
 The rest of this paper is structured as follows: The next section
 gives an overview of the design space of LU decomposition algorithms,
 as well as the methodology we follow.  Then section~\ref{CPS}
@@ -244,9 +253,7 @@ solution.  We also present a key monad and the issues of generating
 control statements. Section~\ref{functors} describes the use of
 parametrized modules of OCaml to encode all of the aspects of the
 LU decomposition algorithm family in completely separate,
-independent modules.  Section~\ref{s:ode} describes generating
-Runge-Kutta solvers for ordinary differential equations (ODE).
-We briefly discuss related work in
+independent modules.  We briefly discuss related work in
 section~\ref{related}. We then outline the future work and conclude.
 Appendices give samples of the generated code (which is available in
 full at \cite{metamonadsURL}).
@@ -1485,16 +1492,6 @@ contains benchmark code and timing comparisons.
 \oleg{We should mention somewhere that we have implemented not only GE
   but Solvers as well.}
 
-\section{Runge-Kutta solvers}
-\label{s:ode}
-\oleg{Drop this? no space}
-\jacques{We should drop this as a whole section, but I still think we 
-should mention it as something that we have done.  Mostly to say that
-things ``extend'' to other families too, and that no new difficulties 
-were encountered.}
-\oleg{Ok, so we mention Runge-Kutta only in the introduction, and drop
-  this section then, right? Do you want to do that?}
-
 \section{Related and future work}\label{related}
 
 The monad in this paper is similar to the one described in
@@ -1554,6 +1551,9 @@ based on an annotated subset of Scheme (which is untyped and has no
 imperative features). The generated code requires post-processing to
 attain efficiency.  
 
+\jacques{some of these items for future work seem to be out of date, they need
+to be reviewed}
+
 We are looking into encapsulating staging
 annotations into just a few functors, so that the rest of the code (in
 particular, the |Gen| functor that puts it all together) should be
@@ -1580,8 +1580,7 @@ error reporting (i.e. asking for the determinant of a
 non-square matrix), memory hierarchy issues, loop-unrolling
 \cite{Padua:MetaOcaml:04},
 warnings when zero-testing is undecidable and
-a value is only probabilistically non-zero, etc.  The larger program
-family of LU decompositions contains more aspects still.
+a value is only probabilistically non-zero, etc.
 
 \section{Conclusion}\label{conclusion}
 In this paper we have demonstrated numerical code extensively parameterized
