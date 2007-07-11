@@ -512,6 +512,23 @@ like Scheme with added syntax for monads!
 
 \subsection{Methodology}
 
+Our overall approach can best be described a combination 
+of two approaches: hand-writing a code generator (cogen) suitable
+for multi-level specialization \cite{Gluck95,GluckJ97} and creating
+an embedded domain-specific language (EDSL) \cite{edsl,WhenHowDSL}.
+More specifically we start from a \emph{known} set of implementations
+of an algorithm, and extract commonalities and variation points.
+This is unlike~\cite{journals/tse/Parnas76} and most subsequent
+approaches to product families, as we do not over-engineer our design
+by imagining weird variations that are unlikely to come up in realistic
+situations, but only create variations when we notice them in actual use.
+This approach is quite well-suited to the development of scientific
+software, which has a rich history and where most useful variations have
+already appeared in some form.
+
+\jacques{need to describe actual process a bit more, maybe one or two
+paragraphs, and then this section is done}
+
 \section{Generating binding statements, CPS, and monad}\label{CPS}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
