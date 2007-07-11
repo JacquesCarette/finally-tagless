@@ -427,6 +427,89 @@ we describe the details of the implementation.
 
 \subsection{Organizing aspects}
 
+Further investigation of the aspects reveals that these fall into
+various categories.  This categorization has already been useful to us,
+as it revealed that parts of our implementation was not as well
+separated into distinct concerns as we had originally thought.  In
+particular, it revealed that our implementation of ``containers'' 
+mixed representation (i.e. data-structure) issues with abstraction
+issues (i.e. matrices and their natural representation-independent
+operations).  We hope to rectify this in the future.
+
+\begin{enumerate}
+	\item \textbf{Abstract domain}.  In other words, these are
+		firmly aspects which are domain-specific, and encode
+		requirements level entities.  In particular, items like
+		Domain, length measure, Matrix, permutation, full division
+		and structured matrices all belong here.
+	\item \textbf{Concrete representation}.  In other words, the
+		design-time issue of choosing a data-structure to represent
+		various abstract domains.  Items like whether the results 
+		should be packed, (part of) the representation of containers,
+		sparsity, and representation of permutations.
+	\item \textbf{Interface}.  In other words, what will be the
+		interface of each generated function.  This mostly deals
+		with the input and output choices, but also includes whether
+		the output should be in-place, and whether errors or warnings
+		should be issued in certain situations.  Logging is also
+		an interface issue.
+	\item \textbf{Algorithmic Strategy}.  This encodes the various
+		choices in the algorithms themselves.  For example, whether
+		to use fraction-free updates, which pivot strategy to use,
+		whether the matrix is augmented.
+	\item \textbf{Information tracking}.  What information should be
+		kept and/or computed while the algorithm proceeds, such
+		as whether to track determinant, rank, or pivot.
+	\item \textbf{Staging}.  This is the abstract interface to the
+		underlying programming language.  It (currently) encodes
+		whether to generate code that will be executed in a future
+		stage, or whether the code is direct and should be executed
+		now.  It should be possible to encode other strategies too.
+\end{enumerate}
+
+While the first two families of aspects are the most obvious, it is quite
+difficult to separate them out cleanly.  This seems to stem from the fact
+that in a non-staged setting, separating out these aspects leads to such
+fantastically inefficient code, especially in the setting of scientific
+computation, that our experience works \emph{against us}.  While it would
+be too much to speak of a paradigm shift, it is necessary to firmly think
+in terms of abstract ideal design while avoiding all thoughts of traditional
+efficiency.
+
+Interestingly, unlike traditional approaches \cite{journals/cacm/parnas72a}, we
+allow the interfaces to our (generated) routines to vary.  Compared to dynamic
+approaches in Object-Oriented language (late binding and dynamic dispatch) or
+functional languages (Haskell's dictionary-based \emph{type classes}), which
+offer some flexibility on interfaces, our interfaces are actually fixed at
+run-time, thus do incur any run-time inefficiency whatsoever.
+
+While we are by no means the first to speak of algorithmic strategy, to
+our knowledge our approach is one of the cleanest, in that the issue of
+strategy is completely separated into an independent entity (module), and
+yet we suffer no run-time inefficiency because of it.
+
+The information tracking aspects are in some ways to most intruiging ones:
+they are purely internal to the algorithms, and they are the ones which
+are most dependent on other choices.  The \emph{implementation} of these
+aspects is completely orthogonal to the other aspects, however their
+\emph{compositionality properties} are deeply enmeshed with that of other
+aspects.  While writing the code for the aspects was straightforward enough,
+this is where quite a bit of infrastructure was needed to encode
+various dependencies, so that it would be impossible to generate an
+instance of the LU Decomposition algorithm with information
+tracking aspects which were incompatible with the requirements of other
+aspects.
+
+Lastly, to ensure that we were indeed firmly in a \emph{cogen} setting,
+we abstracted out the underlying programming language completely.  This 
+allowed us to both generate (efficient) code and to write a directly
+runnable (highly inefficient) version of the algorithm from the same
+generator.  This brought out the issue that, once this was done, we had
+essentially abstracted out all of the syntactic sugar of the underlying
+programming language, and all we were left with was function application
+and monadic composition.  This means the code for our generator looks mostly
+like Scheme with added syntax for monads!
+
 \subsection{Methodology}
 
 \section{Generating binding statements, CPS, and monad}\label{CPS}
@@ -1592,13 +1675,24 @@ are the typing ones plus the constraints we specifically
 impose, including semantic constraints (e.g., rings do not have full
 division).
 
+\jacques{Mention the relationship with the all-dynamic version of a 
+similar design, namely Maple's?  The fact that all choices there are
+dynamic, while all ours are completely static really shows that the
+design space along the dynamic--static dimension is quite large and
+versatile.}
+
 There is an interesting relation with aspect-oriented code
 \cite{kiczales97aspectoriented}: in AspectJ, 
 aspects are (comparatively) lightly typed, and are post-facto extensions of an
-existing piece of code.  Here aspects are weaved together ``from scratch'' to
+existing piece of code.  More precisely, they are post-facto extensions of
+potential program traces, specified in a particular language; these tend
+to be created to follow the operational behaviour of existing code, but
+is not restricted to such a setting.
+In our work, aspects are weaved together ``from scratch'' to
 make up a piece of code/functionality.  One can understand previous work to be
-more akin to dynamically typed aspect weaving, while we have started
-investigating statically typed one.
+more akin to dynamically typed, and dynamically specified aspect weaving, while
+we have started investigating statically typed and statically specified
+aspect weaving.
 
 \subsection*{Acknowledgments}
 We wish to thank Cristiano Calgano for his help in adapting camlp4 for
