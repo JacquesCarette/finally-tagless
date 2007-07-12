@@ -979,16 +979,17 @@ tests are all idempotent and maintain no state.
 \subsection{Abstract code and lifted domains}
 We will be using MetaOCaml operations to build code expressions, values
 of the type |('a,'v) code|. However, we wish to make our generators
-abstract over the particular code representations. Therefore, in the
-following Sections (in the rest of the paper?) rather than 
-MetaOCaml brackets and escapes, we will be using code combinators
+abstract over particular code representations. Therefore, in the
+following Sections (in the rest of the paper?) instead of
+MetaOCaml brackets and escapes we will be using code combinators
 described below. These combinators are functions that produce and
 combine values of the type of abstract code. 
 
-This abstraction lets us vary the output form of our generated LU
-programs. We may use thunks rather than MetaOCaml |('a,'v) code|
-values, for benchmarking purposes. We could use code combinators that
-produce C or Fortran code.
+This encapsulation of staging annotations into a code combinators lets
+us easily change the output form of our generated LU programs. We may
+use single-stage thunks rather than MetaOCaml staged |('a,'v) code|
+values, for benchmarking and regression tests purposes. We could use
+code combinators producing C or Fortran code.
 
 Our code combinator library includes operations to create, dereference
 and mutate reference cells, compare values, manipulate values used
@@ -1651,29 +1652,16 @@ based on an annotated subset of Scheme (which is untyped and has no
 imperative features). The generated code requires post-processing to
 attain efficiency.  
 
-\jacques{some of these items for future work seem to be out of date, they need
-to be reviewed}
-
-We are looking into encapsulating staging
-annotations into just a few functors, so that the rest of the code (in
-particular, the |Gen| functor that puts it all together) should be
-annotation-free and thus can be used as is in a one-stage environment
-(pure OCaml) as well as in a multi-stage environment (generating
-extensions). The one-stage code is a good baseline for benchmarks and
-regression tests. Obtaining a generating extension from properly
-modularized OCaml code (along the lines of our |Gen|) is an exciting
-area of our future research.
-
 To the best of our knowledge, nobody has yet used functors to
 abstract code generators, or even mixed functors and 
 multi-stage programming.
 
 We plan to further investigate the connection between delimited
 continuations and our implementations of code generators like
-|ifM|.  As well, by using some additional syntactic sugar
-(for |ifM|, |whileM|, etc.), the available notation should be
-even more direct-style, and potentially clearer.
-We also would like to extend our monad to a monad transformer.
+|ifM|. The ultimate (and plausible) goal is to write a numerical
+algorithm in (almost) regular OCaml once, and being able to either
+run it as a regular OCaml program, or turn into a code generating
+aspect.
 
 There are many more aspects which can also be handled:
 error reporting (i.e. asking for the determinant of a 
