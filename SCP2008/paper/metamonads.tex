@@ -94,9 +94,7 @@ We use multi-stage programming, monads and OCaml's
 advanced module system to demonstrate how to eliminate all
 abstraction overhead while avoiding any inspection of the resulting
 code.  We demonstrate this clearly with LU decomposition as a 
-representative family of symbolic and numeric algorithms, and also
-include an application to solving ordinary differential equations 
-(via a Runge-Kutta algorithm).
+representative family of symbolic and numeric algorithms. 
 We parameterize our code to a great extent
 (over domain, matrix representations, determinant tracking, 
 pivoting policies, result types, etc) at no run-time cost.  Because
@@ -526,8 +524,22 @@ This approach is quite well-suited to the development of scientific
 software, which has a rich history and where most useful variations have
 already appeared in some form.
 
-\jacques{need to describe actual process a bit more, maybe one or two
-paragraphs, and then this section is done}
+Given a set of commonalities and variation points, the first task is to
+find \emph{semantic} reasons for these.  The underlying reason then
+forms the basis for the abstraction -- a (potentially higher-order)
+module is created to encapsulate the various concepts, and these are
+then implemented as generators.  It is very important at this stage to
+make sure to reify all available \emph{static} information, so that all
+of it is available to the generation process.  While we will see that
+the technical solutions exist to take advantage of such information,
+it is still a difficult design problem to properly encode this information.
+One important item is to try to keep the various pieces of generation-time
+information as orthogonal as possible.  This is unlike ordinary encodings
+of run-time information, where compression and elision frequently lead
+to increased efficiency.  Whenever dependencies between information is
+inevitable, then higher-order encodings should be sought.  When choices
+need to be made based on some (static) information, it is important to
+encode this information by using semantic concepts.
 
 \section{Generating binding statements, CPS, and monad}\label{CPS}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
