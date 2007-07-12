@@ -87,6 +87,8 @@ eliminating abstraction overhead from generic code}
 \ead{oleg@pobox.com}
 \ead[url]{http://pobox.com/\textasciitilde oleg/ftp/}
 
+\hyphenation{ne-ces-sa-ry}
+
 \thanks[1]{Supported in part by NSERC Discovery Grant RPG262084-03.}
 
 \begin{abstract}
@@ -105,7 +107,7 @@ can be made orthogonal and compositional, even in the presence of
 name-generation for temporaries, and 
 ``interleaving'' of aspects.  We also show how to encode some
 domain-specific knowledge so that ``clearly wrong'' compositions can
-be rejected at or before generation time rather than during
+be rejected at or before generation time, rather than during
 the compilation or running of the generated code.
 \end{abstract}
 
@@ -164,17 +166,17 @@ the generated code \cite{TahaSheard97,TahaThesis}.
 
 But more difficult problems remain. Is the generated code optimal? Do
 we still need post-processing to eliminate common subexpressions,
-fold constants, and remove redundant bindings? Is the generator readable,
-resembling the original algorithm? Is the generator extensible? Are the aspects
-truly modular? Can we add another aspect to it or another instance of
-the existing aspect without affecting the existing ones? Finally, can
-we express domain-specific knowledge, e.g., one should not attempt to
-use full division when dealing with matrices of exact integers, nor is
-it worthwhile to use full pivoting on a matrix over $\mathbb Q$.
+fold constants, and remove redundant bindings? Is the generator readable?
+Does it bear as semblance to the original algorithm? Is the generator
+extensible? Are the aspects truly modular? Can we add another aspect to it or
+another instance of the existing aspect without affecting the existing ones?
+Finally, can we express domain-specific knowledge (for instance one should not
+attempt to use full division when dealing with matrices of exact integers, nor
+is it worthwhile to use full pivoting on a matrix over $\mathbb Q$)?
 
-MetaOCaml is \emph{generative}: generated code can only be treated as
-a black box: it cannot be inspected and it cannot be post-processed
-(i.e., no intensional analysis). This approach gives a stronger
+MetaOCaml is purely \emph{generative}: generated code can only be treated as
+a black box: in other words, it cannot be inspected and it cannot be
+post-processed (i.e., no intensional analysis). This approach gives a stronger
 equational theory \cite{Taha2000}, and avoids the danger of creating
 unsoundness \cite{TahaThesis}. Furthermore, intensional code analysis
 essentially requires one to insert both an optimizing compiler and an
@@ -190,7 +192,7 @@ Therefore, in MetaOCaml, code must be generated just right (see
 examples, new techniques are necessary, e.g., abstract interpretation
 \cite{KiselyovTaha}.  But more problems remain
 \cite{Padua:MetaOcaml:04}: generating binding forms (``names'')
-when generating loop bodies or conditional branches; making
+when generating loop bodies or conditional branches, and making
 continuation-passing style (CPS) code clear.  Many authors
 understandably shy away from CPS code as it quickly becomes
 unreadable.  But this is needed for proper name generation.
@@ -213,11 +215,10 @@ and linear system solving as our running examples to demonstrate our
 techniques.  Specifically, our contributions:
 \begin{itemize}
     \item Extending a let-insertion, memoizing monad of
-      \cite{MSP:PADL04,KiselyovTaha} for generating control structures
+      \cite{KiselyovTaha,MSP:PADL04} for generating control structures
       such as loops and conditionals. The extension is non-trivial
-      because of control dependencies and because
-      let-insertion, as we argue, is a control effect on its own.
-      : e.g.,\\
+	  because of control dependencies and because let-insertion, as we argue,
+	  is a control effect on its own: for example\\
       |let x = exp in ...| has a different \emph{effect} within a
       conditional branch.
     \item Implementation of the |perform|-notation (patterned after
@@ -247,7 +248,7 @@ gives an overview of the design space of LU decomposition algorithms,
 as well as the methodology we follow.  Then section~\ref{CPS}
 introduces code generation in MetaOCaml, the problem of name
 generation, and continuation-passing style (CPS) as a general
-solution.  We also present a key monad and the issues of generating
+solution.  We also present a key monad and the issues around generating
 control statements. Section~\ref{functors} describes the use of
 parametrized modules of OCaml to encode all of the aspects of the
 LU decomposition algorithm family in completely separate,
@@ -544,7 +545,7 @@ encode this information by using semantic concepts.
 \section{Generating binding statements, CPS, and monad}\label{CPS}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-We build code generators out of primitive ones using code generation 
+We build large code generators out of primitive generators using 
 combinators. MetaOCaml, as an instance of a multi-stage
 programming system \cite{TahaThesis}, provides exactly the needed
 features: to construct a code expression, to combine them, and to
@@ -574,14 +575,14 @@ and |.<y>.| as arguments. At the generating stage, we can manipulate
 code expressions as (opaque) values. The function |gen| returns a code
 expression, which is inlined in the place of the escape. MetaOCaml can
 print out code expressions, so we can see the final generated code. It
-has no traces of |gen| and |plus|: their applications are done at the
+has no traces of |gen| or |plus|: their applications are done at the
 generation stage.
 
 The final MetaOCaml feature, |.!| (pronounced ``run'') 
-executes the code expression: |.! simplest_code| is a function of two
+executes a code expression: |.! simplest_code| is a function of two
 integers, which we can apply: |(.! simplest_code) 1 2|. The original
 |simplest_code| is not a function on integers -- it is a code
-expression.
+expression which \emph{encodes} a function.
 
 To see the benefit of code generation, we notice that we can easily
 parameterize our code:
@@ -600,9 +601,9 @@ let plus x y = .<.~x +. .~y>. and one = .<1.0>. in
 let plus x y = .<.~x || .~y>. and one = .<true>. in
   simplest_param_code plus one
 \end{code}
-Running the former expression yields the function on |float|s, whereas
+Running the former expression yields a function on |float|s, whereas
 the latter expression is the code expression for a boolean function.
-This clearly shows the separation of concerns, namely of that for domain
+This clearly shows the separation of concerns for domain
 operations.
 
 Let us consider a more complex expression:
@@ -629,27 +630,27 @@ param_code1' plus one
 \end{code}
 However,
 the result of |param_code1' plus one| still exhibits duplicate
-sub-expressions.  Our |let|-insertion optimization saved the
+sub-expressions.  Our |let|-insertion optimization only saved the
 computation at the generating stage.  We need a combinator that
 inserts the |let| expression in the generat\emph{ed} code. We need a
 combinator |letgen| to be used as
 \begin{code}
 let ce = letgen (plus y one) in plus ce (plus x ce)
 \end{code}
-yielding the code like 
+yielding code like 
 \begin{code}
 .<let t = y + 1 in t + (x + t)>.
 \end{code}
 But that seems impossible because |letgen exp| has to generate
-the expression |.<let t = exp in body>.| but |letgen| does not
-have the |body| yet. The body needs a temporary identifier |.<t>.|
+the expression |.<let t = exp in body>.| but |letgen| does not yet
+have the |body|. The body needs a temporary identifier |.<t>.|
 that is supposed to be the result of |letgen| itself.  Certainly
 |letgen| cannot generate only part of a let-expression, without the
 |body|, as all generated expressions in MetaOCaml are well-formed and
 complete.
 
-The key is to use continuation-passing style (CPS). Its benefits were
-first pointed out by \cite{Bondorf:92} in the context of partial
+The solution to this problem is to use continuation-passing style (CPS). Its
+benefits were first pointed out by \cite{Bondorf:92} in the context of partial
 evaluation, and extensively used by \cite{MSP:PADL04,KiselyovTaha} for
 code generation. Like \cite{conf/pepm/BondorfD94}, we use this in the 
 context of writing a cogen by hand.  Now, |param_code2 plus one| gives us the
@@ -668,7 +669,7 @@ param_code2 plus one
 
 \subsection{Monadic notation, making CPS code clear}\label{monadicnotation}
 
-Comparison of the let-insertion in the generator
+Comparing the let-insertion in the generator
 \begin{code}
 let ce = (plus y one) in  plus ce (plus x ce)
 \end{code}
@@ -694,9 +695,10 @@ The |do|-notation of Haskell \cite{Haskell98Report} shows that it is possible
 to write CPS code in a conventional-looking style. The
 |do|-notation is the notation for monadic code \cite{moggi-notions}.
 Not only can monadic code represent CPS \cite{Filinski:Representing},
-it also helps in composability by offering to add different
-layers of effects (state, exception, non-determinism, etc) to the
-basic monad \cite{liang-interpreter} in a controlled way.
+it also helps with composability by giving complete control over how
+different effects are layered
+(state, exception, non-determinism, etc) on top of the
+basic monad \cite{liang-interpreter}.
 
 A monad \cite{moggi-notions} is an abstract data type representing
 computations that yield a value and may have an \emph{effect}.
@@ -731,28 +733,30 @@ let ifM test th el = fun s k ->
 \caption{Our monad}\label{ourmonad}
 \end{figure}
 
-Our monad represents two kinds of computational effects: reading and
+Our monad encapsulates two kinds of computational effects: reading and
 writing a computation-wide state, and control effects. The latter are
-normally associated with exceptions, forking of computations, etc. --
+normally associated with exceptions, forking of computations, et
+cetera --
 in general, whenever a computation ends with something other than
 invoking its natural continuation in the tail position. In our case
 the control effects manifest themselves as code generation.
 
-In Figure~\ref{ourmonad}, the monad (yielding values of the type |v|)
+In Figure~\ref{ourmonad}, the monad (yielding values of type |v|)
 is implemented as a function of two
 arguments: the state (of type |s|) and the continuation. The
-continuation receives the current state and the value, and
-yields the answer of the type |w|.  The monad is polymorphic over the
+continuation receives the current state and a value, and
+yields an answer of type |w|.  The monad is polymorphic over the
 three type parameters, which would require |monad| to be a type
 constructor with three arguments. When we use this monad for code
 generation, we will need yet another type variable, environment
 classifier \cite{taha-environment}. With type constructors taking more
-and more arguments, it becomes more difficult to read and write
+and more arguments, it becomes increasingly difficult to read and write
 types -- which we will be doing extensively when writing module
-signatures in Section XXX. The fact that OCaml renames all type
+signatures in Section~\ref{something}. The fact that OCaml renames all type
 variables when printing out types confuses matters further. An elegant
-solution to these kinds of problems has been suggested by 
-Garrigue on the Caml mailing list 
+solution to these sorts of problems has been suggested by 
+Jacques Garrigue on the Caml mailing list 
+\jacques{edited to here}
 (cited from
 \url{http://groups.google.com/group/fa.caml/msg/e80b1245702d6b24}
 no date, no exact ref). We use a single type parameter |'p| to
@@ -1417,7 +1421,7 @@ end
 \end{code2}
 
 The initialization expressions |OD.Det.fin ()| and |IF.R.fin ()| are
-the pre-flight tests, to be explained in Section XXX.
+the pre-flight tests, to be explained in Section~\ref{something}.
 
 Both instances of |Det| contain the |fin ()| function to generate the
 code representing the computed determinant. Only the |NoDet| does not
