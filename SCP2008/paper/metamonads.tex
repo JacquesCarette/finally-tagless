@@ -910,22 +910,19 @@ let genrecloop gen rtarg = fun s k ->
 The monad represents fine-scale code generation. We need tools for
 larger-scale modularization; we can use any abstraction
 mechanisms we want to structure our code generators, as long as none
-of those abstractions infiltrate the generated code.
+of those abstractions infiltrate the generated code. ML module system
+turns out most convenient.
 
-
-\jacques{This whole section needs to be edited to take into account
-the different organization of the material}.
 
 \subsection{Domains}
-Reviewing the various aspects outlined in section~\ref{design}, the
-simplest parametrization is to make the domain abstract.  As it turns
-out, we need the following to exist in our domains: $0$, $1$, $+$,
+
+We start by abstracting out domains. We have already seen the simplest
+case of domain abstraction in |param_code1|, which took
+code-generators such as |plus| and |one| as arguments.  We need far
+more than two parameters: our domains should include $0$, $1$, $+$,
 $*$, (unary and binary) $-$, at least \emph{exact} division,
-normalization, and potentially a relative size measure. The simplest
-case of such domain abstraction is |param_code1|.  There,
-code-generators such as |plus| and |one| were passed as arguments. We
-need far more than two parameters, so we have to group them. Instead
-of the grouping offered by regular records, we use OCaml
+normalization, and potentially a relative size measure. We could group
+these parameters in tuples or records.  Instead, we use OCaml
 \emph{structures} (i.e., modules) so we can take advantage of
 extensibility, type abstraction and constraints, and especially
 parameterized structures (\emph{functors}).  We define the type of the
@@ -989,10 +986,10 @@ module ZpMake(P:sig val p:int end) = struct
     let () = assert (is_prime P.p)
 end
 \end{code}
-This domain is parametrized by an integer number |p|, the
-(modulus?). To be more precise, the structure |ZpMake| is
+This domain is parametrized by an integer number |p|. 
+To be more precise, the structure |ZpMake| is
 parameterized over another structure of the type described by
-signature P; that argument structure has one field, the int value |p|.
+the signature P; that argument structure has one field, the |int| value |p|.
 Such a parameterized structure (or, a function from structures to
 structures) is a \emph{functor}. The result of |ZpMake| is a domain that is a
 field with no defined order. Hence
@@ -1002,12 +999,12 @@ in the last line of the above code. That line differs from the other
 bindings in |ZpMake| in that it neither defines a function, such as
 |plus|, nor binds a value, such as |zero|. Therefore, the non-value
 expression |assert (is_prime P.p)| will be evaluated
-when the corresponding module is instantiated, like the following
+when the corresponding module is instantiated, as in the following
 \begin{code}
 module Z19 = ZpMake(struct let p = 19 end)
 \end{code}
-We will call such an expression an initializing expression.  if we
-replace |p = 19| with |p = 9| above, we receive an error, a run-time
+We call such an expression an initializing expression. If we
+replace |p = 19| with |p = 9| above, we receive a run-time
 error. It is raised however as we instantiate and combine modules that
 will eventually make the generator.  Although the error is reported at
 run-time rather than compile time as one might have hoped, the error
@@ -1016,13 +1013,13 @@ generation of the target code could begin. In our code we make
 extensive use of these so-called preflight checks performed as part of
 module initialization. The checks seem to offer a good compromise:
 they are dynamic and so do not require complicated type systems; on
-the other hand, the checks are performed quite early, when buiding
+the other hand, the checks are run quite early, when buiding
 code generators, and so ensure that no code violating the
 corresponding \emph{semantic} constraints will be generated. Although
-some may frown on the use of module initializing expressions (since
+some may frown on the use of module initializing expressions since
 that requires careful attention to sharing and multiple instantiations
-of a module), these concerns do not apply in our case: our preflight
-tests are all idempotent and maintain no state.
+of a module, these concerns do not apply in our case: our preflight
+checks are all idempotent and maintain no state.
 
 \subsection{Abstract code and lifted domains}
 We will be using MetaOCaml operations to build code expressions, values
@@ -1033,7 +1030,7 @@ MetaOCaml brackets and escapes we will be using code combinators
 described below. These combinators are functions that produce and
 combine values of the type of abstract code. 
 
-This encapsulation of staging annotations into a code combinators lets
+This encapsulation of staging annotations into code combinators lets
 us easily change the output form of our generated LU programs. We may
 use single-stage thunks rather than MetaOCaml staged |('a,'v) code|
 values, for benchmarking and regression tests purposes. We could use
@@ -1041,16 +1038,14 @@ code combinators producing C or Fortran code.
 
 Our code combinator library includes operations to create, dereference
 and mutate reference cells, compare values, manipulate values used
-for indexing arrays. The following is the implementation of a sample
-combinators, in the case of the abstract code being MetaOCaml code values. 
+for indexing arrays. The following is the implementation of sample
+combinators, in the case of the abstract code being MetaOCaml code. 
 \begin{code}
 let lift x = .< x >.
 
-let cunit = .< () >.
-let unitL = fun s k -> k s .< () >.
+let cunit = .< () >.  and unitL = fun s k -> k s .< () >.
 
-let liftRef x = .< ref .~x >. 
-let liftGet x = .< ! .~x >. 
+let liftRef x = .< ref .~x >.  and   liftGet x = .< ! .~x >. 
 let liftPair x = (.< fst .~x >., .< snd .~x >.)
 
 module Logic = struct
@@ -1062,11 +1057,9 @@ end
 
 module Idx = struct
   let zero = .< 0 >. and one = .< 1 >. and minusone = .< -1 >.
-  let succ a = .< .~a + 1 >.
-  let pred a = .< .~a - 1 >.
+  let succ a = .< .~a + 1 >.  and  pred a = .< .~a - 1 >.
   let less a b = .< .~a < .~b >.
-  let uminus a = .< - .~a >.
-  let add a b = .< .~a + .~b >.
+  let uminus a = .< - .~a >.  and  add a b = .< .~a + .~b >.
 
 let update a f = let b = f (liftGet a) in .< .~a := .~b >.
 let assign a b = .< .~a := .~b >.
@@ -1082,7 +1075,7 @@ generally lifted twice: once from the value domain |v| to the code
 domain |'a vc|, and once more from values to monadic computations
 |('p,'a vc) monad|. 
 
-We now convert the domains of values from teh previous section into
+We now convert the domains of values from the previous section into
 lifted domains, of abstract code values. We define the signature
 |DOMAINL| 
 \begin{code}
@@ -1106,8 +1099,6 @@ end
 the type of the abstract code, |('a, 'b) rep|. The line |include DOMAIN|
 says that lifted domains include all members of non-lifted domains,
 including the initializing expressions with pre-flight checks.
-non-lifted 
-
 The following is a particular instance of |DOMAINL|, the lifted
 version of |IntegerDomain| of the previous section, in the particular
 case of abstract code being MetaOCaml code values |('a, 'b) code|:
@@ -1132,7 +1123,7 @@ end
 
 \subsection{Containers}
 
-The signature |CONTAINER2D| specifies that a container must provide
+The signature |CONTAINER2D| below specifies that a container must provide
 functions |dim1| and |dim2| to extract the dimensions, functions |getL|
 to generate container getters, the cloning
 generator |copy| and functions that generate code for row and column
@@ -1167,7 +1158,7 @@ end
 \end{code}
 
 The type of our containers include the lifted domain |Dom| as one of
-the component. This is quite convenient since operations on containers
+the components. This is quite convenient since operations on containers
 are usually accompanied by the operations on the retrieved and stored
 values. Our containers are parametric over a |DOMAINL|, i.e., functors
 from a |DOMAINL| module to the actual implementation of a
@@ -1194,18 +1185,18 @@ row-wise (C-like) or column-wise (Fortran-like) modes.
 
 \subsection{Maintaining the extensible state}
 
-Various aspects of our LU generator such as determinant
-computation, rank, permutation list may need to keep a state during
+Various aspects of our LU generator such as determinant, rank, 
+and permutation traking may need to keep a state during
 the code generation. For example, the initializing section of the LU
-generator will invoke the |decl| of the determinant aspect so that the
+generator will invoke the function |decl| of the determinant aspect so that the
 latter may generate let-binding for reference cells that track the
 magnitude and the sign of the determinant. The generator of the
 row-swapping code will notify the determinant aspect so that the
 latter may insert the code that flips the sign of the tracked
-determinant. Finally, the final section of the generator will ask the
-determinant aspect to generator code producing the final, signed value
+determinant. The final section of the LU generator will ask the
+determinant aspect to generate code producing the final, signed value
 of the determinant. Clearly the determinant aspect needs to maintain
-state from one invocation of its methods to another; this state should
+state from one invocation of its functions to another; this state should
 include the `names' of mutable variables accumulating the sign and the
 magnitude of the determinant.
 
@@ -1213,13 +1204,13 @@ The simplest method of keeping the state of the generator is by using
 mutable variables private to the Deteminant module (aspect). That,
 however, makes our aspects stateful. Although we are generating
 imperative code, we would like to keep our generators stateless and
-pure functional, for ease of comprehension and reasoning. Also, if a
-module is stateless, we do not have to worry about sharing, aliasing
-and multiple instances. Our main program may include several LU
-generators, which may refer to the Determinant aspect -- which may be
-present in one shared instance or in several. It is irrelevant for us
-which is which. With stateful modules, the issues of aliasing or
-separate instantiation are the source of very subtle problems.
+pure functional, for ease of comprehension and reasoning.  Our main
+program may include several LU generators referring to one Determinant
+aspect -- which may be present in one shared instance or in
+several. That is of no concern if the Determinant module is
+stateless. With stateful modules, the issues of aliasing or separate
+instantiation are the source of very subtle problems.
+
 
 We chose therefore a different way of maintaining the generator state,
 using a monad. We need monad anyway for let-insertion; we add state as
@@ -1228,49 +1219,45 @@ actions |fetch| and |store| to access that monadic state. The state is
 threaded throughout the entire code-generation computation. 
 
 This monadic state has to accommodate several pieces of state, for
-various aspects. We should be able to add a new aspect, which may need
-to keep its own state as part of teh overall monadic state, without
+various aspects. We should be able to add a new aspect -- which may need
+to keep its own state as part of the overall monadic state -- without
 modifying or even recompiling the rest of the code. Thus our monadic
-state should be extensible. One way of achieving is via an extensible
-record, or OCaml object. Each aspect will have its own field; record
+state should be extensible. We could use an extensible
+record: an OCaml object. Each aspect will have its own field; record
 subtyping will assure modularity. Alas, this approach makes it
 difficult to create the initial state, to pass to the monad's |runM|
 method. We should know the names of all fields and should know the
-proper initial value for these fields. This breaks the modularity.
+proper initial value for these fields, which breaks modularity.
 
-A better approach of property list has been suggested my the MLton
-team \cite{mlton-proplist}.  Encoding an object by its dual, list of
-polymorphic variants.  Property list represents an extensible
-object. The initial object is just the empty list. Alas, the MLton's
-approach does not literally apply to us. First of all, due to
-the environment classifiers, we need universes parameterized by
-classifiers. Also, the property names are generated automatically
-in MLton approach, based on generativity of exceptions or reference
-cells. That means if some particular aspect happens to be included
-twice, the state will be incompatible. We will have to worry about
-sharing or the lack of sharing of our aspects. We would rather
-prefer our aspects to be stateless and work the same way whether two
-instances of the aspect are shared or not. Fortunately, OCaml offers a
-way to build open unions using polymorphic variants. Each variant is
-identified by a manifest tag, e.g., `Tdet, and may include a
-value. The tags are not generative and provide the form of manifest
-naming (somewhat similar to symbols of Lisp and Scheme).
+A better approach of a property list has been suggested by the MLton
+team \cite{mlton-proplist}. A property list, too, represents an
+extensible object -- by its dual, a list of polymorphic variants.  The
+initial object is just the empty list. MLton's approach does not
+literally apply to us however. Environment classifiers of MetaOCaml
+require type universes parameterized by classifiers. The MLton
+approach uses generativity of exceptions or reference cells to
+generate property names, i.e., fields of an extensible record. That
+would make our aspects stateful modules, which we try to
+avoid. Fortunately, OCaml offers a way to build open unions with
+polymorphic variants. Each variant is identified by a manifest tag,
+e.g., |`Tdet|, and may include a value. The tags are not generative and
+provide a form of manifest naming, similar to symbols of
+Lisp and Scheme.
 
 Below is the implementation of our open records with manifest
-naming, functions |orec_store| to add a new field to the open record
+naming: functions |orec_store| to add a new field to the open record
 and |orec_find| to obtain the value associated with a particular field
 name. Each `field' is characterized by a triple: injection, 
 projection functions and the string name. The latter is used for 
 printing error messages. For example, for the
 determinant tracking aspect, this triple has the form
 \begin{code}
-  let ip = (fun x -> `TDet x), 
-           (function `TDet x -> Some x | _ -> None), 
-           "Det"
+let ip = 
+  (fun x -> `TDet x), (function `TDet x -> Some x | _ -> None), "Det"
 \end{code}
 We combine these functions with monadic
 actions to access monadic state and so obtain 
-|mo_extend| and |mo_lookup| to store and retrieve one particular value
+|mo_extend| and |mo_lookup| to store and retrieve one component 
 of the monadic state.
 \begin{code}
 let rec lookup ((_,prj,_) as ip) = 
@@ -1291,16 +1278,13 @@ let orec_find ((_,_,name) as ip) s =
 let mo_extend ip v = 
   perform s <-- fetch; store (orec_store ip v s)
 
-let mo_lookup ip =
-  perform s <-- fetch; ret (orec_find ip s)
+let mo_lookup ip = perform s <-- fetch; ret (orec_find ip s)
 \end{code}
-
-Currently, we check at generator-time that one cannot add a slot which
-already exists (already the part of the state) nor we can obtain the
-value of a non-existing slot. These problems may occur if our genetor
-is wrong (calls fin method before decl method of an aspect). It is
-possible to make these checks static (TFP2007, state-variable monad?)
-state-changing monad...
+%
+Currently, we check at generator-time that one should not add an
+already existing field to an open record, nor should one attempt to
+look up a field that does not exist. It is possible to make these
+checks static.
 
 
 
@@ -1324,7 +1308,6 @@ pivoting. We use |lstate| to pass the tracking state, e.g., a piece of
 code for the value of the type |Dom.v ref|, among
 various determinant-tracking functions. The |lstate| is a part of the
 overall monadic state. 
-
 Other aspects follow a similar outline
 
 \begin{code}
@@ -1335,7 +1318,7 @@ module type DETERMINANT = sig
     constraint 'pc = <state : [> `TDet of 'a lstate ]; classif : 'a; ..>
   type ('pc,'v) om = ('pc,'v) omonad
     constraint 'pc = <state : [> `TDet of 'a lstate ]; classif : 'a; ..>
-  val decl : unit -> ('b,unit) lm (* could be unit rather than unit code...*)
+  val decl : unit -> ('b,unit) lm
   val upd_sign  : unit -> ('b,unit) om
   val zero_sign : unit -> ('b,unit) lm
   val acc       : ('a,C.Dom.v) abstract -> (<classif : 'a; ..>,unit) lm
@@ -1361,10 +1344,6 @@ module NoDet =
   let get () = ret (liftRef C.Dom.zeroL)
   let set _ = unitL
   let fin () = failwith "Determinant is needed but not computed"
-  type ('pc,'v) lm = ('pc,'v) cmonad
-    constraint 'pc = <state : [> `TDet of 'a lstate ]; classif : 'a; ..>
-  type ('pc,'v) om = ('pc,'v) omonad
-    constraint 'pc = <state : [> `TDet of 'a lstate ]; classif : 'a; ..>
 end
 \end{code}
 
@@ -1424,18 +1403,17 @@ module type OUTPUTDEP = sig
     module PivotRep : PIVOTKIND 
     module Det      : DETERMINANT
 end
-(* The `keyword' list of all the present internal features *)
 module type INTERNAL_FEATURES = sig
   module R      : TrackRank.RANK
   module P      : TRACKPIVOT
   module L      : LOWER
 end
-
 module type OUTPUT = functor(OD : OUTPUTDEP) -> sig
   module IF : INTERNAL_FEATURES
   type res
   val make_result : 'a wmatrix -> (\dots,res) monad
 end
+
 module OutDetRank(OD : OUTPUTDEP) = struct
   module IF = struct
       module R   = Rank
@@ -1446,16 +1424,14 @@ module OutDetRank(OD : OUTPUTDEP) = struct
     det  <-- OD.Det.fin ();
     rank <-- IF.R.fin ();
     ret (Tuple.tup3 m.matrix det rank)
-  (* Initialization: check the preconditions of instantiation of this struct*)
   let _ = OD.Det.fin ()
   let _ = IF.R.fin ()
 end
 \end{code2}
 
 The initialization expressions |OD.Det.fin ()| and |IF.R.fin ()| are
-the pre-flight tests, to be explained in Section~\ref{something}.
-
-Both instances of |Det| contain the |fin ()| function to generate the
+the pre-flight checks. As we saw in the previous section, 
+both instances of |Det| contain the |fin ()| function to generate the
 code representing the computed determinant. Only the |NoDet| does not
 track any determinant, and so |fin ()| raises an error. The code 
 |let _ = OD.Det.fin ()| in |OutDetRank| invokes that |fin| function, which will
@@ -1467,7 +1443,7 @@ and returned and yet specified the |NoDet| aspect which tracks no
 determinant at all.
 
 \subsection{Main generation}
-We combine all aspects in a record. This record is like a keyword
+We combine all aspects in a record, which serevs as a keyword
 argument list to the |GenGE| functor below.
 \begin{code}
 module type FEATURES = sig
@@ -1479,22 +1455,6 @@ module type FEATURES = sig
   module Output    : OUTPUT
 end
 \end{code}
-
-\oleg{describe how generation proceeds}
-We first instantiate the container |GVC_I| for the vector over an
-integer domain. We pass the container to the main functor |GenLA|,
-since all the linear algebra aspects are parameterized by the
-container and the domain included in it. We open the |G_GVC_I| module
-to make all its components easily available. One of thos components is
-the GE generrator, |GE| (which we open as well). The module |G_GVC_I|
-also inlcudes the generator for GE solvers. The module |GE| includes
-the functor |GenGE| that is the generator. We instantiate the
-generator by passing the functor the `record' of various aspects (the
-order is irrelevant, but all aspects like |Det|, etc. must be
-specified). In the code below, we request generation with full pivot,
-fraction-free update, operate on non-augmented matrix and return the
-|U| factor, determinant and the rank. We run the monad passing the
-initial state |[]| and obtain the code in App A.
 
 \begin{code}
 module GVC_I = GenericVectorContainer(IntegerDomainL)
@@ -1511,8 +1471,33 @@ module GenIV5 = GenGE(struct
 let instantiate gen =
     .<fun a -> .~(runM (gen .<a>.) []) >.;;
 let resIV5 = instantiate GenIV5.gen ;;
-let rIV5 = .! resIV5;;
+\end{code}
+%
+We first instantiate the container |GVC_I| for the vector over an
+integer domain. We pass the container to the main functor |GenLA|,
+since all the linear algebra aspects are parameterized by the
+container and the domain included in it. We open the |G_GVC_I| module
+to make all its components easily available. One of those components
+is the GE generator, |GE| (which we open as well). Besides |GE|, the
+module |G_GVC_I| includes the generator for GE solvers.  The main
+generator functor is |GenGE|, shown later.  We instantiate the
+generator by passing the functor the `record' of various aspects; the
+order is irrelevant, but all aspects like |Det|, etc. must be
+specified. In the code above, we request GE generation with full
+pivot, fraction-free update, operate on non-augmented matrix and
+return the |U| factor, determinant and the rank. We run the monad
+passing the initial state |[]| and obtain the code, which we can see
+by printing |resIV5|. The code can then be ``compiled'' as |!. resIV5|
+or with off-shoring. The code for |resIV5| (Appendix A) shows full
+pivoting, determinant and rank tracking. The code for all these
+aspects is fully inlined; no extra functions are invoked and no tests
+other than those needed by the LU algorithm itself are performed. The
+resulting function returns a triple |int array * int * int| of the
+U-factor, determinant and the rank.
 
+The following is another instantiation of the GE generator, with a
+different set of aspects.
+\begin{code}
 module GAC_F = GenericArrayContainer(FloatDomainL)
 module G_GAC_F = GenLA(GAC_F)
 open G_GAC_F
@@ -1525,7 +1510,21 @@ module GenFA9 = GenGE(struct
     module Input = InpJustMatrix
     module Output = Out_LU_Packed end)
 \end{code}
+The code generated by |GenFA9| (Appendix B) shows no traces of
+determinant tracking whatsoever: no declaration of spurious variables,
+no extra tests, etc. The code appears as if the determinant tracking
+aspect did not exist at all. The generated code for the above and
+other instantiations of |Gen| can be examined at
+\cite{metamonadsURL}. The website also contains benchmark code and
+timing comparisons.
 
+
+The LU generator functor itself is 
+parameterized by the domain, container, pivoting policy (full, row,
+nonzero, no pivoting), update policy (with either `fraction-less'
+or full division), and the result specification. Some of the
+argument modules such as |PIVOT| are functors themselves (parameterized
+by the domain, the container, and the determinant functor). 
 
 \begin{code2}
 module GenGE(F : FEATURES) = struct
@@ -1550,7 +1549,7 @@ module GenGE(F : FEATURES) = struct
                       (fun k bjk -> perform
                       brk <-- ret (C.getL mat.matrix pos.p.rowpos k);
                       U.update bjc pos.curval brk bjk 
-                          (fun ov -> C.col_head_set mat.matrix j k ov) det) UP )
+                          fun ov -> C.col_head_set mat.matrix j k ov) det) UP )
                       (IF.L.updt mat.matrix j pos.p.colpos C.Dom.zeroL 
                           (* this makes no sense outside a field! *)
                           (C.Dom.divL bjc pos.curval))) in
@@ -1599,13 +1598,6 @@ module GenGE(F : FEATURES) = struct
 end
 \end{code2}
 
-The LU generator functor itself is 
-parameterized by the domain, container, pivoting policy (full, row,
-nonzero, no pivoting), update policy (with either `fraction-less'
-or full division), and the result specification. Some of the
-argument modules such as |PIVOT| are functors themselves (parameterized
-by the domain, the container, and the determinant functor). 
-
 There are more pre-flight checks for various ``semantic'' 
 constraints, shown
 in the following structure of the |UPDATE| signature:
@@ -1621,25 +1613,12 @@ This structure implements an update policy of using
 |Dom.div| operation without restrictions -- which is possible only if
 the domain has such an unrestricted operation. A domain such as the integer
 domain may still provide |Dom.div| of the same type, but that operation may
-only be used when we are sure that the division is exact. 
+only be used when we are sure that the division is exact. Thus if we
+specified |module Update = DivisionUpdate| when instantiating |GenIV5|
+above, we would have received an error because |IntegerDomainL| is not
+a field. That run-time error occurs before any code is produced (i.e.,
+before |resIV5| is computed).
 
-
-We can instantiate the |Gen| functor as shown above and inspect the generated
-code, e.g., by printing |resIV5|. The code can then be ``compiled'' as 
-|!. resIV5| or with off-shoring. The code for |resIV5| (Appendix A) shows
-full pivoting, determinant and rank tracking. The code for all these aspects is
-fully inlined; no extra functions are invoked and no tests other than those
-needed by the LU algorithm itself are performed. The GE?? function returns a
-triple |int array * int * int| of the U-factor, determinant and the rank. The
-code generated by |GenFA9| (Appendix B) shows absolutely no traces of
-determinant tracking: no declaration of spurious variables, no extra tests,
-etc. The code appears as if the determinant tracking aspect did not exist
-at all. The generated code for the above and other instantiations of
-|Gen| can be examined at \cite{metamonadsURL}. The website also 
-contains benchmark code and timing comparisons.
-
-\oleg{We should mention somewhere that we have implemented not only GE
-  but Solvers as well.}
 
 \section{Related and future work}\label{related}
 
