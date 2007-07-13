@@ -1,4 +1,5 @@
 \documentclass[draft]{elsart}
+\hyphenation{ana-lysis theo-ry}
 
 % Reduce display spacing
 \divide\abovedisplayskip 2
@@ -29,6 +30,7 @@
 \DefineVerbatimEnvironment{code2}{Verbatim}{xleftmargin=\ourmathindent,commandchars=\\\{\},fontsize=\small}
 \newcommand{\evalresult}[1]{\ensuremath{\Longrightarrow}\textcolor{red}{#1}}
 % \setlength{\parskip}{0pt}
+\parskip=0pt
 \newlength{\ourmathindent}
 \setlength{\ourmathindent}{1em}
 
@@ -97,9 +99,10 @@ advanced module system to demonstrate how to eliminate all
 abstraction overhead while avoiding any inspection of the resulting
 code.  We demonstrate this clearly with LU decomposition as a 
 representative family of symbolic and numeric algorithms. 
-We parameterize our code to a great extent
-(over domain, matrix representations, determinant tracking, 
-pivoting policies, result types, etc) at no run-time cost.  Because
+We parameterize our code to a great extent --
+over domain, input and permutation matrix representations, 
+determinant and rank tracking, 
+pivoting policies, result types, etc -- at no run-time cost.  Because
 the resulting code is generated just right and not changed afterwards,
 MetaOCaml guarantees that the generated code is well-typed.
 We further demonstrate that various abstraction parameters (aspects)
@@ -125,8 +128,8 @@ well-known issue of balancing between maximal performance and the
 level of abstraction at which code is written.  Furthermore, already
 in linear algebra, there is a wealth of different aspects that
 \emph{may} need to be addressed. Implementations of the
-widely used LU decomposition algorithm (which subsumes Gaussian 
-Elimination (GE)) --- the running
+widely used LU decomposition algorithm and its particular case Gaussian 
+Elimination (GE) \oleg{can I say GE is an instance of LU?} --- the running
 example of our paper --- may need to account for the representation of
 the matrix, whether to compute and return the determinant or rank, how
 and whether search for a pivot, etc. Furthermore, current architectures
@@ -200,7 +203,7 @@ The problems of compositionality of code generators, expressing
 dependencies among them and domain-specific knowledge remain.
 
 In this paper, we report on our continued progress \cite{CaretteKiselyov05}
-\footnote{We describe here an improved version of our generator
+\footnote{We describe here an new version of our generator
   dealing with the complete LU decomposition algorithm, as well as
   linear solving. We worked out previously missing aspects of in-place
   updates, representing permutation matrices, dealing with augmented 
@@ -218,8 +221,8 @@ techniques.  Specifically, our contributions:
       \cite{KiselyovTaha,MSP:PADL04} for generating control structures
       such as loops and conditionals. The extension is non-trivial
 	  because of control dependencies and because let-insertion, as we argue,
-	  is a control effect on its own: for example\\
-      |let x = exp in ...| has a different \emph{effect} within a
+	  is a control effect on its own: for example
+      \texttt{let x = exp in \dots} has a different \emph{effect} within a
       conditional branch.
     \item Implementation of the |perform|-notation (patterned after
       the |do|-notation of Haskell) to make monadic code readable.
@@ -241,7 +244,7 @@ the FFT algorithm from~\cite{KiselyovTaha}.  The technology presented
 here was amply sufficient for these implementations.  Since our current
 implementations of these algorithms are rather straightforward compared to 
 our versions of LU Decomposition, these will not be mentioned further
-in this paper.
+in this paper (the code is available at \cite{metamonadsURL}).
 
 The rest of this paper is structured as follows: The next section
 gives an overview of the design space of LU decomposition algorithms,
@@ -259,16 +262,16 @@ full at \cite{metamonadsURL}).
 
 \section{The design space}\label{design}
 
-Before studying the details of the technologies involved in the 
-implementation, it is worthwhile to carefully study the design space involved.
-A preliminary study~\cite{Carette06} revealed a number of aspects of the 
-family of Gaussian Elimination algorithms.  In the present work, we outline
-a number of additional aspects involved in the faimily of LU decomposition 
-algorithms.  These will first be presented in a somewhat ad hoc manner, 
-roughly coresponding to the order in which they were ``discovered''.  These
-will then be reorganized into sets of semantically related aspects, which will
-form the basis of our design.  Finally, we will extract a methodology from
-our experience.  
+Before investigating implementation approaches, it is worthwhile to
+carefully study the design space involved.  A preliminary
+study~\cite{Carette06} revealed a number of aspects of the family of
+Gaussian Elimination algorithms.  In the present work, we outline a
+number of additional aspects involved in the faimily of LU
+decomposition algorithms.  These will first be presented in a somewhat
+ad hoc manner, roughly coresponding to the order in which they were
+``discovered''.  We then reorganize them into groups of
+semantically related aspects to form the basis of our design.
+Finally, we will extract a methodology from our experience.
 
 Throughout, we assume that the reader is familiar with the basic LU
 decomposition algorithm, which factors a invertible matrix $A$ into a unit
@@ -276,20 +279,20 @@ lower triangular matrix $L$ and (usually) an upper triangular matrix $U$,
 such that $A = LU$.  When pivoting is used, we get a unitary matrix $P$ such
 that the factorization is now $A = PLU$.  The case of numeric matrices is well
 covered in~\cite{Golub-vanLoan}.  When $A$ is singular, one can still get
-a $PLU$ decomposition, with $L$ remaining unit lower-triangular but with a
-$U$ which is no longer upper triangular but instead ``staggered''
+a $PLU$ decomposition with $L$ remaining unit lower-triangular. However, 
+$U$ is no longer upper triangular but rather ``staggered''
 in the upper triangle.
 
 \subsection{Aspects}
 
-We reuse the english word ``aspect'' for the various facets of the family
-of LU decomposition algorithms.  While this use if very much in the same 
-spirit as in aspect-oriented programming (AOP)~\cite{kiczales97aspectoriented},
+We reuse the English word ``aspect'' for the various facets of the family
+of LU decomposition algorithms.  While our use shares the 
+spirit of aspect-oriented programming (AOP)~\cite{kiczales97aspectoriented},
 our implementation methodology is radically different\footnote{However it seems
-that we are closer to the original ideas on AOP~\cite{709568,mendhekar97rg}
+that we are closer to the original ideas of AOP~\cite{709568,mendhekar97rg}
 which were also concerned with scientific software}.  We firmly believe that
-our typed generative methodogy is much better suited to the functional
-programming paradigm than attempting to graft the program-trace-based
+our typed generative methodogy is much better suited to functional
+programming, compared to attempts to graft the program-trace-based
 methodology of object-oriented versions of AOP.  
 
 At this point in time, it is better to think of aspects as purely
@@ -319,17 +322,17 @@ implementations (in various languages and settings).
 		with possibly undecidable zero-equivalence.  In the roughly 85 pieces
 		of code we surveyed, 20 different domains were encountered.
 	\item \textbf{Representation of the matrix}: Whether the matrix
-		was represented as an array of arrays, a one-dimensional array,
-		a hash table, etc.  For the case of a one-dimensional array,
-		whether indexing was done in C or Fortran style.  Additionally,
-		if a particular representation had a special mechanism for efficient
-		row exchanges, this was sometimes used.
+		was represented as an array of arrays, a
+		one-dimensional array with C or Fortran indexing styles, 
+		a hash table, etc. Efficient row exchanges, if available for a
+		particular representation, were sometimes used.
 	\item \textbf{Fraction-free}: Whether the 
 		algorithm is allowed to use unrestricted division, or only
 		exact (remainder-free) division.
 	\item \textbf{Length measure (for pivoting)}:  For stability reasons
-		(whether numerical or coefficient growth), if a domain possesses
-		an appropriate length measure, this was sometimes used to choose
+		(whether numerical or coefficient growth), if a domain 
+	  possesses
+		an appropriate length measure, it was sometimes used to choose
 		an ``optimal'' pivot.  Not all domains have such a measure.
 	\item \textbf{Full division}: Whether the input domain supports full
 		division (i.e. is a \emph{field} or pretends to be ($\floats$)) 
@@ -339,10 +342,11 @@ implementations (in various languages and settings).
 		an extra normalization step is required.  For example, some 
 		representations of polynomials require an extra step for
 		zero-testing.
-	\item \textbf{Output choices}:  Whether just the reduced matrix
-		(the `U' factor), both L and U, as well as
-		the rank, the determinant, and/or the sequence of 
-		pivots is to be returned.  For example, Maple's
+	\item \textbf{Output choices}:  Just the reduced matrix
+		(the `U' factor) or both L and U factors. The output
+	  choices also include
+		the rank, the determinant, and the sequence of 
+		pivots.  For example, Maple's
 		\texttt{LinearAlgebra:-LUDecomposition} routine has
 		$2^6 + 2^5 + 2^2 = 100$ possible outputs, depending on whether
 		one chooses a $PLU$, $PLUR$ or \emph{Cholesky} 
@@ -351,14 +355,17 @@ implementations (in various languages and settings).
 		as the algorithm proceeds.
 	\item \textbf{Determinant}:  Whether to explicitly track the determinant
 		of the matrix as the algorithm proceeds.
-	\item \textbf{Code representation}: Whether we are actually generating
-		code or we are in fact representation the algorithm in ``direct
-		style'', albeit with a lot of abstraction overhead.
+	\item \textbf{Code representation}: the form and the language
+	  for the generated code (OCaml, C, Fortran, etc). A
+	  degenerate case, useful for testing, is for the generator
+	  to run the LU algorithm directly (albeit with great
+	  abstraction overhead).
 	\item \textbf{Zero-equivalence}: Whether the 
 		arithmetic operations require a specialized zero-equivalence 
-		routine needs to be used.  It turns out that for certain classes
-		of \emph{expressions}, it is convenient to use a zero-equivalence
-		test which is separate from the domain normalization.  This is
+		routine.  For certain classes
+		of \emph{expressions}, it turns out convenient to use 
+		a zero-equivalence
+		test that is separate from the domain normalization.  This is
 		usually the case when zero-equivalence is formally undecidable
 		but semi-algorithms or probabilistic algorithms do exist.
 		See~\cite{ZhCaJeMo06a} for an example.
@@ -367,105 +374,118 @@ implementations (in various languages and settings).
     \item \textbf{Augmented Matrices}: Whether all or only some
       columns of the matrix participate in elimination.
 	\item \textbf{Pivot representation}: Whether the pivot is represented
-	  as a list of row (and/or column) exchanges, as a unitary matrix,
+	  as a list of row and column exchanges, as a unitary matrix,
 	  or as a permutation vector.
   \item \textbf{Lower matrix}: whether the matrix $L$ should be tracked
 	  as the algorithm proceeds, reconstructed at the end of the
 	  algorithm, or not tracked at all.
   \item \textbf{Input choices}: Whether the input matrix is an augmented
 	  matrix or not, and if so, where is the end of the main matrix.
+	  \oleg{Is this the same as Augmented matrices above?}
   \item \textbf{Packed}: Whether the output matrices $L$ and $U$ are
 	  packed into a single matrix for output.
 \setcounter{naspects}{\value{enumi}}
 \end{enumerate}
 
-There are other aspects which we have not (yet) implemented, but that have
-been seen in different implementations.  In particular,
+The aspects in the following group have also been observed in
+practice but we have not yet implemented them:
 \begin{enumerate}
 \setcounter{enumi}{\value{naspects}}
-\item \textbf{Logging}: This is a classical cross-cutting concern, which
-is also useful in this context.  Of course, there are many different
-parts of the algorithm which could be ``logged'', and ensuring fine control
-over this is a thorny issue.
-\item \textbf{Sparsity}: If a matrix is known to be sparse, the traversal
-(at least) should be sparse.  Additionally, it would better still if
-care was taken to minimize fill-in.
-\item \textbf{Other structure}: For example, if a matrix is known in
-advance to be real symmetric tri-diagonal, then LU decomposition can be
-done in $O(n^2)$ time (instead of $O(n^3)$; the main difficulty in 
-implementing this kind of reduction is the fact that this version of 
-LU requires $O(n)$ extra storage (unlike all other versions).
-\item \textbf{Warnings}: In the case of LU decomposition of a matrix over
-a domain for which we only have a heuristic algorithm for zero
+\item \textbf{Logging}, a classical cross-cutting concern.
+\item \textbf{Sparsity}: If a matrix is known to be sparse, at least
+the traversal should be sparse. Maximal preservation of the sparsity
+is desirable. 
+\item \textbf{Other structure}: If a matrix is known in
+advance to be real symmetric tri-diagonal, LU decomposition can be
+done in $O(n^2)$ rather than $O(n^3)$ time, at the additional $O(n)$
+storage cost.
+\item \textbf{Warnings}: If a domain permits only heuristic zero
 testing, it is customary to issue a warning (or otherwise log) when 
 a potentially zero pivot is chosen.
-\item \textbf{In-place}: When it is possible, it would be good to have the
-option to re-use the input matrix as the storage space for the output.
-\item \textbf{Error-on-singular}: There are instances where we are only
-interested in an LU decomposition for a non-singular matrix, and would
-prefer to get an exception when a singular matrix is encountered.
+\item \textbf{In-place}: offering an option of in-place decomposition,
+  re-using the input matrix as the storage for the output.
+\item \textbf{Error-on-singular}: Raise an exception when the input
+  matrix is (near) singular.
 \setcounter{naspects}{\value{enumi}}
 \end {enumerate}
 
-Clearly the above $\thenaspects$ aspects have a rather complex 
+Most of these aspects are inter-dependent. For example, if the
+determinant is the part of the output, the determinant should be
+tracked during the decomposition. Determinant should also be tracked
+if the fraction-free aspect is chosen. The availability of the length
+measure in the domain influences pivoting, \emph{if} pivoting
+is to be performed. One could therefore select aspects that turn out
+incompatible, and we are to prevent this. 
+More precisely, our goal is to detect the selection of
+incompatible aspects long before the generated code is run.
+
+
+\omitnow{Clearly the above $\thenaspects$ aspects have a rather complex 
 dependency graph.  While some aspects are purely orthogonal to others, 
 most are inter-dependent.  For example, if one wants the determinant of
 the matrix as part of the output, then the determinant has to be tracked
 during the algorithm; a priori, it is possible to make incompatible choices,
 and our implementation has to insure that this is in fact impossible.
-More precisely, our goal is to make sure that this is detected long
-before the algorithm could be run.
-
-There are other kinds of dependencies: for example, whether or not a 
-domain has a length measure will influence pivoting, \emph{if} pivoting
-is to be performed.  While there are no circular dependencies, there is
+There are other kinds of dependencies: for example, 
+  While there are no circular dependencies, there is
 no clear directed graph of dependencies.  In other words, one cannot 
 simply use product, co-products, and compositions of the various aspects 
 to build the resulting algorithm.  We will get back to this point when
-we describe the details of the implementation.
+we describe the details of the implementation.}
+
 
 \subsection{Organizing aspects}
 
-Further investigation of the aspects reveals that these fall into
-various categories.  This categorization has already been useful to us,
-as it revealed that parts of our implementation was not as well
-separated into distinct concerns as we had originally thought.  In
-particular, it revealed that our implementation of ``containers'' 
+\oleg{I'm quite uneasy about this and the following sections. It
+  appears as `philosophy'. It's OK for us, because it is written in
+  the Perfect tense for us. We understand what each of these items
+  mean. OTH, readers will read this in the Future tense. They have not
+  seen our code and know nothing about our approach. To them, it may
+  appear just opaque philosophising. 
+
+I'm in favor of drastically abbreviating these sections. Our message
+to the reader should be: please keep these groups of aspects as you
+read the description of our code below. We also point out that
+attempting to separate these aspects and letting the users
+independently change them leads -- in the unstaged case -- to such
+fantastically inefficient code so that such clean design is rarely
+(cite Aldor?) attempted. Staging let us remove the performance
+penalties of abstraction and so let us concentrate on the design. 
+The last phrase is actually more suitable for conclusion or related
+work. I think it would be much better to let related work make these
+points for us.}
+
+Further investigation revealed the following grouping of aspects:%
+\footnote{This grouping showed that some of our implementation did not
+separate distinct concerns well. In
+particular, our implementation of ``containers'' 
 mixed representation (i.e. data-structure) issues with abstraction
-issues (i.e. matrices and their natural representation-independent
-operations).  We hope to rectify this in the future.
+domain issues.  We hope to rectify this in the future.}
 
 \begin{enumerate}
-	\item \textbf{Abstract domain}.  In other words, these are
-		firmly aspects which are domain-specific, and encode
-		requirements level entities.  In particular, items like
-		Domain, length measure, Matrix, permutation, full division
-		and structured matrices all belong here.
-	\item \textbf{Concrete representation}.  In other words, the
-		design-time issue of choosing a data-structure to represent
-		various abstract domains.  Items like whether the results 
-		should be packed, (part of) the representation of containers,
-		sparsity, and representation of permutations.
-	\item \textbf{Interface}.  In other words, what will be the
-		interface of each generated function.  This mostly deals
-		with the input and output choices, but also includes whether
-		the output should be in-place, and whether errors or warnings
-		should be issued in certain situations.  Logging is also
-		an interface issue.
-	\item \textbf{Algorithmic Strategy}.  This encodes the various
-		choices in the algorithms themselves.  For example, whether
-		to use fraction-free updates, which pivot strategy to use,
-		whether the matrix is augmented.
-	\item \textbf{Information tracking}.  What information should be
-		kept and/or computed while the algorithm proceeds, such
-		as whether to track determinant, rank, or pivot.
-	\item \textbf{Staging}.  This is the abstract interface to the
-		underlying programming language.  It (currently) encodes
-		whether to generate code that will be executed in a future
-		stage, or whether the code is direct and should be executed
-		now.  It should be possible to encode other strategies too.
+	\item \textbf{Abstract domain}.  This group includes
+	  `mathematical' aspects: domain of matrix elements, length
+	  measure, full division, normalization, zero testing,
+	  symmetry and other matrix structure.
+	\item \textbf{Concrete representation}: choosing data
+	  structures for domains, containers, permutation
+	  matrices. This group also includes packing, in-place
+	  decomposition, and the
+	  representation of sparse matrices.
+	\item \textbf{Interface} of each generated function, including
+	  the input and output choices, logging and error reporting.
+		\oleg{In-place updates is also the issue of concrete
+		  representation! As well as of the abstract domains:
+		  for some domains we just can't run LU with no extra
+		  storage.} 
+	\item \textbf{Algorithmic Strategy}, such as fraction-free
+	  updates, pivoting strategies, augmented matrices.
+	\item \textbf{Tracking}, of determinant, rank, or pivot, etc.
+	\item \textbf{Staging}: whether the result if the program or a
+	  generator that will produce the program.
 \end{enumerate}
 
+\oleg{I'd rather replace this paragraph with my remark above.}
 While the first two families of aspects are the most obvious, it is quite
 difficult to separate them out cleanly.  This seems to stem from the fact
 that in a non-staged setting, separating out these aspects leads to such
@@ -475,18 +495,21 @@ be too much to speak of a paradigm shift, it is necessary to firmly think
 in terms of abstract ideal design while avoiding all thoughts of traditional
 efficiency.
 
-Interestingly, unlike traditional approaches \cite{journals/cacm/parnas72a}, we
-allow the interfaces to our (generated) routines to vary.  Compared to dynamic
-approaches in Object-Oriented language (late binding and dynamic dispatch) or
-functional languages (Haskell's dictionary-based \emph{type classes}), which
-offer some flexibility on interfaces, our interfaces are actually fixed at
-run-time, thus do incur any run-time inefficiency whatsoever.
+\oleg{I'd rather move this down where we discuss the output choices. I
+  want to get top the code quickly. Actually, the following paragraph
+  better belongs to related work.}  
+Unlike traditional approaches
+\cite{journals/cacm/parnas72a}, the interfaces of our generated
+routines vary depending on the choices of input and output
+aspects. Dynamic approaches in Object-Oriented language (late binding
+and dynamic dispatch) or functional languages (Haskell's
+dictionary-based \emph{type classes}), too, offer flexibility of
+interfaces. In our approach, however, it is the generator that
+produces code whose interfaces depend on the arguments of the
+generator. The interfaces of the generated routines are all fixed and
+hence effecient.
 
-While we are by no means the first to speak of algorithmic strategy, to
-our knowledge our approach is one of the cleanest, in that the issue of
-strategy is completely separated into an independent entity (module), and
-yet we suffer no run-time inefficiency because of it.
-
+\oleg{I'd drop this: the reader has not seen our implementation.}
 The information tracking aspects are in some ways to most intruiging ones:
 they are purely internal to the algorithms, and they are the ones which
 are most dependent on other choices.  The \emph{implementation} of these
@@ -499,6 +522,7 @@ instance of the LU Decomposition algorithm with information
 tracking aspects which were incompatible with the requirements of other
 aspects.
 
+\oleg{I'd move this to the next section.}
 Lastly, to ensure that we were indeed firmly in a \emph{cogen} setting,
 we abstracted out the underlying programming language completely.  This 
 allowed us to both generate (efficient) code and to write a directly
@@ -515,6 +539,14 @@ Our overall approach can best be described a combination
 of two approaches: hand-writing a code generator (cogen) suitable
 for multi-level specialization \cite{Gluck95,GluckJ97} and creating
 an embedded domain-specific language (EDSL) \cite{edsl,WhenHowDSL}.
+\oleg{I'd keep only the above phrase and say that our approach of
+  using staging, monads and functors turns out to permit extensible
+  set of aspects and flexible enough for iterative improvement in the
+  design.}
+
+\oleg{I'm inclined then to drop the following two paragraphs. I'm
+  positive reviewers would be upset at philosophical poinst in the
+  middle of a technical paper.}
 More specifically we start from a \emph{known} set of implementations
 of an algorithm, and extract commonalities and variation points.
 This is unlike~\cite{journals/tse/Parnas76} and most subsequent
