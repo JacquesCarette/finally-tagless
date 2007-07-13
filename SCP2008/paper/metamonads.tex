@@ -129,7 +129,7 @@ level of abstraction at which code is written.  Furthermore, already
 in linear algebra, there is a wealth of different aspects that
 \emph{may} need to be addressed. Implementations of the
 widely used LU decomposition algorithm and its particular case Gaussian 
-Elimination (GE) \oleg{can I say GE is an instance of LU?} --- the running
+Elimination (GE) --- the running
 example of our paper --- may need to account for the representation of
 the matrix, whether to compute and return the determinant or rank, how
 and whether search for a pivot, etc. Furthermore, current architectures
@@ -247,8 +247,8 @@ our versions of LU Decomposition, these will not be mentioned further
 in this paper (the code is available at \cite{metamonadsURL}).
 
 The rest of this paper is structured as follows: The next section
-gives an overview of the design space of LU decomposition algorithms,
-as well as the methodology we follow.  Then section~\ref{CPS}
+gives an overview of the design space of LU decomposition algorithms.
+Then section~\ref{CPS}
 introduces code generation in MetaOCaml, the problem of name
 generation, and continuation-passing style (CPS) as a general
 solution.  We also present a key monad and the issues around generating
@@ -256,7 +256,10 @@ control statements. Section~\ref{functors} describes the use of
 parametrized modules of OCaml to encode all of the aspects of the
 LU decomposition algorithm family in completely separate,
 independent modules.  We briefly discuss related work in
-section~\ref{related}. We then outline the future work and conclude.
+section~\ref{related}. We then outline future work. In our
+conclusion (section~\ref{conclusion}), we sum up our work, comment
+on programmings with aspects, and outline the overall methodology
+we used to structure our work.
 Appendices give samples of the generated code (which is available in
 full at \cite{metamonadsURL}).
 
@@ -271,7 +274,6 @@ decomposition algorithms.  These will first be presented in a somewhat
 ad hoc manner, roughly coresponding to the order in which they were
 ``discovered''.  We then reorganize them into groups of
 semantically related aspects to form the basis of our design.
-Finally, we will extract a methodology from our experience.
 
 Throughout, we assume that the reader is familiar with the basic LU
 decomposition algorithm, which factors a invertible matrix $A$ into a unit
@@ -379,9 +381,9 @@ implementations (in various languages and settings).
   \item \textbf{Lower matrix}: whether the matrix $L$ should be tracked
 	  as the algorithm proceeds, reconstructed at the end of the
 	  algorithm, or not tracked at all.
-  \item \textbf{Input choices}: Whether the input matrix is an augmented
-	  matrix or not, and if so, where is the end of the main matrix.
-	  \oleg{Is this the same as Augmented matrices above?}
+  \item \textbf{Input choices}: Grouping all the potential
+	  choices of inputs -- currently only augmented matrices require
+	  an extra input.
   \item \textbf{Packed}: Whether the output matrices $L$ and $U$ are
 	  packed into a single matrix for output.
 \setcounter{naspects}{\value{enumi}}
@@ -397,7 +399,7 @@ the traversal should be sparse. Maximal preservation of the sparsity
 is desirable. 
 \item \textbf{Other structure}: If a matrix is known in
 advance to be real symmetric tri-diagonal, LU decomposition can be
-done in $O(n^2)$ rather than $O(n^3)$ time, at the additional $O(n)$
+done in $O(n^2)$ rather than $O(n^3)$ time, at an additional $O(n)$
 storage cost.
 \item \textbf{Warnings}: If a domain permits only heuristic zero
 testing, it is customary to issue a warning (or otherwise log) when 
@@ -419,41 +421,7 @@ incompatible, and we are to prevent this.
 More precisely, our goal is to detect the selection of
 incompatible aspects long before the generated code is run.
 
-
-\omitnow{Clearly the above $\thenaspects$ aspects have a rather complex 
-dependency graph.  While some aspects are purely orthogonal to others, 
-most are inter-dependent.  For example, if one wants the determinant of
-the matrix as part of the output, then the determinant has to be tracked
-during the algorithm; a priori, it is possible to make incompatible choices,
-and our implementation has to insure that this is in fact impossible.
-There are other kinds of dependencies: for example, 
-  While there are no circular dependencies, there is
-no clear directed graph of dependencies.  In other words, one cannot 
-simply use product, co-products, and compositions of the various aspects 
-to build the resulting algorithm.  We will get back to this point when
-we describe the details of the implementation.}
-
-
 \subsection{Organizing aspects}
-
-\oleg{I'm quite uneasy about this and the following sections. It
-  appears as `philosophy'. It's OK for us, because it is written in
-  the Perfect tense for us. We understand what each of these items
-  mean. OTH, readers will read this in the Future tense. They have not
-  seen our code and know nothing about our approach. To them, it may
-  appear just opaque philosophising. 
-
-I'm in favor of drastically abbreviating these sections. Our message
-to the reader should be: please keep these groups of aspects as you
-read the description of our code below. We also point out that
-attempting to separate these aspects and letting the users
-independently change them leads -- in the unstaged case -- to such
-fantastically inefficient code so that such clean design is rarely
-(cite Aldor?) attempted. Staging let us remove the performance
-penalties of abstraction and so let us concentrate on the design. 
-The last phrase is actually more suitable for conclusion or related
-work. I think it would be much better to let related work make these
-points for us.}
 
 Further investigation revealed the following grouping of aspects:%
 \footnote{This grouping showed that some of our implementation did not
@@ -474,10 +442,6 @@ domain issues.  We hope to rectify this in the future.}
 	  representation of sparse matrices.
 	\item \textbf{Interface} of each generated function, including
 	  the input and output choices, logging and error reporting.
-		\oleg{In-place updates is also the issue of concrete
-		  representation! As well as of the abstract domains:
-		  for some domains we just can't run LU with no extra
-		  storage.} 
 	\item \textbf{Algorithmic Strategy}, such as fraction-free
 	  updates, pivoting strategies, augmented matrices.
 	\item \textbf{Tracking}, of determinant, rank, or pivot, etc.
@@ -485,94 +449,15 @@ domain issues.  We hope to rectify this in the future.}
 	  generator that will produce the program.
 \end{enumerate}
 
-\oleg{I'd rather replace this paragraph with my remark above.}
-While the first two families of aspects are the most obvious, it is quite
-difficult to separate them out cleanly.  This seems to stem from the fact
-that in a non-staged setting, separating out these aspects leads to such
-fantastically inefficient code, especially in the setting of scientific
-computation, that our experience works \emph{against us}.  While it would
-be too much to speak of a paradigm shift, it is necessary to firmly think
-in terms of abstract ideal design while avoiding all thoughts of traditional
-efficiency.
-
-\oleg{I'd rather move this down where we discuss the output choices. I
-  want to get top the code quickly. Actually, the following paragraph
-  better belongs to related work.}  
-Unlike traditional approaches
-\cite{journals/cacm/parnas72a}, the interfaces of our generated
-routines vary depending on the choices of input and output
-aspects. Dynamic approaches in Object-Oriented language (late binding
-and dynamic dispatch) or functional languages (Haskell's
-dictionary-based \emph{type classes}), too, offer flexibility of
-interfaces. In our approach, however, it is the generator that
-produces code whose interfaces depend on the arguments of the
-generator. The interfaces of the generated routines are all fixed and
-hence effecient.
-
-\oleg{I'd drop this: the reader has not seen our implementation.}
-The information tracking aspects are in some ways to most intruiging ones:
-they are purely internal to the algorithms, and they are the ones which
-are most dependent on other choices.  The \emph{implementation} of these
-aspects is completely orthogonal to the other aspects, however their
-\emph{compositionality properties} are deeply enmeshed with that of other
-aspects.  While writing the code for the aspects was straightforward enough,
-this is where quite a bit of infrastructure was needed to encode
-various dependencies, so that it would be impossible to generate an
-instance of the LU Decomposition algorithm with information
-tracking aspects which were incompatible with the requirements of other
-aspects.
-
-\oleg{I'd move this to the next section.}
-Lastly, to ensure that we were indeed firmly in a \emph{cogen} setting,
-we abstracted out the underlying programming language completely.  This 
-allowed us to both generate (efficient) code and to write a directly
-runnable (highly inefficient) version of the algorithm from the same
-generator.  This brought out the issue that, once this was done, we had
-essentially abstracted out all of the syntactic sugar of the underlying
-programming language, and all we were left with was function application
-and monadic composition.  This means the code for our generator looks mostly
-like Scheme with added syntax for monads!
-
-\subsection{Methodology}
-
-Our overall approach can best be described a combination 
-of two approaches: hand-writing a code generator (cogen) suitable
-for multi-level specialization \cite{Gluck95,GluckJ97} and creating
-an embedded domain-specific language (EDSL) \cite{edsl,WhenHowDSL}.
-\oleg{I'd keep only the above phrase and say that our approach of
-  using staging, monads and functors turns out to permit extensible
-  set of aspects and flexible enough for iterative improvement in the
-  design.}
-
-\oleg{I'm inclined then to drop the following two paragraphs. I'm
-  positive reviewers would be upset at philosophical poinst in the
-  middle of a technical paper.}
-More specifically we start from a \emph{known} set of implementations
-of an algorithm, and extract commonalities and variation points.
-This is unlike~\cite{journals/tse/Parnas76} and most subsequent
-approaches to product families, as we do not over-engineer our design
-by imagining weird variations that are unlikely to come up in realistic
-situations, but only create variations when we notice them in actual use.
-This approach is quite well-suited to the development of scientific
-software, which has a rich history and where most useful variations have
-already appeared in some form.
-
-Given a set of commonalities and variation points, the first task is to
-find \emph{semantic} reasons for these.  The underlying reason then
-forms the basis for the abstraction -- a (potentially higher-order)
-module is created to encapsulate the various concepts, and these are
-then implemented as generators.  It is very important at this stage to
-make sure to reify all available \emph{static} information, so that all
-of it is available to the generation process.  While we will see that
-the technical solutions exist to take advantage of such information,
-it is still a difficult design problem to properly encode this information.
-One important item is to try to keep the various pieces of generation-time
-information as orthogonal as possible.  This is unlike ordinary encodings
-of run-time information, where compression and elision frequently lead
-to increased efficiency.  Whenever dependencies between information is
-inevitable, then higher-order encodings should be sought.  When choices
-need to be made based on some (static) information, it is important to
-encode this information by using semantic concepts.
+\oleg{In-place updates is also the issue of concrete
+  representation! As well as of the abstract domains:
+  for some domains we just can't run LU with no extra
+  storage.} 
+\jacques{Correct.  There are issues which are ``relational'' rather
+than being completely independent.  The above categories seem to 
+be independent, but that is too simplistic.  Some aspects, like
+in-place, have quite a number of pre-conditions on other aspects
+before they can be realized.}
 
 \section{Generating binding statements, CPS, and monad}\label{CPS}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1435,12 +1320,26 @@ both instances of |Det| contain the |fin ()| function to generate the
 code representing the computed determinant. Only the |NoDet| does not
 track any determinant, and so |fin ()| raises an error. The code 
 |let _ = OD.Det.fin ()| in |OutDetRank| invokes that |fin| function, which will
-produce the monadic code generating action, or raise the error. We do
+produce the monadic code generating action, or raise an error. We do
 not run the action at that time -- we only make sure there is an
-action to run. This is the preflight check again, to rule out the
-semantic error when the user specified that determinant should be computed
-and returned and yet specified the |NoDet| aspect which tracks no
+action to run. This is another preflight check, to rule out the
+semantic error when a user specifies that the determinant should be computed
+and returned and yet specifies the |NoDet| aspect which tracks no
 determinant at all.
+
+It is also worth noticing the |INTERNAL_FEATURES| type, which bundles
+various information tracking aspects.  These are in some ways rather
+intruiging: they are purely internal to the algorithms, yet they are the
+ones which
+are most dependent on other choices.  The \emph{implementation} of these
+aspects is completely orthogonal to the other aspects, however their
+\emph{compositionality properties} are deeply enmeshed with that of other
+aspects.  While writing the code for these was straightforward enough,
+this required quite a bit of type-level infrastructure, as well as the
+preflight checks%
+\footnote{We had originally~\cite{CaretteKiselyov05} implemented all our
+preflight tests at the type level, but this did not scale.}
+to get everything to work properly.
 
 \subsection{Main generation}
 We combine all aspects in a record, which serevs as a keyword
@@ -1679,6 +1578,23 @@ based on an annotated subset of Scheme (which is untyped and has no
 imperative features). The generated code requires post-processing to
 attain efficiency.  
 
+\jacques{Mention the relationship with the all-dynamic version of a 
+similar design, namely Maple's?  The fact that all choices there are
+dynamic, while all ours are completely static really shows that the
+design space along the dynamic--static dimension is quite large and
+versatile.}
+
+Unlike traditional approaches
+\cite{journals/cacm/parnas72a}, the interfaces of our generated
+routines vary depending on the choices of input and output
+aspects. Dynamic approaches in Object-Oriented language (late binding
+and dynamic dispatch) or functional languages (Haskell's
+dictionary-based \emph{type classes}) also offer flexibility of
+interfaces. In our approach, however, it is the generator that
+produces code whose interfaces depend on the arguments of the
+generator. The interfaces of the generated routines are all fixed and
+hence efficient.
+
 To the best of our knowledge, nobody has yet used functors to
 abstract code generators, or even mixed functors and 
 multi-stage programming.
@@ -1701,17 +1617,13 @@ a value is only probabilistically non-zero, etc.
 In this paper we have demonstrated numerical code extensively parameterized
 by complex aspects at no run-time overhead.  The combination of
 stateless functors and structures, and our monad with the
-compositional state makes aspects freely composable without having to
+compositional state makes aspects composable without having to
 worry about value aliasing. The only constraints to compositionality
 are the typing ones plus the constraints we specifically
 impose, including semantic constraints (e.g., rings do not have full
 division).
 
-\jacques{Mention the relationship with the all-dynamic version of a 
-similar design, namely Maple's?  The fact that all choices there are
-dynamic, while all ours are completely static really shows that the
-design space along the dynamic--static dimension is quite large and
-versatile.}
+\subsection{On aspects}
 
 There is an interesting relation with aspect-oriented code
 \cite{kiczales97aspectoriented}: in AspectJ, 
@@ -1726,11 +1638,73 @@ more akin to dynamically typed, and dynamically specified aspect weaving, while
 we have started investigating statically typed and statically specified
 aspect weaving.
 
+While the first two families of aspects (abstract domain and concrete
+representation) are the most obvious, it is quite
+difficult to separate them out cleanly.  This seems to stem from the fact
+that in a non-staged setting, separating out these aspects leads to such
+fantastically inefficient code, especially in the setting of scientific
+computation, that our experience works \emph{against us}.  While it would
+be too much to speak of a paradigm shift, it is necessary to firmly think
+in terms of abstract ideal design while avoiding all thoughts of traditional
+efficiency.  Interestingly, in conversations that the first author had
+with D. Parnas, we discovered this is apparently
+what~\cite{journals/cacm/parnas72a} was advocating.  We believe that we are
+taking the first steps towards a \emph{typed yet efficient} realization of
+these ideas, where the various design-time entities can be directly encoded in
+machine-checkable form.
+
+\subsection{Methodology}
+
+Our overall approach can best be described a combination 
+of two approaches: hand-writing a code generator (cogen) suitable
+for multi-level specialization \cite{Gluck95,GluckJ97} and creating
+an embedded domain-specific language (EDSL) \cite{edsl,WhenHowDSL}.
+Our approach, using staging, monads and functors, seems to permit 
+an extensible set of aspects and appears flexible enough for iterative
+improvement in the design.
+
+As we wanted to ensure that we were indeed firmly in a \emph{cogen} setting,
+we abstracted out the underlying programming language completely.  This 
+allowed us to both generate (efficient) code and to write a directly
+runnable (highly inefficient) version of the algorithm from the same
+generator.  This brought out the issue that, once this was done, we had
+essentially abstracted out all of the syntactic sugar of the underlying
+programming language, and all we were left with was function application
+and monadic composition.  This means the code for our generator looks mostly
+like Scheme with added syntax for monads!
+
+More specifically we start from a \emph{known} set of implementations
+of an algorithm, and extract commonalities and variation points.
+This is unlike~\cite{journals/tse/Parnas76} and most subsequent
+approaches to product families, as we do not over-engineer our design
+by imagining weird variations that are unlikely to come up in realistic
+situations, but only create variations when we notice them in actual use.
+This approach is quite well-suited to the development of scientific
+software, which has a rich history and where most useful variations have
+already appeared in some form.
+
+Given a set of commonalities and variation points, the first task is to
+find \emph{semantic} reasons for these.  The underlying reason then
+forms the basis for the abstraction -- a (potentially higher-order)
+module is created to encapsulate the various concepts, and these are
+then implemented as generators.  It is very important at this stage to
+make sure to reify all available \emph{static} information, so that all
+of it is available to the generation process.  While we will see that
+the technical solutions exist to take advantage of such information,
+it is still a difficult design problem to properly encode this information.
+One important item is to try to keep the various pieces of generation-time
+information as orthogonal as possible.  This is unlike ordinary encodings
+of run-time information, where compression and elision frequently lead
+to increased efficiency.  Whenever dependencies between information is
+inevitable, then higher-order encodings should be sought.  When choices
+need to be made based on some (static) information, it is important to
+encode this information by using semantic concepts.
+
 \subsection*{Acknowledgments}
 We wish to thank Cristiano Calgano for his help in adapting camlp4 for
 use with MetaOCaml. Many helpful discussions with Walid Taha are very
 appreciated. The implementation of the monadic notation, |perform|,
-was the joint work with Lydia van Dijk.
+was joint work with Lydia van Dijk.
 
 \bibliography{metamonads}
 \bibliographystyle{elsart-num}
