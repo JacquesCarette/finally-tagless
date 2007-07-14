@@ -1,5 +1,4 @@
-\documentclass[draft]{elsart}
-\hyphenation{ana-lysis theo-ry}
+\documentclass{elsart}
 
 % Reduce display spacing
 \divide\abovedisplayskip 2
@@ -27,7 +26,7 @@
 \usepackage{fancyvrb}
 \DefineShortVerb{\|}
 \DefineVerbatimEnvironment{code}{Verbatim}{xleftmargin=\ourmathindent,commandchars=\\\{\},fontsize=\small}
-\DefineVerbatimEnvironment{code2}{Verbatim}{xleftmargin=\ourmathindent,commandchars=\\\{\},fontsize=\small}
+\DefineVerbatimEnvironment{code2}{Verbatim}{xleftmargin=\ourmathindent,commandchars=\\\{\},fontsize=\scriptsize}
 \newcommand{\evalresult}[1]{\ensuremath{\Longrightarrow}\textcolor{red}{#1}}
 % \setlength{\parskip}{0pt}
 \parskip=0pt
@@ -90,11 +89,12 @@ eliminating abstraction overhead from generic code}
 \ead[url]{http://pobox.com/\textasciitilde oleg/ftp/}
 
 \hyphenation{ne-ces-sa-ry}
+\hyphenation{ana-lysis theo-ry}
 
 \thanks[1]{Supported in part by NSERC Discovery Grant RPG262084-03.}
 
 \begin{abstract}
-We use multi-stage programming, monads and OCaml's
+We use multi-stage programming, monads and Ocaml's
 advanced module system to demonstrate how to eliminate all
 abstraction overhead while avoiding any inspection of the resulting
 code.  We demonstrate this clearly with LU decomposition as a 
@@ -268,9 +268,9 @@ Before investigating implementation approaches, it is worthwhile to
 carefully study the design space involved.  A preliminary
 study~\cite{Carette06} revealed a number of aspects of the family of
 Gaussian Elimination algorithms.  In the present work, we outline a
-number of additional aspects involved in the faimily of LU
+number of additional aspects involved in the family of LU
 decomposition algorithms.  These will first be presented in a somewhat
-ad hoc manner, roughly coresponding to the order in which they were
+ad hoc manner, roughly corresponding to the order in which they were
 ``discovered''.  We then reorganize them into groups of
 semantically related aspects to form the basis of our design.
 
@@ -292,7 +292,7 @@ spirit of aspect-oriented programming (AOP)~\cite{kiczales97aspectoriented},
 our implementation methodology is radically different\footnote{However it seems
 that we are closer to the original ideas of AOP~\cite{709568,mendhekar97rg}
 which were also concerned with scientific software}.  We firmly believe that
-our typed generative methodogy is much better suited to functional
+our typed generative methodology is much better suited to functional
 programming, compared to attempts to graft the program-trace-based
 methodology of object-oriented versions of AOP.  
 
@@ -332,9 +332,8 @@ implementations (in various languages and settings).
 		exact (remainder-free) division.
 	\item \textbf{Length measure (for pivoting)}:  For stability reasons
 		(whether numerical or coefficient growth), if a domain 
-	  possesses
-		an appropriate length measure, it was sometimes used to choose
-		an ``optimal'' pivot.  Not all domains have such a measure.
+		possesses an appropriate length measure, it was sometimes used to
+		choose an ``optimal'' pivot.  Not all domains have such a measure.
 	\item \textbf{Full division}: Whether the input domain supports full
 		division (i.e. is a \emph{field} or pretends to be ($\floats$)) 
 		or only exact division (i.e. a \emph{division ring}).
@@ -416,7 +415,7 @@ tracked during the decomposition. Determinant should also be tracked
 if the fraction-free aspect is chosen. The availability of the length
 measure in the domain influences pivoting, \emph{if} pivoting
 is to be performed. One could therefore select aspects that turn out
-incompatible, and we are to prevent this. 
+incompatible, and we have to prevent this. 
 More precisely, our goal is to detect the selection of
 incompatible aspects long before the generated code is run.
 
@@ -458,8 +457,6 @@ domain issues.  We hope to rectify this in the future.}
 %% in-place, have quite a number of pre-conditions on other aspects
 %% before they can be realized.}
 
-\oleg{Perhaps we should just add the following phrase, paraphrased
-  from your remark:}
 The groupings are not entirely orthogonal (for example, in-place
 decomposition is possible only for specific domains), yet are useful
 as guidance in creating the modular LU generator discussed in 
@@ -473,7 +470,7 @@ combinators. MetaOCaml, as an instance of a multi-stage
 programming system \cite{TahaThesis}, provides exactly the needed
 features: to construct a code expression, to combine them, and to
 execute them. The following shows the simplest code generator |one|,
-and the simplest code combinators\footnote{%
+and the simplest code combinator\footnote{%
 $\Longrightarrow$ under an expression shows the result of its evaluation}:
 
 \begin{code}
@@ -497,15 +494,14 @@ applies |plus|. The function |gen| receives code expressions |.<x>.|
 and |.<y>.| as arguments. At the generating stage, we can manipulate
 code expressions as (opaque) values. The function |gen| returns a code
 expression, which is inlined in the place of the escape. MetaOCaml can
-print out code expressions, so we can see the final generated code. It
-has no traces of |gen| or |plus|: their applications are done at the
-generation stage.
+print out code expressions, so we can examine the final generated code. It
+has no traces of |gen| or |plus|: they are generation stage computations.
 
 The final MetaOCaml feature, |.!| (pronounced ``run'') 
 executes a code expression: |.! simplest_code| is a function of two
 integers, which we can apply: |(.! simplest_code) 1 2|. The original
 |simplest_code| is not a function on integers -- it is a code
-expression which \emph{encodes} a function.
+expression which \emph{represents} (or encodes) a function.
 
 To see the benefit of code generation, we notice that we can easily
 parameterize our code:
@@ -536,12 +532,12 @@ let param_code1 plus one =
   .<fun x y -> .~(gen .<x>. .<y>.)>.
 \end{code}
 with two occurrences of |plus y one|,
-which may be quite a complex computation and so we would rather not do
-it twice. We may be tempted to rely on the compiler's
+which may be a rather complex computation which we would rather not do
+twice. We may be tempted to rely on the compiler's
 common-subexpression elimination optimization. When the generated code is
 very complex, however, the compiler may overlook common subexpressions.  Or the
-subexpressions may occur in such an imperative context where the compiler
-might not be able to determine if lifting them is sound. So, being
+subexpressions may occur in an imperative context where the compiler
+might not be able to determine whether lifting them is sound. So, being
 conservative, the optimizer will leave the duplicates as they are. 
 We may attempt to eliminate subexpressions as follows: 
 \begin{code}
@@ -596,7 +592,7 @@ Comparing the let-insertion in the generator
 \begin{code}
 let ce = (plus y one) in  plus ce (plus x ce)
 \end{code}
-with the corresponding code generating let-insertion for the future
+with the corresponding code generating let-insertion for a future
 stage
 \begin{code}
 letgen (plus y one) (fun ce -> k (plus ce (plus x ce)))
@@ -678,11 +674,7 @@ types -- which we will be doing extensively when writing module
 signatures in Section~\ref{functors}. The fact that OCaml renames all type
 variables when printing out types confuses matters further. An elegant
 solution to these sorts of problems has been suggested by 
-Jacques Garrigue on the Caml mailing list 
-\jacques{edited to here}
-\oleg{I'd rather keep the following lines in the comments. I know
-  Jacques has been credited, but I don't have the exact reference
-  where he proposed it.}
+Jacques Garrigue on the Caml mailing list.
 %% (cited from
 %% \url{http://groups.google.com/group/fa.caml/msg/e80b1245702d6b24}
 %% no date, no exact ref). 
@@ -712,8 +704,8 @@ code expression. Such a behavior is symptomatic of control operators
 (in particular, |abort|).
 
 Finally, |runM| runs our monad, that is, given the initial state,
-performs the computation of
-the monad and returns its result, which in our case is the code
+it performs the computation of
+the monad and returns its result, which in our case is a code
 expression. We run the monad by passing it the initial state and the
 initial continuation |k0|. We can now re-write our |param_code2|
 example of the previous section as |param_code3|.
@@ -735,7 +727,7 @@ let param_code4 plus one =
   in .<fun x y -> .~(runM (gen .<x>. .<y>.) ())>.
 \end{code}
 The function
-|param_code4|, written in the |perform|-notation, is equivalent to
+|param_code4|, written using the |perform|-notation, is equivalent to
 |param_code3| -- in fact, the camlp4 preprocessor will convert the
 former into the latter. And yet, |param_code4| looks far more
 conventional, as if it were indeed in direct style.
@@ -745,7 +737,7 @@ We can write operations that generate code other than let-statements,
 e.g., conditionals: see |ifL| in Figure~\ref{ourmonad}. The function |ifL|, 
 albeit straightforward, is not as general as we wish: its arguments are
 already generated pieces of code rather than monadic values. We
-``lift it'':
+can ``lift it'':
 \begin{code}
 let ifM' test th el = perform
   testc <-- test; thc <-- th; elc <-- el;
@@ -777,8 +769,8 @@ the index |i| is positive. If |i| turned out
 negative, |a.(i)| would generate an out-of-bound array access
 error. On the other hand, the code with |ifM| accesses the array only
 when we have verified that the index is non-negative. This example
-makes it clear that the code generation (such as the one in |retN|) is 
-truly an effect and we have to be clear about the sequencing of
+makes it clear that code generation (such as the one in |retN|) is 
+truly an effect, and we have to be clear about the sequencing of
 effects when generating control constructions such as conditionals.
 The form |ifM| handles such effects correctly. 
 
@@ -799,18 +791,15 @@ let genrecloop gen rtarg = fun s k ->
   k s .<let rec loop j = .~(gen .<loop>. .<j>. s k0) in loop .~rtarg>.
 \end{code}
 
-
-
 \section{Aspects and Functors}\label{functors}
 
 The monad represents fine-scale code generation. We need tools for
 larger-scale modularization; we can use any abstraction
 mechanisms we want to structure our code generators, as long as none
-of those abstractions infiltrate the generated code. ML module system
-turns out most convenient.
+of those abstractions infiltrate the generated code. The ML module system
+turns out to be most convenient.
 
-
-\subsection{Domains}
+\subsection{Domains}\label{sec:domains}
 
 We start by abstracting out domains. We have already seen the simplest
 case of domain abstraction in |param_code1|, which took
@@ -821,8 +810,8 @@ normalization, and potentially a relative size measure. We could group
 these parameters in tuples or records.  Instead, we use OCaml
 \emph{structures} (i.e., modules) so we can take advantage of
 extensibility, type abstraction and constraints, and especially
-parameterized structures (\emph{functors}).  We define the type of the
-domain, the signature |DOMAIN|, which different domains must satisfy:
+parameterized structures (\emph{functors}).  We define the type,
+the signature |DOMAIN|, which different domains must satisfy:
 
 \begin{code}
 type domain_kind = Domain_is_Ring | Domain_is_Field
@@ -855,21 +844,21 @@ end
 
 One particular domain instance is |IntegerDomain|. The notation\\
 |module IntegerDomain : DOMAIN| makes the compiler verify that our
-|IntegerDomain| is indeed a |DOMAIN|, that is, satisfies the required
-signature. The constraint |DOMAIN| may be omitted; in that case, the
+|IntegerDomain| is indeed a |DOMAIN|. 
+The constraint |DOMAIN| may be omitted; in that case, the
 compiler will verify the type when we try to use that structure as a
 |DOMAIN|. In any case, the errors such as missing ``methods'' or
-methods with incorrect types will be caught statically, even
+methods with incorrect types will be caught statically, 
 \emph{before} any code generation takes place. The variant
-|Domain_is_Ring| of |IntegerDomain.domain_kind| encodes a semantic constraint 
-that the full division
+|Domain_is_Ring| of |IntegerDomain.domain_kind| encodes a semantic constraint:
+that full division
 is not available. While the |DOMAIN| type may have looked daunting to
 some, the implementation is quite straightforward.  Other domains such
 as |float| and arbitrary precision exact rational numbers |Num.num|
 are equally simple.
 
-A more complex domain is |Zp| of the field of integers in prime
-modulus:
+A more complex domain is |Zp|, the field of integers in prime
+characteristic:
 \begin{code}
 module ZpMake(P:sig val p:int end) = struct
     type v = int
@@ -882,61 +871,65 @@ module ZpMake(P:sig val p:int end) = struct
     let () = assert (is_prime P.p)
 end
 \end{code}
-This domain is parametrized by an integer number |p|. 
+This domain is parametrized by an integer |p|. 
 To be more precise, the structure |ZpMake| is
 parameterized over another structure of the type described by
-the signature P; that argument structure has one field, the |int| value |p|.
+the signature |P|, which has one field, the |int| value |p|.
 Such a parameterized structure (or, a function from structures to
-structures) is a \emph{functor}. The result of |ZpMake| is a domain that is a
+structures) is a \emph{functor}. The result of |ZpMake| is a domain which is a
 field with no defined order. Hence
 |normalizer| and |better_than| are set to |None|. |Zp| forms
-a field only when |p| is prime. Therefore, we must make this check,
+a field only when |p| is prime\footnote{or a prime power, a case we do
+not treat here.}.  Since we intend to make a field of prime characteristic, 
+we must check this, as is done
 in the last line of the above code. That line differs from the other 
 bindings in |ZpMake| in that it neither defines a function, such as
-|plus|, nor binds a value, such as |zero|. Therefore, the non-value
-expression |assert (is_prime P.p)|, to be called an initializing
+|plus|, nor binds a value, such as |zero|. This non-value
+expression |assert (is_prime P.p)|, which we will call an initializing
 expression, will be evaluated
-when the corresponding module is instantiated, as in the following
+when the corresponding module is instantiated.
 \begin{code}
 module Z19 = ZpMake(struct let p = 19 end)
 \end{code}
 If we
 replace |p = 19| with |p = 9| above, we receive a run-time
-error. It is raised however as we instantiate and combine modules that
-will eventually make the generator.  Although the error is reported at
-run-time rather than compile time as one might have hoped, the error
+error. However, it is raised as we instantiate and combine modules that
+will \emph{eventually} make the generator.  Although the error is reported at
+``run-time'' rather than during compilation as one might have hoped, the error
 is raised when \emph{generating the generator} -- well before the
-generation of the target code could begin. In our code we make
-extensive use of these so-called preflight checks performed as part of
-module initialization. The checks seem to offer a good compromise:
-they are dynamic and so do not require complicated type systems; on
-the other hand, the checks are run quite early, when buiding
+generation of the target code could begin.  In our code we make
+extensive use of these ``preflight checks'', which are performed as part of
+module initialization. These checks seem to offer a good compromise:
+they are dynamic and so do not require a complicated type system; on
+the other hand, the checks are run quite early, when building
 code generators, and so ensure that no code violating the
 corresponding \emph{semantic} constraints will be generated. Although
-some may frown on the use of module initializing expressions since
-that requires careful attention to sharing and multiple instantiations
+some may frown on the use of module initializing expressions 
+as this requires careful attention to sharing and multiple instantiations
 of a module, these concerns do not apply in our case: our preflight
 checks are all idempotent and maintain no state.
 
-\subsection{Abstract code and lifted domains}
+\subsection{Abstract code and lifted domains}\label{sec:lifteddomains}
 We will be using MetaOCaml operations to build code expressions, values
-of the type |('a,'v) code|. However, we wish to make our generators
+of type |('a,'v) code|. However, we wish to make our generators
 abstract over particular code representations. Therefore, when writing
 the LU generator (Section~\ref{sec:det} and below), instead of
-MetaOCaml brackets and escapes we will be using code combinators
+MetaOCaml brackets and escapes we will be using the code combinators
 described below. These combinators are functions that produce and
-combine values of the type of abstract code. 
+combine values of the type of \emph{abstract code}. 
 
 This encapsulation of staging annotations into code combinators lets
-us easily change the output form of our generated LU programs. We may
-use single-stage thunks rather than MetaOCaml staged |('a,'v) code|
-values, for benchmarking and regression tests purposes. We could use
+us easily change the output form of our generated LU programs.  For example,
+We may use single-stage thunks rather than MetaOCaml staged |('a,'v) code|
+values, for benchmarking and regression tests purposes. We could also use
 code combinators producing C or Fortran code.
 
 Our code combinator library includes operations to create, dereference
-and mutate reference cells, compare values, manipulate values used
+and mutate reference cells, compare values, and manipulate values used
 for indexing arrays. The following is the implementation of sample
 combinators, in the case of the abstract code being MetaOCaml code. 
+We basically need to ``lift'' most the underlying programming language
+into combinators.
 \begin{code}
 let lift x = .< x >.
 
@@ -969,8 +962,8 @@ let applyM  f x = ret (apply f x)
 
 \noindent  The types above are
 generally lifted twice: once from the value domain |v| to the code
-domain |'a vc|, and once more from values to monadic computations
-|('p,'a vc) monad|. 
+domain |('a,'v) code|, and once more from values to monadic computations
+|('p,'v) monad|. 
 
 We now convert the domains of values from the previous section into
 lifted domains, of abstract code values. We define the signature
@@ -995,7 +988,7 @@ end
 (part of a larger module |Domains_sig|) that is parameterised by
 the type of abstract code, |('a, 'b) rep|. The line |include DOMAIN|
 says that lifted domains include all members of non-lifted domains,
-including the initializing expressions with pre-flight checks.
+including the initializing expressions with preflight checks.
 The following is a particular instance of |DOMAINL|, the lifted
 version of |IntegerDomain| of the previous section, in the particular
 case of abstract code being MetaOCaml code values |('a, 'b) code|:
@@ -1013,7 +1006,9 @@ module IntegerDomainL = struct
     let better_thanL = Some (fun x y -> .<abs .~x > abs .~y >. )
 end
 \end{code}
-
+Such lifting is completely straightforward.  However, it is a
+program-text to program-text transformation over modules, and as such could
+only be automated (currently) by further use of camlp4.
 
 \subsection{Containers}
 
@@ -1076,58 +1071,56 @@ The accompanying code includes containers whose
 elements are stored in a 1D array, in a
 row-wise (C-like) or column-wise (Fortran-like) modes.
 
-
-\subsection{Maintaining the extensible state}
+\subsection{Maintaining an extensible state}
 
 Various aspects of our LU generator such as determinant, rank, 
-and permutation traking may need to keep a state during
-the code generation. For example, the initializing section of the LU
+and permutation tracking may need to keep a state during
+code generation. For example, the initializing section of the LU
 generator will invoke the function |decl| of the determinant aspect so that the
 latter may generate let-binding for reference cells that track the
 magnitude and the sign of the determinant. The generator of the
 row-swapping code will notify the determinant aspect so that the
-latter may insert the code that flips the sign of the tracked
+latter may insert code that flips the sign of the tracked
 determinant. The final section of the LU generator will ask the
 determinant aspect to generate code producing the final, signed value
 of the determinant. Clearly the determinant aspect needs to maintain
 state from one invocation of its functions to another; this state should
-include the `names' of mutable variables accumulating the sign and the
+include the ``names'' of mutable variables accumulating the sign and the
 magnitude of the determinant.
 
 The simplest method of keeping the state of the generator is by using
-mutable variables private to the Deteminant module (aspect). That,
+mutable variables, private to the Determinant module (aspect). That,
 however, makes our aspects stateful. Although we are generating
 imperative code, we would like to keep our generators stateless and
-pure functional, for ease of comprehension and reasoning.  Our main
+purely functional, for ease of comprehension and reasoning.  Our main
 program may include several LU generators referring to one Determinant
 aspect -- which may be present in one shared instance or in
 several. That is of no concern if the Determinant module is
 stateless. With stateful modules, the issues of aliasing or separate
 instantiation are the source of very subtle problems.
 
-
-We chose therefore a different way of maintaining the generator state,
-using a monad. We need monad anyway for let-insertion; we add state as
+We therefore chose a different way of maintaining the generator state,
+using a monad. We already need a monad for let-insertion; we add state as
 an additional monad parameter (Fig.~\ref{ourmonad}) and monadic
 actions |fetch| and |store| to access that monadic state. The state is
 threaded throughout the entire code-generation computation. 
 
-This monadic state has to accommodate several pieces of state, for
+This monadic state has to accommodate several distinct pieces of state, for
 various aspects. We should be able to add a new aspect -- which may need
 to keep its own state as part of the overall monadic state -- without
 modifying or even recompiling the rest of the code. Thus our monadic
 state should be extensible. We could use an extensible
-record: an OCaml object. Each aspect will have its own field; record
-subtyping will assure modularity. Alas, this approach makes it
-difficult to create the initial state, to pass to the monad's |runM|
-method. We should know the names of all fields and should know the
-proper initial value for these fields, which breaks modularity.
+record: an OCaml object. Each aspect would have its own field; record
+subtyping would assure modularity. Alas, this approach makes it
+difficult to create an initial state, to pass to the monad's |runM|
+method. We would be required to know the names of all fields and should know
+the proper initial value for these fields, which breaks modularity.
 
-A better approach of a property list has been suggested by the MLton
-team \cite{mlton-proplist}. A property list, too, represents an
+The MLton team suggests a better approach: property 
+lists~\cite{mlton-proplist}.  A property list, too, represents an
 extensible object -- by its dual, a list of polymorphic variants.  The
 initial object is just the empty list. MLton's approach does not
-literally apply to us however. Environment classifiers of MetaOCaml
+literally apply to us however. MetaOCaml's environment classifiers
 require type universes parameterized by classifiers. The MLton
 approach uses generativity of exceptions or reference cells to
 generate property names, i.e., fields of an extensible record. That
@@ -1141,8 +1134,8 @@ Lisp and Scheme.
 Below is the implementation of our open records with manifest
 naming: functions |orec_store| to add a new field to the open record
 and |orec_find| to obtain the value associated with a particular field
-name. Each `field' is characterized by a triple: injection, 
-projection functions and the string name. The latter is used for 
+name. Each ``field'' is characterized by a triple: an injection function, 
+a projection function and the string name. The latter is used for 
 printing error messages. For example, for the
 determinant tracking aspect, this triple has the form
 \begin{code}
@@ -1175,21 +1168,18 @@ let mo_extend ip v =
 let mo_lookup ip = perform s <-- fetch; ret (orec_find ip s)
 \end{code}
 %
-Currently, we check at generator-time that one should not add an
+Currently, we check at generation-time that one should not add an
 already existing field to an open record, nor should one attempt to
 look up a field that does not exist. It is possible to make these
 checks static.
 
-
-
-
 \subsection{Determinant aspect}
 \label{sec:det}
-To track determinant we should be able to generate code
+To track the determinant, we should be able to generate code
 for: defining variables used for tracking (|decl|),
-updating the sign or the absolute
-value of the determinant, converting the tracking state
-to the final determinant value of the type |outdet|. LU of a
+updating the sign (|upd_sign|) or the absolute
+value of the determinant, and converting the tracking state
+to the final determinant value of type |outdet|. LU of a
 floating-point matrix with no determinant tracking uses the
 instantiation of |DETERMINANT| where |outdet| is |unit| and all the
 functions of that module generate no code. For integer matrices, we
@@ -1273,7 +1263,6 @@ module AbstractDet =
 end
 \end{code}
 
-
 \subsection{Output}
 
 More interesting is the aspect of what to return
@@ -1290,7 +1279,7 @@ module type and one instantiation, which specifies the output of a LU
 algorithm as a 3-tuple |contr * Det.outdet * int| of the U-factor, the
 determinant and the rank.
 
-\begin{code2}
+\begin{code}
 module type OUTPUTDEP = sig 
     module PivotRep : PIVOTKIND 
     module Det      : DETERMINANT
@@ -1305,12 +1294,11 @@ module type OUTPUT = functor(OD : OUTPUTDEP) -> sig
   type res
   val make_result : 'a wmatrix -> (\dots,res) monad
 end
-
 module OutDetRank(OD : OUTPUTDEP) = struct
   module IF = struct
-      module R   = Rank
-      module P   = DiscardPivot
-      module L   = NoLower end
+    module R   = Rank
+    module P   = DiscardPivot
+    module L   = NoLower end
   type res = C.contr * C.Dom.v * int
   let make_result m = perform
     det  <-- OD.Det.fin ();
@@ -1319,40 +1307,41 @@ module OutDetRank(OD : OUTPUTDEP) = struct
   let _ = OD.Det.fin ()
   let _ = IF.R.fin ()
 end
-\end{code2}
+\end{code}
 
 The initialization expressions |OD.Det.fin ()| and |IF.R.fin ()| are
-the pre-flight checks. As we saw in the previous section, 
-both instances of |Det| contain the |fin ()| function to generate the
+the preflight checks. As we saw in the previous section, 
+both instances of |Det| contain |fin ()| function to generate
 code representing the computed determinant. Only the |NoDet| does not
 track any determinant, and so |fin ()| raises an error. The code 
-|let _ = OD.Det.fin ()| in |OutDetRank| invokes that |fin| function, which will
+|let _ = OD.Det.fin ()| in |OutDetRank| invokes this |fin| function, which will
 produce the monadic code generating action, or raise an error. We do
 not run the action at that time -- we only make sure there is an
 action to run. This is another preflight check, to rule out the
-semantic error when a user specifies that the determinant should be computed
-and returned and yet specifies the |NoDet| aspect which tracks no
+semantic error where a user specifies that the determinant should be computed
+and returned, and yet specifies the |NoDet| aspect which tracks no
 determinant at all.
 
-The module of the signature |INTERNAL_FEATURES| bundles information
-tracking aspects. The latter are not directly selectible by the
-user. Rather, they are \emph{function} of other user choices. The
+The module of signature |INTERNAL_FEATURES| bundles information
+tracking aspects. The latter are not directly selectable by the
+user. Rather, they are \emph{functions} of other user choices. The
 implementations of the tracking aspects such as |Rank|, |NoRank|,
 |PackedLower| are quite similar (and simpler) than the implementation
 of the |AbstractDet| and |NoDet| aspects in Section~\ref{sec:det}. The
 choice of a particular tracking aspect may depend on all other choices
 (e.g., it is not possible to extract the |L| factor if the domain is
-not a field). Currently we use pre-flight checks to ensure consistency
+not a field). Currently we use preflight checks to ensure consistency
 of tracking aspects. Previously~\cite{CaretteKiselyov05} we tried to
 implement all our preflight tests at the (module) type level, using
 sharing constraints and module computations. That lead to obscure
 code, long impenetrable type error messages and made compilation very
-slow.
-
+slow.  Furthermore, at least in OCaml, type-level computations are not
+powerful enough to help us with tasks such as verifying that an integer
+is prime, as required in section~\ref{sec:domains}.
 
 \subsection{Main generation}
-We combine all user-selectable aspects in a record, which serves as a `keyword
-argument' list to the |GenGE| functor below.
+We combine all user-selectable aspects in a record, which serves as a ``keyword
+argument'' list to the |GenGE| functor below.
 \begin{code}
 module type FEATURES = sig
   module Det       : DETERMINANT
@@ -1381,16 +1370,16 @@ let instantiate gen =
 let resIV5 = instantiate GenIV5.gen ;;
 \end{code}
 %
-We first instantiate the container |GVC_I| for the vector over an
+We first instantiate the container |GVC_I| for a vector over an
 integer domain. We pass the container to the main functor |GenLA|,
-since all the linear algebra aspects are parameterized by the
+since all linear algebra codes are parameterized by the
 container and the domain included in it. We open the |G_GVC_I| module
 to make all its components easily available. One of those components
 is the GE generator, |GE| (which we open as well). Besides |GE|, the
 module |G_GVC_I| includes the generator for GE solvers.  The main
 generator functor is |GenGE|, shown later.  We instantiate the
-generator by passing the functor the `record' of various aspects; the
-order is irrelevant, but all aspects suc as |Det| must be
+generator by passing to the functor the ``record'' of various aspects; the
+order is irrelevant, but all aspects such as |Det| must be
 specified. In the code above, we request GE generation with full
 pivot, fraction-free update, operate on non-augmented matrix and
 return the |U| factor, determinant and the rank. We run the monad
@@ -1427,8 +1416,7 @@ other instantiations of |Gen| can be examined at
 \cite{metamonadsURL}. The website also contains benchmark code and
 timing comparisons.
 
-
-The LU generator functor itself is 
+The LU generator functor (called |GenGE| below) itself is 
 parameterized by the domain, container, pivoting policy (full, row,
 nonzero, no pivoting), update policy (with either `fraction-less'
 or full division), and the output specification. Some of the
@@ -1437,78 +1425,82 @@ by the domain, the container, and the determinant functor).
 
 \begin{code2}
 module GenGE(F : FEATURES) = struct
-    module O = F.Output(F)
+  module O = F.Output(F)
 
-    let wants_pack = O.IF.L.wants_pack
-    let can_pack   = 
-        let module U = F.Update(F.Det) in
-        (U.upd_kind = DivisionBased)
-    (* some more pre-flight tests *)
-    let _ = ensure ((not wants_pack) || can_pack) 
-           "Cannot return a packed L in this case"
+  let wants_pack = O.IF.L.wants_pack
+  let can_pack   = 
+    let module U = F.Update(F.Det) in
+    (U.upd_kind = DivisionBased)
+  (* some more preflight tests *)
+  let _ = ensure ((not wants_pack) || can_pack) 
+         "Cannot return a packed L in this case"
 
-    let zerobelow mat pos = 
-        let module IF = O.IF in
-        let module U = F.Update(F.Det) in
-        let innerbody j bjc = perform
-            whenM (Logic.notequalL bjc C.Dom.zeroL ) (perform
-                det <-- F.Det.get ();
-                optSeqM (Iters.col_iter mat.matrix j (Idx.succ pos.p.colpos) 
-               (Idx.pred mat.numcol) C.getL
-                      (fun k bjk -> perform
-                      brk <-- ret (C.getL mat.matrix pos.p.rowpos k);
-                      U.update bjc pos.curval brk bjk 
-                          fun ov -> C.col_head_set mat.matrix j k ov) det) UP )
-                      (IF.L.updt mat.matrix j pos.p.colpos C.Dom.zeroL 
-                          (* this makes no sense outside a field! *)
-                          (C.Dom.divL bjc pos.curval))) in
-        perform
-              seqM (Iters.row_iter mat.matrix pos.p.colpos
-              (Idx.succ pos.p.rowpos)
-              (Idx.pred mat.numrow) C.getL innerbody UP) 
-                   (U.update_det pos.curval)
+  let zerobelow mat pos = 
+    let module IF = O.IF in
+    let module U = F.Update(F.Det) in
+    let innerbody j bjc = perform
+      whenM (Logic.notequalL bjc C.Dom.zeroL ) (perform
+        det <-- F.Det.get ();
+        optSeqM (Iters.col_iter mat.matrix j (Idx.succ pos.p.colpos) 
+         (Idx.pred mat.numcol) C.getL
+              (fun k bjk -> perform
+              brk <-- ret (C.getL mat.matrix pos.p.rowpos k);
+              U.update bjc pos.curval brk bjk 
+                (fun ov -> C.col_head_set mat.matrix j k ov) det) UP )
+              (IF.L.updt mat.matrix j pos.p.colpos C.Dom.zeroL 
+                (* this makes no sense outside a field! *)
+                (C.Dom.divL bjc pos.curval))) in
+      perform
+        seqM (Iters.row_iter mat.matrix pos.p.colpos
+          (Idx.succ pos.p.rowpos)
+          (Idx.pred mat.numrow) C.getL innerbody UP) 
+             (U.update_det pos.curval)
 
-   let init input = perform
-        let module IF = O.IF in
-          (a,rmar,augmented) <-- F.Input.get_input input;
-          r <-- IF.R.decl ();
-          c <-- retN (liftRef Idx.zero);
-          b <-- retN (C.mapper C.Dom.normalizerL (C.copy a));
-          m <-- retN (C.dim1 a);
-          rmar <-- retN rmar;
-          n <-- if augmented then retN (C.dim2 a) else ret rmar;
-          F.Det.decl ();
-          IF.P.decl rmar;
-          _ <-- IF.L.decl (if wants_pack then b else C.identity rmar m);
-          let mat = {matrix=b; numrow=n; numcol=m} in
-          ret (mat, r, c, rmar)
+ let init input = perform
+    let module IF = O.IF in
+      (a,rmar,augmented) <-- F.Input.get_input input;
+      r <-- IF.R.decl ();
+      c <-- retN (liftRef Idx.zero);
+      b <-- retN (C.mapper C.Dom.normalizerL (C.copy a));
+      m <-- retN (C.dim1 a);
+      rmar <-- retN rmar;
+      n <-- if augmented then retN (C.dim2 a) else ret rmar;
+      F.Det.decl ();
+      IF.P.decl rmar;
+      _ <-- IF.L.decl (if wants_pack then b else C.identity rmar m);
+      let mat = {matrix=b; numrow=n; numcol=m} in
+      ret (mat, r, c, rmar)
 
-   let forward_elim (mat, r, c, rmar) = perform
-        let module IF = O.IF in
-          whileM (Logic.andL (Idx.less (liftGet c) mat.numcol)
-                              (Idx.less (liftGet r) rmar) )
-             ( perform
-             rr <-- retN (liftGet r);
-             cc <-- retN (liftGet c);
-             let cp  = {rowpos=rr; colpos=cc} in
-             let module Pivot = F.PivotF(F.Det)(IF.P) in
-             pivot <-- l1 retN (Pivot.findpivot mat cp);
-             seqM (matchM pivot (fun pv -> 
-                      seqM (zerobelow mat {p=cp; curval=pv} )
-                           (IF.R.succ ()) )
-                      (F.Det.zero_sign () ))
-                  (updateM c Idx.succ) )
+ let forward_elim (mat, r, c, rmar) = perform
+    let module IF = O.IF in
+      whileM (Logic.andL (Idx.less (liftGet c) mat.numcol)
+                          (Idx.less (liftGet r) rmar) )
+       ( perform
+       rr <-- retN (liftGet r);
+       cc <-- retN (liftGet c);
+       let cp  = {rowpos=rr; colpos=cc} in
+       let module Pivot = F.PivotF(F.Det)(IF.P) in
+       pivot <-- l1 retN (Pivot.findpivot mat cp);
+       seqM (matchM pivot (fun pv -> 
+              seqM (zerobelow mat {p=cp; curval=pv} )
+                   (IF.R.succ ()) )
+              (F.Det.zero_sign () ))
+            (updateM c Idx.succ) )
 
-   let gen input = perform
-          (mat, r, c, rmar) <-- init input;
-          seqM 
-            (forward_elim (mat, r, c, rmar))
-            (O.make_result mat)
+ let gen input = perform
+    (mat, r, c, rmar) <-- init input;
+    seqM 
+      (forward_elim (mat, r, c, rmar))
+      (O.make_result mat)
 end
 \end{code2}
 
-There are more pre-flight checks for various ``semantic'' 
-constraints, shown
+A careful reading of this code will reveal that the core of the 
+Gaussian Elimination algorithm is still visible in this code generator:
+the |forward_elim| function iterates over the columns and rows of the
+matrix, finding a pivot, and zeroing the appropriate entries.
+
+There are more preflight checks for various ``semantic'' constraints, shown
 in the following structure of the |UPDATE| signature:
 \begin{code}
 module DivisionUpdate(Det:DETERMINANT) =
@@ -1527,11 +1519,10 @@ above, we would have received an error because |IntegerDomainL| is not
 a field. That run-time error occurs before any code is produced (i.e.,
 before |resIV5| is computed).
 
-
 \section{Related and future work}\label{related}
 
 The monad in this paper is similar to the one described in
-\cite{MSP:PADL04,KiselyovTaha}.  However the latter papers used only
+\cite{MSP:PADL04,KiselyovTaha}.  However those papers used only
 |retN| and fixpoints (for generation-time iterations).  This paper
 does not involve monadic fixpoints because the generator is not
 recursive, but heavily relies on monadic operations for generating
@@ -1560,9 +1551,9 @@ C code in C using |printf|, nothing prevents producing code that
 misses semicolons, open or close parentheses or variable
 bindings. MetaOCaml gives us assurance that these errors, and more
 subtle type errors, shall not occur in the generated code.  SPIRAL
-\cite{Pueschel:05} is another such even more ambitious project.  But
+\cite{Pueschel:05} is another even more ambitious project.  But
 SPIRAL does intentional code analysis, relying on a set of code
-transformation ``rules'' which make sense, but which are not proved to
+transformation ``rules'' which make sense, but which are not proven to
 be either complete or confluent.  The strength of both of these
 project relies on their platform-specific optimizations performed via
 search techniques, something we have not attempted here.
@@ -1570,7 +1561,7 @@ search techniques, something we have not attempted here.
 The highly parametric version of our Gaussian Elimination is directly
 influenced by the generic implementations available in Axiom
 \cite{Axiom} and Aldor \cite{Watt:2002:HCA}.  Even though the Aldor
-compiler frequently can optimize away a lot of abstraction overhead, 
+compiler can frequently optimize away a lot of abstraction overhead, 
 it does not provide any guarantees that it will do so, unlike our
 approach.
 
@@ -1587,12 +1578,15 @@ based on an annotated subset of Scheme (which is untyped and has no
 imperative features). The generated code requires post-processing to
 attain efficiency.  
 
-\jacques{Mention the relationship with the all-dynamic version of a 
-similar design, namely Maple's?  The fact that all choices there are
-dynamic, while all ours are completely static really shows that the
+Our code was initially motivated by trying to unify the various
+implementations in Maple.  Interestingly, when we compare our end 
+result with the options available from Maple's \texttt{LUDecomposition}
+algorithm, we notice a great deal of similarity.  The biggest difference
+is that in Maple, all the choices are done dynamically (and are dynamically
+typed), while ours choices are done statically, in a statically typed
+environment.  To us, this shows that the
 design space along the dynamic--static dimension is quite large and
-versatile.}
-\oleg{yes, please!}
+versatile.
 
 Unlike traditional approaches
 \cite{journals/cacm/parnas72a}, the interfaces of our generated
@@ -1608,6 +1602,14 @@ hence efficient.
 To the best of our knowledge, nobody has yet used functors to
 abstract code generators, or even mixed functors and 
 multi-stage programming.
+
+It would be interesting to implement a camlp4 extension that 
+automates the lifting of (simple) modules as done in 
+section~\ref{sec:lifteddomains},
+first to the code level, and then to monadic values.  Even more
+interesting would be a (typed) extension to MetaOCaml that would 
+allow us to write such code with the same guarantees that the rest of
+MetaOCaml already affords us.
 
 We plan to further investigate the connection between delimited
 continuations and our implementations of code generators like
@@ -1626,7 +1628,7 @@ a value is only probabilistically non-zero, etc.
 \section{Conclusion}\label{conclusion}
 In this paper we have demonstrated numerical code extensively parameterized
 by complex aspects at no run-time overhead.  The combination of
-stateless functors and structures, and our monad with the
+stateless functors and structures, and our monad with
 compositional state makes aspects composable without having to
 worry about value aliasing. The only constraints to compositionality
 are the typing ones plus the constraints we specifically
@@ -1637,8 +1639,7 @@ division).
 
 There is an interesting relation with aspect-oriented code
 \cite{kiczales97aspectoriented}: in AspectJ, 
-aspects are (comparatively) lightly typed, and are post-facto extensions of an
-existing piece of code.  More precisely, they are post-facto extensions of
+aspects are (comparatively) lightly typed, and are post-facto extensions of
 potential program traces, specified in a particular language; these tend
 to be created to follow the operational behaviour of existing code, but
 is not restricted to such a setting.
@@ -1671,18 +1672,24 @@ Our approach, using staging, monads and functors, seems to permit
 an extensible set of aspects and appears flexible enough for iterative
 improvement in the design.
 
-\oleg{I'm inclined to suggest to omit the following, or at least
-  abbreviate. The omitting may be the best option as we don't have
-  much time for editing. The problem with explaining methodology is
-  like explaining Buddhism: it is all obvious. As I read about Zen
-  Buddhism: its simple truths are understandable if you already know
-  them.}
+%\oleg{I'm inclined to suggest to omit the following, or at least
+%  abbreviate. The omitting may be the best option as we don't have
+%  much time for editing. The problem with explaining methodology is
+%  like explaining Buddhism: it is all obvious. As I read about Zen
+%  Buddhism: its simple truths are understandable if you already know
+%  them.}
+%
+%\jacques{All obvious, but worthwhile documenting anyways.  I really
+%  like reading papers where the ``obvious truth'' is explained in
+%  clear enough ways that I nevertheless learn something new.  Sometimes,
+%  all one really learns is a better vocabulary for describing something
+%  known, but that is already quite useful.  So I leave it in.}
 
 As we wanted to ensure that we were indeed firmly in a \emph{cogen} setting,
 we abstracted out the underlying programming language completely.  This 
 allowed us to both generate (efficient) code and to write a directly
-runnable (highly inefficient) version of the algorithm from the same
-generator.  This brought out the issue that, once this was done, we had
+runnable (but highly inefficient) version of the algorithm from the same
+generator.  But this
 essentially abstracted out all of the syntactic sugar of the underlying
 programming language, and all we were left with was function application
 and monadic composition.  This means the code for our generator looks mostly
@@ -1692,7 +1699,7 @@ More specifically we start from a \emph{known} set of implementations
 of an algorithm, and extract commonalities and variation points.
 This is unlike~\cite{journals/tse/Parnas76} and most subsequent
 approaches to product families, as we do not over-engineer our design
-by imagining weird variations that are unlikely to come up in realistic
+by imagining variations that are unlikely to come up in realistic
 situations, but only create variations when we notice them in actual use.
 This approach is quite well-suited to the development of scientific
 software, which has a rich history and where most useful variations have
@@ -1702,7 +1709,7 @@ Given a set of commonalities and variation points, the first task is to
 find \emph{semantic} reasons for these.  The underlying reason then
 forms the basis for the abstraction -- a (potentially higher-order)
 module is created to encapsulate the various concepts, and these are
-then implemented as generators.  It is very important at this stage to
+implemented as generators.  It is very important at this stage to
 make sure to reify all available \emph{static} information, so that all
 of it is available to the generation process.  While we will see that
 the technical solutions exist to take advantage of such information,
@@ -1721,8 +1728,252 @@ use with MetaOCaml. Many helpful discussions with Walid Taha are very
 appreciated. The implementation of the monadic notation, |perform|,
 was joint work with Lydia van Dijk.
 
-\bibliography{metamonads}
-\bibliographystyle{elsart-num}
+% Embed .bbl file directly to make document self-contained
+% \bibliography{metamonads}
+% \bibliographystyle{elsart-num}
+
+\begin{thebibliography}{10}
+\expandafter\ifx\csname url\endcsname\relax
+  \def\url#1{\texttt{#1}}\fi
+\expandafter\ifx\csname urlprefix\endcsname\relax\def\urlprefix{URL }\fi
+
+\bibitem{Carette06}
+J.~Carette, Gaussian {E}limination: a case study in efficient genericity with
+  {MetaOCaml}, Science of Computer Programming 62~(1) (2006) 3--24, special
+  Issue on the First MetaOCaml Workshop 2004.
+
+\bibitem{Monagan:2001:M7P}
+M.~B. Monagan, K.~O. Geddes, K.~M. Heal, G.~Labahn, S.~M. Vorkoetter,
+  J.~McCarron, P.~DeMarco, Maple 7 Programming Guide, Waterloo Maple Inc.,
+  2001.
+
+\bibitem{Gruntz:1994:IG}
+D.~Gruntz, M.~Monagan, Introduction to {Gauss}, \textsc{SIGSAM Bulletin}:
+  Communications on Computer Algebra 28~(2) (1994) 3--19.
+
+\bibitem{Axiom}
+R.~D. Jenks, R.~S. Sutor, {AXIOM}: The Scientific Computation System, Springer
+  Verlag, 1992.
+
+\bibitem{Czarnecki}
+K.~Czarnecki, U.~W. Eisenecker, Generative programming: methods, tools, and
+  applications, ACM Press/Addison-Wesley Publishing Co., 2000.
+
+\bibitem{Veldhuizen:1998:ISCOPE}
+T.~L. Veldhuizen, Arrays in {Blitz++}, in: Proceedings of the 2nd International
+  Scientific Computing in Object-Oriented Parallel Environments (ISCOPE'98),
+  Lecture Notes in Computer Science, Springer-Verlag, 1998.
+
+\bibitem{musser89generic}
+D.~R. Musser, A.~A. Stepanov, Generic programming, in: {ISSAC 1988}:
+  Proceedings of the International Symposium on Symbolic and Algebraic
+  Computation, Vol. 358 of Lecture Notes in Computer Science, Springer-Verlag,
+  1989, pp. 13--25.
+
+\bibitem{musser94algorithmoriented}
+D.~R. Musser, A.~A. Stepanov, Algorithm-oriented generic libraries, Software -
+  Practice and Experience 24~(7) (1994) 623--642.
+
+\bibitem{BOOST}
+J.~Siek, L.-Q. Lee, A.~Lumsdaine, The Boost Graph Library: User Guide and
+  Reference Manual, Addison-Wesley, 2002.
+
+\bibitem{POOMA}
+I.~John V.W.~Reynders, J.~C. Cummings, The {POOMA} framework, Comput. Phys.
+  12~(5) (1998) 453--459.
+
+\bibitem{ATLAS}
+R.~C. Whaley, A.~Petitet, J.~J. Dongarra, Automated empirical optimization of
+  software and the {ATLAS} project, Parallel Computing 27~(1--2) (2001) 3--35.
+
+\bibitem{HygienicMacros}
+E.~E. Kohlbecker, D.~P. Friedman, M.~Felleisen, B.~F. Duba, Hygienic macro
+  expansion., in: LISP and Functional Programming, 1986, pp. 151--161.
+
+\bibitem{camlp4}
+D.~de~Rauglaudre, Camlp4 reference manual,
+  \url{http://caml.inria.fr/camlp4/manual/} (Jan. 2002).
+
+\bibitem{conf/dagstuhl/CzarneckiOST03}
+K.~Czarnecki, J.~T. O'Donnell, J.~Striegnitz, W.~Taha, {DSL} implementation in
+  {MetaOCaml}, {Template Haskell}, and {C++}., in: C.~Lengauer, D.~S. Batory,
+  C.~Consel, M.~Odersky (Eds.), Domain-Specific Program Generation, Vol. 3016
+  of Lecture Notes in Computer Science, Springer, 2003, pp. 51--72.
+
+\bibitem{CTHL03}
+C.~Calcagno, W.~Taha, L.~Huang, X.~Leroy, Implementing multi-stage languages
+  using asts, gensym, and reflection, in: K.~Czarnecki, F.~Pfenning,
+  Y.~Smaragdakis (Eds.), Generative Programming and Component Engineering
+  (GPCE), LNCS, Springer-Verlag, 2003.
+
+\bibitem{metaocaml-org}
+{MetaOCaml}, \url{http://www.metaocaml.org}.
+
+\bibitem{TahaSheard97}
+W.~Taha, T.~Sheard, Multi-stage programming with explicit annotations, in:
+  Proceedings of the Symposium on Partial Evaluation and Semantic-Based Program
+  Manipulation {(PEPM)}, ACM Press, Amsterdam, 1997, pp. 203--217.
+
+\bibitem{TahaThesis}
+W.~Taha, Multi-stage programming: its theory and applications, Ph.D. thesis,
+  Oregon Graduate Institute of Science and Technology (1999).
+
+\bibitem{Taha2000}
+W.~Taha, A sound reduction semantics for untyped {CBN} multi-stage computation.
+  {Or}, the theory of {MetaML} is non-trival., in: PEPM, 2000, pp. 34--43.
+
+\bibitem{Pueschel:05}
+M.~P{\"u}schel, J.~M.~F. Moura, J.~Johnson, D.~Padua, M.~Veloso, B.~W. Singer,
+  J.~Xiong, F.~Franchetti, A.~Ga\v{c}i\'{c}, Y.~Voronenko, K.~Chen, R.~W.
+  Johnson, N.~Rizzolo, {SPIRAL}: Code generation for {DSP} transforms,
+  Proceedings of the IEEE, special issue on "Program Generation, Optimization,
+  and Adaptation" 93~(2).
+
+\bibitem{Kennedy01Telescoping}
+K.~Kennedy, B.~Broom, K.~Cooper, J.~Dongarra, R.~Fowler, D.~Gannon,
+  L.~Johnsson, J.~Mellor-Crummey, L.~Torczon, Telescoping languages: A strategy
+  for automatic generation of scientific problem-solving systems from annotated
+  libraries, Journal of Parallel and Distributed Computing 61~(12) (2001)
+  1803--1826.
+
+\bibitem{dongarra7}
+Z.~Chen, J.~Dongarra, P.~Luszczek, K.~Rothe, Lapack for clusters project: An
+  example of self adapting numerical software, Hawaii International Conference
+  on System Sciences HICSS-37.
+
+\bibitem{Veldhuizen:2004}
+T.~L. Veldhuizen, Active libraries and universal languages, Ph.D. thesis,
+  Indiana University Computer Science (May 2004).
+\newline\urlprefix\url{\url{http://osl.iu.edu/~tveldhui/papers/2004/dissertati%
+on.pdf}}
+
+\bibitem{KiselyovTaha}
+O.~Kiselyov, K.~N. Swadi, W.~Taha, A methodology for generating verified
+  combinatorial circuits, in: EMSOFT '04: Proceedings of the fourth ACM
+  international conference on Embedded software, ACM Press, New York, NY, USA,
+  2004, pp. 249--258.
+
+\bibitem{Padua:MetaOcaml:04}
+A.~Cohen, S.~Donadio, M.~J. Garzara'n, C.~Herrmann, D.~Padua, In search for a
+  program generator to implement generic transformations for high-performance
+  computing, metaOCaml Workshop, October 2004.
+
+\bibitem{CaretteKiselyov05}
+J.~Carette, O.~Kiselyov, Multi-stage programming with {F}unctors and {M}onads:
+  eliminating abstraction overhead from generic code, in: Generative
+  Programming and Component-based Engineering {GPCE}, 2005, pp. 256--274.
+
+\bibitem{MSP:PADL04}
+J.~L. Eckhardt, R.~Kaiabachev, K.~N. Swadi, W.~Taha, O.~Kiselyov, Practical
+  aspects of multi-stage programming, rice University Techical Report
+  {TR05}-451,
+  \url{http://www.cs.rice.edu/~taha/publications/preprints/2004-02-16.pdf}
+  (Feb. 2004).
+
+\bibitem{metamonadsURL}
+{Source code}, \url{http://www.cas.mcmaster.ca/~carette/metamonads/}.
+
+\bibitem{Golub-vanLoan}
+G.~H. {Golub}, C.~F. {Van Loan}, Matrix Computations, 3rd Edition, Johns
+  Hopkins University Press, Baltimore, MD, 1996.
+
+\bibitem{kiczales97aspectoriented}
+G.~Kiczales, J.~Lamping, A.~Menhdhekar, C.~Maeda, C.~Lopes, J.-M. Loingtier,
+  J.~Irwin, Aspect-oriented programming, in: M.~Ak\c{s}it, S.~Matsuoka (Eds.),
+  Proceedings European Conference on Object-Oriented Programming, Vol. 1241,
+  Springer-Verlag, Berlin, Heidelberg, and New York, 1997, pp. 220--242.
+
+\bibitem{709568}
+J.~Irwin, J.-M. Loingtier, J.~R. Gilbert, G.~Kiczales, J.~Lamping,
+  A.~Mendhekar, T.~Shpeisman, Aspect-oriented programming of sparse matrix
+  code, in: ISCOPE '97: Proceedings of the Scientific Computing in
+  Object-Oriented Parallel Environments, Springer-Verlag, London, UK, 1997, pp.
+  249--256.
+
+\bibitem{mendhekar97rg}
+A.~Mendhekar, G.~Kiczales, J.~Lamping, {RG}: {A} case-study for aspect-oriented
+  programming, Tech. Rep. SPL97-009 P9710044, Palo Alto, CA, USA (February
+  1997).
+
+\bibitem{journals/cacm/parnas72a}
+D.~L. Parnas, On the criteria to be used in decomposing systems into modules.,
+  Commun. ACM 15~(12) (1972) 1053--1058.
+
+\bibitem{journals/tse/Parnas76}
+D.~L. Parnas, On the design and development of program families., IEEE Trans.
+  Software Eng. 2~(1) (1976) 1--9.
+
+\bibitem{EWD:EWD447}
+E.~W. Dijkstra, On the role of scientific thought, published as
+  \cite{EWD:EWD447pub}.
+\newline\urlprefix\url{\url{http://www.cs.utexas.edu/users/EWD/ewd04xx/EWD447.%
+PDF}}
+
+\bibitem{ZhCaJeMo06a}
+W.~Zhou, J.~Carette, D.~J. Jeffrey, M.~B. Monagan, Hierarchical representations
+  with signatures for large expression management, in: Proceedings of
+  Artificial Intelligence and Symbolic Computation, Vol. 4120 of Lecture Notes
+  in Computer Science, 2006, pp. 254--268.
+
+\bibitem{Bondorf:92}
+A.~Bondorf, Improving binding times without explicit {CPS}-conversion, in: 1992
+  ACM Conference on Lisp and Functional Programming. San Francisco, California,
+  1992, pp. 1--10.
+
+\bibitem{conf/pepm/BondorfD94}
+A.~Bondorf, D.~Dussart, Improving {CPS}-based partial evaluation: Writing cogen
+  by hand., in: PEPM, 1994, pp. 1--9.
+
+\bibitem{Haskell98Report}
+S.~Peyton~Jones, et~al., The Revised Haskell 98 Report, Cambridge Univ.\null{}
+  Press, 2003, also on \url{http://haskell.org/}.
+
+\bibitem{moggi-notions}
+E.~Moggi, Notions of computation and monads, Information and Computation 93~(1)
+  (1991) 55--92.
+
+\bibitem{Filinski:Representing}
+A.~Filinski, Representing monads., in: POPL, 1994, pp. 446--457.
+
+\bibitem{liang-interpreter}
+S.~Liang, P.~Hudak, M.~Jones, Monad transformers and modular interpreters, in:
+  {POPL} '95: Conference Record of the Annual {ACM} Symposium on Principles of
+  Programming Languages, {ACM} {P}ress, {N}ew {Y}ork, 1995, pp. 333--343.
+
+\bibitem{taha-environment}
+W.~Taha, M.~F. Nielsen, Environment classifiers, in: {POPL} '03: Conference
+  Record of the Annual {ACM} Symposium on Principles of Programming Languages,
+  {ACM} {P}ress, {N}ew {Y}ork, 2003, pp. 26--37.
+
+\bibitem{mlton-proplist}
+{{MLton} team}, Property list, \url{http://mlton.org/PropertyList}.
+
+\bibitem{Watt:2002:HCA}
+S.~M. Watt, Aldor, in: J.~Grabmeier, E.~Kaltofen, V.~Weispfennig (Eds.),
+  Computer Algebra Handbook: Foundations, Applications, Systems, Springer
+  Verlag, 2003.
+
+\bibitem{Gluck95}
+R.~Gl{\"u}ck, R.~Nakashige, R.~Z{\"o}chling, Binding-time analysis applied to
+  mathematical algorithms, in: System Modelling and Optimization, 1995.
+
+\bibitem{GluckJ97}
+R.~Gl{\"u}ck, J.~J{\o}rgensen, An automatic program generator for multi-level
+  specialization., Lisp and Symbolic Computation 10~(2) (1997) 113--158.
+
+\bibitem{edsl}
+P.~Hudak, Building domain-specific embedded languages, ACM Comput. Surv.
+  28~(4es) (1996) 196.
+
+\bibitem{WhenHowDSL}
+M.~Mernik, J.~Heering, A.~M. Sloane, When and how to develop domain-specific
+  languages, ACM Comput. Surv. 37~(4) (2005) 316--344.
+
+\bibitem{EWD:EWD447pub}
+E.~W. Dijkstra, On the role of scientific thought, in: Selected Writings on
+  Computing: A Personal Perspective, Springer-Verlag, 1982, pp. 60--66.
+
+\end{thebibliography}
 \appendix
 \section{The \texttt{perform} monad notation}
 \label{app:perform}
