@@ -203,7 +203,7 @@ The problems of compositionality of code generators, expressing
 dependencies among them and domain-specific knowledge remain.
 
 In this paper, we report on our continued progress \cite{CaretteKiselyov05}
-\footnote{We describe here an new version of our generator
+\footnote{We describe here a new version of our generator
   dealing with the complete LU decomposition algorithm, as well as
   linear solving. We worked out previously missing aspects of in-place
   updates, representing permutation matrices, dealing with augmented 
@@ -243,25 +243,24 @@ ordinary differential equations, as well as a reimplementation of
 the FFT algorithm from~\cite{KiselyovTaha}.  The technology presented
 here was amply sufficient for these implementations.  Since our current
 implementations of these algorithms are rather straightforward compared to 
-our versions of LU Decomposition, these will not be mentioned further
-in this paper (the code is available at \cite{metamonadsURL}).
+our versions of LU decomposition, we will not mention them further 
+(the code is available at \cite{metamonadsURL}).
 
 The rest of this paper is structured as follows: The next section
 gives an overview of the design space of LU decomposition algorithms.
-Then section~\ref{CPS}
+Section~\ref{CPS}
 introduces code generation in MetaOCaml, the problem of name
-generation, and continuation-passing style (CPS) as a general
-solution.  We also present a key monad and the issues around generating
+generation, and the continuation-passing style (CPS) as a general
+solution.  We also present the key monad and the issues of generating
 control statements. Section~\ref{functors} describes the use of
 parametrized modules of OCaml to encode all of the aspects of the
-LU decomposition algorithm family in completely separate,
-independent modules.  We briefly discuss related work in
-section~\ref{related}. We then outline future work. In our
-conclusion (section~\ref{conclusion}), we sum up our work, comment
-on programmings with aspects, and outline the overall methodology
-we used to structure our work.
-Appendices give samples of the generated code (which is available in
-full at \cite{metamonadsURL}).
+LU decomposition algorithm family as separate
+modules.  We discuss related work in
+Section~\ref{related} and outline future work. In our
+conclusion (Section~\ref{conclusion}) we comment
+on programmings with aspects and sum up our guiding methodology.
+Appendices give samples of the generated code, available in
+full at \cite{metamonadsURL}.
 
 \section{The design space}\label{design}
 
@@ -278,7 +277,7 @@ semantically related aspects to form the basis of our design.
 Throughout, we assume that the reader is familiar with the basic LU
 decomposition algorithm, which factors a invertible matrix $A$ into a unit
 lower triangular matrix $L$ and (usually) an upper triangular matrix $U$,
-such that $A = LU$.  When pivoting is used, we get a unitary matrix $P$ such
+such that $A = LU$.  Pivoting adds a unitary matrix $P$ such
 that the factorization is now $A = PLU$.  The case of numeric matrices is well
 covered in~\cite{Golub-vanLoan}.  When $A$ is singular, one can still get
 a $PLU$ decomposition with $L$ remaining unit lower-triangular. However, 
@@ -312,8 +311,8 @@ implementations (in various languages and settings).
 
 \newcounter{naspects}
 \begin{enumerate}
-	\item \textbf{Domain}: In which (algebraic) domain do the matrix
-		elements belong to.  Some implementations were very specific
+	\item \textbf{Domain}: the (algebraic) domain of matrix
+		elements.  Some implementations were very specific
 		($\mathbb{Z}, \mathbb{Q}, \mathbb{Z_p}, 
 		\mathbb{Z}_p\left[\alpha_1,\ldots,\alpha_n\right], 
 		\mathbb{Z}\left[x\right]$, $\mathbb{Q}\left(x\right)$, 
@@ -401,7 +400,7 @@ is desirable.
 advance to be real symmetric tri-diagonal, LU decomposition can be
 done in $O(n^2)$ rather than $O(n^3)$ time, at an additional $O(n)$
 storage cost.
-\item \textbf{Warnings}: If a domain permits only heuristic zero
+\item \textbf{Warnings}: In a domain with only heuristic zero
 testing, it is customary to issue a warning (or otherwise log) when 
 a potentially zero pivot is chosen.
 \item \textbf{In-place}: offering an option of in-place decomposition,
@@ -412,7 +411,7 @@ a potentially zero pivot is chosen.
 \end {enumerate}
 
 Most of these aspects are inter-dependent. For example, if the
-determinant is the part of the output, the determinant should be
+determinant is part of the output, the determinant should be
 tracked during the decomposition. Determinant should also be tracked
 if the fraction-free aspect is chosen. The availability of the length
 measure in the domain influences pivoting, \emph{if} pivoting
@@ -445,19 +444,26 @@ domain issues.  We hope to rectify this in the future.}
 	\item \textbf{Algorithmic Strategy}, such as fraction-free
 	  updates, pivoting strategies, augmented matrices.
 	\item \textbf{Tracking}, of determinant, rank, or pivot, etc.
-	\item \textbf{Staging}: whether the result if the program or a
+	\item \textbf{Staging}: whether the result is the program or a
 	  generator that will produce the program.
 \end{enumerate}
 
-\oleg{In-place updates is also the issue of concrete
-  representation! As well as of the abstract domains:
-  for some domains we just can't run LU with no extra
-  storage.} 
-\jacques{Correct.  There are issues which are ``relational'' rather
-than being completely independent.  The above categories seem to 
-be independent, but that is too simplistic.  Some aspects, like
-in-place, have quite a number of pre-conditions on other aspects
-before they can be realized.}
+%% \oleg{In-place updates is also the issue of concrete
+%%   representation! As well as of the abstract domains:
+%%   for some domains we just can't run LU with no extra
+%%   storage.} 
+%% \jacques{Correct.  There are issues which are ``relational'' rather
+%% than being completely independent.  The above categories seem to 
+%% be independent, but that is too simplistic.  Some aspects, like
+%% in-place, have quite a number of pre-conditions on other aspects
+%% before they can be realized.}
+
+\oleg{Perhaps we should just add the following phrase, paraphrased
+  from your remark:}
+The groupings are not entirely orthogonal (for example, in-place
+decomposition is possible only for specific domains), yet are useful
+as guidance in creating the modular LU generator discussed in 
+Section~\ref{functors}.
 
 \section{Generating binding statements, CPS, and monad}\label{CPS}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -669,14 +675,19 @@ generation, we will need yet another type variable, environment
 classifier \cite{taha-environment}. With type constructors taking more
 and more arguments, it becomes increasingly difficult to read and write
 types -- which we will be doing extensively when writing module
-signatures in Section~\ref{something}. The fact that OCaml renames all type
+signatures in Section~\ref{functors}. The fact that OCaml renames all type
 variables when printing out types confuses matters further. An elegant
 solution to these sorts of problems has been suggested by 
 Jacques Garrigue on the Caml mailing list 
 \jacques{edited to here}
-(cited from
-\url{http://groups.google.com/group/fa.caml/msg/e80b1245702d6b24}
-no date, no exact ref). We use a single type parameter |'p| to
+\oleg{I'd rather keep the following lines in the comments. I know
+  Jacques has been credited, but I don't have the exact reference
+  where he proposed it.}
+%% (cited from
+%% \url{http://groups.google.com/group/fa.caml/msg/e80b1245702d6b24}
+%% no date, no exact ref). 
+%
+We use a single type parameter |'p| to
 represent all parameters of our monad (all parameters but the type of
 the monadic value |'v|). The type variable |'p| is constrained to be
 the type of an object with methods (fields) |state| and |answer|. The
@@ -883,12 +894,13 @@ a field only when |p| is prime. Therefore, we must make this check,
 in the last line of the above code. That line differs from the other 
 bindings in |ZpMake| in that it neither defines a function, such as
 |plus|, nor binds a value, such as |zero|. Therefore, the non-value
-expression |assert (is_prime P.p)| will be evaluated
+expression |assert (is_prime P.p)|, to be called an initializing
+expression, will be evaluated
 when the corresponding module is instantiated, as in the following
 \begin{code}
 module Z19 = ZpMake(struct let p = 19 end)
 \end{code}
-We call such an expression an initializing expression. If we
+If we
 replace |p = 19| with |p = 9| above, we receive a run-time
 error. It is raised however as we instantiate and combine modules that
 will eventually make the generator.  Although the error is reported at
@@ -909,8 +921,8 @@ checks are all idempotent and maintain no state.
 \subsection{Abstract code and lifted domains}
 We will be using MetaOCaml operations to build code expressions, values
 of the type |('a,'v) code|. However, we wish to make our generators
-abstract over particular code representations. Therefore, in the
-following Sections (in the rest of the paper?) instead of
+abstract over particular code representations. Therefore, when writing
+the LU generator (Section~\ref{sec:det} and below), instead of
 MetaOCaml brackets and escapes we will be using code combinators
 described below. These combinators are functions that produce and
 combine values of the type of abstract code. 
@@ -962,7 +974,7 @@ domain |'a vc|, and once more from values to monadic computations
 
 We now convert the domains of values from the previous section into
 lifted domains, of abstract code values. We define the signature
-|DOMAINL| 
+|DOMAINL|:
 \begin{code}
 module S(T: sig type ('a, 'b) rep  end) = struct
 open T
@@ -980,8 +992,8 @@ module type DOMAINL = sig
   val normalizerL : ('a vc -> 'a vc) option
 end 
 \end{code}
-(part of the larger module |Domains_sig|) which is parameterised by
-the type of the abstract code, |('a, 'b) rep|. The line |include DOMAIN|
+(part of a larger module |Domains_sig|) that is parameterised by
+the type of abstract code, |('a, 'b) rep|. The line |include DOMAIN|
 says that lifted domains include all members of non-lifted domains,
 including the initializing expressions with pre-flight checks.
 The following is a particular instance of |DOMAINL|, the lifted
@@ -993,13 +1005,10 @@ open T
 module IntegerDomainL = struct
     include IntegerDomain
     type 'a vc = ('a,v) code
-    let zeroL = .< 0 >.  
-    let oneL = .< 1 >. 
-    let (+^) x y = .<.~x + .~y>. 
-    let ( *^ ) x y = .<.~x * .~y>.
-    let ( -^ ) x y = .<.~x - .~y>.
+    let zeroL = .< 0 >.  and oneL = .< 1 >. 
+    let (+^) x y = .<.~x + .~y>. and ( -^ ) x y = .<.~x - .~y>.
+    let ( *^ ) x y = .<.~x * .~y>. and divL x y = .<.~x / .~y>. 
     let uminusL x = .<- .~x>.
-    let divL x y = .<.~x / .~y>. 
     let normalizerL = None
     let better_thanL = Some (fun x y -> .<abs .~x > abs .~y >. )
 end
@@ -1175,7 +1184,7 @@ checks static.
 
 
 \subsection{Determinant aspect}
-
+\label{sec:det}
 To track determinant we should be able to generate code
 for: defining variables used for tracking (|decl|),
 updating the sign or the absolute
@@ -1184,7 +1193,7 @@ to the final determinant value of the type |outdet|. LU of a
 floating-point matrix with no determinant tracking uses the
 instantiation of |DETERMINANT| where |outdet| is |unit| and all the
 functions of that module generate no code. For integer matrices, we
-have to track some aspects of the determinant, even if we don't output
+have to track some aspects of the determinant, even if we do not output
 it. The determinant tracking aspect is complex because tracking
 variables, if any, are to be declared at the beginning of LU; the sign
 of the determinant has to be updated on each row or column
@@ -1193,7 +1202,7 @@ pivoting. We use |lstate| to pass the tracking state, e.g., a piece of
 code for the value of the type |Dom.v ref|, among
 various determinant-tracking functions. The |lstate| is a part of the
 overall monadic state. 
-Other aspects follow a similar outline
+Other aspects follow a similar outline.
 
 \begin{code}
 module type DETERMINANT = sig
@@ -1213,10 +1222,10 @@ module type DETERMINANT = sig
 end
 \end{code}
 
-We have two instances of |Det|. The first one is used when the user
-requested that no determinant tracking is needed, and so no code is
+We have two instances of |Det|. The first one is used to specify
+no determinant tracking, and so no code is
 generated. The methods just return without executing any
-code-generation action.
+code-generation actions.
 \begin{code}
 module NoDet =
   struct
@@ -1245,11 +1254,9 @@ module AbstractDet =
   struct
   open C.Dom
   type tdet = v ref
-  (* the first part of the state is an integer: which is +1, 0, -1:
-     the sign of the determinant *)
   type 'a lstate = ('a,int ref) abstract * ('a,tdet) abstract
   let decl () = perform
-      ddecl <-- retN (liftRef oneL);
+      ddecl <-- retN (liftRef oneL); (* track the sign: +1, 0, -1 *)
       dsdecl <-- retN (liftRef Idx.one);
       mo_extend ip (dsdecl,ddecl);
       unitL
@@ -1327,23 +1334,25 @@ semantic error when a user specifies that the determinant should be computed
 and returned and yet specifies the |NoDet| aspect which tracks no
 determinant at all.
 
-It is also worth noticing the |INTERNAL_FEATURES| type, which bundles
-various information tracking aspects.  These are in some ways rather
-intruiging: they are purely internal to the algorithms, yet they are the
-ones which
-are most dependent on other choices.  The \emph{implementation} of these
-aspects is completely orthogonal to the other aspects, however their
-\emph{compositionality properties} are deeply enmeshed with that of other
-aspects.  While writing the code for these was straightforward enough,
-this required quite a bit of type-level infrastructure, as well as the
-preflight checks%
-\footnote{We had originally~\cite{CaretteKiselyov05} implemented all our
-preflight tests at the type level, but this did not scale.}
-to get everything to work properly.
+The module of the signature |INTERNAL_FEATURES| bundles information
+tracking aspects. The latter are not directly selectible by the
+user. Rather, they are \emph{function} of other user choices. The
+implementations of the tracking aspects such as |Rank|, |NoRank|,
+|PackedLower| are quite similar (and simpler) than the implementation
+of the |AbstractDet| and |NoDet| aspects in Section~\ref{sec:det}. The
+choice of a particular tracking aspect may depend on all other choices
+(e.g., it is not possible to extract the |L| factor if the domain is
+not a field). Currently we use pre-flight checks to ensure consistency
+of tracking aspects. Previously~\cite{CaretteKiselyov05} we tried to
+implement all our preflight tests at the (module) type level, using
+sharing constraints and module computations. That lead to obscure
+code, long impenetrable type error messages and made compilation very
+slow.
+
 
 \subsection{Main generation}
-We combine all aspects in a record, which serevs as a keyword
-argument list to the |GenGE| functor below.
+We combine all user-selectable aspects in a record, which serves as a `keyword
+argument' list to the |GenGE| functor below.
 \begin{code}
 module type FEATURES = sig
   module Det       : DETERMINANT
@@ -1381,13 +1390,14 @@ is the GE generator, |GE| (which we open as well). Besides |GE|, the
 module |G_GVC_I| includes the generator for GE solvers.  The main
 generator functor is |GenGE|, shown later.  We instantiate the
 generator by passing the functor the `record' of various aspects; the
-order is irrelevant, but all aspects like |Det|, etc. must be
+order is irrelevant, but all aspects suc as |Det| must be
 specified. In the code above, we request GE generation with full
 pivot, fraction-free update, operate on non-augmented matrix and
 return the |U| factor, determinant and the rank. We run the monad
 passing the initial state |[]| and obtain the code, which we can see
 by printing |resIV5|. The code can then be ``compiled'' as |!. resIV5|
-or with off-shoring. The code for |resIV5| (Appendix A) shows full
+or with off-shoring. The code for |resIV5|
+(App.~\ref{app:code-GenIV5}) shows full
 pivoting, determinant and rank tracking. The code for all these
 aspects is fully inlined; no extra functions are invoked and no tests
 other than those needed by the LU algorithm itself are performed. The
@@ -1409,7 +1419,7 @@ module GenFA9 = GenGE(struct
     module Input = InpJustMatrix
     module Output = Out_LU_Packed end)
 \end{code}
-The code generated by |GenFA9| (Appendix B) shows no traces of
+The code generated by |GenFA9| (App.~\ref{app:code-GenFA9}) shows no traces of
 determinant tracking whatsoever: no declaration of spurious variables,
 no extra tests, etc. The code appears as if the determinant tracking
 aspect did not exist at all. The generated code for the above and
@@ -1421,7 +1431,7 @@ timing comparisons.
 The LU generator functor itself is 
 parameterized by the domain, container, pivoting policy (full, row,
 nonzero, no pivoting), update policy (with either `fraction-less'
-or full division), and the result specification. Some of the
+or full division), and the output specification. Some of the
 argument modules such as |PIVOT| are functors themselves (parameterized
 by the domain, the container, and the determinant functor). 
 
@@ -1500,7 +1510,7 @@ end
 There are more pre-flight checks for various ``semantic'' 
 constraints, shown
 in the following structure of the |UPDATE| signature:
-\vspace*{-5pt}\begin{code}
+\begin{code}
 module DivisionUpdate(Det:DETERMINANT) =
   struct
   open C.Dom = struct 
@@ -1508,11 +1518,10 @@ module DivisionUpdate(Det:DETERMINANT) =
 end
 \end{code}
 %
-This structure implements an update policy of using
-|Dom.div| operation without restrictions -- which is possible only if
-the domain has such an unrestricted operation. A domain such as the integer
-domain may still provide |Dom.div| of the same type, but that operation may
-only be used when we are sure that the division is exact. Thus if we
+This structure implements an update policy relying on
+unrestricted |Dom.div|. Many domains provide |Dom.div|, for example,
+the integer domain. The latter however assumes that division is applied
+only if the dividend is the exact multiple of the divisor. Thus if we
 specified |module Update = DivisionUpdate| when instantiating |GenIV5|
 above, we would have received an error because |IntegerDomainL| is not
 a field. That run-time error occurs before any code is produced (i.e.,
@@ -1583,6 +1592,7 @@ similar design, namely Maple's?  The fact that all choices there are
 dynamic, while all ours are completely static really shows that the
 design space along the dynamic--static dimension is quite large and
 versatile.}
+\oleg{yes, please!}
 
 Unlike traditional approaches
 \cite{journals/cacm/parnas72a}, the interfaces of our generated
@@ -1633,25 +1643,23 @@ potential program traces, specified in a particular language; these tend
 to be created to follow the operational behaviour of existing code, but
 is not restricted to such a setting.
 In our work, aspects are weaved together ``from scratch'' to
-make up a piece of code/functionality.  One can understand previous work to be
+make up a piece of code.  One can understand previous work to be
 more akin to dynamically typed, and dynamically specified aspect weaving, while
 we have started investigating statically typed and statically specified
 aspect weaving.
 
 While the first two families of aspects (abstract domain and concrete
-representation) are the most obvious, it is quite
-difficult to separate them out cleanly.  This seems to stem from the fact
-that in a non-staged setting, separating out these aspects leads to such
-fantastically inefficient code, especially in the setting of scientific
-computation, that our experience works \emph{against us}.  While it would
-be too much to speak of a paradigm shift, it is necessary to firmly think
-in terms of abstract ideal design while avoiding all thoughts of traditional
-efficiency.  Interestingly, in conversations that the first author had
-with D. Parnas, we discovered this is apparently
-what~\cite{journals/cacm/parnas72a} was advocating.  We believe that we are
-taking the first steps towards a \emph{typed yet efficient} realization of
-these ideas, where the various design-time entities can be directly encoded in
-machine-checkable form.
+representation) are the most obvious, it is quite difficult to
+separate them out cleanly. Attempts at such a separation in a
+non-staged setting, have lead to fantastically inefficient code,
+unacceptable for scientific computation. Staging permitted us, perhaps
+for the first time, to think in terms of an ideal design without
+worrying about abstraction penalties.  Interestingly, in conversations
+of the first author with D. Parnas, we discovered this is
+apparently what~\cite{journals/cacm/parnas72a} was advocating.  We
+believe that we are taking the first steps towards a \emph{typed yet
+  efficient} realization of these ideas, where the various design-time
+entities can be directly encoded in machine-checkable form.
 
 \subsection{Methodology}
 
@@ -1662,6 +1670,13 @@ an embedded domain-specific language (EDSL) \cite{edsl,WhenHowDSL}.
 Our approach, using staging, monads and functors, seems to permit 
 an extensible set of aspects and appears flexible enough for iterative
 improvement in the design.
+
+\oleg{I'm inclined to suggest to omit the following, or at least
+  abbreviate. The omitting may be the best option as we don't have
+  much time for editing. The problem with explaining methodology is
+  like explaining Buddhism: it is all obvious. As I read about Zen
+  Buddhism: its simple truths are understandable if you already know
+  them.}
 
 As we wanted to ensure that we were indeed firmly in a \emph{cogen} setting,
 we abstracted out the underlying programming language completely.  This 
@@ -1708,38 +1723,34 @@ was joint work with Lydia van Dijk.
 
 \bibliography{metamonads}
 \bibliographystyle{elsart-num}
-\section{Appendix 0}
+\appendix
+\section{The \texttt{perform} monad notation}
 \label{app:perform}
-Grammar of our perform monad
 We support four different constructs to introduce a monadic
-expressions.
-
+expressions:
 \begin{code}
   perform exp
   perform exp1; exp2
   perform x <-- exp1; exp2
   perform let x = foo in exp
 \end{code}
-
 which is almost literally the grammar of the Haskell's "do"-notation,
 with the differences that Haskell uses |do| and |<-| where we use
 |perform| and |<--|.
-
 We support not only |let x = foo in ...|  expressions but arbitrarily
 complex let-expressions, including |let rec| and |let module|.
 
 The actual bind function of the monad defaults to |bind| and the
 pattern-match--failure function to |failwith| (only used for refutable
-patterns).  To select a different function, use the
-extended forms of |perform|. For example, use the function named 
-|bind| from module |Mod|.  In
-addition use the module's |failwith|-function in refutable patterns.
+patterns).  Extended forms of |perform| let us override these
+defaults. For example, to use the function named 
+|bind| from module |Mod|, we write
 \begin{code}
         perform with module Mod in exp2
 \end{code}
-The code has full explanation...
 
-\section{Appendix A}
+\section{Code of the \texttt{GenIV5} algorithm}
+\label{app:code-GenIV5}
 The code generated for |GenIV5|, fraction-free LU of the integer matrix
 represented by a flat vector, full pivoting, returning the |U|-factor,
 the determinant and the rank.
@@ -1830,7 +1841,9 @@ val resIV5 : ('a, GVC_I.contr -> GenIV5.O.res) code =
     else if ((! t_8) = 1) then (! t_7)
     else (~- (! t_7)), (! t_2))>.
 \end{code2}
-\section{Appendix B}
+
+\section{Code of the \texttt{GenFA9} algorithm}
+\label{app:code-GenFA9}
 The code generated for |GenFA9|, LU of the floating point
 non-augmented matrix
 represented by a 2D array, row pivoting, returning the complete
