@@ -1,8 +1,6 @@
 \usepackage{amsmath}
 \usepackage{amssymb}
 \usepackage{comment}
-% APLAS
-% \usepackage[compact]{titlesec} 
 \usepackage{hyphenat}
 \usepackage{url}
 \usepackage{prooftree1} \proofrulebaseline=1.5ex \proofdotseparation=.75ex
@@ -17,10 +15,10 @@
 
 \usepackage[compact]{fancyvrb1}
 \DefineShortVerb{\|}
-\DefineVerbatimEnvironment{code}{Verbatim}{xleftmargin=\parindent}
-\DefineVerbatimEnvironment{code2}{BVerbatim}{xleftmargin=\parindent,baseline=t}
-\DefineVerbatimEnvironment{code3}{Verbatim}{xleftmargin=\parindent,baseline=t,fontsize=\small}
-\DefineVerbatimEnvironment{code4}{Verbatim}{baseline=t,fontsize=\small}
+\fvset{xleftmargin=\parindent,baseline=t}
+\DefineVerbatimEnvironment{code}{Verbatim}{}
+\DefineVerbatimEnvironment{code2}{BVerbatim}{}
+\DefineVerbatimEnvironment{code3}{Verbatim}{fontsize=\small}
 
 \DeclareMathOperator{\pe}{PE}
 \DeclareMathOperator{\si}{SI}
@@ -51,10 +49,12 @@
 \newcommand{\ident}[1]{\mathinner{\text{\textit{#1\/}}}}
 \newcommand{\subst}[3]{#1\left\{#2\mapsto#3\right\}}
 
-\newenvironment{floatrule}{}{}
+\newenvironment{floatrule}{\ifshort\else\hrule\vskip\abovedisplayskip\fi}{\ifshort\else\vskip\belowdisplayskip\hrule\vskip\belowdisplayskip\fi}
 
 \newcommand{\ourthanks}{We thank Martin Sulzmann and Walid Taha 
 for helpful discussions.  Sam Staton, Pieter Hofstra, and Bart Jacobs
 kindly provided some useful references.
 %on coalgebraic structures in the $\lambda$\hyp calculus.
 We thank anonymous reviewers for pointers to related work.}
+
+\newif\ifshort

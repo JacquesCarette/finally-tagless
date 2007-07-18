@@ -23,8 +23,7 @@ evaluator, and call-by-name and
 call-by-value CPS transformers.
 
 Our main idea is to encode
-% de Bruijn or higher-order abstract syntax
-HOAS
+\ifshort HOAS \else de Bruijn or higher-order abstract syntax \fi
 using cogen functions rather than data constructors.
 In other words, we represent object terms not in an initial algebra
 but using the coalgebraic structure of the $\lambda$-calculus.
@@ -46,7 +45,7 @@ bindings.
     refined syntactic type structure. Ideally, such a treatment should
     be metacircular, in the sense that the type structure used in the
     defined language should be adequate for the defining language.
-    \hfill\rm John Reynolds~\citep{reynolds-definitional}
+    \rm \ifshort \hfill John Reynolds~\fi\citep{reynolds-definitional}
 \end{quote}
 
 %\category{CR-number}{subcategory}{third-level}
@@ -102,88 +101,84 @@ values in the metalanguage in a universal type, a generalized algebraic
 data type (GADT), or a dependent type.  In the remainder of this section,
 we discuss these solutions, identify their drawbacks, then summarize our
 proposal and contributions.  
-%aplas
-\begin{comment}
+\ifshort
+We leave aside the solved problem of writing a parser\slash type\hyp checker,
+for embedding object language objects into the metalanguage
+(whether using dependent types \cite{WalidICFP02} or not \cite{baars-typing}),
+and just enter them by hand.
+\else
 No matter how we represent the object language in the
 metalanguage, the representation can be created either by hand (for example, by
 entering object terms at a metalanguage interpreter's prompt) or
 by a parser\slash type\hyp checker reading from a text string.
 We leave aside the solved problem of writing such a parser\slash type\hyp checker,
 whether using dependent types \cite{WalidICFP02} or not \cite{baars-typing}.
-\end{comment}
-%aplas-else
-We leave aside the solved problem of writing a parser\slash type\hyp checker,
-for embedding object language objects into the metalanguage
-(whether using dependent types \cite{WalidICFP02} or not \cite{baars-typing}),
-and just enter them by hand.
-%aplas
+\fi
 
 \subsection{The tag problem}\label{tagproblem}
 
-% see tagless\_interp1.ml, module Tagfull for the complete code.
-% If you change the code in here, please adjust the .ml file
-% accordingly. Let the paper and the accompanying code be in sync.
-It is straightforward to create an algebraic data type, say in OCaml~%
-%aplas-specific
-Fig.~\ref{fig:tag-problem}(a)%
-, to
-represent object terms such as those in Figure~\ref{fig:object}.
-% fig:tag-problem part (a) was here
-For brevity, we elide treating integers, conditionals, and fixpoint in
-this section.
-We represent each variable using a unary de Bruijn index.
-For example, we represent the object term $(\fun{x}x)\True$ as
-%aplas-specific
-\texttt{let test1 = A (L (V VZ), B true)}.
-%aplas-else
-\begin{comment}
-\begin{code}
-let test1 = A (L (V VZ), B true)
-\end{code}
-\end{comment}
-
-\begin{figure}
-%
-(a) \begin{code2}
+\begin{SaveVerbatim}{2a}
 type var = VZ | VS of var
 type exp = V of var | B of bool | L of exp | A of exp * exp
-\end{code2}
-
-(b) \begin{code2}
-let rec lookup (x::env) = function | VZ   -> x
-                                   | VS v -> lookup env v
+\end{SaveVerbatim}
+\begin{SaveVerbatim}[commandchars=\@\{\}]{2b}
+let rec lookup (x::env) = function VZ -> x | VS v -> lookup env v
 let rec eval0 env = function
 | V v       -> lookup env v
 | B b       -> b 
 | L e       -> fun x -> eval0 (x::env) e
 | A (e1,e2) -> (eval0 env e1) (eval0 env e2) 
-\end{code2}
-
-(c) \begin{code2}
+\end{SaveVerbatim}
+\begin{SaveVerbatim}{2c}
 type u = UB of bool | UA of (u -> u)
-\end{code2}
-
-(d) \begin{code2}
+\end{SaveVerbatim}
+\begin{SaveVerbatim}{2d}
 let rec eval env = function
 | V v       -> lookup env v
 | B b       -> UB b
 | L e       -> UA (fun x -> eval (x::env) e)
 | A (e1,e2) -> match eval env e1 with UA f -> f (eval env e2)
-\end{code2}
+\end{SaveVerbatim}
+\begin{SaveVerbatim}{test1}
+let test1 = A (L (V VZ), B true)
+\end{SaveVerbatim}
+
+% see tagless\_interp1.ml, module Tagfull for the complete code.
+% If you change the code in here, please adjust the .ml file
+% accordingly. Let the paper and the accompanying code be in sync.
+It is straightforward to create an algebraic data type, say in OCaml\ifshort\
+Fig.~\ref{fig:tag-problem}(a)\fi, to
+represent object terms such as those in Figure~\ref{fig:object}.
+For brevity, we elide treating integers, conditionals, and fixpoint in
+this section.
+\ifshort\else\UseVerbatim{2a}\fi
+We represent each variable using a unary de Bruijn index.
+For example, we represent the object term $(\fun{x}x)\True$ as
+\ifshort \BUseVerbatim{test1}.\else \UseVerbatim{test1}\fi
+
+\ifshort
+\begin{figure}
+%
+(a) \BUseVerbatim{2a}
+
+(b) \BUseVerbatim{2b}
+
+(c) \BUseVerbatim{2c}
+
+(d) \BUseVerbatim{2d}
 \caption{OCaml code illustrating the tag problem.}
 \label{fig:tag-problem}
 \end{figure}
-% 
+\fi
+
 Following \cite{WalidICFP02},
-we try to implement an interpreter function |eval0|%
-%aplas-specific
-, Fig.~\ref{fig:tag-problem}(b)%
-. It takes
+we try to implement an interpreter function |eval0|\ifshort,
+Fig.~\ref{fig:tag-problem}(b)\fi. It takes
 an object term such as |test1| above and gives us its value.
 The first argument to |eval0| is the environment, initially empty,
 which is the list of values bound to free variables in the
 interpreted code.
-% fig:tag-problem part (b) was here
+\ifshort\else\UseVerbatim{2b}\fi
 If our OCaml-like metalanguage were untyped, the code above would be 
 acceptable.
 The |L e| line exhibits interpretive overhead:
@@ -201,58 +196,46 @@ A related problem is the type of the environment |env|: a regular
 OCaml list cannot hold both boolean and function values. 
 
 The usual solution is to introduce a universal type \citep[\S1.3]
-{WalidICFP02} containing both booleans and functions%
-%aplas-specific
-, Fig.~\ref{fig:tag-problem}(c)%
-.
-% fig:tag-problem part (c) was here
-We can then write a typed interpreter%
-%aplas-specific
-, Fig.~\ref{fig:tag-problem}(d)
-% fig:tag-problem part (d) was here
+{WalidICFP02} containing both booleans and functions\ifshort,
+Fig.~\ref{fig:tag-problem}(c)\fi.
+\ifshort\else\UseVerbatim{2c}\fi
+We can then write a typed interpreter\ifshort,
+Fig.~\ref{fig:tag-problem}(d), \else\UseVerbatim{2d}\fi
 whose inferred type is |u list -> exp -> u|. Now we can evaluate
-%aplas-specific
+\ifshort
 \texttt{eval [] test1} obtaining |UB true|.
-%aplas-else
-\begin{comment}
+\else
 \begin{code}
 let test1r = eval [] test1
 val test1r : u = UB true 
 \end{code}
-\end{comment}
-% fig:tag-problem part (f) was here
+\fi
 The unfortunate tag |UB| in the result reflects that |eval| is a partial
 function.  
-%aplas-specific
-First, the pattern match |with UA f| in the line |A (e1,e2)| is not 
-exhaustive, so |eval| can fail if we apply a boolean,
-as in the ill-typed term |A (B true, B false)|.
-Second, the |lookup|
-function assumes a nonempty environment, so |eval| can fail if we
-evaluate an open term |A (L (V (VS VZ)), B true)|.
-After all, the type |exp| represents object
-terms both well-typed and ill-typed, both open and closed.
-%aplas-else
-\begin{comment}
 First, the pattern match |with UA f| in the line
 |A (e1,e2)| is not exhaustive, so |eval| can fail if we apply a boolean,
 as in the ill-typed term |A (B true, B false)|.
+\ifshort\else
 \begin{code}
 let test2 = A (B true, B false)
 let test2r = eval [] test2
 Exception: Match_failure in eval
 \end{code}
+\fi
 Second, the |lookup|
 function assumes a nonempty environment, so |eval| can fail if we
 evaluate an open term
+\ifshort
+|A (L (V (VS VZ)), B true)|.
+\else
 \begin{code}
 let test3 = A (L (V (VS VZ)), B true)
 let test3r = eval [] test3
 Exception: Match_failure in lookup
 \end{code}
+\fi
 After all, the type |exp| represents object
 terms both well-typed and ill-typed, both open and closed.
-\end{comment}
 
 If we evaluate only closed terms that have been type-checked, then
 |eval| would never fail. Alas, this soundness is not obvious to the
@@ -266,96 +249,95 @@ interpretation \cite{WalidICFP02} and impair optimality in partial evaluation
 \cite{taha-tag}.  In short, the universal\hyp type solution is
 unsatisfactory because it does not preserve typing.
 
-%aplas-else
-\begin{comment}
-\subsection{Solutions using fancier types}
-\end{comment}
+\ifshort\else\subsection{Solutions using fancier types}\fi
 
 It is commonly thought that to interpret a typed object language in
 a typed metalanguage while preserving types is difficult and requires
 GADTs or dependent types \citep{taha-tag}.  In fact, this problem
 motivated much work on GADTs \cite{xi-guarded,peyton-jones-simple} and
 on dependent types \cite{WalidICFP02,fogarty-concoqtion}.
-%aplas-else
-\begin{comment}
+\ifshort\else
 For a metalanguage's type system to allow the well-typed object term
 |test1| but disallow the ill-typed object term |test2|, fancier types
 such as GADTs or dependent types seem necessary.  
-\end{comment}
+\fi
 Yet other type systems
 have been proposed to distinguish closed terms like |test1| from open
 terms 
-%aplas-comment: like |test3|
-%aplas \cite{WalidPOPL03,NanevskiICFP02,NanevskiJFP05,DaviesJACM01,nanevski-contextual},
-\cite{WalidPOPL03,NanevskiJFP05,DaviesJACM01},
+\ifshort\cite{WalidPOPL03,NanevskiJFP05,DaviesJACM01}\else
+like |test3|
+\cite{WalidPOPL03,NanevskiICFP02,NanevskiJFP05,DaviesJACM01,nanevski-contextual}\fi,
 so that |lookup| never receives an empty environment.  We discuss these
-proposals further in \S\ref{related}%
-%aplas-specific
-.
-%aplas-else
-\begin{comment}
-; here we just note that many
+proposals further in \S\ref{related}\ifshort\else;
+here we just note that many
 advanced type systems have been devised to ensure statically that an
-object term is well-typed and closed.
-\end{comment}
+object term is well-typed and closed\fi.
 
 \subsection{Our final proposal}\label{ourapproach}
 
 We represent object programs using ordinary functions rather than
-data constructors.  The interpreter below provides these functions
-\begin{code4}
+data constructors.  These functions comprise the entire interpreter, shown
+below.
+\ifshort
+\begin{code3}[xleftmargin=0pt]
 let varZ env    = fst env       let b (bv:bool) env = bv
 let varS vp env = vp (snd env)  let app e1 e2 env   = (e1 env) (e2 env)
 let lam e env   = fun x -> e (x,env)
-\end{code4}
-which comprise the entire interpreter.
+\end{code3}
+\else
+\begin{code}
+let varZ env        = fst env
+let varS vp env     = vp (snd env)
+let b (bv:bool) env = bv
+let lam e env       = fun x -> e (x,env)
+let app e1 e2 env   = (e1 env) (e2 env)
+\end{code}
+\fi
 We now represent our sample term $(\fun{x}x)\True$ as
-%aplas-specific
-\texttt{let testf1 = app (lam varZ) (b true)}
-%aplas-else
-\begin{comment}
+\ifshort
+\texttt{let testf1 = app (lam varZ) (b true)}.
+\else
 \begin{code}
 let testf1 = app (lam varZ) (b true)
 \end{code}
-\end{comment}
+\fi
 This representation is almost the same as in \S\ref{tagproblem}, only
 written with lowercase identifiers. To evaluate an object term is to
-apply its representation to the empty environment%
-%aplas-specific
-, |testf1 ()|, obtaining |true|.
-%aplas-else
-\begin{comment}
+apply its representation to the empty environment\ifshort
+, |testf1 ()|, obtaining |true|\fi.
+\ifshort\else
 \begin{code}
 let testf1r = testf1 ()
 val testf1r : bool = true
 \end{code}
-\end{comment}
+\fi
 The result has no tags: the interpreter patently uses no tags and no
 pattern matching. The term |b true| evaluates to a boolean and the term
 |lam varZ| evaluates to a function, both untagged. The |app| function
 applies |lam varZ| without pattern matching. What is more, evaluating an
-%aplas-specific
-open term such as \texttt{app (lam (varS varZ)) (b true)}
-gives a type- rather than a run-time error.
-%aplas-else
-\begin{comment}
+open term such as
+\ifshort
+\texttt{app (lam (varS varZ)) (b true)}
+\else
+|testf3| below
+\fi
+gives a type error rather than a run-time error.
+\ifshort\else
 \begin{code}
-open term such as |testf3| below gives a type error rather than
-a run-time error
 let testf3 = app (lam (varS varZ)) (b true)
 let testf3r = testf3 ()
 \end{code}
-\end{comment}
+\fi
 The type error correctly complains
-that the initial environment should be a tuple rather than |()|.
+that the initial environment should be a tuple rather than~|()|.
 In other words, the term is open.
 
 In sum, by Church\hyp encoding terms using ordinary functions, we
 achieve a tagless evaluator for a typed object language in a
 metalanguage with a simple 
-%aplas
-Hindley-Milner type system%
-%aplas \cite{hindley-principal,milner-theory}
+\ifshort
+Hindley-Milner \fi
+type system\ifshort\else\ \cite{hindley-principal,milner-theory}\fi
 .  In this \emph{final} rather
 than \emph{initial} approach, both kinds of run-time errors in
 \S\ref{tagproblem} (applying a nonfunction and evaluating an open
@@ -367,18 +349,18 @@ the serious performance penalty \cite{WalidICFP02} of error checking.
 \Citet{Gluck-jones-optimality} explains deeper technical reasons that
 inevitably lead to these performance penalties.
 
-Our solution is emphatically distinct from Church-encoding of the
-universal type. Church-encoding of the type |u|, \S\ref{tagproblem},
-requires two continuations; the interpreter (see |app| above) would
-have to provide both to the encoding of |e1|. The continuation
-corresponding to the |UB| branch of |u| must either raise an error or
-loop. For a well-typed object term that error continuation is never
-invoked, yet it must be supplied. Our interpreter has no error
+Our solution is \emph{not} Church-encoding the
+universal type. The Church encoding of the type~|u| in \S\ref{tagproblem}
+requires two continuations; the function |app| in the interpreter above would
+have to provide both to the encoding of~|e1|. The continuation
+corresponding to the |UB| case of~|u| must either raise an error or
+loop. For a well-typed object term, that error continuation is never
+invoked, yet it must be supplied. In contrast, our interpreter has no error
 continuation at all.
 
 The evaluator above is wired directly into the
-functions |b|, |lam|, |app|, and so on.  %In the rest of this paper, 
-We explain how to abstract the interpreter so as
+functions |b|, |lam|, |app|, and so on.  \ifshort We \else In the rest of this paper, we \fi
+explain how to abstract the interpreter so as
 to process the \emph{same} term in many other
 ways: compilation, partial evaluation, CPS
 conversion, and so forth.
@@ -397,14 +379,12 @@ representation but varying the interpreter, we can
     \item even partially evaluate the term, online; and
     \item transform the term to continuation\hyp passing style (CPS),
         including call-by-name (CBN) CPS, so to isolate the evaluation
-        order of the object language from that of the metalanguage
-%aplas
+        order of the object language from that of the metalanguage.\ifshort
 \footnote{Due to serious lack of space, 
-we refer the reader to the accompanying code for this.}%
-.
+we refer the reader to the accompanying code for this.}\fi
 \end{itemize*}
 We have programmed our interpreters in OCaml (and, for staging,
-\cite{metaocaml}) and standard Haskell. The complete code is available
+MetaOCaml) and standard Haskell. The complete code is available at
 \url{http://okmij.org/ftp/packages/tagless-final.tar.gz}
 to supplement the paper. Our examples below switch between (Meta)OCaml
 and Haskell even though we have implemented each example equivalently in
@@ -412,23 +392,22 @@ both metalanguages, because some of our claims are more obvious in one
 metalanguage than the other.  For example, MetaOCaml provides
 convenient, typed staging facilities.
 
-We take the problem of tagless (staged) typed-preserving
-interpretation exactly as it was posed in \cite{WalidICFP02} and
-\cite{xi-guarded}.  We use their running examples and achieve the
+We attack the problem of tagless (staged) typed-preserving
+interpretation exactly as it was posed
+by \citet{WalidICFP02} and \citet{xi-guarded}.
+We use their running examples and achieve the
 result they call desirable.  Our contributions are as follows.
 
 \begin{enumerate*}
 \item We build interpreters that evaluate (\S\ref{language}),
     compile (or evaluate with staging) (\S\ref{compiler}), and partially evaluate (\S\ref{PE}) a typed higher-order object language
-   in a typed metalanguage, in direct and continuation\hyp passing styles%
-% aplas
-%   (\S\ref{variations}).
-.
+   in a typed metalanguage, in direct and continuation\hyp passing
+   styles\ifshort\else\ (\S\ref{variations})\fi.
 \item All these interpreters use no type tags, patently never get stuck,
     and need no advanced type-system features such as GADTs, dependent types,
     or intentional type analysis.
 \item The partial evaluator avoids polymorphic lift and delays binding-time
-    ana-lysis.  It bakes a type-to-type map into the interpreter
+    analysis.  It bakes a type-to-type map into the interpreter
     interface to eliminate the need for GADTs and thus remain portable
     across Haskell 98 and ML.
 \item We use the type system of the metalanguage
@@ -436,24 +415,12 @@ result they call desirable.  Our contributions are as follows.
 \item We show clean, comparable implementations in MetaOCaml and Haskell.
 \item We specify a functor signature that encompasses all our
   interpreters, from evaluation and compilation (\S\ref{language}) 
-   to partial evaluation%
-% aplas: commented
-%  and CPS transformation (\S\ref{PE}).
-.
+   to partial evaluation \ifshort\else and CPS transformation \fi(\S\ref{PE}).
 \item We point a clear way to extend the object language with more features
-    such as state%
-%aplas (\S\ref{state})%
-%aplas
-\footnote{again, see code}
-.
+    such as state\ifshort\else~(\S\ref{state})\fi.\ifshort\footnote{Again, please see our code.}\fi
 \item We describe an approach to self\hyp interpretation compatible with the
-  above%
-%aplas: (\S\ref{selfinterp})
-.  Self\hyp interpretation turned out
-  harder than expected%
-%aplas
-\footnotemark[\value{footnote}]
-.
+  above\ifshort\else~(\S\ref{selfinterp})\fi.  Self\hyp interpretation turned out
+  harder than expected.\ifshort\footnotemark[\value{footnote}]\fi
 \end{enumerate*}
 Our code is surprisingly simple and obvious in hindsight, but
 it has been an open problem to
@@ -465,15 +432,16 @@ recently that some work on programming type-indexed values in ML
 \cite{yang-encoding} has given a hint of how such a function can be
 expressed.''  We discuss related work in~\S\ref{related}.
 
-We reiterate that we specifically do not propose any new language
-feature or technique. We use the existing, known approaches --
-Hindley-Milner type system with inference-preserving module system or
-constructor classes extensions, as realized in ML or Haskell98 -- to
-solve the problem that was stated in published record as lacking
-solution in ML or Haskell98 and most likely unimplementable in these
-languages without extensions. The simplicity of our solution and our
-use of only mainstream functional language features makes typed
-embedded DSLs more practical to build.
+To reiterate, we do \emph{not} propose any new language
+feature or technique. We use features already present in
+mainstream functional languages---Hindley-Milner
+type system with either an inference\hyp preserving module system or
+constructor classes, as realized in ML and Haskell 98---to
+solve the problem that was stated in the published record as
+unsolved and likely unsolvable in ML or Haskell 98
+without extensions. The simplicity of our solution and our
+use of only mainstream features makes it more practical to build typed,
+embedded domain\hyp specific languages.
 \begin{comment}
 We may claim some contribution about type-preserving CPS. Check
 related work section in \cite{Guillemette-Monier-PLPV}, especially
@@ -498,19 +466,11 @@ also ensures that our object programs are closed.
 
 \subsection{How to make encoding flexible: abstract the interpreter}
 \label{encoding}
-We embed our language in (Meta)OCaml and Haskell.  In Haskell,
-the functions that construct object terms are methods in a type class
-|Symantics| (with a parameter |repr| of kind |* -> *|)%
-%aplas-specific
-, Fig.~\ref{fig:symantics-haskell}(a)%
-. The class is so named
-because its interface gives the syntax of the object language and its
-instances give the semantics.
-\begin{figure}
-%
-(a) \begin{code2}
+
+\ifshort
+\begin{SaveVerbatim}{3a}
 class Symantics repr where
-  int  :: Int  -> repr Int;       bool :: Bool -> repr Bool
+  int :: Int  -> repr Int;       bool :: Bool -> repr Bool
   lam :: (repr a -> repr b) -> repr (a -> b)
   app :: repr (a -> b) -> repr a -> repr b
   fix :: (repr a -> repr a) -> repr a
@@ -519,31 +479,48 @@ class Symantics repr where
   mul :: repr Int -> repr Int -> repr Int
   leq :: repr Int -> repr Int -> repr Bool
   if_ :: repr Bool -> repr a -> repr a -> repr a
-\end{code2}
+\end{SaveVerbatim}
+\else
+\begin{SaveVerbatim}{3a}
+class Symantics repr where
+  int  :: Int  -> repr Int
+  bool :: Bool -> repr Bool
 
-(b) \begin{code2}
+  lam :: (repr a -> repr b) -> repr (a -> b)
+  app :: repr (a -> b) -> repr a -> repr b
+  fix :: (repr a -> repr a) -> repr a
+
+  add :: repr Int -> repr Int -> repr Int
+  mul :: repr Int -> repr Int -> repr Int
+  leq :: repr Int -> repr Int -> repr Bool
+  if_ :: repr Bool -> repr a -> repr a -> repr a
+\end{SaveVerbatim}
+\fi
+\begin{SaveVerbatim}{3b}
 testpowfix () = lam (\x -> fix (\self -> lam (\n ->
                  if_ (leq n (int 0)) (int 1)
                      (mul x (app self (add n (int (-1))))))))
-\end{code2}
-
-(c) \begin{code2}
+\end{SaveVerbatim}
+\begin{SaveVerbatim}{3c}
 testpowfix7 () = lam (\x -> app (app (testpowfix ()) x) (int 7))
-\end{code2}
-\caption{Symantics in Haskell.}
-\label{fig:symantics-haskell}
-\end{figure}
-% fig:symantics-haskell part (a) was here
+\end{SaveVerbatim}
+
+We embed our language in (Meta)OCaml and Haskell.  In Haskell,
+the functions that construct object terms are methods in a type class
+|Symantics| (with a parameter |repr| of kind |* -> *|)\ifshort,
+Fig.~\ref{fig:symantics-haskell}(a)\fi. The class is so named
+because its interface gives the syntax of the object language and its
+instances give the semantics.
+\ifshort\else\UseVerbatim{3a}\fi
 For example, we encode the term |test1|, or $(\fun{x}x)\True$, from
-\S\ref{tagproblem} above as |app (lam (\x -> x)) (bool True)|,
+\S\ref{tagproblem} above as \texttt{app (lam (\textbackslash x -> x)) (bool True)},
 whose inferred type is \texttt{Symantics repr => repr Bool}.
 For another example, the classical $\mathit{power}$ function is
-%aplas-specific
-in Fig.~\ref{fig:symantics-haskell}(b)
-% fig:symantics-haskell part (b) was here
+\ifshort in Fig.~\ref{fig:symantics-haskell}(b)
+\else\UseVerbatim{3b}\fi
 and the partial application $\fun{x} \mathit{power}\;x\;7$ is
-in Fig.~\ref{fig:symantics-haskell}(c).
-% fig:symantics-haskell part (c) was here
+\ifshort in Fig.~\ref{fig:symantics-haskell}(c).
+\else\UseVerbatim{3c}\fi
 The dummy argument |()| above is to avoid the monomorphism
 restriction, to keep the type of |testpowfix| and |testpowfix7|
 polymorphic in |repr|. Instead of supplying this dummy
@@ -556,6 +533,18 @@ The methods |add|, |mul|, and |leq| are quite similar, and so are
 |int| and |bool|. Therefore, we will frequently show implementations of
 only one method of each group and elide the rest, to save space. The
 accompanying code has the complete implementations.
+
+\ifshort
+\begin{figure}
+(a) \BUseVerbatim{3a}
+
+(b) \BUseVerbatim{3b}
+
+(c) \BUseVerbatim{3c}
+\caption{Symantics in Haskell}
+\label{fig:symantics-haskell}
+\end{figure}
+\fi
 
 Comparing |Symantics| with Fig.~\ref{fig:object}
 shows how to represent \emph{every} typed, closed object term in the
@@ -583,19 +572,20 @@ module type Symantics = sig type ('c, 'dv) repr
 
   val lam : (('c, 'da) repr -> ('c, 'db) repr) -> ('c, 'da -> 'db) repr
   val app : ('c, 'da -> 'db) repr -> ('c, 'da) repr -> ('c, 'db) repr
-  val fix : (('c, 'da -> 'db) repr -> ('c, 'da -> 'db) repr) -> ('c, 'da -> 'db) repr
+  val fix : ('x -> 'x) -> (('c, 'da -> 'db) repr as 'x)
 
   val add : ('c, int) repr -> ('c, int) repr -> ('c, int) repr
   val mul : ('c, int) repr -> ('c, int) repr -> ('c, int) repr
   val leq : ('c, int) repr -> ('c, int) repr -> ('c, bool) repr
-  val if_ : ('c, bool) repr-> (unit-> ('c, 'da) repr)-> (unit-> ('c, 'da) repr)-> ('c, 'da) repr
+  val if_ : ('c,bool) repr -> (unit -> ('c, 'da) repr)
+                           -> (unit -> ('c, 'da) repr) -> ('c, 'da) repr
 end
-
 module EX(S: Symantics) = struct open S
   let test1 () = app (lam (fun x -> x)) (bool true)
-  let testpowfix () =  lam (fun x -> fix (fun self -> lam (fun n ->
-                         if_ (leq n (int 0)) (fun () -> int 1)
-                             (fun () -> mul x (app self (add n (int (-1))))))))
+  let testpowfix () =
+       lam (fun x -> fix (fun self -> lam (fun n ->
+        if_ (leq n (int 0)) (fun () -> int 1)
+            (fun () -> mul x (app self (add n (int (-1))))))))
   let testpowfix7 =  lam (fun x -> app (app (testpowfix ()) x) (int 7))
 end
 \end{code}
@@ -603,17 +593,17 @@ end
 \caption{A simple (Meta)OCaml embedding of our object language}
 \label{fig:ocaml-simple}
 \end{figure*}
-To embed the same object language in (Meta)OCaml, we replace the type
-class |Symantics| and its instances by a module signature |Symantics|
+To embed the same object language in (Meta)OCaml, we replace the \ifshort type
+class \fi |Symantics| \ifshort\else type class \fi and its instances by a module signature |Symantics|
 and its implementations.  Figure~\ref{fig:ocaml-simple} shows a simple
 signature that suffices until~\S\ref{PE}.  The two differences are:
-the additional type parameter |c|, an
-environment classifier \cite{WalidPOPL03} (required by MetaOCaml for
-code generation in~\S\ref{compiler}); and the $\eta$-expanded type for
+the additional type parameter |'c|, an
+\emph{environment classifier} \cite{WalidPOPL03} required by MetaOCaml for
+code generation in~\S\ref{compiler}; and the $\eta$-expanded type for
 |fix| and thunk types in |if_| since OCaml is a call-by-value
 language.
 
-The functor |EX|, Fig.~\ref{fig:ocaml-simple} encodes 
+The functor |EX| in Fig.~\ref{fig:ocaml-simple} encodes 
 our running examples |test1| and $\mathit{power}$.
 The dummy argument to |test1| and |testpowfix| is an artifact of
 MetaOCaml, related to monomorphism: in order for us to run a
@@ -626,7 +616,7 @@ the rank-2 record types of OCaml to maintain the necessary polymorphism.
 
 Thus we represent an object expression in
 OCaml as a functor from |Symantics| to an appropriate semantic domain. This
-is essentially the same as the constraint |Symantics repr =>| in the
+is essentially the same as the constraint \texttt{Symantics repr =>} in the
 Haskell embedding.
 
 \subsection{Two tagless interpreters}
@@ -1403,7 +1393,7 @@ evaluator and a compiler, but the general ideas are similar.
 
 
 % don't even have space for CPS
-\begin{comment}
+\ifshort\else
 \section{Continuation\hyp passing style}\label{variations}
 % aplas-specific
 \label{state}
@@ -1426,7 +1416,7 @@ modify the CBV CPS transformation to pass a piece of state along with
 the continuation. This technique lets us support mutable state.  Due
 to the severe lack of space we cannot describe these interpreters and
 refer the reader to the accompanying code.
-\end{comment}
+\fi
 
 \begin{comment}
 \subsection{Call-by-name CPS interpreters}\label{S:CPS}
@@ -1635,7 +1625,7 @@ extensions.
 \end{comment}
 
 
-\begin{comment}
+\ifshort\else
 \section{Self-interpretation}\label{selfinterp}
 
 We turn to interpreting the object language in the object language, to
@@ -1841,7 +1831,6 @@ constructor (in Haskell).  Thus
 ``context'' is a euphemism for a polymorphic argument, and ``plugging''
 is a euphemism for application.
 
-%aplas \begin{comment}
 \jacques{But how 
 to you create, in either Haskell or MetaOCaml, an untypechecked 
 interpreter-with-a-hole [UIH] ?}
@@ -1867,9 +1856,6 @@ RR is not an identity: it is an interpreter that encapsulates another
 interpreter. The RR interpreter can be made self if we treat RR as a
 special form and interpret it always with itself (similar to let and
 hole below).}
-%aplas \end{comment}
-
-%aplas \begin{comment}
 
 The crucial role of the higher-order type parameter r
 
@@ -1923,8 +1909,7 @@ seems the inference is possible, as our Haskell and OCaml code
 constructively illustrates. Perhaps we need to characterize our
 fragment.
 
-%aplas \end{comment}
-\end{comment}
+\fi
 
 \section{Related work}\label{related}
 
@@ -2077,7 +2062,7 @@ meta-circular interpertation first appeared in \citet{Pfenning-Lee}.
 Our approach however is implementable in mainstream ML and supports
 type inference and typed CPS and partial evaluation. In contrast,
 \cite{Pfenning-Lee} conclude that partial evaluation and program
-transformations "do not seem to be expressible" even using their
+transformations ``do not seem to be expressible'' even using their
 extension to $F_{\omega}$, perhaps because their avoidance of general
 recursive types compels them to include the polymorphic lift that we
 avoid in \S\ref{S:PE-lift}.

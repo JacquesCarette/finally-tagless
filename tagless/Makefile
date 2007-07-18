@@ -5,7 +5,7 @@ export BIBTEX := bibtex -min-crossrefs=9999
 
 all: jfp.dvi jfp.pdf aplas.dvi aplas.pdf
 
-jfp.dvi jfp.pdf aplas.dvi aplas.pdf: tagless-final.tex
+jfp.dvi jfp.pdf aplas.dvi aplas.pdf: tagless-final.tex preamble.tex fancyvrb1.sty
 
 .tex.dvi:
 	if texi2dvi $<; then killall -USR1 xdvi.bin; true; fi
