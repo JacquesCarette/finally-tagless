@@ -655,7 +655,7 @@ module CPST(S: Symantics) = struct
   let app e1 e2 = S.lam (fun k -> 
     S.app e1 (S.lam (fun f ->
     S.app e2 (S.lam (fun v -> S.app (S.app f v) k)))))
-  let fix f  = S.fix (fun self -> (f self))
+  let fix = S.fix
 end;;
 
 module T = struct

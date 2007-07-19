@@ -4,6 +4,7 @@
 \expandafter\let\csname endequation*\endcsname\relax
 
 \usepackage[T1]{fontenc}
+\usepackage[override]{cmtt}
 \input{preamble}
 
 \usepackage[sort]{natbib1}
@@ -22,4 +23,10 @@
 \maketitle
 \input{tagless-final}
 
+\section*{Acknowledgments}
+\ourthanks
+
+\bibliographystyle{mcbride}
+\bibsep=0pt
+\bibliography{tagless}
 \end{document}

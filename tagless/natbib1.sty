@@ -1,5 +1,5 @@
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{natbib1}[2003/01/13 Enhanced natbib by ccshan]
+\ProvidesPackage{natbib1}[2007/07/14 Enhanced natbib by ccshan]
 \RequirePackageWithOptions{natbib}
 
 \expandafter\def
@@ -10,8 +10,15 @@
 \NAT@@open}
 
 \newtoks\NAT@@openprefix
+\def\NAT@mbox@prefix{\the\NAT@@openprefix
+    \global\let\NAT@mbox\NAT@mbox@save
+    \NAT@mbox}
 \newcommand{\citearound}[1]{%
-    \NAT@@openprefix{\unskip#1\ \global\NAT@@openprefix{}}}
+    \ifx\NAT@mbox\NAT@mbox@prefix\else
+        \global\let\NAT@mbox@save\NAT@mbox
+        \global\let\NAT@mbox\NAT@mbox@prefix
+    \fi
+    \global\NAT@@openprefix{\unskip#1\ \global\NAT@@openprefix{}}}
 \newcommand{\citegenitive}{\citearound{'s}}
 \newcommand{\citets}{\citegenitive\citet}
 \newcommand{\Citets}{\citegenitive\Citet}

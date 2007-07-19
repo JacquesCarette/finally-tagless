@@ -64,7 +64,7 @@ If the metalanguage supports \emph{staging}, then
 the embedding can compile object programs to the metalanguage and avoid the
 overhead of interpreting them on the fly \citep{WalidICFP02}.  A staged
 definitional interpreter is thus a promising way to build a domain\hyp specific
-language.
+language (DSL)\@.
 
 \begin{figure}
     \begin{floatrule}
@@ -279,10 +279,10 @@ We represent object programs using ordinary functions rather than
 data constructors.  These functions comprise the entire interpreter, shown
 below.
 \ifshort
-\begin{code3}[xleftmargin=0pt]
-let varZ env    = fst env       let b (bv:bool) env = bv
-let varS vp env = vp (snd env)  let app e1 e2 env   = (e1 env) (e2 env)
-let lam e env   = fun x -> e (x,env)
+\begin{code3}
+let varZ env    = fst env         let b (bv:bool) env = bv
+let varS vp env = vp (snd env)    let lam e env   = fun x -> e (x,env)
+let app e1 e2 env   = (e1 env) (e2 env)
 \end{code3}
 \else
 \begin{code}
@@ -378,7 +378,7 @@ representation but varying the interpreter, we can
     \item compile the term, with staging support such as in MetaOCaml;
     \item even partially evaluate the term, online; and
     \item transform the term to continuation\hyp passing style (CPS),
-        including call-by-name (CBN) CPS, so to isolate the evaluation
+        even call-by-name (CBN) CPS, so to isolate the evaluation
         order of the object language from that of the metalanguage.\ifshort
 \footnote{Due to serious lack of space, 
 we refer the reader to the accompanying code for this.}\fi
@@ -439,9 +439,9 @@ type system with either an inference\hyp preserving module system or
 constructor classes, as realized in ML and Haskell 98---to
 solve the problem that was stated in the published record as
 unsolved and likely unsolvable in ML or Haskell 98
-without extensions. The simplicity of our solution and our
+without extensions. The simplicity of our solution and its
 use of only mainstream features makes it more practical to build typed,
-embedded domain\hyp specific languages.
+embedded DSLs.
 \begin{comment}
 We may claim some contribution about type-preserving CPS. Check
 related work section in \cite{Guillemette-Monier-PLPV}, especially
@@ -565,7 +565,7 @@ such as if we forget |app| somewhere above.
 
 \begin{figure*}[t]
 \begin{floatrule}
-\begin{code}
+\begin{code2}
 module type Symantics = sig type ('c, 'dv) repr
   val int : int  -> ('c, int) repr
   val bool: bool -> ('c, bool) repr
@@ -577,8 +577,8 @@ module type Symantics = sig type ('c, 'dv) repr
   val add : ('c, int) repr -> ('c, int) repr -> ('c, int) repr
   val mul : ('c, int) repr -> ('c, int) repr -> ('c, int) repr
   val leq : ('c, int) repr -> ('c, int) repr -> ('c, bool) repr
-  val if_ : ('c,bool) repr -> (unit -> ('c, 'da) repr)
-                           -> (unit -> ('c, 'da) repr) -> ('c, 'da) repr
+  val if_ : ('c, bool) repr
+            -> (unit -> 'x) -> (unit -> 'x) -> (('c, 'da) repr as 'x)
 end
 module EX(S: Symantics) = struct open S
   let test1 () = app (lam (fun x -> x)) (bool true)
@@ -586,9 +586,9 @@ module EX(S: Symantics) = struct open S
        lam (fun x -> fix (fun self -> lam (fun n ->
         if_ (leq n (int 0)) (fun () -> int 1)
             (fun () -> mul x (app self (add n (int (-1))))))))
-  let testpowfix7 =  lam (fun x -> app (app (testpowfix ()) x) (int 7))
+  let testpowfix7 = lam (fun x -> app (app (testpowfix ()) x) (int 7))
 end
-\end{code}
+\end{code2}
 \end{floatrule}
 \caption{A simple (Meta)OCaml embedding of our object language}
 \label{fig:ocaml-simple}
@@ -614,7 +614,7 @@ the definitions of our object terms must look syntactically like
 values. Alternatively, we could have used
 the rank-2 record types of OCaml to maintain the necessary polymorphism.
 
-Thus we represent an object expression in
+Thus, we represent an object expression in
 OCaml as a functor from |Symantics| to an appropriate semantic domain. This
 is essentially the same as the constraint \texttt{Symantics repr =>} in the
 Haskell embedding.
@@ -629,7 +629,8 @@ the |Symantics| signature in MetaOCaml.
 
 The first interpreter evaluates an object term to its value in the
 metalanguage.  The module below interprets each object\hyp language
-operation as the corresponding metalanguage operation
+operation as the corresponding metalanguage operation.
+\ifshort
 \vspace*{-0.8em}\begin{code3}
 module R = struct type ('c,'dv) repr = 'dv (* no wrappers *)
   let int  (x:int)  = x         let bool (b:bool) = b
@@ -640,21 +641,37 @@ module R = struct type ('c,'dv) repr = 'dv (* no wrappers *)
   let if_  eb et ee = if eb then et () else ee () end
 \end{code3}
 \vspace*{-0.8em}
+\else
+\begin{code}
+module R = struct
+  type ('c,'dv) repr = 'dv (* no wrappers *)
+
+  let int  (x:int)  = x
+  let bool (b:bool) = b
+  let lam  f        = f
+  let app  e1 e2    = e1 e2
+  let fix  f        = let rec self n = f self n in self
+  let add  e1 e2    = e1 + e2
+  let mul  e1 e2    = e1 * e2
+  let leq  x y      = x <= y
+  let if_  eb et ee = if eb then et () else ee ()
+end
+\end{code}
+\fi
 %
 As in~\S\ref{ourapproach},
 this interpreter is patently tagless, using neither a universal type nor
 any pattern matching: the operation |add| is really
 OCaml's addition, and |app| is OCaml's application. To run our
-examples, we instantiate the |EX| functor from~\S\ref{encoding} with |R|%
-%aplas-specific
-: \texttt{module EXR = EX(R)}%
-.
-%% \begin{code}
-%% module EXR = EX(R)
-%% \end{code}
-Thus |EXR.test1 ()| evaluates to the untagged boolean value |true|.
-% aplas: commented out
-\begin{comment}
+examples, we instantiate the |EX| functor from~\S\ref{encoding}
+with~|R|\ifshort: \texttt{module EXR = EX(R)}\fi.
+\ifshort\else
+\begin{code}
+module EXR = EX(R)
+\end{code}
+\fi
+Thus, |EXR.test1 ()| evaluates to the untagged boolean value |true|.
+\ifshort It \else
 In Haskell, we define
 \begin{code}
 newtype R a = R {unR::a}
@@ -664,39 +681,40 @@ Although |R| looks like a tag, it is only
 a |newtype|.  The types |a| and |R a| are represented differently
 only at compile time, not at run time.  Pattern matching against~|R|
 cannot ever fail and is assuredly compiled away.
-In OCaml, too, it is obvious to the compiler that
-\end{comment}
-%aplas: the following line is for aplas only
-It is obvious to the compiler that
-%
+In OCaml, too, it
+\fi is obvious to the compiler that
 pattern matching cannot fail, because there is no
 pattern matching. Evaluation can only fail to yield a value
 due to interpreting |fix|.
-%aplas-specific
+\ifshort
 (The source code shows a total interpreter |L| that measures
-the size of each object term).
-%aplas-specific (cont)
-We can also generalize from~|R| to all interpreters; the proof
-of these propositions follow immediately from the soundness of the
+the size of each object term.)
+\fi
+\ifshort
+We can also generalize from~|R| to all interpreters;
+these propositions follow immediately from the soundness of the
 metalanguage's type system.
-%end aplas-specific
+\fi
 \begin{proposition}
 If an object term~$e$ encoded in the metalanguage has type~$t$,
 then evaluating~$e$ in the interpreter~|R| either continues
 indefinitely or terminates with a value of the same type~$t$.
 \end{proposition}
-% Generalizing from~|R| to all interpreters, we have the following
-% broader and more useful, if also more obvious, proposition.
+\ifshort\else
+Generalizing from~|R| to all interpreters, we have the following
+broader and more useful, if also more obvious, proposition.
+\fi
 \begin{proposition}
   If an implementation of |Symantics| never gets stuck, then
   the type system of the object
   language is sound with respect to the dynamic semantics defined by
   that implementation.
 \end{proposition}
-% These propositions follow immediately from the soundness of the
-% metalanguage's type system.
-% aplas-commented
-\begin{comment}
+\ifshort\else
+These propositions follow immediately from the soundness of the
+metalanguage's type system.
+\fi
+\ifshort\else
 For variety, we show another interpreter, which measures the \emph{size}
 of each object term, defined as the number of term
 constructors. The following is slightly abbreviated code (see the
@@ -712,28 +730,25 @@ module L = struct
   let if_ eb et ee = eb + et () + ee () + 1
 end
 \end{code}
-Now the expression
-\begin{code}
-let module E = EX(L) in E.test1 ()
-\end{code}
+Now the OCaml expression
+|let module E = EX(L) in E.test1 ()|
 evaluates to |3|. This interpreter is not only tagless but also
 total. It ``evaluates'' even seemingly divergent terms like
-\begin{code}
-app (fix (fun self -> self)) (int 1)
-\end{code}
+|app (fix (fun self -> self)) (int 1)|.
+\fi
 
-%aplas \begin{comment}
+\begin{comment}
+\begin{code}
 module EX1(S: Symantics) = struct
  open S
  let tfix () = app (fix (fun self -> self)) (int 1)
 end;;
 let module E =EX1(R) in E.tfix ();;
 let module E =EX1(L) in E.tfix ();;
-%%aplas \end{comment}
+\end{code}
 \end{comment}
 
 \section{A tagless compiler (or, a staged interpreter)}\label{compiler}
-\vspace{-5pt}
 Besides immediate evaluation, we can compile our object language
 into OCaml code using MetaOCaml's staging facilities. MetaOCaml
 represents future-stage expressions of type~$t$ at the
@@ -748,77 +763,96 @@ the future-stage code value~$e$ by compiling and linking it at run-time.
 The bracket, escape, and run are akin to
 quasi-quotation, unquotation, and |eval| of Lisp.
 
-Inserting brackets and escapes appropriately into the
-evaluator~|R| above yields the simple compiler~|C| below%
-%aplas-specific
-, Fig.~\ref{fig:interpreter-C}(a)
-.
-% fig:interpreter-C part (a) was here
-%
-\begin{figure}[t]
 % this code does not have the 'sv parameter. It shows up later.
-(a) \begin{code2}
+\ifshort
+\begin{SaveVerbatim}{5a}
 module C = struct type ('c,'dv) repr = ('c,'dv) code
-  let int (x:int)   = .<x>.           let bool (b:bool) = .<b>.
+  let int (x:int)  = .<x>.            let bool (b:bool) = .<b>.
+  let lam f        = .<fun x -> .~(f .<x>.)>.
+  let app e1 e2    = .<.~e1 .~e2>.
+  let fix f =  .<let rec self n = .~(f .<self>.) n in self>.
+  let add e1 e2    = .<.~e1 + .~e2>.  let mul e1 e2 = .<.~e1 * .~e2>.
+  let leq x y      = .<.~x <= .~y>.
+  let if_ eb et ee = .<if .~eb then .~(et ()) else .~(ee ())>. end
+\end{SaveVerbatim}
+\else
+\begin{SaveVerbatim}{5a}
+module C = struct
+  type ('c,'dv) repr = ('c,'dv) code
+
+  let int (x:int)   = .<x>.
+  let bool (b:bool) = .<b>.
   let lam f         = .<fun x -> .~(f .<x>.)>.
   let app e1 e2     = .<.~e1 .~e2>.
-  let fix f =  .<let rec self n = .~(f .<self>.) n in self>.
-  let add e1 e2     = .<.~e1 + .~e2>. let mul e1 e2     = .<.~e1 * .~e2>.
+  let fix f         = .<let rec self n = .~(f .<self>.) n in self>.
+  let add e1 e2     = .<.~e1 + .~e2>.
+  let mul e1 e2     = .<.~e1 * .~e2>.
   let leq x y       = .<.~x <= .~y>.
-  let if_ eb et ee  = .<if .~eb then .~(et ()) else .~(ee ())>. end
-\end{code2}
-
-(b) \begin{code2}
+  let if_ eb et ee  = .<if .~eb then .~(et ()) else .~(ee ())>.
+end
+\end{SaveVerbatim}
+\fi
+\begin{SaveVerbatim}{5b}
 let module E = EX(C) in E.test1 ()
-\end{code2}
-
-(c) \begin{code2}
+\end{SaveVerbatim}
+\begin{SaveVerbatim}{5c}
 let module E = EX(C) in E.testpowfix7
-\end{code2}
-
-(d) \begin{code2}
+\end{SaveVerbatim}
+\begin{SaveVerbatim}{5d}
 .<fun x_1 -> (fun x_2 -> let rec self_3 = fun n_4 ->
-   (fun x_5 -> if x_5 <= 0 then 1  else x_2 * (self_3 (x_5 + (-1))))
+   (fun x_5 -> if x_5 <= 0 then 1 else x_2 * self_3 (x_5 + (-1)))
    n_4 in self_3) x_1 7>.
-\end{code2}
+\end{SaveVerbatim}
+
+Inserting brackets and escapes appropriately into the
+evaluator~|R| above yields the simple compiler~|C|
+\ifshort in Fig.~\ref{fig:interpreter-C}(a).\else below.
+\UseVerbatim{5a}
+\fi
+\ifshort
+\begin{figure}[t]
+(a) \BUseVerbatim{5a}
+
+(b) \BUseVerbatim{5b}
+
+(c) \BUseVerbatim{5c}
+
+(d) \BUseVerbatim{5d}
 \caption{The tagless staged interpreter \texttt{C}.}
 \label{fig:interpreter-C}
 \end{figure}
-%
+\fi
 This is a straightforward staging of
 |module R|.
 This compiler produces
-unoptimized code. For example, interpreting our |test1|%
-%aplas-specific
-, Fig.~\ref{fig:interpreter-C}(b),
-% fig:interpreter-C part (b) was here
-gives the code value |.<(fun x_6 -> x_6) true>.|
-of inferred type |('c, bool) C.repr|.  Interpreting |testpowfix7|
+unoptimized code. For example, interpreting our |test1| with
+\ifshort Fig.~\ref{fig:interpreter-C}(b) \else \UseVerbatim{5b}\fi
+gives the code value |.<(fun|~|x_6|~|->|~|x_6)| |true>.|
+of inferred type |('c,|~|bool)| |C.repr|.  Interpreting |testpowfix7|
+\ifshort\pagebreak[3]\fi
 with
-%aplas-specific
-Fig.~\ref{fig:interpreter-C}(c),
-% fig:interpreter-C part (c) was here
-gives a code value with many apparent $\beta$-redexes
-%aplas-specific
-Fig.~\ref{fig:interpreter-C}(d).
-% fig:interpreter-C part (d) was here
+\ifshort Fig.~\ref{fig:interpreter-C}(c) \else \UseVerbatim{5c}\fi
+gives a code value with many apparent $\beta$- and $\eta$-redexes\ifshort,
+Fig.~\ref{fig:interpreter-C}(d). \else: \UseVerbatim{5d}\fi
 This compiler does not incur
 any interpretive overhead: the
-code produced for $\fun{x}x$ is simply |fun x_6 -> x_6| 
-% aplas: and does not
-% call the interpreter, unlike the recursive calls to |eval0| and
-% |eval| in the |L e| lines in \S\ref{tagproblem}.
+code produced for $\fun{x}x$ is simply |fun|~|x_6|~|->|~|x_6|\ifshort\else\
+and does not
+call the interpreter, unlike the recursive calls to |eval0| and
+|eval| in the |L e| lines in \S\ref{tagproblem}\fi.
 The resulting code obviously contains no tags and no pattern matching.
-%aplas: the line is for aplas. The original paragraph commented out
+\ifshort
 The accompanying code shows the Haskell implementation. 
-\begin{comment}
+\else
+
 We have also implemented this compiler in Haskell. 
 Since Haskell
 has no (convenient, typed) staging facility, we had to emulate
-it. To be precise, we defined a data type |ByteCode| with
-constructors such as |Var|, |Lam|, |App|, |Fix|, and |INT|%
-\footnote{\texttt{ByteCode} can be mapped to AST of Template Haskell
-  (TH). The output of our compiler will then be assuredly type-correct TH.}
+it: we defined a data type |ByteCode| with
+constructors such as |Var|, |Lam|, |App|, |Fix|, and |INT|.%
+\footnote{\texttt{ByteCode} can be mapped to the abstract syntax of Template
+    Haskell. The output of our compiler will then be assuredly type-correct
+    Template Haskell.}
 Whereas our representation of object terms uses HOAS,
 our bytecode uses integer-named
 variables to be realistic. 
@@ -834,7 +868,7 @@ GADTs because we also wanted to write a typed interpreter for
 the \texttt{ByteCode} \emph{data type}.} is quite similar (but slightly more
 verbose) than the corresponding MetaOCaml code above. The
 accompanying code gives the full details.
-\end{comment}
+\fi
 
 \section{A tagless partial evaluator}\label{PE}
 
@@ -852,25 +886,12 @@ dynamic terms.
 \label{S:PE-lift}
 
 Roughly, a partial evaluator interprets each object term to either
-a static (present-stage) term (using~|R|) or
-a dynamic (future-stage) term (using~|C|).  To
+a static (present-stage) term (using\ifshort\else\ the evaluator\fi~|R|) or
+a dynamic (future-stage) term (using\ifshort\else\ the compiler\fi~|C|).  To
 distinguish between static and dynamic terms, one might define
-%aplas-specific
-\texttt{data P0 t = S0 (R t) $\mid$ E0 (C t)}.
-We then start to define |P0| as an instance of the |Symantics| class.
-Integer and boolean literals are immediate, present-stage
-values. Addition yields a static term (using~|R|) if and only if both operands
-are static; otherwise we extract the dynamic terms from the operands and
-add them using~|C|.
-Whereas |mul| and |leq| are as easy to define as |add|, we encounter
-a problem with |if_|.  If the first argument to |if_| is a dynamic term
-(type |C Bool|) and the second and third arguments are a static term
-(type |R a|) and a dynamic term (type |C a|), then we need to convert
-the static term to dynamic, but there is no polymorphic ``lift''
-function, of type |a -> C a|, to send a value to the future stage
-\cite{xi-guarded,WalidPOPL03}.
-%aplas-else
-\begin{comment}
+\ifshort
+\texttt{data P0~t~= S0~(R~t)~}\Verb+|+\texttt{ E0~(C~t)}.
+\else
 \begin{code}
 data P0 t = S0 (R t) | E0 (C t)
 \end{code}
@@ -884,7 +905,13 @@ abstrB :: P0 Bool -> C Bool
 abstrB (S0 r) = bool (unR r)
 abstrB (E0 c) = c
 \end{code}
+\fi
 We then start to define |P0| as an instance of the |Symantics| class.
+Integer and boolean literals are immediate, present-stage
+values. Addition yields a static term (using~|R|) if and only if both operands
+are static; otherwise we extract the dynamic terms from the operands and
+add them using~|C|.
+\ifshort\else
 \begin{code}
 instance Symantics P0 where
   int  x = S0 (int x)
@@ -892,77 +919,87 @@ instance Symantics P0 where
   add (S0 e1) (S0 e2) = S0 (add e1 e2)
   add e1 e2 = E0 (add (abstrI e1) (abstrI e2))
 \end{code}
-Integer and boolean literals are immediate, present-stage
-values. Addition yields a static term (using~|R|) if and only if both operands
-are static; otherwise we extract the dynamic terms from the operands and
-add them using~|C|.  Thus the two uses of |add| above refer to
+Thus, the two uses of |add| above refer to
 |add| for~|R| and |add| for~|C|.
 
+\fi
 Whereas |mul| and |leq| are as easy to define as |add|, we encounter
 a problem with |if_|.  If the first argument to |if_| is a dynamic term
 (type |C Bool|) and the second and third arguments are a static term
 (type |R a|) and a dynamic term (type |C a|), then we need to convert
 the static term to dynamic, but there is no polymorphic ``lift''
 function, of type |a -> C a|, to send a value to the future stage
-\cite{xi-guarded,WalidPOPL03}.\footnote{We note in passing that, if we
+\cite{xi-guarded,WalidPOPL03}.\ifshort\else
+\footnote{If we
 were to add polymorphic \texttt{lift} to the type class
 \texttt{Symantics repr}, then \texttt{repr} would become an instance of
 \texttt{Applicative} and thus \texttt{Functor}:\quad\texttt{fmap
-f = app (lift f)}}
-\end{comment}
+f = app (lift f)}}\fi
 
 Our |Symantics| class only includes separate lifting methods |bool| and
-|int|, not a parametrically polymorphic lifting method:
+|int|, not a parametrically polymorphic lifting method, for good reason:
 When compiling to a first-order target language such as machine code,
 booleans, integers, and functions may well be represented differently.
-Thus polymorphic lift cannot be compiled without intensional type
-analysis.  To avoid this, we turn to
-\citearound{'s technique}\citet[see also \citealp{sumii-hybrid}]{asai-binding-time}:
+Thus, compiling polymorphic lift requires intensional type
+analysis.  To avoid needing polymorphic lift, we turn to
+Asai's technique \cite{asai-binding-time,sumii-hybrid}:
 build a dynamic term
 alongside every static term.
 
 \subsection{Delaying binding-time analysis}
 \label{S:PE-problem}
 
-We switch to the Haskell data type
-%aplas-specific
-|data P1 t = P1 (Maybe (R t)) (C t)|
-%aplas-else
-\begin{comment}
-\begin{code}
+\begin{SaveVerbatim}{P1}
 data P1 t = P1 (Maybe (R t)) (C t)
-\end{code}
-\end{comment}
+\end{SaveVerbatim}
+
+We switch to the Haskell data type
+\ifshort \BUseVerbatim{P1} \else \UseVerbatim{P1} \fi
 so that a partially evaluated term |P1 t| always contains a dynamic
 component and sometimes contains a static component.  The two
 alternative constructors of a |Maybe| value, |Just| and |Nothing|,
-tag each term with a phase: present or
+tag each partially evaluated term with a phase: either present or
 future.  This tag is not an object type tag: all pattern matching below
 is exhaustive.  Because the future-stage component is always present, we
 can now define the polymorphic function
-%aplas-specific
+\ifshort
 |abstr1 (P1 _ dyn) = dyn| of type
 |abstr1 :: P1 t -> C t|
-%aplas-else
-\begin{comment}
+\else
 \begin{code}
 abstr1 :: P1 t -> C t
 abstr1 (P1 _ dyn) = dyn
 \end{code}
-\end{comment}
+\fi
 to extract it without requiring polymorphic lift into~|C|.  We then try
 to define the interpreter |P1|---and get as far as the first-order
 constructs of our object language, including |if_|.
+\ifshort
 \vspace*{-0.7em}
 \begin{code3}
 instance Symantics P1 where
-  int  x = P1 (Just (int x)) (int x)
+  int x = P1 (Just (int x)) (int x)
   add (P1 (Just n1) _) (P1 (Just n2) _) = int (unR (add n1 n2))
   add e1 e2 = P1 Nothing (add (abstr1 e1) (abstr1 e2))
   if_ (P1 (Just s) _) et ef = if unR s then et else ef
   if_ eb et ef = P1 Nothing (if_ (abstr1 eb) (abstr1 et) (abstr1 ef))
 \end{code3}
 \vspace*{-0.7em}
+\else
+\begin{code}
+instance Symantics P1 where
+  int  x = P1 (Just (int  x)) (int  x)
+  bool b = P1 (Just (bool b)) (bool b)
+
+  add (P1 (Just n1) _) (P1 (Just n2) _) = int (unR (add n1 n2))
+  add e1 e2 = P1 Nothing (add (abstr1 e1) (abstr1 e2))
+  -- mul and leq are analogous and elided
+
+  if_ (P1 (Just s) _) et ef = if unR s then et else ef
+  if_ eb et ef = P1 Nothing
+                    (if_ (abstr1 eb) (abstr1 et) (abstr1 ef))
+\end{code}
+\fi
 When we come to functions, however, we stumble.  According to our
 definition of~|P1|, a partially evaluated object function, such as the
 identity $\fun{x}x$ embedded in Haskell as |lam (\x -> x)|\texttt{ ::
@@ -981,31 +1018,25 @@ different static arguments, can give both static and dynamic results: we
 want to simplify $(\fun{y}x\times y)0$ to~$0$ but $(\fun{y}x\times y)1$
 to~$x$.
 
-To enable these simplifications, we delay binding-time analysis (BTA)
+To enable these simplifications, we delay binding-time analysis
 for a static function until it is applied, that is, until |lam f|
 appears as the argument of |app|.  To do so, we have to incorporate |f|
 as it is into the |P1| data structure: applying the type constructor
 |P1| to a function type |a -> b| should yield one of
-\vspace*{-0.7em}
-\begin{code3}
+\ifshort\vspace*{-0.7em}\fi
+\begin{code}
 data P1 (a -> b) = S1 (P1 a -> P1 b) | E1 (C (a -> b))
 data P1 (a -> b) = P1 (Maybe (P1 a -> P1 b)) (C (a -> b))
-\end{code3}
-\vspace*{-0.7em}
+\end{code}
+\ifshort\vspace*{-0.7em}\fi
 That is, we need a nonparametric data type, something akin to
 type-indexed functions and type-indexed types, which
 \citet{oliveira-typecase} dub the \emph{typecase} design pattern.
-%aplas-simplification
-Thus typed partial evaluation, like typed CPS transformation,
+Thus, typed partial evaluation, like typed CPS transformation,
 inductively defines a map from source types to target types that
 performs case distinction on the source type.
-\begin{comment}
-
-Thus typed partial evaluation, like typed CPS transformation,
-inductively defines a map from source types to target types that
-performs case distinction on the source type.  The connection with CPS
-is not an accident, as we shall see in~\S\ref{S:CPS}.
-\end{comment}
+\ifshort\else The connection with CPS
+is not an accident, as we shall see in~\S\ref{S:CPS}.\fi
 
 \subsection{Eliminating tags from typecase}
 \label{S:PE-GADT}
@@ -1015,8 +1046,7 @@ GADTs and type-class functional dependencies
 \cite{oliveira-typecase}.  These
 methods are equivalent, and here we use GADTs; |incope1.hs|
 in the accompanying source code shows the latter.
-%aplas: the original text is in comments below. Here's a greatly
-% abbreaviated text
+\ifshort
 \vspace*{-0.7em}
 \begin{code3}
 data P t where
@@ -1024,48 +1054,23 @@ data P t where
   VF :: (P a -> P b) -> P (a -> b);   E  :: C t -> P t
 \end{code3}
 \vspace*{-0.7em}
-The constructors |VI|, |VB|, and |VF| build static terms (like |S0|
-in~\S\ref{S:PE-lift}), and |E| builds dynamic terms (like |E0|).  However,
-the type |P t| is no longer parametric in~|t|: the constructor |VF| takes an
-operand of type |P a -> P b| rather than |a -> b|. As before, we define a
-function |abstr| to extract a future-stage computation from a value of 
-type |P t|. The implementations of |int|, |bool|, and |add| are like
-in~\S\ref{S:PE-problem}.
-The interpretation of |lam f = VF f| just wraps the HOAS function |f|. 
-We can always compile |f| to a code value,
-but we delay it to apply |f| to concrete arguments. The interpretation of
-\vspace*{-0.7em}
-\begin{code3}
-app (VF f) ea = f ea;  app (E f)  ea = E (app f (abstr ea))
-\end{code3}
-\vspace*{-0.7em}
-checks to see if |ef| is such a delayed
-HOAS function |VF f|. If it is, we apply |f| to the
-concrete argument |ea|, giving us a chance to perform static
-computations (see example |testpowfix7| in~\S\ref{S:PE-solution}). If |ef| is a
-dynamic value |E f|, we residualize.
-This solution using GADTs works but is not quite satisfactory. First, it
-cannot be ported to MetaOCaml.  Second,
-the problem of nonexhaustive pattern\hyp matching reappears in
-|app|. Although Coq or logical
-frameworks with canonical forms could prove pattern-matching
-exhaustive, GHC cannot and issues warnings. Recall, our goal is to
-make this exhaustiveness \emph{syntactically} apparent.
-
-\begin{comment}
+\else
 We introduce a GADT with four data constructors.
-\vspace*{-0.7em}
+\begin{code}
 data P t where
   VI :: Int  -> P Int
   VB :: Bool -> P Bool
   VF :: (P a -> P b) -> P (a -> b)
   E  :: C t -> P t
-\end{code3}
+\end{code}
+\fi
 The constructors |VI|, |VB|, and |VF| build static terms (like |S0|
 in~\S\ref{S:PE-lift}), and |E| builds dynamic terms (like |E0|).  However,
 the type |P t| is no longer parametric in~|t|: the constructor |VF| takes an
-operand of type |P a -> P b| rather than |a -> b|. As before, we define a
-function to extract a future-stage computation from a value of type |P t|.
+operand of type |P a -> P b| rather than |a -> b|. We define a function
+\ifshort |abstr|, \fi like |abstr1| above\ifshort,\fi\
+to extract a future-stage computation from a value of type |P t|.
+\ifshort\else
 \begin{code}
 abstr :: P t -> C t
 abstr (VI i) = int i
@@ -1089,63 +1094,93 @@ instance Symantics P where
   app (VF f) ea = f ea
   app (E f)  ea = E (app f (abstr ea))
 \end{code}
+\fi
 The implementations of |int|, |bool|, and |add| are like
 in~\S\ref{S:PE-problem}.
-The interpretation of |lam f| just wraps the
-HOAS function |f|. We can always compile |f| to a code value,
+The interpretation of |lam f| is |VF f|, which just wraps the HOAS function |f|. 
+We can always compile |f| to a code value,
 but we delay it to apply |f| to concrete arguments. The interpretation of
-|app ef ea| checks to see if |ef| is such a delayed
+|app ef ea|
+\ifshort
+defined by
+\vspace*{-0.7em}
+\begin{code3}
+app (VF f) ea = f ea;  app (E f) ea = E (app f (abstr ea))
+\end{code3}
+\vspace*{-0.7em}
+\fi
+checks to see if |ef| is such a delayed
 HOAS function |VF f|. If it is, we apply |f| to the
 concrete argument |ea|, giving us a chance to perform static
 computations (see example |testpowfix7| in~\S\ref{S:PE-solution}). If |ef| is a
 dynamic value |E f|, we residualize.
+\ifshort\else
 
+\fi
 This solution using GADTs works but is not quite satisfactory. First, it
-cannot be ported to MetaOCaml as GADTs are unavailable there.  Second,
-the problem of nonexhaustive pattern\hyp matching reappears in |app|
-above: the type |P t| has four constructors, of which pattern\hyp
-matching in |app| uses only |VF| and~|E|. One may say that the
+cannot be ported to MetaOCaml\ifshort\else\ as GADTs are unavailable there\fi.  Second,
+the problem of nonexhaustive pattern\hyp matching reappears in
+|app|\ifshort. \else\
+above: the type |P t| has four constructors, of which the pattern in
+|app| matches only |VF| and~|E|. One may say that the
 constructors |VI| and |VB| obviously cannot occur because they do not
 construct values of type |P (a -> b)| as required by the type of |app|.
-Indeed the metalanguage implementation could reason thus, 
-but it may not; GHC for one issues warnings%
+\fi
+\ifshort
+Although Coq or logical
+frameworks with canonical forms could prove pattern\hyp matching
+exhaustive,
+\else
+Indeed the metalanguage implementation could reason thus,%
 \footnote{If we use inductive families (as those in Coq) or logical
-  frameworks with canonical forms, we can prove the pattern-matching
-  to be exhaustive. The coverage checker of Twelf does such proof.}. 
+  frameworks with canonical forms (as in Twelf with its coverage checker),
+  we can prove the pattern matching to be exhaustive.}
+but it may not;
+\fi
+GHC cannot and issues warnings.
+\ifshort
+Recall, our
+\else
 Although this point may seem minor, it is the heart of
 the tagging problem and the purpose of tag elimination. A typed tagged
 interpreter contains many pattern\hyp matching forms that look partial
-but never fail in reality. The goal is to make this safety
-\emph{syntactically} apparent.
-\end{comment}
-
+but never fail in reality. The
+\fi
+goal is to make this exhaustiveness \emph{syntactically} apparent.
 
 
 \subsection{The ``final'' solution}
 \label{S:PE-solution}
+
+\begin{SaveVerbatim}{P}
+data P t = P (Maybe (repr_pe t)) (C t)
+\end{SaveVerbatim}
+
 Let us re-examine the problem in~\S\ref{S:PE-problem}. What we
 would ideally like is to write
-%aplas: inlining
-\texttt{data P t = P (Maybe (repr\_pe t)) (C t)}
-\begin{comment}
-\begin{code}
-data P t = P (Maybe (repr_pe t)) (C t)
-\end{code}
-\end{comment}
+\ifshort \BUseVerbatim{P} \else \UseVerbatim{P} \fi
 where |repr_pe| is the type function defined
 % inductively because P below depends on repr_pe
-by\vspace*{-0.8em}
+by
+\ifshort\vspace*{-0.8em}
 \begin{code3}
-repr_pe Int      = Int          repr_pe Bool     = Bool
-repr_pe (a -> b) = P a -> P b
+repr_pe Int = Int; repr_pe Bool = Bool; repr_pe (a -> b) = P a -> P b
 \end{code3}
 \vspace*{-0.8em}
+\else
+\begin{code}
+repr_pe Int      = Int
+repr_pe Bool     = Bool
+repr_pe (a -> b) = P a -> P b
+\end{code}
+\fi
 Although we can use type classes to define this type function
 in Haskell, that is not portable to MetaOCaml. However,
 these three typecase alternatives are already present in existing
 methods of |Symantics|.
 A simple and portable solution thus emerges: we bake |repr_pe| 
-into the signature |Symantics|. Switching to MetaOCaml to demonstrate this,
+into the signature |Symantics|. Switching to MetaOCaml to demonstrate
+this\ifshort\else\ portability\fi,
 we recall from Figure~\ref{fig:ocaml-simple} in~\S\ref{encoding} that the |repr| type
 constructor took two arguments |'c| and~|'dv|. We add an argument
 |'sv| for the result of applying |repr_pe| to~|'dv|.
@@ -1153,54 +1188,54 @@ Figure~\ref{fig:ocaml} shows the new signature.
 % aplas: abbreviated figure
 \begin{figure*}
 \begin{floatrule}
-\begin{code}
+\ifshort
+\begin{code2}
 module type Symantics = sig type ('c,'sv,'dv) repr
-  val int : int  -> ('c,int,int) repr
-  val lam : (('c,'sa,'da) repr -> ('c,'sb,'db) repr as 'x) -> ('c,'x,'da->'db) repr
-  val app : ('c,'x,'da->'db) repr -> (('c,'sa,'da) repr -> ('c,'sb,'db) repr as 'x)
-  val fix : ('x->'x) -> (('c, ('c,'sa,'da) repr -> ('c,'sb,'db) repr, 'da->'db) repr as 'x)
+  val int : int -> ('c,int,int) repr
+  val lam : (('c,'sa,'da) repr -> ('c,'sb,'db) repr as 'x)
+            -> ('c,'x,'da -> 'db) repr
+  val app : ('c,'x,'da -> 'db) repr
+            -> (('c,'sa,'da) repr -> ('c,'sb,'db) repr as 'x)
+  val fix : ('x -> 'x) -> (('c, ('c,'sa,'da) repr -> ('c,'sb,'db) repr,
+                                'da -> 'db) repr as 'x)
   val add : ('c,int,int) repr -> ('c,int,int) repr -> ('c,int,int) repr
-  val if_ : ('c,bool,bool) repr -> (unit->'x) -> (unit->'x) -> (('c,'sa,'da) repr as 'x)
-end
-\end{code}
-\end{floatrule}
-\caption{A (Meta)OCaml embedding of our object language that supports
-  partial evaluation (\texttt{bool}, \texttt{mul},
-\texttt{leq} are elided)}
-\label{fig:ocaml}
-\end{figure*}
-
-\begin{comment}
-\begin{figure*}
-\begin{floatrule}
-\begin{code}
+  val if_ : ('c,bool,bool) repr
+            -> (unit->'x) -> (unit->'x) -> (('c,'sa,'da) repr as 'x) end
+\end{code2}
+\else
+\begin{code2}
 module type Symantics = sig
   type ('c,'sv,'dv) repr
 
   val int : int  -> ('c,int,int) repr
   val bool: bool -> ('c,bool,bool) repr
 
-  val lam : (('c,'sa,'da) repr -> ('c,'sb,'db) repr as 'x) -> ('c,'x,'da->'db) repr
-  val app : ('c,'x,'da->'db) repr -> (('c,'sa,'da) repr -> ('c,'sb,'db) repr as 'x)
-  val fix : ('x -> 'x) -> (('c, ('c,'sa,'da) repr -> ('c,'sb,'db) repr, 'da->'db) repr as 'x)
+  val lam : (('c,'sa,'da) repr -> ('c,'sb,'db) repr as 'x)
+            -> ('c,'x,'da -> 'db) repr
+  val app : ('c,'x,'da -> 'db) repr
+            -> (('c,'sa,'da) repr -> ('c,'sb,'db) repr as 'x)
+  val fix : ('x -> 'x) -> (('c, ('c,'sa,'da) repr -> ('c,'sb,'db) repr,
+                                'da -> 'db) repr as 'x)
 
   val add : ('c,int,int) repr -> ('c,int,int) repr -> ('c,int,int) repr
   val mul : ('c,int,int) repr -> ('c,int,int) repr -> ('c,int,int) repr
   val leq : ('c,int,int) repr -> ('c,int,int) repr -> ('c,bool,bool) repr
-  val if_ : ('c,bool,bool) repr -> (unit -> 'x) -> (unit -> 'x) -> (('c,'sa,'da) repr as 'x)
+  val if_ : ('c,bool,bool) repr
+            -> (unit -> 'x) -> (unit -> 'x) -> (('c,'sa,'da) repr as 'x)
 end
-\end{code}
+\end{code2}
+\fi
 \end{floatrule}
-\caption{A (Meta)OCaml embedding of our object language that supports partial evaluation}
+\caption{A (Meta)OCaml embedding of our object language that supports
+  partial evaluation \ifshort \protect\linebreak[2] (\texttt{bool},
+  \texttt{mul}, \texttt{leq} are elided)\fi}
 \label{fig:ocaml}
 \end{figure*}
-\end{comment}
 
-% aplas: abberviated figure here. The original is in teh comments
-% right down below
 \begin{figure}
 \begin{floatrule}
-\begin{code}
+\ifshort
+\begin{code2}
 module P = struct
   type ('c,'sv,'dv) repr = {st: 'sv option; dy: ('c,'dv) code}
   let abstr {dy = x} = x    let pdyn x = {st = None; dy = x}
@@ -1218,74 +1253,65 @@ module P = struct
   let lam f = {st = Some f; dy = C.lam (fun x -> abstr (f (pdyn x)))}
   let app ef ea = match ef with {st = Some f} -> f ea
                   | _ -> pdyn (C.app (abstr ef) (abstr ea)) end
-\end{code}
-\end{floatrule}
-\caption{Our partial evaluator (\texttt{bool}, \texttt{mul},
-  \texttt{leq} and \texttt{fix} are elided)}
-\label{fig:pe}
-\end{figure}
-
-\begin{comment}
-\begin{figure}
-\begin{floatrule}
-\begin{code}
+\end{code2}
+\else
+\begin{code2}[commandchars=\@\[\]]
 module P = struct
   type ('c,'sv,'dv) repr = {st: 'sv option; dy: ('c,'dv) code}
   let abstr {dy = x} = x
   let pdyn x = {st = None; dy = x}
 
-  let int  (x:int)  = {st = Some (R.int x);  dy = C.int x}
+  let int  (x:int ) = {st = Some (R.int  x); dy = C.int  x}
   let bool (x:bool) = {st = Some (R.bool x); dy = C.bool x}
 
   let add e1 e2 = match e1, e2 with
-  | {st = Some 0}, e | e, {st = Some 0} -> e
-  | {st = Some m}, {st = Some n} -> int (R.add m n)
-  | _ -> pdyn (C.add (abstr e1) (abstr e2))
+                  | {st = Some 0}, e | e, {st = Some 0} -> e
+                  | {st = Some m}, {st = Some n} -> int (R.add m n)
+                  | _ -> pdyn (C.add (abstr e1) (abstr e2))
 
   let if_ eb et ee = match eb with
-  | {st = Some b} -> if b then et () else ee ()
-  | _ -> pdyn (C.if_ (abstr eb) (fun () -> abstr (et ()))
-                                (fun () -> abstr (ee ())))
-  let lam f = {st = Some f; 
-               dy = C.lam (fun x -> abstr (f (pdyn x)))}
+                     | {st = Some b} -> if b then et () else ee ()
+                     | _ -> pdyn (C.if_ (abstr eb) (fun () @!->@! abstr (et @!()))
+                                                   (fun () @!->@! abstr (ee @!())))
 
+  let lam f = {st = Some f; dy = C.lam (fun x -> abstr (f (pdyn x)))}
   let app ef ea = match ef with
-  | {st = Some f} -> f ea
-  | _ -> pdyn (C.app (abstr ef) (abstr ea))
+                  | {st = Some f} -> f ea
+                  | _ -> pdyn (C.app (abstr ef) (abstr ea))
 
-  let fix f = 
-    let fdyn = C.fix (fun x -> abstr (f (pdyn x)))
-    in let rec self = function
-       | {st = Some _} as e -> app (f (lam self)) e
-       | e -> pdyn (C.app fdyn (abstr e))
-       in {st = Some self; dy = fdyn}
+  let fix f = let fdyn = C.fix (fun x -> abstr (f (pdyn x)))
+              in let rec self = function
+                                | {st = Some @!_} as e -> app (f (lam self)) e
+                                | e -> pdyn (C.app fdyn (abstr e))
+                 in {st = Some self; dy = fdyn}
 end
-\end{code}
+\end{code2}
+\fi
 \end{floatrule}
-\caption{Our partial evaluator (\texttt{mul} and \texttt{leq} are elided)}
+\caption{Our partial evaluator (\ifshort \texttt{bool}, \texttt{mul},
+  \texttt{leq} and \texttt{fix} \else \texttt{mul} and \texttt{leq} \fi
+  are elided)}
 \label{fig:pe}
 \end{figure}
-\end{comment}
 
 The interpreters |R|, |L| and~|C| above only use the old
 type arguments |'c| and~|'dv|, which are treated by the new signature
-in the same way.  Hence all that needs to change in these interpreters
+in the same way.  Hence, all that needs to change in these interpreters
 to match the new signature is to add a phantom type
 argument~|'sv| to~|repr|.
-For example, the compiler |C| now begins \texttt{module C = struct
-  type ('c,'sv,'dv) repr = ('c,'dv) code} with the rest the same.
-In contrast, the partial evaluator~|P| relies on the type argument |'sv|.
-
-%aplas: here's the original text
-\begin{comment}
 For example, the compiler |C| now begins
+\ifshort
+\texttt{module C = struct
+  type ('c,'sv,'dv) repr = ('c,'dv) code}
+\else
 \begin{code}
 module C = struct
   type ('c,'sv,'dv) repr = ('c,'dv) code
-  (* the rest is the same *)
 \end{code}
+\fi
+with the rest the same.
 In contrast, the partial evaluator~|P| relies on the type argument |'sv|.
-\end{comment}
+
 
 Figure~\ref{fig:pe} shows the partial evaluator~|P|.
 Its type |repr| literally expresses the type equation for |repr_pe| above.
@@ -1302,79 +1328,70 @@ structure of~|int|: not only is addition performed statically
 (using~|R|) when both operands are statically known, but it is
 eliminated when one operand is statically~$0$; similarly for
 multiplication by~$0$ or~$1$.  
-\begin{comment}
+\ifshort
+Such optimizations can be quite effective
+\else
 Such algebraic simplifications are easy
 to abstract over the specific domain (such as monoid or ring) where they
-apply.  These simplifications and abstractions help a lot in a large
-language with more base types and primitive operations.
-\end{comment}
-%aplas-specific
-In large languages, this can be quite effective.
+apply.  These simplifications and abstractions help a lot
+\fi
+in a large language with more base types and primitive operations.
 
-%aplas: abbreviated paragraph. The original is commented below
-Any partial evaluator must decide how much to unfold recursion. The code in
-Figure~\ref{fig:pe} na\"\i vely unfolds |fix| whenever the
-argument is static.  In the accompanying source code is a conservative
-alternative |P.fix| that unrolls recursion only once, then residualizes.
-Many sophisticated approaches have been developed for this trade-off
-\cite{jones-partial}, but this issue is orthogonal to our presentation.
-\begin{comment}
-Any partial evaluator must decide how much to unfold recursion
+Any partial evaluator must decide how much to unfold recursion\ifshort.
+The code in Figure~\ref{fig:pe} na\"\i vely unfolds |fix|
+\else\
 statically: unfolding too little can degrade the residual code, whereas
 unfolding too much risks nontermination.  Our partial evaluator is no
 exception, because our object language includes |fix|.  The code in
 Figure~\ref{fig:pe} takes the na\"\i ve approach of ``going all the
-way'', that is, unfold |fix| rather than residualize whenever the
+way'', that is, unfold |fix| rather than residualize
+\fi
+whenever the
 argument is static.  In the accompanying source code is a conservative
 alternative |P.fix| that unrolls recursion only once, then residualizes.
-Many sophisticated approaches have been developed to make this trade-off
+Many sophisticated approaches have been developed for this trade-off
 \cite{jones-partial}, but this issue is orthogonal to our presentation.
+\ifshort\else
 A separate concern in our treatment of |fix| is possible code bloat in
 the residual program, which calls for let-insertion
 \cite{SwadiTahaKiselyovPasalic2006}.
-\end{comment}
+\fi
 
 
-%aplas: abbreviated paragraph. The original is in the comments below
 Given this implementation of~|P|, our running example
-\texttt{let module E = EX(P) in E.test1 ()} evaluates to
-\texttt{\{P.st = Some true; P.dy = .<true>.\}}
-of type |('a, bool, bool) P.repr|.  Unlike with~|C| in~\S\ref{compiler},
-a $\beta$-reduction has been statically performed to yield |true|.  More
-interestingly, whereas |testpowfix7| compiles to a code value with many
-$\beta$-redexes in~\S\ref{compiler}, the partial evaluation
-\texttt{let module E = EX(P) in E.testpowfix7}
-gives the desired result
-\vspace*{-0.7em}
-\begin{code3}
-{P.st = Some <fun>;
- P.dy = .<fun x_1 -> x_1 * (x_1 * (x_1 * (x_1 * (x_1 * (x_1 * x_1)))))>.}
-\end{code3}
-\vspace*{-0.7em}
-
-\begin{comment}
-Given this implementation of~|P|, our running example
+\ifshort
+\texttt{let module E = EX(P) in E.test1 ()}
+\else
 \begin{code}
 let module E = EX(P) in E.test1 ()
 \end{code}
+\fi
 evaluates to
+\ifshort
+|{P.st = Some true; P.dy = .<true>.}|
+\else
 \begin{code}
 {P.st = Some true; P.dy = .<true>.}
 \end{code}
+\fi
 of type |('a, bool, bool) P.repr|.  Unlike with~|C| in~\S\ref{compiler},
 a $\beta$-reduction has been statically performed to yield |true|.  More
 interestingly, whereas |testpowfix7| compiles to a code value with many
 $\beta$-redexes in~\S\ref{compiler}, the partial evaluation
+\ifshort
+\texttt{let module E = EX(P) in E.testpowfix7}
+\else
 \begin{code}
 let module E = EX(P) in E.testpowfix7
 \end{code}
+\fi
 gives the desired result
+\ifshort\vspace*{-0.7em}\fi
 \begin{code}
 {P.st = Some <fun>;
- P.dy = .<fun x_1 -> x_1 * (x_1 * (x_1 * (x_1 *
-                    (x_1 * (x_1 * x_1)))))>.}
+ P.dy = .<fun x -> x * (x * (x * (x * (x * (x * x)))))>.}
 \end{code}
-\end{comment}
+\ifshort\vspace*{-0.7em}\fi
 
 
 Unlike the GADT approach in~\S\ref{S:PE-GADT}, all pattern\hyp matching
@@ -1383,27 +1400,24 @@ implementation that |P| never gets stuck.  Further, all pattern\hyp matching occ
 during partial evaluation, only to check if a value is known statically,
 never what type it has.  In other words, our partial evaluator tags
 phases (with |Some| and |None|) but not object types.
-%aplas: commented out
-\begin{comment}
+
+\ifshort\else
 Our typed partial evaluator is online and polyvariant.  It reuses the
 compiler~|C| and the evaluator~|R| by composing them.  This situation is
 simpler than \citets{SperberThiemann:TwoForOne} composition of a partial
 evaluator and a compiler, but the general ideas are similar.
-\end{comment}
+\fi
 
 
 % don't even have space for CPS
 \ifshort\else
 \section{Continuation\hyp passing style}\label{variations}
-% aplas-specific
-\label{state}
-\label{S:CPS}
 
 Our approach accommodates
 several variants, including
 a call-by-name CPS interpreter and a call-by-value CPS
 transformation.
-% Here's the text to replace the comment block below.
+\ifshort\label{state}\label{S:CPS}%
 This lets us decouple the evaluation strategy of the object language
 from that of the metalanguage. The accompanying code shows the CBN CPS
 interpreter (module |RCN| implementing |Symantics|) and a CBV CPS
@@ -1416,15 +1430,15 @@ modify the CBV CPS transformation to pass a piece of state along with
 the continuation. This technique lets us support mutable state.  Due
 to the severe lack of space we cannot describe these interpreters and
 refer the reader to the accompanying code.
-\fi
 
-\begin{comment}
+\else
+
 \subsection{Call-by-name CPS interpreters}\label{S:CPS}
 
 The object language generally inherits the evaluation strategy from
 the metalanguage---call-by-value (CBV) in OCaml, call-by-name (CBN) in
 Haskell.  To represent a CBN object language in a CBV metalanguage,
-\cite{reynolds-definitional,reynolds-relation} and \cite{PlotkinCBN}
+\citet{reynolds-definitional,reynolds-relation} and \citet{PlotkinCBN}
 introduce CPS to make the evaluation strategy of a definitional
 interpreter indifferent to that of the metalanguage. To achieve the same
 indifference in the typed setting, we build a CBN CPS interpreter for
@@ -1435,8 +1449,7 @@ mapping a continuation~|k| to the answer
 returned by~|k|.
 \begin{code}
 let int (x:int) = fun k -> k x
-let add e1 e2 = fun k ->
-  e1 (fun v1 -> e2 (fun v2 -> k (v1 + v2)))
+let add e1 e2 = fun k -> e1 (fun v1 -> e2 (fun v2 -> k (v1 + v2)))
 \end{code}
 In both |int| and |add|, the interpretation has type 
 |(int -> 'w)|\texttt{ }|-> 'w|, where |'w| is the (polymorphic) answer type.
@@ -1452,8 +1465,7 @@ does not evaluate the argument~|e2| by applying it to the
 continuation~|k|. Rather, it passes |e2| unevaluated to the abstraction.
 Interpreting $\fun{x} x+1$ yields type
 \begin{code}
-((((int -> 'w1) -> 'w1) -> (int -> 'w1) -> 'w1)
- -> 'w2) -> 'w2
+((((int -> 'w1) -> 'w1) -> (int -> 'w1) -> 'w1) -> 'w2) -> 'w2
 \end{code}
 
 We would like to collect those interpretation functions into a module
@@ -1469,22 +1481,15 @@ in~\S\ref{S:PE-solution} is precisely the same type function we
 need for CBN CPS\@.
 \begin{code}
 module RCN = struct
-  type ('c,'sv,'dv) repr = 
-    {ko: 'w. ('sv -> 'w) -> 'w}
+  type ('c,'sv,'dv) repr = {ko: 'w. ('sv -> 'w) -> 'w}
   let int (x:int) = {ko = fun k -> k x}
-  let add e1 e2 = 
-    {ko = fun k -> e1.ko (fun v1 -> 
-                   e2.ko (fun v2 -> k (v1+v2)))}
-  let if_ eb et ee = 
-    {ko = fun k -> eb.ko 
-         (fun vb -> if vb then (et ()).ko k 
-                          else (ee ()).ko k)}
+  let add e1 e2 = {ko = fun k ->
+      e1.ko (fun v1 -> e2.ko (fun v2 -> k (v1 + v2)))}
+  let if_ eb et ee = {ko = fun k ->
+      eb.ko (fun vb -> if vb then (et ()).ko k else (ee ()).ko k)}
   let lam f = {ko = fun k -> k f}
-  let app e1 e2 = 
-    {ko = fun k -> e1.ko (fun f -> (f e2).ko k)}
-  let fix f = 
-    let rec fx f n = app (f (lam (fx f))) n in 
-    lam (fx f)
+  let app e1 e2 = {ko = fun k -> e1.ko (fun f -> (f e2).ko k)}
+  let fix f = let rec fx f n = app (f (lam (fx f))) n in lam (fx f)
   let run x = x.ko (fun v -> v)
 end
 \end{code}
@@ -1501,7 +1506,7 @@ under CBN but not CBV\@.
 \begin{code}
 module EXS(S: Symantics) = struct open S
  let diverg () = app (lam (fun x -> int 1)) 
-                  (app (fix (fun f->f)) (int 2))
+                     (app (fix (fun f->f)) (int 2))
 end
 \end{code}
 Interpreting |EXS| with the |R| interpreter of
@@ -1519,13 +1524,13 @@ let module M = EXS(RCN) in RCN.run (M.diverg ())
 Changing one definition turns our CBN CPS interpreter into CBV\@.
 \begin{code}
 module RCV = struct include RCN
-  let lam f = {ko = fun k -> k (fun e ->
-    e.ko (fun v -> f {ko = fun k -> k v}))}
+  let lam f = {ko = fun k -> k
+      (fun e -> e.ko (fun v -> f {ko = fun k -> k v}))}
 end
 \end{code}
 Now an applied abstraction
 evaluates its argument before proceeding. This approach is in
-line with \cite{reynolds-relation}, albeit typed. The
+line with \citets{reynolds-relation}, albeit typed. The
 interpreter~|RCV| is useful for CBV evaluation of the object language
 whether the metalanguage is CBV or CBN\@.
 
@@ -1536,17 +1541,15 @@ CPS transformation on the object language.
 \begin{code}
 module CPST(S: Symantics) = struct
   let int i = S.lam (fun k -> S.app k (S.int i))
-  let add e1 e2 = S.lam (fun k ->
-    S.app e1 (S.lam (fun v1 ->
-    S.app e2 (S.lam (fun v2 ->
-    S.app k (S.add v1 v2))))))
-  let lam f = S.lam (fun k -> S.app k (S.lam
-    (fun x -> f (S.lam (fun k -> S.app k x)))))
-  let app e1 e2 = S.lam (fun k -> 
-    S.app e1 (S.lam (fun f ->
-    S.app e2 (S.lam (fun v ->
-    S.app (S.app f v) k)))))
-  let fix f = S.fix (fun self -> (f self))
+  let add e1 e2 = S.lam (fun k -> S.app e1 (S.lam (fun v1 ->
+                                  S.app e2 (S.lam (fun v2 ->
+                                  S.app k (S.add v1 v2))))))
+  let lam f = S.lam (fun k -> S.app k
+              (S.lam (fun x -> f (S.lam (fun k -> S.app k x)))))
+  let app e1 e2 = S.lam (fun k -> S.app e1 (S.lam (fun f ->
+                                  S.app e2 (S.lam (fun v ->
+                                  S.app (S.app f v) k)))))
+  let fix = S.fix
 end
 \end{code}
 This (abbreviated) code explicitly maps CPS interpretations to
@@ -1558,10 +1561,9 @@ and thus does not have signature |Symantics|.
 The reason is again the type of |lam f|. Whereas
 |int| and |add| return the (abbreviated) type
 |('c, ..., (int -> 'w) -> 'w) S.repr|,
-the type of |lam (add (int 1))| is
+the type of \texttt{lam (add (int~1))} is
 \begin{code}
-('c, ..., ((int -> (int -> 'w1) -> 'w1) -> 'w2)
-          -> 'w2) S.repr
+('c, ..., ((int -> (int -> 'w1) -> 'w1) -> 'w2) -> 'w2) S.repr
 \end{code}
 Hence, to write the type equation defining |CPST.repr| we again need
 a type function with a typecase distinction, similar to |repr_pe|
@@ -1578,14 +1580,13 @@ match the signature |Symantics|, we cannot apply the |EX| functor to it.
 Nevertheless, we can write the tests.
 \begin{code}
 module T = struct
- module M = CPST(C)
- open M
- let test1 () = (* same as before *)
-   app (lam (fun x -> x)) (bool true)
- let testpowfix () = ... (* same as before *)
- let testpowfix7 = (* same as before *)
-    lam (fun x -> app (app (testpowfix ()) x)
-                      (int 7))
+  module M = CPST(C)
+  open M
+  let test1 () = (* same as before *)
+       app (lam (fun x -> x)) (bool true)
+  let testpowfix () = ... (* same as before *)
+  let testpowfix7 = (* same as before *)
+       lam (fun x -> app (app (testpowfix ()) x) (int 7))
 end
 \end{code}
 We instantiate |CPST| with the desired base interpreter~|C|,
@@ -1601,17 +1602,15 @@ With
 |CPST| instantiated by the compiler~|C| above,
 |T.test1| gives
 \begin{code}
-.<fun x_5 ->
-  (fun x_2 -> x_2 (fun x_3 x_4 -> x_4 x_3))
-  (fun x_6 -> (fun x_1 -> x_1 true)
-              (fun x_7 -> x_6 x_7 x_5))>.
+.<fun x_5 -> (fun x_2 -> x_2 (fun x_3 x_4 -> x_4 x_3))
+             (fun x_6 -> (fun x_1 -> x_1 true)
+                         (fun x_7 -> x_6 x_7 x_5))>.
 \end{code}
 This output is a na\"{\i}ve CPS transformation of $(\fun{x}x)\True$,
 containing several apparent $\beta$-redexes.  To eliminate these
 redexes, we just change~|T| to instantiate |CPST| with |P| instead.
 \begin{code}
-{P.st = Some <fun>;
- P.dy = .<fun x_5 -> x_5 true>.}
+{P.st = Some <fun>; P.dy = .<fun x_5 -> x_5 true>.}
 \end{code}
 
 \subsection{State and imperative features}
@@ -1622,8 +1621,9 @@ with the continuation. This technique lets us support mutable state. We
 can also add mutable references to the object language using mutable
 references of the metalanguage.  The accompanying code illustrates these
 extensions.
-\end{comment}
 
+\fi
+\fi
 
 \ifshort\else
 \section{Self-interpretation}\label{selfinterp}
@@ -1649,24 +1649,24 @@ in~\S\ref{S:interpreter-RL} may just as well be written in our object
 language.  In particular, the following \emph{object} functions implement an
 evaluator.  (We use the number~$0$ in lieu of a unit value.)
 \begin{align*}
-    \ident{int} &= \fun{x} x &
+    \ident{int} &= \fun{x} x \\
+    \ident{add} &= \fun{x} \fun{y} x+y \\
+    \ident{if\_}&= \fun{b} \fun{t} \fun{e} \cond{b}{t\,0}{e\,0} \\
     \ident{lam} &= \fun{f} f \\
-    \ident{add} &= \fun{x} \fun{y} x+y &
     \ident{app} &= \fun{f} \fun{x} fx \\
-    \ident{if\_}&= \fun{b} \fun{t} \fun{e} \cond{b}{t\,0}{e\,0} &
     \ident{fix} &= \fun{g} \fix{f} \fun{x} gfx
 \end{align*}
 We thus map each object terms~$e$ to an object term~$\encode{e}$ as follows.
 We call this mapping \emph{pre-encoding}.
 \begin{align*}
-    \encode{x} &= x &
-    \encode{\fun{x}e} &= \ident{lam} (\fun{x} \encode{e}) \\
-    \encode{n} &= \ident{int}\, n &
-    \encode{fx} &= \ident{app} \encode{f} \encode{x} \\
-    \encode{e_1 + e_2} &= \ident{add} \encode{e_1} \encode{e_2} &
-    \encode{\fix{f}e} &= \ident{fix} (\fun{f} \encode{e}) \\
+    \encode{x} &= x \\
+    \encode{n} &= \ident{int}\, n \\
+    \encode{e_1 + e_2} &= \ident{add} \encode{e_1} \encode{e_2} \\
     \encode{\cond{b}{t}{e}} &= \rlap{$\ident{if\_} \encode{b}
-        \left(\fun{\_}\encode{t}\right) \left(\fun{\_}\encode{e}\right)$}
+        \left(\fun{\_}\encode{t}\right) \left(\fun{\_}\encode{e}\right)$} \\
+    \encode{\fun{x}e} &= \ident{lam} (\fun{x} \encode{e}) \\
+    \encode{fx} &= \ident{app} \encode{f} \encode{x} \\
+    \encode{\fix{f}e} &= \ident{fix} (\fun{f} \encode{e})
 \end{align*}
 The metavariables $x$ and~$n$ stand for a variable and an integer,
 respectively.
@@ -1722,14 +1722,13 @@ We then define the self\hyp interpreter
     (\fun{b} b)
 \end{equation*}
 and apply it to the encoded term.  The result is the object term
-\begin{multline*}
+\begin{equation*}
     \bigl(\fun{e} e (\fun{f} \fun{x} fx) (\fun{f} f) (\fun{b} b)\bigr)
-\\
     \bigl(
     \fun{\ident{app}} \fun{\ident{lam}} \fun{\ident{bool}}
     \ident{app} (\ident{lam} (\fun{x} x))\, (\ident{bool} \True)
     \bigr),
-\end{multline*}
+\end{equation*}
 which partially evaluates to~$\True$ easily.
 However, encoding fails on an term with multiple $\lambda$\hyp
 abstractions at different types.  For example, the pre-encoding
@@ -1753,6 +1752,7 @@ language (along with polymorphism over kinds!), we add let-bound polymorphism.
 As usual,
 we can add a new typing rule
 \begin{equation*}
+    \let\vcenter\vbox
     \begin{prooftree}
         e_1:t_1 \quad \subst{e_2}{x}{e_1}:t_2
         \justifies \be{x=e_1} e_2 : t_2
@@ -1793,12 +1793,12 @@ a context.  For example, the evaluator is the context
     \end{tabular}
 \end{align*}
 To interpret an object term~$e$ using an interpreter $I[~]$ is to
-evaluate the object term~$I[\encode{e}]$.  $\si$ is
+evaluate the object term~$I[\encode{e}]$.  $\si$~is
 a self\hyp interpreter in the following sense.
 \begin{proposition}
     $\si[\encode{e}]$ is observationally equivalent to~$e$.
 \end{proposition}
-As a corollary, we can pre-encode the self\hyp interpreter itself as
+As a corollary, we can pre-encode $\si$ itself as
 a context: the term $\si[\encode{\si[\encode{e}]}]$ is observationally
 equivalent to $\si[\encode{e}]$, and in turn to~$e$.  In other words,
 $\si$ can interpret itself.  Our partial evaluator is optimal with respect to
@@ -1822,15 +1822,16 @@ machinery that we have been using in this paper all along.
 
 In the presence of let-bound polymorphism, we can understand a term
 waiting to be plugged into a context as a higher-rank and higher-kind
-abstraction over the context.  Whereas our object language does not support
+abstraction over the context.  Even though our object language does not support
 higher abstraction, our metalanguages do, so they can type-check an object term
 separately from its interpreter---either as a functor from a |Symantics| module
 containing a type constructor
 (in OCaml), or a value with a |Symantics| constraint over a type
-constructor (in Haskell).  Thus
+constructor (in Haskell).  Thus,
 ``context'' is a euphemism for a polymorphic argument, and ``plugging''
 is a euphemism for application.
 
+\begin{comment}
 \jacques{But how 
 to you create, in either Haskell or MetaOCaml, an untypechecked 
 interpreter-with-a-hole [UIH] ?}
@@ -1856,6 +1857,9 @@ RR is not an identity: it is an interpreter that encapsulates another
 interpreter. The RR interpreter can be made self if we treat RR as a
 special form and interpret it always with itself (similar to let and
 hole below).}
+\end{comment}
+
+\begin{comment}
 
 The crucial role of the higher-order type parameter r
 
@@ -1909,14 +1913,15 @@ seems the inference is possible, as our Haskell and OCaml code
 constructively illustrates. Perhaps we need to characterize our
 fragment.
 
+\end{comment}
 \fi
 
 \section{Related work}\label{related}
 
-Our initial motivation came from several papers
+Our initial motivation came from several papers 
 \citep{WalidICFP02,taha-tag,xi-guarded,peyton-jones-simple} that used
-embedded interpreters to justify advanced type systems, in particular,
-GADT. While we admire all this technical work, we were not convinced
+embedded interpreters to justify advanced type systems, in particular
+GADTs. While we admire all this technical work, we were not convinced
 that their motivating example actually needed all this machinery.
 Although GADTs may indeed be more flexible and easier to use, they are
 not available in mainstream ML, and their current implementation in
@@ -1941,7 +1946,7 @@ a sum type (at some level of the hierarchy);
 for such an encoding of a typed language
 in a typed language, without either an
 advanced type system or the overhead of tagging and untagging;
-(3) Thus an indirect interpreter is necessary, which needs a universal
+(3) Thus, an indirect interpreter is necessary, which needs a universal
   type (and hence tagging).
 While the logic is sound, we showed that the premise in the very first step
 was not valid.
@@ -1956,9 +1961,9 @@ a sum type (at some level of the hierarchy).
 for such an encoding of a typed language
 in a typed language, without either an
 advanced type system or the overhead of tagging and untagging.
-\item Thus an indirect interpreter is necessary, which needs a universal
+\item Thus, an indirect interpreter is necessary, which needs a universal
   type (and hence tagging).
-\item Thus any self-interpreter must have tags and cannot be 
+\item Thus, any self-interpreter must have tags and cannot be 
   Jones-optimal.
 \end{enumerate*}
 While the logic is sound, we showed that the premise in the very first step
@@ -2138,8 +2143,7 @@ metalanguage without using GADTs, dependent types, or a universal type.
 Our family of interpreters include an evaluator, a compiler, a partial
 evaluator, and CPS transformers.  It is patent that they never get stuck,
 because we represent object types as metalanguage types.  This work
-makes it safer and more efficient to embed %domain\hyp specific languages
-DSLs
+makes it safer and more efficient to embed DSLs
 in practical metalanguages such as Haskell and ML\@.
 
 Our main idea is to represent object programs not in an initial algebra
@@ -2150,33 +2154,21 @@ computation from consumers to producers: encoding object terms as calls
 to metalanguage functions (\S\ref{ourapproach}); build dynamic terms
 alongside static ones (\S\ref{S:PE-lift}); simulating type functions for
 partial evaluation (\S\ref{S:PE-solution}) and CPS
-transformation%
-%aplas
-.
-%aplas-else ~(\S\ref{S:CPS}).
+transformation\ifshort\else~(\S\ref{S:CPS})\fi.
 This shift also underlies fusion,
 functionalization, and amortized complexity analysis.
-%aplas-else
-\begin{comment}
+\ifshort\else
 When the metalanguage does provide higher-rank and higher-kind
 polymorphism, we can type-check and compile an object term separately
 from any interpreters it may be plugged into.
-\end{comment}
+\fi
 
 Our representation of object terms in elimination form encodes
 primitive recursive folds over the terms. 
-%aplas This makes operations like interpretation trivial to implement. 
+\ifshort\else
+This encoding makes operations like interpretation trivial to implement.
+\fi
 We still
 have to understand if and how non-primitively 
 recursive operations can be supported.
 
-% aplas: acknowledgments are at the beginning
-% \section*{Acknowledgments}
-% \ourthanks
-
-\bibliographystyle{mcbride}
-\bibsep=0pt
-% aplas
-\bibliography{aplas}
-% \bibliography{tagless}
-\end{document}

@@ -12,8 +12,6 @@
 @STRING{proc_pldi_2		= ": Proceedings of the {ACM} Conference on Programming Language Design and Implementation" }
 @STRING{proc_popl_1		= "{POPL} '" }
 @STRING{proc_popl_2		= ": Conference Record of the Annual {ACM} Symposium on Principles of Programming Languages" }
-%@STRING{pub_acm			= "{ACM} {P}ress" }
-%@STRING{pub_acm_addr		= "{N}ew {Y}ork" }
 @STRING{pub_elsevier		= "Elsevier Science" }
 @STRING{pub_elsevier_addr	= "Amsterdam" }
 @STRING{pub_ph			= "Prentice-Hall" }
@@ -29,8 +27,7 @@
   author	= "Emir Pa{\v s}ali{\'c} and Walid Taha and Tim Sheard",
   title		= "Tagless Staged Interpreters for Typed Languages",
   pages		= "157--166",
-  booktitle	= "{ICFP}",
-  year		= 2002,
+  crossref	= "icfp2002",
   url		= "http://www.cs.rice.edu/~taha/publications/conference/icfp02.dvi http://www.cs.rice.edu/~taha/publications/conference/icfp02.ps http://www.cs.rice.edu/~taha/publications/conference/icfp02.pdf"
 }
 
@@ -49,8 +46,7 @@
   author	= "Hongwei Xi and Chiyan Chen and Gang Chen",
   title		= "Guarded Recursive Datatype Constructors",
   pages		= "224--235",
-  year          = 2003,
-  booktitle     = "{POPL}",
+  crossref	= "popl2003",
   url		= "http://www.cs.bu.edu/~hwxi/academic/papers/popl03.pdf http://www.cs.bu.edu/~hwxi/academic/papers/popl03.ps http://www.cs.bu.edu/~hwxi/academic/talks/popl03.ppt"
 }
 
@@ -58,8 +54,7 @@
   author    = {Walid Taha and Michael Florentin Nielsen},
   title     = {Environment Classifiers},
   pages     = {26--37},
-  year          = 2003,
-  booktitle     = "{POPL}",
+  crossref  = "popl2003",
   url       = "http://www.cs.rice.edu/~taha/publications/conference/popl03.dvi http://www.cs.rice.edu/~taha/publications/conference/popl03.ps http://www.cs.rice.edu/~taha/publications/conference/popl03.pdf"
 }
 
@@ -67,8 +62,7 @@
   author	= "Arthur I. Baars and S. Doaitse Swierstra",
   title		= "Typing Dynamic Typing",
   pages		= "157--166",
-  booktitle	= "{ICFP}",
-  year		= 2002,
+  crossref	= "icfp2002",
   url		= "http://www.cs.uu.nl/~arthurb/data/Dynamic/p189-baars.pdf http://www.cs.uu.nl/~arthurb/data/Dynamic/Talk.pdf http://www.cs.uu.nl/~arthurb/dynamic.html",
   abstract	= "Even when programming in a statically typed language we every now and then encounter statically untypable values; such values result from interpreting values or from communicating with the outside world. To cope with this
 		  problem most languages include some form of \emph{dynamic} types. It may be that the core language has been explicitly extended with such a type, or that one is allowed to live dangerously by using functions like
@@ -90,16 +84,14 @@
   author	= "Peyton Jones, Simon L. and Dimitrios Vytiniotis and Stephanie Weirich and Geoffrey Washburn",
   title		= "Simple Unification-Based Type Inference for {GADT}s",
   pages		= "50--61",
-  booktitle	= "{ICFP}",
-  year		= 2006,
+  crossref	= "icfp2006",
   url		= "http://research.microsoft.com/~simonpj/papers/gadt/"
 }
 
 @InProceedings{	fogarty-concoqtion,
   author	= "Seth Fogarty and Emir Pasalic and Jeremy Siek and Walid Taha",
   title		= "{C}oncoqtion: Indexed Types Now!",
-  booktitle	= "{PEPM}",
-  year		= 2007,
+  crossref	= "pepm2007",
   url		= "http://www.cs.rice.edu/~taha/publications/conference/pepm07b.pdf"
 }
 
@@ -112,8 +104,7 @@
   author    = {Aleksandar Nanevski},
   title     = {Meta-programming with Names and Necessity},
   pages     = {206--217},
-  booktitle	= "{ICFP}",
-  year		= 2002,
+  crossref  = "icfp2002"
 }
 
 @article{NanevskiJFP05,
@@ -190,8 +181,7 @@
   author	= {Zhe Yang},
   title		= {Encoding Types in {ML}-Like Languages},
   pages		= {289--300},
-  booktitle	= "{ICFP}",
-  year		= 1998,
+  crossref	= "icfp1998",
   url		= "http://cs.nyu.edu/zheyang/papers/YangZ--ICFP98.html http://cs.nyu.edu/zheyang/papers/YangZ--ICFP98.ps.gz"
 }
 
@@ -199,8 +189,7 @@
   author	= {Frank Pfenning and Conal Elliott},
   title		= {Higher-Order Abstract Syntax},
   pages		= {199--208},
-  booktitle	= "{PLDI}",
-  year		= 1998,
+  crossref	= "pldi1988",
   url		= "http://www.cs.cmu.edu/~fp/papers/pldi88.pdf"
 }
 
@@ -215,15 +204,14 @@
   author	= "Cristiano Calcagno and Eugenio Moggi and Walid Taha",
   title		= "{ML}-Like Inference for Classifiers",
   pages		= "79--93",
-  booktitle	= "{ESOP}",
-  year		= 2004,
+  crossref	= "esop2004",
   url		= "http://www.doc.ic.ac.uk/~ccris/ftp/esop04.pdf"
 }
 
 @InProceedings{Gluck-jones-optimality,
  author = {Robert Gl{\"u}ck},
  title = {{J}ones Optimality, Binding-Time Improvements, and the Strength of Program Specializers},
- booktitle = {{ASIA-PEPM} '02},
+ booktitle = {{ASIA-PEPM}},
  year = {2002},
  pages = {9--19},
  doi = {http://doi.acm.org/10.1145/568173.568175},
@@ -233,8 +221,7 @@
   author	= {Oliveira, Bruno C{\'e}sar {\lowercase{D}}os Santos and Jeremy Gibbons},
   title		= {{T}ype{C}ase: A Design Pattern for Type-Indexed Functions},
   pages		= {98--109},
-  booktitle	= "Haskell Workshop",
-  year          = 2005,
+  crossref	= "haskell2005",
   url		= {http://web.comlab.ox.ac.uk/oucl/work/bruno.oliveira/typecase.pdf}
 }
 
@@ -265,8 +252,7 @@
   author	= "Kedar Swadi and Walid Taha and Oleg Kiselyov and Emir Pasalic",
   title		= "A Monadic Approach for Avoiding Code Duplication When Staging Memoized Functions",
   pages		= "160--169",
-  booktitle	= "{PEPM}",
-  year		= 2006,
+  crossref	= "pepm2006",
   url		= "http://www.cs.rice.edu/~taha/publications/conference/pepm06.dvi http://www.cs.rice.edu/~taha/publications/conference/pepm06.ps http://www.cs.rice.edu/~taha/publications/conference/pepm06.pdf"
 }
 
@@ -274,8 +260,7 @@
   author	= {Michael Sperber and Peter Thiemann},
   title		= {Two for the Price of One: Composing Partial Evaluation and Compilation},
   pages		= {215--225},
-  booktitle	= "{PLDI}",
-  year		= 1997,
+  crossref	= "pldi1997",
   url		= "http://www-pu.informatik.uni-tuebingen.de/users/sperber/papers/composing-pe-and-compilation.ps.gz http://www-pu.informatik.uni-tuebingen.de/users/sperber/papers/composing-pe-and-compilation.pdf"
 }
 
@@ -315,8 +300,7 @@
   author	= {Olivier Danvy and Pablo E. Mart{\'\i}nez L{\'o}pez},
   title		= {Tagging, Encoding, and {J}ones Optimality},
   pages		= {335--347},
-  booktitle	= "{ESOP}",
-  year		= 2003,
+  crossref	= "esop2003"
 }
 
 @InProceedings{laod93,
@@ -365,8 +349,7 @@
 @inproceedings{balat:tdpe-popl2004,
    author = "Vincent Balat and Di Cosmo, Roberto and Marcelo P. Fiore",
    title = "Extensional Normalisation and Type-Directed Partial Evaluation for Typed Lambda Calculus with Sums",
-  year          = 2004,
-  booktitle     = "{POPL}",
+   crossref="popl2004",
   pages		= "64--76",
    url = "http://repository.readscheme.org/ftp/papers/balat-tdpe-popl2004.pdf"
 }
@@ -374,8 +357,7 @@
 @InProceedings{	Ramsey-ML-module-mania,
   author	= "Norman Ramsey",
   title		= "{ML} Module Mania: A Type-Safe, Separately Compiled, Extensible Interpreter",
-  booktitle	= "{ML} Workshop",
-  year	        = "2005",
+  crossref	= "ml2005",
   url		= "http://www.eecs.harvard.edu/~nr/pubs/maniaws-abstract.html http://www.eecs.harvard.edu/~nr/pubs/maniaws.ps http://www.eecs.harvard.edu/~nr/pubs/maniaws.pdf http://www.eecs.harvard.edu/~nr/pubs/maniaws.dvi"
 }
 
@@ -383,16 +365,14 @@
   author	= {Geoffrey Washburn and Stephanie Weirich},
   title		= {Boxes Go Bananas: Encoding Higher-Order Abstract Syntax with Parametric Polymorphism},
   pages		= {249--262},
-  booktitle	= "{ICFP}",
-  year		= 2003,
+  crossref	= "icfp2003"
 }
 
 @InProceedings{	Danvy-TDPE,
   author	= "Olivier Danvy",
   title		= "Type-Directed Partial Evaluation",
   pages		= "242--257",
-  booktitle	= "{POPL}",
-  year		= 1996,
+  crossref	= "popl1996",
   url		= "ftp://ftp.daimi.au.dk/pub/empl/danvy/Papers/danvy-popl96.ps.gz"
 }
 
@@ -412,8 +392,7 @@
   author	= {Peter Thiemann},
   title		= {Cogen in Six Lines},
   pages		= "180--189",
-  booktitle	= "{ICFP}",
-  year		= 1996,
+  crossref	= "icfp1996",
   url		= "http://www.informatik.uni-freiburg.de/~thiemann/papers/icfp96.ps.gz"
 }
 
@@ -427,7 +406,7 @@
 @Article{	bohm-automatic,
   author	= "Corrado B{\"o}hm and Alessandro Berarducci",
   title		= "Automatic Synthesis of Typed {$\Lambda$}-Programs on Term Algebras",
-  journal	= "Theor. Comp. Sci.",
+  journal	= j_tcs,
   year		= 1985,
   volume	= 39,
   pages		= "135--154"
@@ -463,8 +442,7 @@
   author	= "Zhong Shao",
   title		= "Typed Cross-Module Compilation",
   pages		= "141--152",
-  booktitle	= "{ICFP}",
-  year		= 1998,
+  crossref	= "icfp1998",
   url		= "http://flint.cs.yale.edu/flint/publications/tcc.ps.gz http://flint.cs.yale.edu/flint/publications/tcc.pdf"
 }
 
@@ -472,8 +450,7 @@
   author	= "Zhong Shao",
   title		= "Transparent Modules with Fully Syntactic Signatures",
   pages		= "220--232",
-  booktitle	= "{ICFP}",
-  year		= 1999,
+  crossref	= "icfp1999",
   url		= "http://flint.cs.yale.edu/flint/publications/fullsig.ps.gz http://flint.cs.yale.edu/flint/publications/fullsig.pdf"
 }
 
@@ -544,8 +521,7 @@ generator, we generate ML code, C code, and OCaml byte code.
                Satnam Singh},
   title     = {Lava: Hardware Design in {H}askell},
   pages     = {174-184},
-  booktitle	= "{ICFP}",
-  year		= 1998,
+  crossref	= "icfp1998",
   ee        = {http://doi.acm.org/10.1145/289423.289440},
   bibsource = {DBLP, http://dblp.uni-trier.de}
 }
@@ -592,51 +568,50 @@ generator, we generate ML code, C code, and OCaml byte code.
 
 @Proceedings{	acm1972,
   key		= "{\relax ACM}",
-  title		= "Proc. {ACM} Natl Conf.",
-  booktitle		= "Proc. {ACM} Natl Conf.",
+  title		= "Proc. {ACM} {N}atl. {C}onf.",
+  booktitle	= "Proc. {ACM} {N}atl. {C}onf.",
   year		= 1972,
+  location	= "Boston"
+}
+
+@Proceedings{	icfp1998,
+  key		= "{\relax ICFP}",
+  title		= "{ICFP}",
+  booktitle	= "{ICFP}",
+  year		= 1998,
+  isbn		= "0-58113-024-4",
+  location	= "Baltimore"
 }
 
 @Proceedings{	icfp1999,
   key		= "{\relax ICFP}",
-  title		= proc_icfp_1 # "99"  # proc_icfp_2,
-  booktitle	= proc_icfp_1 # "99"  # proc_icfp_2,
-  address	= pub_acm_addr,
-  publisher	= pub_acm,
+  title		= "{ICFP}",
+  booktitle	= "{ICFP}",
   year		= 1999,
-  volume	= "34(9)",
-  series	= j_sigplan,
-  url		= "http://pauillac.inria.fr/pli/ http://dblp.uni-trier.de/db/conf/icfp/icfp99.html",
   isbn		= "1-58113-111-9",
   location	= "Paris"
 }
 
 @Proceedings{	icfp2002,
   key		= "{\relax ICFP}",
-  title		= proc_icfp_1 # "02"  # proc_icfp_2,
-  booktitle	= proc_icfp_1 # "02"  # proc_icfp_2,
-  address	= pub_acm_addr,
-  publisher	= pub_acm,
+  title		= "{ICFP}",
+  booktitle	= "{ICFP}",
   year		= 2002,
   location	= "Pittsburgh, PA"
 }
 
 @Proceedings{	icfp2006,
   key		= "{\relax ICFP}",
-  title		= proc_icfp_1 # "06"  # proc_icfp_2,
-  booktitle	= proc_icfp_1 # "06"  # proc_icfp_2,
-  address	= pub_acm_addr,
-  publisher	= pub_acm,
+  title		= "{ICFP}",
+  booktitle	= "{ICFP}",
   year		= 2006,
   location	= "Portland, OR"
 }
 
 @Proceedings{	popl2003,
   key		= "{\relax POPL}",
-  title		= proc_popl_1 # "03"  # proc_popl_2,
-  booktitle	= proc_popl_1 # "03"  # proc_popl_2,
-  address	= pub_acm_addr,
-  publisher	= pub_acm,
+  title		= "{POPL}",
+  booktitle     = "{POPL}",
   year		= 2003,
   isbn		= {1-58113-628-5},
   issn		= "0730-8566",
@@ -654,24 +629,17 @@ generator, we generate ML code, C code, and OCaml byte code.
 }
 
 @Proceedings{	pepm2007,
-  key		= "{\relax ACM}",
-  title		= "Proceedings of the 2007 {ACM} {SIG{\-}PLAN} Workshop on Partial Evaluation and Semantics-Based Program Manipulation",
-  booktitle	= "Proceedings of the 2007 {ACM} {SIG{\-}PLAN} Workshop on Partial Evaluation and Semantics-Based Program Manipulation",
-  address	= pub_acm_addr,
-  publisher	= pub_acm,
+  key		= "{\relax PEPM}",
+  title		= "{PEPM}",
+  booktitle	= "{PEPM}",
   year		= 2007
 }
 
 @Proceedings{	pldi1988,
   key		= "{\relax PLDI}",
-  title		= proc_pldi_1 # "88"  # proc_pldi_2,
-  booktitle	= proc_pldi_1 # "88"  # proc_pldi_2,
-  address	= pub_acm_addr,
-  publisher	= pub_acm,
+  title		= "{PLDI}",
+  booktitle	= "{PLDI}",
   year		= 1988,
-  month		= "22--24 "  # jun,
-  volume	= "23(7)",
-  series	= j_sigplan,
   location	= "Atlanta"
 }
 
@@ -682,34 +650,25 @@ generator, we generate ML code, C code, and OCaml byte code.
 }
 
 @Proceedings{	esop2004,
-  editor	= "David A. Schmidt",
-  title		= "Programming Languages and Systems: Proceedings of {ESOP} 2004, 13th {E}uropean Symposium on Programming",
-  booktitle	= "Programming Languages and Systems: Proceedings of {ESOP} 2004, 13th {E}uropean Symposium on Programming",
-  address	= pub_sv_addr,
-  publisher	= pub_sv,
+  title		= "{ESOP}",
+  booktitle	= "{ESOP}",
   year		= 2004,
-  number	= 2986,
-  series	= s_lncs,
   isbn		= "3-540-21313-9",
   location	= "Barcelona, Spain"
 }
 
 @Proceedings{	haskell2005,
-  title		= "Proceedings of the 2005 {H}askell Workshop",
-  booktitle	= "Proceedings of the 2005 {H}askell Workshop",
-  address	= pub_acm_addr,
-  publisher	= pub_acm,
+  title		= "{H}askell Workshop",
+  booktitle	= "{H}askell Workshop",
   year		= 2005,
   isbn		= {1-59593-071-X},
   location	= {Tallinn, Estonia}
 }
 
 @Proceedings{	pepm2006,
-  key		= "{\relax ACM}",
-  title		= "Proceedings of the 2006 {ACM} {SIG{\-}PLAN} Workshop on Partial Evaluation and Semantics-Based Program Manipulation",
-  booktitle	= "Proceedings of the 2006 {ACM} {SIG{\-}PLAN} Workshop on Partial Evaluation and Semantics-Based Program Manipulation",
-  address	= pub_acm_addr,
-  publisher	= pub_acm,
+  key		= "{\relax PEPM}",
+  title		= "{PEPM}",
+  booktitle	= "{PEPM}",
   year		= 2006,
   isbn		= "1-59593-196-1",
   location	= "Charleston, SC"
@@ -717,12 +676,9 @@ generator, we generate ML code, C code, and OCaml byte code.
 
 @Proceedings{	pldi1997,
   key		= "{\relax PLDI}",
-  title		= proc_pldi_1 # "97"  # proc_pldi_2,
-  booktitle	= proc_pldi_1 # "97"  # proc_pldi_2,
-  address	= pub_acm_addr,
-  publisher	= pub_acm,
+  title		= "{PLDI}",
+  booktitle	= "{PLDI}",
   year		= 1997,
-  month		= "16--18 "  # jun,
   location	= "Las Vegas, NV"
 }
 
@@ -735,37 +691,26 @@ generator, we generate ML code, C code, and OCaml byte code.
 }
 
 @Proceedings{	esop2003,
-  editor	= "Pierpaolo Degano",
-  title		= "Programming Languages and Systems: Proceedings of {ESOP} 2003, 12th {E}uropean Symposium on Programming",
-  booktitle	= "Programming Languages and Systems: Proceedings of {ESOP} 2003, 12th {E}uropean Symposium on Programming",
-  address	= pub_sv_addr,
-  publisher	= pub_sv,
+  title		= "{ESOP}",
+  booktitle	= "{ESOP}",
   year		= 2003,
-  number	= 2618,
-  series	= s_lncs,
   isbn		= "3-540-00886-1",
   location	= "Warsaw"
 }
 
 @Proceedings{	popl2004,
   key		= "{\relax POPL}",
-  title		= proc_popl_1 # "04"  # proc_popl_2,
-  booktitle	= proc_popl_1 # "04"  # proc_popl_2,
-  address	= pub_acm_addr,
-  publisher	= pub_acm,
+  title		= "{POPL}",
+  booktitle     = "{POPL}",
   year		= 2004,
   location	= {Venice, Italy}
 }
 
 @Proceedings{	ml2005,
   key		= "{\relax ML}",
-  title		= "Proceedings of the 2005 Workshop on {ML}",
-  booktitle	= "Proceedings of the 2005 Workshop on {ML}",
-  address	= pub_elsevier_addr,
-  publisher	= pub_elsevier,
+  title		= "{ML} Workshop",
+  booktitle	= "{ML} Workshop",
   year		= 2005,
-  month		= sep,
-  series	= s_entcs,
   url		= "http://ttic.uchicago.edu/~blume/ml05/",
   annote	= "To be published as a volume of ENTCS",
   location	= "Tallinn"
@@ -773,41 +718,29 @@ generator, we generate ML code, C code, and OCaml byte code.
 
 @Proceedings{	icfp2003,
   key		= "{\relax ICFP}",
-  title		= proc_icfp_1 # "03"  # proc_icfp_2,
-  booktitle	= proc_icfp_1 # "03"  # proc_icfp_2,
-  address	= pub_acm_addr,
-  publisher	= pub_acm,
+  title		= "{ICFP}",
+  booktitle	= "{ICFP}",
   year		= 2003,
-  volume	= "38(9)",
-  series	= j_sigplan,
   isbn		= {1-58113-756-7},
   location	= "Uppsala, Sweden"
 }
 
 @Proceedings{	popl1996,
   key		= "{\relax POPL}",
-  title		= proc_popl_1 # "96"  # proc_popl_2,
-  booktitle	= proc_popl_1 # "96"  # proc_popl_2,
-  address	= pub_acm_addr,
-  publisher	= pub_acm,
+  title		= "{POPL}",
+  booktitle	= "{POPL}",
   year		= 1996,
   isbn		= {0-89791-769-3},
-  issn		= "0730-8566",
   location	= "St.~Petersburg Beach, FL"
 }
 
 @Proceedings{	icfp1996,
   key		= "{\relax ICFP}",
-  title		= proc_icfp_1 # "96"  # proc_icfp_2,
-  booktitle	= proc_icfp_1 # "96"  # proc_icfp_2,
-  address	= pub_acm_addr,
-  publisher	= pub_acm,
+  title		= "{ICFP}",
+  booktitle	= "{ICFP}",
   year		= 1996,
-  volume	= "31(6)",
-  series	= j_sigplan,
   url		= "http://www.cs.indiana.edu/icfp96/ http://dblp.uni-trier.de/db/conf/icfp/icfp96.html",
   isbn		= "0-89791-770-7",
-  issn		= "0362-1340",
   location	= "Philadelphia"
 }
 
