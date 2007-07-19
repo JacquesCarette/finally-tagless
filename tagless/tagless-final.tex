@@ -43,9 +43,9 @@ bindings.
 \small
     It should also be possible to define languages with a highly
     refined syntactic type structure. Ideally, such a treatment should
-    be metacircular, in the sense that the type structure used in the
+    be metacircular, in the sense that the type structure \linebreak[1] used in the
     defined language should be adequate for the defining language.
-    \rm \ifshort \hfill John Reynolds~\fi\citep{reynolds-definitional}
+    \rm \ifshort \hfill John Reynolds~\else\\\fi\citep{reynolds-definitional}
 \end{quote}
 
 %\category{CR-number}{subcategory}{third-level}
@@ -372,7 +372,7 @@ free in the encoding of an object term such as |testf1| above.  Defining
 these functions differently gives rise to different interpreters, that
 is, different folds on object programs.  Given the same term
 representation but varying the interpreter, we can
-\begin{itemize*}
+\begin{itemize}
     \item evaluate the term to a value in the metalanguage;
     \item measure the size or depth of the term;
     \item compile the term, with staging support such as in MetaOCaml;
@@ -382,7 +382,7 @@ representation but varying the interpreter, we can
         order of the object language from that of the metalanguage.\ifshort
 \footnote{Due to serious lack of space, 
 we refer the reader to the accompanying code for this.}\fi
-\end{itemize*}
+\end{itemize}
 We have programmed our interpreters in OCaml (and, for staging,
 MetaOCaml) and standard Haskell. The complete code is available at
 \url{http://okmij.org/ftp/packages/tagless-final.tar.gz}
@@ -398,7 +398,7 @@ by \citet{WalidICFP02} and \citet{xi-guarded}.
 We use their running examples and achieve the
 result they call desirable.  Our contributions are as follows.
 
-\begin{enumerate*}
+\begin{enumerate}
 \item We build interpreters that evaluate (\S\ref{language}),
     compile (or evaluate with staging) (\S\ref{compiler}), and partially evaluate (\S\ref{PE}) a typed higher-order object language
    in a typed metalanguage, in direct and continuation\hyp passing
@@ -421,7 +421,7 @@ result they call desirable.  Our contributions are as follows.
 \item We describe an approach to self\hyp interpretation compatible with the
   above\ifshort\else~(\S\ref{selfinterp})\fi.  Self\hyp interpretation turned out
   harder than expected.\ifshort\footnotemark[\value{footnote}]\fi
-\end{enumerate*}
+\end{enumerate}
 Our code is surprisingly simple and obvious in hindsight, but
 it has been an open problem to
 interpret a typed object language in a typed metalanguage without
@@ -1268,7 +1268,6 @@ module P = struct
                   | {st = Some 0}, e | e, {st = Some 0} -> e
                   | {st = Some m}, {st = Some n} -> int (R.add m n)
                   | _ -> pdyn (C.add (abstr e1) (abstr e2))
-
   let if_ eb et ee = match eb with
                      | {st = Some b} -> if b then et () else ee ()
                      | _ -> pdyn (C.if_ (abstr eb) (fun () @!->@! abstr (et @!()))
@@ -1278,7 +1277,6 @@ module P = struct
   let app ef ea = match ef with
                   | {st = Some f} -> f ea
                   | _ -> pdyn (C.app (abstr ef) (abstr ea))
-
   let fix f = let fdyn = C.fix (fun x -> abstr (f (pdyn x)))
               in let rec self = function
                                 | {st = Some @!_} as e -> app (f (lam self)) e
@@ -1781,7 +1779,7 @@ a context.  For example, the evaluator is the context
         \be{\ident{app} &= \fun{f} \fun{x} fx&} \\
         \be{\ident{fix} &= \fun{g} \fix{f} \fun{x} gfx&} [~],
     \end{tabular}
-\intertext{and the size\hyp measurer is the context}
+\intertext{and the size\hyp measurer at the end of~\S\ref{S:interpreter-RL} is the context}
     \mathrm{SZ}[~] &=
     \begin{tabular}[t]{@{}Ml@{}>{{}}Ml@{}Ml@{}}
         \be{\ident{int} &= \fun{x} 1&} \\
@@ -1924,51 +1922,34 @@ embedded interpreters to justify advanced type systems, in particular
 GADTs. While we admire all this technical work, we were not convinced
 that their motivating example actually needed all this machinery.
 Although GADTs may indeed be more flexible and easier to use, they are
-not available in mainstream ML, and their current implementation in
-GHC has problems. We were also interested in discovering the minimal and
+not available in mainstream ML\@, and their current implementation in
+GHC has problems. We also wanted to find the minimal,
 widely available set of language features necessary for tagless
 type-preserving interpretation.
 
 Even a simply typed $\lambda$-calculus obviously supports self\hyp
 interpretation, provided we use universal types \cite{taha-tag}.  The
-ensuing tagging overhead motivated \cite{taha-tag} to propose tag
+ensuing tagging overhead motivated \citet{taha-tag} to propose tag
 elimination, which however does not statically guarantee that all tags
 will be removed \cite{WalidICFP02}.
 
-% aplas: this is the simplified paragraph. The original text is in the
-% comment right below.
-\Citet{WalidICFP02}, \citet{taha-tag}, \citet{xi-guarded}, and
-\citet{peyton-jones-simple} seem to argue that a self\hyp
-interpreter of a typed language cannot be tagless or Jones\hyp optimal:
-(1) One needs to encode a typed language in a typed language based on
-a sum type (at some level of the hierarchy);
-(2) It is not possible to write a \emph{direct} interpreter 
-for such an encoding of a typed language
-in a typed language, without either an
-advanced type system or the overhead of tagging and untagging;
-(3) Thus, an indirect interpreter is necessary, which needs a universal
-  type (and hence tagging).
-While the logic is sound, we showed that the premise in the very first step
-was not valid.
-\begin{comment}
 \Citet{WalidICFP02}, \citet{taha-tag}, \citet{xi-guarded}, and
 \citet{peyton-jones-simple} seem to argue as follows that a self\hyp
-interpreter of a typed language cannot be tagless or Jones\hyp optimal.
-\begin{enumerate*}
+interpreter of a typed language cannot be tagless or Jones\hyp optimal:
+\begin{shortlist}
 \item One needs to encode a typed language in a typed language based on
-a sum type (at some level of the hierarchy).
+a sum type (at some level of the hierarchy)\\
 \item It is not possible to write a \emph{direct} interpreter 
 for such an encoding of a typed language
 in a typed language, without either an
-advanced type system or the overhead of tagging and untagging.
+advanced type system or the overhead of tagging and untagging\\
 \item Thus, an indirect interpreter is necessary, which needs a universal
-  type (and hence tagging).
+  type (and hence tagging)\ifshort\else\\
 \item Thus, any self-interpreter must have tags and cannot be 
-  Jones-optimal.
-\end{enumerate*}
+  Jones-optimal\fi.
+\end{shortlist}
 While the logic is sound, we showed that the premise in the very first step
-was not valid.
-\end{comment}
+is not valid.
 
 \citet{Danvy-tagging-encoding} discuss Jones optimality at length and
 apply HOAS to typed self\hyp interpretation.  However, their source
@@ -1979,25 +1960,25 @@ evaluator remove all the tags. In contrast, our object encoding and
 interpreters do not have tags to start with and obviously cannot
 raise run-time errors.
 
-%aplas-else
-\begin{comment}
-  A lot of effort has gone into ``typing dynamic typing'': to statically
-  type-check dynamically\hyp typed values
-  \cite{baars-typing,haskell-list},
-  using the host language's type system to varying extents.
-  Our object terms are statically typed, so we would
-  need one of these techniques to interpret dynamically\hyp typed
-  terms such as those read from a file.
-\end{comment}
-
+\ifshort\else
+A lot of effort has gone into ``typing dynamic typing'': to statically
+type-check dynamically\hyp typed values
+\citep{baars-typing,WalidICFP02,Guillemette-Monier-PLPV,haskell-list},
+using the host language's type system to varying extents.
+Our object terms are statically typed, so we would
+need one of these techniques to interpret dynamically\hyp typed
+terms such as those read from a file.
+\fi
 
 Our partial evaluator establishes a bijection |repr_pe| between static
 and dynamic types (the valid values of |'sv| and |'dv|), and between
 static and dynamic terms.  It is customary to implement such a bijection
-using an injection\hyp projection pair, as done for interpreters by
-\cite{Ramsey-ML-module-mania,Benton-embedded-interpreters},
-partial evaluation by \cite{Danvy-TDPE}, and type-level functions by
-\cite{oliveira-typecase}.  As explained in~\S\ref{S:PE-solution}, we
+using an injection\hyp projection pair, as done for interpreters
+\ifshort \cite{Ramsey-ML-module-mania,Benton-embedded-interpreters}\else
+by \citet{Ramsey-ML-module-mania} and \citet{Benton-embedded-interpreters}\fi,
+partial evaluation \ifshort \cite{Danvy-TDPE}\else by \citet{Danvy-TDPE}\fi,
+and type-level functions \ifshort \cite{oliveira-typecase}\else by
+\citet{oliveira-typecase}\fi.  As explained in~\S\ref{S:PE-solution}, we
 avoid injection and projection at the type level by adding an argument
 to |repr|.
 
@@ -2011,23 +1992,24 @@ functions (see \S\ref{S:PE-solution}) to obtain simpler types
 acceptable to MetaOCaml.
 \Citet{sumii-hybrid} also use Asai's method,
 to combine online
-and offline partial evaluation.  Like \cite{SperberThiemann:TwoForOne},
-we strive for modularity by reusing interpreters for individual stages.  It would be interesting
+and offline partial evaluation.
+We strive for modularity by reusing interpreters for individual stages
+\cite{SperberThiemann:TwoForOne}.  It would be interesting
 to try to derive a \emph{cogen} \cite{Thiemann:cogeninsixlines}
 in the same manner.
 
-The idea of multiple interpretations of the host language pervasives
-such as addition or application is quite common in implementing
-embedded DSL. It is also common to use phantom types to prevent
-forming of ill-typed DSL terms \cite{Lava,Rhiger-thesis}. However,
-the universal type still remains (|Bit| and |NumSig| in Lava
-\cite{Lava}, |Raw| and |Term| in \cite[Fig 2.2,
-  Sec. 3]{Rhiger-thesis}), along with the attendant pattern-matching
-overhead. These approaches are not tagless.  The universal type also
+It is common to implement an embedded DSL by providing multiple
+interpretations of host\hyp language pervasives such as addition and
+application.  It is also common to use phantom types to rule out
+ill-typed object terms, as Lava
+\cite{Lava} and \citet{Rhiger-thesis} do. However, these approaches
+are not tagless because they still use universal types, such as Lava's
+\texttt{Bit} and \texttt{NumSig} and Rhiger's \texttt{Raw} (his Fig.~2.2)
+and \texttt{Term} (his Chap.~3), and incur the attendant overhead of
+pattern matching.  The universal type also
 greatly complicates the soundness and completeness proofs of embedding
-\cite{Rhiger-thesis}. In contrast, our proofs become trivial.
-The approach of \Citet[Sec 3.3.4]{Rhiger-thesis} does not 
-support typed CPS transformation.
+\cite{Rhiger-thesis}, whereas our proofs are trivial.
+Rhiger's approach does not support typed CPS transformation (his~\S3.3.4).
 \begin{comment}
 Rhiger's But Fig 2.2, p33: universal type Raw.  He uses phantom type
 upon the Exp datatype. But that is cheating: phantom type means
@@ -2061,23 +2043,23 @@ approach makes it easier to perform algebraic simplifications (as
 in~\S\ref{S:PE-solution}).
 
 
-Our approach is based on encoding a term in its elimination form, as a
-co-algebraic structure. That basic idea and its application to
-meta-circular interpertation first appeared in \citet{Pfenning-Lee}.
-Our approach however is implementable in mainstream ML and supports
-type inference and typed CPS and partial evaluation. In contrast,
-\cite{Pfenning-Lee} conclude that partial evaluation and program
+We encode terms in elimination form, as a coalgebraic structure.
+\Citet{Pfenning-Lee} first described this basic idea and applied it to
+metacircular interpretation.
+Our approach, however, can be implemented in mainstream ML and supports
+type inference and typed CPS transformation and partial evaluation. In contrast,
+\citeauthor{Pfenning-Lee} conclude that partial evaluation and program
 transformations ``do not seem to be expressible'' even using their
-extension to $F_{\omega}$, perhaps because their avoidance of general
+extension to~$F_\omega$, perhaps because their avoidance of general
 recursive types compels them to include the polymorphic lift that we
-avoid in \S\ref{S:PE-lift}.
+avoid in~\S\ref{S:PE-lift}.
 \begin{comment}
 It seems that Pfenning and Lee embed $F_2$ with type constructions in 
 (pure) $F_3$.  We embed $F_1$ in (weak?) $F_2$, as I see it.  In a way, what 
 we do is very similar to what they do (Figure 1, p.152), except that we 
-do it in standard programming languges.  It is unclear if their work can 
+do it in standard programming languages.  It is unclear if their work can 
 be implemented (yet) in any language.  And we preserve type-inference, 
-while their solution needs explcit types!
+while their solution needs explicit types!
 The following line of their conclusion is worth citing: "... this does 
 not imply that the same language is also suitable for type 
 metaprogramming. ... such as partial evaluation... do not seem to be 
@@ -2091,48 +2073,45 @@ syntactic hole.
 \end{comment}
 
 Our encoding of the type function |repr_pe| in \S\ref{S:PE-solution}
-may be regarded as an emulation of type-indexed types and related to
-the intensional type analysis
-\cite{Morrisett-intensional,Generic-Haskell}. Our running HOAS
-example however, includes |fix|, which cannot be handled by the
-intensional type analysis \cite{xi-guarded}.  Our final approach
-seems related to \citearound{'s approach to HOAS via catamorphism and
-  anamorphism}\cite{Washburn-Weirich-boxes}.
+emulates type-indexed types and is related to intensional type analysis
+\cite{Morrisett-intensional,Generic-Haskell}. However, our object
+language and running examples in HOAS include |fix|,
+which intensional type analysis cannot handle
+\cite{xi-guarded}.  Our final approach
+seems related to \citearound{'s approach to HOAS using catamorphisms and
+  anamorphisms}\citet{Washburn-Weirich-boxes}.
 
 
 We could not find work that establishes that
-the \emph{typed} $\lambda$-calculus possesses a final coalgebra structure.
-% aplas: abbreviated. The original text is in comments
-(see \Citet{honsell99coinductive} for the untyped case).
-% aplas: comment
-\begin{comment}
+the \emph{typed} $\lambda$-calculus has a final coalgebra structure.
+\ifshort
+(See \Citet{honsell99coinductive} for the untyped case.)
+\else
 \Citet{HonsellLenisa,honsell99coinductive}
-investigate the untyped $\lambda$-calculus,
+investigate the untyped $\lambda$-calculus
 along this line.  
 In particular, they use
 contexts with a hole \cite[p.\,13]{honsell99coinductive} to define
 \emph{observational equivalence}
-(see \S\ref{selfinterp}).
+(see our~\S\ref{selfinterp}).
 \citearound{'s bibliography}\Citet{honsell99coinductive} refers to the
 foundational work in this important area.  
 Particularly intriguing is the link to the
 coinductive aspects of B\"{o}hm trees, as pointed out by
-\cite{berarducci-models} and \cite[Example 4.3.4]{jacobs-coalgebra}.
-\end{comment}
+\citet{berarducci-models} and Jacobs \citeyearpar[Example 4.3.4]{jacobs-coalgebra}.
+\fi
 
-%aplas
-\begin{comment}
+\ifshort\else
 One way to understand our main idea is to eschew sum types and sum kinds
 for their dual, record types and record kinds.
 For the self\hyp interpreter, we then proceed to use a Church encoding for
 recursive data types \cite{bohm-automatic}.
-\end{comment}
+\fi
 
-%aplas: beforeAs \S\ref{S:clarify} observes, 
-We observe that
+\ifshort We observe that \else As \S\ref{S:clarify} observes, \fi
 higher-rank and higher-kind
 polymorphism let us type-check and compile object terms separately from
-interpreters.  This is consistent with the role of
+interpreters.  This \ifshort\else observation \fi is consistent with the role of
 polymorphism in the separate compilation of modules
 \cite{shao-typed}.
 

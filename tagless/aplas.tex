@@ -4,6 +4,8 @@
 % http://flint.cs.yale.edu/aplas2007/
 \input{preamble}\shorttrue
 \usepackage[compact]{titlesec}
+\usepackage{paralist}
+\newenvironment{shortlist}{\begin{inparaenum}[(1)]\def\\{;}}{\end{inparaenum}}
 
 \usepackage[numbers,sectionbib,sort&compress]{natbib1}
 \let\bibname\refname
