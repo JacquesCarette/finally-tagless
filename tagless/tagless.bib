@@ -4,6 +4,7 @@
 @STRING{j_jcss			= "Journal of Computer and System Sciences" }
 @STRING{j_jfp			= "Journal of Functional Programming" }
 @STRING{j_ngc			= "New Generation Computing" }
+@STRING{j_scp			= "Science of Computer Programming" }
 @STRING{j_sigplan		= "{ACM} {SIG{\-}PLAN} Notices" }
 @STRING{j_tcs			= "Theoretical Computer Science" }
 @STRING{proc_icfp_1		= "{ICFP} '" }
@@ -313,7 +314,6 @@
   author	= "Konstantin L{\"a}ufer and Martin Odersky",
   booktitle	= "Proceedings of the 4th Annual {OOPSLA}\slash {ECOOP} Workshop on Object-Oriented Reflection and Metalevel Architectures",
   month      = oct,
-  organization  = {ACM},
   title      = {Self-Interpretation and Reflection in a Statically Typed Language},
   year       = {1993},
   url = "http://webpages.cs.luc.edu/~laufer/papers/reflection.pdf"
@@ -539,8 +539,8 @@ generator, we generate ML code, C code, and OCaml byte code.
 @article{Pfenning-Lee,
   author    = {Frank Pfenning and
                Peter Lee},
-  title     = {Metacircularity in the Polymorphic lambda-{C}alculus},
-  journal   = {Theor. Comput. Sci.},
+  title     = {Metacircularity in the Polymorphic $\lambda$-Calculus},
+  journal   = j_tcs,
   volume    = {89},
   number    = {1},
   year      = {1991},
@@ -552,10 +552,8 @@ generator, we generate ML code, C code, and OCaml byte code.
   author    = {Robert Harper and
                J. Gregory Morrisett},
   title     = {Compiling Polymorphism Using Intensional Type Analysis},
-  booktitle = {POPL},
-  year      = {1995},
-  pages     = {130-141},
-  bibsource = {DBLP, http://dblp.uni-trier.de}
+  crossref	= "popl1995",
+  pages     = {130-141}
 }
 
 @article{Generic-Haskell,
@@ -563,7 +561,7 @@ generator, we generate ML code, C code, and OCaml byte code.
                Johan Jeuring and
                Andres L{\"o}h},
   title     = {Type-indexed data types},
-  journal   = {Sci. Comput. Program.},
+  journal   = j_scp,
   volume    = {51},
   number    = {1-2},
   year      = {2004},
@@ -572,6 +570,20 @@ generator, we generate ML code, C code, and OCaml byte code.
   bibsource = {DBLP, http://dblp.uni-trier.de}
 }
 
+@InProceedings{	chen-typeful,
+  author	= {Chiyan Chen and Hongwei Xi},
+  title		= {Implementing Typeful Program Transformations},
+  pages		= {20--28},
+  crossref	= {pepm2003},
+  abstract	= {The notion of program transformation is ubiquitous in programming language studies on interpreters, compilers, partial evaluators, etc. In order to implement a program transformation, we need to choose a representation in
+		  the meta language, that is, the programming language in which we construct programs, for representing object programs, that is, the programs in the object language on which the program transformation is to be performed. In
+		  practice, most representations chosen for typed object programs are typeless in the sense that the type of an object program cannot be reflected in the type of its representation. This is unsatisfactory as such typeless
+		  representations make it impossible to capture in the type system of the meta language various invariants in a program transformation that are related to the types of object programs. In this paper, we propose an approach
+		  to implementing program transformations that makes use of a first-order typeful program representation formed in Dependent ML (DML), where the type of an object program as well as the types of the free variables in the
+		  object program can be reflected in the type of the representation of the object program. We introduce some programming techniques needed to handle this typeful program representation, and then present an implementation of
+		  a CPS transform function where the relation between the type of an object program and that of its CPS transform is captured in the type system of DML. In a broader context, we claim to have taken a solid step along the
+		  line of research on constructing certifying compilers.}
+}
 
 %------------------------------------------------------------------------
 % After this, only procedings etc
@@ -658,6 +670,18 @@ generator, we generate ML code, C code, and OCaml byte code.
   series	= s_lncs,
   isbn		= {3-540-42068-1},
   location	= "Aarhus, Denmark"
+}
+
+@Proceedings{	pepm2003,
+  key		= "{\relax PEPM}",
+  title		= "Proceedings of the 2003 {ACM} {SIG{\-}PLAN} Workshop on Partial Evaluation and Semantics-Based Program Manipulation",
+  booktitle	= "Proceedings of the 2003 {ACM} {SIG{\-}PLAN} Workshop on Partial Evaluation and Semantics-Based Program Manipulation",
+  address	= pub_acm_addr,
+  publisher	= pub_acm,
+  year		= 2003,
+  month		= "7~"  # jun,
+  isbn		= {1-58113-667-6},
+  location	= "San Diego, CA"
 }
 
 @Proceedings{	pepm2007,
@@ -829,11 +853,24 @@ generator, we generate ML code, C code, and OCaml byte code.
 
 @Proceedings{	plpv2006,
   editor	= "Aaron Stump and Hongwei Xi",
-  title		= {{PLPV} 2006: Programming Languages Meet Program Verification},
-  booktitle	= {{PLPV} 2006: Programming Languages Meet Program Verification},
+  title		= {{PLPV} 2006: Programming Languages Meets Program Verification},
+  booktitle	= {{PLPV} 2006: Programming Languages Meets Program Verification},
   address	= pub_elsevier_addr,
   publisher	= pub_elsevier,
   year		= 2006,
+  number	= "174(7)",
   series	= s_entcs,
   location	= "Seattle, WA"
+}
+
+@Proceedings{	popl1995,
+  key		= "{\relax POPL}",
+  title		= proc_popl_1 # "95"  # proc_popl_2,
+  booktitle	= proc_popl_1 # "95"  # proc_popl_2,
+  address	= pub_acm_addr,
+  publisher	= pub_acm,
+  year		= 1995,
+  isbn		= "0-89791-692-1",
+  issn		= "0730-8566",
+  location	= "San Francisco"
 }

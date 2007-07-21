@@ -4,6 +4,7 @@
 @STRING{j_jcss			= "Journal of Computer and System Sciences" }
 @STRING{j_jfp			= "{JFP}" }
 @STRING{j_ngc			= "New Generation Computing" }
+@STRING{j_scp			= "Sci. Comput. Program." }
 @STRING{j_sigplan		= "{ACM} {SIG{\-}PLAN} Notices" }
 @STRING{j_tcs			= "Theor. Comp. Sci." }
 @STRING{proc_icfp_1		= "{ICFP} '" }
@@ -314,7 +315,6 @@
 
 @inproceedings{HonsellLenisa,
  author = {Furio Honsell and Marina Lenisa},
-  editor	= "Mariangiola Dezani-Ciancaglini and Gordon D. Plotkin",
  title = {Final Semantics for untyped lambda-calculus},
  booktitle = {{TLCA} '95: Proceedings of the 2nd International Conference on Typed Lambda Calculi and Applications},
  year = {1995},
@@ -419,8 +419,7 @@
   year      = 1996,
   pages     = "339--378",
   publisher = "Marcel Dekker",
-  volume    = "180",
-  editor    = "A. Ursini and P. Aglian\`{o}"
+  volume    = "180"
 }
 
 @Misc{haskell-list,
@@ -529,8 +528,8 @@ generator, we generate ML code, C code, and OCaml byte code.
 @article{Pfenning-Lee,
   author    = {Frank Pfenning and
                Peter Lee},
-  title     = {Metacircularity in the Polymorphic lambda-{C}alculus},
-  journal   = {Theor. Comput. Sci.},
+  title     = {Metacircularity in the Polymorphic $\lambda$-Calculus},
+  journal   = j_tcs,
   volume    = {89},
   number    = {1},
   year      = {1991},
@@ -542,10 +541,8 @@ generator, we generate ML code, C code, and OCaml byte code.
   author    = {Robert Harper and
                J. Gregory Morrisett},
   title     = {Compiling Polymorphism Using Intensional Type Analysis},
-  booktitle = "{POPL}",
-  year      = {1995},
-  pages     = {130-141},
-  bibsource = {DBLP, http://dblp.uni-trier.de}
+  crossref	= "popl1995",
+  pages     = {130-141}
 }
 
 @article{Generic-Haskell,
@@ -553,7 +550,7 @@ generator, we generate ML code, C code, and OCaml byte code.
                Johan Jeuring and
                Andres L{\"o}h},
   title     = {Type-indexed data types},
-  journal   = {Sci. Comput. Program.},
+  journal   = j_scp,
   volume    = {51},
   number    = {1-2},
   year      = {2004},
@@ -562,6 +559,12 @@ generator, we generate ML code, C code, and OCaml byte code.
   bibsource = {DBLP, http://dblp.uni-trier.de}
 }
 
+@InProceedings{	chen-typeful,
+  author	= {Chiyan Chen and Hongwei Xi},
+  title		= {Implementing Typeful Program Transformations},
+  pages		= {20--28},
+  crossref	= {pepm2003}
+}
 
 %------------------------------------------------------------------------
 % After this, only procedings etc
@@ -619,13 +622,19 @@ generator, we generate ML code, C code, and OCaml byte code.
 }
 
 @Proceedings{	pado2001,
-  editor	= {Olivier Danvy and Andrzej Filinski},
   title		= {Proc. of {PADO} 2001: 2nd Symp. on Programs as Data Objects},
   booktitle	= {Proc. of {PADO} 2001: 2nd Symp. on Programs as Data Objects},
   year		= 2001,
   month		= "21--23 "  # may,
   number	= 2053,
   series	= s_lncs,
+}
+
+@Proceedings{	pepm2003,
+  key		= "{\relax PEPM}",
+  title		= "{PEPM}",
+  booktitle	= "{PEPM}",
+  year		= 2003
 }
 
 @Proceedings{	pepm2007,
@@ -745,12 +754,20 @@ generator, we generate ML code, C code, and OCaml byte code.
 }
 
 @Proceedings{	plpv2006,
-  editor	= "Aaron Stump and Hongwei Xi",
-  title		= {{PLPV} 2006: Programming Languages Meet Program Verification},
-  booktitle	= {{PLPV} 2006: Programming Languages Meet Program Verification},
-  address	= pub_elsevier_addr,
-  publisher	= pub_elsevier,
+  title		= {Programming Languages Meets Program Verification},
+  booktitle	= {Programming Languages Meets Program Verification},
   year		= 2006,
+  number	= "174(7)",
   series	= s_entcs,
   location	= "Seattle, WA"
+}
+
+@Proceedings{	popl1995,
+  key		= "{\relax POPL}",
+  title		= "{POPL}",
+  booktitle	= "{POPL}",
+  year		= 1995,
+  isbn		= "0-89791-692-1",
+  issn		= "0730-8566",
+  location	= "San Francisco"
 }

@@ -1239,13 +1239,12 @@ end
 module P = struct
   type ('c,'sv,'dv) repr = {st: 'sv option; dy: ('c,'dv) code}
   let abstr {dy = x} = x    let pdyn x = {st = None; dy = x}
-  let int  (x:int)  = {st = Some (R.int x);  dy = C.int x}
 
+  let int  (x:int)  = {st = Some (R.int x);  dy = C.int x}
   let add e1 e2 = match e1, e2 with
   | {st = Some 0}, e | e, {st = Some 0} -> e
   | {st = Some m}, {st = Some n} -> int (R.add m n)
   | _ -> pdyn (C.add (abstr e1) (abstr e2))
-
   let if_ eb et ee = match eb with
   | {st = Some b} -> if b then et () else ee ()
   | _ -> pdyn (C.if_ (abstr eb) (fun () -> abstr (et ()))
@@ -1916,15 +1915,16 @@ fragment.
 
 \section{Related work}\label{related}
 
-Our initial motivation came from several papers 
-\citep{WalidICFP02,taha-tag,xi-guarded,peyton-jones-simple} that used
-embedded interpreters to justify advanced type systems, in particular
-GADTs. While we admire all this technical work, we were not convinced
-that their motivating example actually needed all this machinery.
+Our initial motivation came from several papers that justify advanced
+type systems, in particular GADTs, by embedded interpreters
+\citep{WalidICFP02,taha-tag,xi-guarded,peyton-jones-simple} and
+CPS transformations \citep{Guillemette-Monier-PLPV,chen-typeful}.
+We admire all this technical machinery, but
+these motivating examples do not need it.
 Although GADTs may indeed be more flexible and easier to use, they are
-not available in mainstream ML\@, and their current implementation in
-GHC has problems. We also wanted to find the minimal,
-widely available set of language features necessary for tagless
+unavailable in mainstream ML and implemented problematically
+in GHC currently. We also wanted to find the minimal
+set of widespread language features needed for tagless
 type-preserving interpretation.
 
 Even a simply typed $\lambda$-calculus obviously supports self\hyp
@@ -1939,12 +1939,12 @@ interpreter of a typed language cannot be tagless or Jones\hyp optimal:
 \begin{shortlist}
 \item One needs to encode a typed language in a typed language based on
 a sum type (at some level of the hierarchy)\\
-\item It is not possible to write a \emph{direct} interpreter 
+\item A \emph{direct} interpreter 
 for such an encoding of a typed language
-in a typed language, without either an
-advanced type system or the overhead of tagging and untagging\\
+in a typed language requires either
+advanced types or tagging overhead\\
 \item Thus, an indirect interpreter is necessary, which needs a universal
-  type (and hence tagging)\ifshort\else\\
+  type and hence tagging\ifshort\else\\
 \item Thus, any self-interpreter must have tags and cannot be 
   Jones-optimal\fi.
 \end{shortlist}
