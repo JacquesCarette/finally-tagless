@@ -11,6 +11,7 @@
 \end{comment}
 
 \begin{abstract}
+\ifdim\parindent=0pt \parindent=1em \fi
 We have built the first family of tagless interpretations for a
 higher-order typed object
 language in a typed metalanguage (Haskell or ML) that
@@ -530,8 +531,8 @@ Haskell to infer the object types for us. We could also
 avoid the dummy argument by switching off the monomorphism restriction
 with a compiler flag.
 The methods |add|, |mul|, and |leq| are quite similar, and so are
-|int| and |bool|. Therefore, we will frequently show implementations of
-only one method of each group and elide the rest, to save space. The
+|int| and |bool|. Therefore, we often show
+only one method of each group and elide the rest. The
 accompanying code has the complete implementations.
 
 \ifshort
@@ -717,17 +718,20 @@ metalanguage's type system.
 \ifshort\else
 For variety, we show another interpreter, which measures the \emph{size}
 of each object term, defined as the number of term
-constructors. The following is slightly abbreviated code (see the
-accompanying source code for the complete definition).
+constructors.
 \begin{code}
 module L = struct
   type ('c,'dv) repr = int
-  let int (x:int)  = 1
-  let lam f        = f 0 + 1
-  let app e1 e2    = e1 + e2 + 1
-  let fix f        = f 0 + 1
-  let mul e1 e2    = e1 + e2 + 1
-  let if_ eb et ee = eb + et () + ee () + 1
+
+  let int  (x:int)  = 1
+  let bool (b:bool) = 1
+  let lam  f        = f 0 + 1
+  let app  e1 e2    = e1 + e2 + 1
+  let fix  f        = f 0 + 1
+  let add  e1 e2    = e1 + e2 + 1
+  let mul  e1 e2    = e1 + e2 + 1
+  let leq  x y      = x + y + 1
+  let if_  eb et ee = eb + et () + ee () + 1
 end
 \end{code}
 Now the OCaml expression
@@ -1086,13 +1090,13 @@ We may now make |P| an instance of
 |mul|, |leq|, |if_|, and |fix|.
 \begin{code}
 instance Symantics P where
-  int x  = VI x
-  bool b = VB b
+  int x               = VI x
+  bool b              = VB b
   add (VI n1) (VI n2) = VI (n1 + n2)
-  add e1 e2 = E (add (abstr e1) (abstr e2))
-  lam = VF
-  app (VF f) ea = f ea
-  app (E f)  ea = E (app f (abstr ea))
+  add e1 e2           = E (add (abstr e1) (abstr e2))
+  lam                 = VF
+  app (VF f) ea       = f ea
+  app (E f)  ea       = E (app f (abstr ea))
 \end{code}
 \fi
 The implementations of |int|, |bool|, and |add| are like
@@ -1344,9 +1348,17 @@ Figure~\ref{fig:pe} takes the na\"\i ve approach of ``going all the
 way'', that is, unfold |fix| rather than residualize
 \fi
 whenever the
-argument is static.  In the accompanying source code is a conservative
-alternative |P.fix| that unrolls recursion only once, then residualizes.
-Many sophisticated approaches have been developed for this trade-off
+argument is static.
+\ifshort
+In the accompanying source code is a conservative
+alternative |P.fix| that unfolds recursion only once, then residualizes.
+\else
+A conservative alternative is to unfold recursion only once, then residualize:
+\begin{code}
+let fix f = f (pdyn (C.fix (fun x -> abstr (f (pdyn x)))))
+\end{code}
+\fi
+Many sophisticated approaches have been developed to decide how much to unfold
 \cite{jones-partial}, but this issue is orthogonal to our presentation.
 \ifshort\else
 A separate concern in our treatment of |fix| is possible code bloat in

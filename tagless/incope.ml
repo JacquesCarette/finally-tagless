@@ -222,9 +222,9 @@ module L = struct
   let eql x y = x + y + 1
   let if_ eb et ee = eb + et () + ee () + 1
 
-  let lam f = (f 0) + 1
+  let lam f = f 0 + 1
   let app e1 e2 = e1 + e2 + 1
-  let fix f = (f 0) + 1
+  let fix f = f 0 + 1
 end;;
 
 module EXL = EX(L);;
@@ -526,7 +526,7 @@ module RCN = struct
   let lapp e2 e1 = 
     {ko = fun k -> e2.ko (fun v -> (app (lam e1) {ko = fun k -> k v}).ko k)}
 
-  let fix f = let rec fx f n = app (f (lam (fx f))) n in lam(fx f)
+  let fix f = let rec fx f n = app (f (lam (fx f))) n in lam (fx f)
 
   let get_res x = x.ko (fun v -> v)
 end;;
