@@ -25,7 +25,7 @@
  *)
 
 module type Symantics = sig
-  type ('c,+'sv,+'dv) repr
+  type ('c,'sv,'dv) repr
   val int  : int  -> ('c,int,int) repr
   val bool : bool -> ('c,bool,bool) repr
   val add  : ('c,int,int) repr -> ('c,int,int) repr -> ('c,int,int) repr
@@ -207,8 +207,7 @@ module EXR = EX(R);;
 (* ------------------------------------------------------------------------ *)
 (* Another interpreter: it interprets each term to give its size
    (the number of constructors)
-   It is a typed, tagless interpreter: L is not a tag. The interpreter
-   never gets stuck, because it evaluates typed terms only.
+   The interpreter never gets stuck, because it evaluates typed terms only.
    This interpreter is also total: it determines the size of the term
    even if the term itself is divergent  *)
 
@@ -584,7 +583,7 @@ let rstestpw72 = EXSV.testpowfix72;;
 
 (* Simplified Symantics modules with no 'sv *)
 module type SymS = sig
-  type ('c,+'dv) repr
+  type ('c,'dv) repr
   val int : int  -> ('c,int) repr
   val bool: bool -> ('c,bool) repr
   val add : ('c,int) repr-> ('c,int) repr-> ('c,int) repr
@@ -694,7 +693,7 @@ let ctestfix = T.testpowfix72;;
 
 
 (* Extension of S for an imperative language with a single piece of
-   state.
+   first-order state.
 
         let x = e1 in e2
         deref ()
@@ -817,7 +816,8 @@ let cpsipow = RCPSI.get_res (EXPSI_INT.pow ()) 100;;
 let cpsipow7 = RCPSI.get_res (EXPSI_INT.pow7 ()) 100;;
 let cpsipow27 = RCPSI.get_res (EXPSI_INT.pow27 ()) 100;;
 
-(* Extension of S for an imperative language
+(* Extension of S for an imperative language with reference cells
+   (which may hold any values, including functional values).
 
         let x = e1 in e2
         newref e
@@ -831,6 +831,8 @@ let cpsipow27 = RCPSI.get_res (EXPSI_INT.pow27 ()) 100;;
  Since we use higher-order abstract syntax, let x = e1 in e2
  is just lapp e1 (\x -> e2), which is an inverse application.
 
+ This time, we use reference cells of the meta-language to
+ implement reference cells of the source language.
 *)
 module type SymSP = sig
   include Symantics
@@ -863,7 +865,7 @@ module CR = struct
 end;;
 
 (* Doing PE with references may be problematic. It is not clear what
-  to do wif we encounter newref with the static code, but then need
+  to do if we encounter newref with the static code, but then need
   to residualize. We have to `import' the reference and its contents.
   We skip this for now.
 *)
