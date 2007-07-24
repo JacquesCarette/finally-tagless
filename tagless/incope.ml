@@ -692,8 +692,7 @@ let ctestfix = T.testpowfix72;;
 *)
 
 
-(* Extension of S for an imperative language with a single piece of
-   first-order state.
+(* Extension of S for an imperative language with a single piece of state.
 
         let x = e1 in e2
         deref ()
@@ -711,14 +710,16 @@ let ctestfix = T.testpowfix72;;
 module type SymSI = sig
   include Symantics
   type state
+  type 'c states			(* static version of teh state *)
   val lapp : ('c,'sa,'da) repr -> (('c,'sa,'da) repr -> ('c,'sb,'db) repr)
     ->  ('c,'sb,'db) repr
-  val deref : unit -> ('c,state,state) repr
-  val set   : ('c,state,state) repr -> ('c,state,state) repr
+  val deref : unit -> ('c,'c states,state) repr
+  val set   : ('c,'c states,state) repr -> ('c,'c states,state) repr
 end;;
-
+ 
 (* INT state *)
-module EXSI_INT(S: SymSI with type state = int) = struct
+module EXSI_INT(S: SymSI with type state = int and type 'c states = int) = 
+struct
   open S
 
   (* this program corresponds to 
@@ -747,16 +748,45 @@ module EXSI_INT(S: SymSI with type state = int) = struct
   let pow27 () = app (pow7 ()) (int 2)
 end;;
 
+(* Second-order, INT->INT state *)
+(* The two Symantics arguments are necessary because we cannot write
+  S: SymSI with ... 
+       type 'c states = ('c,int,int) S.repr -> ('c,int,int) S.repr
+ that is, the typing constraints can't refer to the signature being
+ defined.
+*)
+module EXSI_INT_INT(S0: Symantics)
+(S: SymSI with type state  = int->int
+           and  type 'c states = ('c,int,int) S0.repr -> ('c,int,int) S0.repr
+           and  type ('c,'sv,'dv) repr = ('c,'sv,'dv) S0.repr) = 
+struct
+  open S
+
+  (* this program corresponds to 
+     let v0 = !state in
+       state := (\x -> x * 2);
+       v0 10 + !state 10; *)
+  let test1 () = lapp (deref ()) (fun v0 -> 
+                  lapp (set (lam (fun x -> mul x (int 2)))) (fun _ ->
+		   add (app v0 (int 10)) (app (deref ()) (int 10))))
+end;;
+
+
+
 (* Pure state passing CPS interpreter. *)
 (* We make the CPS to be fully polymorphic over the answer type.
    We could have just as well put the answer type into the ST signature
    below (as common in SML). But because we have higher-rank types
    in OCaml, we may as well use them.
 *)
-module RCPS(ST: sig type state end) = struct
-  type state = ST.state
+(* This version assumes the first-order state. For the higher order-state,
+   see below.
+*)
+module RCPS (ST: sig type state type 'c states end) = struct
+  include ST
   type ('c,'sv,'dv) repr = {ko: 'w. ('sv -> state -> 'w) -> state -> 'w}
-  type ('c, 'sv, 'dv) result = state -> 'sv
+  type ('c, 'sv, 'dv) result = 'c states -> 'sv
+
   let int (x:int) = {ko = fun k -> k x}
   let bool (b:bool) = {ko = fun k -> k b}
   let add e1 e2 = 
@@ -796,7 +826,10 @@ module RCPS(ST: sig type state end) = struct
   let set e = {ko = fun k -> e.ko (fun v s -> k s v)}
 end;;
 
-module RCPSI = RCPS(struct type state = int end);;
+module RCPSI = RCPS(struct 
+  type state = int
+  type 'c states = int
+end);;
 module EXPSI = EX(RCPSI);;
 
 (*
@@ -815,6 +848,75 @@ let cpsitesti2 = RCPSI.get_res (EXPSI_INT.test2 ()) 100;; (* 102 *)
 let cpsipow = RCPSI.get_res (EXPSI_INT.pow ()) 100;;
 let cpsipow7 = RCPSI.get_res (EXPSI_INT.pow7 ()) 100;;
 let cpsipow27 = RCPSI.get_res (EXPSI_INT.pow27 ()) 100;;
+
+
+(* The version of RCPS for the second-order state. The only difference
+   from RCPS is the type of states and repr. All the values remain the same.
+   The reason for this duplication of RCPS is the fact the types 
+   states and repr are mutually recursive here. We can't pass such 
+   types via a signature.
+   I guess we may need recursive modules. It's better avoid experimental
+   features for now.
+*)
+module RCPS2 (ST: sig type state1 type state2 end) = struct
+  type state = ST.state1 -> ST.state2
+  type 'c states = ('c,ST.state1,ST.state1) repr ->
+                   ('c,ST.state2,ST.state2) repr
+  and ('c,'sv,'dv) repr =
+       {ko: 'w. ('sv -> 'c states -> 'w) -> 'c states -> 'w}
+
+  type ('c, 'sv, 'dv) result = 'c states -> 'sv
+  let int (x:int) = {ko = fun k -> k x}
+  let bool (b:bool) = {ko = fun k -> k b}
+  let add e1 e2 = 
+    {ko = fun k -> e1.ko (fun v1 -> e2.ko (fun v2 -> k (v1+v2)))}
+  let mul e1 e2 = 
+    {ko = fun k -> e1.ko (fun v1 -> e2.ko (fun v2 -> k (v1*v2)))}
+  let leq e1 e2 = 
+    {ko = fun k -> e1.ko (fun v1 -> e2.ko (fun v2 -> k (v1 <= v2)))}
+  let eql e1 e2 = 
+    {ko = fun k -> e1.ko (fun v1 -> e2.ko (fun v2 -> k (v1 = v2)))}
+  let if_ eb et ee = 
+    {ko = fun k -> eb.ko (fun vb -> if vb then (et ()).ko k else (ee ()).ko k)}
+
+(*
+  val lam : (('c,'sa,'da) repr -> ('c,'sb,'db) repr)
+    -> ('c,(('c,'sa,'da) repr -> ('c,'sb,'db) repr),'da->'db) repr
+  val app : ('c,(('c,'sa,'da) repr -> ('c,'sb,'db) repr),'da->'db) repr
+    -> ('c,'sa,'da) repr -> ('c,'sb,'db) repr
+  val fix : (('c,(('c,'sa,'da) repr -> ('c,'sb,'db) repr) as 's,'da->'db) repr 
+             -> ('c,'s,'da->'db) repr)  -> ('c,'s,'da->'db) repr
+*)
+
+  let lam f = {ko = fun k -> k f} (* weird CPS: it's actually a CBN CPS! *)
+
+  let app e1 e2 = {ko = fun k -> e1.ko (fun f -> (f e2).ko k)}
+
+  let fix f = let rec fx f n = app (f (lam (fx f))) n in lam(fx f)
+
+  let get_res x = fun s0 -> x.ko (fun v s -> v) s0
+  (* let run x s0 = x.ko (fun v s -> v) s0 *)
+
+  (* The following is the `imperative' part, dealing with the state *)
+  (* because our CPS is CBN, we have to force the evaluation of e2! *)
+  let lapp e2 e1 = 
+    {ko = fun k -> e2.ko (fun v -> (app (lam e1) {ko = fun k -> k v}).ko k)}
+  let deref () = {ko = fun k s -> k s s}
+  let set e = {ko = fun k -> e.ko (fun v s -> k s v)}
+end;;
+
+module RCPSII = RCPS2(struct 
+  type state1 = int
+  type state2 = int end);;
+module EXPSI = EX(RCPSII);;
+
+
+module EXPSI_INT_INT = EXSI_INT_INT(RCPSII)(RCPSII);;
+let cpsitestii1 = RCPSII.get_res (EXPSI_INT_INT.test1 ()) 
+                  (fun x -> RCPSII.add (RCPSII.int 2) 
+		                        (RCPSII.mul x (RCPSII.int 2)));;
+(* 42 *)
+
 
 (* Extension of S for an imperative language with reference cells
    (which may hold any values, including functional values).
