@@ -96,7 +96,7 @@ let result =
   in
     Exception.catch
       (one +^ one +^ max /^ zero)
-      (fun {Arithmetic.value = _v; func = _f; cause = c} as e ->
+      (fun ({Arithmetic.value = _v; func = _f; cause = c} as e) ->
          match c with
              Arithmetic.NegOverflow -> max
            | Arithmetic.PosOverflow -> min
@@ -118,7 +118,7 @@ let test_exception_monad _ =
          (fun v -> v = max_number)
          (Exception.catch
             result
-            (fun {Arithmetic.value = v; func = _f; cause = _c} as e ->
+            (fun ({Arithmetic.value = v; func = _f; cause = _c} as e) ->
                match v with
                    Arithmetic.Normal n -> Exception.return (Int64.to_int n)
                  | Arithmetic.NegInf -> Exception.return min_number
