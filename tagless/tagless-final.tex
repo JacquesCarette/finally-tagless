@@ -32,7 +32,7 @@ Our representation also simulates inductive maps from types to
 types, which are required for typed partial evaluation and CPS transformations.
 
 Our encoding of an object term abstracts over the various ways to
-interpret it yet statically assures that the interpreters never get
+interpret it, yet statically assures that the interpreters never get
 stuck.  To achieve self\hyp interpretation and show Jones\hyp
 optimality, we relate this exemplar of higher-rank and higher-kind
 polymorphism (provided by ML functors and Haskell~98 constructor
@@ -172,7 +172,7 @@ For example, we represent the object term $(\fun{x}x)\True$ as
 \end{figure}
 \fi
 
-Following \cite{WalidICFP02},
+\noindent Following \cite{WalidICFP02},
 we try to implement an interpreter function |eval0|\ifshort,
 Fig.~\ref{fig:tag-problem}(b)\fi. It takes
 an object term such as |test1| above and gives us its value.
@@ -345,7 +345,7 @@ than \emph{initial} approach, both kinds of run-time errors in
 \S\ref{tagproblem} (applying a nonfunction and evaluating an open
 term) are reported at compile time. Because the new interpreter
 uses no universal type or pattern matching, it never results in a
-run-time error (and is in fact total).  Because this safety is obvious
+run-time error, and is in fact total.  Because this safety is obvious
 not just to us but also to the metalanguage implementation, we avoid
 the serious performance penalty \cite{WalidICFP02} of error checking.
 \Citet{Gluck-jones-optimality} explains deeper technical reasons that
@@ -378,9 +378,9 @@ representation but varying the interpreter, we can
     \item evaluate the term to a value in the metalanguage;
     \item measure the size or depth of the term;
     \item compile the term, with staging support such as in MetaOCaml;
-    \item even partially evaluate the term, online; and
+    \item partially evaluate the term, online; and
     \item transform the term to continuation\hyp passing style (CPS),
-        even call-by-name (CBN) CPS, so to isolate the evaluation
+        even call-by-name (CBN) CPS, so as to isolate the evaluation
         order of the object language from that of the metalanguage.\ifshort
 \footnote{Due to serious lack of space, 
 we refer the reader to the accompanying code for this.}\fi
@@ -425,8 +425,8 @@ result they call desirable.  Our contributions are as follows.
 \item We point a clear way to extend the object language with more features
     such as state\ifshort\else~(\S\ref{state})\fi.\ifshort\footnote{Again, please see our code.}\fi
 \item We describe an approach to self\hyp interpretation compatible with the
-  above\ifshort\else~(\S\ref{selfinterp})\fi.  Self\hyp interpretation turned out
-  harder than expected.\ifshort\footnotemark[\value{footnote}]\fi
+  above\ifshort\else~(\S\ref{selfinterp})\fi.  Self\hyp interpretation turned
+  out to be harder than expected.\ifshort\footnotemark[\value{footnote}]\fi
 \end{enumerate}
 Our code is surprisingly simple and obvious in hindsight, but
 it has been an open problem to
@@ -439,10 +439,11 @@ recently that some work on programming type-indexed values in ML
 expressed.''  We discuss related work in~\S\ref{related}.
 
 To reiterate, we do \emph{not} propose any new language
-feature or technique. We use features already present in
+feature or new technique. We use features already present in
 mainstream functional languages---Hindley-Milner
 type system with either an inference\hyp preserving module system or
-constructor classes, as realized in ML and Haskell 98---to
+constructor classes, as realized in ML and Haskell 98---and techniques
+which have all appeared in the literature, to
 solve the problem that was stated in the published record as
 unsolved and likely unsolvable in ML or Haskell 98
 without extensions. The simplicity of our solution and its
@@ -463,8 +464,8 @@ type-preserving, assured compiler, whose properties and assured by HM.
 Figure~\ref{fig:object} shows our object language, a simply-typed
 $\lambda$-calculus with fixpoint, integers, booleans, and comparison.
 The language is close to \citets{xi-guarded}, without their polymorphic
-lift but with more constants so as to express Fibonacci, factorial, and
-power.
+lift but with more constants so as to more conveniently express Fibonacci,
+factorial, and power.
 In contrast to \S\ref{intro}, we encode binding using higher-order
 abstract syntax (HOAS) \cite{miller-manipulating,pfenning-higher-order}
 rather than de Bruijn indices. This makes the encoding convenient and
@@ -745,8 +746,8 @@ end
 Now the OCaml expression
 |let module E = EX(L) in E.test1 ()|
 evaluates to |3|. This interpreter is not only tagless but also
-total. It ``evaluates'' even seemingly divergent terms like
-|app (fix (fun self -> self)) (int 1)|.
+total. It ``evaluates'' even seemingly divergent terms, for instance
+|app (fix (fun self -> self)) (int 1)| evaluates to $3$.
 \fi
 
 \begin{comment}
@@ -764,7 +765,7 @@ let module E =EX1(L) in E.tfix ();;
 Besides immediate evaluation, we can compile our object language
 into OCaml code using MetaOCaml's staging facilities. MetaOCaml
 represents future-stage expressions of type~$t$ at the
-present stage as values of type |('c,|$t$|) code| where |'c| is the
+present stage as values of type |('c, |$t$|) code| where |'c| is the
 environment classifier \cite{WalidPOPL03,calcagno-ml-like}. Code values are created
 by a \emph{bracket} form |.<|$e$|>.|, which specifies that the expression~$e$ is to be
 evaluated at a future stage. The \emph{escape} |.~|$e$ must occur
@@ -935,7 +936,7 @@ instance Symantics P0 where
   int  x = S0 (int x)
   bool x = S0 (bool x)
   add (S0 e1) (S0 e2) = S0 (add e1 e2)
-  add e1 e2 = E0 (add (abstrI e1) (abstrI e2))
+  add     e1      e2  = E0 (add (abstrI e1) (abstrI e2))
 \end{code}
 Thus, the two uses of |add| above refer to
 |add| for~|R| and |add| for~|C|.
@@ -943,8 +944,8 @@ Thus, the two uses of |add| above refer to
 \fi
 Whereas |mul| and |leq| are as easy to define as |add|, we encounter
 a problem with |if_|.  If the first argument to |if_| is a dynamic term
-(type |C Bool|) and the second and third arguments are a static term
-(type |R a|) and a dynamic term (type |C a|), then we need to convert
+(of type |C Bool|), the second a static term (of type |R a|) and the third a
+dynamic term (of type |C a|), then we need to convert
 the static term to dynamic, but there is no polymorphic ``lift''
 function, of type |a -> C a|, to send a value to the future stage
 \cite{xi-guarded,WalidPOPL03}.\ifshort\else
@@ -1031,7 +1032,7 @@ evaluate the function, that is, compute as much as possible statically
 when it is applied to a mix of static and dynamic inputs.  For example,
 the partial evaluator should turn $\fun{n}(\fun{x}x)n$ into $\fun{n}n$
 by substituting $n$ for~$x$ in the body of $\fun{x}x$ even though $n$ is
-not statically known.  Even the same static function, applied to
+not statically known.  The same static function, applied to
 different static arguments, can give both static and dynamic results: we
 want to simplify $(\fun{y}x\times y)0$ to~$0$ but $(\fun{y}x\times y)1$
 to~$x$.
@@ -1331,9 +1332,9 @@ In contrast, the partial evaluator~|P| relies on the type argument |'sv|.
 Figure~\ref{fig:pe} shows the partial evaluator~|P|.
 Its type |repr| literally expresses the type equation for |repr_pe| above.
 The function |abstr|, as in~\S\ref{S:PE-GADT},
-extracts a future-stage code value from a result of
+extracts a future-stage code value from the result of
 partial evaluation.  Conversely, the function |pdyn| injects a
-code value into partial evaluation. As
+code value into the |repr| type. As
 in~\S\ref{S:PE-problem}, we build dynamic terms alongside
 any static ones to avoid polymorphic lift.
 
@@ -1351,6 +1352,11 @@ to abstract over the specific domain (such as monoid or ring) where they
 apply.  These simplifications and abstractions help a lot
 \fi
 in a large language with more base types and primitive operations.
+\ifshort\else
+Incidentally, the code actually contains a more general implementation
+mechanism for such features, inspired in part by previous work in
+generative linear algebra~\cite{CaretteKiselyov05}.
+\fi
 
 Any partial evaluator must decide how much to unfold recursion\ifshort.
 The code in Figure~\ref{fig:pe} na\"\i vely unfolds |fix|
@@ -1416,10 +1422,10 @@ gives the desired result
 \end{code}
 \ifshort\vspace*{-0.7em}\fi
 
-
-Unlike the GADT approach in~\S\ref{S:PE-GADT}, all pattern\hyp matching
-in~|P| is \emph{syntactically} exhaustive, so it is patent to the metalanguage
-implementation that |P| never gets stuck.  Further, all pattern\hyp matching occurs
+\noindent Unlike the GADT approach in~\S\ref{S:PE-GADT}, all pattern\hyp
+matching in~|P| is \emph{syntactically} exhaustive, so it is patent to the
+metalanguage implementation that |P| never gets stuck.  Further, all
+pattern\hyp matching occurs
 during partial evaluation, only to check if a value is known statically,
 never what type it has.  In other words, our partial evaluator tags
 phases (with |Some| and |None|) but not object types.
@@ -1711,7 +1717,7 @@ and to evaluate this pre-encoded term is to evaluate the object term
     ((\fun{f} f) (\fun{x} x))\, ((\fun{b} b) \True).
 \end{equation*}
 Because the evaluator above mostly consists of glorified identity
-functions, we expect our simple partial evaluator to reduce the
+functions, our simple partial evaluator reduces the
 result of this instantiation to~$e$.  In general, to
 interpret~$\encode{e}$ using an interpreter is to instantiate its free
 variables by that interpreter's definitions.
@@ -1753,7 +1759,7 @@ and apply it to the encoded term.  The result is the object term
     \bigr),
 \end{equation*}
 which partially evaluates to~$\True$ easily.
-However, encoding fails on an term with multiple $\lambda$\hyp
+However, encoding fails on a term with multiple $\lambda$\hyp
 abstractions at different types.  For example, the pre-encoding
 \begin{equation*}
     \encode{\fun{f}\fun{x}fx}
@@ -1836,8 +1842,8 @@ the self\hyp interpreter~$\si$.
 \subsection{Contexts clarify polymorphism}
 \label{S:clarify}
 
-We type-check a pre-encoded term~$\encode{e}$ and its interpreter~$I[~]$
-only together, never separately.  This treatment has the drawback that
+We always type-check a pre-encoded term~$\encode{e}$ and its interpreter~$I[~]$
+together, never separately.  This treatment has the drawback that
 we must duplicate a pre-encoded term in order to interpret it in
 multiple ways.  The meta-notions of contexts and plugging may seem ad
 hoc, but in fact they just reflect the type-class and module
@@ -2140,6 +2146,13 @@ polymorphism let us type-check and compile object terms separately from
 interpreters.  This \ifshort\else observation \fi is consistent with the role of
 polymorphism in the separate compilation of modules
 \cite{shao-typed}.
+
+\begin{comment}
+Our solution could have been even more straightforward if we had
+total type-level functions at our disposal (|repr_pe| in
+\S\ref{S:PE-solution}) in MetaOCaml.  Simple type-level computations 
+certainly ought to become mainstream.
+\end{comment}
 
 \section{Conclusions}\label{conclusion}
 
