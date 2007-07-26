@@ -18,7 +18,7 @@ language in a typed metalanguage (Haskell or ML) that
 require no dependent
 types, generalized algebraic data types, or
 postprocessing to eliminate tags.
-The interpretations include
+The statically type-preserving interpretations include
 an evaluator, a compiler (or staged evaluator), a partial
 evaluator, and call-by-name and
 call-by-value CPS transformers.
@@ -327,6 +327,7 @@ gives a type error rather than a run-time error.
 \begin{code}
 let testf3 = app (lam (varS varZ)) (b true)
 let testf3r = testf3 ()
+This expression has type unit but is here used with type 'a * 'b
 \end{code}
 \fi
 The type error correctly complains
@@ -411,6 +412,10 @@ result they call desirable.  Our contributions are as follows.
     analysis.  It bakes a type-to-type map into the interpreter
     interface to eliminate the need for GADTs and thus remain portable
     across Haskell 98 and ML.
+\item We show the first typed, tagless and statically type-preserving CPS
+    transformation with simple types, which is available for mainstream
+    functional languages (ML and Haskell). Type-preservation is assured by
+    the soundness of our embedding.
 \item We use the type system of the metalanguage
     to check statically that an object program is well-typed and closed.
 \item We show clean, comparable implementations in MetaOCaml and Haskell.
@@ -581,6 +586,7 @@ module type Symantics = sig type ('c, 'dv) repr
   val if_ : ('c, bool) repr
             -> (unit -> 'x) -> (unit -> 'x) -> (('c, 'da) repr as 'x)
 end
+
 module EX(S: Symantics) = struct open S
   let test1 () = app (lam (fun x -> x)) (bool true)
   let testpowfix () =
@@ -591,7 +597,8 @@ module EX(S: Symantics) = struct open S
 end
 \end{code2}
 \end{floatrule}
-\caption{A simple (Meta)OCaml embedding of our object language}
+\caption{A simple (Meta)OCaml embedding of our object language, 
+    and examples of use}
 \label{fig:ocaml-simple}
 \end{figure*}
 To embed the same object language in (Meta)OCaml, we replace the \ifshort type
@@ -605,7 +612,8 @@ code generation in~\S\ref{compiler}; and the $\eta$-expanded type for
 language.
 
 The functor |EX| in Fig.~\ref{fig:ocaml-simple} encodes 
-our running examples |test1| and $\mathit{power}$.
+our running examples |test1| and the $\mathit{power}$ function
+(|testpowfix|).
 The dummy argument to |test1| and |testpowfix| is an artifact of
 MetaOCaml, related to monomorphism: in order for us to run a
 piece of generated code, it must be polymorphic in its environment
@@ -848,6 +856,12 @@ The resulting code obviously contains no tags and no pattern matching.
 \ifshort
 The accompanying code shows the Haskell implementation. 
 \else
+\begin{proposition}
+    The compiler |C| generates tagless, pattern-match free code.
+\end{proposition}
+This is syntactically clear from the body of |C|, and follows
+readily by structural induction and the properties of |.~| and
+|.< >.|.
 
 We have also implemented this compiler in Haskell. 
 Since Haskell
@@ -1629,7 +1643,7 @@ We can modify the CBV CPS transformation to pass a piece of state along
 with the continuation. This technique lets us support mutable state. We
 can also add mutable references to the object language using mutable
 references of the metalanguage.  The accompanying code illustrates these
-extensions.
+extensions.  No new techniques were needed in the implementation.
 
 \fi
 \fi
