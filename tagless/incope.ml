@@ -710,7 +710,7 @@ let ctestfix = T.testpowfix72;;
 module type SymSI = sig
   include Symantics
   type state
-  type 'c states			(* static version of teh state *)
+  type 'c states			(* static version of the state *)
   val lapp : ('c,'sa,'da) repr -> (('c,'sa,'da) repr -> ('c,'sb,'db) repr)
     ->  ('c,'sb,'db) repr
   val deref : unit -> ('c,'c states,state) repr
@@ -779,12 +779,13 @@ end;;
    below (as common in SML). But because we have higher-rank types
    in OCaml, we may as well use them.
 *)
-(* This version assumes the first-order state. For the higher order-state,
-   see below.
-*)
-module RCPS (ST: sig type state type 'c states end) = struct
+module RCPS (ST: sig 
+  type state 
+  type 'c states 
+  type ('c,'sv,'dv) repr = 
+      {ko: 'w. ('sv -> 'c states -> 'w) -> 'c states -> 'w}
+end) = struct
   include ST
-  type ('c,'sv,'dv) repr = {ko: 'w. ('sv -> state -> 'w) -> state -> 'w}
   type ('c, 'sv, 'dv) result = 'c states -> 'sv
 
   let int (x:int) = {ko = fun k -> k x}
@@ -826,9 +827,12 @@ module RCPS (ST: sig type state type 'c states end) = struct
   let set e = {ko = fun k -> e.ko (fun v s -> k s v)}
 end;;
 
+(* Instantiate for the first-order state *)
 module RCPSI = RCPS(struct 
   type state = int
   type 'c states = int
+  type ('c,'sv,'dv) repr = 
+      {ko: 'w. ('sv -> 'c states -> 'w) -> 'c states -> 'w}
 end);;
 module EXPSI = EX(RCPSI);;
 
@@ -850,65 +854,25 @@ let cpsipow7 = RCPSI.get_res (EXPSI_INT.pow7 ()) 100;;
 let cpsipow27 = RCPSI.get_res (EXPSI_INT.pow27 ()) 100;;
 
 
-(* The version of RCPS for the second-order state. The only difference
-   from RCPS is the type of states and repr. All the values remain the same.
-   The reason for this duplication of RCPS is the fact the types 
-   states and repr are mutually recursive here. We can't pass such 
-   types via a signature.
-   I guess we may need recursive modules. It's better avoid experimental
-   features for now.
+(* Instantiate for the second-order state. The structure RCPS2_t must be named.
+   We cannot `inline' it and write
+  module RCPSII = RCPS(
+  type state = int -> int
+  type 'c states = ('c,int,int) repr -> ('c,int,int) repr
+  and ('c,'sv,'dv) repr = ... end);;
+because OCaml will make the type 'c states abstract. If the types are
+mutually recursive, the structure should be named rather than anonymous.
 *)
-module RCPS2 (ST: sig type state1 type state2 end) = struct
-  type state = ST.state1 -> ST.state2
-  type 'c states = ('c,ST.state1,ST.state1) repr ->
-                   ('c,ST.state2,ST.state2) repr
+module RCPS2_t = struct 
+  type state = int -> int
+  type 'c states = ('c,int,int) repr -> ('c,int,int) repr
   and ('c,'sv,'dv) repr =
        {ko: 'w. ('sv -> 'c states -> 'w) -> 'c states -> 'w}
-
-  type ('c, 'sv, 'dv) result = 'c states -> 'sv
-  let int (x:int) = {ko = fun k -> k x}
-  let bool (b:bool) = {ko = fun k -> k b}
-  let add e1 e2 = 
-    {ko = fun k -> e1.ko (fun v1 -> e2.ko (fun v2 -> k (v1+v2)))}
-  let mul e1 e2 = 
-    {ko = fun k -> e1.ko (fun v1 -> e2.ko (fun v2 -> k (v1*v2)))}
-  let leq e1 e2 = 
-    {ko = fun k -> e1.ko (fun v1 -> e2.ko (fun v2 -> k (v1 <= v2)))}
-  let eql e1 e2 = 
-    {ko = fun k -> e1.ko (fun v1 -> e2.ko (fun v2 -> k (v1 = v2)))}
-  let if_ eb et ee = 
-    {ko = fun k -> eb.ko (fun vb -> if vb then (et ()).ko k else (ee ()).ko k)}
-
-(*
-  val lam : (('c,'sa,'da) repr -> ('c,'sb,'db) repr)
-    -> ('c,(('c,'sa,'da) repr -> ('c,'sb,'db) repr),'da->'db) repr
-  val app : ('c,(('c,'sa,'da) repr -> ('c,'sb,'db) repr),'da->'db) repr
-    -> ('c,'sa,'da) repr -> ('c,'sb,'db) repr
-  val fix : (('c,(('c,'sa,'da) repr -> ('c,'sb,'db) repr) as 's,'da->'db) repr 
-             -> ('c,'s,'da->'db) repr)  -> ('c,'s,'da->'db) repr
-*)
-
-  let lam f = {ko = fun k -> k f} (* weird CPS: it's actually a CBN CPS! *)
-
-  let app e1 e2 = {ko = fun k -> e1.ko (fun f -> (f e2).ko k)}
-
-  let fix f = let rec fx f n = app (f (lam (fx f))) n in lam(fx f)
-
-  let get_res x = fun s0 -> x.ko (fun v s -> v) s0
-  (* let run x s0 = x.ko (fun v s -> v) s0 *)
-
-  (* The following is the `imperative' part, dealing with the state *)
-  (* because our CPS is CBN, we have to force the evaluation of e2! *)
-  let lapp e2 e1 = 
-    {ko = fun k -> e2.ko (fun v -> (app (lam e1) {ko = fun k -> k v}).ko k)}
-  let deref () = {ko = fun k s -> k s s}
-  let set e = {ko = fun k -> e.ko (fun v s -> k s v)}
 end;;
 
-module RCPSII = RCPS2(struct 
-  type state1 = int
-  type state2 = int end);;
-module EXPSI = EX(RCPSII);;
+
+module RCPSII = RCPS(RCPS2_t);;
+module EXPSII = EX(RCPSII);;
 
 
 module EXPSI_INT_INT = EXSI_INT_INT(RCPSII)(RCPSII);;
