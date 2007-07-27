@@ -412,10 +412,12 @@ result they call desirable.  Our contributions are as follows.
     analysis.  It bakes a type-to-type map into the interpreter
     interface to eliminate the need for GADTs and thus remain portable
     across Haskell 98 and ML.
-\item We show the first typed, tagless and statically type-preserving CPS
-    transformation with simple types, which is available for mainstream
-    functional languages (ML and Haskell). Type-preservation is assured by
+\ifshort\else
+\item We show the first typed, tagless, and statically type-preserving CPS
+    transformation with simple types (\S\ref{variations}), which is available for mainstream
+    functional languages (ML and Haskell). Type preservation is assured by
     the soundness of our embedding.
+\fi
 \item We use the type system of the metalanguage
     to check statically that an object program is well-typed and closed.
 \item We show clean, comparable implementations in MetaOCaml and Haskell.
@@ -1664,7 +1666,7 @@ With
                          (fun x_7 -> x_6 x_7 x_5))>.
 \end{code}
 This output is a na\"{\i}ve CPS transformation of $(\fun{x}x)\True$,
-containing several apparent $\beta$-redexes.  To eliminate these
+containing several apparent $\beta$-redexes.  To reduce these
 redexes, we just change~|T| to instantiate |CPST| with |P| instead.
 \begin{code}
 {P.st = Some <fun>; P.dy = .<fun x_5 -> x_5 true>.}
@@ -1673,56 +1675,63 @@ redexes, we just change~|T| to instantiate |CPST| with |P| instead.
 \subsection{State and imperative features}
 \label{state}
 
-We can modify the CBV CPS transformation to pass a piece of state
-along with the continuation. This technique lets us support mutable
-state. This extended object language adds operations
-|deref ()| to obtain the current state, |set v| to replace the current
-state with |v| returning the previous value of the state, and the
-let-form |let x = e1 in e2|. The latter enforces an order of
-evaluation: |e1| will always be evaluated before |e2| even if the
-expression |e2| does not need the value of |x|. The more familiar
-imperative sequencing form |begin e1; e2 end| is expressible in our
-object language as |let _ = e1 in e2|.  In HOAS, the let-form actually
-has the form |lapp e1 (fun x -> e2)|, which looks like functional
-application with its two arguments swapped.  The extended object
-language corresponds to the following signature, which
-includes all of the original |Symantics| and adds imperative features.
+\begin{figure}
+    \begin{floatrule}
+    \begin{proofrules}
+        \[ \justifies \deref:t_s \]
+        \[ e:t_s \justifies \set e:t_s \]
+        \[ e_1:t_1 \quad \[ [x:t_1] \proofoverdots e_2:t_2 \] \justifies \lapp{e_1}{x}{e_2}:t_2 \]
+    \end{proofrules}
+    \end{floatrule}
+    \caption{Extending our typed object language with mutable state of type~$t_s$}
+    \label{fig:state}
+\end{figure}
 
+We can modify a CBN or CBV CPS transformation to pass a piece of state
+along with the continuation. This technique lets us support mutable
+state. As Figure~\ref{fig:state} shows, we extend our object language
+with three imperative features.
+\begin{enumerate}
+    \item ``$\deref$'' gets the current state;
+    \item ``$\set e$'' sets the state to the value of~$e$ and returns
+        the previous value of the state;
+    \item the let-form ``$\lapp{e_1}{x}e_2$'' evaluates $e_1$
+        before~$e_2$ even if $e_2$ does not use~$x$.
+\end{enumerate}
+If $x$ does not appear in~$e_2$, then ``$\lapp{e_1}{x}e_2$'' is same as
+the more familiar sequencing form ``$e_1;e_2$''.
+We can embed this extended object language into OCaml by extending the
+|Symantics| signature in Figure~\ref{fig:ocaml}.
 \begin{code}
 module type SymSI = sig
   include Symantics
   type state
   type 'c states       (* static version of the state *)
-  val lapp : ('c,'sa,'da) repr -> 
-             (('c,'sa,'da) repr -> ('c,'sb,'db) repr) ->
-             ('c,'sb,'db) repr
-  val deref : unit -> ('c,'c states,state) repr
-  val set   : (('c,'c states,state) repr as 'x) -> 'x
+  val lapp : (('c,'sa,'da) repr as 'x) -> ('x -> 'y)
+             -> (('c,'sb,'db) repr as 'y)
+  val deref : unit -> ('c, 'c states, state) repr
+  val set   : (('c, 'c states, state) repr as 'x) -> 'x
 end
 \end{code}
-We can write a simple test: 
+In HOAS, the type of |lapp| is that of function application with
+the two arguments swapped.  We can encode the term
+``$\lapp{\deref}{x} \set 2;\, x+\deref$''
+as the OCaml functor
 \begin{code}
-let v0 = !state in state := 2; v0 + !state
+module EXSI_INT(S: SymSI
+  with type state = int and type 'c states = int) = struct open S
+  let test1 () = lapp (deref ()) (fun x -> 
+                  lapp (set (int 2)) (fun _ -> add x (deref ())))
+end
 \end{code}
-which, in our language, takes the form
-\begin{code}
-module EXSI_INT(S: SymSI with type state = int 
-                          and type 'c states = int) = 
-struct
-  open S
-  let test1 () = lapp (deref ()) (fun v0 -> 
-                  lapp (set (int 2)) (fun _ ->
-                   add v0 (deref ())))
-end;;
-\end{code}
-The accompanying source code shows several more tests, including an
-imperative power function that uses state as the accumulator as well as
-a test for a higher-order state.
+The accompanying source code shows several more tests, including
+a test for higher-order state and a power function that uses state
+as the accumulator.
 
-The state-passing interpreter is an extension of the CBN CPS
-interpreter RCN of\S\ref{S:CPS}:
+The state-passing interpreter extends the CBN CPS
+interpreter |RCN| of~\S\ref{S:CPS}.
 \begin{code}
-module RCPS (ST: sig 
+module RCPS(ST: sig 
   type state 
   type 'c states 
   type ('c,'sv,'dv) repr = 
@@ -1731,22 +1740,21 @@ end) = struct
   include ST
   type ('c, 'sv, 'dv) result = 'c states -> 'sv
   ... 
-  let get_res x = fun s0 -> x.ko (fun v s -> v) s0
-  let lapp e2 e1 = {ko = fun k -> e2.ko 
-      (fun v -> (app (lam e1) {ko = fun k -> k v}).ko k)}
+  let lapp e2 e1 = {ko = fun k ->
+      e2.ko (fun v -> (app (lam e1) {ko = fun k -> k v}).ko k)}
   let deref () = {ko = fun k s -> k s s}
   let set e = {ko = fun k -> e.ko (fun v s -> k s v)}
+  let get_res x = fun s0 -> x.ko (fun v s -> v) s0
 end
 \end{code}
-The implementations of the |int|, |app|, |lam|, etc. functions is
-\emph{identical} to those of |RCN| and elided. New here is the extended type
-|repr|
-which now includes the state, and the ``constructors'' for the imperative
-forms of the object language: |lapp|, |deref|, and |set|. The
-interpreter is still CBN and so evaluation of |app ef ea| does not
-guarantee to evaluate |ea|. On the other hand, the implementation of
-the let-form |lapp ea ef| does assure that |ea| will always be
-evaluated. In the case of first-order state (such as |int|) we 
+The implementations of |int|, |app|, |lam|, and so on are
+\emph{identical} to those of |RCN| and elided. New are the extended type
+|repr|,
+which now includes the state, and the functions
+|lapp|, |deref|, and |set| representing imperative features. The
+interpreter is still CBN, so evaluating |app ef ea| may not
+evaluate |ea|, but evaluating |lapp ea ef| does.
+For first-order state, such as of type~$\ZZ$, we 
 instantiate the interpreter as
 \begin{code}
 module RCPSI = RCPS(struct 
@@ -1754,13 +1762,13 @@ module RCPSI = RCPS(struct
   type 'c states = int
   type ('c,'sv,'dv) repr = 
       {ko: 'w. ('sv -> 'c states -> 'w) -> 'c states -> 'w}
-end);;
+end)
 \end{code}
-It fully implements the |Symantics| signature and so can run the pure
-code of the unextended object language: we can pass |RCPSI| as an
-argument to the functor |EX| (Fig.~\ref{fig:ocaml-simple}) and run 
-the example |test1| from there. The main use for |RCPSI| is to run the 
-extended object language:
+|RCPSI| matches the |Symantics| signature and implements the
+unextended object language: we can pass |RCPSI|
+to the functor |EX| (Fig.~\ref{fig:ocaml-simple}) and run 
+the example |test1| from there. The main use for |RCPSI| is to interpret the 
+extended object language.
 \begin{code}
 module EXPSI_INT = EXSI_INT(RCPSI)
 let cpsitesti1 = RCPSI.get_res (EXPSI_INT.test1 ()) 100
@@ -1790,7 +1798,7 @@ equivalent to the object application $\si\Encode{e}$
 \cite{jones-partial,taha-tag,Danvy-tagging-encoding}.
 A partial evaluator~$\pe$ maps object terms~$e$ to observationally
 equivalent object terms~$\pe(e)$.  It is said to be
-\emph{optimal} with respect to~|si| if $\pe(\si\Encode{e})$
+\emph{optimal} with respect to~|si| \citep{jones-challenging} if $\pe(\si\Encode{e})$
 is equal to~$e$ (up to $\alpha$\hyp conversion, or in some accounts, no
 less efficient than~$e$).
 
@@ -1802,7 +1810,8 @@ evaluator.  (We use the number~$0$ in lieu of a unit value.)
 \begin{align*}
     \ident{int} &= \fun{x} x \\
     \ident{add} &= \fun{x} \fun{y} x+y \\
-    \ident{if\_}&= \fun{b} \fun{t} \fun{e} \cond{b}{t\,0}{e\,0} \\
+    \ident{if\_}&= \fun{b} \fun{t} \fun{e} \cond{b}{t\,0}{e\,0}
+        \displaybreak[0] \\
     \ident{lam} &= \fun{f} f \\
     \ident{app} &= \fun{f} \fun{x} fx \\
     \ident{fix} &= \fun{g} \fix{f} \fun{x} gfx
@@ -1814,7 +1823,8 @@ We call this mapping \emph{pre-encoding}.
     \encode{n} &= \ident{int}\, n \\
     \encode{e_1 + e_2} &= \ident{add} \encode{e_1} \encode{e_2} \\
     \encode{\cond{b}{t}{e}} &= \rlap{$\ident{if\_} \encode{b}
-        \left(\fun{\_}\encode{t}\right) \left(\fun{\_}\encode{e}\right)$} \\
+        \left(\fun{\_}\encode{t}\right) \left(\fun{\_}\encode{e}\right)$}
+        \displaybreak[0] \\
     \encode{\fun{x}e} &= \ident{lam} (\fun{x} \encode{e}) \\
     \encode{fx} &= \ident{app} \encode{f} \encode{x} \\
     \encode{\fix{f}e} &= \ident{fix} (\fun{f} \encode{e})
