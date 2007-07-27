@@ -441,15 +441,22 @@ recently that some work on programming type-indexed values in ML
 expressed.''  We discuss related work in~\S\ref{related}.
 
 To reiterate, we do \emph{not} propose any new language
-feature or new technique. We use features already present in
+feature or \ifshort new \else even any new programming \fi technique.
+\ifshort
+We
+\else
+Rather, we solve an open problem by a novel combination of simple types
+and existing techniques.  More precisely, we
+\fi
+use features already present in
 mainstream functional languages---Hindley-Milner
 type system with either an inference\hyp preserving module system or
 constructor classes, as realized in ML and Haskell 98---and techniques
 which have all appeared in the literature, to
-solve the problem that was stated in the published record as
+solve a problem that was stated in the published record as
 unsolved and likely unsolvable in ML or Haskell 98
 without extensions. The simplicity of our solution and its
-use of only mainstream features makes it more practical to build typed,
+use of only mainstream features \ifshort\else are virtues that \fi make it more practical to build typed,
 embedded DSLs.
 \begin{comment}
 We may claim some contribution about type-preserving CPS. Check
