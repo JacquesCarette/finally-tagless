@@ -2082,7 +2082,7 @@ fragment.
 Our initial motivation came from several papers that justify advanced
 type systems, in particular GADTs, by embedded interpreters
 \citep{WalidICFP02,taha-tag,xi-guarded,peyton-jones-simple} and
-CPS transformations \citep{Guillemette-Monier-PLPV,chen-typeful}.
+CPS transformations \citep{Guillemette-Monier-PLPV,shao-type-toplas,chen-typeful}.
 We admire all this technical machinery, but
 these motivating examples do not need it.
 Although GADTs may indeed be more flexible and easier to use, they are
@@ -2145,12 +2145,10 @@ and type-level functions \ifshort \cite{oliveira-typecase}\else by
 \citet{oliveira-typecase}\fi.  As explained in~\S\ref{S:PE-solution}, we
 avoid injection and projection at the type level by adding an argument
 to |repr|.
-\begin{comment}
-Our solution could have been even more straightforward if we had
-total type-level functions at our disposal (|repr_pe| in
-\S\ref{S:PE-solution}) in MetaOCaml.  Simple type-level computations 
-certainly ought to become mainstream.
-\end{comment}
+Our solution could have been even more straightforward if MetaOCaml
+provided total type-level functions such as |repr_pe| in
+\S\ref{S:PE-solution}---simple type-level computations 
+ought to become mainstream.
 
 At the term level, we also avoid converting between static and dynamic
 terms by building them in parallel, using \citearound{'s
@@ -2211,6 +2209,22 @@ term to be partially evaluated.  We shift this work to the type checker
 of the metalanguage.  By avoiding term-level type representations, our
 approach makes it easier to perform algebraic simplifications (as
 in~\S\ref{S:PE-solution}).
+
+Using Haskell, \citet{Guillemette-Monier-PLPV} implement a CPS transformation
+for HOAS terms and statically assure that it preserves object types.
+They represent proofs of type preservation as terms of a GADT, which is not
+sound (as they admit in \S4.2) without a separate totality check because
+any type is trivially inhabited by a nonterminating term in Haskell.
+In contrast, our CPS transformations use simpler types than GADTs and
+assure type preservation at the (terminating) type level rather than
+the term level of the metalanguage.
+\Citeauthor{Guillemette-Monier-PLPV} review other
+type\hyp preserving CPS transformations (mainly in the context of typed intermediate
+languages), in particular
+\citets{shao-type-toplas} and \citets{chen-typeful}.
+These approaches use de Bruijn indices and fancier
+type systems with type-level functions, GADTs, or type\hyp equality
+proofs.
 
 
 We encode terms in elimination form, as a coalgebraic structure.

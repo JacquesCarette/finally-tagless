@@ -1,26 +1,17 @@
 @STRING{j_acmcs			= "{ACM} Comp. Surv." }
 @STRING{j_hosc			= "{HOSC}" }
 @STRING{j_jacm			= "J. {ACM}" }
-@STRING{j_jcss			= "Journal of Computer and System Sciences" }
+@STRING{j_jcss			= "J. Comp. \& System Sciences" }
 @STRING{j_jfp			= "{JFP}" }
 @STRING{j_ngc			= "New Generation Computing" }
 @STRING{j_scp			= "Sci. Comput. Program." }
 @STRING{j_sigplan		= "{ACM} {SIG{\-}PLAN} Notices" }
 @STRING{j_tcs			= "Theor. Comp. Sci." }
-@STRING{proc_icfp_1		= "{ICFP} '" }
-@STRING{proc_icfp_2		= ": Proceedings of the {ACM} International Conference on Functional Programming" }
-@STRING{proc_pldi_1		= "{PLDI} '" }
-@STRING{proc_pldi_2		= ": Proceedings of the {ACM} Conference on Programming Language Design and Implementation" }
-@STRING{proc_popl_1		= "{POPL} '" }
-@STRING{proc_popl_2		= ": Conference Record of the Annual {ACM} Symposium on Principles of Programming Languages" }
+@STRING{j_toplas		= "Trans. Program. Languages \& Systems" }
 @STRING{pub_elsevier		= "Elsevier Science" }
-@STRING{pub_elsevier_addr	= "Amsterdam" }
 @STRING{pub_ph			= "Prentice-Hall" }
-@STRING{pub_ph_addr		= "NJ" }
 @STRING{pub_ieee		= "{IEEE} Computer Society Press" }
-@STRING{pub_ieee_addr		= "Washington, {DC}" }
 @STRING{pub_sv			= "Springer-Verlag" }
-@STRING{pub_sv_addr		= "Berlin" }
 @STRING{s_entcs			= "{ENTCS}" }
 @STRING{s_lncs			= "{LNCS}" }
 
@@ -288,7 +279,6 @@
   author	= "Neil D. Jones and Carsten K. Gomard and Peter Sestoft",
   title		= "Partial Evaluation and Automatic Program Generation",
   booktitle	= "Partial Evaluation and Automatic Program Generation",
-  address	= pub_ph_addr,
   publisher	= pub_ph,
   year		= 1993,
   month		= jun,
@@ -321,7 +311,6 @@
  isbn = {3-540-59048-X},
  pages = {249--265},
  publisher = pub_sv,
- address = pub_sv_addr,
   number	= 902,
   series	= s_lncs
  }
@@ -575,6 +564,23 @@ generator, we generate ML code, C code, and OCaml byte code.
   number	= {2--3},
   pages		= {291--302},
   annote	= "Jones-optimality"
+}
+
+@Article{	shao-type-toplas,
+  author	= "Zhong Shao and Valery Trifonov and Bratin Saha and Nikolaos S. Papaspyrou",
+  title		= "A Type System for Certified Binaries",
+  journal	= j_toplas,
+  year		= 2005,
+  month		= jan,
+  volume	= 27,
+  number	= 1,
+  pages		= "1--45",
+  url		= "http://flint.cs.yale.edu/flint/publications/tscb-toplas.pdf",
+  abstract	= "A \emph{certified binary} is a value together with a proof that the value satisfies a given specification. Existing compilers that generate certified code have focused on simple memory and control-flow safety rather than
+		  more advanced properties. In this paper, we present a general framework for explicitly representing complex propositions and proofs in typed intermediate and assembly languages. The new framework allows us to reason about
+		  certified programs that involve effects while still maintaining decidable typechecking. We show how to integrate an entire proof system (the calculus of inductive constructions) into a compiler intermediate language and
+		  how the intermediate language can undergo complex transformations (CPS and closure conversion) while preserving proofs represented in the type system. Our work provides a foundation for the process of automatically
+		  generating certified binaries in a type-theoretic framework."
 }
 
 %------------------------------------------------------------------------

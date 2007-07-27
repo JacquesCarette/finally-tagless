@@ -7,6 +7,7 @@
 @STRING{j_scp			= "Science of Computer Programming" }
 @STRING{j_sigplan		= "{ACM} {SIG{\-}PLAN} Notices" }
 @STRING{j_tcs			= "Theoretical Computer Science" }
+@STRING{j_toplas		= "{ACM} Transactions on Programming Languages and Systems" }
 @STRING{proc_icfp_1		= "{ICFP} '" }
 @STRING{proc_icfp_2		= ": Proceedings of the {ACM} International Conference on Functional Programming" }
 @STRING{proc_pldi_1		= "{PLDI} '" }
@@ -602,6 +603,23 @@ generator, we generate ML code, C code, and OCaml byte code.
   number	= {2--3},
   pages		= {291--302},
   annote	= "Jones-optimality"
+}
+
+@Article{	shao-type-toplas,
+  author	= "Zhong Shao and Valery Trifonov and Bratin Saha and Nikolaos S. Papaspyrou",
+  title		= "A Type System for Certified Binaries",
+  journal	= j_toplas,
+  year		= 2005,
+  month		= jan,
+  volume	= 27,
+  number	= 1,
+  pages		= "1--45",
+  url		= "http://flint.cs.yale.edu/flint/publications/tscb-toplas.pdf",
+  abstract	= "A \emph{certified binary} is a value together with a proof that the value satisfies a given specification. Existing compilers that generate certified code have focused on simple memory and control-flow safety rather than
+		  more advanced properties. In this paper, we present a general framework for explicitly representing complex propositions and proofs in typed intermediate and assembly languages. The new framework allows us to reason about
+		  certified programs that involve effects while still maintaining decidable typechecking. We show how to integrate an entire proof system (the calculus of inductive constructions) into a compiler intermediate language and
+		  how the intermediate language can undergo complex transformations (CPS and closure conversion) while preserving proofs represented in the type system. Our work provides a foundation for the process of automatically
+		  generating certified binaries in a type-theoretic framework."
 }
 
 %------------------------------------------------------------------------
