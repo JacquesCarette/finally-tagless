@@ -570,9 +570,7 @@ encoding |lam (\x -> app x x)| both fail occurs-checks in type checking.
 Haskell's type checker also flags syntactically invalid object terms, 
 such as if we forget |app| somewhere above.
 
-\begin{figure*}[t]
-\begin{floatrule}
-\begin{code2}
+\begin{SaveVerbatim}{ocaml-simple}
 module type Symantics = sig type ('c, 'dv) repr
   val int : int  -> ('c, int) repr
   val bool: bool -> ('c, bool) repr
@@ -587,7 +585,8 @@ module type Symantics = sig type ('c, 'dv) repr
   val if_ : ('c, bool) repr
             -> (unit -> 'x) -> (unit -> 'x) -> (('c, 'da) repr as 'x)
 end
-
+\end{SaveVerbatim}
+\begin{SaveVerbatim}{ocaml-examples}
 module EX(S: Symantics) = struct open S
   let test1 () = app (lam (fun x -> x)) (bool true)
   let testpowfix () =
@@ -596,12 +595,40 @@ module EX(S: Symantics) = struct open S
             (fun () -> mul x (app self (add n (int (-1))))))))
   let testpowfix7 = lam (fun x -> app (app (testpowfix ()) x) (int 7))
 end
-\end{code2}
+\end{SaveVerbatim}
+
+\ifshort
+\begin{figure}[t]
+\begin{floatrule}
+\begin{tabular}{@{}l@{}}
+\ifx\relax\normalbaselineskip\else\baselineskip\normalbaselineskip\fi
+\BUseVerbatim[baseline=b]{ocaml-simple}\\[\medskipamount]
+\ifx\relax\normalbaselineskip\else\baselineskip\normalbaselineskip\fi
+\BUseVerbatim[baseline=t]{ocaml-examples}
+\end{tabular}
 \end{floatrule}
 \caption{A simple (Meta)OCaml embedding of our object language, 
     and examples of use}
 \label{fig:ocaml-simple}
-\end{figure*}
+\label{fig:ocaml-examples}
+\end{figure}
+\else
+\begin{figure}[t]
+\begin{floatrule}
+\BUseVerbatim{ocaml-simple}
+\end{floatrule}
+\caption{A simple (Meta)OCaml embedding of our object language}
+\label{fig:ocaml-simple}
+\end{figure}
+\begin{figure}[t]
+\begin{floatrule}
+\BUseVerbatim{ocaml-examples}
+\end{floatrule}
+\caption{Examples using the embedding in Figure~\ref{fig:ocaml-simple} of our object language}
+\label{fig:ocaml-examples}
+\end{figure}
+\fi
+
 To embed the same object language in (Meta)OCaml, we replace the \ifshort type
 class \fi |Symantics| \ifshort\else type class \fi and its instances by a module signature |Symantics|
 and its implementations.  Figure~\ref{fig:ocaml-simple} shows a simple
@@ -612,7 +639,7 @@ code generation in~\S\ref{compiler}; and the $\eta$-expanded type for
 |fix| and thunk types in |if_| since OCaml is a call-by-value
 language.
 
-The functor |EX| in Fig.~\ref{fig:ocaml-simple} encodes 
+The functor |EX| in Fig.~\ref{fig:ocaml-examples} encodes 
 our running examples |test1| and the $\mathit{power}$ function
 (|testpowfix|).
 The dummy argument to |test1| and |testpowfix| is an artifact of
@@ -858,7 +885,7 @@ The resulting code obviously contains no tags and no pattern matching.
 The accompanying code shows the Haskell implementation. 
 \else
 \begin{proposition}
-    The compiler |C| generates tagless, pattern-match free code.
+    The compiler |C| generates tagless code free of pattern matching.
 \end{proposition}
 This is syntactically clear from the body of |C|, and follows
 readily by structural induction and the properties of |.~| and
@@ -868,10 +895,11 @@ We have also implemented this compiler in Haskell.
 Since Haskell
 has no (convenient, typed) staging facility, we had to emulate
 it: we defined a data type |ByteCode| with
-constructors such as |Var|, |Lam|, |App|, |Fix|, and |INT|.%
-\footnote{\texttt{ByteCode} can be mapped to the abstract syntax of Template
-    Haskell. The output of our compiler will then be assuredly type-correct
-    Template Haskell.}
+constructors such as |Var|, |Lam|, |App|, |Fix|, and |INT|.
+(Alternatively, we could use Template Haskell as our staging facility:
+\texttt{ByteCode} can be mapped to the abstract syntax of Template
+Haskell. The output of our compiler will then be assuredly type-correct
+Template Haskell.)
 Whereas our representation of object terms uses HOAS,
 our bytecode uses integer-named
 variables to be realistic. 
@@ -882,10 +910,10 @@ newtype C t = C (Int -> (ByteCode t, Int))
 where |Int| is the counter for creating fresh variable
 names. We define the compiler by making |C| an instance of the
 class |Symantics|.
-The implementation\footnote{The implementation uses
+The implementation is quite similar (but slightly more
+verbose) than the corresponding MetaOCaml code above. (The implementation uses
 GADTs because we also wanted to write a typed interpreter for 
-the \texttt{ByteCode} \emph{data type}.} is quite similar (but slightly more
-verbose) than the corresponding MetaOCaml code above. The
+the \texttt{ByteCode} \emph{data type}.) The
 accompanying code gives the full details.
 \fi
 
@@ -949,11 +977,11 @@ dynamic term (of type |C a|), then we need to convert
 the static term to dynamic, but there is no polymorphic ``lift''
 function, of type |a -> C a|, to send a value to the future stage
 \cite{xi-guarded,WalidPOPL03}.\ifshort\else
-\footnote{If we
+(By the way, if we
 were to add polymorphic \texttt{lift} to the type class
 \texttt{Symantics repr}, then \texttt{repr} would become an instance of
-\texttt{Applicative} and thus \texttt{Functor}:\quad\texttt{fmap
-f = app (lift f)}}\fi
+\texttt{Applicative} and thus \texttt{Functor}:\texttt{ fmap
+f = app (lift f)~}.)\fi
 
 Our |Symantics| class only includes separate lifting methods |bool| and
 |int|, not a parametrically polymorphic lifting method, for good reason:
@@ -1137,7 +1165,7 @@ dynamic value |E f|, we residualize.
 
 \fi
 This solution using GADTs works but is not quite satisfactory. First, it
-cannot be ported to MetaOCaml\ifshort\else\ as GADTs are unavailable there\fi.  Second,
+cannot be ported to MetaOCaml\ifshort\else, as GADTs are unavailable there\fi.  Second,
 the problem of nonexhaustive pattern\hyp matching reappears in
 |app|\ifshort. \else\
 above: the type |P t| has four constructors, of which the pattern in
@@ -1150,11 +1178,11 @@ Although Coq or logical
 frameworks with canonical forms could prove pattern\hyp matching
 exhaustive,
 \else
-Indeed the metalanguage implementation could reason thus,%
-\footnote{If we use inductive families (as those in Coq) or logical
+Indeed, the metalanguage implementation could reason thus:
+if we use inductive families (as in Coq) or logical
   frameworks with canonical forms (as in Twelf with its coverage checker),
-  we can prove the pattern matching to be exhaustive.}
-but it may not;
+  we can prove the pattern matching to be exhaustive.
+Then again, the metalanguage implementation may not reason thus:
 \fi
 GHC cannot and issues warnings.
 \ifshort
@@ -1205,7 +1233,7 @@ constructor took two arguments |'c| and~|'dv|. We add an argument
 |'sv| for the result of applying |repr_pe| to~|'dv|.
 Figure~\ref{fig:ocaml} shows the new signature.
 % aplas: abbreviated figure
-\begin{figure*}
+\begin{figure}
 \begin{floatrule}
 \ifshort
 \begin{code2}
@@ -1249,7 +1277,7 @@ end
   partial evaluation \ifshort \protect\linebreak[2] (\texttt{bool},
   \texttt{mul}, \texttt{leq} are elided)\fi}
 \label{fig:ocaml}
-\end{figure*}
+\end{figure}
 
 \begin{figure}
 \begin{floatrule}

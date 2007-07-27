@@ -57,3 +57,6 @@ kindly provided some useful references.
 We thank anonymous reviewers for pointers to related work.}
 
 \newif\ifshort
+
+\newcommand{\maybefootnote}{\ifshort\expandafter\footnote\else\expandafter\parenthesize\fi}
+\newcommand{\parenthesize}[1]{ (#1)}
