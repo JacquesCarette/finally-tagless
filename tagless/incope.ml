@@ -837,13 +837,13 @@ end);;
 module EXPSI = EX(RCPSI);;
 
 (*
-let cpsitest1 = (EXPSI.test1r ()) 100;;
-let cpsitest2 = (EXPSI.test2r ()) 100;;
-let cpsitest3 = (EXPSI.test3r ()) 100;;
-let cpsitestg = (EXPSI.testgibr ()) 100;;
-let cpsitestg1 = (EXPSI.testgib1r ()) 100;;
-let cpsitestg2 = (EXPSI.testgib2r ()) 100;;
-let cpsitestp7 = (EXPSI.testpowfix7r ()) 100;;
+let cpsitest1 = RCPSI.get_res (EXPSI.test1r ()) 100;;
+let cpsitest2 = RCPSI.get_res (EXPSI.test2r ()) 100;;
+let cpsitest3 = RCPSI.get_res (EXPSI.test3r ()) 100;;
+let cpsitestg = RCPSI.get_res (EXPSI.testgibr ()) 100;;
+let cpsitestg1 = RCPSI.get_res (EXPSI.testgib1r ()) 100;;
+let cpsitestg2 = RCPSI.get_res (EXPSI.testgib2r ()) 100;;
+let cpsitestp7 = RCPSI.get_res (EXPSI.testpowfix7r ()) 100;;
 *)
 
 module EXPSI_INT = EXSI_INT(RCPSI);;

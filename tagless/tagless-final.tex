@@ -1645,11 +1645,101 @@ redexes, we just change~|T| to instantiate |CPST| with |P| instead.
 \subsection{State and imperative features}
 \label{state}
 
-We can modify the CBV CPS transformation to pass a piece of state along
-with the continuation. This technique lets us support mutable state. We
-can also add mutable references to the object language using mutable
-references of the metalanguage.  The accompanying code illustrates these
-extensions.  No new techniques were needed in the implementation.
+We can modify the CBV CPS transformation to pass a piece of state
+along with the continuation. This technique lets us support mutable
+state and implement an extended object language, with operations
+|deref ()| to obtain the current state, |set v| to replace the current
+state with |v| returning the previous value of the state, and the
+let-form |let x = e1 in e2|. The latter enforces the order of
+evaluation: |e1| will always be evaluated before |e2| even if the
+expression |e2| does not need the value of |x|. The more familiar
+imperative sequencing form |begin e1; e2 end| is expressible in our
+object language as |let _ = e1 in e2|.  In HOAS, the let-form actually
+has the form |lapp e1 (fun x -> e2)|, which looks like the functional
+application with its two arguments swapped.  The extended object
+language corresponds to the following signature, which
+includes all of the original Symantics and adds imperative features.
+
+\begin{code}
+module type SymSI = sig
+  include Symantics
+  type state
+  type 'c states	(* static version of the state *)
+  val lapp : ('c,'sa,'da) repr -> 
+             (('c,'sa,'da) repr -> ('c,'sb,'db) repr) ->
+             ('c,'sb,'db) repr
+  val deref : unit -> ('c,'c states,state) repr
+  val set   : (('c,'c states,state) repr as 'x) -> 'x
+end
+\end{code}
+
+We can write a simple test: 
+\begin{code}
+let v0 = !state in state := 2; v0 + !state
+\end{code}
+which, in our language, takes the form
+\begin{code}
+module EXSI_INT(S: SymSI with type state = int and type 'c states = int) = 
+struct
+  open S
+  let test1 () = lapp (deref ()) (fun v0 -> 
+                  lapp (set (int 2)) (fun _ ->
+		   add v0 (deref ())))
+end;;
+\end{code}
+The accompanying source code shows several more tests, including the
+imperative power function that uses the state as the accumulator and
+the test of a higher-order state.
+
+The state-passing interpreter is the extension of the CBN CPS
+interpreter RCN of\S\ref{S:CPS}:
+\begin{code}
+module RCPS (ST: sig 
+  type state 
+  type 'c states 
+  type ('c,'sv,'dv) repr = 
+      {ko: 'w. ('sv -> 'c states -> 'w) -> 'c states -> 'w}
+end) = struct
+  include ST
+  type ('c, 'sv, 'dv) result = 'c states -> 'sv
+  ... 
+  let get_res x = fun s0 -> x.ko (fun v s -> v) s0
+  let lapp e2 e1 = 
+    {ko = fun k -> e2.ko (fun v -> (app (lam e1) {ko = fun k -> k v}).ko k)}
+  let deref () = {ko = fun k s -> k s s}
+  let set e = {ko = fun k -> e.ko (fun v s -> k s v)}
+end
+\end{code}
+The implementations of |int|, |app|, |lam|, etc. functions is \emph{identical}
+to those of |RCN| and elided. New here is the extended type |repr|
+that now includes the state, and the `constructors' of the imperative
+forms of the object language: |lapp|, |deref|, and |set|. The
+interpreter is still CBN and so evaluation of |app ef ea| does not
+guarantee to evaluate |ea|. On the other hand, the implementation of
+the let-form |lapp ea ef| does assure that |ea| will always be
+evaluated. In the case of the first-order state such as |int| we 
+instantiate the interpreter as
+\begin{code}
+module RCPSI = RCPS(struct 
+  type state = int
+  type 'c states = int
+  type ('c,'sv,'dv) repr = 
+      {ko: 'w. ('sv -> 'c states -> 'w) -> 'c states -> 'w}
+end);;
+\end{code}
+It fully implements the |Symantics| signature and so can run the pure
+code of the unextended object language: we can pass |RCPSI| as an
+argument to the functor |EX| (Fig.~\ref{fig:ocaml-simple}) and run 
+the example |test1| from there. The main use for |RCPSI| is to run the 
+extended object language:
+\begin{code}
+module EXPSI_INT = EXSI_INT(RCPSI)
+let cpsitesti1 = RCPSI.get_res (EXPSI_INT.test1 ()) 100 (* 102 *)
+\end{code}
+
+We can also add mutable references to the object language using
+mutable references of the metalanguage, as shown in the accompanying
+code.  No new techniques were needed in the implementation.
 
 \fi
 \fi
