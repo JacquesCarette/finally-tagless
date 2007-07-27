@@ -1675,24 +1675,24 @@ redexes, we just change~|T| to instantiate |CPST| with |P| instead.
 
 We can modify the CBV CPS transformation to pass a piece of state
 along with the continuation. This technique lets us support mutable
-state and implement an extended object language, with operations
+state. This extended object language adds operations
 |deref ()| to obtain the current state, |set v| to replace the current
 state with |v| returning the previous value of the state, and the
-let-form |let x = e1 in e2|. The latter enforces the order of
+let-form |let x = e1 in e2|. The latter enforces an order of
 evaluation: |e1| will always be evaluated before |e2| even if the
 expression |e2| does not need the value of |x|. The more familiar
 imperative sequencing form |begin e1; e2 end| is expressible in our
 object language as |let _ = e1 in e2|.  In HOAS, the let-form actually
-has the form |lapp e1 (fun x -> e2)|, which looks like the functional
+has the form |lapp e1 (fun x -> e2)|, which looks like functional
 application with its two arguments swapped.  The extended object
 language corresponds to the following signature, which
-includes all of the original Symantics and adds imperative features.
+includes all of the original |Symantics| and adds imperative features.
 
 \begin{code}
 module type SymSI = sig
   include Symantics
   type state
-  type 'c states	(* static version of the state *)
+  type 'c states       (* static version of the state *)
   val lapp : ('c,'sa,'da) repr -> 
              (('c,'sa,'da) repr -> ('c,'sb,'db) repr) ->
              ('c,'sb,'db) repr
@@ -1700,26 +1700,26 @@ module type SymSI = sig
   val set   : (('c,'c states,state) repr as 'x) -> 'x
 end
 \end{code}
-
 We can write a simple test: 
 \begin{code}
 let v0 = !state in state := 2; v0 + !state
 \end{code}
 which, in our language, takes the form
 \begin{code}
-module EXSI_INT(S: SymSI with type state = int and type 'c states = int) = 
+module EXSI_INT(S: SymSI with type state = int 
+                          and type 'c states = int) = 
 struct
   open S
   let test1 () = lapp (deref ()) (fun v0 -> 
                   lapp (set (int 2)) (fun _ ->
-		   add v0 (deref ())))
+                   add v0 (deref ())))
 end;;
 \end{code}
-The accompanying source code shows several more tests, including the
-imperative power function that uses the state as the accumulator and
-the test of a higher-order state.
+The accompanying source code shows several more tests, including an
+imperative power function that uses state as the accumulator as well as
+a test for a higher-order state.
 
-The state-passing interpreter is the extension of the CBN CPS
+The state-passing interpreter is an extension of the CBN CPS
 interpreter RCN of\S\ref{S:CPS}:
 \begin{code}
 module RCPS (ST: sig 
@@ -1732,20 +1732,21 @@ end) = struct
   type ('c, 'sv, 'dv) result = 'c states -> 'sv
   ... 
   let get_res x = fun s0 -> x.ko (fun v s -> v) s0
-  let lapp e2 e1 = 
-    {ko = fun k -> e2.ko (fun v -> (app (lam e1) {ko = fun k -> k v}).ko k)}
+  let lapp e2 e1 = {ko = fun k -> e2.ko 
+      (fun v -> (app (lam e1) {ko = fun k -> k v}).ko k)}
   let deref () = {ko = fun k s -> k s s}
   let set e = {ko = fun k -> e.ko (fun v s -> k s v)}
 end
 \end{code}
-The implementations of |int|, |app|, |lam|, etc. functions is \emph{identical}
-to those of |RCN| and elided. New here is the extended type |repr|
-that now includes the state, and the `constructors' of the imperative
+The implementations of the |int|, |app|, |lam|, etc. functions is
+\emph{identical} to those of |RCN| and elided. New here is the extended type
+|repr|
+which now includes the state, and the ``constructors'' for the imperative
 forms of the object language: |lapp|, |deref|, and |set|. The
 interpreter is still CBN and so evaluation of |app ef ea| does not
 guarantee to evaluate |ea|. On the other hand, the implementation of
 the let-form |lapp ea ef| does assure that |ea| will always be
-evaluated. In the case of the first-order state such as |int| we 
+evaluated. In the case of first-order state (such as |int|) we 
 instantiate the interpreter as
 \begin{code}
 module RCPSI = RCPS(struct 
@@ -1762,12 +1763,15 @@ the example |test1| from there. The main use for |RCPSI| is to run the
 extended object language:
 \begin{code}
 module EXPSI_INT = EXSI_INT(RCPSI)
-let cpsitesti1 = RCPSI.get_res (EXPSI_INT.test1 ()) 100 (* 102 *)
+let cpsitesti1 = RCPSI.get_res (EXPSI_INT.test1 ()) 100
+val cpsitesti1 : int = 102
 \end{code}
 
 We can also add mutable references to the object language using
 mutable references of the metalanguage, as shown in the accompanying
-code.  No new techniques were needed in the implementation.
+code.  It is worthwhile reiterating how close this implementation is to the CPS
+interpreter, and that adding state and imperative features needed no new
+techniques.
 
 \fi
 \fi
@@ -2131,6 +2135,12 @@ and type-level functions \ifshort \cite{oliveira-typecase}\else by
 \citet{oliveira-typecase}\fi.  As explained in~\S\ref{S:PE-solution}, we
 avoid injection and projection at the type level by adding an argument
 to |repr|.
+\begin{comment}
+Our solution could have been even more straightforward if we had
+total type-level functions at our disposal (|repr_pe| in
+\S\ref{S:PE-solution}) in MetaOCaml.  Simple type-level computations 
+certainly ought to become mainstream.
+\end{comment}
 
 At the term level, we also avoid converting between static and dynamic
 terms by building them in parallel, using \citearound{'s
@@ -2151,11 +2161,11 @@ in the same manner.
 It is common to implement an embedded DSL by providing multiple
 interpretations of host\hyp language pervasives such as addition and
 application.  It is also common to use phantom types to rule out
-ill-typed object terms, as Lava
-\cite{Lava} and \citet{Rhiger-thesis} do. However, these approaches
+ill-typed object terms, as done in Lava
+\cite{Lava} and by \citet{Rhiger-thesis}. However, these approaches
 are not tagless because they still use universal types, such as Lava's
-\texttt{Bit} and \texttt{NumSig} and Rhiger's \texttt{Raw} (his Fig.~2.2)
-and \texttt{Term} (his Chap.~3), and incur the attendant overhead of
+\texttt{Bit} and \texttt{NumSig}, and Rhiger's \texttt{Raw} (his Fig.~2.2)
+and \texttt{Term} (his Chap.~3), which incur the attendant overhead of
 pattern matching.  The universal type also
 greatly complicates the soundness and completeness proofs of embedding
 \cite{Rhiger-thesis}, whereas our proofs are trivial.
@@ -2197,7 +2207,7 @@ We encode terms in elimination form, as a coalgebraic structure.
 \Citet{Pfenning-Lee} first described this basic idea and applied it to
 metacircular interpretation.
 Our approach, however, can be implemented in mainstream ML and supports
-type inference and typed CPS transformation and partial evaluation. In contrast,
+type inference, typed CPS transformation and partial evaluation. In contrast,
 \citeauthor{Pfenning-Lee} conclude that partial evaluation and program
 transformations ``do not seem to be expressible'' even using their
 extension to~$F_\omega$, perhaps because their avoidance of general
@@ -2260,17 +2270,10 @@ recursive data types \cite{bohm-automatic}.
 
 \ifshort We observe that \else As \S\ref{S:clarify} observes, \fi
 higher-rank and higher-kind
-polymorphism let us type-check and compile object terms separately from
+polymorphism lets us type-check and compile object terms separately from
 interpreters.  This \ifshort\else observation \fi is consistent with the role of
 polymorphism in the separate compilation of modules
 \cite{shao-typed}.
-
-\begin{comment}
-Our solution could have been even more straightforward if we had
-total type-level functions at our disposal (|repr_pe| in
-\S\ref{S:PE-solution}) in MetaOCaml.  Simple type-level computations 
-certainly ought to become mainstream.
-\end{comment}
 
 \section{Conclusions}\label{conclusion}
 
