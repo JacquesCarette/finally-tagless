@@ -1772,8 +1772,8 @@ module RCPSI = RCPS(struct
       {ko: 'w. ('sv -> 'c states -> 'w) -> 'c states -> 'w}
 end)
 \end{code}
-If the state is higher-order, then the types |state| and |'c states|
-are no longer be the same; furthermore, |'s states| is mutually
+If the state has a higher-order type, then the types |state| and |'c states|
+are no longer the same, and |'s states| is mutually
 recursive with the type |('c,'sv,'dv) repr|, as demonstrated in the
 accompanying source code.
 
