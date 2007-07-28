@@ -1720,7 +1720,8 @@ module type SymSI = sig
   val set   : (('c, 'c states, state) repr as 'x) -> 'x
 end
 \end{code}
-In HOAS, the type of |lapp| is that of function application with
+In HOAS, we write $\lapp{e_1}{x}e_2$ as |lapp e1 (fun x -> e2)|;
+the type of |lapp| is that of function application with
 the two arguments swapped.  We can encode the term
 ``$\lapp{\deref}{x} \set 2;\, x+\deref$''
 as the OCaml functor
@@ -1759,8 +1760,8 @@ The implementations of |int|, |app|, |lam|, and so on are
 |repr|,
 which now includes the state, and the functions
 |lapp|, |deref|, and |set| representing imperative features. The
-interpreter is still CBN, so evaluating |app ef ea| may not
-evaluate |ea|, but evaluating |lapp ea ef| does.
+interpreter is still CBN, so evaluating |app ef ea| might not
+evaluate |ea|, but evaluating |lapp ea ef| always does.
 For first-order state, such as of type~$\ZZ$, we 
 instantiate the interpreter as
 \begin{code}
@@ -1771,6 +1772,11 @@ module RCPSI = RCPS(struct
       {ko: 'w. ('sv -> 'c states -> 'w) -> 'c states -> 'w}
 end)
 \end{code}
+If the state is higher-order, then the types |state| and |'c states|
+are no longer be the same; furthermore, |'s states| is mutually
+recursive with the type |('c,'sv,'dv) repr|, as demonstrated in the
+accompanying source code.
+
 |RCPSI| matches the |Symantics| signature and implements the
 unextended object language: we can pass |RCPSI|
 to the functor |EX| (Fig.~\ref{fig:ocaml-simple}) and run 
@@ -1782,12 +1788,12 @@ let cpsitesti1 = RCPSI.get_res (EXPSI_INT.test1 ()) 100
 val cpsitesti1 : int = 102
 \end{code}
 
-We can also add mutable references to the object language using
-mutable references of the metalanguage, as shown in the accompanying
-code.  It is worthwhile reiterating how close this implementation is to the CPS
+It is worthwhile reiterating how close this implementation is to the CPS
 interpreter, and that adding state and imperative features needed no new
 techniques.
-
+We can also add mutable references to the object language using
+mutable references of the metalanguage, as shown in the accompanying
+code.
 \fi
 \fi
 
