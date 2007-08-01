@@ -1,9 +1,5 @@
 (* Interpreter, Compiler, Partial Evaluator *)
 
-(* Code accompanying the paper by
-    Jacques Carette, Oleg Kiselyov, and Chung-chieh Shan
-*)
-
 (*
   The language is simply-typed lambda-calculus with fixpoint,
   integers [plus basic operations], booleans [ditto] and comparison.
@@ -13,12 +9,11 @@
   B Bool |
   IF b e-then e-else
   
-  The language is just expressive enough for the Fibonacci and
+  The language is just expressive enough for the Gibonacci and
   power functions.
 
   The compiler, the interpreter and the source and target languages
   are *all* typed. The interpreter and the compiler use no tags.
-  The only tags in the PE are staging tags.
   There is no pattern-match failure possible: the evaluators never
   get stuck.
 *)
@@ -30,7 +25,7 @@
  *)
 
 module type Symantics = sig
-  type ('c,+'sv,+'dv) repr
+  type ('c,'sv,'dv) repr
   val int  : int  -> ('c,int,int) repr
   val bool : bool -> ('c,bool,bool) repr
   val add  : ('c,int,int) repr -> ('c,int,int) repr -> ('c,int,int) repr
@@ -212,8 +207,7 @@ module EXR = EX(R);;
 (* ------------------------------------------------------------------------ *)
 (* Another interpreter: it interprets each term to give its size
    (the number of constructors)
-   It is a typed, tagless interpreter: L is not a tag. The interpreter
-   never gets stuck, because it evaluates typed terms only.
+   The interpreter never gets stuck, because it evaluates typed terms only.
    This interpreter is also total: it determines the size of the term
    even if the term itself is divergent  *)
 
@@ -227,9 +221,9 @@ module L = struct
   let eql x y = x + y + 1
   let if_ eb et ee = eb + et () + ee () + 1
 
-  let lam f = (f 0) + 1
+  let lam f = f 0 + 1
   let app e1 e2 = e1 + e2 + 1
-  let fix f = (f 0) + 1
+  let fix f = f 0 + 1
 end;;
 
 module EXL = EX(L);;
@@ -255,12 +249,14 @@ module C = struct
   let lam f = .<fun x -> .~(f .<x>.)>.
   let app e1 e2 = .<.~e1 .~e2>.
   let fix f = .<let rec self n = .~(f .<self>.) n in self>.
+  (* let unfold z s = .<let rec f n = if n <= 0 then .~z else .~s (f (n-1)) in f>. *)
 end;;
 
 module EXC = EX(C);;
 
 (* ------------------------------------------------------------------------ *)
 (* Partial evaluator *)
+(* Inspired by Ken's solution *)
 
 module P =
 struct
@@ -395,6 +391,106 @@ let ctestp0 = EXC.testpowfix0r ();;
 let ptestp0 = EXP.testpowfix0r ();;
 let ltestp0 = EXL.testpowfix0r ();;
 
+(* these are no longer relevant, for now
+let itesti1 = EXR.testi1r ();;
+let ctesti1 = EXC.testi1r ();;
+let ptesti1 = EXP.testi1r ();;
+let ltesti1 = EXL.testi1r ();; *)
+
+(* start encoding some of Ken's ideas on a self-interpreter *)
+(* Jacques: this is really all junk now because we know that 
+   we need let-polymorphism for all of this to work properly, so
+   this should likely all be deleted 
+let apply_to_si_R encoded_e =
+    encoded_e R.int R.bool R.add R.app 
+        R.mul R.leq R.eql (R.if_) (R.lam) (R.lam) (R.fix)
+    ;;
+
+let apply_to_si_C encoded_e =
+    encoded_e C.int C.bool C.add C.app
+        C.mul C.leq C.eql C.if_ C.lam C.lam C.fix
+    ;;
+
+let apply_to_si_P encoded_e =
+    encoded_e P1.int P1.bool P1.add P1.app
+        P1.mul P1.leq P1.eql P1.if_ P1.lam P1.lam P1.fix
+    ;;
+
+let itesti2 = EXR.testi2r;;
+let ctesti2 = EXC.testi2r;;
+let ptesti2 = EXP.testi2r;;
+let ltesti2 = EXL.testi2r;;
+
+(* actually run some of the above tests *)
+let ctest2' = let res =  (.< .~(EXC.test2r ()) 5 >.) in .! res;;
+let ctest3' = let f = (fun x -> x+17) in
+    let res = (.< .~(EXC.test3r ()) f >.) in .! res;;
+let ctestg1' = let res = .< .~(EXC.testgib1r ())>. in .! res;;
+
+let an_e1 = (fun _int -> (fun _bool -> (fun _add -> (fun _app ->
+            (fun _mul -> (fun _leq -> (fun _eql -> (fun _if_ ->
+            (fun _lam1 -> (fun _lam2 -> (fun _fix -> 
+            (_add (_int 1) (_int 2))
+            ))))))))))) ;;
+
+let an_e2 = (fun _int -> (fun _bool -> (fun _add -> (fun _app ->
+            (fun _mul -> (fun _leq -> (fun _eql -> (fun _if_ ->
+            (fun _lam1 -> (fun _lam2 -> (fun _fix ->
+            _lam1 (fun x -> _add x x)
+            ))))))))))) ;;
+
+let an_ep = (fun _int -> (fun _bool -> (fun _add -> (fun _app ->
+            (fun _mul -> (fun _leq -> (fun _eql -> (fun _if_ ->
+            (fun _lam1 -> (fun _lam2 -> (fun _fix -> 
+            _lam1 (fun x ->
+                  _fix (fun self -> _lam2 (fun n ->
+                    _if_ (_leq n (_int 0)) (fun () -> _int 1)
+                        (fun () -> _mul x (_app self (_add n (_int (-1))))))))
+            ))))))))))) ;;
+
+(* an_e1 - compute 3 three ways *)
+let testR1 = apply_to_si_R an_e1 ;;
+let testC1 = apply_to_si_C an_e1 ;;
+let testP1 = apply_to_si_P an_e1 ;;
+
+(* an_e2 - compute x+x three ways *)
+let testR2 = apply_to_si_R an_e2 ;;
+let testC2 = apply_to_si_C an_e2 ;;
+let testP2 = apply_to_si_P an_e2 ;;
+
+(* an_ep - compute power three ways *)
+let testRp = apply_to_si_R an_ep ;;
+let testCp = apply_to_si_C an_ep ;;
+let testPp = apply_to_si_P an_ep ;;
+
+*)
+
+(* Remnants of an earlier idea: compile the PE: make a code, which,
+when run, will make a PE...
+*)
+
+
+(*
+module P = struct
+  let abstr = function (RL x) -> .<x>. | RC x -> x
+  let int (x:int) = .<RL x>.
+  let add e1 e2 = .<
+    match (e1,e2) with
+      (RL n1, RL n2) -> RL (n1+n2)
+    | _              -> RC (C.add (abstr e1) (abstr e2))>.
+(*
+  let ifeq ie1 ie2 et ee = 
+    .<let i1 = .~ie1 in if i1 = .~ie2 then .~et i1 else .~ee i1>.
+
+  let lam f = .<fun x -> .~(f .<x>.)>.
+  let app e1 e2 = .<.~e1 .~e2>.
+  let fix f = .<fun n -> let rec self n = .~(f .<self>.) n in self n>.
+  let get_res x = .! x
+*)
+end;;
+
+*)
+
 (* ------------------------------------------------------------------------ *)
 (* CPS CBN interpreter *)
 
@@ -429,7 +525,7 @@ module RCN = struct
   let lapp e2 e1 = 
     {ko = fun k -> e2.ko (fun v -> (app (lam e1) {ko = fun k -> k v}).ko k)}
 
-  let fix f = let rec fx f n = app (f (lam (fx f))) n in lam(fx f)
+  let fix f = let rec fx f n = app (f (lam (fx f))) n in lam (fx f)
 
   let get_res x = x.ko (fun v -> v)
 end;;
@@ -487,7 +583,7 @@ let rstestpw72 = EXSV.testpowfix72;;
 
 (* Simplified Symantics modules with no 'sv *)
 module type SymS = sig
-  type ('c,+'dv) repr
+  type ('c,'dv) repr
   val int : int  -> ('c,int) repr
   val bool: bool -> ('c,bool) repr
   val add : ('c,int) repr-> ('c,int) repr-> ('c,int) repr
@@ -558,7 +654,7 @@ module CPST(S: Symantics) = struct
   let app e1 e2 = S.lam (fun k -> 
     S.app e1 (S.lam (fun f ->
     S.app e2 (S.lam (fun v -> S.app (S.app f v) k)))))
-  let fix f  = S.fix (fun self -> (f self))
+  let fix = S.fix
 end;;
 
 module T = struct
@@ -596,8 +692,7 @@ let ctestfix = T.testpowfix72;;
 *)
 
 
-(* Extension of S for an imperative language with a single piece of
-   state.
+(* Extension of S for an imperative language with a single piece of state.
 
         let x = e1 in e2
         deref ()
@@ -612,20 +707,19 @@ let ctestfix = T.testpowfix72;;
  Some may call it `bind'.
 *)
 
-(* The state here is assumed first order! Higher-order state needs a more
-   complex module.
-*)
 module type SymSI = sig
   include Symantics
   type state
+  type 'c states			(* static version of the state *)
   val lapp : ('c,'sa,'da) repr -> (('c,'sa,'da) repr -> ('c,'sb,'db) repr)
     ->  ('c,'sb,'db) repr
-  val deref : unit -> ('c,state,state) repr
-  val set   : ('c,state,state) repr -> ('c,state,state) repr
+  val deref : unit -> ('c,'c states,state) repr
+  val set   : ('c,'c states,state) repr -> ('c,'c states,state) repr
 end;;
-
+ 
 (* INT state *)
-module EXSI_INT(S: SymSI with type state = int) = struct
+module EXSI_INT(S: SymSI with type state = int and type 'c states = int) = 
+struct
   open S
 
   (* this program corresponds to 
@@ -654,16 +748,46 @@ module EXSI_INT(S: SymSI with type state = int) = struct
   let pow27 () = app (pow7 ()) (int 2)
 end;;
 
+(* Second-order, INT->INT state *)
+(* The two Symantics arguments are necessary because we cannot write
+  S: SymSI with ... 
+       type 'c states = ('c,int,int) S.repr -> ('c,int,int) S.repr
+ that is, the typing constraints can't refer to the signature being
+ defined.
+*)
+module EXSI_INT_INT(S0: Symantics)
+(S: SymSI with type state  = int->int
+           and  type 'c states = ('c,int,int) S0.repr -> ('c,int,int) S0.repr
+           and  type ('c,'sv,'dv) repr = ('c,'sv,'dv) S0.repr) = 
+struct
+  open S
+
+  (* this program corresponds to 
+     let v0 = !state in
+       state := (\x -> x * 2);
+       v0 10 + !state 10; *)
+  let test1 () = lapp (deref ()) (fun v0 -> 
+                  lapp (set (lam (fun x -> mul x (int 2)))) (fun _ ->
+		   add (app v0 (int 10)) (app (deref ()) (int 10))))
+end;;
+
+
+
 (* Pure state passing CPS interpreter. *)
 (* We make the CPS to be fully polymorphic over the answer type.
    We could have just as well put the answer type into the ST signature
    below (as common in SML). But because we have higher-rank types
    in OCaml, we may as well use them.
 *)
-module RCPS(ST: sig type state end) = struct
-  type state = ST.state
-  type ('c,'sv,'dv) repr = {ko: 'w. ('sv -> state -> 'w) -> state -> 'w}
-  type ('c, 'sv, 'dv) result = state -> 'sv
+module RCPS (ST: sig 
+  type state 
+  type 'c states 
+  type ('c,'sv,'dv) repr = 
+      {ko: 'w. ('sv -> 'c states -> 'w) -> 'c states -> 'w}
+end) = struct
+  include ST
+  type ('c, 'sv, 'dv) result = 'c states -> 'sv
+
   let int (x:int) = {ko = fun k -> k x}
   let bool (b:bool) = {ko = fun k -> k b}
   let add e1 e2 = 
@@ -703,17 +827,23 @@ module RCPS(ST: sig type state end) = struct
   let set e = {ko = fun k -> e.ko (fun v s -> k s v)}
 end;;
 
-module RCPSI = RCPS(struct type state = int end);;
+(* Instantiate for the first-order state *)
+module RCPSI = RCPS(struct 
+  type state = int
+  type 'c states = int
+  type ('c,'sv,'dv) repr = 
+      {ko: 'w. ('sv -> 'c states -> 'w) -> 'c states -> 'w}
+end);;
 module EXPSI = EX(RCPSI);;
 
 (*
-let cpsitest1 = (EXPSI.test1r ()) 100;;
-let cpsitest2 = (EXPSI.test2r ()) 100;;
-let cpsitest3 = (EXPSI.test3r ()) 100;;
-let cpsitestg = (EXPSI.testgibr ()) 100;;
-let cpsitestg1 = (EXPSI.testgib1r ()) 100;;
-let cpsitestg2 = (EXPSI.testgib2r ()) 100;;
-let cpsitestp7 = (EXPSI.testpowfix7r ()) 100;;
+let cpsitest1 = RCPSI.get_res (EXPSI.test1r ()) 100;;
+let cpsitest2 = RCPSI.get_res (EXPSI.test2r ()) 100;;
+let cpsitest3 = RCPSI.get_res (EXPSI.test3r ()) 100;;
+let cpsitestg = RCPSI.get_res (EXPSI.testgibr ()) 100;;
+let cpsitestg1 = RCPSI.get_res (EXPSI.testgib1r ()) 100;;
+let cpsitestg2 = RCPSI.get_res (EXPSI.testgib2r ()) 100;;
+let cpsitestp7 = RCPSI.get_res (EXPSI.testpowfix7r ()) 100;;
 *)
 
 module EXPSI_INT = EXSI_INT(RCPSI);;
@@ -723,8 +853,37 @@ let cpsipow = RCPSI.get_res (EXPSI_INT.pow ()) 100;;
 let cpsipow7 = RCPSI.get_res (EXPSI_INT.pow7 ()) 100;;
 let cpsipow27 = RCPSI.get_res (EXPSI_INT.pow27 ()) 100;;
 
-(* Extension of S for an imperative language with arbitrary many
-   reference cells.
+
+(* Instantiate for the second-order state. The structure RCPS2_t must be named.
+   We cannot `inline' it and write
+  module RCPSII = RCPS(
+  type state = int -> int
+  type 'c states = ('c,int,int) repr -> ('c,int,int) repr
+  and ('c,'sv,'dv) repr = ... end);;
+because OCaml will make the type 'c states abstract. If the types are
+mutually recursive, the structure should be named rather than anonymous.
+*)
+module RCPS2_t = struct 
+  type state = int -> int
+  type 'c states = ('c,int,int) repr -> ('c,int,int) repr
+  and ('c,'sv,'dv) repr =
+       {ko: 'w. ('sv -> 'c states -> 'w) -> 'c states -> 'w}
+end;;
+
+
+module RCPSII = RCPS(RCPS2_t);;
+module EXPSII = EX(RCPSII);;
+
+
+module EXPSI_INT_INT = EXSI_INT_INT(RCPSII)(RCPSII);;
+let cpsitestii1 = RCPSII.get_res (EXPSI_INT_INT.test1 ()) 
+                  (fun x -> RCPSII.add (RCPSII.int 2) 
+		                        (RCPSII.mul x (RCPSII.int 2)));;
+(* 42 *)
+
+
+(* Extension of S for an imperative language with reference cells
+   (which may hold any values, including functional values).
 
         let x = e1 in e2
         newref e
@@ -737,6 +896,9 @@ let cpsipow27 = RCPSI.get_res (EXPSI_INT.pow27 ()) 100;;
 
  Since we use higher-order abstract syntax, let x = e1 in e2
  is just lapp e1 (\x -> e2), which is an inverse application.
+
+ This time, we use reference cells of the meta-language to
+ implement reference cells of the source language.
 *)
 module type SymSP = sig
   include Symantics
@@ -769,7 +931,7 @@ module CR = struct
 end;;
 
 (* Doing PE with references may be problematic. It is not clear what
-  to do wif we encounter newref with the static code, but then need
+  to do if we encounter newref with the static code, but then need
   to residualize. We have to `import' the reference and its contents.
   We skip this for now.
 *)
@@ -784,7 +946,7 @@ module EXSP(S: SymSP) = struct
                   lapp (deref r) (fun v0 -> 
                   lapp (setref r (int 2)) (fun _ ->
 		   add v0 (deref r))))
-  (* the same but with higher order *)
+  (* the same but with the higher order *)
   let testi2 () = lapp (newref (lam (fun x -> (add x (int 1))))) (fun r ->
                   lapp (deref r) (fun v0 ->
 		  lapp (setref r (lam (fun x -> (mul x x)))) (fun _ ->
@@ -813,3 +975,33 @@ let testi1 = EXSPC.testi1 ();;
 let testi2 = EXSPC.testi2 ();;
 let testi27 = EXSPC.pow27 ();;
 
+(*
+module type SI = sig
+  include S
+  val lapp : ('c,'sa,'da) repr ->
+    ('c,(('c,'sa,'da) repr -> ('c,'sb,'db) repr),'da->'db) repr
+    -> ('c,'sb,'db) repr
+  val 
+*)
+
+(* The following shows that splitting a type variable doesn't
+   help for module subtyping. A split (constrained) type variable
+   is less polymorphic, so it won't pass where the signature demands
+   unconstrained variable.
+
+module type S1 = sig
+  type ('a,'v) rep
+  val vi : int -> ('a,int) rep
+end;;
+
+module R1 = struct
+  type ('a,'v) rep = ('b, ('v->'w) -> 'w) code constraint 'a = 'b * 'w
+  let vi (x:int) = .<fun k -> k x>.
+end;;
+
+module E1(S:S1) = struct
+  let t () = S.vi 1
+end;;
+
+module E11 = E1(R1);;
+*)
