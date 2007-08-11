@@ -1,7 +1,7 @@
 # name:          Makefile
 # synopsis:      Construction rules for monadic "do" syntax extension
 # authors:       Chris L. Spiel (nifty stuff), Lydia E. van Dijk (boring rest)
-# last revision: Thu Jun 21 18:13:57 UTC 2007
+# last revision: Sat Aug 11 06:28:36 UTC 2007
 # ocaml version: 3.10.0
 
 
@@ -86,7 +86,7 @@ OCAMLFIND := ocamlfind
 
 
 # Flags for both OCaml compilers
-OCAMLFLAGS := -warn-error AX -g -dtypes
+OCAMLFLAGS := -warn-error AX -g #-dtypes
 
 
 # Flags to compile a syntax extension
@@ -118,7 +118,7 @@ DISTNAME := monad-syntax-extension
 
 
 # Version number of the tarball.  (See DISTNAME.)
-VERSION := 5.0pre1
+VERSION := 5.0
 
 
 # Name of the package for findlib
@@ -167,7 +167,14 @@ findlib-uninstall:
 # management system.
 .PHONY: dist
 dist:
-	darcs dist --dist-name $(DISTNAME)-$(VERSION)
+	svn export --quiet . ../$(DISTNAME)-$(VERSION)
+	tar --create \
+            --gzip \
+            --file=$(DISTNAME)-$(VERSION).tar.gz \
+            --directory=.. \
+            $(DISTNAME)-$(VERSION)
+	rm ../$(DISTNAME)-$(VERSION)/*
+	rmdir ../$(DISTNAME)-$(VERSION)
 
 
 # Check whether the project is ready for distribution:

@@ -2,10 +2,10 @@
  * synopsis:      Haskell-like "do" for monads
  * authors:       Jacques Carette and Oleg Kiselyov,
  *                based in part of work of Lydia E. Van Dijk
- * last revision: Mon Jun 18 16:43:47 UTC 2007
+ * last revision: Sat Aug 11 06:21:17 UTC 2007
  * ocaml version: 3.10.0
  *
- * Copyright (C) 2006  J. Carette, L. E. van Dijk, O. Kiselyov
+ * Copyright (C) 2006, 2007  J. Carette, L. E. van Dijk, O. Kiselyov
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -339,17 +339,37 @@ let rec exp_to_patt (_loc: Ast.Loc.t) (an_expression: Ast.expr): Ast.patt =
       let p1 = exp_to_patt _loc e1
       and p2 = exp_to_patt _loc e2 in
         <:patt< $p1$ $p2$ >>
-    | <:expr< ($tup:el$) >> ->                 (* tuple *)
-      let pl = List.map (exp_to_patt _loc) (Ast.list_of_expr el []) in
-        <:patt< ($Ast.paCom_of_list pl$) >>
-(*    | <:expr< { $list:eel$ } >> ->             (* record *)
-      let ppl = List.map (fun (p, e) -> p, exp_to_patt _loc e) eel in
-        <:patt< { $list:ppl$ } >> -- FIXME, lvd *)
+    | <:expr< ($tup:e$) >> ->                  (* tuple *)
+      let p = exp_to_patt _loc e in
+        <:patt< ($tup:p$) >>
+    | <:expr< $e1$, $e2$ >> ->
+      let p1 = exp_to_patt _loc e1
+      and p2 = exp_to_patt _loc e2 in
+        <:patt< $p1$, $p2$ >>
+    | <:expr< { $rec_binding:r$ } >> ->        (* record *)
+      let p = recbinding_to_patt _loc r in
+        <:patt< { $p$ } >>
     | <:expr< ($e$ : $t$) >> ->                (* type restriction *)
       let p = exp_to_patt _loc e in
         <:patt< ($p$ : $t$) >>
     | _ -> Loc.raise _loc
-             (Stream.Error "exp_to_patt: this pattern is not yet supported")
+        (Stream.Error "exp_to_patt: this pattern is not yet supported")
+(** [recbinding_to_pattrec _loc an_exp_record]
+
+    Convert [an_exp_record] to a pattern matching a record. *)
+and recbinding_to_patt (_loc: Ast.Loc.t) (an_exp_record: Ast.rec_binding): Ast.patt =
+  match an_exp_record with
+      <:rec_binding< >> -> <:patt< >>
+    | <:rec_binding< $i$ = $e$ >> ->
+      let p = exp_to_patt _loc e in
+        <:patt< $i$ = $p$ >>
+    | <:rec_binding< $b1$ ; $b2$ >> ->
+        let p1 = recbinding_to_patt _loc b1
+        and p2 = recbinding_to_patt _loc b2 in
+          Ast.PaSem(_loc, p1, p2) (* Till: pb ici? <:patt< p1; p2 >> *)
+    | <:rec_binding< $anti:_$ >> ->
+      Loc.raise _loc
+        (Stream.Error "recbinding_to_patt: antiquotations are not yet supported")
 
 
 (** [patt_to_exp _loc a_pattern]
@@ -367,36 +387,63 @@ let rec patt_to_exp (_loc: Ast.Loc.t) (a_pattern: Ast.patt): Ast.expr =
       let p1 = patt_to_exp _loc e1
       and p2 = patt_to_exp _loc e2 in
         <:expr< $p1$ $p2$ >>
-    | <:patt< ($tup:el$) >> ->                 (* tuple *)
-      let pl = List.map (patt_to_exp _loc) (Ast.list_of_patt el []) in
-        <:expr< ($Ast.exCom_of_list pl$) >>
-(*    | <:patt< { $list:eel$ } >> ->             (* record *)
-      let ppl = List.map (fun (p, e) -> p, patt_to_exp _loc e) eel in
-        <:expr< { $list:ppl$ } >> -- FIXME, lvd *)
+    | <:patt< ($tup:p$) >> ->                  (* tuple *)
+      let e = patt_to_exp _loc p in
+        <:expr< ($tup:e$) >>
+    | <:patt< $p1$, $p2$ >> ->
+      let e1 = patt_to_exp _loc p1
+      and e2 = patt_to_exp _loc p2 in
+        <:expr< $e1$, $e2$ >>
+    | <:patt< { $r$ } >> ->
+      <:expr< { $rec_binding:patt_to_recbinding _loc r$ } >>
     | <:patt< ($e$ : $t$) >> ->                (* type restriction *)
       let p = patt_to_exp _loc e in
         <:expr< ($p$ : $t$) >>
-    | _ -> Loc.raise _loc
-             (Stream.Error "patt_to_exp: this expression is not yet supported")
-
+    | _ ->
+      Loc.raise _loc
+        (Stream.Error "patt_to_exp: this expression is not yet supported")
+and patt_to_recbinding (_loc: Ast.Loc.t) (a_pattern: Ast.patt): Ast.rec_binding =
+  match a_pattern with
+      <:patt< >> -> <:rec_binding< >>
+    | <:patt< $i$ = $p$ >> ->
+      let p = patt_to_exp _loc p in
+        <:rec_binding< $i$ = $p$ >>
+    | <:patt< $p1$ ; $p2$ >> ->
+        let b1 = patt_to_recbinding _loc p1
+        and b2 = patt_to_recbinding _loc p2 in
+          <:rec_binding< $b1$; $b2$ >>
+    | <:patt< $anti:_$ >> ->
+      Loc.raise _loc
+        (Stream.Error "patt_to_recbinding: antiquotation are not yet supported")
+    | _ -> Loc.raise _loc (Stream.Error "patt_to_recbinding: not reached")
 
 
 (** [is_irrefutable_pattern a_pattern]
 
-    Answer whether [a_pattern] is irrefutable. *)
+    Answer whether [a_pattern] is irrefutable.
+
+    Implementation Note: In OCaml 3.10.0 the function
+    [Ast.is_irrefut_patt] is buggy.  Thus, we must use our own
+    implementation. *)
 let rec is_irrefutable_pattern (a_pattern: Ast.patt): bool =
   match a_pattern with
-(*      <:patt< { $list:ppl$ } >> ->             (* record *)
-      List.for_all (fun (_p1, p2) -> is_irrefutable_pattern p2) ppl -- FIXME, lvd *)
-    | <:patt< () >> -> true                    (* unit *)
-    | <:patt< ( $p$ : $_t$ ) >> ->             (* type constraint *)
+      <:patt< () >> -> true             (* unit *)
+    | <:patt< ( $p$ : $_$ ) >> ->       (* type constraint *)
       is_irrefutable_pattern p
-    | <:patt< ( $p1$ as $_p2$ ) >> ->          (* alias *)
+    | <:patt< ( $p1$ as $_p2$ ) >> ->   (* alias *)
       is_irrefutable_pattern p1
-    | <:patt< ( $tup:pl$ ) >> ->               (* tuple of patterns *)
-      List.for_all is_irrefutable_pattern (Ast.list_of_patt pl [])
-    | <:patt< $lid:_s$ >> -> true              (* variable *)
-    | <:patt< _ >> -> true                     (* wildcard *)
+    | <:patt< { $r$ } >> ->             (* record *)
+      is_irrefutable_pattern r
+    | <:patt< $_$ = $p$ >> ->           (* field in a record *)
+      is_irrefutable_pattern p
+    | <:patt< $r1$; $r2$ >> ->          (* sum of fields *)
+        is_irrefutable_pattern r1 && is_irrefutable_pattern r2
+    | <:patt< $t1$, $t2$ >> ->          (* sum in a tuple *)
+      is_irrefutable_pattern t1 && is_irrefutable_pattern t2
+    | <:patt< ($tup:t$) >> ->           (* tuple *)
+      is_irrefutable_pattern t
+    | <:patt< $lid:_$ >> -> true        (* variable *)
+    | <:patt< _ >> -> true              (* wildcard *)
     | _ -> false
 
 
@@ -405,8 +452,9 @@ let rec is_irrefutable_pattern (a_pattern: Ast.patt): bool =
     Convert [an_expression_list] to a tuple of expressions. *)
 let tuplify_expr (_loc: Ast.Loc.t) (an_expression_list: Ast.expr list): Ast.expr =
   match an_expression_list with
-      x :: [] -> x
-    | xs -> <:expr< ($Ast.exCom_of_list xs$) >>
+      [] -> Loc.raise _loc (Stream.Error "tuplify_expr: empty expression list")
+    | x :: [] -> x
+    | _ -> <:expr< ($tup:Ast.exCom_of_list an_expression_list$) >>
 
 
 (** [tuplify_patt _loc a_pattern_list]
@@ -414,8 +462,9 @@ let tuplify_expr (_loc: Ast.Loc.t) (an_expression_list: Ast.expr list): Ast.expr
     Convert [a_pattern_list] to a tuple of patterns. *)
 let tuplify_patt (_loc: Ast.Loc.t) (a_pattern_list: Ast.patt list): Ast.patt =
   match a_pattern_list with
-      x :: [] -> x
-    | xs -> <:patt< ($Ast.paCom_of_list xs$) >>
+      [] -> Loc.raise _loc (Stream.Error "tuplify_patt: empty pattern list")
+    | x :: [] -> x
+    | _ -> <:patt< ($tup:Ast.paCom_of_list a_pattern_list$) >>
 
 
 (** [convert _loc a_perform_body a_bind_function a_fail_function]
@@ -430,81 +479,66 @@ let convert
     (a_fail_function: Ast.expr): Ast.expr =
   let rec loop _loc a_perform_body =
     match a_perform_body with
-        <:expr< let $rec:Ast.BFalse$ $list:_lst$ in $lid:"<--"$ >> ->
+        <:expr< let $rec:_$ $_$ in $lid:"<--"$ >> ->
           Loc.raise _loc
             (Stream.Error "convert: monadic binding cannot be last a \"perform\" body")
-      | <:expr< let $rec:Ast.BTrue$ $list:_lst$ in $lid:"<--"$ >> ->
-          Loc.raise _loc
-            (Stream.Error "convert: recursive monadic binding cannot be last a \"perform\" body")
-      | <:expr< let $rec:Ast.BFalse$ $bs$ in $body$ >> ->
-          let body' = loop _loc body in
-            <:expr< let $rec:Ast.BFalse$ $bs$ in $body'$ >>
-      | <:expr< let $rec:Ast.BTrue$ $bs$ in $body$ >> ->
-          let body' = loop _loc body in
-            <:expr< let $rec:Ast.BTrue$ $bs$ in $body'$ >>
+      | <:expr< let $rec:r$ $binding:bs$ in $body$ >> ->
+        let body' = loop _loc body in
+          <:expr< let $rec:r$ $binding:bs$ in $body'$ >>
       | <:expr< let module $m$ = $mb$ in $body$ >> ->
-          let body' = loop _loc body in
-            <:expr< let module $m$ = $mb$ in $body'$ >>
+        let body' = loop _loc body in
+          <:expr< let module $m$ = $mb$ in $body'$ >>
       | <:expr< do { $e$ } >> ->
-        begin
-          match Ast.list_of_expr e [] with
-              b1 :: b2 :: bs ->
-                let do_rest () =
-                  loop _loc
-                    (match bs with
-                        [] -> b2
-                      | _  -> <:expr< do { $list:(b2 :: bs)$ } >>)
-                and do_merge a_body =
-                  loop _loc <:expr< do { $list:(a_body :: b2 :: bs)$ } >> in
-                    begin
-                      match b1 with
-                          (* monadic binding *)
-                          <:expr< let $rec:Ast.BFalse$ $bi$ in $lid:"<--"$ >> ->
-                                 begin
-                                   match Ast.pel_of_binding bi with
-                                       (p, e) :: [] ->
-                                         if is_irrefutable_pattern p then
-                                           <:expr< $a_bind_function$ $e$ (fun $p$ -> $do_rest ()$) >>
-                                         else
-                                           <:expr< $a_bind_function$
-                                             $e$
-                                             (fun [$p$ -> $do_rest ()$
-                                             | _ -> $a_fail_function$ ]) >>
-                                     | _ -> failwith "not reached"
-                                 end
-                          (* recursive monadic binding *)
-                        | <:expr< let $rec:Ast.BTrue$ $bi$ in $lid:"<--"$ >> ->
-                          let pattern_list = List.map fst (Ast.pel_of_binding bi) in
-                          let patterns = tuplify_patt _loc pattern_list
-                          and patt_as_exp =
-                            tuplify_expr
-                              _loc
-                              (List.map (fun x -> patt_to_exp _loc x) pattern_list)
-                          in
-                            List.iter
-                              (fun p ->
-                                if not (is_irrefutable_pattern p) then
-                                  Loc.raise _loc
-                                    (Stream.Error
-                                        ("convert: refutable patterns like '" ^
-                                            (*string_of_patt p*) "???" ^
-                                            "' and recursive bindings do not go together")))
-                              pattern_list;
-                            <:expr< let rec $bi$ in
-                                      $a_bind_function$
-                                        $patt_as_exp$
-                                        (fun $patterns$ -> $do_rest ()$) >>
-                        | (* map through the regular let *)
-                          <:expr< let $rec:Ast.BFalse$ $bs$ in $body$ >> ->
-                          <:expr< let $rec:Ast.BFalse$ $bs$ in $do_merge body$ >>
-                        | <:expr< let $rec:Ast.BTrue$ $bs$ in $body$ >> ->
-                          <:expr< let $rec:Ast.BTrue$ $bs$ in $do_merge body$ >>
-                        | <:expr< let module $m$ = $mb$ in $body$ >> ->
-                          <:expr< let module $m$ = $mb$ in $do_merge body$ >>
-                        | _ -> <:expr< $a_bind_function$ $b1$ (fun _ -> $do_rest ()$) >>
-                    end
-            | _ -> failwith "not reached"
-        end
+         let b1, b2, bs =
+           match Ast.list_of_expr e [] with
+               b1 :: b2 :: bs -> b1, b2, bs
+             | _ -> assert false in
+         let do_rest () =
+           loop _loc
+             (match bs with
+                 [] -> b2
+               | _  -> <:expr< do { $list:(b2 :: bs)$ } >>)
+         and do_merge a_body =
+           loop _loc <:expr< do { $list:(a_body :: b2 :: bs)$ } >> in
+             begin
+               match b1 with
+                   (* monadic binding *)
+                   <:expr< let $p$ = $e$ in $lid:"<--"$ >> ->
+                     if is_irrefutable_pattern p then
+                       <:expr< $a_bind_function$ $e$ (fun $p$ -> $do_rest ()$) >>
+                     else
+                       <:expr< $a_bind_function$
+                               $e$
+                               (fun [$p$ -> $do_rest ()$
+                                     | _ -> $a_fail_function$ ]) >>
+                   (* recursive monadic binding *)
+                 | <:expr< let rec $binding:b$ in $lid:"<--"$ >> ->
+                   let pattern_list = List.map fst (Ast.pel_of_binding b) in
+                   let patterns = tuplify_patt _loc pattern_list
+                   and patt_as_exp =
+                     tuplify_expr
+                       _loc
+                       (List.map (fun x -> patt_to_exp _loc x) pattern_list)
+                   in
+                     List.iter
+                       (fun p ->
+                         if not (is_irrefutable_pattern p) then
+                           Loc.raise _loc
+                             (Stream.Error
+                                 ("convert: refutable patterns and " ^
+                                     "recursive bindings do not go together")))
+                       pattern_list;
+                     <:expr< let rec $binding:b$ in
+                               $a_bind_function$
+                                 $patt_as_exp$
+                                 (fun $patterns$ -> $do_rest ()$) >>
+                 | (* map through the regular let *)
+                   <:expr< let $rec:r$ $binding:bs$ in $body$ >> ->
+                   <:expr< let $rec:r$ $binding:bs$ in $do_merge body$ >>
+                 | <:expr< let module $m$ = $mb$ in $body$ >> ->
+                   <:expr< let module $m$ = $mb$ in $do_merge body$ >>
+                 | _ -> <:expr< $a_bind_function$ $b1$ (fun _ -> $do_rest ()$) >>
+             end
       | any_body -> any_body
   in loop _loc a_perform_body
 
@@ -517,12 +551,10 @@ let convert
     module name. *)
 let qualify
     (_loc: Ast.Loc.t)
-    (a_module_expression: Ast.expr)
+    (a_module_ident: Ast.ident)
     (a_function_expression: Ast.expr): Ast.expr =
-  match a_module_expression with
-      <:expr< $_e1$ . $_e2$ >> as m -> <:expr< $m$ . $a_function_expression$ >>
-    | <:expr< $uid:_s$ >> as m -> <:expr< $m$ . $a_function_expression$ >>
-    | _ -> failwith "qualify: 'with module' expects a module name or module-path."
+  let me = <:expr< $id:a_module_ident$ >> in
+    <:expr< $me$ . $a_function_expression$ >>
 
 
 (* Here we have to do the same nasty trick that Camlp4 uses and even
@@ -540,7 +572,7 @@ EXTEND Gram
 
     expr: LEVEL "top"
     [
-      [ "perform"; "with"; "module"; monad_module = expr; "in";
+      [ "perform"; "with"; "module"; monad_module = uid; "in";
         perform_body = expr LEVEL ";" ->
           let qualified_fail_expr =
             qualify _loc monad_module (default_failure_fun_expr _loc) in
@@ -567,6 +599,17 @@ EXTEND Gram
             (default_failure_expr _loc) ]
     ] ;
 
+    uid:
+    [
+     [i = LIST1 a_UIDENT SEP "." ->
+       let rec uid_to_ident = function
+           [a]-> <:ident< $uid:a$ >>
+         | a :: b -> <:ident< $uid:a$.$uid_to_ident b$ >>
+         | [] -> assert false
+       in
+         uid_to_ident i]
+    ];
+
     opt_failure_expr:
     [
       [ "and"; fail_fun = expr -> fail_fun ]
@@ -575,25 +618,26 @@ EXTEND Gram
     recursive_monadic_binding:
     [
       [ e1 = expr LEVEL "simple"; "<--"; e2 = expr LEVEL "top" ->
-        (exp_to_patt _loc e1, e2) ]
+         <:binding< $exp_to_patt _loc e1$ = $e2$ >>
+      ]
     ] ;
 
     expr: BEFORE "apply"
     [ NONA
       [ "rec"; binding_list = LIST1 recursive_monadic_binding SEP "and" ->
-        let bi = Ast.binding_of_pel binding_list in
-          <:expr< let $rec:Ast.BTrue$ $bi$ in $lid:"<--"$ >> ]
+         let bind = Ast.biAnd_of_list binding_list in
+           <:expr< let rec $binding:bind$ in $lid:"<--"$ >> ]
     |
       [ e1 = SELF; "<--"; e2 = expr LEVEL "top" ->
-        let bi = Ast.binding_of_pel ((exp_to_patt _loc e1, e2) :: []) in
-          <:expr< let $rec:Ast.BFalse$ $bi$ in $lid:"<--"$ >> ]
+        let p1 = exp_to_patt _loc e1 in
+          <:expr< let $p1$ =  $exp:e2$ in $lid:"<--"$ >> ]
     ] ;
 
-   (* The difference between the expression and patterns is just [_].
-    * So, we make [_] identifier. *)
-   expr: LEVEL "simple"
-   [
-     [ "_" -> <:expr< $lid:"_"$ >> ]
-   ] ;
+    (* The difference between the expression and patterns is just [_].
+     * So, we make [_] identifier. *)
+    expr: LEVEL "simple"
+    [
+      [ "_" -> <:expr< $lid:"_"$ >> ]
+    ] ;
 
 END;

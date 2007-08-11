@@ -1,3 +1,26 @@
+2007-08-11  Lydia van Dijk  <lvandijk@freenet.de>
+
+	Adapt to OCaml's new preprocessor in version 3.10.  (Big thanks go
+	to Till Varoquaux for his assistance with this particular change.)
+	* pa_monad.ml (exp_to_patt): Use more idiomatic Camlp4 code.
+	(patt_to_exp): Dito.
+	(qualify): Dito.
+	(recbinding_to_patt): New function.
+	(patt_to_recbinding): Dito.
+	(is_irrefutable_pattern): Rewrite.
+	(tuplify_expr): Dito.
+	(tuplify_patt): Dito.
+	(convert): Rewrite.
+	(EXTEND-uid): New.
+	(EXTEND-expr): Module names now are "uid"s and not "expr"s.
+	(EXTEND-recursive_monadic_binding): Use more idiomatic Camlp4
+	code.
+	(EXTEND-expr-BEFORE-"apply"): Dito.
+	* pa_monad-camlp4-3.09.ml: New name for old file "pa_monad.ml".
+	* README: Add section on supported OCaml versions.
+	* Makefile (VERSION): Bump forward.
+	(dist): Create tarball using subversion.
+
 2007-04-22  Lydia van Dijk  <lvandijk@freenet.de>
 
 	* README (Contents): Add cc.ml, cc.mli, and test-cc.ml.
