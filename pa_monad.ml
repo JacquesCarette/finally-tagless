@@ -366,7 +366,7 @@ and recbinding_to_patt (_loc: Ast.Loc.t) (an_exp_record: Ast.rec_binding): Ast.p
     | <:rec_binding< $b1$ ; $b2$ >> ->
         let p1 = recbinding_to_patt _loc b1
         and p2 = recbinding_to_patt _loc b2 in
-          Ast.PaSem(_loc, p1, p2) (* Till: pb ici? <:patt< p1; p2 >> *)
+          <:patt< $p1$; $p2$ >>
     | <:rec_binding< $anti:_$ >> ->
       Loc.raise _loc
         (Stream.Error "recbinding_to_patt: antiquotations are not yet supported")
