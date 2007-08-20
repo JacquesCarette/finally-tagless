@@ -1,0 +1,259 @@
+Dear author(s),
+
+I am delighted to inform you that your paper has been accepted for
+presentation at APLAS 2007 and inclusion in the proceedings.  We
+received 84 submissions this year, and the program committee selected
+25 papers for publication, a 30% acceptance rate.
+
+For the final version of your paper, please carefully address the
+comments you will find in the attached reviews. In particular,
+please address the following comment raised during the PC meeting:
+
+  " ... The authors claim their idea is new (e.g., at the second last
+   paragraph in the introduction), but it has been well-known in fact.
+   See Reference [32, Section 5] for instance ... "
+
+Also, if you need to change your paper title, please send me email
+(<aplas2007@easychair.org>) as soon as possible.
+
+In order to publish your paper, we need to receive the final version
+and a signed LNCS copyright form before
+
+                FRIDAY, SEPTEMBER 7, 2007 
+
+in the format specified by Springer-Verlag at the URL:
+
+           http://www.springer.de/comp/lncs/authors.html 
+
+The paper shall not be more than 16 pages long. 
+
+---------------------------------------------
+
+Paper: 16
+Title: Finally Tagless, Partially Evaluated (Tagless Staged Interpreters for Simpler Typed Languages)
+
+
+-------------------- review 1 --------------------
+ 
+OVERALL RATING: -1 (weak reject) 
+REVIEWER'S CONFIDENCE: 3 (high) 
+Presentation: 2 (poor)
+ 
+----------------------- REVIEW --------------------
+
+This paper talks about embedding a typed target language into a 
+typed meta language in a way that is type safe and free from
+interpretative overhead. By changing the representation type, 
+the embedded language is allowed to possess various features, 
+including staged evaluation and partial evaluation. The authors
+showed that all these are possible without the use of GADT
+or dependent types.
+
+The paper deals with an interesting topic. However, technique-wise,
+I am not particularly impressed. I would be surprised if the trick
+of type safe embedding (which the authors call "tagless interpretation")
+is not well-known. Therefore, the technically new and interesting 
+materials actually start from Section 4 (page 9) about the partial
+evaluator which, I believe, has potential to be a stand-alone paper
+but unfortunately not yet fully developed.
+
+The authors apparently suffer from lack of space. But most of the
+trivialities in Section 1.1, 1.2, 1.3, and 2.2 can be spared. 
+In the accompanying code there seems to be more interesting stuff
+not talked about: self interpretation, transformation to CPS, etc.
+What are they saved for? The paper unfortunately only talks about
+Jones optimality briefly in the last section. I think it is an
+interesting result that a typed, tagless language can be Jones-
+optimal, which deserves to be discussed and demonstrated more.
+
+I don't see the point of the de Bruijn notation in Section 1.1
+and 1.2, since they are not used in the rest of the paper. For
+a while I was thinking how the authors could, in the presence
+of fixed points but without (at least a simulation of) dependent 
+types, check that the de Bruijn indexs are never out of bound.
+It turns out that de Bruijn indexes are eventually abandoned. 
+On page 5, it is listed as a contribution that the authors "use 
+the type system of the meta language to check statically that 
+an object program is .. closed." But, if closeness here refers 
+to not having free variables, it is not checked by the type system.
+
+I am not sure it is a good idea to use two languages in a paper.
+It is true that some features are better demonstrated in one
+language than another, but the readers still keep wondering
+about the missing side. I, for one, was wondering whether the
+Haskell counterpart of Section 3 would make any sense, given that
+Haskell is not a multi-staged language, until I actually downloaded
+the accompanying code. I believe it does make sense in the context, 
+but the readers need some explanation. I would prefer the old way
+of using one language in the running text and put the other
+in the appendix --- if I understand correctly, this conference 
+does allow appendixes outside the page limit.
+
+Section 4.1, ".. there is no polymorphic 'lift' function, of
+type a -> C a.." Although some references are listed, it would be
+nice to explain why not, in a sentence or two.
+
+Section 4.2, "The two alternative constructs of a Maybe value,
+Just and Nothing, tag each term with a phase: present or future."
+I think both the present and future staged expression are contained
+in P1, while the Maybe constructor indicated whether there does
+exist a static value.
+
+Section 4.2, ".. applying the type constructor P1 .. should yield one
+of .. That is, we need a nonparametric data type..." It is ambiguous
+whether we need a nonparametric type because there are two alternatives
+for P1, or because both alternatives are different from the type
+designated by the class Symantics.
+
+Section 4.2, "... however, the type P t is no longer parametric
+in t..." Explain why this matters. Do we need parametricity somewhere?
+Or is it not desirable simply because we want to show that we
+do not need non-Haskell 98 features?
+
+Section 4.4, "The code in Figure 7 natively unfolds fix whenever.."
+But I don't see fix in Figure 7.
+
+Section 5, "... their current implementation in GHC has problems."
+Can you be more specific? 
+
+
+-------------------- review 2 --------------------
+ 
+OVERALL RATING: 1 (weak accept) 
+REVIEWER'S CONFIDENCE: 2 (medium) 
+Presentation: 3 (fair)
+ 
+----------------------- REVIEW --------------------
+
+I think this paper has some great ideas in it, but there are two
+problems: some messiness in its presentation, and something
+impractical in the idea (for which see below).  These combine to make
+me think it only deserves a "weak accept".
+
+The paper starts oddly: the introduction includes a "final" example
+that only hints at the technology used in the rest of the paper, and
+is quite different from it in an important respect.  The disconnect
+between what is done in the introduction and what is done in the rest
+of the paper makes for an awkward transition.  In particular, it seems
+strange to move from an object language needing explicit environments
+and de Bruijn bound variables, to one where the object language
+includes meta-leval function spaces.
+
+This transition is not commented on, but is it the intention that we
+should imagine the later sections of the paper use the introduction's
+approach to convert from object language abstractions into HOAS style
+abstractions?   Otherwise, Section 1 seems rather an orphan, and not
+really so relevant to the main thrust of the rest of the paper.
+
+The introduction does make it clear how the basic approach will work,
+and the following sections bear out the introduction's claims.  In
+particular, Section 2 makes it clear that the basic approach is to
+represent object values with functors, and that various analyses and
+transformations are achieved by passing different modules as arguments
+to these functors.  For example, the R module provides a simple
+interpretation (in some sense, the "identity" transformation), and it
+can be passed to the EX functor in order to interpret EX's two
+programs (test1, and testpowfix7).
+
+Similarly, Section 3 describes a module C, which can be used to
+compile object language code into the meta-level using MetaOCaml's
+facilities for doing this.  This is elegant.  Again, the object value
+EX is acted on by C, by having module C passed to the EX functor.
+
+Section 4 gets off to a horrid start presentationally because it
+silently switches implementation languages (to Haskell).  This is
+particularly ugly in the suggested definition of the new P0 type,
+where OCaml modules R and C suddenly become Haskell type operators of
+the same names.  At this point, the reader is almost sure to become
+lost.  In fact, given that the Haskell-specific solution with GADTs
+ends up being dismissed as "not quite satisfactory", I wonder at the
+need for this diversion at all.  Perhaps it would be better to discuss
+the Haskell GADT part-solution in a separate, later, section of the
+paper, just to answer the inevitable questions from readers who
+imagine that GADTs might provide a good solution.
+
+The "final" solution of Section 4.4 is convincing, though again marred
+by presentation: the abbreviating 'x type variables within the types
+ascribed to the signature are more confusing than useful.  I can
+believe that the types (particularly that for fix) will get large, but
+perhaps a standard type equation might make things clearer.  Something
+like
+
+  type ('c,'da,'db,'sa,'sb) frep =
+       ('c, ('c,'sa,'da)repr -> ('c,'sb,'db) repr, 'da -> 'db) repr
+
+could be used, and this rather complicated monster might then warrant
+further explanation.  Also, Figure 7 does not include the definition
+of fix, as promised.
+
+Section 5 looks to be a reasonable summary of related work, though I'm
+not an expert in the field.  Towards the end of this section, the
+names of Washburn and Weirich are omitted in the sentence mentioning
+their cite, making it ungrammatical.
+
+Finally, my doubts about practicality: this approach seems to preclude
+writing programs that manipulate different object language inputs
+programmatically.  Recall that if we are to apply multiple analyses to
+the same object program we need to have that object program
+represented as a functor, which can be applied to the
+analysis/transformation modules as required.  But how do I write the
+front-end that takes an input string, say, and turns it into a
+functor?  Can I treat functors as arguments to functions?  No.  But
+can I pass functors to higher-order functors so that programs can be
+passed around and manipulated?  Certainly not in SML, but what does
+OCaml provide here?  Maybe we might even set up a parsing functor that
+would be able to return the functor corresponding to the input
+program.  I don't know, but I'm both pessimistic and very keen to hear
+otherwise! 
+
+
+-------------------- review 3 --------------------
+ 
+OVERALL RATING: 2 (strong accept) 
+REVIEWER'S CONFIDENCE: 3 (high) 
+Presentation: 4 (good)
+ 
+----------------------- REVIEW --------------------
+
+The authors show how to define evaluators (ie a interpreter, compiler
+and partial evaluator) for a typed object language in terms of
+a typed meta language without using GADTs, dependent types, or
+universal types. Concrete code fragments demonstrating the approach
+are given in Haskell 98 and MetaOCaml.
+
+I would classify this work as a "functional pearl", though APLAS has 
+no such category. Anyway, this is interesting and useful work. 
+I recommend acceptance. 
+
+Further comments:
+
+Switching between ML and Haskell code fragments makes the paper
+hard to read. Why not stick to one language.
+
+p5 pretty much all works which show how to encode GADTs in terms of
+   Hindley/Milner borrow ideas from [38]. I know that [38] is
+   a tough paper to read. I think you should give [38] more credit
+   in the related work section
+
+p6 your definition of class Symantics reminds me of Hinze's
+   "Generics for the masses" paper where he employs a similar idea
+   by abstracting over the concrete implementation by abstracting
+   over the type constructor repr
+
+   BTW, the "interpreter" instance of class Symantics will require
+   newtypes (data types would incur a penalty because of tags)
+
+p13 "...current implementation in GHC has problems".
+
+   Well, I'd say not anymore. I hope you agree that in 'practice'
+   we'll use type extensions such as GADTs to define well-typed
+   interpreters. Of course, your work is nice in that you show that
+   we do without GADTs.
+
+   I recall a paper by  Oliver Danvy, Morten Rhiger
+   "A Simple Take on Typed Abstract Syntax in Haskell-like Languages"
+   FLOPS'01 which talks about representing typed abstract syntax
+   in Haskell. This work may be relevant to yours. 
+
+"
+
