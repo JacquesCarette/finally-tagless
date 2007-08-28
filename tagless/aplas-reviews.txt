@@ -1,3 +1,6 @@
+\jacques{My comments are all enclosed in \jacques{}.  The only ones which
+really need an action are those marked TODO}
+
 Dear author(s),
 
 I am delighted to inform you that your paper has been accepted for
@@ -12,6 +15,10 @@ please address the following comment raised during the PC meeting:
   " ... The authors claim their idea is new (e.g., at the second last
    paragraph in the introduction), but it has been well-known in fact.
    See Reference [32, Section 5] for instance ... "
+
+\jacques{I have softened the claim in that paragraph and put in an
+explicit link to [32] there.  The real issue is that previous work on
+this has not "penetrated" the mainstream enough!}
 
 Also, if you need to change your paper title, please send me email
 (<aplas2007@easychair.org>) as soon as possible.
@@ -57,6 +64,9 @@ materials actually start from Section 4 (page 9) about the partial
 evaluator which, I believe, has potential to be a stand-alone paper
 but unfortunately not yet fully developed.
 
+\jacques{I guess this reviewed missed the explicit sentence that 
+opens the last paragraph of the introduction!}
+
 The authors apparently suffer from lack of space. But most of the
 trivialities in Section 1.1, 1.2, 1.3, and 2.2 can be spared. 
 In the accompanying code there seems to be more interesting stuff
@@ -65,6 +75,9 @@ What are they saved for? The paper unfortunately only talks about
 Jones optimality briefly in the last section. I think it is an
 interesting result that a typed, tagless language can be Jones-
 optimal, which deserves to be discussed and demonstrated more.
+
+\jacques{They are saved for the Journal version, obviously ;-).  I guess
+that's the paper this reviewer really wanted to see.}
 
 I don't see the point of the de Bruijn notation in Section 1.1
 and 1.2, since they are not used in the rest of the paper. For
@@ -77,7 +90,15 @@ the type system of the meta language to check statically that
 an object program is .. closed." But, if closeness here refers 
 to not having free variables, it is not checked by the type system.
 
+\jacques{As I said in email, there seems to be a point here, as even
+we say in the paper.  That needs HOAS.  TODO}
+
 I am not sure it is a good idea to use two languages in a paper.
+
+\jacques{It does make the paper harder to read for the common mortal,
+yes.  But, oh well, this is research, and we're not out to pander to
+the lowest-common-denominator}
+
 It is true that some features are better demonstrated in one
 language than another, but the readers still keep wondering
 about the missing side. I, for one, was wondering whether the
@@ -89,9 +110,17 @@ of using one language in the running text and put the other
 in the appendix --- if I understand correctly, this conference 
 does allow appendixes outside the page limit.
 
+\jacques{This is an interesting point, about appendices not counting
+towards the page limit.  If this is so, then we might be able to 
+do some real improvements to this paper.  But then again, do we really
+have the time? TODO}
+
+
 Section 4.1, ".. there is no polymorphic 'lift' function, of
 type a -> C a.." Although some references are listed, it would be
 nice to explain why not, in a sentence or two.
+
+\jacques{And those sentences or two are in the next paragraph!}
 
 Section 4.2, "The two alternative constructs of a Maybe value,
 Just and Nothing, tag each term with a phase: present or future."
@@ -99,23 +128,39 @@ I think both the present and future staged expression are contained
 in P1, while the Maybe constructor indicated whether there does
 exist a static value.
 
+\jacques{We are implicitly using the isomorphism that
+P1 (Maybe (R t)) (C t) ~~ Either ((R t),(C t)) (C t)
+which is essentially distributivity,
+which I guess is not clear enough.  I added an explicit "By distributivity"}
+
 Section 4.2, ".. applying the type constructor P1 .. should yield one
 of .. That is, we need a nonparametric data type..." It is ambiguous
 whether we need a nonparametric type because there are two alternatives
 for P1, or because both alternatives are different from the type
 designated by the class Symantics.
 
+\jacques{I don't know how to clarify this, but neither of those reasons
+are why this type is nonparametric. TODO}
+
 Section 4.2, "... however, the type P t is no longer parametric
 in t..." Explain why this matters. Do we need parametricity somewhere?
 Or is it not desirable simply because we want to show that we
 do not need non-Haskell 98 features?
 
+\jacques{It has to be paramatric else P can't be an instance of
+Symantics, which is something stated only in the longer version.
+I tried to say this, but all attempts made the paper longer.
+TODO}
+
 Section 4.4, "The code in Figure 7 natively unfolds fix whenever.."
 But I don't see fix in Figure 7.
+
+\jacques{oops -- fixed}
 
 Section 5, "... their current implementation in GHC has problems."
 Can you be more specific? 
 
+\jacques{This was true of 6.4, but is it true of 6.6? TODO}
 
 -------------------- review 2 --------------------
  
@@ -137,7 +182,13 @@ between what is done in the introduction and what is done in the rest
 of the paper makes for an awkward transition.  In particular, it seems
 strange to move from an object language needing explicit environments
 and de Bruijn bound variables, to one where the object language
-includes meta-leval function spaces.
+includes meta-level function spaces.
+
+\jacques{Well, this is the Socratic approach at work -- start from
+something quite familiar, and move slowly towards the more complicated
+in easily understandable chunks, instead of leaping, as is done in way
+too many papers.  No idea how to be even more upfront that this is what
+we are doing, though apparently we really need to.  TODO}
 
 This transition is not commented on, but is it the intention that we
 should imagine the later sections of the paper use the introduction's
@@ -172,6 +223,10 @@ the Haskell GADT part-solution in a separate, later, section of the
 paper, just to answer the inevitable questions from readers who
 imagine that GADTs might provide a good solution.
 
+\jacques{I am torn here.  In *this* version of the paper, we only 
+switch to Haskell for 4.1-4.3, and then back to MetaOCaml for 4.4!  So
+it is somewhat jarring.}
+
 The "final" solution of Section 4.4 is convincing, though again marred
 by presentation: the abbreviating 'x type variables within the types
 ascribed to the signature are more confusing than useful.  I can
@@ -186,10 +241,17 @@ could be used, and this rather complicated monster might then warrant
 further explanation.  Also, Figure 7 does not include the definition
 of fix, as promised.
 
+\jacques{The figure 7 glitch is fixed.  And I like the "as 'x".
+Type ascriptions are nicely covered in TAPL, it's not our fault not
+enough people really get them}
+
 Section 5 looks to be a reasonable summary of related work, though I'm
 not an expert in the field.  Towards the end of this section, the
 names of Washburn and Weirich are omitted in the sentence mentioning
 their cite, making it ungrammatical.
+
+\jacques{This was a bug in the submitted version, the version that I 
+currently get from LaTeX does not have this glitch}
 
 Finally, my doubts about practicality: this approach seems to preclude
 writing programs that manipulate different object language inputs
@@ -206,6 +268,10 @@ would be able to return the functor corresponding to the input
 program.  I don't know, but I'm both pessimistic and very keen to hear
 otherwise! 
 
+\jacques{Answer: camlp4 and/or TH can certainly cope with that.
+And higher-order functors can be passed around in OCaml.  However,
+I don't think a "parsing functor" can be created -- that would need
+camlp4, I think.  TODO.}
 
 -------------------- review 3 --------------------
  
@@ -235,10 +301,19 @@ p5 pretty much all works which show how to encode GADTs in terms of
    a tough paper to read. I think you should give [38] more credit
    in the related work section
 
+\jacques{Absolutely right.  It is a bit hard to read, but it really
+does deserve more credit (I just finished reading it).  I have added
+another clear reference}
+
 p6 your definition of class Symantics reminds me of Hinze's
    "Generics for the masses" paper where he employs a similar idea
    by abstracting over the concrete implementation by abstracting
    over the type constructor repr
+
+\jacques{yes, but the relation between the two methods is quite shallow.
+What is cool, in both cases, is that it _works_ in a typed system.
+That and he's abstracting out polynomial Functors, while we're abstracting
+out something much more complicated.}
 
    BTW, the "interpreter" instance of class Symantics will require
    newtypes (data types would incur a penalty because of tags)
@@ -250,10 +325,18 @@ p13 "...current implementation in GHC has problems".
    interpreters. Of course, your work is nice in that you show that
    we do without GADTs.
 
+\jacques{Is 6.6 OK?  And, yes, in practice one might wish to use GADTs, 
+   assuming that they "play well" with other parts, which certainly was
+   not true in 6.4.}
+
    I recall a paper by  Oliver Danvy, Morten Rhiger
    "A Simple Take on Typed Abstract Syntax in Haskell-like Languages"
    FLOPS'01 which talks about representing typed abstract syntax
    in Haskell. This work may be relevant to yours. 
 
-"
-
+\jacques{This paper is most definitely relevant.  It does its work 
+   via injection/projection pairs, and it gets really really close to
+   what we've done.  They were missing the work of [38] and then they
+   could have done a fair bit of what we've done.  We need to cite this
+   too.  But I am really afraid to blow the page limit, I will let 
+   someone else fiddle with this! TODO}

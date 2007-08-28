@@ -1014,7 +1014,8 @@ data P1 t = P1 (Maybe (R t)) (C t)
 We switch to the Haskell data type
 \ifshort \BUseVerbatim{P1} \else \UseVerbatim{P1} \fi
 so that a partially evaluated term |P1 t| always contains a dynamic
-component and sometimes contains a static component.  The two
+component and sometimes contains a static component.  By 
+distributivity, the two
 alternative constructors of a |Maybe| value, |Just| and |Nothing|,
 tag each partially evaluated term with a phase: either present or
 future.  This tag is not an object type tag: all pattern matching below
@@ -1125,7 +1126,7 @@ data P t where
 The constructors |VI|, |VB|, and |VF| build static terms (like |S0|
 in~\S\ref{S:PE-lift}), and |E| builds dynamic terms (like |E0|).  However,
 the type |P t| is no longer parametric in~|t|: the constructor |VF| takes an
-operand of type |P a -> P b| rather than |a -> b|. We define a function
+operand of type |P a -> P b| rather than |a -> b|.  We define a function
 \ifshort |abstr|, \fi like |abstr1| above\ifshort,\fi\
 to extract a future-stage computation from a value of type |P t|.
 \ifshort\else
@@ -1398,7 +1399,7 @@ generative linear algebra~\cite{CaretteKiselyov05}.
 \fi
 
 Any partial evaluator must decide how much to unfold recursion\ifshort.
-The code in Figure~\ref{fig:pe} na\"\i vely unfolds |fix|
+Our code na\"\i vely unfolds |fix|
 \else\
 statically: unfolding too little can degrade the residual code, whereas
 unfolding too much risks nontermination.  Our partial evaluator is no
@@ -1406,8 +1407,7 @@ exception, because our object language includes |fix|.  The code in
 Figure~\ref{fig:pe} takes the na\"\i ve approach of ``going all the
 way'', that is, unfold |fix| rather than residualize
 \fi
-whenever the
-argument is static.
+whenever the argument is static.
 \ifshort
 In the accompanying source code is a conservative
 alternative |P.fix| that unfolds recursion only once, then residualizes.
@@ -2134,8 +2134,8 @@ advanced types or tagging overhead\\
 \item Thus, any self-interpreter must have tags and cannot be 
   Jones-optimal\fi.
 \end{shortlist}
-While the logic is sound, we showed that the premise in the very first step
-is not valid.
+While the logic is sound, we (following \citet{yang-encoding}) showed that the
+premise in the very first step is not valid.
 
 \citet{Danvy-tagging-encoding} discuss Jones optimality at length and
 apply HOAS to typed self\hyp interpretation.  However, their source
