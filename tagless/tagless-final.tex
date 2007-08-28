@@ -97,7 +97,7 @@ compilation, partial evaluation, and other processing.
 
 \Citet{WalidICFP02} and \citet{xi-guarded} motivated interpreting
 a typed object language in a typed metalanguage as an interesting
-problem.  The known solutions to this problem store object terms and
+problem.  The common solutions to this problem store object terms and
 values in the metalanguage in a universal type, a generalized algebraic
 data type (GADT), or a dependent type.  In the remainder of this section,
 we discuss these solutions, identify their drawbacks, then summarize our
@@ -153,7 +153,9 @@ represent object terms such as those in Figure~\ref{fig:object}.
 For brevity, we elide treating integers, conditionals, and fixpoint in
 this section.
 \ifshort\else\UseVerbatim{2a}\fi
-We represent each variable using a unary de Bruijn index.
+We represent each variable using a unary de Bruijn index
+\footnote{We use de Bruijn indices here to make the comparison with
+\citep{WalidICFP02} simpler}.
 For example, we represent the object term $(\fun{x}x)\True$ as
 \ifshort \BUseVerbatim{test1}.\else \UseVerbatim{test1}\fi
 
@@ -386,8 +388,8 @@ representation but varying the interpreter, we can
 we refer the reader to the accompanying code for this.}\fi
 \end{itemize}
 We have programmed our interpreters in OCaml (and, for staging,
-MetaOCaml) and standard Haskell. The complete code is available at
-\url{http://okmij.org/ftp/packages/tagless-final.tar.gz}
+MetaOCaml \cite{metaocaml}) and standard Haskell. The complete code is
+available at \url{http://okmij.org/ftp/packages/tagless-final.tar.gz}
 to supplement the paper. Our examples below switch between (Meta)OCaml
 and Haskell even though we have implemented each example equivalently in
 both metalanguages, because some of our claims are more obvious in one
@@ -617,7 +619,7 @@ end
 \end{tabular}
 \end{floatrule}
 \caption{A simple (Meta)OCaml embedding of our object language, 
-    and examples of use}
+    and examples}
 \label{fig:ocaml-simple}
 \label{fig:ocaml-examples}
 \end{figure}
@@ -2092,10 +2094,17 @@ fragment.
 
 \section{Related work}\label{related}
 
+\ifshort
+Our initial motivation came from several papers 
+\citep{WalidICFP02,taha-tag,xi-guarded,peyton-jones-simple}
+that use embedded interpreters to justify advanced
+type systems, in particular GADTs.
+\else
 Our initial motivation came from several papers that justify advanced
 type systems, in particular GADTs, by embedded interpreters
 \citep{WalidICFP02,taha-tag,xi-guarded,peyton-jones-simple} and
 CPS transformations \citep{Guillemette-Monier-PLPV,shao-type-toplas,chen-typeful}.
+\fi
 We admire all this technical machinery, but
 these motivating examples do not need it.
 Although GADTs may indeed be more flexible and easier to use, they are
@@ -2223,6 +2232,10 @@ of the metalanguage.  By avoiding term-level type representations, our
 approach makes it easier to perform algebraic simplifications (as
 in~\S\ref{S:PE-solution}).
 
+% The following paragraph was not in the version submitted to APLAS,
+% yet was not commented out.  Of course, if we had space, we should add
+% this, but it is difficult to see how.
+\ifshort\else
 Using Haskell, \citet{Guillemette-Monier-PLPV} implement a CPS transformation
 for HOAS terms and statically assure that it preserves object types.
 They represent proofs of type preservation as terms of a GADT, which is not
@@ -2238,6 +2251,7 @@ languages), in particular
 These approaches use de Bruijn indices and fancier
 type systems with type-level functions, GADTs, or type\hyp equality
 proofs.
+\fi
 
 
 We encode terms in elimination form, as a coalgebraic structure.
