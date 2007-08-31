@@ -33,8 +33,6 @@ type boolean = BoolT
  *)
 
 module type Symantics = sig
-  type ('a,'b) sfun
-  type ('a,'b) dfun
   type ('c,'sv,'dv,'svt,'dvt) repr
   val int  : int  -> ('c,int,int,integer,integer) repr
   val bool : bool -> ('c,bool,bool,boolean,boolean) repr
@@ -59,11 +57,13 @@ module type Symantics = sig
              (unit -> 'x) -> (('c,'sa,'da,'svt,'dvt) repr as 'x)
 
   val lam : (('c,'sa,'da,'sat,'dat) repr -> ('c,'sb,'db,'sbt,'dbt) repr as 'x)
-  -> ('c,'x,'da->'db, ('sat,'sbt) sfun, ('dat,'dbt) dfun) repr
-  val app : ('c,'x,'da->'db,('sat,'sbt) sfun,('dat,'dbt) dfun) repr -> (('c,'sa,'da,'sat,'dat) repr ->
+  -> ('c,'x,'da->'db, 'x, 'dat -> 'dbt ) repr
+  val app : ('c,'x,'da->'db, 'x, 'dat -> 'dbt) repr -> (('c,'sa,'da,'sat,'dat) repr ->
       ('c,'sb,'db,'sbt,'dbt) repr as 'x)
   val fix : ('x -> 'x) -> (('c, ('c,'sa,'da,'sat,'dat) repr ->
-      ('c,'sb,'db,'sbt,'dbt) repr, 'da->'db,('sat,'sbt) sfun, ('dat,'dbt) dfun) repr as 'x)
+      ('c,'sb,'db,'sbt,'dbt) repr, 'da->'db, 
+      ('c,'sa,'da,'sat,'dat) repr -> ('c,'sb,'db,'sbt,'dbt) repr, 
+      'dat -> 'dbt) repr as 'x)
 
 end
 ;;
@@ -120,8 +120,6 @@ end;;
 *)
 (* Pure interpreter. It is essentially the identity transformer *)
 module R = struct
-  type ('a,'b) sfun
-  type ('a,'b) dfun
   type ('c,'sv,'dv,'svt,'dvt) repr = 'dv    (* absolutely no wrappers *)
   let int (x:int) = x
   let bool (b:bool) = b
@@ -156,8 +154,6 @@ module EXR = EX(R);;
    *)
 module RT = struct
   (* The following ``works'', but produces opaque results *)
-  type ('a,'b) sfun = ('a -> 'b)
-  type ('a,'b) dfun
   type ('c,'sv,'dv,'svt,'dvt) repr = 'svt
   let int (x:int) = IntT
   let bool (x:bool) = BoolT
@@ -181,8 +177,6 @@ module EXRT = EX(RT);;
    even if the term itself is divergent  *)
 
 module L = struct
-  type ('a,'b) sfun
-  type ('a,'b) dfun
   type ('c,'sv,'dv,'svt,'dvt) repr = int    (* absolutely no wrappers *)
   let int (x:int) = 1
   let bool (b:bool) = 1
@@ -207,8 +201,6 @@ module EXL = EX(L);;
 *)
 
 module C = struct
-  type ('a,'b) sfun
-  type ('a,'b) dfun
   type ('c,'sv,'dv,'svt,'dvt) repr = ('c,'dv) code
   let int (x:int) = .<x>.
   let bool (b:bool) = .<b>.
@@ -234,8 +226,6 @@ module EXC = EX(C);;
    know how to fix that *)
 
 module CT = struct
-  type ('a,'b) sfun
-  type ('a,'b) dfun = 'a -> 'b
   type ('c,'sv,'dv,'svt,'dvt) repr = ('c, 'dvt) code
   let int (x:int) = .< IntT >.
   let bool (b:bool) = .< BoolT >.
@@ -258,8 +248,6 @@ module EXCT = EX(CT);;
 
 module P =
 struct
-  type ('a,'b) sfun
-  type ('a,'b) dfun
   type ('c,'sv,'dv,'svt,'dvt) repr = {st: 'sv option; dy: ('c,'dv) code}
   type ('a,'s,'v) result = RL of 's | RC of ('a,'v) code;;
   let abstr {dy = x} = x
@@ -356,8 +344,6 @@ module EXP = EX(P1);;
 
 module PT =
 struct
-  type ('a,'b) sfun = 'a -> 'b
-  type ('a,'b) dfun = 'a -> 'b
   type ('c,'sv,'dv,'svt,'dvt) repr = {st: 'svt option; dy: ('c,'dvt) code}
   type ('a,'s,'v) result = RL of 's | RC of ('a,'v) code;;
   let abstr {dy = x} = x
@@ -391,11 +377,11 @@ struct
   let mul e1 e2 = ring int IntT IntT 0 RT.mul CT.mul (e1,e2)
   let leq e1 e2 = build bool true RT.leq CT.leq (e1,e2)
   let eql e1 e2 = build bool true RT.eql CT.eql (e1,e2)
-  let if_ eb et ee = et ()
+  let if_ eb et ee = ee ()
 
   let lam f =
-  {st = Some f; 
-   dy = C.lam (fun x -> abstr (f (pdyn x)))}
+      {st = Some f; 
+       dy = C.lam (fun x -> abstr (f (pdyn x)))}
 
   let app ef ea = match ef with
   | {st = Some f} -> f ea
@@ -423,6 +409,7 @@ let ptest1 = EXP.test1r ();;
 let ltest1 = EXL.test1r ();;
 let ttest1 = EXRT.test1r ();;
 let ztest1 = EXCT.test1r ();;
+let wtest1 = EXPT.test1r ();;
 
 let itest2 = EXR.test2r ();;
 let ctest2 = EXC.test2r ();;
@@ -430,13 +417,15 @@ let ptest2 = EXP.test2r ();;
 let ltest2 = EXL.test2r ();;
 let ttest2 = EXRT.test2r ();;
 let ztest2 = EXCT.test2r ();;
+let wtest2 = EXPT.test2r ();;
 
 let itest3 = EXR.test3r ();;
 let ctest3 = EXC.test3r ();;
 let ptest3 = EXP.test3r ();;
 let ltest3 = EXL.test3r ();;
 let ttest3 = EXRT.test3r ();;
-let ztest3 = EXCT.test2r ();;
+let ztest3 = EXCT.test3r ();;
+let wtest3 = EXPT.test3r ();;
 
 let itestg = EXR.testgibr ();;
 let ctestg = EXC.testgibr ();;
@@ -444,6 +433,7 @@ let ptestg = EXP.testgibr ();;
 let ltestg = EXL.testgibr ();;
 let ttestg = EXRT.testgibr ();;
 let ztestg = EXCT.testgibr ();;
+let wtestg = EXPT.testgibr ();;
 
 let itestg1 = EXR.testgib1r ();;
 let ctestg1 = EXC.testgib1r ();;
@@ -485,8 +475,6 @@ let ztestp0 = EXCT.testpowfix0r ();;
 
 (* Call-by-name interpreter *)
 module RCN = struct
-  type ('a,'b) sfun
-  type ('a,'b) dfun
   type ('c,'sv,'dv,'svt,'dvt) repr = {ko: 'w. ('sv -> 'w) -> 'w}
   let int (x:int) = {ko = fun k -> k x}
   let bool (b:bool) = {ko = fun k -> k b}
@@ -772,8 +760,6 @@ module RCPS (ST: sig
       {ko: 'w. ('sv -> 'c states -> 'w) -> 'c states -> 'w}
 end) = struct
   include ST
-  type ('a,'b) sfun
-  type ('a,'b) dfun
   type ('c, 'sv, 'dv) result = 'c states -> 'sv
 
   let int (x:int) = {ko = fun k -> k x}
