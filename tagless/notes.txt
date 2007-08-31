@@ -1,3 +1,7 @@
+* Changes to final paper
+
+We should cite abstract categorial grammars, and compilation modes
+in FORTH.  We should add pretty-printing as an interpreter.
 
 * Questions for Neil Jones
 

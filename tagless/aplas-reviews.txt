@@ -142,7 +142,8 @@ for P1, or because both alternatives are different from the type
 designated by the class Symantics.
 
 \jacques{I don't know how to clarify this, but neither of those reasons
-are why this type is nonparametric. TODO}
+are why this type is nonparametric.}
+\ccshan{I added "unlike applying P1 to Int or Bool" to try to clarify.}
 
 Section 4.2, "... however, the type P t is no longer parametric
 in t..." Explain why this matters. Do we need parametricity somewhere?
@@ -151,8 +152,8 @@ do not need non-Haskell 98 features?
 
 \jacques{It has to be paramatric else P can't be an instance of
 Symantics, which is something stated only in the longer version.
-I tried to say this, but all attempts made the paper longer.
-TODO}
+I tried to say this, but all attempts made the paper longer.}
+\ccshan{I just dropped it from the short version; it seems unessential.}
 
 Section 4.4, "The code in Figure 7 natively unfolds fix whenever.."
 But I don't see fix in Figure 7.

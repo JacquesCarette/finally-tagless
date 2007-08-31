@@ -35,8 +35,8 @@ Our encoding of an object term abstracts over the various ways to
 interpret it, yet statically assures that the interpreters never get
 stuck.  To achieve self\hyp interpretation and show Jones\hyp
 optimality, we relate this exemplar of higher-rank and higher-kind
-polymorphism (provided by ML functors and Haskell~98 constructor
-classes) to plugging a term into a context of let\hyp polymorphic
+polymorphism \ifshort\else (provided by ML functors and Haskell~98 constructor
+classes) \fi to plugging a term into a context of let\hyp polymorphic
 bindings.
 \end{abstract}
 
@@ -1090,6 +1090,7 @@ data P1 (a -> b) = S1 (P1 a -> P1 b) | E1 (C (a -> b))
 data P1 (a -> b) = P1 (Maybe (P1 a -> P1 b)) (C (a -> b))
 \end{code}
 \ifshort\vspace*{-0.7em}\fi
+unlike applying |P1| to |Int| or |Bool|.
 That is, we need a nonparametric data type, something akin to
 type-indexed functions and type-indexed types, which
 \citet{oliveira-typecase} dub the \emph{typecase} design pattern.
@@ -1126,9 +1127,9 @@ data P t where
 \end{code}
 \fi
 The constructors |VI|, |VB|, and |VF| build static terms (like |S0|
-in~\S\ref{S:PE-lift}), and |E| builds dynamic terms (like |E0|).  However,
+in~\S\ref{S:PE-lift}), and |E| builds dynamic terms (like |E0|).  \ifshort\else However,
 the type |P t| is no longer parametric in~|t|: the constructor |VF| takes an
-operand of type |P a -> P b| rather than |a -> b|.  We define a function
+operand of type |P a -> P b| rather than |a -> b|.  \fi We define a function
 \ifshort |abstr|, \fi like |abstr1| above\ifshort,\fi\
 to extract a future-stage computation from a value of type |P t|.
 \ifshort\else
@@ -2110,8 +2111,8 @@ CPS transformations \citep{Guillemette-Monier-PLPV,shao-type-toplas,chen-typeful
 We admire all this technical machinery, but
 these motivating examples do not need it.
 Although GADTs may indeed be more flexible and easier to use, they are
-unavailable in mainstream ML and implemented problematically
-in GHC currently. We also wanted to find the minimal
+unavailable in mainstream ML, and their current implementation in GHC fails to
+detect exhaustive pattern matching.  We also wanted to find the minimal
 set of widespread language features needed for tagless
 type-preserving interpretation.
 
@@ -2182,11 +2183,17 @@ deforest the object term representation.  Put another way, we
 manual apply type-level partial evaluation to our type
 functions (see \S\ref{S:PE-solution}) to obtain simpler types 
 acceptable to MetaOCaml.
+
 \Citet{sumii-hybrid} also use Asai's method,
 to combine online
 and offline partial evaluation.
+They predate us in deforesting the object term representation to enable tagless
+partial evaluation.
 We strive for modularity by reusing interpreters for individual stages
-\citep{SperberThiemann:TwoForOne}.  It would be interesting
+\citep{SperberThiemann:TwoForOne}: our partial evaluator~|P|
+reuses our tagless evaluator~|R| and tagless compiler~|C|, so it
+is patent that the \emph{output} of~|P| never gets
+stuck.  It would be interesting
 to try to derive a \emph{cogen} \citep{Thiemann:cogeninsixlines}
 in the same manner.
 
