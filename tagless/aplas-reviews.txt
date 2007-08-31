@@ -91,7 +91,9 @@ an object program is .. closed." But, if closeness here refers
 to not having free variables, it is not checked by the type system.
 
 \jacques{As I said in email, there seems to be a point here, as even
-we say in the paper.  That needs HOAS.  TODO}
+we say in the paper.  That needs HOAS.}
+\ccshan{Clarified that both the HOAS code and the de Bruijn code
+prevents evaluating open code.}
 
 I am not sure it is a good idea to use two languages in a paper.
 

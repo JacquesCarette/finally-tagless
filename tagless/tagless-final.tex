@@ -105,7 +105,7 @@ proposal and contributions.
 \ifshort
 We leave aside the solved problem of writing a parser\slash type\hyp checker,
 for embedding object language objects into the metalanguage
-(whether using dependent types \cite{WalidICFP02} or not \cite{baars-typing}),
+(whether using dependent types \citep{WalidICFP02} or not \citep{baars-typing}),
 and just enter them by hand.
 \else
 No matter how we represent the object language in the
@@ -113,7 +113,7 @@ metalanguage, the representation can be created either by hand (for example, by
 entering object terms at a metalanguage interpreter's prompt) or
 by a parser\slash type\hyp checker reading from a text string.
 We leave aside the solved problem of writing such a parser\slash type\hyp checker,
-whether using dependent types \cite{WalidICFP02} or not \cite{baars-typing}.
+whether using dependent types \citep{WalidICFP02} or not \citep{baars-typing}.
 \fi
 
 \subsection{The tag problem}\label{tagproblem}
@@ -153,9 +153,9 @@ represent object terms such as those in Figure~\ref{fig:object}.
 For brevity, we elide treating integers, conditionals, and fixpoint in
 this section.
 \ifshort\else\UseVerbatim{2a}\fi
-We represent each variable using a unary de Bruijn index
-\footnote{We use de Bruijn indices here to make the comparison with
-\citep{WalidICFP02} simpler}.
+We represent each variable using a unary de Bruijn index.%
+\footnote{We use de Bruijn indices to simplify the comparison with
+\citearound{'s work}\citet{WalidICFP02}.}
 For example, we represent the object term $(\fun{x}x)\True$ as
 \ifshort \BUseVerbatim{test1}.\else \UseVerbatim{test1}\fi
 
@@ -174,7 +174,7 @@ For example, we represent the object term $(\fun{x}x)\True$ as
 \end{figure}
 \fi
 
-\noindent Following \cite{WalidICFP02},
+\noindent Following \citep{WalidICFP02},
 we try to implement an interpreter function |eval0|\ifshort,
 Fig.~\ref{fig:tag-problem}(b)\fi. It takes
 an object term such as |test1| above and gives us its value.
@@ -244,12 +244,12 @@ If we evaluate only closed terms that have been type-checked, then
 |eval| would never fail. Alas, this soundness is not obvious to the
 metalanguage, whose type system we must still appease with the
 nonexhaustive pattern matching in |lookup| and |eval| and the tags |UB|
-and |UA| \cite[\S1.4]{WalidICFP02}.  In other words, the algebraic data
+and |UA| \citep[\S1.4]{WalidICFP02}.  In other words, the algebraic data
 types above fail to express in the metalanguage that the object program
 is well-typed.  This failure necessitates tagging and nonexhaustive
 pattern\hyp matching operations that incur a performance penalty in
-interpretation \cite{WalidICFP02} and impair optimality in partial evaluation
-\cite{taha-tag}.  In short, the universal\hyp type solution is
+interpretation \citep{WalidICFP02} and impair optimality in partial evaluation
+\citep{taha-tag}.  In short, the universal\hyp type solution is
 unsatisfactory because it does not preserve typing.
 
 \ifshort\else\subsection{Solutions using fancier types}\fi
@@ -257,8 +257,8 @@ unsatisfactory because it does not preserve typing.
 It is commonly thought that to interpret a typed object language in
 a typed metalanguage while preserving types is difficult and requires
 GADTs or dependent types \citep{taha-tag}.  In fact, this problem
-motivated much work on GADTs \cite{xi-guarded,peyton-jones-simple} and
-on dependent types \cite{WalidICFP02,fogarty-concoqtion}.
+motivated much work on GADTs \citep{xi-guarded,peyton-jones-simple} and
+on dependent types \citep{WalidICFP02,fogarty-concoqtion}.
 \ifshort\else
 For a metalanguage's type system to allow the well-typed object term
 |test1| but disallow the ill-typed object term |test2|, fancier types
@@ -267,9 +267,9 @@ such as GADTs or dependent types seem necessary.
 Yet other type systems
 have been proposed to distinguish closed terms like |test1| from open
 terms 
-\ifshort\cite{WalidPOPL03,NanevskiJFP05,DaviesJACM01}\else
+\ifshort\citep{WalidPOPL03,NanevskiJFP05,DaviesJACM01}\else
 like |test3|
-\cite{WalidPOPL03,NanevskiICFP02,NanevskiJFP05,DaviesJACM01,nanevski-contextual}\fi,
+\citep{WalidPOPL03,NanevskiICFP02,NanevskiJFP05,DaviesJACM01,nanevski-contextual}\fi,
 so that |lookup| never receives an empty environment.  We discuss these
 proposals further in \S\ref{related}\ifshort\else;
 here we just note that many
@@ -341,7 +341,7 @@ achieve a tagless evaluator for a typed object language in a
 metalanguage with a simple 
 \ifshort
 Hindley-Milner \fi
-type system\ifshort\else\ \cite{hindley-principal,milner-theory}\fi
+type system\ifshort\else\ \citep{hindley-principal,milner-theory}\fi
 .  In this \emph{final} rather
 than \emph{initial} approach, both kinds of run-time errors in
 \S\ref{tagproblem} (applying a nonfunction and evaluating an open
@@ -349,7 +349,7 @@ term) are reported at compile time. Because the new interpreter
 uses no universal type or pattern matching, it never results in a
 run-time error, and is in fact total.  Because this safety is obvious
 not just to us but also to the metalanguage implementation, we avoid
-the serious performance penalty \cite{WalidICFP02} of error checking.
+the serious performance penalty \citep{WalidICFP02} of error checking.
 \Citet{Gluck-jones-optimality} explains deeper technical reasons that
 inevitably lead to these performance penalties.
 
@@ -388,7 +388,7 @@ representation but varying the interpreter, we can
 we refer the reader to the accompanying code for this.}\fi
 \end{itemize}
 We have programmed our interpreters in OCaml (and, for staging,
-MetaOCaml \cite{metaocaml}) and standard Haskell. The complete code is
+\citet{metaocaml}) and standard Haskell. The complete code is
 available at \url{http://okmij.org/ftp/packages/tagless-final.tar.gz}
 to supplement the paper. Our examples below switch between (Meta)OCaml
 and Haskell even though we have implemented each example equivalently in
@@ -439,7 +439,7 @@ without tagging or type\hyp system extensions.  For example, \citet{taha-tag}
 say that ``expressing such an interpreter in a statically typed
 programming language is a rather subtle matter. In fact, it is only
 recently that some work on programming type-indexed values in ML
-\cite{yang-encoding} has given a hint of how such a function can be
+\citep{yang-encoding} has given a hint of how such a function can be
 expressed.''  We discuss related work in~\S\ref{related}.
 
 To reiterate, we do \emph{not} propose any new language
@@ -462,7 +462,7 @@ use of only mainstream features \ifshort\else are virtues that \fi make it more 
 embedded DSLs.
 \begin{comment}
 We may claim some contribution about type-preserving CPS. Check
-related work section in \cite{Guillemette-Monier-PLPV}, especially
+related work section in \citep{Guillemette-Monier-PLPV}, especially
 check the work of Shao on type-preserving CPS in Flint. The PLPV paper
 in related work shows other tasks, including closure conversion, which
 we may tackle in our approach. We may be able to write a
@@ -478,7 +478,7 @@ The language is close to \citets{xi-guarded}, without their polymorphic
 lift but with more constants so as to more conveniently express Fibonacci,
 factorial, and power.
 In contrast to \S\ref{intro}, we encode binding using higher-order
-abstract syntax (HOAS) \cite{miller-manipulating,pfenning-higher-order}
+abstract syntax (HOAS) \citep{miller-manipulating,pfenning-higher-order}
 rather than de Bruijn indices. This makes the encoding convenient and
 also ensures that our object programs are closed.
 
@@ -645,7 +645,7 @@ class \fi |Symantics| \ifshort\else type class \fi and its instances by a module
 and its implementations.  Figure~\ref{fig:ocaml-simple} shows a simple
 signature that suffices until~\S\ref{PE}.  The two differences are:
 the additional type parameter |'c|, an
-\emph{environment classifier} \cite{WalidPOPL03} required by MetaOCaml for
+\emph{environment classifier} \citep{WalidPOPL03} required by MetaOCaml for
 code generation in~\S\ref{compiler}; and the $\eta$-expanded type for
 |fix| and thunk types in |if_| since OCaml is a call-by-value
 language.
@@ -802,16 +802,16 @@ let module E =EX1(L) in E.tfix ();;
 \section{A tagless compiler (or, a staged interpreter)}\label{compiler}
 Besides immediate evaluation, we can compile our object language
 into OCaml code using MetaOCaml's staging facilities. MetaOCaml
-represents future-stage expressions of type~$t$ at the
-present stage as values of type |('c, |$t$|) code| where |'c| is the
-environment classifier \cite{WalidPOPL03,calcagno-ml-like}. Code values are created
-by a \emph{bracket} form |.<|$e$|>.|, which specifies that the expression~$e$ is to be
-evaluated at a future stage. The \emph{escape} |.~|$e$ must occur
+represents future-stage expressions of type~$t$
+as values of type |('c, |$t$|) code|, where |'c| is the
+environment classifier \citep{WalidPOPL03,calcagno-ml-like}. Code values are created
+by a \emph{bracket} form |.<|$e$|>.|, which quotes the expression~$e$ for
+evaluation at a future stage. The \emph{escape} |.~|$e$ must occur
 within a bracket and specifies that the expression~$e$ must be evaluated
 at the current stage; its result, which must be a code value, is
 spliced into the code being built by the enclosing bracket. The \emph{run} form |.!|$e$ evaluates
-the future-stage code value~$e$ by compiling and linking it at run-time.
-The bracket, escape, and run are akin to
+the future-stage code value~$e$ by compiling and linking it at run time.
+Bracket, escape, and run are akin to
 quasi-quotation, unquotation, and |eval| of Lisp.
 
 % this code does not have the 'sv parameter. It shows up later.
@@ -880,11 +880,11 @@ unoptimized code. For example, interpreting our |test1| with
 \ifshort Fig.~\ref{fig:interpreter-C}(b) \else \UseVerbatim{5b}\fi
 gives the code value |.<(fun|~|x_6|~|->|~|x_6)| |true>.|
 of inferred type |('c,|~|bool)| |C.repr|.  Interpreting |testpowfix7|
-\ifshort\pagebreak[3]\fi
 with
 \ifshort Fig.~\ref{fig:interpreter-C}(c) \else \UseVerbatim{5c}\fi
 gives a code value with many apparent $\beta$- and $\eta$-redexes\ifshort,
 Fig.~\ref{fig:interpreter-C}(d). \else: \UseVerbatim{5d}\fi
+\ifshort\pagebreak[3]\fi
 This compiler does not incur
 any interpretive overhead: the
 code produced for $\fun{x}x$ is simply |fun|~|x_6|~|->|~|x_6|\ifshort\else\
@@ -892,6 +892,8 @@ and does not
 call the interpreter, unlike the recursive calls to |eval0| and
 |eval| in the |L e| lines in \S\ref{tagproblem}\fi.
 The resulting code obviously contains no tags and no pattern matching.
+The environment classifiers here, like the tuple types in \S\ref{ourapproach},
+make it a type error to run an open expression.
 \ifshort
 The accompanying code shows the Haskell implementation. 
 \else
@@ -987,7 +989,7 @@ a problem with |if_|.  If the first argument to |if_| is a dynamic term
 dynamic term (of type |C a|), then we need to convert
 the static term to dynamic, but there is no polymorphic ``lift''
 function, of type |a -> C a|, to send a value to the future stage
-\cite{xi-guarded,WalidPOPL03}.\ifshort\else
+\citep{xi-guarded,WalidPOPL03}.\ifshort\else
 (By the way, if we
 were to add polymorphic \texttt{lift} to the type class
 \texttt{Symantics repr}, then \texttt{repr} would become an instance of
@@ -1000,7 +1002,7 @@ When compiling to a first-order target language such as machine code,
 booleans, integers, and functions may well be represented differently.
 Thus, compiling polymorphic lift requires intensional type
 analysis.  To avoid needing polymorphic lift, we turn to
-Asai's technique \cite{asai-binding-time,sumii-hybrid}:
+Asai's technique \citep{asai-binding-time,sumii-hybrid}:
 build a dynamic term
 alongside every static term.
 
@@ -1102,7 +1104,7 @@ is not an accident, as we shall see in~\S\ref{S:CPS}.\fi
 
 Two common ways to provide typecase in Haskell are
 GADTs and type-class functional dependencies
-\cite{oliveira-typecase}.  These
+\citep{oliveira-typecase}.  These
 methods are equivalent, and here we use GADTs; |incope1.hs|
 in the accompanying source code shows the latter.
 \ifshort
@@ -1395,7 +1397,7 @@ in a large language with more base types and primitive operations.
 \ifshort\else
 Incidentally, the code actually contains a more general implementation
 mechanism for such features, inspired in part by previous work in
-generative linear algebra~\cite{CaretteKiselyov05}.
+generative linear algebra~\citep{CaretteKiselyov05}.
 \fi
 
 Any partial evaluator must decide how much to unfold recursion\ifshort.
@@ -1418,11 +1420,11 @@ let fix f = f (pdyn (C.fix (fun x -> abstr (f (pdyn x)))))
 \end{code}
 \fi
 Many sophisticated approaches have been developed to decide how much to unfold
-\cite{jones-partial}, but this issue is orthogonal to our presentation.
+\citep{jones-partial}, but this issue is orthogonal to our presentation.
 \ifshort\else
 A separate concern in our treatment of |fix| is possible code bloat in
 the residual program, which calls for let-insertion
-\cite{SwadiTahaKiselyovPasalic2006}.
+\citep{SwadiTahaKiselyovPasalic2006}.
 \fi
 
 
@@ -1810,7 +1812,7 @@ Given an \emph{encoding} of each object term~$e$ as an \emph{object} term~$\Enco
 a \emph{self\hyp interpreter} is usually defined as an object
 function~$\si$ such that any object term~$e$ is observationally
 equivalent to the object application $\si\Encode{e}$
-\cite{jones-partial,taha-tag,Danvy-tagging-encoding}.
+\citep{jones-partial,taha-tag,Danvy-tagging-encoding}.
 A partial evaluator~$\pe$ maps object terms~$e$ to observationally
 equivalent object terms~$\pe(e)$.  It is said to be
 \emph{optimal} with respect to~|si| \citep{jones-challenging} if $\pe(\si\Encode{e})$
@@ -2114,10 +2116,10 @@ set of widespread language features needed for tagless
 type-preserving interpretation.
 
 Even a simply typed $\lambda$-calculus obviously supports self\hyp
-interpretation, provided we use universal types \cite{taha-tag}.  The
+interpretation, provided we use universal types \citep{taha-tag}.  The
 ensuing tagging overhead motivated \citet{taha-tag} to propose tag
 elimination, which however does not statically guarantee that all tags
-will be removed \cite{WalidICFP02}.
+will be removed \citep{WalidICFP02}.
 
 \Citet{WalidICFP02}, \citet{taha-tag}, \citet{xi-guarded}, and
 \citet{peyton-jones-simple} seem to argue as follows that a self\hyp
@@ -2135,7 +2137,7 @@ advanced types or tagging overhead\\
   Jones-optimal\fi.
 \end{shortlist}
 While the logic is sound, we (following \citet{yang-encoding}) showed that the
-premise in the very first step is not valid.
+first step's premise is not valid.
 
 \citet{Danvy-tagging-encoding} discuss Jones optimality at length and
 apply HOAS to typed self\hyp interpretation.  However, their source
@@ -2160,10 +2162,10 @@ Our partial evaluator establishes a bijection |repr_pe| between static
 and dynamic types (the valid values of |'sv| and |'dv|), and between
 static and dynamic terms.  It is customary to implement such a bijection
 using an injection\hyp projection pair, as done for interpreters
-\ifshort \cite{Ramsey-ML-module-mania,Benton-embedded-interpreters}\else
+\ifshort \citep{Ramsey-ML-module-mania,Benton-embedded-interpreters}\else
 by \citet{Ramsey-ML-module-mania} and \citet{Benton-embedded-interpreters}\fi,
-partial evaluation \ifshort \cite{Danvy-TDPE}\else by \citet{Danvy-TDPE}\fi,
-and type-level functions \ifshort \cite{oliveira-typecase}\else by
+partial evaluation \ifshort \citep{Danvy-TDPE}\else by \citet{Danvy-TDPE}\fi,
+and type-level functions \ifshort \citep{oliveira-typecase}\else by
 \citet{oliveira-typecase}\fi.  As explained in~\S\ref{S:PE-solution}, we
 avoid injection and projection at the type level by adding an argument
 to |repr|.
@@ -2184,21 +2186,21 @@ acceptable to MetaOCaml.
 to combine online
 and offline partial evaluation.
 We strive for modularity by reusing interpreters for individual stages
-\cite{SperberThiemann:TwoForOne}.  It would be interesting
-to try to derive a \emph{cogen} \cite{Thiemann:cogeninsixlines}
+\citep{SperberThiemann:TwoForOne}.  It would be interesting
+to try to derive a \emph{cogen} \citep{Thiemann:cogeninsixlines}
 in the same manner.
 
 It is common to implement an embedded DSL by providing multiple
 interpretations of host\hyp language pervasives such as addition and
 application.  It is also common to use phantom types to rule out
 ill-typed object terms, as done in Lava
-\cite{Lava} and by \citet{Rhiger-thesis}. However, these approaches
+\citep{Lava} and by \citet{Rhiger-thesis}. However, these approaches
 are not tagless because they still use universal types, such as Lava's
 \texttt{Bit} and \texttt{NumSig}, and Rhiger's \texttt{Raw} (his Fig.~2.2)
 and \texttt{Term} (his Chap.~3), which incur the attendant overhead of
 pattern matching.  The universal type also
 greatly complicates the soundness and completeness proofs of embedding
-\cite{Rhiger-thesis}, whereas our proofs are trivial.
+\citep{Rhiger-thesis}, whereas our proofs are trivial.
 Rhiger's approach does not support typed CPS transformation (his~\S3.3.4).
 \begin{comment}
 Rhiger's But Fig 2.2, p33: universal type Raw.  He uses phantom type
@@ -2285,10 +2287,10 @@ syntactic hole.
 
 Our encoding of the type function |repr_pe| in \S\ref{S:PE-solution}
 emulates type-indexed types and is related to intensional type analysis
-\cite{Morrisett-intensional,Generic-Haskell}. However, our object
+\citep{Morrisett-intensional,Generic-Haskell}. However, our object
 language and running examples in HOAS include |fix|,
 which intensional type analysis cannot handle
-\cite{xi-guarded}.  Our final approach
+\citep{xi-guarded}.  Our final approach
 seems related to \citearound{'s approach to HOAS using catamorphisms and
   anamorphisms}\citet{Washburn-Weirich-boxes}.
 
@@ -2302,7 +2304,7 @@ the \emph{typed} $\lambda$-calculus has a final coalgebra structure.
 investigate the untyped $\lambda$-calculus
 along this line.  
 In particular, they use
-contexts with a hole \cite[p.\,13]{honsell99coinductive} to define
+contexts with a hole \citep[p.\,13]{honsell99coinductive} to define
 \emph{observational equivalence}
 (see our~\S\ref{selfinterp}).
 \citearound{'s bibliography}\Citet{honsell99coinductive} refers to the
@@ -2316,7 +2318,7 @@ coinductive aspects of B\"{o}hm trees, as pointed out by
 One way to understand our main idea is to eschew sum types and sum kinds
 for their dual, record types and record kinds.
 For the self\hyp interpreter, we then proceed to use a Church encoding for
-recursive data types \cite{bohm-automatic}.
+recursive data types \citep{bohm-automatic}.
 \fi
 
 \ifshort We observe that \else As \S\ref{S:clarify} observes, \fi
@@ -2324,7 +2326,7 @@ higher-rank and higher-kind
 polymorphism lets us type-check and compile object terms separately from
 interpreters.  This \ifshort\else observation \fi is consistent with the role of
 polymorphism in the separate compilation of modules
-\cite{shao-typed}.
+\citep{shao-typed}.
 
 \section{Conclusions}\label{conclusion}
 
