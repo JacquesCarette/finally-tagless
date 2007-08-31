@@ -26,8 +26,20 @@
 
 
 (* We need some meta-types that are shared by everyone *)
-type integer = IntT
-type boolean = BoolT
+type integer = [`IntT]
+type boolean = [`BoolT]
+
+(* And we need a data-structure in which to store constraints *)
+type 'a constraintset = (int * 'a) list * int
+
+(* Actually, we can't really be that polymorphic :-( so we need to 
+   create a type that will contain all this *)
+type anything = [`AnyT]
+type base     = [ integer | boolean | anything ]
+type allt     = [ base | `Function of (allt * allt) ]
+
+type acs = allt constraintset
+
 (* This class/type defines syntax (and its instances, semantics) 
    of our language
  *)
@@ -154,16 +166,40 @@ module EXR = EX(R);;
    *)
 module RT = struct
   (* The following ``works'', but produces opaque results *)
-  type ('c,'sv,'dv,'svt,'dvt) repr = 'svt
-  let int (x:int) = IntT
-  let bool (x:bool) = BoolT
-  let add x y = IntT
-  let mul x y = IntT
-  let leq x y = BoolT
-  let eql x y = BoolT
+  type ('c,'sv,'dv,'svt,'dvt) repr = acs -> acs
+  let int (x:int) = fun (cs,n) -> ([(0,`IntT)],n)
+  let bool (x:bool) = fun (cs,n) -> ([(0,`BoolT)],n)
+  let add x y = fun (cs,n) -> 
+      let (xcs,xn) = x (cs,n) in
+      let (ycs,yn) = y (cs,xn) in
+      match (xcs,ycs) with
+      | ([(0,`IntT)],[(0,`IntT)]) -> ([(0,`IntT)],yn)
+      | _                         -> failwith "incompatible types in add"
+  let mul x y = fun (cs,n) -> 
+      let (xcs,xn) = x (cs,n) in
+      let (ycs,yn) = y (cs,xn) in
+      match (xcs,ycs) with
+      | ([(0,`IntT)],[(0,`IntT)]) -> ([(0,`IntT)],yn)
+      | _                         -> failwith "incompatible types in mul"
+  let leq x y = fun (cs,n) -> 
+      let (xcs,xn) = x (cs,n) in
+      let (ycs,yn) = y (cs,xn) in
+      match (xcs,ycs) with
+      | ([(0,`IntT)],[(0,`IntT)]) -> ([(0,`BoolT)],yn)
+      | _                         -> failwith "incompatible types in leq"
+  let eql x y = fun (cs,n) -> 
+      let (xcs,xn) = x (cs,n) in
+      let (ycs,yn) = y (cs,xn) in
+      match (xcs,ycs) with
+      | ([(0,a)],[(0,b)]) when a=b -> ([(0,`BoolT)],yn)
+      | _                         -> failwith "incompatible types in eql"
   let if_ eb et ee = ee ()
-  let lam f = (fun x -> f x)
-  let app f c = f c
+  let lam f = fun (cs,n) -> let g = f (fun (cc,nn) -> ([(0,`AnyT)],nn)) in
+      let (newcs,newn) = g (cs,n) in
+      ( (0,`Function(`AnyT,snd(List.hd newcs)))::newcs, newn+1 )
+  let app f c = fun (cs,n) -> 
+      let (newcs,newn) = f (c (cs,n)) in
+      (List.tl newcs, newn)
   let fix f = let rec self n = f self n in self
 end;;
 module EXRT = EX(RT);;
@@ -227,12 +263,12 @@ module EXC = EX(C);;
 
 module CT = struct
   type ('c,'sv,'dv,'svt,'dvt) repr = ('c, 'dvt) code
-  let int (x:int) = .< IntT >.
-  let bool (b:bool) = .< BoolT >.
-  let add e1 e2 = .< IntT >.
-  let mul e1 e2 = .< IntT >.
-  let leq x y = .< BoolT >.
-  let eql x y = .< BoolT >.
+  let int (x:int) = .< `IntT >.
+  let bool (b:bool) = .< `BoolT >.
+  let add e1 e2 = .< `IntT >.
+  let mul e1 e2 = .< `IntT >.
+  let leq x y = .< `BoolT >.
+  let eql x y = .< `BoolT >.
   let if_ eb et ee =  ee ()
   let lam (f : (('c,'sa,'da,'sat,'dat) repr -> ('c,'sb,'db,'sbt,'dbt) repr as
   'x)) = .<fun (x:'dat) -> .~(f .<x>.) >.
@@ -342,6 +378,7 @@ module EXP = EX(P1);;
 (* Partial evaluator *)
 (* This is again for the type stuff *)
 
+(*
 module PT =
 struct
   type ('c,'sv,'dv,'svt,'dvt) repr = {st: 'svt option; dy: ('c,'dvt) code}
@@ -373,8 +410,8 @@ struct
   | _, ({st = Some e'} as e) when e' = zero -> e
   | ee -> monoid cast one element f1 f2 ee
 
-  let add e1 e2 = monoid int IntT 0 RT.add CT.add (e1,e2)
-  let mul e1 e2 = ring int IntT IntT 0 RT.mul CT.mul (e1,e2)
+  let add e1 e2 = monoid int (`IntT) 0 RT.add CT.add (e1,e2)
+  let mul e1 e2 = ring int `IntT `IntT 0 RT.mul CT.mul (e1,e2)
   let leq e1 e2 = build bool true RT.leq CT.leq (e1,e2)
   let eql e1 e2 = build bool true RT.eql CT.eql (e1,e2)
   let if_ eb et ee = ee ()
@@ -401,39 +438,36 @@ struct
 end;;
 
 module EXPT = EX(PT);;
+*)
 
 (* all the tests together *)
 let itest1 = EXR.test1r ();;
 let ctest1 = EXC.test1r ();;
 let ptest1 = EXP.test1r ();;
 let ltest1 = EXL.test1r ();;
-let ttest1 = EXRT.test1r ();;
-let ztest1 = EXCT.test1r ();;
-let wtest1 = EXPT.test1r ();;
+let ttest1 = EXRT.test1r () ([],0);;
+let ztest1 = EXCT.test1r ();; 
 
 let itest2 = EXR.test2r ();;
 let ctest2 = EXC.test2r ();;
 let ptest2 = EXP.test2r ();;
 let ltest2 = EXL.test2r ();;
-let ttest2 = EXRT.test2r ();;
+let ttest2 = EXRT.test2r () ([],0);;
 let ztest2 = EXCT.test2r ();;
-let wtest2 = EXPT.test2r ();;
 
 let itest3 = EXR.test3r ();;
 let ctest3 = EXC.test3r ();;
 let ptest3 = EXP.test3r ();;
 let ltest3 = EXL.test3r ();;
-let ttest3 = EXRT.test3r ();;
+let ttest3 = EXRT.test3r () ([],0);;
 let ztest3 = EXCT.test3r ();;
-let wtest3 = EXPT.test3r ();;
 
 let itestg = EXR.testgibr ();;
 let ctestg = EXC.testgibr ();;
 let ptestg = EXP.testgibr ();;
 let ltestg = EXL.testgibr ();;
-let ttestg = EXRT.testgibr ();;
+let ttestg = EXRT.testgibr () ([],0);;
 let ztestg = EXCT.testgibr ();;
-let wtestg = EXPT.testgibr ();;
 
 let itestg1 = EXR.testgib1r ();;
 let ctestg1 = EXC.testgib1r ();;
@@ -446,21 +480,21 @@ let itestg2 = EXR.testgib2r ();;
 let ctestg2 = EXC.testgib2r ();;
 let ptestg2 = EXP.testgib2r ();;
 let ltestg2 = EXL.testgib2r ();;
-let ttestg2 = EXRT.testgib2r ();;
+let ttestg2 = EXRT.testgib2r () ([],0);;
 let ztestg2 = EXCT.testgib2r ();;
 
 let itestp7 = EXR.testpowfix7r ();;
 let ctestp7 = EXC.testpowfix7r ();;
 let ptestp7 = EXP.testpowfix7r ();;
 let ltestp7 = EXL.testpowfix7r ();;
-let ttestp7 = EXRT.testpowfix7r ();;
+let ttestp7 = EXRT.testpowfix7r () ([],0);;
 let ztestp7 = EXCT.testpowfix7r ();;
 
 let itestp0 = EXR.testpowfix0r ();;
 let ctestp0 = EXC.testpowfix0r ();;
 let ptestp0 = EXP.testpowfix0r ();;
 let ltestp0 = EXL.testpowfix0r ();;
-let ttestp0 = EXRT.testpowfix0r ();;
+let ttestp0 = EXRT.testpowfix0r () ([],0);;
 let ztestp0 = EXCT.testpowfix0r ();;
 
 (* ------------------------------------------------------------------------ *)
