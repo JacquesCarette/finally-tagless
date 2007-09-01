@@ -19,6 +19,9 @@ please address the following comment raised during the PC meeting:
 \jacques{I have softened the claim in that paragraph and put in an
 explicit link to [32] there.  The real issue is that previous work on
 this has not "penetrated" the mainstream enough!}
+\oleg{I also added explicit ref to [32,38] in the last paragraph of
+the introduction, which already was saying that all of our techniques,
+in isolation, have been published.}
 
 Also, if you need to change your paper title, please send me email
 (<aplas2007@easychair.org>) as soon as possible.
@@ -100,6 +103,8 @@ I am not sure it is a good idea to use two languages in a paper.
 \jacques{It does make the paper harder to read for the common mortal,
 yes.  But, oh well, this is research, and we're not out to pander to
 the lowest-common-denominator}
+\oleg{Haskell code indeed was confusing in APLAS version of Sec 4. Now
+Sec 4 uses only OCaml.}
 
 It is true that some features are better demonstrated in one
 language than another, but the readers still keep wondering
@@ -115,8 +120,8 @@ does allow appendixes outside the page limit.
 \jacques{This is an interesting point, about appendices not counting
 towards the page limit.  If this is so, then we might be able to 
 do some real improvements to this paper.  But then again, do we really
-have the time? TODO}
-
+have the time?}
+\oleg{I think the reviewer is greatly mistaken about the space allotment.}
 
 Section 4.1, ".. there is no polymorphic 'lift' function, of
 type a -> C a.." Although some references are listed, it would be
@@ -144,6 +149,7 @@ designated by the class Symantics.
 \jacques{I don't know how to clarify this, but neither of those reasons
 are why this type is nonparametric.}
 \ccshan{I added "unlike applying P1 to Int or Bool" to try to clarify.}
+\oleg{I have changed that slightly in the OCaml version...}
 
 Section 4.2, "... however, the type P t is no longer parametric
 in t..." Explain why this matters. Do we need parametricity somewhere?
@@ -163,7 +169,8 @@ But I don't see fix in Figure 7.
 Section 5, "... their current implementation in GHC has problems."
 Can you be more specific? 
 
-\jacques{This was true of 6.4, but is it true of 6.6? TODO}
+\jacques{This was true of 6.4, but is it true of 6.6?}
+\oleg{Yes, that is true in GHC 6.6.1, the latest released version.}
 
 -------------------- review 2 --------------------
  
@@ -191,7 +198,7 @@ includes meta-level function spaces.
 something quite familiar, and move slowly towards the more complicated
 in easily understandable chunks, instead of leaping, as is done in way
 too many papers.  No idea how to be even more upfront that this is what
-we are doing, though apparently we really need to.  TODO}
+we are doing, though apparently we really need to.}
 
 This transition is not commented on, but is it the intention that we
 should imagine the later sections of the paper use the introduction's
@@ -274,7 +281,12 @@ otherwise!
 \jacques{Answer: camlp4 and/or TH can certainly cope with that.
 And higher-order functors can be passed around in OCaml.  However,
 I don't think a "parsing functor" can be created -- that would need
-camlp4, I think.  TODO.}
+camlp4, I think.}
+\oleg{We talk about parsing in the Introduction, the last paragraph of
+Sec 1.1. Incidentally, in AliceML one may indeed parse a program into
+a functor -- AliceML permits serialization and deserialization of
+functors. Perhaps other typed systems supporting distributed computations
+can do teh same.}
 
 -------------------- review 3 --------------------
  
@@ -307,6 +319,7 @@ p5 pretty much all works which show how to encode GADTs in terms of
 \jacques{Absolutely right.  It is a bit hard to read, but it really
 does deserve more credit (I just finished reading it).  I have added
 another clear reference}
+\oleg{There is still space for a sentence or two of further credit.}
 
 p6 your definition of class Symantics reminds me of Hinze's
    "Generics for the masses" paper where he employs a similar idea
@@ -331,6 +344,7 @@ p13 "...current implementation in GHC has problems".
 \jacques{Is 6.6 OK?  And, yes, in practice one might wish to use GADTs, 
    assuming that they "play well" with other parts, which certainly was
    not true in 6.4.}
+\oleg{6.6.1 is still problematic}
 
    I recall a paper by  Oliver Danvy, Morten Rhiger
    "A Simple Take on Typed Abstract Syntax in Haskell-like Languages"
@@ -343,3 +357,5 @@ p13 "...current implementation in GHC has problems".
    could have done a fair bit of what we've done.  We need to cite this
    too.  But I am really afraid to blow the page limit, I will let 
    someone else fiddle with this! TODO}
+\oleg{I believe that paper is part of Rhiger's thesis, which we
+discuss in the related work. It's worth double-checking though...}
