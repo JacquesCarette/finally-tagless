@@ -256,7 +256,71 @@ module EXC = EX(C);;
 
 (* ------------------------------------------------------------------------ *)
 (* Partial evaluator *)
-(* Inspired by Ken's solution *)
+
+(* First attempt: straightforward but quickly runs into trouble of requiring
+   polymorphic lift, which we don't have and should not try to get. 
+   Indeed, when implementing `add', we can lift a `static' int to
+   the `dynamic' int by using C.int. But to write if_, we need to be able
+   to lift values of any type...
+*)
+
+module P0 = struct
+  type ('c,'sv,'dv) repr 
+	= S0 of ('c,'sv,'dv) R.repr | E0 of ('c,'sv,'dv) C.repr
+  let int (x:int) = S0 (R.int x)
+  let bool (x:bool) = S0 (R.bool x)
+  let add e1 e2 = 
+    match (e1,e2) with
+    | (S0 e1, S0 e2) -> S0 (R.add e1 e2)
+    | (S0 e1, E0 e2) -> E0 (C.add (C.int e1) e2)
+    | (E0 e1, S0 e2) -> E0 (C.add e1 (C.int e2))
+    | (E0 e1, E0 e2) -> E0 (C.add e1 e2)
+end;;
+
+(* Second attempt: works for the first-order fragment of our language,
+   but stumbles on the higher-order fragment.
+*)
+
+module P1 : Symantics = struct
+  type ('c,'sv,'dv) repr = 
+      P1 of ('c,'sv,'dv) R.repr option * ('c,'sv,'dv) C.repr
+  let abstr1 (P1 (_,dyn)) = dyn
+
+  let int  (x:int)  = P1 (Some (R.int x), C.int x)
+  let bool (x:bool) = P1 (Some (R.bool x),C.bool x)
+  let add e1 e2 = 
+    match (e1,e2) with
+    | (P1 (Some n1,_),P1 (Some n2,_)) -> int (R.add n1 n2)
+    | _ -> P1 (None,(C.add (abstr1 e1) (abstr1 e2)))
+  let mul e1 e2 = 
+    match (e1,e2) with
+    | (P1 (Some n1,_),P1 (Some n2,_)) -> int (R.mul n1 n2)
+    | _ -> P1 (None,(C.mul (abstr1 e1) (abstr1 e2)))
+  let leq e1 e2 = 
+    match (e1,e2) with
+    | (P1 (Some n1,_),P1 (Some n2,_)) -> bool (R.leq n1 n2)
+    | _ -> P1 (None,(C.leq (abstr1 e1) (abstr1 e2)))
+  let eql e1 e2 = 
+    match (e1,e2) with
+    | (P1 (Some n1,_),P1 (Some n2,_)) -> bool (R.eql n1 n2)
+    | _ -> P1 (None,(C.eql (abstr1 e1) (abstr1 e2)))
+  let if_ = function
+    | P1 (Some s,_) -> fun et ee -> if s then et () else ee ()
+    | eb -> fun et ee -> P1 (None, C.if_ (abstr1 eb) 
+                                   (fun () -> abstr1 (et ()))
+                                   (fun () -> abstr1 (ee ())))
+  let lam f     = failwith "problem!"
+  let fix f     = failwith "problem!"
+  let app e1 e2 = failwith "problem!"
+end;;
+
+(* But the problem occurs when we try to implement lam. The result
+  of (lam f) must be P1 (None,_) or P1 ((Some _),_). Alas, we won't know
+  which is which until we apply the function 'f' to a particular
+  P1 value. 
+*)
+
+(* Final solution, Inspired by Ken's solution *)
 
 module P =
 struct

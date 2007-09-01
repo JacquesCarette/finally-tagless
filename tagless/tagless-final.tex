@@ -147,8 +147,8 @@ let test1 = A (L (V VZ), B true)
 % see tagless\_interp1.ml, module Tagfull for the complete code.
 % If you change the code in here, please adjust the .ml file
 % accordingly. Let the paper and the accompanying code be in sync.
-It is straightforward to create an algebraic data type, say in OCaml\ifshort\
-Fig.~\ref{fig:tag-problem}(a)\fi, to
+It is straightforward to create an algebraic data type, say in OCaml%
+\ifshort, Fig.~\ref{fig:tag-problem}(a)\fi, to
 represent object terms such as those in Figure~\ref{fig:object}.
 For brevity, we elide treating integers, conditionals, and fixpoint in
 this section.
@@ -454,7 +454,7 @@ use features already present in
 mainstream functional languages---Hindley-Milner
 type system with either an inference\hyp preserving module system or
 constructor classes, as realized in ML and Haskell 98---and techniques
-which have all appeared in the literature, to
+which have all appeared in the literature (in particular, \cite{yang-encoding,sumii-hybrid}), to
 solve a problem that was stated in the published record as
 unsolved and likely unsolvable in ML or Haskell 98
 without extensions. The simplicity of our solution and its
@@ -2111,7 +2111,8 @@ CPS transformations \citep{Guillemette-Monier-PLPV,shao-type-toplas,chen-typeful
 We admire all this technical machinery, but
 these motivating examples do not need it.
 Although GADTs may indeed be more flexible and easier to use, they are
-unavailable in mainstream ML, and their current implementation in GHC fails to
+unavailable in mainstream ML, and their current implementation in GHC
+6.6.1 fails to
 detect exhaustive pattern matching.  We also wanted to find the minimal
 set of widespread language features needed for tagless
 type-preserving interpretation.
