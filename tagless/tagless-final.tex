@@ -390,11 +390,14 @@ we refer the reader to the accompanying code for this.}\fi
 We have programmed our interpreters in OCaml (and, for staging,
 \citet{metaocaml}) and standard Haskell. The complete code is
 available at \url{http://okmij.org/ftp/packages/tagless-final.tar.gz}
-to supplement the paper. Our examples below switch between (Meta)OCaml
+to supplement the paper. 
+\ifshort For simplicity, our main examples will be in MetaOCaml, but
+all examples have also been implemented in Haskell.
+\else Our examples below switch between (Meta)OCaml
 and Haskell even though we have implemented each example equivalently in
 both metalanguages, because some of our claims are more obvious in one
 metalanguage than the other.  For example, MetaOCaml provides
-convenient, typed staging facilities.
+convenient, typed staging facilities.\fi
 
 We attack the problem of tagless (staged) typed-preserving
 interpretation exactly as it was posed
@@ -480,7 +483,7 @@ factorial, and power.
 In contrast to \S\ref{intro}, we encode binding using higher-order
 abstract syntax (HOAS) \citep{miller-manipulating,pfenning-higher-order}
 rather than de Bruijn indices. This makes the encoding convenient and
-also ensures that our object programs are closed.
+ensures that our object programs are closed.
 
 \subsection{How to make encoding flexible: abstract the interpreter}
 \label{encoding}
@@ -541,12 +544,12 @@ and the partial application $\fun{x} \mathit{power}\;x\;7$ is
 \else\UseVerbatim{3c}\fi
 The dummy argument |()| above is to avoid the monomorphism
 restriction, to keep the type of |testpowfix| and |testpowfix7|
-polymorphic in |repr|. Instead of supplying this dummy
+polymorphic in |repr|. \ifshort\else Instead of supplying this dummy
 argument, we could have given the terms explicit polymorphic
 signatures.  We however prefer for
 Haskell to infer the object types for us. We could also
 avoid the dummy argument by switching off the monomorphism restriction
-with a compiler flag.
+with a compiler flag.\fi
 The methods |add|, |mul|, and |leq| are quite similar, and so are
 |int| and |bool|. Therefore, we often show
 only one method of each group and elide the rest. The
@@ -679,7 +682,7 @@ The first interpreter evaluates an object term to its value in the
 metalanguage.  The module below interprets each object\hyp language
 operation as the corresponding metalanguage operation.
 \ifshort
-\vspace*{-0.8em}\begin{code3}
+\vspace*{-0.6em}\begin{code3}
 module R = struct type ('c,'dv) repr = 'dv (* no wrappers *)
   let int  (x:int)  = x         let bool (b:bool) = b
   let lam  f        = f         let app  e1 e2    = e1 e2
@@ -688,7 +691,7 @@ module R = struct type ('c,'dv) repr = 'dv (* no wrappers *)
   let leq  x y      = x <= y
   let if_  eb et ee = if eb then et () else ee () end
 \end{code3}
-\vspace*{-0.8em}
+\vspace*{-0.6em}
 \else
 \begin{code}
 module R = struct
@@ -884,7 +887,7 @@ with
 \ifshort Fig.~\ref{fig:interpreter-C}(c) \else \UseVerbatim{5c}\fi
 gives a code value with many apparent $\beta$- and $\eta$-redexes\ifshort,
 Fig.~\ref{fig:interpreter-C}(d). \else: \UseVerbatim{5d}\fi
-\ifshort\pagebreak[3]\fi
+%\ifshort\pagebreak[3]\fi
 This compiler does not incur
 any interpretive overhead: the
 code produced for $\fun{x}x$ is simply |fun|~|x_6|~|->|~|x_6|\ifshort\else\
@@ -998,7 +1001,7 @@ can now define the polymorphic function
 to extract it without requiring polymorphic lift into~|C|.  We then try
 to define the interpreter |P1|---and get as far as the first-order
 constructs of our object language, including |if_|.
-\vspace*{-0.7em}
+\vspace*{-0.6em}
 \begin{code3}
 module P1 : Symantics = struct
   let int  (x:int)  = P1 (Some (R.int x), C.int x)
@@ -1011,7 +1014,7 @@ module P1 : Symantics = struct
                                    (fun () -> abstr1 (et ()))
                                    (fun () -> abstr1 (ee ())))
 \end{code3}
-\vspace*{-0.7em}
+\vspace*{-0.6em}
 When we come to functions, however, we stumble.  According to our
 definition of~|P1|, a partially evaluated object function, such as the
 identity $\fun{x}x$ embedded in OCaml as |lam (fun x -> x)|\texttt{ :
@@ -1036,12 +1039,12 @@ for a static function until it is applied, that is, until |lam f|
 appears as the argument of |app|.  To do so, we have to incorporate |f|
 as it is into the |P1.repr| data structure: the representation
 for a function type |'a->'b| should be either
-\vspace*{-0.7em}
+\vspace*{-0.6em}
 \begin{code}
 S1 of ('c,'a) repr -> ('c,'b) repr | E1 of ('c,'a->'b) C.repr
 P1 of (('c,'a) repr -> ('c,'b) repr) option * ('c,'a->'b) C.repr
 \end{code}
-\vspace*{-0.7em}
+\vspace*{-0.6em}
 unlike |P1.repr| of |int| or |bool|.
 That is, we need a nonparametric data type, something akin to
 type-indexed functions and type-indexed types, which
@@ -1069,12 +1072,12 @@ would ideally like is to write
 where |repr_pe| is the type function defined
 % inductively because P below depends on repr_pe
 by
-\vspace*{-0.8em}
+\vspace*{-0.6em}
 \begin{code3}
 repr_pe ('c,int) = ('c,int); repr_pe ('c,bool) = ('c,bool)
 repr_pe ('c,'a->'b) = ('c,'a) repr -> ('c,'b) repr
 \end{code3}
-\vspace*{-0.8em}
+\vspace*{-0.6em}
 Although we can use type classes to define this type function
 in Haskell, that is not portable to MetaOCaml. However,
 these three typecase alternatives are already present in existing
@@ -1430,7 +1433,7 @@ to extract it without requiring polymorphic lift into~|C|.  We then try
 to define the interpreter |P1|---and get as far as the first-order
 constructs of our object language, including |if_|.
 \ifshort
-\vspace*{-0.7em}
+\vspace*{-0.6em}
 \begin{code3}
 instance Symantics P1 where
   int x = P1 (Just (int x)) (int x)
@@ -1439,7 +1442,7 @@ instance Symantics P1 where
   if_ (P1 (Just s) _) et ef = if unR s then et else ef
   if_ eb et ef = P1 Nothing (if_ (abstr1 eb) (abstr1 et) (abstr1 ef))
 \end{code3}
-\vspace*{-0.7em}
+\vspace*{-0.6em}
 \else
 \begin{code}
 instance Symantics P1 where
@@ -1478,12 +1481,12 @@ for a static function until it is applied, that is, until |lam f|
 appears as the argument of |app|.  To do so, we have to incorporate |f|
 as it is into the |P1| data structure: applying the type constructor
 |P1| to a function type |a -> b| should yield one of
-\ifshort\vspace*{-0.7em}\fi
+\ifshort\vspace*{-0.6em}\fi
 \begin{code}
 data P1 (a -> b) = S1 (P1 a -> P1 b) | E1 (C (a -> b))
 data P1 (a -> b) = P1 (Maybe (P1 a -> P1 b)) (C (a -> b))
 \end{code}
-\ifshort\vspace*{-0.7em}\fi
+\ifshort\vspace*{-0.6em}\fi
 unlike applying |P1| to |Int| or |Bool|.
 That is, we need a nonparametric data type, something akin to
 type-indexed functions and type-indexed types, which
@@ -1618,11 +1621,11 @@ would ideally like is to write
 where |repr_pe| is the type function defined
 % inductively because P below depends on repr_pe
 by
-\ifshort\vspace*{-0.8em}
+\ifshort\vspace*{-0.6em}
 \begin{code3}
 repr_pe Int = Int; repr_pe Bool = Bool; repr_pe (a -> b) = P a -> P b
 \end{code3}
-\vspace*{-0.8em}
+\vspace*{-0.6em}
 \else
 \begin{code}
 repr_pe Int      = Int
@@ -2503,8 +2506,8 @@ CPS transformations \citep{Guillemette-Monier-PLPV,shao-type-toplas,chen-typeful
 \fi
 We admire all this technical machinery, but
 these motivating examples do not need it.
-Although GADTs may indeed be more flexible and easier to use, they are
-unavailable in mainstream ML, and their current implementation in GHC
+Although GADTs may indeed be simpler and more flexible, they are
+unavailable in mainstream ML, and their implementation in GHC
 6.6.1 fails to
 detect exhaustive pattern matching.  We also wanted to find the minimal
 set of widespread language features needed for tagless
