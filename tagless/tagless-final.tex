@@ -164,12 +164,17 @@ For example, we represent the object term $(\fun{x}x)\True$ as
 %
 (a) \BUseVerbatim{2a}
 
+\smallskip
 (b) \BUseVerbatim{2b}
 
+\smallskip
 (c) \BUseVerbatim{2c}
 
+\smallskip
 (d) \BUseVerbatim{2d}
-\caption{OCaml code illustrating the tag problem.}
+
+\medskip
+\caption{OCaml code illustrating the tag problem}
 \label{fig:tag-problem}
 \end{figure}
 \fi
@@ -549,7 +554,7 @@ argument, we could have given the terms explicit polymorphic
 signatures.  We however prefer for
 Haskell to infer the object types for us. We could also
 avoid the dummy argument by switching off the monomorphism restriction
-with a compiler flag.\fi
+with a compiler flag. \fi
 The methods |add|, |mul|, and |leq| are quite similar, and so are
 |int| and |bool|. Therefore, we often show
 only one method of each group and elide the rest. The
@@ -559,9 +564,13 @@ accompanying code has the complete implementations.
 \begin{figure}
 (a) \BUseVerbatim{3a}
 
+\smallskip
 (b) \BUseVerbatim{3b}
 
+\smallskip
 (c) \BUseVerbatim{3c}
+
+\medskip
 \caption{Symantics in Haskell}
 \label{fig:symantics-haskell}
 \end{figure}
@@ -613,14 +622,14 @@ end
 
 \ifshort
 \begin{figure}[t]
-\begin{floatrule}
 \begin{tabular}{@{}l@{}}
 \ifx\relax\normalbaselineskip\else\baselineskip\normalbaselineskip\fi
-\BUseVerbatim[baseline=b]{ocaml-simple}\\[\medskipamount]
+\BUseVerbatim[baseline=b]{ocaml-simple}\\[\smallskipamount]
 \ifx\relax\normalbaselineskip\else\baselineskip\normalbaselineskip\fi
 \BUseVerbatim[baseline=t]{ocaml-examples}
 \end{tabular}
-\end{floatrule}
+
+\medskip
 \caption{A simple (Meta)OCaml embedding of our object language, 
     and examples}
 \label{fig:ocaml-simple}
@@ -662,9 +671,9 @@ piece of generated code, it must be polymorphic in its environment
 classifier (the type variable |'c| in Figure~\ref{fig:ocaml-simple}).
 The value restriction dictates that
 the definitions of our object terms must look syntactically like
-values. Alternatively, we could have used
-the rank-2 record types of OCaml to maintain the necessary polymorphism.
-
+values. (Alternatively, we could have used
+the rank-2 record types of OCaml to maintain the necessary polymorphism.)
+\ifshort\else\par\fi
 Thus, we represent an object expression in
 OCaml as a functor from |Symantics| to an appropriate semantic domain. This
 is essentially the same as the constraint \texttt{Symantics repr =>} in the
@@ -682,7 +691,7 @@ The first interpreter evaluates an object term to its value in the
 metalanguage.  The module below interprets each object\hyp language
 operation as the corresponding metalanguage operation.
 \ifshort
-\vspace*{-0.6em}\begin{code3}
+\begin{code3}
 module R = struct type ('c,'dv) repr = 'dv (* no wrappers *)
   let int  (x:int)  = x         let bool (b:bool) = b
   let lam  f        = f         let app  e1 e2    = e1 e2
@@ -691,7 +700,6 @@ module R = struct type ('c,'dv) repr = 'dv (* no wrappers *)
   let leq  x y      = x <= y
   let if_  eb et ee = if eb then et () else ee () end
 \end{code3}
-\vspace*{-0.6em}
 \else
 \begin{code}
 module R = struct
@@ -867,12 +875,17 @@ evaluator~|R| above yields the simple compiler~|C|
 \begin{figure}[t]
 (a) \BUseVerbatim{5a}
 
+\smallskip
 (b) \BUseVerbatim{5b}
 
+\smallskip
 (c) \BUseVerbatim{5c}
 
+\smallskip
 (d) \BUseVerbatim{5d}
-\caption{The tagless staged interpreter \texttt{C}.}
+
+\medskip
+\caption{The tagless staged interpreter \texttt{C}}
 \label{fig:interpreter-C}
 \end{figure}
 \fi
@@ -887,7 +900,6 @@ with
 \ifshort Fig.~\ref{fig:interpreter-C}(c) \else \UseVerbatim{5c}\fi
 gives a code value with many apparent $\beta$- and $\eta$-redexes\ifshort,
 Fig.~\ref{fig:interpreter-C}(d). \else: \UseVerbatim{5d}\fi
-%\ifshort\pagebreak[3]\fi
 This compiler does not incur
 any interpretive overhead: the
 code produced for $\fun{x}x$ is simply |fun|~|x_6|~|->|~|x_6|\ifshort\else\
@@ -939,7 +951,7 @@ accompanying code gives the full details.
 \section{A tagless partial evaluator}\label{PE}
 Surprisingly, we can write a partial evaluator using the idea above,
 namely to build object terms using ordinary functions rather than data
-constructors.  We present this partial evaluator in a sequence of four
+constructors.  We present this partial evaluator in a sequence of three
 attempts. It uses no universal type and no tags
 for object types.  We then discuss residualization and binding-time
 analysis.  Our partial evaluator is a modular extension of the evaluator
@@ -950,25 +962,26 @@ dynamic terms.
 \subsection{Avoiding polymorphic lift}
 \label{S:PE-lift}
 
-Roughly, a partial evaluator interprets each object term to either
+Roughly, a partial evaluator interprets each object term to yield either
 a static (present-stage) term (using\ifshort\else\ the evaluator\fi~|R|) or
 a dynamic (future-stage) term (using\ifshort\else\ the
 compiler\fi~|C|). To
-distinguish between static and dynamic terms, one might define
-|repr| in the first version of the partial evaluator |P0| as
-\texttt{type ('c,'dv) repr 
-	= S0 of ('c,'dv) R.repr~}\Verb+|+\texttt{~E0 of ('c,'dv) C.repr}.
+distinguish between static and dynamic terms, we might try to define
+|repr| in the partial evaluator as
+\texttt{type ('c,'dv)\,repr 
+	= S0 of ('c,'dv)\,R.repr~}\Verb+|+\texttt{~E0 of ('c,'dv)\,C.repr}.
 Integer and boolean literals are immediate, present-stage
 values. Addition yields a static term (using~|R.add|) if and only 
 if both operands are static; otherwise we extract the dynamic terms 
 from the operands and add them using~|C.add|. We use |C.int| to
 convert from the static term |('c,int) R.repr|, which is just |int|,
 to the dynamic term.
+
 Whereas |mul| and |leq| are as easy to define as |add|, we encounter
-a problem with |if_|.  If the first argument to |if_| is a dynamic term
+a problem with |if_|.  Suppose that the first argument to |if_| is a dynamic term
 (of type |('c,bool) C.repr|), the second a static term 
-(of type |('c,'a) R.repr|) and the third a
-dynamic term (of type |('c,'a) C.repr|), then we need to convert
+(of type |('c,'a) R.repr|), and the third a
+dynamic term (of type |('c,'a) C.repr|). We then need to convert
 the static term to dynamic, but there is no polymorphic ``lift''
 function, of type |'a -> ('c,'a) C.repr|, to send a value to the future stage
 \citep{xi-guarded,WalidPOPL03}.
@@ -997,14 +1010,13 @@ future.  This tag is not an object type tag: all pattern matching below
 is exhaustive.  Because the future-stage component is always present, we
 can now define the polymorphic function
 |let abstr1 (P1 (_,dyn)) = dyn| of type
-\texttt{abstr1 : ('c,'dv) repr -> ('c,'dv) C.repr}
+\texttt{('c,'dv) repr -> ('c,'dv) C.repr}
 to extract it without requiring polymorphic lift into~|C|.  We then try
 to define the interpreter |P1|---and get as far as the first-order
 constructs of our object language, including |if_|.
-\vspace*{-0.6em}
 \begin{code3}
 module P1 : Symantics = struct
-  let int  (x:int)  = P1 (Some (R.int x), C.int x)
+  let int (x:int) = P1 (Some (R.int x), C.int x)
   let add e1 e2 = match (e1,e2) with
     | (P1 (Some n1,_),P1 (Some n2,_)) -> int (R.add n1 n2)
     | _ -> P1 (None,(C.add (abstr1 e1) (abstr1 e2)))
@@ -1014,8 +1026,7 @@ module P1 : Symantics = struct
                                    (fun () -> abstr1 (et ()))
                                    (fun () -> abstr1 (ee ())))
 \end{code3}
-\vspace*{-0.6em}
-When we come to functions, however, we stumble.  According to our
+However, we stumble on functions.  According to our
 definition of~|P1|, a partially evaluated object function, such as the
 identity $\fun{x}x$ embedded in OCaml as |lam (fun x -> x)|\texttt{ :
 }|('c,'a->'a) P1.repr|, consists of a dynamic part 
@@ -1038,13 +1049,11 @@ To enable these simplifications, we delay binding-time analysis
 for a static function until it is applied, that is, until |lam f|
 appears as the argument of |app|.  To do so, we have to incorporate |f|
 as it is into the |P1.repr| data structure: the representation
-for a function type |'a->'b| should be either
-\vspace*{-0.6em}
-\begin{code}
+for a function type |'a->'b| should be one of
+\begin{code3}
 S1 of ('c,'a) repr -> ('c,'b) repr | E1 of ('c,'a->'b) C.repr
 P1 of (('c,'a) repr -> ('c,'b) repr) option * ('c,'a->'b) C.repr
-\end{code}
-\vspace*{-0.6em}
+\end{code3}
 unlike |P1.repr| of |int| or |bool|.
 That is, we need a nonparametric data type, something akin to
 type-indexed functions and type-indexed types, which
@@ -1052,15 +1061,15 @@ type-indexed functions and type-indexed types, which
 Thus, typed partial evaluation, like typed CPS transformation,
 inductively defines a map from source types to target types that
 performs case distinction on the source type. In Haskell, typecase
-can be equivalently implemented either with GADTs or 
+can be equivalently implemented either with GADTs or with
 type-class functional dependencies
 \citep{oliveira-typecase}. The accompanying code shows both
-approaches, neither of which is portable to OCaml. In addition,
+approaches, neither portable to OCaml. In addition,
 the problem of nonexhaustive pattern\hyp matching reappears in
 the GADT approach because GHC 6.6.1 cannot see that a particular
 type of a GADT value precludes certain constructors.
-Recall, our
-goal is to make this exhaustiveness \emph{syntactically} apparent.
+Thus GADTs fail to
+make it \emph{syntactically} apparent that pattern matching is exhaustive.
 
 
 \subsection{The ``final'' solution}
@@ -1068,16 +1077,16 @@ goal is to make this exhaustiveness \emph{syntactically} apparent.
 
 Let us re-examine the problem in~\S\ref{S:PE-problem}. What we
 would ideally like is to write
-\texttt{type ('c,'dv) repr = P1 of repr\_pe ('c,'dv) R.repr option * ('c,'dv) C.repr}
+\begingroup\sloppy
+\texttt{type ('c,'dv) repr = P1 of (repr\_pe ('c,'dv)) R.repr option * ('c,'dv) C.repr}
 where |repr_pe| is the type function defined
 % inductively because P below depends on repr_pe
 by
-\vspace*{-0.6em}
 \begin{code3}
 repr_pe ('c,int) = ('c,int); repr_pe ('c,bool) = ('c,bool)
 repr_pe ('c,'a->'b) = ('c,'a) repr -> ('c,'b) repr
 \end{code3}
-\vspace*{-0.6em}
+\endgroup\noindent
 Although we can use type classes to define this type function
 in Haskell, that is not portable to MetaOCaml. However,
 these three typecase alternatives are already present in existing
@@ -1092,6 +1101,7 @@ Figure~\ref{fig:ocaml} shows the new signature.
 \begin{figure}
 \begin{floatrule}
 \ifshort
+\smallskip
 \begin{code2}
 module type Symantics = sig type ('c,'sv,'dv) repr
   val int : int -> ('c,int,int) repr
@@ -1105,6 +1115,7 @@ module type Symantics = sig type ('c,'sv,'dv) repr
   val if_ : ('c,bool,bool) repr
             -> (unit->'x) -> (unit->'x) -> (('c,'sa,'da) repr as 'x) end
 \end{code2}
+\medskip
 \else
 \begin{code2}
 module type Symantics = sig
@@ -1156,6 +1167,7 @@ module P = struct
   let app ef ea = match ef with {st = Some f} -> f ea
                   | _ -> pdyn (C.app (abstr ef) (abstr ea)) end
 \end{code2}
+\medskip
 \else
 \begin{code2}[commandchars=\@\[\]]
 module P = struct
@@ -1283,7 +1295,7 @@ the residual program, which calls for let-insertion
 
 Given this implementation of~|P|, our running example
 \ifshort
-\texttt{let module E = EX(P) in E.test1 ()}
+\texttt{let module E\,=\,EX(P) in E.test1 ()}
 \else
 \begin{code}
 let module E = EX(P) in E.test1 ()
@@ -1342,7 +1354,7 @@ dynamic terms.
 \subsection{Avoiding polymorphic lift}
 \label{S:PE-lift}
 
-Roughly, a partial evaluator interprets each object term to either
+Roughly, a partial evaluator interprets each object term to yield either
 a static (present-stage) term (using\ifshort\else\ the evaluator\fi~|R|) or
 a dynamic (future-stage) term (using\ifshort\else\ the compiler\fi~|C|).  To
 distinguish between static and dynamic terms, one might define
@@ -1661,6 +1673,7 @@ module type Symantics = sig type ('c,'sv,'dv) repr
   val if_ : ('c,bool,bool) repr
             -> (unit->'x) -> (unit->'x) -> (('c,'sa,'da) repr as 'x) end
 \end{code2}
+\medskip
 \else
 \begin{code2}
 module type Symantics = sig
@@ -1712,6 +1725,7 @@ module P = struct
   let app ef ea = match ef with {st = Some f} -> f ea
                   | _ -> pdyn (C.app (abstr ef) (abstr ea)) end
 \end{code2}
+\medskip
 \else
 \begin{code2}[commandchars=\@\[\]]
 module P = struct
