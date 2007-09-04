@@ -25,58 +25,26 @@
 *)
 
 
-(* We need some meta-types that are shared by everyone *)
-type integer = [`IntT]
-type boolean = [`BoolT]
-
-(* And we need a data-structure in which to store constraints *)
-type 'a constraintset = (int * 'a) list * int
-
-(* Actually, we can't really be that polymorphic :-( so we need to 
-   create a type that will contain all this *)
-type anything = [`AnyT]
-type base     = [ integer | boolean | anything ]
-type allt     = [ base | `Function of (allt * allt) ]
-
-type acs = allt constraintset
-
 (* This class/type defines syntax (and its instances, semantics) 
    of our language
  *)
 
 module type Symantics = sig
-  type ('c,'sv,'dv,'svt,'dvt) repr
-  val int  : int  -> ('c,int,int,integer,integer) repr
-  val bool : bool -> ('c,bool,bool,boolean,boolean) repr
-  val add  : ('c,int,int,integer,integer) repr -> ('c,int,int,integer,integer) repr ->
-      ('c,int,int,integer,integer) repr
-  val mul  : ('c,int,int,integer,integer) repr -> ('c,int,int,integer,integer) repr ->
-      ('c,int,int,integer,integer) repr
-  val leq  : ('c,int,int,integer,integer) repr -> ('c,int,int,integer,integer) repr ->
-      ('c,bool,bool,boolean,boolean) repr
+  type ('c,'sv,'dv) repr
+  val int  : int  -> ('c,int,int) repr
+  val bool : bool -> ('c,bool,bool) repr
+  val add  : ('c,int,int) repr -> ('c,int,int) repr -> ('c,int,int) repr
+  val mul  : ('c,int,int) repr -> ('c,int,int) repr -> ('c,int,int) repr
+  val leq  : ('c,int,int) repr -> ('c,int,int) repr -> ('c,bool,bool) repr
   (* could be defined in terms of leq and if_ *)
-  val eql  : ('c,'sa,'da,'svt,'dvt) repr -> ('c,'sa,'da,'svt,'dvt) repr ->
-      ('c,bool,bool,boolean,boolean) repr
-  (* The last two arguments to [if_] are functional terms.
-     One of them is applied to unit.
-     The reason for this charade is to prevent evaluation
-     of both arguments of if_ in a CBV language.
-     if_ must be a syntactic form rather than just a function.
-     Or, at least it shouldn't take just (undelayed) terms.
-  *)
-  val if_ : ('c,bool,bool,boolean,boolean) repr ->
+  val eql  : ('c,'sa,'da) repr -> ('c,'sa,'da) repr -> ('c,bool,bool) repr
+  val if_ : ('c,bool,bool) repr ->
              (unit -> 'x) ->
-             (unit -> 'x) -> (('c,'sa,'da,'svt,'dvt) repr as 'x)
+             (unit -> 'x) -> (('c,'sa,'da) repr as 'x)
 
-  val lam : (('c,'sa,'da,'sat,'dat) repr -> ('c,'sb,'db,'sbt,'dbt) repr as 'x)
-  -> ('c,'x,'da->'db, 'x, 'dat -> 'dbt ) repr
-  val app : ('c,'x,'da->'db, 'x, 'dat -> 'dbt) repr -> (('c,'sa,'da,'sat,'dat) repr ->
-      ('c,'sb,'db,'sbt,'dbt) repr as 'x)
-  val fix : ('x -> 'x) -> (('c, ('c,'sa,'da,'sat,'dat) repr ->
-      ('c,'sb,'db,'sbt,'dbt) repr, 'da->'db, 
-      ('c,'sa,'da,'sat,'dat) repr -> ('c,'sb,'db,'sbt,'dbt) repr, 
-      'dat -> 'dbt) repr as 'x)
-
+  val lam : (('c,'sa,'da) repr -> ('c,'sb,'db) repr as 'x) -> ('c,'x,'da->'db) repr
+  val app : ('c,'x,'da->'db) repr -> (('c,'sa,'da) repr -> ('c,'sb,'db) repr as 'x)
+  val fix : ('x -> 'x) -> (('c, ('c,'sa,'da) repr -> ('c,'sb,'db) repr, 'da->'db) repr as 'x)
 end
 ;;
 
@@ -132,7 +100,7 @@ end;;
 *)
 (* Pure interpreter. It is essentially the identity transformer *)
 module R = struct
-  type ('c,'sv,'dv,'svt,'dvt) repr = 'dv    (* absolutely no wrappers *)
+  type ('c,'sv,'dv) repr = 'dv    (* absolutely no wrappers *)
   let int (x:int) = x
   let bool (b:bool) = b
   let add e1 e2 = e1 + e2
@@ -148,58 +116,74 @@ end;;
 
 module EXR = EX(R);;
 
+(* We need some meta-types that are shared by everyone 
+   The most important thing to notice is that this is an _intentional_ 
+   type, in that the information contained in a function application 
+   is not forgotten.  If it were, then I don't know how to write a
+   typechecker in direct style.  *)
+type base     = IntT | BoolT | AnyT of int
+type allt     = Base of base 
+              | Function of (allt * allt)
+              | Apply    of (allt * allt)
 
+(* our type representation will be alt above *)
+type typerep     = allt
+type typecheck   = typerep -> bool
+(* Typechecking requires going from a typerep to a typerep !
+   Basically, if the type is correct, this will act as the identity,
+   otherwise ?
+   *)
+
+
+(* Are two typecheks unifiable? *)
+(* this routine is //wrong//, but it passes all the tests!  Clearly,
+   the tests are nowhere near sufficient, that needs to be fixed later *)
+let unifiable (t1:allt) (t2:allt) = match (t1,t2) with
+    | (Base IntT, Base IntT)   -> true
+    | (Base BoolT, Base BoolT) -> true
+    | _                        -> false
 
 (* ------------------------------------------------------------------------ *)
 (* Types-as-Values.
-   We have a small language which reflects types as values.
+   We have a small language which reflects types as values (allt).
 
-   It is not particularly interesting because all the function types will
-   be given as functions (HOAS and all that).
+   Below, we have a type-checker.  Given a type, it returns true/false
+   depending on whether that type is compatible.  In other words, given
+   a program, it builds a specialized typechecker (as a closure) for
+   this program.  This will always succeed, and always terminate.
 
-   And now we take essentially the interpreter above and make
-   it deal with types instead.
-   
-   This is easily seen to be a type-checker; of course it is rather
-   pointless, since we made sure that we did everything "just right"
-   to ensure that Ocaml's own type system took care of everything.
+   Of course it is rather pointless, since we made sure that we did everything
+   "just right" to ensure that Ocaml's own type system took care of everything.
+   But the basic idea will be useful later.
    *)
 module RT = struct
-  (* The following ``works'', but produces opaque results *)
-  type ('c,'sv,'dv,'svt,'dvt) repr = acs -> acs
-  let int (x:int) = fun (cs,n) -> ([(0,`IntT)],n)
-  let bool (x:bool) = fun (cs,n) -> ([(0,`BoolT)],n)
-  let add x y = fun (cs,n) -> 
-      let (xcs,xn) = x (cs,n) in
-      let (ycs,yn) = y (cs,xn) in
-      match (xcs,ycs) with
-      | ([(0,`IntT)],[(0,`IntT)]) -> ([(0,`IntT)],yn)
-      | _                         -> failwith "incompatible types in add"
-  let mul x y = fun (cs,n) -> 
-      let (xcs,xn) = x (cs,n) in
-      let (ycs,yn) = y (cs,xn) in
-      match (xcs,ycs) with
-      | ([(0,`IntT)],[(0,`IntT)]) -> ([(0,`IntT)],yn)
-      | _                         -> failwith "incompatible types in mul"
-  let leq x y = fun (cs,n) -> 
-      let (xcs,xn) = x (cs,n) in
-      let (ycs,yn) = y (cs,xn) in
-      match (xcs,ycs) with
-      | ([(0,`IntT)],[(0,`IntT)]) -> ([(0,`BoolT)],yn)
-      | _                         -> failwith "incompatible types in leq"
-  let eql x y = fun (cs,n) -> 
-      let (xcs,xn) = x (cs,n) in
-      let (ycs,yn) = y (cs,xn) in
-      match (xcs,ycs) with
-      | ([(0,a)],[(0,b)]) when a=b -> ([(0,`BoolT)],yn)
-      | _                         -> failwith "incompatible types in eql"
-  let if_ eb et ee = ee ()
-  let lam f = fun (cs,n) -> let g = f (fun (cc,nn) -> ([(0,`AnyT)],nn)) in
-      let (newcs,newn) = g (cs,n) in
-      ( (0,`Function(`AnyT,snd(List.hd newcs)))::newcs, newn+1 )
-  let app f c = fun (cs,n) -> 
-      let (newcs,newn) = f (c (cs,n)) in
-      (List.tl newcs, newn)
+  type ('c,'sv,'dv) repr = typecheck
+  let int (x:int) = fun t -> t = Base IntT
+  let bool (x:bool) = fun t -> t = Base BoolT
+  let add x y = fun t -> match t with
+      | Base IntT -> (x (Base IntT)) && (y (Base IntT))
+      | _         -> false
+  let mul x y = fun t -> match t with
+      | Base IntT -> (x (Base IntT)) && (y (Base IntT))
+      | _                                 -> false
+  let leq x y = fun t -> match t with
+      | Base BoolT -> (x (Base IntT)) && (y (Base IntT))
+      | _                                 -> false
+  let eql x y = fun t -> match t with
+      | Base BoolT -> 
+            ((x (Base IntT)) && (y (Base IntT))) ||
+            ((x (Base BoolT)) && (y (Base BoolT))) ||
+            ((x (Base (AnyT 0))) && (y (Base (AnyT 0))))
+      | _                                 -> false
+  let if_ eb et ee = fun t -> (eb (Base BoolT)) &&
+      ((et () t) && (ee () t))
+  let lam f = fun t -> match t with
+      | Function(x,y) -> true
+      | _             -> false
+  let app f c = fun t -> match t with
+      | Apply (g, d) -> (f g) && (c d) (* should check g,d too! *)
+      | _            -> false
+  (* fix is really nice because it works as is *)
   let fix f = let rec self n = f self n in self
 end;;
 module EXRT = EX(RT);;
@@ -213,7 +197,7 @@ module EXRT = EX(RT);;
    even if the term itself is divergent  *)
 
 module L = struct
-  type ('c,'sv,'dv,'svt,'dvt) repr = int    (* absolutely no wrappers *)
+  type ('c,'sv,'dv) repr = int    (* absolutely no wrappers *)
   let int (x:int) = 1
   let bool (b:bool) = 1
   let add e1 e2 = e1 + e2 + 1
@@ -237,7 +221,7 @@ module EXL = EX(L);;
 *)
 
 module C = struct
-  type ('c,'sv,'dv,'svt,'dvt) repr = ('c,'dv) code
+  type ('c,'sv,'dv) repr = ('c,'dv) code
   let int (x:int) = .<x>.
   let bool (b:bool) = .<b>.
   let add e1 e2 = .<.~e1 + .~e2>.
@@ -261,14 +245,15 @@ module EXC = EX(C);;
    input variables of functions do not print.  Rather annoying, but I don't
    know how to fix that *)
 
+(*
 module CT = struct
-  type ('c,'sv,'dv,'svt,'dvt) repr = ('c, 'dvt) code
-  let int (x:int) = .< `IntT >.
-  let bool (b:bool) = .< `BoolT >.
-  let add e1 e2 = .< `IntT >.
-  let mul e1 e2 = .< `IntT >.
-  let leq x y = .< `BoolT >.
-  let eql x y = .< `BoolT >.
+  type ('c,'sv,'dv) repr = ('c, 'dvt) code
+  let int (x:int) = .< IntT >.
+  let bool (b:bool) = .< BoolT >.
+  let add e1 e2 = .< IntT >.
+  let mul e1 e2 = .< IntT >.
+  let leq x y = .< BoolT >.
+  let eql x y = .< BoolT >.
   let if_ eb et ee =  ee ()
   let lam (f : (('c,'sa,'da,'sat,'dat) repr -> ('c,'sb,'db,'sbt,'dbt) repr as
   'x)) = .<fun (x:'dat) -> .~(f .<x>.) >.
@@ -277,6 +262,7 @@ module CT = struct
 end;;
 
 module EXCT = EX(CT);;
+*)
 
 (* ------------------------------------------------------------------------ *)
 (* Partial evaluator *)
@@ -284,7 +270,7 @@ module EXCT = EX(CT);;
 
 module P =
 struct
-  type ('c,'sv,'dv,'svt,'dvt) repr = {st: 'sv option; dy: ('c,'dv) code}
+  type ('c,'sv,'dv) repr = {st: 'sv option; dy: ('c,'dv) code}
   type ('a,'s,'v) result = RL of 's | RC of ('a,'v) code;;
   let abstr {dy = x} = x
   let pdyn x = {st = None; dy = x}
@@ -381,7 +367,7 @@ module EXP = EX(P1);;
 (*
 module PT =
 struct
-  type ('c,'sv,'dv,'svt,'dvt) repr = {st: 'svt option; dy: ('c,'dvt) code}
+  type ('c,'sv,'dv) repr = {st: 'svt option; dy: ('c,'dvt) code}
   type ('a,'s,'v) result = RL of 's | RC of ('a,'v) code;;
   let abstr {dy = x} = x
   let pdyn x = {st = None; dy = x}
@@ -445,57 +431,62 @@ let itest1 = EXR.test1r ();;
 let ctest1 = EXC.test1r ();;
 let ptest1 = EXP.test1r ();;
 let ltest1 = EXL.test1r ();;
-let ttest1 = EXRT.test1r () ([],0);;
-let ztest1 = EXCT.test1r ();; 
+let ttest1 = EXRT.test1r () (Base IntT);;
+(* let ztest1 = EXCT.test1r ();;  *)
 
 let itest2 = EXR.test2r ();;
 let ctest2 = EXC.test2r ();;
 let ptest2 = EXP.test2r ();;
 let ltest2 = EXL.test2r ();;
-let ttest2 = EXRT.test2r () ([],0);;
-let ztest2 = EXCT.test2r ();;
+let ttest2 = EXRT.test2r () (Function(Base IntT, Base IntT));;
+(* let ztest2 = EXCT.test2r ();; *)
 
 let itest3 = EXR.test3r ();;
 let ctest3 = EXC.test3r ();;
 let ptest3 = EXP.test3r ();;
 let ltest3 = EXL.test3r ();;
-let ttest3 = EXRT.test3r () ([],0);;
-let ztest3 = EXCT.test3r ();;
+let ttest3 = EXRT.test3r () (Function(Base IntT, Function(Base IntT, Base
+IntT)));;
+(* let ztest3 = EXCT.test3r ();; *)
 
 let itestg = EXR.testgibr ();;
 let ctestg = EXC.testgibr ();;
 let ptestg = EXP.testgibr ();;
 let ltestg = EXL.testgibr ();;
-let ttestg = EXRT.testgibr () ([],0);;
-let ztestg = EXCT.testgibr ();;
+let ttestg = EXRT.testgibr () (Function(Base IntT, Function(Base IntT, Base
+IntT)));;
+(* let ztestg = EXCT.testgibr ();; *)
 
 let itestg1 = EXR.testgib1r ();;
 let ctestg1 = EXC.testgib1r ();;
 let ptestg1 = EXP.testgib1r ();;
 let ltestg1 = EXL.testgib1r ();;
-(* let ttestg1 = EXRT.testgib1r ();; this one loops? *)
-let ztestg1 = EXCT.testgib1r ();;
+let ttestg1 = EXRT.testgib1r () 
+    (Apply (Apply(Apply(Function(Base IntT, Function(Base IntT,Function(Base
+    IntT, Base IntT))),(Base IntT)),(Base IntT)), (Base IntT)));;
+(* let ztestg1 = EXCT.testgib1r ();; *)
 
 let itestg2 = EXR.testgib2r ();;
 let ctestg2 = EXC.testgib2r ();;
 let ptestg2 = EXP.testgib2r ();;
 let ltestg2 = EXL.testgib2r ();;
-let ttestg2 = EXRT.testgib2r () ([],0);;
-let ztestg2 = EXCT.testgib2r ();;
+let ttestg2 = EXRT.testgib2r () (Function(Base IntT, Function(Base IntT, Base
+IntT)));;
+(* let ztestg2 = EXCT.testgib2r ();; *)
 
 let itestp7 = EXR.testpowfix7r ();;
 let ctestp7 = EXC.testpowfix7r ();;
 let ptestp7 = EXP.testpowfix7r ();;
 let ltestp7 = EXL.testpowfix7r ();;
-let ttestp7 = EXRT.testpowfix7r () ([],0);;
-let ztestp7 = EXCT.testpowfix7r ();;
+let ttestp7 = EXRT.testpowfix7r () (Function(Base IntT, Base IntT));;
+(* let ztestp7 = EXCT.testpowfix7r ();; *)
 
 let itestp0 = EXR.testpowfix0r ();;
 let ctestp0 = EXC.testpowfix0r ();;
 let ptestp0 = EXP.testpowfix0r ();;
 let ltestp0 = EXL.testpowfix0r ();;
-let ttestp0 = EXRT.testpowfix0r () ([],0);;
-let ztestp0 = EXCT.testpowfix0r ();;
+let ttestp0 = EXRT.testpowfix0r () (Function(Base IntT, Base IntT));;
+(* let ztestp0 = EXCT.testpowfix0r ();; *)
 
 (* ------------------------------------------------------------------------ *)
 (* CPS CBN interpreter *)
@@ -509,7 +500,7 @@ let ztestp0 = EXCT.testpowfix0r ();;
 
 (* Call-by-name interpreter *)
 module RCN = struct
-  type ('c,'sv,'dv,'svt,'dvt) repr = {ko: 'w. ('sv -> 'w) -> 'w}
+  type ('c,'sv,'dv) repr = {ko: 'w. ('sv -> 'w) -> 'w}
   let int (x:int) = {ko = fun k -> k x}
   let bool (b:bool) = {ko = fun k -> k b}
   let add e1 e2 = 
@@ -717,11 +708,10 @@ module type SymSI = sig
   include Symantics
   type state
   type 'c states			(* static version of the state *)
-  val lapp : ('c,'sa,'da,'sat,'dat) repr -> (('c,'sa,'da,'sat,'dat) repr ->
-      ('c,'sb,'db,'sbt,'dvt) repr)
-    ->  ('c,'sb,'db,'sbt,'dvt) repr
-  val deref : unit -> ('c,'c states,state,'a,'b) repr
-  val set   : ('c,'c states,state,'a,'b) repr -> ('c,'c states,state,'a,'b) repr
+  val lapp : ('c,'sa,'da) repr -> (('c,'sa,'da) repr ->
+      ('c,'sb,'db) repr) ->  ('c,'sb,'db) repr
+  val deref : unit -> ('c,'c states,state) repr
+  val set   : ('c,'c states,state) repr -> ('c,'c states,state) repr
 end;;
  
 (* INT state *)
@@ -764,9 +754,9 @@ end;;
 *)
 module EXSI_INT_INT(S0: Symantics)
 (S: SymSI with type state  = int->int
-           and  type 'c states = ('c,int,int,integer,integer) S0.repr ->
-               ('c,int,int,integer,integer) S0.repr
-           and  type ('c,'sv,'dv,'svt,'dvt) repr = ('c,'sv,'dv,'svt,'dvt) S0.repr) = 
+           and  type 'c states = ('c,int,int) S0.repr ->
+               ('c,int,int) S0.repr
+           and  type ('c,'sv,'dv) repr = ('c,'sv,'dv) S0.repr) = 
 struct
   open S
 
@@ -790,7 +780,7 @@ end;;
 module RCPS (ST: sig 
   type state 
   type 'c states 
-  type ('c,'sv,'dv,'svt,'dvt) repr = 
+  type ('c,'sv,'dv) repr = 
       {ko: 'w. ('sv -> 'c states -> 'w) -> 'c states -> 'w}
 end) = struct
   include ST
@@ -839,7 +829,7 @@ end;;
 module RCPSI = RCPS(struct 
   type state = int
   type 'c states = int
-  type ('c,'sv,'dv,'svt,'dvt) repr = 
+  type ('c,'sv,'dv) repr = 
       {ko: 'w. ('sv -> 'c states -> 'w) -> 'c states -> 'w}
 end);;
 module EXPSI = EX(RCPSI);;
@@ -873,9 +863,8 @@ mutually recursive, the structure should be named rather than anonymous.
 *)
 module RCPS2_t = struct 
   type state = int -> int
-  type 'c states = ('c,int,int,integer,integer) repr ->
-      ('c,int,int,integer,integer) repr
-  and ('c,'sv,'dv,'svt,'dvt) repr =
+  type 'c states = ('c,int,int) repr -> ('c,int,int) repr
+  and ('c,'sv,'dv) repr =
        {ko: 'w. ('sv -> 'c states -> 'w) -> 'c states -> 'w}
 end;;
 
@@ -913,16 +902,12 @@ module type SymSP = sig
   include Symantics
   type 'a rf
   type 'a rft
-  val newref : ('c,'sa,'da,'sat,'dat) repr -> ('c,'sa rf,'da rf,'sat rft,'dat
-  rft) repr 
-  val deref : ('c,'sa rf,'da rf,'sat rft, 'dat rft) repr ->
-      ('c,'sa,'da,'sat,'dat) repr
-  val setref : ('c,'sa rf,'da rf,'sat rft,'dat rft) repr ->
-      ('c,'sa,'da,'sat,'dat) repr
-              -> ('c,'sa,'da,'sat,'dat) repr
-  val lapp : ('c,'sa,'da,'sat,'dat) repr ->
-    (('c,'sa,'da,'sat,'dat) repr -> ('c,'sb,'db,'sbt,'dbt) repr)
-    -> ('c,'sb,'db,'sbt,'dbt) repr
+  val newref : ('c,'sa,'da) repr -> ('c,'sa rf,'da rf) repr 
+  val deref : ('c,'sa rf,'da rf) repr -> ('c,'sa,'da) repr
+  val setref : ('c,'sa rf,'da rf) repr -> ('c,'sa,'da) repr
+              -> ('c,'sa,'da) repr
+  val lapp : ('c,'sa,'da) repr ->
+    (('c,'sa,'da) repr -> ('c,'sb,'db) repr) -> ('c,'sb,'db) repr
 end;;
 
 module RR = struct
