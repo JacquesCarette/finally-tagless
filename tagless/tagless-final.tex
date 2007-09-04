@@ -391,7 +391,7 @@ We have programmed our interpreters in OCaml (and, for staging,
 \citet{metaocaml}) and standard Haskell. The complete code is
 available at \url{http://okmij.org/ftp/packages/tagless-final.tar.gz}
 to supplement the paper. 
-\ifshort For simplicity, our main examples will be in MetaOCaml, but
+\ifshort For simplicity, main examples in the paper will be in MetaOCaml;
 all examples have also been implemented in Haskell.
 \else Our examples below switch between (Meta)OCaml
 and Haskell even though we have implemented each example equivalently in
@@ -1057,7 +1057,7 @@ type-class functional dependencies
 \citep{oliveira-typecase}. The accompanying code shows both
 approaches, neither of which is portable to OCaml. In addition,
 the problem of nonexhaustive pattern\hyp matching reappears in
-in the GADT approach because GHC 6.6.1 cannot see that a particular
+the GADT approach because GHC 6.6.1 cannot see that a particular
 type of a GADT value precludes certain constructors.
 Recall, our
 goal is to make this exhaustiveness \emph{syntactically} apparent.
@@ -1226,10 +1226,10 @@ any static ones to avoid polymorphic lift.
 The static portion of the interpretation of |lam f| is |Some f|, 
 which just wraps the HOAS
 function |f|. The interpretation of |app ef ea| 
-checks to see if |ef| has such a wrapped
+checks to see if |ef| is such a wrapped
 HOAS function. If it is, we apply |f| to the
 concrete argument |ea|, giving us a chance to perform static
-computations (see example the below). If
+computations (see the example below). If
 |ef| has only a dynamic part, we residualize.
 
 
