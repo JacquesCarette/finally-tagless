@@ -55,5 +55,5 @@ incope1.hs		Tagless interpreter, compiler, partial evaluator.
 
 
 
-Last updated: July 2007.
+Last updated: September 2007.
 
