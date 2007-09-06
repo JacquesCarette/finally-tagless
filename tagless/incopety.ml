@@ -55,7 +55,11 @@ module EX(S: Symantics) = struct
 
  let test1 () = S.add (S.int 1) (S.int 2)
  let test2 () = S.lam (fun x -> S.add x x)
+ let test2b () = S.lam (fun x -> S.add x (S.int 1))
  let test3 () = S.lam (fun x -> S.add (S.app x (S.int 1)) (S.int 2))
+ let test4 () = S.lam (fun x -> S.lam (fun y -> 
+     S.if_ (S.leq x (S.int 0)) (fun () -> S.add x y)
+                               (fun () -> S.mul x y)))
 
  let testgib () = S.lam (fun x -> S.lam (fun y ->
                   S.fix (fun self -> S.lam (fun n ->
@@ -82,7 +86,9 @@ module EX(S: Symantics) = struct
 
  let test1r () = runit test1
  let test2r () = runit test2
+ let test2br () = runit test2b
  let test3r () = runit test3
+ let test4r () = runit test4
 
  let testgibr () = runit testgib
  let testgib1r () = runit testgib1
@@ -121,23 +127,21 @@ module EXR = EX(R);;
    type, in that the information contained in a function application 
    is not forgotten.  If it were, then I don't know how to write a
    typechecker in direct style.  *)
-type base     = IntT | BoolT | AnyT of int
+type base     = IntT | BoolT 
 type allt     = Base of base 
+              | AnyT of int
               | Function of (allt * allt)
-              | Apply    of (allt * allt)
 
 (* our type representation will be alt above *)
 type typerep     = allt
-type typecheck   = typerep -> bool
-(* Typechecking requires going from a typerep to a typerep !
-   Basically, if the type is correct, this will act as the identity,
-   otherwise ?
-   *)
 
+(* First attempt, pure type-checking -- return true/false.
+   Unfortunately, this will not work, see later comments *)
+type typecheck1   = typerep -> bool
 
-(* Are two typecheks unifiable? *)
-(* this routine is //wrong//, but it passes all the tests!  Clearly,
-   the tests are nowhere near sufficient, that needs to be fixed later *)
+(* Are two types unifiable? *)
+(* this routine is //wrong//, but that is irrelevant since it is only
+   used by our first attempt, which will (independently) not work *)
 let unifiable (t1:allt) (t2:allt) = match (t1,t2) with
     | (Base IntT, Base IntT)   -> true
     | (Base BoolT, Base BoolT) -> true
@@ -156,8 +160,8 @@ let unifiable (t1:allt) (t2:allt) = match (t1,t2) with
    "just right" to ensure that Ocaml's own type system took care of everything.
    But the basic idea will be useful later.
    *)
-module RT = struct
-  type ('c,'sv,'dv) repr = typecheck
+module RT1 = struct
+  type ('c,'sv,'dv) repr = typecheck1
   let int (x:int) = fun t -> t = Base IntT
   let bool (x:bool) = fun t -> t = Base BoolT
   let add x y = fun t -> match t with
@@ -169,25 +173,139 @@ module RT = struct
   let leq x y = fun t -> match t with
       | Base BoolT -> (x (Base IntT)) && (y (Base IntT))
       | _                                 -> false
+  (* first partial problem: we can't test if the types in x and y are in 
+     fact compatible, as they are encoded in a black-box.
+     In this case, we can get away with a hack!  Since equality is not
+     actually defined at function types, we can just see if one of the 
+     base types works, and fail otherwise *)
   let eql x y = fun t -> match t with
       | Base BoolT -> 
             ((x (Base IntT)) && (y (Base IntT))) ||
             ((x (Base BoolT)) && (y (Base BoolT))) ||
-            ((x (Base (AnyT 0))) && (y (Base (AnyT 0))))
+            ((x (AnyT 0)) && (y (AnyT 0)))
       | _                                 -> false
+  (* Here we again have an almost problem: we really have to have that
+     the 'then' and 'else' clause are the same types.  But since that
+     is the result type, then we can just test it twice, and that will 
+     work *)
   let if_ eb et ee = fun t -> (eb (Base BoolT)) &&
       ((et () t) && (ee () t))
+  (* We can't really test lam either.  The point is that we should have
+     that f transforms from a typechecker for type x to one for type y.
+     But we don't have anything of type x (or y) with which to try it on. 
+     So all we can really do is test that it's a function.  *)
   let lam f = fun t -> match t with
       | Function(x,y) -> true
       | _             -> false
-  let app f c = fun t -> match t with
-      | Apply (g, d) -> (f g) && (c d) (* should check g,d too! *)
-      | _            -> false
   (* fix is really nice because it works as is *)
   let fix f = let rec self n = f self n in self
+  (* here is where things really really break down.  We only get the
+     return type, we don't know anything about f or c (since they are not
+     types but rather typecheckers!).  We can't manufacture the right type
+     (that's inference).  One way out would be to have 
+     Apply of (allt*allt)
+     in allt.  But that would be an intentional type!  So basically we
+     can't typecheck anything at all which contains a function application,
+     at least not this way *)
+  let app f c = fun t -> match t with
+      | _            -> false
 end;;
-module EXRT = EX(RT);;
+(* Let's not bother trying to instantiate this.  While it does have the 
+   right signature, we know it is much too under-powered *)
 
+
+(* Second attempt.  This is part checking, part inference.  We get
+   passed a type, and we return either a *specialization* of that type
+   [if there is one which will work], or None.  *)
+type typecheck2   = typerep -> (typerep option)
+
+(* Unifier.  Convention: negative indices for polymorphic variables are
+   "fresh", and will unify with anything.  *)
+let unify (t1:allt) (t2:allt) : allt option = 
+    let rec unify_with_subs u1 u2 s = match (u1,u2) with
+    | (Base IntT, Base IntT)   -> s, Some (Base IntT)
+    | (Base BoolT, Base BoolT) -> s, Some (Base BoolT)
+    | (AnyT x, y)              -> (x,y)::s, Some y
+    | (x, AnyT y)              -> (y,x)::s, Some x
+    | (Function(t1,t2), Function(t3,t4)) -> begin
+        match unify_with_subs t1 t3 s with
+        | (s1,Some z) -> begin match unify_with_subs t2 t4 s1 with
+            | (s2, Some zz) -> s2, Some(Function(z, zz))
+            | _             -> s, None end
+        | _           -> s, None end
+    | _                        -> s, None
+in snd (unify_with_subs t1 t2 [])
+
+(* This code really ought to be rewritten using pa_monad for the 
+   Maybe monad!  Right now, the code is astonishingly ugly as it is
+   expanded monadic code, blech.  Later. *)
+module RT2 = struct
+  type ('c,'sv,'dv) repr = typecheck2
+
+  let int (x:int) = unify (Base IntT)
+  let bool (x:bool) = unify (Base BoolT)
+  (* No point matching x and y's return since IntT is not specializable *)
+  let add x y = fun t -> 
+      let x1 = x (Base IntT) and y1 = y (Base IntT) in
+      match (x1,y1) with
+      | (Some x2, Some y2) -> unify (Base IntT) t
+      | _                  -> None
+  let mul x y = fun t -> 
+      let x1 = x (Base IntT) and y1 = y (Base IntT) in
+      match (x1,y1) with
+      | (Some x2, Some y2) -> unify (Base IntT) t
+      | _                  -> None
+  let leq x y = fun t -> 
+      let x1 = x (Base IntT) and y1 = y (Base IntT) in
+      match (x1,y1) with
+      | (Some x2, Some y2) -> unify (Base BoolT) t
+      | _                  -> None
+  (* But now we can really make this work.  We get actual types out
+     of checking the arguments, and we can make sure that what we get
+     is in fact equal.  And here we really mean equality! *)
+  let eql x y = fun t -> match unify (Base BoolT) t with
+      | Some (Base BoolT) -> begin
+          let xt = x (AnyT(-1)) and yt = y (AnyT(-1)) in
+          match (xt,yt) with
+          | (Some t1, Some t2) when t1 = t2 -> Some t
+          | _                               -> None
+          end
+      | _                                   -> None
+  (* Here we again have an almost problem: we really have to have that
+     the 'then' and 'else' clause are the same types.  But since that
+     is the result type, then we can just test it twice, and that will 
+     work *)
+  let if_ eb et ee = fun t -> match (eb (Base BoolT)) with
+      | Some _ -> begin let etc = (et () t) and eec = (ee () t) in 
+                  match (etc, eec) with 
+                  | (Some t1, Some t2) -> unify t1 t2
+                  | _                  -> None end
+      | None   -> None
+  let lam f = fun t -> match t with
+      | Function(x,y) -> let res = f (fun _ -> Some x) y in begin
+          match res with
+          | Some z -> begin match unify z y with 
+              | Some zz -> Some(Function(x, zz))
+              | _       -> None end
+          | _      -> None end
+      | _             -> None
+  let app f c = fun t -> let ctyp = c (AnyT(-1)) in
+      match ctyp with
+      | Some cc -> 
+          let res = f(Function(cc,t)) in begin
+          match res with
+          | Some(Function(x1,x2)) -> Some x2
+          | _                     -> None end
+      | None -> None
+  let fix f = fun t -> match t with
+      | Function(x,y) -> let res = f (fun _ -> Some t) t in begin
+          match res with
+          | Some z -> unify t z
+          | None   -> None end
+      | _             -> None
+end;;
+
+module EXRT2 = EX(RT2);;
 
 (* ------------------------------------------------------------------------ *)
 (* Another interpreter: it interprets each term to give its size
@@ -240,35 +358,38 @@ end;;
 module EXC = EX(C);;
 
 (* ------------------------------------------------------------------------ *)
-(* Now do the type-level work for the compiler too.  This works beautifully
-   with the minor exception of printing - the type constraints on the
-   input variables of functions do not print.  Rather annoying, but I don't
-   know how to fix that *)
+(* Compiler generator 
 
-(*
-module CT = struct
-  type ('c,'sv,'dv) repr = ('c, 'dvt) code
-  let int (x:int) = .< IntT >.
-  let bool (b:bool) = .< BoolT >.
-  let add e1 e2 = .< IntT >.
-  let mul e1 e2 = .< IntT >.
-  let leq x y = .< BoolT >.
-  let eql x y = .< BoolT >.
-  let if_ eb et ee =  ee ()
-  let lam (f : (('c,'sa,'da,'sat,'dat) repr -> ('c,'sb,'db,'sbt,'dbt) repr as
-  'x)) = .<fun (x:'dat) -> .~(f .<x>.) >.
-  let app e1 e2 = .<.~e1 .~e2>.
+   This is essentially the same as the compiler, except that it is a functor
+   over an interpreter instead of being a separate module.  The only 
+   drawback is that Ocaml doesn't do enough inlining, so there is overhead.
+   But the advantages of being functorial probably outweight that. *)
+
+module type InterpreterType = Symantics with type ('c,'sv,'dv) repr = 'dv
+
+module CGen(R:InterpreterType) = struct
+  type ('c,'sv,'dv) repr = ('c,'dv) code
+  let int (x:int) = let y = R.int x in .<y>.
+  let bool (b:bool) = let y = R.bool b in .<y>.
+  let add e1 e2 = .< R.add .~e1 .~e2 >.
+  let mul e1 e2 = .<R.mul .~e1 .~e2>.
+  let leq x y = .< R.leq .~x .~y >.
+  let eql x y = .< R.eql .~x .~y >.
+  let if_ eb et ee = .< R.if_ .~eb (fun _ -> .~(et ())) (fun _ -> .~(ee ())) >.
+
+  let lam f = let y = R.lam f in .< fun x -> .~(y .<x>.) >. 
+  let app e1 e2 = .<R.app .~e1 .~e2>.
   let fix f = .<let rec self n = .~(f .<self>.) n in self>.
 end;;
 
-module EXCT = EX(CT);;
-*)
+module C2 = CGen(R) ;;
+module EXC2 = EX(C2) ;;
 
 (* ------------------------------------------------------------------------ *)
 (* Partial evaluator *)
 (* Inspired by Ken's solution *)
 
-module P =
+module P = 
 struct
   type ('c,'sv,'dv) repr = {st: 'sv option; dy: ('c,'dv) code}
   type ('a,'s,'v) result = RL of 's | RC of ('a,'v) code;;
@@ -341,7 +462,7 @@ end;;
 (* Alternatively, we process fix all the way, provided the computation
    is static.
 *)
-module P1 =
+module P1 = 
 struct
   include P
 (*
@@ -357,135 +478,168 @@ struct
        in {st = Some self; dy = fdyn}
 end;;
 
-
 module EXP = EX(P1);;
 
-(* ------------------------------------------------------------------------ *)
-(* Partial evaluator *)
-(* This is again for the type stuff *)
-
-(*
-module PT =
+(* ---------------------------------------*)
+(* Or we can also go functorial *)
+module P2(R:InterpreterType) = 
 struct
-  type ('c,'sv,'dv) repr = {st: 'svt option; dy: ('c,'dvt) code}
+  module C = CGen(R)
+  type ('c,'sv,'dv) repr = {st: 'sv option; dy: ('c,'dv) code}
   type ('a,'s,'v) result = RL of 's | RC of ('a,'v) code;;
   let abstr {dy = x} = x
   let pdyn x = {st = None; dy = x}
 
-  let int  (x:int)  = {st = Some (RT.int x);
-                       dy = CT.int x}
-  let bool (x:bool) = {st = Some (RT.bool x);
-                       dy = CT.bool x}
+  let int  (x:int)  = {st = Some (R.int x);
+                       dy = C.int x}
+  let bool (x:bool) = {st = Some (R.bool x);
+                       dy = C.bool x}
 
-  (* generic build - takes a repr constructor, 
-     a generic element
-     an interpreter function
+  (* generic build - takes a repr constructor, an interpreter function
      and a compiler function (all binary) and builds a PE version *)
-  let build cast element f1 f2 = function
-  | {st = Some m}, {st = Some n} -> let _ = f1 m n in cast element
+  let build cast f1 f2 = function
+  | {st = Some m}, {st = Some n} -> cast (f1 m n)
   | e1, e2 -> pdyn (f2 (abstr e1) (abstr e2))
   (* same as 'build' but takes care of the neutral element (e) simplification
      allowed via a monoid structure which is implicitly present *)
-  let monoid cast one element f1 f2 = function
+  let monoid cast one f1 f2 = function
   | {st = Some e'}, e when e' = one -> e
   | e, {st = Some e'} when e' = one -> e
-  | ee -> build cast element f1 f2 ee
+  | ee -> build cast f1 f2 ee
   (* same as above but for a ring structure instead of monoid *)
-  let ring cast zero one element f1 f2 = function
+  let ring cast zero one f1 f2 = function
   | ({st = Some e'} as e), _ when e' = zero -> e
   | _, ({st = Some e'} as e) when e' = zero -> e
-  | ee -> monoid cast one element f1 f2 ee
+  | ee -> monoid cast one f1 f2 ee
 
-  let add e1 e2 = monoid int (`IntT) 0 RT.add CT.add (e1,e2)
-  let mul e1 e2 = ring int `IntT `IntT 0 RT.mul CT.mul (e1,e2)
-  let leq e1 e2 = build bool true RT.leq CT.leq (e1,e2)
-  let eql e1 e2 = build bool true RT.eql CT.eql (e1,e2)
-  let if_ eb et ee = ee ()
+  let add e1 e2 = monoid int 0 R.add C.add (e1,e2)
+  let mul e1 e2 = ring int 0 1 R.mul C.mul (e1,e2)
+  let leq e1 e2 = build bool R.leq C.leq (e1,e2)
+  let eql e1 e2 = build bool R.eql C.eql (e1,e2)
+  let if_ eb et ee = match eb with
+  | {st = Some b} -> if b then et () else ee ()
+  | _ -> pdyn (C.if_ (abstr eb) 
+                     (fun () -> abstr (et ()))
+                     (fun () -> abstr (ee ())))
 
   let lam f =
-      {st = Some f; 
-       dy = C.lam (fun x -> abstr (f (pdyn x)))}
+  {st = Some f; 
+   dy = C.lam (fun x -> abstr (f (pdyn x)))}
 
   let app ef ea = match ef with
   | {st = Some f} -> f ea
   | _ -> pdyn (C.app (abstr ef) (abstr ea))
 
+   (*
+     For now, to avoid divergence at the PE stage, we residualize.
+     Actually, we unroll the fixpoint exactly once, and then
+     residualize
+   *)
+  let fix f = f (pdyn (C.fix (fun x -> abstr (f (pdyn x)))))
+  (* this should allow us controlled unfolding *)
+  (*
+  let unfold z s = lam (function
+      | {st = Some n} -> 
+              let rec f k = if k<=0 then z else
+                                match s with
+                                | {st = Some m} -> m (f (k-1))
+                                | {dy = y}      -> pdyn (C.app y (abstr (f (k-1))))
+              in f n
+      | {dy = y}      -> pdyn (C.app (C.unfold (abstr z) (abstr s)) y))
+  *)
 
-  (* here we really don't care about divergence, go all the way! *)
+  let get_res t = match t with
+      | {st = (Some y) } -> RL y
+      | _                -> RC (abstr t)
+end;;
+
+(* Alternatively, we process fix all the way, provided the computation
+   is static.
+*)
+module P3(R:InterpreterType) =
+struct
+  include P2(R)
+(*
+  type ('c,'sv,'dv) repr = {st: 'sv option; dy: ('c,'dv) code}
+  let abstr {dy = x} = x
+  let pdyn x = {st = None; dy = x}
+*)
   let fix f =
     let fdyn = C.fix (fun x -> abstr (f (pdyn x)))
     in let rec self = function
        | {st = Some _} as e -> app (f (lam self)) e
        | e -> pdyn (C.app fdyn (abstr e))
        in {st = Some self; dy = fdyn}
-  let get_res t = match t with
-      | {st = (Some y) } -> RL y
-      | _                -> RC (abstr t)
 end;;
 
-module EXPT = EX(PT);;
-*)
+module P2A = P2(R);;
+module EXP2 = EX(P2A);;
 
 (* all the tests together *)
 let itest1 = EXR.test1r ();;
 let ctest1 = EXC.test1r ();;
 let ptest1 = EXP.test1r ();;
 let ltest1 = EXL.test1r ();;
-let ttest1 = EXRT.test1r () (Base IntT);;
+let ttest1 = EXRT2.test1r () (Base IntT);;
 (* let ztest1 = EXCT.test1r ();;  *)
 
 let itest2 = EXR.test2r ();;
 let ctest2 = EXC.test2r ();;
 let ptest2 = EXP.test2r ();;
 let ltest2 = EXL.test2r ();;
-let ttest2 = EXRT.test2r () (Function(Base IntT, Base IntT));;
+let ttest2 = EXRT2.test2r () (Function(Base IntT, Base IntT));;
 (* let ztest2 = EXCT.test2r ();; *)
+let ttest2b = EXRT2.test2br () (Function(Base IntT, Base IntT));;
 
 let itest3 = EXR.test3r ();;
 let ctest3 = EXC.test3r ();;
 let ptest3 = EXP.test3r ();;
 let ltest3 = EXL.test3r ();;
-let ttest3 = EXRT.test3r () (Function(Base IntT, Function(Base IntT, Base
-IntT)));;
+let ttest3 = EXRT2.test3r () (Function(Function(Base IntT, Base IntT),Base IntT));;
 (* let ztest3 = EXCT.test3r ();; *)
+
+(* a test of some features without the baggage of fix *)
+let ttest4 = EXRT2.test4r () (Function(Base IntT, Function(Base IntT, Base
+IntT)));;
 
 let itestg = EXR.testgibr ();;
 let ctestg = EXC.testgibr ();;
 let ptestg = EXP.testgibr ();;
 let ltestg = EXL.testgibr ();;
-let ttestg = EXRT.testgibr () (Function(Base IntT, Function(Base IntT, Base
-IntT)));;
+let ttestg = EXRT2.testgibr () (Function(Base IntT, Function(Base IntT,
+Function(Base IntT, Base IntT))));;
 (* let ztestg = EXCT.testgibr ();; *)
 
 let itestg1 = EXR.testgib1r ();;
 let ctestg1 = EXC.testgib1r ();;
 let ptestg1 = EXP.testgib1r ();;
 let ltestg1 = EXL.testgib1r ();;
-let ttestg1 = EXRT.testgib1r () 
-    (Apply (Apply(Apply(Function(Base IntT, Function(Base IntT,Function(Base
-    IntT, Base IntT))),(Base IntT)),(Base IntT)), (Base IntT)));;
+let ttestg1 = EXRT2.testgib1r () (Base IntT);;
 (* let ztestg1 = EXCT.testgib1r ();; *)
 
 let itestg2 = EXR.testgib2r ();;
 let ctestg2 = EXC.testgib2r ();;
 let ptestg2 = EXP.testgib2r ();;
 let ltestg2 = EXL.testgib2r ();;
-let ttestg2 = EXRT.testgib2r () (Function(Base IntT, Function(Base IntT, Base
+let ttestg2 = EXRT2.testgib2r () (Function(Base IntT, Function(Base IntT, Base
 IntT)));;
 (* let ztestg2 = EXCT.testgib2r ();; *)
+
+let ttestp = EXRT2.testpowfix () (Function(Base IntT, Function(Base IntT, Base
+IntT)));;
 
 let itestp7 = EXR.testpowfix7r ();;
 let ctestp7 = EXC.testpowfix7r ();;
 let ptestp7 = EXP.testpowfix7r ();;
 let ltestp7 = EXL.testpowfix7r ();;
-let ttestp7 = EXRT.testpowfix7r () (Function(Base IntT, Base IntT));;
+let ttestp7 = EXRT2.testpowfix7r () (Function(Base IntT, Base IntT));;
 (* let ztestp7 = EXCT.testpowfix7r ();; *)
 
 let itestp0 = EXR.testpowfix0r ();;
 let ctestp0 = EXC.testpowfix0r ();;
 let ptestp0 = EXP.testpowfix0r ();;
 let ltestp0 = EXL.testpowfix0r ();;
-let ttestp0 = EXRT.testpowfix0r () (Function(Base IntT, Base IntT));;
+let ttestp0 = EXRT2.testpowfix0r () (Function(Base IntT, Base IntT));;
 (* let ztestp0 = EXCT.testpowfix0r ();; *)
 
 (* ------------------------------------------------------------------------ *)
@@ -630,8 +784,8 @@ end;;
 
 
 module CPST(S: Symantics) = struct
- (*  type w = unit *)
- (*  type ('c,'dv) repr = ('c, ('dv -> w)->w) S.repr *)
+  (* type w = unit
+  type ('c,'sv,'dv) repr = ('c, 'sv,('dv -> w)->w) S.repr *)
   let int i = S.lam (fun k -> S.app k (S.int i))
   let bool b = S.lam (fun k -> S.app k (S.bool b))
   let add e1 e2 = S.lam (fun k ->
@@ -643,6 +797,9 @@ module CPST(S: Symantics) = struct
   let leq e1 e2 = S.lam (fun k ->
     S.app e1 (S.lam (fun v1 ->
     S.app e2 (S.lam (fun v2 -> S.app k (S.leq v1 v2))))))
+  let eql e1 e2 = S.lam (fun k ->
+    S.app e1 (S.lam (fun v1 ->
+    S.app e2 (S.lam (fun v2 -> S.app k (S.eql v1 v2))))))
   let if_ ec et ef = S.lam (fun k ->
     S.app ec (S.lam (fun vc ->
     S.if_ vc (fun () -> S.app (et ()) k) (fun () -> S.app (ef ()) k))))
@@ -653,6 +810,40 @@ module CPST(S: Symantics) = struct
     S.app e2 (S.lam (fun v -> S.app (S.app f v) k)))))
   let fix = S.fix
 end;;
+(*  This fails (when type declarations are commented out above) because
+    the type of 'lam' is wrong!  I don't know how to fix it [JC]
+    module T4:Symantics = CPST(R);; *)
+
+(* Attempt to make CPST more 'uniform', but it has the same problem as
+   the code above -- lam has the wrong type
+module CPST2(S: Symantics) = struct
+  let ret a = fun k -> S.app k a
+  let bind a f = S.app a (S.lam (fun v -> f v))
+  let binop g e1 e2 = S.lam (fun k->
+                      bind e1 (fun v1 ->
+                      bind e2 (fun v2 -> 
+                      S.app k (g v1 v2))))
+
+  type ('a,'sv,'dv) repr = ('a, 'sv, ('dv->unit)->unit) S.repr
+  let int i = ret (S.int i)
+  let bool i = ret (S.bool i)
+  let add e1 e2 = binop S.add e1 e2 
+  let mul e1 e2 = binop S.mul e1 e2
+  let eql e1 e2 = binop S.eql e1 e2
+  let leq e1 e2 = binop S.leq e1 e2
+
+  let if_ ec et ef = S.lam (fun k ->
+    S.app ec (S.lam (fun vc ->
+    S.if_ vc (fun () -> S.app (et ()) k) (fun () -> S.app (ef ()) k))))
+  let lam f = S.lam (fun k1 -> 
+              S.lam (fun x ->
+              bind x (fun z -> f z k1)))
+  let app e1 e2 = S.lam (fun k -> 
+    S.app e1 (S.lam (fun f ->
+    S.app e2 (S.lam (fun v -> S.app (S.app f v) k)))))
+  let fix = S.fix
+end;;
+module TT:Symantics = CPST2(R);;  *)
 
 module T = struct
  module M = CPST(P)
