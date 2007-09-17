@@ -198,7 +198,8 @@ module RT1 = struct
       | Function(x,y) -> true
       | _             -> false
   (* fix is really nice because it works as is *)
-  let fix f = let rec self n = f self n in self
+  (* let fix f = let rec self n = f self n in self *)
+  let fix f = R.fix f
   (* here is where things really really break down.  We only get the
      return type, we don't know anything about f or c (since they are not
      types but rather typecheckers!).  We can't manufacture the right type
