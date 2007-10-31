@@ -192,36 +192,24 @@ struct
   | {st = SNNeg}, e -> seta (sign_weaken0 e.st) C.mul e1 e2
   | {st = SNPos}, e -> seta (sign_weaken0 (sign_neg e.st)) C.mul e1 e2
   | _, _ -> seta SUnknown C.mul e1 e2
-end;;
 
-
-(*
-
-
-  type ('a,'s,'v) result = RL of 's | RC of ('a,'v) code;;
-
-
-  let leq e1 e2 = build bool R.leq C.leq (e1,e2)
-  let if_ eb et ee = match eb with
-  | {st = Some b} -> if b then et () else ee ()
-  | _ -> pdyn (C.if_ (abstr eb) 
-                     (fun () -> abstr (et ()))
-                     (fun () -> abstr (ee ())))
+  let leq e1 e2 = pdyn (C.leq (concr e1) (concr e2))
+  let if_ eb et ee =
+     pdyn (C.if_ (concr eb) 
+                 (fun () -> concr (et ()))
+                 (fun () -> concr (ee ())))
 
   let lam f =
-  {st = Some f; 
-   dy = C.lam (fun x -> abstr (f (pdyn x)))}
+      {st = SUnknown; dy = C.lam (fun x -> concr (f (pdyn x)))}
 
-  let app ef ea = match ef with
-  | {st = Some f} -> f ea
-  | _ -> pdyn (C.app (abstr ef) (abstr ea))
+  let app ef ea = pdyn (C.app (concr ef) (concr ea))
 
    (*
      For now, to avoid divergence at the PE stage, we residualize.
      Actually, we unroll the fixpoint exactly once, and then
      residualize
    *)
-  let fix f = f (pdyn (C.fix (fun x -> abstr (f (pdyn x)))))
+  let fix f = f (pdyn (C.fix (fun x -> concr (f (pdyn x)))))
   (* this should allow us controlled unfolding *)
   (*
   let unfold z s = lam (function
@@ -229,13 +217,21 @@ end;;
               let rec f k = if k<=0 then z else
                                 match s with
                                 | {st = Some m} -> m (f (k-1))
-                                | {dy = y}      -> pdyn (C.app y (abstr (f (k-1))))
+                                | {dy = y}      -> pdyn (C.app y (concr (f (k-1))))
               in f n
-      | {dy = y}      -> pdyn (C.app (C.unfold (abstr z) (abstr s)) y))
+      | {dy = y}      -> pdyn (C.app (C.unfold (concr z) (concr s)) y))
   *)
 
-  let get_res t = match t with
-      | {st = (Some y) } -> RL y
-      | _                -> RC (abstr t)
+  let get_res t = concr t
 end;;
-*)
+
+module EXP = EX(AIS);;
+
+let ptest1 = EXP.test1r ();;
+let ptest2 = EXP.test2r ();;
+let ptest3 = EXP.test3r ();;
+let ptestg = EXP.testgibr ();;
+let ptestg1 = EXP.testgib1r ();;
+let ptestg2 = EXP.testgib2r ();;
+let ptestp7 = EXP.testpowfix7r ();;
+let ptestp0 = EXP.testpowfix0r ();;
