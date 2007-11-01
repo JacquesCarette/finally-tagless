@@ -1,4 +1,4 @@
-        MetaOCaml version 3.09.1 alpha 029
+        MetaOCaml version 3.09.1 alpha 030
 
 #       val e1 : 'a list * int = ([], 0)
 # val e2 : 'a Examples.MString.b list * int = (["foo"], 1)
@@ -56,8 +56,8 @@
      .<(((* cross-stage persistent value (as id: B.bop) *))
     (* cross-stage persistent value (as id: x) *) (-5))>.;
     Examples.TC3.Code
-     .<(((* cross-stage persistent value (as id: B.bop) *))
-    (* cross-stage persistent value (as id: x) *) 3)>.;
+     .<(((* cross-stage persistent value (as id: B.bop) *)) 3
+    (* cross-stage persistent value (as id: y) *))>.;
     Examples.TC3.Code
      .<(((* cross-stage persistent value (as id: B.bop) *)) 7 7)>.;
     Examples.TC3.Ground 12],
@@ -69,8 +69,8 @@
 # val w11 : ('a, '_b Examples.TC3.b list) code =
   .<[(((* cross-stage persistent value (as id: B.bop) *))
      (* cross-stage persistent value (as id: x) *) (-5));
-   (((* cross-stage persistent value (as id: B.bop) *))
-     (* cross-stage persistent value (as id: x) *) 3);
+   (((* cross-stage persistent value (as id: B.bop) *)) 3
+     (* cross-stage persistent value (as id: y) *));
    (((* cross-stage persistent value (as id: B.bop) *)) 7 7);
    (* cross-stage persistent value (as id: x) *)]>.
 # val w11a : ('a, '_b Examples.TC3.b list) code =
@@ -91,8 +91,8 @@
      .<(((* cross-stage persistent value (as id: B.bop) *))
     (* cross-stage persistent value (as id: x) *) .<(-5)>.)>.;
     Examples.TC4.Code
-     .<(((* cross-stage persistent value (as id: B.bop) *))
-    (* cross-stage persistent value (as id: x) *) .<3>.)>.;
+     .<(((* cross-stage persistent value (as id: B.bop) *)) .<3>.
+    (* cross-stage persistent value (as id: y) *))>.;
     Examples.TC4.Code
      .<(((* cross-stage persistent value (as id: B.bop) *)) .<7>. .<7>.)>.;
     Examples.TC4.Ground .<(6 + 6)>.],
@@ -100,8 +100,8 @@
 # val w16 : ('a, '_b Examples.TC4.b list) code =
   .<[(((* cross-stage persistent value (as id: B.bop) *))
      (* cross-stage persistent value (as id: x) *) .<(-5)>.);
-   (((* cross-stage persistent value (as id: B.bop) *))
-     (* cross-stage persistent value (as id: x) *) .<3>.);
+   (((* cross-stage persistent value (as id: B.bop) *)) .<3>.
+     (* cross-stage persistent value (as id: y) *));
    (((* cross-stage persistent value (as id: B.bop) *)) .<7>. .<7>.);
    (* cross-stage persistent value (as id: x) *)]>.
 # val w18 : '_a Examples.TC4.b list =

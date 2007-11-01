@@ -29,6 +29,16 @@ module AbstractVector(B:MONOID) = struct
   let attach v p = (v,p)
 end
 
+(* generate a type for a concrete vector *)
+module ConcreteVectorTypeGen(B:MONOID) = struct
+    module VP = AbstractVector(B)
+    module type CVT = sig
+        val head : 'a VP.vp -> 'a B.b
+        val tail : 'a VP.vp -> 'a VP.vp
+        val concat : 'a VP.vp -> 'a VP.vp -> 'a VP.vp
+    end
+end
+
 (* "safe" vector-with-length.  That is, if the underlying List.hd
    and List.tl were *unsafe*, then this version would add safety.
    Just for demonstration purposes, later this will become more useful *)
@@ -55,6 +65,8 @@ end
 
 (* used in the tests *)
 module LV = LVector(MString)
+module LVStringType = ConcreteVectorTypeGen(MString)
+module LVV : LVStringType.CVT = LV 
 
 (* of type MONOID but we don't want the types to be abstract *)
 (* this is a pure lift [to code] of MString *)
@@ -147,6 +159,9 @@ end
 module TC2 = Code(MString)
 module LVC2 = LVector2(TC2)
 
+(* check that we have the right signature *)
+module LVC2V : LVStringType.CVT = LVC2
+
 (* repeat of the same but over (Nat,+) monoid *)
 (* of type MONOID but we don't want the types to be abstract *)
 module T3 = struct 
@@ -157,14 +172,19 @@ end
 
 module TC3 = Code(T3)
 module LVC3 = LVector2(TC3)
+(* check that we have the right signature *)
+module LVAddMonoidType = ConcreteVectorTypeGen(T3)
+module LVC3V : LVAddMonoidType.CVT = LVC3
 
 module T4 = struct 
-  type 'a b=('a,int) code
+  type 'a b = ('a,int) code
   let bop x y = .< .~x + .~y >.
   let neutral = .< 0 >.
 end
 module TC4 = Code(T4)
 module LVC4 = LVector2(TC4)
+(* check that we have the right signature *)
+module LVC4V : LVAddMonoidType.CVT = LVC4
 
 (* Ok, now we're getting somewhere.  This is very much like 
    LVector3, except that we have a cleaner separation of generation-time
@@ -197,7 +217,32 @@ module T5 = struct
   let neutral = 1
 end
 
+(* lifting of AbstractVector to plain code.
+   Note how /prop/ does not change. *)
+module AbstractVector3(B:MONOID) = struct
+  type ('a,'b) v = ('a, 'b B.b list) code
+  type prop = int
+  type ('a,'b) vp = ('a,'b) v * prop
+  let value (v,p) = v
+  let prop (v,p) = p
+  let attach v p = (v,p)
+end
+
+(* the types are now somewhat different, adjust accordingly *)
+module ConcreteVector3TypeGen(B:MONOID) = struct
+    module VP = AbstractVector3(B)
+    type ('a,'b) t = ('a, 'b B.b) code
+    module type CVT = sig
+        val head : ('a,'b) VP.vp -> ('a,'b) t
+        val tail : ('a,'b) VP.vp -> ('a,'b) VP.vp
+        val concat : ('a,'b) VP.vp -> ('a,'b) VP.vp -> ('a,'b) VP.vp
+    end
+end
+
 module LVC5 = LVector3(T5)
+(* check that we have the right signature *)
+module LVMultMonoidType = ConcreteVector3TypeGen(T5)
+module LVC5V : LVMultMonoidType.CVT = LVC5
 
 (* ========================================================= *)
 (*  End of "working" code.  Rest is still under construction *)
