@@ -979,3 +979,76 @@ dynterm_C_show = case dynterm1 () of DynTerm t -> show $ compC t
 dynterm_P_show = case dynterm1 () of DynTerm t -> show $ compP t
 -- "True"
 
+-- ------------------------------------------------------------------------
+-- A rather unsatisfactory attempt at the problem of deriving an 
+-- eta-transformer. It works only in the simplest case (test3 below)
+-- and doesn't work for nested lambda
+--
+-- Another idea, not tried below, is to represent a Hypothetical
+-- expression (Hyp below) as Hyp (a->b) where 'a' is the hypothesis.
+-- So, we may be able to represent
+-- \x -> e1 + e2 as (\x -> e1) `liftedplus` (\x -> e2)
+-- \x -> e1 e2 as (\x -> e1) `liftedapp` (\x->e2)
+-- The hypothesis can be discharged when we examine e1 or e2
+-- (e.g., when e1 is a constant, we can note the fact it does not
+-- depend on the hypothesis). This approach better works in Twelf.
+-- Still, it has trouble for nested lambdas.
+
+-- For related work, see the paper ''Free variable Types''
+-- by Edwin Westbrook, on Aaron Stump's home page.
+
+
+data RC r s = RCHyp | RCHRed (r s) | RCReal
+data RH r s a = RH (RC r s) (r a)
+
+hdyn (RH _ x) = x
+
+-- instance Symantics r => Symantics (RH r) where
+hint x  = RH RCReal (int x)
+hbool x = RH RCReal (bool x)
+
+h1add RCReal RCReal = RCReal
+h1add _ _ = RCHyp
+hadd (RH ec1 e1) (RH ec2 e2) = RH (h1add ec1 ec2) (add e1 e2)
+
+h1app RCReal _ RCReal = RCReal
+h1app RCReal e1 RCHyp = RCHRed e1
+h1app _ _ _ = RCHyp
+
+happ (RH ec1 e1) (RH ec2 e2) = RH (h1app ec1 e1 ec2) (app e1 e2)
+
+hlam f = check_eta_red (f (RH RCHyp undefined)) -- this is fixable
+ where
+  to_r f = lam (hdyn . f . (RH RCReal))
+  check_eta_red (RH RCHyp _)      = RH RCHyp (to_r f)
+  check_eta_red (RH RCReal _)     = RH RCReal (to_r f)
+  check_eta_red (RH (RCHRed e) _) = RH RCReal e
+
+
+{-
+htest1 () = hlam (\x -> (hlam (\y -> (hint 1))) `happ` (hint 2))
+htest1r = compC . hdyn $ htest1 ()
+
+htest2 () = hlam (\x -> (hlam (\y -> x)) `happ` (hint 2))
+htest2r = compC . hdyn $ htest2 ()
+
+htest3 () = hlam (\x -> (hlam (\y -> (hint 1))) `happ` x)
+htest3r = compC . hdyn $ htest3 ()
+
+htest31 () = hlam (\x -> (hlam (\y -> x)) `happ` x)
+htest31r = compC . hdyn $ htest31 ()
+
+-- nested lambdas aren't handled yet. Need to also propagate
+haddtest () = hlam (\x -> hlam (\y -> hadd x y))
+htest4 () = hlam (\x -> hlam (\y -> (haddtest () `happ` y) `happ` x))
+htest4r = compC . hdyn $ htest4 ()
+
+htest5 () = hlam (\x -> hlam (\y -> (haddtest () `happ` x) `happ` y))
+htest5r = compC . hdyn $ htest5 ()
+
+htest6 () = hlam (\x -> hlam (\y -> (haddtest () `happ` y) `happ` y))
+htest6r = compC . hdyn $ htest6 ()
+
+htest7 () = hlam (\x -> hlam (\y -> (haddtest () `happ` x) `happ` x))
+htest7r = compC . hdyn $ htest7 ()
+-}
