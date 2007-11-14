@@ -4,6 +4,8 @@
 
 module Incope where
 
+import Data.Typeable  -- used ONLY for typechecking below
+
 {-
   The language is simply-typed lambda-calculus with fixpoint,
   integers, booleans and comparison.
@@ -964,7 +966,7 @@ test3_3 = unRR (test3_1)
 
 -- The Show constraint here is so that we could see the result of the
 -- computation...
-data DynTerm repr = forall a. Show a => DynTerm (repr a)
+data DynTerm repr = forall a. (Show a, Typeable a) => DynTerm (repr a)
 
 -- A sample `dynamic' object term
 dynterm1 () = DynTerm (lam (\x -> x) `app` (bool True))
@@ -978,6 +980,63 @@ dynterm_C_show = case dynterm1 () of DynTerm t -> show $ compC t
 -- "((\\V0 -> V0) True)"
 dynterm_P_show = case dynterm1 () of DynTerm t -> show $ compP t
 -- "True"
+
+
+data UExp = UInt Int | UBool Bool | UAdd UExp UExp | UIf UExp UExp UExp
+
+-- Typechecking is obviously partial
+-- Rather than use the Either data type to report errors (Error monad), 
+-- we report errors via 'error' for simplicity.
+typecheck :: Symantics repr => UExp -> DynTerm repr
+typecheck (UInt x) = DynTerm (int x)
+typecheck (UBool x) = DynTerm (bool x)
+typecheck (UAdd e1 e2) = tadd (typecheck e1) (typecheck e2)
+ where
+ tadd (DynTerm e1) (DynTerm e2) = DynTerm (add e1' e2')
+  where
+  Just e1' = gcast e1
+  Just e2' = gcast e2
+typecheck (UIf e1 e2 e3) = tif (typecheck e1) (typecheck e2) (typecheck e3)
+ where
+ tif (DynTerm e1) (DynTerm e2) (DynTerm e3) = DynTerm (if_ e1' e2 e3')
+  where
+  Just e1' = gcast e1
+  Just e3' = gcast e3
+
+
+rShow (DynTerm t) = show $ compR t
+lShow (DynTerm t) = show $ compL t
+cShow (DynTerm t) = show $ compC t
+
+dt1 () = typecheck (UAdd (UInt 1) (UInt 2))
+
+dt1rs = rShow $ dt1 () -- "3"
+dt1rc = cShow $ dt1 () -- "(1 + 2)"
+
+dt2 () = typecheck (UIf (UBool True) (UAdd (UInt 1) (UInt 2)) (UInt 3))
+dt2rs = rShow $ dt2 () -- "3"
+dt2rc = cShow $ dt2 () -- "(if True then (1 + 2) else 3)"
+
+dt3 () = typecheck (UIf (UBool True) (UAdd (UInt 1) (UInt 2)) (UBool False))
+dt3rs = rShow $ dt3 () 
+dt3rc = cShow $ dt3 () 
+
+
+
+{-
+
+    int :: Int -> repr Int                -- int literal
+    bool :: Bool -> repr Bool             -- bool literal
+
+    lam :: (repr a -> repr b) -> repr (a->b)
+    app :: repr (a->b) -> repr a -> repr b
+    fix :: (repr a -> repr a) -> repr a
+
+    add :: repr Int -> repr Int -> repr Int
+    mul :: repr Int -> repr Int -> repr Int
+    if_ :: repr Bool -> repr a -> repr a -> repr a
+    leq :: repr Int -> repr Int -> repr Bool
+-}
 
 -- ------------------------------------------------------------------------
 -- A rather unsatisfactory attempt at the problem of deriving an 
