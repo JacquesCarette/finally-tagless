@@ -3,6 +3,11 @@
 -- Interpreter, Compiler, Partial Evaluator 
 -- Typechecking into Symantics terms
 
+-- The code does show how to convert untyped terms to 
+-- typed terms that can be interpreted by various typed interpreters. 
+-- Typechecking happens only once, regardless of the number of 
+-- interpretations of the term.
+
 module IncopeTypecheck where
 
 import Incope
@@ -40,7 +45,7 @@ dynterm_P_show = case dynterm1 () of DynTerm t -> show $ compP t
 -- "True"
 
 -- Typechecking
--- Representing unparsed terms
+-- Representing untyped terms (the AST produced by the parser, for example)
 data UExp = UInt Int | UBool Bool | UAdd UExp UExp | UIf UExp UExp UExp
 	  | UApp UExp UExp
 	    -- functions are represented via combinators
@@ -105,6 +110,7 @@ tc exp = either error id (typecheck exp)
 rShow (DynTerm t) = show $ compR t
 lShow (DynTerm t) = show $ compL t
 cShow (DynTerm t) = show $ compC t
+pShow (DynTerm t) = show $ compP t
 
 
 dt1:: Symantics repr => DynTerm repr
@@ -145,6 +151,7 @@ dt5 = tc (((ut2 `UApp` ut) `UApp` (UBool False)) `UApp` (UInt 20))
 dt5rl = lShow $ dt5  -- 9
 dt5rc = cShow $ dt5  
   -- "((((\\V0 -> (\\V1 -> V0)) (\\V2 -> (\\V3 -> V2))) False) 20)"
+dt5rp = pShow $ dt5  -- "(\\V0 -> 20)"
 
 dt6:: Symantics repr => DynTerm repr
 dt6 = tc (((ut2 `UApp` ut2) `UApp` (UBool False)) `UApp` (UInt 20))
@@ -152,3 +159,5 @@ dt6rl = lShow $ dt6
 -- "*** Exception: Bad App: UApp (UK (UK (UInt 1) (UBool True)) (UBool True)) (UK (UK (UInt 1) (UBool True)) (UBool True))
 
 -- Again, the error message could be better, but I am getting hungry...
+
+-- If we apply PE, it's like converting SK to normal lambdas...
