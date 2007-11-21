@@ -1,0 +1,64 @@
+\documentclass[ucs]{beamer}
+\usepackage{helvet}
+\usepackage[utf8x]{inputenc}
+\usepackage{microtype}
+\usepackage{calc}
+%\usepackage{tikz}
+
+\usepackage{textcomp}
+\makeatletter
+\uc@dclc{8249}{default}{\textlangle}
+\uc@dclc{8250}{default}{\textrangle}
+\makeatother
+
+\usepackage[compact]{fancyvrb1}
+\DefineVerbatimEnvironment{code}{Verbatim}{commandchars=\\\{\}}
+
+\def\>{\leavevmode\rlap{\color{blue}$\blacktriangleright$}\ \ }
+\newcommand\slide[2]{#2<#1>}
+
+\setbeamertemplate{section in toc}{{\leavevmode\llap{$\blacktriangleright$ }\bfseries\inserttocsection}\par}
+\setbeamertemplate{section in toc shaded}{{\color{black}\inserttocsection}\par}
+\setbeamertemplate{subsection in toc shaded}[default][50]
+
+\AtBeginSection[]
+{
+  \begin{frame}<beamer>
+    \frametitle{Outline}
+    \tableofcontents[currentsection]
+  \end{frame}
+}
+
+\begin{document}
+
+\newcommand{\authorstack}[3]{\begin{footnotesize}\begin{tabular}[t]{@{}c@{}}\begin{normalsize}#1\end{normalsize}\\[\jot]#2\\\texttt{#3}\end{tabular}\end{footnotesize}\ignorespaces}
+\newsavebox\carette \sbox\carette{\authorstack{Jacques Carette}{McMaster University}{carette@mcmaster.ca}}
+\newsavebox\oleg    \sbox\oleg   {\authorstack{Oleg Kiselyov}{FNMOC}{oleg@pobox.com}}
+\newsavebox\ccshan  \sbox\ccshan {\authorstack{Chung-chieh Shan}{Rutgers University}{ccshan@rutgers.edu}}
+
+\setbeamertemplate{sidebar right}{}
+
+\title{Finally tagless, partially evaluated}
+\subtitle{Tagless staged interpreters for simpler typed languages}
+\author[Jacques Carette and Oleg Kiselyov and Chung-chieh Shan]{\usebox\carette \and \usebox\oleg \and \usebox\ccshan}
+\date{30 November 2007}
+
+\begin{frame}
+    \titlepage
+\end{frame}
+
+\setbeamertemplate{background}{%
+    \raisebox{0pt}[\paperheight][0pt]
+        {\includegraphics[angle=90,width=\paperwidth+1pt]{White_pearl_necklace.jpg}}%
+    \llap{\href{http://www.flickr.com/photos/28481088@N00/160781390/}
+               {\scriptsize\color{gray}tanakawho on flickr\kern1pt}}}
+\begin{frame}
+\end{frame}
+\setbeamertemplate{background}[default]
+
+\setbeamertemplate{sidebar right}{\vfill\llap{\usebeamerfont{framesubtitle}\insertpagenumber\hskip\jot}\vskip\jot}
+
+\begin{frame}
+\end{frame}
+
+\end{document}
