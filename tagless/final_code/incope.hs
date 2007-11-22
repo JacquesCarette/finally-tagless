@@ -746,32 +746,3 @@ test3_2 = unRR (test3_1)
 test3_3 :: (Symantics repr) => repr ((Int->Int)->Int)
 test3_3 = unRR (test3_1)
 
--- ------------------------------------------------------------------------
--- Representing parsed AST terms
---
--- The following DynTerm repr could well be the result of the
--- parser/typechecker (created along the lines of `typing dynamic typing')
--- that reads object terms from a string or a file.
--- The type of the term is abstracted over; however, the parser does not commit
--- to any interpretation of that term. As the following shows, we can
--- interpret the same `dynamic' term in multiple ways.
--- This test was inspired by the discussion with Adam Chlipala
--- on Lambda-the-Ultimate on Sep 4-5, 2007.
-
--- The Show constraint here is so that we could see the result of the
--- computation...
-data DynTerm repr = forall a. Show a => DynTerm (repr a)
-
--- A sample `dynamic' object term
-dynterm1 () = DynTerm (lam (\x -> x) `app` (bool True))
-
--- Examples of several interpretations, using R, L, C, and P interpreters
-dynterm_R_show = case dynterm1 () of DynTerm t -> show $ compR t
--- "True"
-dynterm_L_show = case dynterm1 () of DynTerm t -> show $ compL t
--- "3"
-dynterm_C_show = case dynterm1 () of DynTerm t -> show $ compC t
--- "((\\V0 -> V0) True)"
-dynterm_P_show = case dynterm1 () of DynTerm t -> show $ compP t
--- "True"
-
