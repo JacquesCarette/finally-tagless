@@ -1,9 +1,14 @@
+\pagenumbering{arabic}
 \documentclass[ucs]{beamer}
 \usepackage{helvet}
-\usepackage[utf8x]{inputenc}
+\usepackage{eulervm}
+%\usepackage[utf8x]{inputenc}
 \usepackage{microtype}
 \usepackage{calc}
-%\usepackage{tikz}
+
+\usepackage{tikz}
+\usepgflibrary{shapes}
+\usepgflibrary{arrows}
 
 \usepackage{textcomp}
 \makeatletter
@@ -29,6 +34,16 @@
   \end{frame}
 }
 
+% To get the page numbers to stay constant on a frame [dpt]
+\mode<presentation>
+{
+  \setbeamertemplate{sidebar left}{\thispdfpagelabel{\insertframenumber}}
+}
+
+\title{Finally tagless, partially evaluated}
+\subtitle{Tagless staged interpreters for simpler typed languages}
+\author{Jacques Carette and Oleg Kiselyov and Chung-chieh Shan}
+
 \begin{document}
 
 \newcommand{\authorstack}[3]{\begin{footnotesize}\begin{tabular}[t]{@{}c@{}}\begin{normalsize}#1\end{normalsize}\\[\jot]#2\\\texttt{#3}\end{tabular}\end{footnotesize}\ignorespaces}
@@ -38,10 +53,8 @@
 
 \setbeamertemplate{sidebar right}{}
 
-\title{Finally tagless, partially evaluated}
-\subtitle{Tagless staged interpreters for simpler typed languages}
 \author[Jacques Carette and Oleg Kiselyov and Chung-chieh Shan]{\usebox\carette \and \usebox\oleg \and \usebox\ccshan}
-\date{30 November 2007}
+\date{APLAS\\30 November 2007}
 
 \begin{frame}
     \titlepage
@@ -56,9 +69,119 @@
 \end{frame}
 \setbeamertemplate{background}[default]
 
-\setbeamertemplate{sidebar right}{\vfill\llap{\usebeamerfont{framesubtitle}\insertpagenumber\hskip\jot}\vskip\jot}
+\setbeamertemplate{sidebar right}{\vfill\llap{\usebeamerfont{framesubtitle}\insertframenumber\hskip\jot}\vskip\jot}
 
-\begin{frame}
+\tikzstyle{lang}=[ellipse,draw,anchor=west,text depth=3pt,text height=9pt]
+\tikzstyle{every picture}=[>=angle 60]
+
+\setbeamertemplate{background}{%
+    \raisebox{0pt}[\paperheight][0pt]
+        {\includegraphics[width=\paperwidth,trim=0 35 0 180,clip]{FC0836213122.jpg}}}
+\begin{frame}<1>[t,label=everywhere]{There's interpretation everywhere}
+    A fold on an inductive data type is an interpreter of a domain-specific
+    language.
+
+    \bigskip
+    \begin{tikzpicture}
+        \draw node [lang] (lang0) {contract};
+        \foreach \label/\prev/\cur in {grammar/0/1,music/1/2,$\lambda$-term/2/3}
+            \draw (lang\prev.east)+(.3,0) node [lang] (lang\cur) {\label};
+        \draw (lang3.east)+(.2,0) node [anchor=west] {\dots};
+    \onslide<2>
+        \draw (lang0)+(-110:2cm)   node (terp01) {value};
+        \draw (lang0)+( -85:2.5cm) node (terp02) {schedule};
+        \draw (lang1)+(-110:2cm)   node (terp11) {parse};
+        \draw (lang1)+( -85:2.5cm) node (terp12) {pretty-print};
+        \draw (lang2)+(-110:2cm)   node (terp21) {typeset};
+        \draw (lang2)+( -85:2.5cm) node (terp22) {perform};
+        \draw (lang3)+(-110:2cm)   node (terp31) {evaluate};
+        \draw (lang3)+( -85:2.5cm) node (terp32) {compile};
+        \foreach \lang in {0,...,3} {
+            \draw (lang\lang)+(-65:1.5cm) node {\dots};
+            \foreach \terp in {1,...,2}
+                \draw [->] (lang\lang) -- (terp\lang\terp);
+        }
+    \onslide<3>
+        \draw (lang3)+(-148:4.5cm)  node (terp31) {evaluate};
+        \draw (lang3)+(-133:4.25cm) node (terp32) {compile};
+        \draw (lang3)+(-113:4cm)    node (terp33) {specialize};
+        \draw (lang3)+( -93:4.4cm)  node (terp34) {CPS transform};
+        \draw (lang3)+( -73:4cm)    node (terp35) {pretty-print};
+        \draw (lang3)+( -58:3cm)    node {\dots};
+        \foreach \terp in {1,...,5} \draw [->] (lang3) -- (terp3\terp);
+    \end{tikzpicture}
+
+    \only<2>{The same language can be interpreted in many useful ways.}%
+    \only<3>{We focus on the $\lambda$-calculus as an example.}
+\end{frame}
+\setbeamertemplate{background}[default]
+\againframe<2->[t]{everywhere}
+
+\begin{frame}{How to preserve types?}
+    \def\bool{\onslide<5->{ \rlap{\alert{bool}}}}
+    \begin{tikzpicture}
+        \draw node [lang] (lang)
+          {\texttt{\alt<6->{\onslide<6>{\alert{leq} (\alert{lit} 3, }%
+                            \only<7>{\makebox[0pt]{\sffamily
+                                      Simply typed $\lambda$-calculus}}%
+                            \onslide<6>{\alert{lit} 4)}}
+                           {\onslide<2->{Leq (Lit 3, }%
+                            \only<1>{\makebox[0pt]{\sffamily
+                                      \alert{Typed} source language}}%
+                            \onslide<2->{Lit 4)}}:\
+                   \only<6>{\rlap{\alert{bool}}}%
+                   \onslide<2-5>{term\bool}}};
+        \draw [->] (lang) --
+            node [above,midway,anchor=east]
+              {\only<1>{\alert{Typed} metalanguage\hspace*{2em}}%
+               \only<2>{evaluate}%
+               \only<7>{\begin{tabular}{@{}r@{\qquad}}
+                        Haskell constructor classes\\
+                        or ML functors
+                        \end{tabular}}}
+            node [above,midway,anchor=east,text width=2.5in,inner xsep=0pt]
+                {\only<-2,7>{\color{bg}}\ttfamily
+                \alt<6->{\only<6>{\alert<6>{lit:\ int -> int}\\
+                lit i = i\\[1ex]
+                \alert<6>{leq:\ (int,int) -> bool}\\
+                leq (i,j) = i <= j}}
+                {\alert<5>{eval:\ term\only<5>{ bool} -> value\only<5>{ bool}}\\
+                eval (Lit i) = Int i\\
+                eval (Leq (m,n)) =\\
+                \quad \alert<4>{match (eval m, eval n) with\\
+                \quad (Int i, Int j) ->} Bool (i <= j)}}
+            +(-100:4cm)
+            node [anchor=north,text depth=0pt,text height=9pt]
+              {\texttt{\llap{\onslide<2-5>{Bool}
+                             \onslide<2-6>{true:}%
+                             \only<1>{\rlap{\sffamily
+                                            \alert{Typed} target languages}}%
+                             \only<7>{\rlap{\sffamily evaluate}}}\
+                       \only<6>{\rlap{\alert{bool}}}%
+                       \onslide<2-5>{value\bool}}};
+        \draw [->] (lang) -- +(-80:3.5cm)
+            node [anchor=north] {\only<7>{compile}};
+        \draw [->] (lang) -- +(-65:3cm)
+            node [anchor=north west,inner xsep=0pt] {\only<7>{specialize}};
+        \draw [->] (lang) -- +(-50:2.5cm)
+            node [anchor=north west,inner xsep=0pt] {\only<7>{CPS transform}};
+        \draw      (lang)    +(-35:2cm) node {\dots};
+    \end{tikzpicture}
+
+    \bigskip
+
+    \strut
+    \only<-3>{It should be obvious in the metalanguage that interpreting
+    a well-typed source term yields a well-typed target term.}%
+    \only<4>{The term should be well-typed (and closed), so pattern matching
+    in the metalanguage should always \textbf{obviously} succeed.}%
+    \only<5>{Previous solutions use (and motivate) fancier types:\\
+    GADT, dependent types.}%
+    \only<6>{Our simple solution is to be \textbf{finally tagless}:\\
+    replace term constructors by cogen functions.}%
+    \only<7>{To accommodate multiple interpretations,\\
+    the term abstracts over the cogen functions and their types.}%
+    \strut
 \end{frame}
 
 \end{document}
