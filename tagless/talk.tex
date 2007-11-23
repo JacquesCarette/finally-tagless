@@ -62,7 +62,7 @@
 
 \setbeamertemplate{background}{%
     \raisebox{0pt}[\paperheight][0pt]
-        {\includegraphics[angle=90,width=\paperwidth+1pt]{White_pearl_necklace.jpg}}%
+        {\includegraphics[width=\paperwidth+1pt,trim=0 100 0 0]{White_pearl_necklace.jpg}}%
     \llap{\href{http://www.flickr.com/photos/28481088@N00/160781390/}
                {\scriptsize\color{gray}tanakawho on flickr\kern1pt}}}
 \begin{frame}
@@ -124,11 +124,11 @@
           {\texttt{\alt<6->{\onslide<6>{\alert{leq} (\alert{lit} 3, }%
                             \only<7>{\makebox[0pt]{\sffamily
                                       Simply typed $\lambda$-calculus}}%
-                            \onslide<6>{\alert{lit} 4)}}
+                            \onslide<6>{\alert{lit} 4):}}
                            {\onslide<2->{Leq (Lit 3, }%
                             \only<1>{\makebox[0pt]{\sffamily
                                       \alert{Typed} source language}}%
-                            \onslide<2->{Lit 4)}}:\
+                            \onslide<2->{Lit 4):}}\
                    \only<6>{\rlap{\alert{bool}}}%
                    \onslide<2-5>{term\bool}}};
         \draw [->] (lang) --
@@ -145,11 +145,11 @@
                 lit i = i\\[1ex]
                 \alert<6>{leq:\ (int,int) -> bool}\\
                 leq (i,j) = i <= j}}
-                {\alert<5>{eval:\ term\only<5>{ bool} -> value\only<5>{ bool}}\\
+                {\only<2-5>{\alert<5>{eval:\ term\only<5>{ 'a} -> value\only<5>{ 'a}}\\
                 eval (Lit i) = Int i\\
                 eval (Leq (m,n)) =\\
                 \quad \alert<4>{match (eval m, eval n) with\\
-                \quad (Int i, Int j) ->} Bool (i <= j)}}
+                \quad (Int i, Int j) ->} Bool (i <= j)}}}
             +(-100:4cm)
             node [anchor=north,text depth=0pt,text height=9pt]
               {\texttt{\llap{\onslide<2-5>{Bool}
