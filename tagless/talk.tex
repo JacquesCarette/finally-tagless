@@ -102,11 +102,11 @@
                 \draw [->] (lang\lang) -- (terp\lang\terp);
         }
     \onslide<3>
-        \draw (lang3)+(-148:4.5cm)  node (terp31) {evaluate};
-        \draw (lang3)+(-133:4.25cm) node (terp32) {compile};
-        \draw (lang3)+(-113:4cm)    node (terp33) {specialize};
-        \draw (lang3)+( -93:4.4cm)  node (terp34) {CPS transform};
-        \draw (lang3)+( -73:4cm)    node (terp35) {pretty-print};
+        \draw (lang3)+(-148:4.5cm)  node [inner xsep=0pt] (terp31) {evaluate};
+        \draw (lang3)+(-133:4.25cm) node [inner xsep=0pt] (terp32) {compile};
+        \draw (lang3)+(-113:4cm)    node [inner xsep=0pt] (terp33) {specialize};
+        \draw (lang3)+( -93:4.4cm)  node [inner xsep=0pt] (terp34) {CPS transform};
+        \draw (lang3)+( -73:4cm)    node [inner xsep=0pt] (terp35) {pretty-print};
         \draw (lang3)+( -58:3cm)    node {\dots};
         \foreach \terp in {1,...,5} \draw [->] (lang3) -- (terp3\terp);
     \end{tikzpicture}
@@ -117,20 +117,19 @@
 \setbeamertemplate{background}[default]
 \againframe<2->[t]{everywhere}
 
-\begin{frame}{How to preserve types?}
-    \def\bool{\onslide<5->{ \rlap{\alert{bool}}}}
+\begin{frame}{Simple type preservation}
+    \def\bool{\only<5-6>{\ \alert{bool}}}
     \begin{tikzpicture}
         \draw node [lang] (lang)
           {\texttt{\alt<6->{\onslide<6>{\alert{leq} (\alert{lit} 3, }%
                             \only<7>{\makebox[0pt]{\sffamily
                                       Simply typed $\lambda$-calculus}}%
                             \onslide<6>{\alert{lit} 4):}}
-                           {\onslide<2->{Leq (Lit 3, }%
+                           {\onslide<2->{LEQ (LIT 3, }%
                             \only<1>{\makebox[0pt]{\sffamily
                                       \alert{Typed} source language}}%
-                            \onslide<2->{Lit 4):}}\
-                   \only<6>{\rlap{\alert{bool}}}%
-                   \onslide<2-5>{term\bool}}};
+                            \onslide<2->{LIT 4):}}%
+                   \makebox[3em][l]{\bool\only<2-5>{\ term}}}};
         \draw [->] (lang) --
             node [above,midway,anchor=east]
               {\only<1>{\alert{Typed} metalanguage\hspace*{2em}}%
@@ -143,28 +142,27 @@
                 {\only<-2,7>{\color{bg}}\ttfamily
                 \alt<6->{\only<6>{\alert<6>{lit:\ int -> int}\\
                 lit i = i\\[1ex]
-                \alert<6>{leq:\ (int,int) -> bool}\\
+                \alert<6>{leq:\ int * int -> bool}\\
                 leq (i,j) = i <= j}}
-                {\only<2-5>{\alert<5>{eval:\ term\only<5>{ 'a} -> value\only<5>{ 'a}}\\
-                eval (Lit i) = Int i\\
-                eval (Leq (m,n)) =\\
+                {\only<2-5>{\alert<5>{eval:\ \only<5>{'a }term -> \only<5>{'a }value}\\
+                eval (LIT i) = INT i\\
+                eval (LEQ (m,n)) =\\
                 \quad \alert<4>{match (eval m, eval n) with\\
-                \quad (Int i, Int j) ->} Bool (i <= j)}}}
+                \quad (INT i, INT j) ->} BOOL (i <= j)}}}
             +(-100:4cm)
             node [anchor=north,text depth=0pt,text height=9pt]
-              {\texttt{\llap{\onslide<2-5>{Bool}
+              {\texttt{\llap{\onslide<2-5>{BOOL}
                              \onslide<2-6>{true:}%
                              \only<1>{\rlap{\sffamily
                                             \alert{Typed} target languages}}%
-                             \only<7>{\rlap{\sffamily evaluate}}}\
-                       \only<6>{\rlap{\alert{bool}}}%
-                       \onslide<2-5>{value\bool}}};
+                             \only<7>{\rlap{\sffamily evaluate}}}%
+                       \makebox[3em][l]{\bool\only<2-5>{\ value}}}};
         \draw [->] (lang) -- +(-80:3.5cm)
-            node [anchor=north] {\only<7>{compile}};
+            node [anchor=north west,inner xsep=0pt] {\only<7>{\hspace*{-16pt}compile}};
         \draw [->] (lang) -- +(-65:3cm)
             node [anchor=north west,inner xsep=0pt] {\only<7>{specialize}};
         \draw [->] (lang) -- +(-50:2.5cm)
-            node [anchor=north west,inner xsep=0pt] {\only<7>{CPS transform}};
+            node [anchor=north west,inner xsep=0pt] {\only<7>{\hspace*{-3pt}CPS transform}};
         \draw      (lang)    +(-35:2cm) node {\dots};
     \end{tikzpicture}
 
@@ -176,11 +174,11 @@
     \only<4>{The term should be well-typed (and closed), so pattern matching
     in the metalanguage should always \textbf{obviously} succeed.}%
     \only<5>{Previous solutions use (and motivate) fancier types:\\
-    GADT, dependent types.}%
-    \only<6>{Our simple solution is to be \textbf{finally tagless}:\\
+    generalized abstract data types, dependent types.}%
+    \only<6>{Our simple solution is to be \textbf{finally tagless:}\\
     replace term constructors by cogen functions.}%
-    \only<7>{To accommodate multiple interpretations,\\
-    the term abstracts over the cogen functions and their types.}%
+    \only<7>{The term accommodates \textbf{multiple interpretations}\\
+    by abstracting over the cogen functions and their types.}%
     \strut
 \end{frame}
 
