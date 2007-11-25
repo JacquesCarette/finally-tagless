@@ -118,68 +118,86 @@
 \againframe<2->[t]{everywhere}
 
 \begin{frame}{Simple type preservation}
-    \def\bool{\only<5-6>{\ \alert{bool}}}
+    \def\bool{\only<6-7>{\ \alert{bool}}}
     \begin{tikzpicture}
         \draw node [lang] (lang)
-          {\texttt{\alt<6->{\onslide<6>{\alert{leq} (\alert{lit} 3, }%
-                            \only<7>{\makebox[0pt]{\sffamily
+          {\texttt{\alt<7->{\onslide<7>{\alert{leq} (\alert{lit} 3, }%
+                            \only<8>{\makebox[0pt]{\sffamily
                                       Simply typed $\lambda$-calculus}}%
-                            \onslide<6>{\alert{lit} 4):}}
-                           {\onslide<2->{LEQ (LIT 3, }%
+                            \onslide<7>{\alert{lit} 4):}}
+                           {\onslide<3->{LEQ (LIT 3, }%
                             \only<1>{\makebox[0pt]{\sffamily
                                       \alert{Typed} source language}}%
-                            \onslide<2->{LIT 4):}}%
-                   \makebox[3em][l]{\bool\only<2-5>{\ term}}}};
+                            \only<2>{\makebox[0pt]{$3 \le 4$}}%
+                            \onslide<3->{LIT 4):}}%
+                   \makebox[3em][l]{\bool\only<3-6>{\ term}}}};
         \draw [->] (lang) --
             node [above,midway,anchor=east]
               {\only<1>{\alert{Typed} metalanguage\hspace*{2em}}%
-               \only<2>{evaluate}%
-               \only<7>{\begin{tabular}{@{}r@{\qquad}}
-                        Haskell constructor classes\\
+               \only<2-3>{evaluate}%
+               \only<8>{\begin{tabular}{@{}r@{\qquad}}
+                        Haskell constructor instances\\
                         or ML functors
                         \end{tabular}}}
             node [above,midway,anchor=east,text width=2.5in,inner xsep=0pt]
-                {\only<-2,7>{\color{bg}}\ttfamily
-                \alt<6->{\only<6>{\alert<6>{lit:\ int -> int}\\
+                {\only<-3,8>{\color{bg}}\ttfamily
+                \alt<7->{\only<7>{\alert<7>{lit:\ int -> int}\\
                 lit i = i\\[1ex]
-                \alert<6>{leq:\ int * int -> bool}\\
+                \alert<7>{leq:\ int * int -> bool}\\
                 leq (i,j) = i <= j}}
-                {\only<2-5>{\alert<5>{eval:\ \only<5>{'a }term -> \only<5>{'a }value}\\
+                {\only<3-6>{\alert<6>{eval:\ \only<6>{'a }term -> \only<6>{'a }value}\\
                 eval (LIT i) = INT i\\
                 eval (LEQ (m,n)) =\\
-                \quad \alert<4>{match (eval m, eval n) with\\
+                \quad \alert<5>{match (eval m, eval n) with\\
                 \quad (INT i, INT j) ->} BOOL (i <= j)}}}
             +(-100:4cm)
             node [anchor=north,text depth=0pt,text height=9pt]
-              {\texttt{\llap{\onslide<2-5>{BOOL}
-                             \onslide<2-6>{true:}%
+              {\texttt{\llap{\onslide<3-6>{BOOL}
+                             \onslide<3-7>{true:}%
                              \only<1>{\rlap{\sffamily
                                             \alert{Typed} target languages}}%
-                             \only<7>{\rlap{\sffamily evaluate}}}%
-                       \makebox[3em][l]{\bool\only<2-5>{\ value}}}};
+                             \only<2>{\rlap{\enspace$\mathsf{true}$}}%
+                             \only<8>{\rlap{\sffamily evaluate}}}%
+                       \makebox[3em][l]{\bool\only<3-6>{\ value}}}};
         \draw [->] (lang) -- +(-80:3.5cm)
-            node [anchor=north west,inner xsep=0pt] {\only<7>{\hspace*{-16pt}compile}};
+            node [anchor=north west,inner xsep=0pt] {\only<8>{\hspace*{-16pt}compile}};
         \draw [->] (lang) -- +(-65:3cm)
-            node [anchor=north west,inner xsep=0pt] {\only<7>{specialize}};
+            node [anchor=north west,inner xsep=0pt] {\only<8>{specialize}};
         \draw [->] (lang) -- +(-50:2.5cm)
-            node [anchor=north west,inner xsep=0pt] {\only<7>{\hspace*{-3pt}CPS transform}};
+            node [anchor=north west,inner xsep=0pt] {\only<8>{\hspace*{-3pt}CPS transform}};
         \draw      (lang)    +(-35:2cm) node {\dots};
     \end{tikzpicture}
 
     \bigskip
 
     \strut
-    \only<-3>{It should be obvious in the metalanguage that interpreting
+    \only<-4>{It should be obvious in the metalanguage that interpreting
     a well-typed source term yields a well-typed target term.}%
-    \only<4>{The term should be well-typed (and closed), so pattern matching
+    \only<5>{The term should be well-typed (and closed), so pattern matching
     in the metalanguage should always \textbf{obviously} succeed.}%
-    \only<5>{Previous solutions use (and motivate) fancier types:\\
+    \only<6>{Previous solutions use (and motivate) fancier types:\\
     generalized abstract data types, dependent types.}%
-    \only<6>{Our simple solution is to be \textbf{finally tagless:}\\
+    \only<7>{Our simple solution is to be \textbf{finally tagless:}\\
     replace term constructors by cogen functions.}%
-    \only<7>{The term accommodates \textbf{multiple interpretations}\\
+    \only<8>{The term accommodates \textbf{multiple interpretations}\\
     by abstracting over the cogen functions and their types.}%
     \strut
+\end{frame}
+
+\section{The object language}
+\subsection{As a constructor class in Haskell}
+\subsection{As a functor signature in ML}
+\section{Tagless interpretation}
+\subsection{Evaluation}
+\subsection{Compilation}
+\section{Type-indexed types}
+\subsection{Partial evaluation}
+\subsection{CPS transformation}
+
+\begin{frame}{Conclusion}
+    Initial type-checking can be done
+
+    Preserves sharing
 \end{frame}
 
 \end{document}
