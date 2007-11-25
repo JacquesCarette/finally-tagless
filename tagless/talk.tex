@@ -1,8 +1,12 @@
 \pagenumbering{arabic}
-\documentclass[ucs]{beamer}
+\documentclass[ucs,professionalfont]{beamer}
+\usepackage{concmath}
 \usepackage{helvet}
-\usepackage{eulervm}
+%\renewcommand{\rmdefault}{cmss}
 %\usepackage[utf8x]{inputenc}
+\usepackage[override]{cmtt}
+\usepackage{mdwtab}
+\usepackage{prooftree1} \proofrulebaseline=1.5ex \proofdotseparation=.75ex
 \usepackage{microtype}
 \usepackage{calc}
 
@@ -21,6 +25,14 @@
 
 \def\>{\leavevmode\rlap{\color{blue}$\blacktriangleright$}\ \ }
 \newcommand\slide[2]{#2<#1>}
+
+%\newcommand{\ZZ}{\mathbold{Z}}
+%\newcommand{\BB}{\mathbold{B}}
+\newcommand{\ZZ}{\textrm{int}}
+\newcommand{\BB}{\textrm{bool}}
+\newcommand{\fun}[1]{\mathopen{\lambda\mathord{#1}.\;}}
+\newcommand{\fix}[1]{\mathopen{\mathop{\textrm{fix}}\mathord{#1}.\;}}
+\newcommand{\cond}[2]{\mathopen{\textrm{if}}\;#1\mathrel{\textrm{then}}#2\mathrel{\textrm{else}}}
 
 \setbeamertemplate{section in toc}{{\leavevmode\llap{$\blacktriangleright$ }\bfseries\inserttocsection}\par}
 \setbeamertemplate{section in toc shaded}{{\color{black}\inserttocsection}\par}
@@ -118,53 +130,49 @@
 \againframe<2->[t]{everywhere}
 
 \begin{frame}{Simple type preservation}
-    \def\bool{\only<6-7>{\ \alert{bool}}}
+    \def\bool{\only<7-8>{\ \alert{bool}}}
     \begin{tikzpicture}
         \draw node [lang] (lang)
-          {\texttt{\alt<7->{\onslide<7>{\alert{leq} (\alert{lit} 3, }%
-                            \only<8>{\makebox[0pt]{\sffamily
-                                      Simply typed $\lambda$-calculus}}%
-                            \onslide<7>{\alert{lit} 4):}}
-                           {\onslide<3->{LEQ (LIT 3, }%
-                            \only<1>{\makebox[0pt]{\sffamily
-                                      \alert{Typed} source language}}%
-                            \only<2>{\makebox[0pt]{$3 \le 4$}}%
-                            \onslide<3->{LIT 4):}}%
-                   \makebox[3em][l]{\bool\only<3-6>{\ term}}}};
+          {\begin{overprint}[12em]
+               \onslide<1>\makebox[12em]{\alert{Typed} source language}
+               \onslide<2>\makebox[12em]{$3 \le 4$}
+               \onslide<3-7>\makebox[12em]{\texttt{LEQ (LIT 3, LIT 4):\makebox[4em][l]{\bool\ term}}}
+               \onslide<8>\makebox[12em]{\texttt{\alert{leq} (\alert{lit} 3, \alert{lit} 4):\makebox[4em][l]{\bool}}}
+               \onslide<9>\makebox[12em]{Simply typed $\lambda$-calculus}
+           \end{overprint}};
         \draw [->] (lang) --
             node [above,midway,anchor=east]
               {\only<1>{\alert{Typed} metalanguage\hspace*{2em}}%
                \only<2-3>{evaluate}%
-               \only<8>{\begin{tabular}{@{}r@{\qquad}}
+               \only<9>{\begin{tabular}{@{}r@{\qquad}}
                         Haskell constructor instances\\
                         or ML functors
                         \end{tabular}}}
             node [above,midway,anchor=east,text width=2.5in,inner xsep=0pt]
-                {\only<-3,8>{\color{bg}}\ttfamily
-                \alt<7->{\only<7>{\alert<7>{lit:\ int -> int}\\
+                {\only<-3,9>{\color{bg}}\ttfamily
+                \alt<8->{\only<8>{\alert<8>{lit:\ int -> int}\\
                 lit i = i\\[1ex]
-                \alert<7>{leq:\ int * int -> bool}\\
+                \alert<8>{leq:\ int * int -> bool}\\
                 leq (i,j) = i <= j}}
-                {\only<3-6>{\alert<6>{eval:\ \only<6>{'a }term -> \only<6>{'a }value}\\
+                {\only<3-7>{\alert<7>{eval:\ \only<7>{'a }term -> \only<7>{'a }value}\\
                 eval (LIT i) = INT i\\
                 eval (LEQ (m,n)) =\\
                 \quad \alert<5>{match (eval m, eval n) with\\
                 \quad (INT i, INT j) ->} BOOL (i <= j)}}}
             +(-100:4cm)
             node [anchor=north,text depth=0pt,text height=9pt]
-              {\texttt{\llap{\onslide<3-6>{BOOL}
-                             \onslide<3-7>{true:}%
-                             \only<1>{\rlap{\sffamily
-                                            \alert{Typed} target languages}}%
-                             \only<2>{\rlap{\enspace$\mathsf{true}$}}%
-                             \only<8>{\rlap{\sffamily evaluate}}}%
-                       \makebox[3em][l]{\bool\only<3-6>{\ value}}}};
+              {\llap{\onslide<3-7>{\texttt{BOOL }}%
+                     \onslide<3-8>{\texttt{true:}}%
+                     \only<1>{\rlap{\alert{Typed} target languages}}%
+                     \only<2>{\rlap{\enspace\textrm{true}}}%
+                     \only<9>{\rlap{evaluate}}}%
+               \makebox[3em][l]{\texttt{\bool\only<3-7>{\ value}}}};
         \draw [->] (lang) -- +(-80:3.5cm)
-            node [anchor=north west,inner xsep=0pt] {\only<8>{\hspace*{-16pt}compile}};
+            node [anchor=north west,inner xsep=0pt] {\only<9>{\hspace*{-16pt}compile}};
         \draw [->] (lang) -- +(-65:3cm)
-            node [anchor=north west,inner xsep=0pt] {\only<8>{specialize}};
+            node [anchor=north west,inner xsep=0pt] {\only<9>{specialize}};
         \draw [->] (lang) -- +(-50:2.5cm)
-            node [anchor=north west,inner xsep=0pt] {\only<8>{\hspace*{-3pt}CPS transform}};
+            node [anchor=north west,inner xsep=0pt] {\only<9>{\hspace*{-3pt}CPS transform}};
         \draw      (lang)    +(-35:2cm) node {\dots};
     \end{tikzpicture}
 
@@ -173,19 +181,89 @@
     \strut
     \only<-4>{It should be obvious in the metalanguage that interpreting
     a well-typed source term yields a well-typed target term.}%
-    \only<5>{The term should be well-typed (and closed), so pattern matching
-    in the metalanguage should always \textbf{obviously} succeed.}%
-    \only<6>{Previous solutions use (and motivate) fancier types:\\
-    generalized abstract data types, dependent types.}%
-    \only<7>{Our simple solution is to be \textbf{finally tagless:}\\
+    \only<5-6>{The term should be \alert{\alt<5>{well-typed}{closed}}, so
+    \alert{\alt<5>{pattern matching}{environment lookup}} in the metalanguage should always \textbf{obviously} succeed.}%
+    \only<7>{Previous solutions use (and motivate) fancier types:\\
+    generalized abstract data types (GADT) and dependent types.}%
+    \only<8>{Our simple solution is to be \textbf{finally tagless:}\\
     replace term constructors by cogen functions.}%
-    \only<8>{The term accommodates \textbf{multiple interpretations}\\
+    \only<9>{The term accommodates \textbf{multiple interpretations}\\
     by abstracting over the cogen functions and their types.}%
     \strut
 \end{frame}
 
 \section{The object language}
 \subsection{As a constructor class in Haskell}
+
+\begin{frame}[t,fragile]{The object language\only<3-8>{ as a constructor class}\only<9-16>{ as a functor signature}}
+\setbeamercovered{transparent}
+\begin{overprint}
+\onslide<1-2>
+\medskip
+\begin{proofrules}
+    \[ \[ [x:t_1] \proofoverdots e:t_2 \] \justifies \fun{x}e:t_1\to t_2 \]
+    \[ \[ [f:t_1\to t_2] \proofoverdots e:t_1\to t_2 \] \justifies \fix{f}e:t_1\to t_2 \]
+    \[ e_1:t_1\to t_2 \quad e_2:t_1 \justifies e_1 e_2: t_2 \]
+    \[ \text{$n$ is an integer} \justifies n:\ZZ \]
+    \uncover<1>{\[ \text{$b$ is a boolean} \justifies b:\BB \]}
+    \[ e_1:\ZZ \quad e_2:\ZZ \justifies e_1+e_2:\ZZ \]
+    \uncover<1>{\[ e_1:\ZZ \quad e_2:\ZZ \justifies e_1 \times e_2:\ZZ \]}
+    \uncover<1>{\[ e_1:\ZZ \quad e_2:\ZZ \justifies e_1 \le e_2:\BB \]}
+    \[ e:\BB \quad e_1:t \quad e_2:t \justifies \cond{e}{e_1}{e_2}:t \]
+\end{proofrules}
+\onslide<3-8>
+\begin{semiverbatim}
+class Symantics \alert<3>{repr} where
+     \alert<4,5>{int }\alert<5>{:: Int -> repr Int}
+     \alert<4,6>{lam }\alert<6>{:: (repr a -> repr b) -> repr (a -> b)}
+     \alert<4,6>{fix }\alert<6>{:: (repr a -> repr a) -> repr a}
+     \alert<4,7>{app }\alert<7>{:: repr (a -> b) -> repr a -> repr b}
+     \alert<4  >{add }:: repr Int -> repr Int -> repr Int
+     \alert<4,8>{if_ }\alert<8>{:: repr Bool -> repr a -> repr a -> repr a}
+\end{semiverbatim}
+\onslide<9-16>
+\begin{semiverbatim}
+module type Symantics = sig type \alert<9>{\smash{('c,'v)}\,repr}
+ val \alert<10,11>{int}\alert<11>{:\,int\,->\,('c,int)\,repr}
+ val \alert<10,12>{lam}\alert<12>{:\,(('c,'a)\,repr\,->\,('c,'b)\,repr)\,->\,('c,'a->'b)\,repr}
+ val \alert<10,12>{fix}\alert<12>{:\,('x\,->\,'x)\,->\,(('c,'a->'b)\,repr as 'x)}
+ val \alert<10,13>{app}\alert<13>{:\,('c,'a\,->\,'b)\,repr\,->\,('c,'a)\,repr\,->\,('c,'b)\,repr}
+ val \alert<10   >{add}:\,('c,int)\,repr\,->\,('c,int)\,repr\,->\,('c,int)\,repr
+ val \alert<10,14>{if_}\alert<14>{:\,('c,bool)\,repr\,->\,(unit\,->\,'x)\,->\,(unit\,->\,'x)}
+     \alert<10,14>{   }\alert<14>{ \,         \,    \,->\,(('c,'a)\,repr as 'x)}
+end
+\end{semiverbatim}
+\end{overprint}
+
+\onslide<1->
+\begin{tabular}{@{}Mll@{}}
+\only<5-8,11-14>{\text{\textcolor{structure.fg}{Object term}}}%
+\only<16>{\rlap{\textcolor{structure.fg}{ML higher-order functor}}}
+& \only<5-8,11-15>{\textcolor{structure.fg}{\only<-14>{\llap{\tikz\draw[->,semithick](0,0)--(1.5,0)node[anchor=mid,inner sep=0pt]{\vphantom{O}};\:}}\only<3-8>{Haskell term}\only<9-15>{ML higher-order functor}}} \\
+\multicolumn{2}{@{}l@{}}{\only<16>{\alert{\texttt{functor (S:Symantics) -> struct open S}}}} \\
+\only<16>{\rlap{\alert{\texttt{ let term () =}}}}%
+\visible<1-14>{\uncover<1-2,5-8,11-14>{\alert<6,12>{\fun{x} \fix{f} \fun{n}}}}
+& \ttfamily
+  \only<5-8>{\alert<6>{lam (\textbackslash x -> fix (\textbackslash f -> lam (\textbackslash n ->}}%
+  \only<11-16>{\alert<12>{lam\,(fun x\,-> fix\,(fun f\,-> lam\,(fun n\,->}} \\
+\visible<1-14>{\uncover<1-2,5-8,11-14>{\alert<8,14>{\cond{\textcolor{black}{n\le\alert<5,11>{0}}}{\textcolor{black}{1}}}}}
+& \ttfamily
+  \only<5-8>{\alert<8>{if\textunderscore} \alert<8>(leq n (\alert<5>{int 0})\alert<8>) \alert<8>(int 1\alert<8>)}%
+  \only<11-16>{\alert<14>{if\textunderscore} \alert<14>(leq n (\alert<11>{int 0})\alert<14>) \alert<14>{(fun\,()\,->}\,int 1\alert<14>)} \\
+\visible<1-14>{\uncover<1-2,5-8,11-14>{x\times \alert<7,13>{f(n-1)}}}
+& \ttfamily
+  \only<5-8>{\alert<8>(mul x (\alert<7>{app f (add n (int (-1)))})\alert<8>))))}%
+  \only<11-16>{\alert<14>{(fun\,()\,->}\,mul x\,(\alert<13>{app f\,(add n\,(int\,(-1)\!)\!)}\!)\!\alert<14>)\!)\!)\!)} \\
+\multicolumn{2}{@{}l@{}}{\only<16>{\alert{\texttt{end:\ functor (S:Symantics) -> sig}}}} \\
+\only<16>{\rlap{\alert{\texttt{ val term:\ unit\,->}}}}%
+\visible<1-14>{\uncover<1-2,5-8,11-14>{\mathord:\;\ZZ\to\ZZ}}
+& \ttfamily
+  \only<5-8>{::\ Symantics repr => repr (Int -> Int)}%
+  \only<11-16>{('c,int->int)\,S.repr} \\
+\multicolumn{2}{@{}l@{}}{\only<16>{\alert{\texttt{end}}}}
+\end{tabular}
+\end{frame}
+
 \subsection{As a functor signature in ML}
 \section{Tagless interpretation}
 \subsection{Evaluation}
