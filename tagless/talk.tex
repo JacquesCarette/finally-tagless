@@ -3,7 +3,7 @@
 \usepackage{concmath}
 \usepackage{helvet}
 %\renewcommand{\rmdefault}{cmss}
-%\usepackage[utf8x]{inputenc}
+\usepackage[utf8x]{inputenc}
 \usepackage[override]{cmtt}
 \usepackage{mdwtab}
 \usepackage{prooftree1} \proofrulebaseline=1.5ex \proofdotseparation=.75ex
@@ -33,6 +33,7 @@
 \newcommand{\fun}[1]{\mathopen{\lambda\mathord{#1}.\;}}
 \newcommand{\fix}[1]{\mathopen{\mathop{\textrm{fix}}\mathord{#1}.\;}}
 \newcommand{\cond}[2]{\mathopen{\textrm{if}}\;#1\mathrel{\textrm{then}}#2\mathrel{\textrm{else}}}
+\newcommand{\ceil}[1]{\lceil#1\rceil}
 
 \setbeamertemplate{section in toc}{{\leavevmode\llap{$\blacktriangleright$ }\bfseries\inserttocsection}\par}
 \setbeamertemplate{section in toc shaded}{{\color{black}\inserttocsection}\par}
@@ -84,7 +85,7 @@
 \setbeamertemplate{sidebar right}{\vfill\llap{\usebeamerfont{framesubtitle}\insertframenumber\hskip\jot}\vskip\jot}
 
 \tikzstyle{lang}=[ellipse,draw,anchor=west,text depth=3pt,text height=9pt]
-\tikzstyle{every picture}=[>=angle 60]
+\tikzstyle{every picture}=[>=angle 60,semithick]
 
 \setbeamertemplate{background}{%
     \raisebox{0pt}[\paperheight][0pt]
@@ -156,8 +157,8 @@
                 leq (i,j) = i <= j}}
                 {\only<3-7>{\alert<7>{eval:\ \only<7>{'a }term -> \only<7>{'a }value}\\
                 eval (LIT i) = INT i\\
-                eval (LEQ (m,n)) =\\
-                \quad \alert<5>{match (eval m, eval n) with\\
+                eval (LEQ (e1,e2)) =\\
+                \quad \alert<5>{match (eval e1, eval e2) with\\
                 \quad (INT i, INT j) ->} BOOL (i <= j)}}}
             +(-100:4cm)
             node [anchor=north,text depth=0pt,text height=9pt]
@@ -194,9 +195,10 @@
 
 \section{The object language}
 \subsection{As a constructor class in Haskell}
+\subsection{As a functor signature in ML}
 
 \begin{frame}[t,fragile]{The object language\only<3-8>{ as a constructor class}\only<9-16>{ as a functor signature}}
-\setbeamercovered{transparent}
+\setbeamercovered{transparent=20}
 \begin{overprint}
 \onslide<1-2>
 \medskip
@@ -214,16 +216,16 @@
 \onslide<3-8>
 \begin{semiverbatim}
 class Symantics \alert<3>{repr} where
-     \alert<4,5>{int }\alert<5>{:: Int -> repr Int}
-     \alert<4,6>{lam }\alert<6>{:: (repr a -> repr b) -> repr (a -> b)}
-     \alert<4,6>{fix }\alert<6>{:: (repr a -> repr a) -> repr a}
-     \alert<4,7>{app }\alert<7>{:: repr (a -> b) -> repr a -> repr b}
-     \alert<4  >{add }:: repr Int -> repr Int -> repr Int
-     \alert<4,8>{if_ }\alert<8>{:: repr Bool -> repr a -> repr a -> repr a}
+     \alert<4,5>{int }\alert<5>{:\!: Int -> repr Int}
+     \alert<4,6>{lam }\alert<6>{:\!: (repr a -> repr b) -> repr (a -> b)}
+     \alert<4,6>{fix }\alert<6>{:\!: (repr a -> repr a) -> repr a}
+     \alert<4,7>{app }\alert<7>{:\!: repr (a -> b) -> repr a -> repr b}
+     \alert<4  >{add }:\!: repr Int -> repr Int -> repr Int
+     \alert<4,8>{if_ }\alert<8>{:\!: repr Bool -> repr a -> repr a -> repr a}
 \end{semiverbatim}
 \onslide<9-16>
 \begin{semiverbatim}
-module type Symantics = sig type \alert<9>{\smash{('c,'v)}\,repr}
+module type Symantics = sig type \alert<9>{\smash{('c,'a)}\,repr}
  val \alert<10,11>{int}\alert<11>{:\,int\,->\,('c,int)\,repr}
  val \alert<10,12>{lam}\alert<12>{:\,(('c,'a)\,repr\,->\,('c,'b)\,repr)\,->\,('c,'a->'b)\,repr}
  val \alert<10,12>{fix}\alert<12>{:\,('x\,->\,'x)\,->\,(('c,'a->'b)\,repr as 'x)}
@@ -239,8 +241,8 @@ end
 \begin{tabular}{@{}Mll@{}}
 \only<5-8,11-14>{\text{\textcolor{structure.fg}{Object term}}}%
 \only<16>{\rlap{\textcolor{structure.fg}{ML higher-order functor}}}
-& \only<5-8,11-15>{\textcolor{structure.fg}{\only<-14>{\llap{\tikz\draw[->,semithick](0,0)--(1.5,0)node[anchor=mid,inner sep=0pt]{\vphantom{O}};\:}}\only<3-8>{Haskell term}\only<9-15>{ML higher-order functor}}} \\
-\multicolumn{2}{@{}l@{}}{\only<16>{\alert{\texttt{functor (S:Symantics) -> struct open S}}}} \\
+& \only<5-8,11-15>{\textcolor{structure.fg}{\only<-14>{\llap{\tikz\draw[->](0,0)--(1.5,0)node[anchor=mid,inner sep=0pt]{\vphantom{O}};\:}}\only<3-8>{Haskell term}\only<9-15>{ML higher-order functor}}} \\
+\multicolumn{2}{@{}l@{}}{\only<16>{\alert{\texttt{module POWER (S:Symantics) = struct open S}}}} \\
 \only<16>{\rlap{\alert{\texttt{ let term () =}}}}%
 \visible<1-14>{\uncover<1-2,5-8,11-14>{\alert<6,12>{\fun{x} \fix{f} \fun{n}}}}
 & \ttfamily
@@ -256,26 +258,161 @@ end
   \only<11-16>{\alert<14>{(fun\,()\,->}\,mul x\,(\alert<13>{app f\,(add n\,(int\,(-1)\!)\!)}\!)\!\alert<14>)\!)\!)\!)} \\
 \multicolumn{2}{@{}l@{}}{\only<16>{\alert{\texttt{end:\ functor (S:Symantics) -> sig}}}} \\
 \only<16>{\rlap{\alert{\texttt{ val term:\ unit\,->}}}}%
-\visible<1-14>{\uncover<1-2,5-8,11-14>{\mathord:\;\ZZ\to\ZZ}}
+\visible<1-14>{\uncover<1-2,5-8,11-14>{\mathord:\;\ZZ\to\ZZ\to\ZZ}}
 & \ttfamily
-  \only<5-8>{::\ Symantics repr => repr (Int -> Int)}%
-  \only<11-16>{('c,int->int)\,S.repr} \\
+  \only<5-8>{:\!:\ \!Symantics \!repr \!=>\,repr\,(Int\,->\,Int\,->\,Int)}%
+  \only<11-16>{('c,\,int\,->\,int\,->\,int)\,\only<16>{\alert{S.}}repr} \\
 \multicolumn{2}{@{}l@{}}{\only<16>{\alert{\texttt{end}}}}
 \end{tabular}
 \end{frame}
 
-\subsection{As a functor signature in ML}
+\begin{frame}[fragile]{Composing object programs as functors}
+\[
+    \visible<2->{\alert{\fun{x}}}
+    \bigl( \fun{x} \fix{f} \fun{n} \cond{n\le0}{1}{x\times f(n-1)} \bigr)
+    \visible<2->{\alert{\;x\;7}}
+\]
+\onslide<3->
+\begin{semiverbatim}
+module POWER7 (S:Symantics) = struct open S
+ module P = POWER(S)
+ let term () = \alert{lam (fun x -> app (app} (P.term ()) \alert{x)}
+                                 \alert{(int 7))}
+end: functor (S:Symantics) -> sig
+ val term: unit -> ('c,\,int\,->\,int)\,S.repr
+end
+\end{semiverbatim}
+\end{frame}
+
 \section{Tagless interpretation}
 \subsection{Evaluation}
 \subsection{Compilation}
+
+\begin{frame}[t,fragile]{Tagless interpretation: \alt<5->{Compilation}{Evaluation}}
+
+No worry about pattern matching or environment lookup!
+
+Well-typed source programs \textbf{obviously}
+\alt<5->{\alert{translate to well-typed target programs.}}
+        {don't go wrong.\\}%
+\strut
+\begin{semiverbatim}
+module \alt<5->{C}{R} = struct
+ \alert<1>{type ('c,'a) repr = \only<4->{\visible<5->{\alert<5>{('c,}}}'a\only<4->{\visible<5->{\alert<5>{) code}}}}
+ let int (x:int) = \only<4->{\visible<5->{\alert<5>{‹}}}x\only<4->{\visible<5->{\alert<5>{›}}}
+ let lam f       = \only<4->{\visible<5->{\alert<5>{‹}}}fun x -> \only<4->{\visible<5->{\alert<5>{~(}}}f \only<4->{\visible<5->{\alert<5>{‹}}}x\only<4->{\visible<5->{\alert<5>{›)›}}}
+ let fix g       = \only<4->{\visible<5->{\alert<5>{‹}}}let rec f n = \only<4->{\visible<5->{\alert<5>{~(}}}g \only<4->{\visible<5->{\alert<5>{‹}}}f\only<4->{\visible<5->{\alert<5>{›)}}} n in f\only<4->{\visible<5->{\alert<5>{›}}}
+ let app e1 e2   = \only<4->{\visible<5->{\alert<5>{‹}}}\only<4->{\visible<5->{\alert<5>{~}}}e1 \only<4->{\visible<5->{\alert<5>{~}}}e2\only<4->{\visible<5->{\alert<5>{›}}}
+ let add e1 e2   = \only<4->{\visible<5->{\alert<5>{‹}}}\only<4->{\visible<5->{\alert<5>{~}}}e1 + \only<4->{\visible<5->{\alert<5>{~}}}e2\only<4->{\visible<5->{\alert<5>{›}}}
+ let if_ e e1 e2 = \only<4->{\visible<5->{\alert<5>{‹}}}if \only<4->{\visible<5->{\alert<5>{~}}}e then \only<4->{\visible<5->{\alert<5>{~(}}}e1 ()\only<4->{\visible<5->{\alert<5>{)}}} else \only<4->{\visible<5->{\alert<5>{~(}}}e2 ()\only<4->{\visible<5->{\alert<5>{)›}}}
+end
+\only<2>{module POWER7R = \alert<2>{POWER7(R)}}\only<6->{module POWER7C = POWER7(C)}
+\only<2>{\>POWER7R.term () 2}\only<6->{\>POWER7C.term ()}
+  \only<2>{\rlap{128}}\onslide<6->{\alert{‹fun x -> (fun x -> let rec self = fun x ->
+    (fun x -> if x <= 0 then 1 else x * self (x + (-1)))
+    x in self) x 7›}}
+\end{semiverbatim}
+\end{frame}
+
 \section{Type-indexed types}
 \subsection{Partial evaluation}
 \subsection{CPS transformation}
 
+\begin{frame}[fragile]{\only<11->{Type-indexed types}\only<13->{: }\only<-10,13-15>{Partial evaluation}\only<16->{CPS transformation}}
+\setbeamercovered{transparent=20}
+\newcommand\remember[1]{\tikz[remember picture,baseline=0pt,text=structure.fg] \node[inner ysep=0pt,inner xsep=2pt,anchor=base] (#1) {#1};}
+\newcommand\remark[1]{\textcolor{structure.fg}{\footnotesize(* #1 *)}}
+\definecolor{dynamic}{rgb}{.7,0,.7}
+\definecolor{static}{rgb}{0,.7,.7}
+\newcommand\dynamic[1]{\textcolor{dynamic}{\texttt{‹#1›}}}
+\newcommand\static[1]{\textcolor{static}{\texttt{#1}}}
+\begin{overlayarea}{0pt}{3ex}
+\onslide+<1,13-15>{\rlap{\hspace*{-1pc}\texttt{module P = struct}}}%
+\onslide+<12>\vspace*{-1em}%
+\begin{semiverbatim}
+module type Symantics = sig type ('c,\alert<12>{'s},'a) repr
+ val int: int -> ('c,\alert<12>{int},int) repr
+ val lam: 'x\,-> ('c, \alert<12>{('c,'s,'a) repr ->
+            \,        ('c,'t,'b) repr} as\,'x, 'a\,->\,'b) repr
+\uncover<0>{ val fix: (('c, \alert<12>{('c,'s,'a) repr -> ('c,'t,'b) repr},
+                'a -> 'b) repr as 'x -> 'x) -> 'x}
+ val app: ('c, \alert<12>{('c,'s,'a) repr ->
+               ('c,'t,'b) repr} as\,'x, 'a\,->\,'b) repr ->\,'x
+\uncover<0>{ val add: 'x -> 'x -> (('c,\alert<12>{int},int) repr as\,'x)
+ val if_: ('c,\alert<12>{bool},bool) repr -> (unit->'x) -> (unit->'x)
+                              -> (('c,\alert<12>{'s},'a) repr as\,'x)}
+end
+\end{semiverbatim}
+\end{overlayarea}
+\begin{tabular}[L]{@{}>{\ttfamily\frenchspacing}l@{\hspace*{-.5em}}r@{ }cc@{}}
+\onslide+<1-10,13->
+type ('c,\alt<13->{\only<14->{\alert<14-15>{'s},}'a}{\alt<1>{ 'a}{\alert<2>{int}}}) repr
+                    & \onslide+<3-10>\remember{source term}
+                    & \onslide+<4-10>$3$
+                    & \onslide+<5-10>$x$ \\
+\onslide+<1-10,13->
+\ \ \ = \alt<13->{\alt<16->{\makebox[14pc][l]{\alert{('s\,->\,ans)\,->\,ans}}\remark{CBN CPS evaluator}}{('c,'a) code}}
+                 {\alt<1>{???}{('c,int) code}}
+                    & \onslide+<3-10>\remember{dynamic part}
+                    & \onslide+<4-10>\dynamic{3}
+                    & \onslide+<5-10>\dynamic{x} \\
+\onslide+<2-10,13->
+\ \ \ \alt<16->{= \makebox[14pc][l]{\alert{('c, ('s\,->\,ans)\,->\,ans) code}}\remark{CBN CPS compiler}}{* \alt<13->{\alert{\alt<14->{'s}{('c,'a) static}}}{int} option}
+                    & \onslide+<3-10>\remember{static part}
+                    & \onslide+<4-10>\static{Some 3}
+                    & \onslide+<5-10>\static{None} \\
+\onslide+<14-15>...\\
+\onslide+<14-15>\rlap{\hspace*{-1pc}end}%
+\onslide+<6-10>
+type ('c,\alert<6>{int->int}) repr
+                    && \onslide+<8-10>\hspace*{-4em}$\fun{x}x$
+                    & \onslide+<7-10>$f$ \\
+\onslide+<6-10>
+\ \ \ = ('c,int->int) code
+                    && \onslide+<8-10>\hspace*{-4em}\dynamic{fun \!x->x}
+                    & \onslide+<7-10>\dynamic{f} \\
+\onslide+<15>\rlap{\hspace*{-1pc}module POWER7P = POWER7(P)}%
+\onslide+<6-10>
+\ \ \ * \alert<8>{(('c,int) repr ->}
+                    && \onslide+<8-10>\hspace*{-4em}\static{Some (fun \!r->r)}
+                    & \onslide+<7-10>\static{None} \\
+\onslide+<15>\rlap{\hspace*{-1pc}\>POWER7P.term ()}%
+\onslide+<6-10>
+\ \ \ \ \ \ \alert<8>{('c,int) repr)} option \\
+\onslide+<15>\rlap{\hspace*{-1pc}\ \ (‹fun x -> x\,*\,x\,*\,x\,*\,x\,*\,x\,*\,x\,*\,x›, Some <fun>)}%
+\\
+\onslide+<9-10>
+type ('c,'a) \\
+\ \ \ = ('c,'a) code \\
+\ \ \ * \alert<9-10>{\alt<9>{???}{('c,'a) static}} option
+\end{tabular}
+\onslide+<10-13,14->
+\texttt{\begin{tabular}[L]{@{}l@{ }l@{}}
+    type ('c,\:int)        &static = int \\
+    type ('c,\:bool)       &static = bool \\
+    type ('c,\:'a\,->\,'b) &static = ('c,'a)\:repr -> ('c,'b)\:repr
+\end{tabular}}
+
+\onslide+<3-10>
+\begin{tikzpicture}[remember picture,overlay,->,rounded corners=1ex,draw=structure.fg,text=structure.fg]
+    \draw (source term) --
+        +(-2.4,0) |- (dynamic part);
+    \draw (source term) --
+        node [midway,above,inner sep=0pt] {\footnotesize interpret}
+        +(-2.4,0) |- (static part);
+\end{tikzpicture}
+\end{frame}
+
 \begin{frame}{Conclusion}
+    Early obvious safety
+
     Initial type-checking can be done
 
+    Accommodates interpretations with type-indexed types
+
     Preserves sharing
+
+    Acknowledge prior-work authors in slides
 \end{frame}
 
 \end{document}
