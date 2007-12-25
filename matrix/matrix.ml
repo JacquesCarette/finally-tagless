@@ -83,24 +83,27 @@ let bind m n = fun k s -> m (fun x s' -> n x k s') s
 let retN c = fun k s -> .<let a = .~c in .~(k .<a>. s) >.
 let seq s1 s2 = .< begin .~s1 ; .~s2 end >.
 let seqL s1 s2 = ret (seq s1 s2)
+let abort v = fun k s -> v
 ;;
 
 
 
 (* The state is the polymorphic extensible record, collecting attributes
    of various vid *)
-type state = {curr_vid : vid;
-	      dim1 : (vid * int lv) list;
-	      dim1D : vid * (vid * vid) list; (* see dynamic storage below *)
-	      vecks : (vid * veck_t) list;
-	    }
-and ('v, 'w) monad = ('v -> state -> 'w) -> state -> 'w
+type ('a,'w) state = 
+    {curr_vid : vid;
+     dim1 : (vid * int lv) list;
+     dim1D : vid * (vid * ('a,int) code) list; (* see dynamic storage below *)
+     vecks : (vid * ('a,'w) veck_t) list;
+   }
 and ('a, 'v,'w) cmonad 
-      = (('a,'v) repr -> state -> ('a,'w) code) -> state -> ('a,'w) code
-and veck_t = {veck_s: state;
-	      veck_k: 'a 'w. 
-   (vid -> state -> ('a,'w) code)}
+      = (('a,'v) repr -> ('a,'w) state -> ('a,'w) code) -> 
+	('a,'w) state -> ('a,'w) code
+and ('a,'w) veck_t = {veck_s: ('a,'w) state;
+		      veck_k: vid -> ('a,'w) state -> ('a,'w) code}
 ;;
+
+type ('v, 's, 'w) monad = ('v -> 's -> 'w) -> 's -> 'w;;
 
 let init_state = {curr_vid = 1;
 		  dim1 = [];
@@ -120,14 +123,9 @@ let new_vid s =
   let v = s.curr_vid in
   (v, {s with curr_vid = succ v});;
 
-
-
 let get_dim1 i k s = 
   k (try Some (List.assoc i s.dim1) with Not_found -> None) s;;
 
-let get_veck i k s = 
-  k (try List.assoc i s.vecks with Not_found -> 
-    failwith (Printf.sprintf "get_veck: not found %d" i)) s;;
 
 
 let upd_dim1 f k s = k () ({s with dim1 = f s.dim1});;
@@ -139,17 +137,22 @@ let st_new lst v vl =
   else (v,vl)::lst;;
 
 let new_vid_capture k s = 
-  let (v,s') = new_vid s in
+  let (v,s) = new_vid s in
   k v {s with vecks = st_new s.vecks v {veck_s = s; veck_k = k}};;
 
-
-
+(* the saved state does not include the captured continuation; compensating *)
+let get_veck i k s = 
+  k (try let veck = List.assoc i s.vecks in
+         {veck with veck_s = {veck.veck_s with vecks = 
+			      st_new veck.veck_s.vecks i veck}}
+     with Not_found -> 
+     failwith (Printf.sprintf "get_veck: not found %d" i)) s;;
 
 
 let with_newvid cd k s = let (v,s') = new_vid s in k (R (cd,v)) s';;
-let lit_int x : (('a,int) repr,'w) monad = with_newvid .<x>.;;
+let lit_int x : (('a,int) repr,'s,'w) monad = with_newvid .<x>.;;
 
-let ($) (e1:('v1,'w) monad) (e2:('v2,'w) monad) : ('v2,'w) monad
+let ($) (e1:('v1,'s,'w) monad) (e2:('v2,'s,'w) monad) : ('v2,'s,'w) monad
     = bind e1 (fun _ -> e2);;
 
 let let_ e f = 
@@ -195,16 +198,17 @@ let test1r = run (test1 ());;
   that 'a contaminates everything... 
 *)
 
-
-
-let vec_read_init lst = 
-  bind (with_newvid .<o_read lst>.) (function R (cd,v) as res ->
-    fun k s ->
-      k res {s with vecks = st_new s.vecks v {veck_s = s; veck_k = k}}
-);;
-
-
-vecks : (vid * veck_t) list;
+let vec_read lst = 
+  let cd = .<o_read lst>. in
+  bind new_vid_capture (fun v ->
+    let () = Printf.printf "\nvec_read %d\n" v in
+    bind (get_dim1 v) 
+      (function 
+	| None -> ret (R (cd,v))
+	| Some (L d) -> 
+	    ret (R (.<let v = .~cd in assert (Array.length v = d); v>.,v))
+      ))
+;;
 
 (* We assume that assignment of a vector preserves all the static properties
    we care about: dimensions. Thus, we preserve vid of the target.
@@ -213,6 +217,7 @@ vecks : (vid * veck_t) list;
 let vec_assign eto efrom = 
   bind eto (function R (cto,vto) ->
   bind efrom (function R (cfrom,vfrom) ->
+  let () = Printf.printf "\nassign: vto %d vfrom %d\n" vto vfrom in
   bind (with_newvid .<o_assign .~cto .~cfrom>.) (fun res ->
   if vto = vfrom then ret res
   else
@@ -226,8 +231,14 @@ let vec_assign eto efrom =
 		   dto dfrom)
       |	(None, Some (L dfrom)) ->
 	  bind (get_veck vto) (fun veck -> 
-	    veck.veck_k (ret cto) veck.veck_s)
-
+	    let s = veck.veck_s in
+	    let s = {s with dim1 = st_new s.dim1 vto (L dfrom)} in
+	    fun _ _ -> veck.veck_k vto s)
+      |	(Some (L dto),None) ->
+	  bind (get_veck vfrom) (fun veck -> 
+	    let s = veck.veck_s in
+	    let s = {s with dim1 = st_new s.dim1 vfrom (L dto)} in
+	    fun _ _ -> veck.veck_k vto s)
 	      )))))
 ;;
 
@@ -240,7 +251,8 @@ let test2r = run (test2 ());;
 let test21 () =
   vec_assign (vec_zero 6) (vec_zero 5)
 ;;
-let test21r = run (test21 ());;
+
+(* let test21r = run (test21 ());; *)
 (* Exception: Failure "vec_assign: patently wrong dim: 6 vs 5".
 *)
 
@@ -262,9 +274,28 @@ val test22r : (vid * state) * ('a, unit) code =
       (o_clone a_1))>.)
 *)
 
+let test3 () =
+  vec_assign (vec_read [1.0;2.0;3.0]) (vec_zero 5)
+;;
+let test3r = run (test3 ());;
 
-(*
+let test31 () =
+  let_ (vec_read [1.0;2.0;3.0]) (fun v1 ->
+  let_ (vec_copy (ret v1)) (fun v2 ->
+  vec_assign (ret v2) (vec_zero 5)))
+;;
+let test31r = run (test31 ());;
 
+let test32 () =
+  let_ (vec_read [1.0;2.0;3.0]) (fun v1 ->
+  let_ (vec_copy (ret v1)) (fun v2 ->
+  vec_assign  (vec_zero 5) (ret v2)))
+;;
+let test32r = run (test32 ());;
+
+
+
+(* ------------------------- Some old code 
 
 (* matrix representation and its operations *)
 (* A matrix with n rows and m columns is represented as a
