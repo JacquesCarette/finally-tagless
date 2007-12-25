@@ -45,6 +45,19 @@
  the matrix has been read. The rest of the code must be free from any
  index bounds checks. So, the goal is to eliminate matrix bound/dim checks.
 
+
+ In this first version, we aim for just a vector language, with the following
+ syntax
+   <var> |
+   lit_int <integer-literal> |
+   lit_float <float-literal: IEEE double> |
+   <term> $ <term> |  (* sequencing *)
+   let_ <term> (fun x -> <term>) | (* creates vars *)
+   vec_zero <int-lit> |
+   vec_copy <term> |
+   vec_assign <term> <term> |
+   vec_read "file-name" (* actually, we `read' an array from a list *)
+
 *)
 
 (* Representation of object values in the meta-language, MetaOcaml.
@@ -57,6 +70,12 @@
 type vid = int				(* vid of 0 is reserved *)
 type ('a,'b) repr = R of ('a,'b) code * vid
 ;;
+(* A value can either be represented directly, or refer to the corr value for
+   the given vid. The latter represents equality constraints
+*)
+type 'a lv = L of 'a | V of vid;; 
+
+type vec = float array;; 
 
 (* Our monad: continuation plus state *)
 let ret c = fun k s -> k c s
@@ -66,18 +85,28 @@ let seq s1 s2 = .< begin .~s1 ; .~s2 end >.
 let seqL s1 s2 = ret (seq s1 s2)
 ;;
 
+
+
 (* The state is the polymorphic extensible record, collecting attributes
    of various vid *)
 type state = {curr_vid : vid;
-	      dim1 : (vid * int) list;
-	    };;
-let init_state = {curr_vid = 1;
-		  dim1 = []
-		};;
-type ('v, 'w) monad = ('v -> state -> 'w) -> state -> 'w
-type ('a, 'v,'w) cmonad 
+	      dim1 : (vid * int lv) list;
+	      dim1D : vid * (vid * vid) list; (* see dynamic storage below *)
+	      vecks : (vid * veck_t) list;
+	    }
+and ('v, 'w) monad = ('v -> state -> 'w) -> state -> 'w
+and ('a, 'v,'w) cmonad 
       = (('a,'v) repr -> state -> ('a,'w) code) -> state -> ('a,'w) code
+and veck_t = {veck_s: state;
+	      veck_k: 'a 'w. 
+   (vid -> state -> ('a,'w) code)}
 ;;
+
+let init_state = {curr_vid = 1;
+		  dim1 = [];
+		  dim1D = (0, []);
+		  vecks = [];
+		};;
 
 (* I made the run return the accumulated state, so we can print and see it *)
 let run m = 
@@ -91,13 +120,30 @@ let new_vid s =
   let v = s.curr_vid in
   (v, {s with curr_vid = succ v});;
 
-let upd_state f k s = k () (f s);;
+
+
+let get_dim1 i k s = 
+  k (try Some (List.assoc i s.dim1) with Not_found -> None) s;;
+
+let get_veck i k s = 
+  k (try List.assoc i s.vecks with Not_found -> 
+    failwith (Printf.sprintf "get_veck: not found %d" i)) s;;
+
+
+let upd_dim1 f k s = k () ({s with dim1 = f s.dim1});;
 
 let st_new lst v vl = 
   let found = try ignore(List.assoc v lst); true with Not_found -> false in
   if found 
   then failwith (Printf.sprintf "st_new: vid %d is already present" v)
   else (v,vl)::lst;;
+
+let new_vid_capture k s = 
+  let (v,s') = new_vid s in
+  k v {s with vecks = st_new s.vecks v {veck_s = s; veck_k = k}};;
+
+
+
 
 
 let with_newvid cd k s = let (v,s') = new_vid s in k (R (cd,v)) s';;
@@ -109,6 +155,116 @@ let ($) (e1:('v1,'w) monad) (e2:('v2,'w) monad) : ('v2,'w) monad
 let let_ e f = 
   bind e (function R (c,v) ->
     bind (retN c) (fun c' -> f (R (c',v))));;
+
+
+(* Vector representation and its operations *)
+(* A vector of size n is represented as a float array.
+   The following primitives are considered to be primitives of the
+   _object_ language. In the generated code, they will appear as CSP.
+   No error checking is done here.
+*)
+let o_zero n = Array.make n 0.0;;
+let o_clone = Array.copy;;
+let o_assign ato afrom = Array.blit afrom 0 ato 0 (Array.length afrom);;
+let o_read = Array.of_list;;
+
+let vec_zero n = 
+  bind (with_newvid .<o_zero n>.) (function R (_,v) as r ->
+    upd_dim1 (fun s -> st_new s v (L n)) $ ret r)
+;;
+
+(* We assume that cloning of a vector preserves all the static properties
+   we care about: dimensions. Thus, we preserve vid.
+*)
+let vec_copy e = bind e (function R (c,v) ->
+  ret (R (.<o_clone .~c>.,v)));;
+
+let test1 () =
+  let_ (vec_zero 5) (fun v1 ->
+  let_ (vec_copy (ret v1)) (fun v2 ->
+    ret v2
+));;
+
+let test1r = run (test1 ());;
+
+(* `Dynamic storage'
+  Place for dimensional values that will only be known at run-time.
+  Currently, it is implemented in the ugliest possible way,
+  using a CSP mutable array. However, that keeps that pesky 'a
+  out of state. Otherwise, I have to keep vars in the state, meaning
+  that 'a contaminates everything... 
+*)
+
+
+
+let vec_read_init lst = 
+  bind (with_newvid .<o_read lst>.) (function R (cd,v) as res ->
+    fun k s ->
+      k res {s with vecks = st_new s.vecks v {veck_s = s; veck_k = k}}
+);;
+
+
+vecks : (vid * veck_t) list;
+
+(* We assume that assignment of a vector preserves all the static properties
+   we care about: dimensions. Thus, we preserve vid of the target.
+*)
+
+let vec_assign eto efrom = 
+  bind eto (function R (cto,vto) ->
+  bind efrom (function R (cfrom,vfrom) ->
+  bind (with_newvid .<o_assign .~cto .~cfrom>.) (fun res ->
+  if vto = vfrom then ret res
+  else
+    bind (get_dim1 vto)   (fun dto ->
+    bind (get_dim1 vfrom) (fun dfrom ->
+      match (dto,dfrom) with
+      |	(Some (L dto), Some (L dfrom)) ->
+	  if dto = dfrom then ret res
+	      else failwith 
+	        (Printf.sprintf "vec_assign: patently wrong dim: %d vs %d"
+		   dto dfrom)
+      |	(None, Some (L dfrom)) ->
+	  bind (get_veck vto) (fun veck -> 
+	    veck.veck_k (ret cto) veck.veck_s)
+
+	      )))))
+;;
+
+
+let test2 () =
+  vec_assign (vec_zero 5) (vec_zero 5)
+;;
+let test2r = run (test2 ());;
+
+let test21 () =
+  vec_assign (vec_zero 6) (vec_zero 5)
+;;
+let test21r = run (test21 ());;
+(* Exception: Failure "vec_assign: patently wrong dim: 6 vs 5".
+*)
+
+let test22 () =
+  let_ (vec_zero 5) (fun v1 ->
+  vec_assign (vec_zero 5) (vec_copy (ret v1)))
+;;
+let test22r = run (test22 ());;
+
+(* A bit beautified result:
+
+val test22r : (vid * state) * ('a, unit) code =
+  ((3,
+    {curr_vid = 4; dim1 = [(2, L 5); (1, L 5)]; dim1D = (0, []); vecks = []}),
+
+   .<let a_1 = o_zero 5 in
+    (o_assign
+      (o_zero 5)
+      (o_clone a_1))>.)
+*)
+
+
+(*
+
 
 (* matrix representation and its operations *)
 (* A matrix with n rows and m columns is represented as a
@@ -172,7 +328,7 @@ let test1 () =
 ));;
 
 let test1r = run (test1 ());;
-
+*)
 
 (*
 
