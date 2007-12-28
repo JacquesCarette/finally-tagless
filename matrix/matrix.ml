@@ -41,8 +41,9 @@
  time -- e.g., mat_unit), we can check them as we generate the code.
  Alas, mat_read can read the matrix, along with its dimensions, from a file.
  So, the dimensions do not become known until the run-time. Our compiler
- has to insert some checks. Our goal is to insert the checks right after
- the matrix has been read. The rest of the code must be free from any
+ has to insert some checks. Our goal is to insert the checks as early as
+ possible, right after the matrix has been read. 
+ The rest of the code must be free from any
  index bounds checks. So, the goal is to eliminate matrix bound/dim checks.
 
 
@@ -77,13 +78,12 @@ type 'a lv = L of 'a | V of vid;;
 
 type vec = float array;; 
 
-(* Our monad: continuation plus state *)
+(* Our monad: continuation plus state. Well, actually more: TBW *)
 let ret c = fun k s -> k c s
 let bind m n = fun k s -> m (fun x s' -> n x k s') s
 let retN c = fun k s -> .<let a = .~c in .~(k .<a>. s) >.
 let seq s1 s2 = .< begin .~s1 ; .~s2 end >.
 let seqL s1 s2 = ret (seq s1 s2)
-let abort v = fun k s -> v
 ;;
 
 
@@ -94,21 +94,19 @@ type ('a,'w) state =
     {curr_vid : vid;
      dim1 : (vid * int lv) list;
      dim1D : vid * (vid * ('a,int) code) list; (* see dynamic storage below *)
-     vecks : (vid * ('a,'w) veck_t) list;
    }
 and ('a, 'v,'w) cmonad 
       = (('a,'v) repr -> ('a,'w) state -> ('a,'w) code) -> 
 	('a,'w) state -> ('a,'w) code
-and ('a,'w) veck_t = {veck_s: ('a,'w) state;
-		      veck_k: vid -> ('a,'w) state -> ('a,'w) code}
 ;;
+
+exception NewCtx of (vid * int lv) list;;
 
 type ('v, 's, 'w) monad = ('v -> 's -> 'w) -> 's -> 'w;;
 
 let init_state = {curr_vid = 1;
 		  dim1 = [];
 		  dim1D = (0, []);
-		  vecks = [];
 		};;
 
 (* I made the run return the accumulated state, so we can print and see it *)
@@ -119,6 +117,9 @@ let run m =
 ;;
 
 
+(* State accessors and modifiers *)
+(* They often have the monadic type, so we can use them in monads *)
+
 let new_vid s = 
   let v = s.curr_vid in
   (v, {s with curr_vid = succ v});;
@@ -126,16 +127,27 @@ let new_vid s =
 let get_dim1 i k s = 
   k (try Some (List.assoc i s.dim1) with Not_found -> None) s;;
 
-
-
 let upd_dim1 f k s = k () ({s with dim1 = f s.dim1});;
 
+(* Add a new `property' to the property list of vid 'v'. Fail if that
+   property already exists.
+*)
 let st_new lst v vl = 
   let found = try ignore(List.assoc v lst); true with Not_found -> false in
   if found 
   then failwith (Printf.sprintf "st_new: vid %d is already present" v)
   else (v,vl)::lst;;
 
+let new_vid_capture k s = 
+  let (v,s) = new_vid s in
+  let rec loop ctx =
+    try k (v,ctx) s with NewCtx ctx -> 
+      let () = Printf.printf "backtrack, ctx len %d" (List.length ctx) in
+      loop ctx
+  in loop []
+;;
+
+(*
 let new_vid_capture k s = 
   let (v,s) = new_vid s in
   k v {s with vecks = st_new s.vecks v {veck_s = s; veck_k = k}};;
@@ -147,17 +159,23 @@ let get_veck i k s =
 			      st_new veck.veck_s.vecks i veck}}
      with Not_found -> 
      failwith (Printf.sprintf "get_veck: not found %d" i)) s;;
+*)
 
-
+(* Associate a code value with a fresh vid *)
 let with_newvid cd k s = let (v,s') = new_vid s in k (R (cd,v)) s';;
-let lit_int x : (('a,int) repr,'s,'w) monad = with_newvid .<x>.;;
 
+(* Basic monadic operations *)
 let ($) (e1:('v1,'s,'w) monad) (e2:('v2,'s,'w) monad) : ('v2,'s,'w) monad
     = bind e1 (fun _ -> e2);;
+
+(* Start implementing our language. First, scalar operations *)
+
+let lit_int x : (('a,int) repr,'s,'w) monad = with_newvid .<x>.;;
 
 let let_ e f = 
   bind e (function R (c,v) ->
     bind (retN c) (fun c' -> f (R (c',v))));;
+
 
 
 (* Vector representation and its operations *)
@@ -171,6 +189,7 @@ let o_clone = Array.copy;;
 let o_assign ato afrom = Array.blit afrom 0 ato 0 (Array.length afrom);;
 let o_read = Array.of_list;;
 
+(* Start implementing vector operations of our language *)
 let vec_zero n = 
   bind (with_newvid .<o_zero n>.) (function R (_,v) as r ->
     upd_dim1 (fun s -> st_new s v (L n)) $ ret r)
@@ -198,21 +217,25 @@ let test1r = run (test1 ());;
   that 'a contaminates everything... 
 *)
 
+
+(* Basic constraint generation and resolution *)
 let vec_read lst = 
   let cd = .<o_read lst>. in
-  bind new_vid_capture (fun v ->
-    let () = Printf.printf "\nvec_read %d\n" v in
-    bind (get_dim1 v) 
-      (function 
-	| None -> ret (R (cd,v))
-	| Some (L d) -> 
-	    ret (R (.<let v = .~cd in assert (Array.length v = d); v>.,v))
-      ))
+  bind new_vid_capture (function 
+    | (v,[]) ->
+	let () = Printf.printf "\nvec_read, no ctx %d\n" v in
+	ret (R (cd,v))
+    | (v,([(v',_)] as ctx)) when not (v = v') -> 
+	let () = Printf.printf "\nvec_read, not us: v %d, v' %d\n" v v' in
+	raise (NewCtx ctx)
+    | (v,[(v',L d)]) when v = v' ->
+	let () = Printf.printf "\nvec_read, v %d, explicit dim %d\n" v d in
+	upd_dim1 (fun s -> st_new s v (L d)) $
+	(ret (R (.<let v = .~cd in assert (Array.length v = d); v>.,v)))
+    | (v,_) ->
+	failwith (Printf.sprintf "vec_read: unrecognized ctx for v %d" v)
+		       )
 ;;
-
-(* We assume that assignment of a vector preserves all the static properties
-   we care about: dimensions. Thus, we preserve vid of the target.
-*)
 
 let vec_assign eto efrom = 
   bind eto (function R (cto,vto) ->
@@ -230,15 +253,9 @@ let vec_assign eto efrom =
 	        (Printf.sprintf "vec_assign: patently wrong dim: %d vs %d"
 		   dto dfrom)
       |	(None, Some (L dfrom)) ->
-	  bind (get_veck vto) (fun veck -> 
-	    let s = veck.veck_s in
-	    let s = {s with dim1 = st_new s.dim1 vto (L dfrom)} in
-	    fun _ _ -> veck.veck_k vto s)
+	  raise (NewCtx [(vto,L dfrom)])
       |	(Some (L dto),None) ->
-	  bind (get_veck vfrom) (fun veck -> 
-	    let s = veck.veck_s in
-	    let s = {s with dim1 = st_new s.dim1 vfrom (L dto)} in
-	    fun _ _ -> veck.veck_k vto s)
+	  raise (NewCtx [(vfrom,L dto)])
 	      )))))
 ;;
 
@@ -266,7 +283,7 @@ let test22r = run (test22 ());;
 
 val test22r : (vid * state) * ('a, unit) code =
   ((3,
-    {curr_vid = 4; dim1 = [(2, L 5); (1, L 5)]; dim1D = (0, []); vecks = []}),
+    {curr_vid = 4; dim1 = [(2, L 5); (1, L 5)]; dim1D = (0, []); }),
 
    .<let a_1 = o_zero 5 in
     (o_assign
