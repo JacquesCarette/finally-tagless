@@ -93,20 +93,21 @@ let seqL s1 s2 = ret (seq s1 s2)
 type ('a,'w) state = 
     {curr_vid : vid;
      dim1 : (vid * int lv) list;
-     dim1D : vid * (vid * ('a,int) code) list; (* see dynamic storage below *)
+     dim1D : (vid * ('a,int) code) list; (* see dynamic storage below *)
    }
 and ('a, 'v,'w) cmonad 
       = (('a,'v) repr -> ('a,'w) state -> ('a,'w) code) -> 
 	('a,'w) state -> ('a,'w) code
 ;;
 
-exception NewCtx of (vid * int lv) list;;
+exception NewCtx   of (vid * int lv) list;;
+exception NewCtxRe of (vid * int lv) list;;
 
 type ('v, 's, 'w) monad = ('v -> 's -> 'w) -> 's -> 'w;;
 
 let init_state = {curr_vid = 1;
-		  dim1 = [];
-		  dim1D = (0, []);
+		  dim1  = [];
+		  dim1D = [];
 		};;
 
 (* I made the run return the accumulated state, so we can print and see it *)
@@ -127,7 +128,11 @@ let new_vid s =
 let get_dim1 i k s = 
   k (try Some (List.assoc i s.dim1) with Not_found -> None) s;;
 
-let upd_dim1 f k s = k () ({s with dim1 = f s.dim1});;
+let get_dim1D i k s = 
+  k (try Some (List.assoc i s.dim1D) with Not_found -> None) s;;
+
+let upd_dim1  f k s = k () ({s with dim1  = f s.dim1});;
+let upd_dim1D f k s = k () ({s with dim1D = f s.dim1D});;
 
 (* Add a new `property' to the property list of vid 'v'. Fail if that
    property already exists.
@@ -141,25 +146,13 @@ let st_new lst v vl =
 let new_vid_capture k s = 
   let (v,s) = new_vid s in
   let rec loop ctx =
-    try k (v,ctx) s with NewCtx ctx -> 
-      let () = Printf.printf "backtrack, ctx len %d" (List.length ctx) in
-      loop ctx
+    try k (v,ctx) s with 
+    | NewCtx ctx -> 
+	let () = Printf.printf "backtrack, ctx len %d" (List.length ctx) in
+	loop ctx
+    | NewCtxRe ctx -> raise (NewCtx ctx) 
   in loop []
 ;;
-
-(*
-let new_vid_capture k s = 
-  let (v,s) = new_vid s in
-  k v {s with vecks = st_new s.vecks v {veck_s = s; veck_k = k}};;
-
-(* the saved state does not include the captured continuation; compensating *)
-let get_veck i k s = 
-  k (try let veck = List.assoc i s.vecks in
-         {veck with veck_s = {veck.veck_s with vecks = 
-			      st_new veck.veck_s.vecks i veck}}
-     with Not_found -> 
-     failwith (Printf.sprintf "get_veck: not found %d" i)) s;;
-*)
 
 (* Associate a code value with a fresh vid *)
 let with_newvid cd k s = let (v,s') = new_vid s in k (R (cd,v)) s';;
@@ -188,6 +181,7 @@ let o_zero n = Array.make n 0.0;;
 let o_clone = Array.copy;;
 let o_assign ato afrom = Array.blit afrom 0 ato 0 (Array.length afrom);;
 let o_read = Array.of_list;;
+let o_len = Array.length;;
 
 (* Start implementing vector operations of our language *)
 let vec_zero n = 
@@ -225,13 +219,32 @@ let vec_read lst =
     | (v,[]) ->
 	let () = Printf.printf "\nvec_read, no ctx %d\n" v in
 	ret (R (cd,v))
-    | (v,([(v',_)] as ctx)) when not (v = v') -> 
+    | (v,([(v',L _)] as ctx)) when not (v = v') -> 
 	let () = Printf.printf "\nvec_read, not us: v %d, v' %d\n" v v' in
-	raise (NewCtx ctx)
+	raise (NewCtxRe ctx)
     | (v,[(v',L d)]) when v = v' ->
 	let () = Printf.printf "\nvec_read, v %d, explicit dim %d\n" v d in
-	upd_dim1 (fun s -> st_new s v (L d)) $
+	upd_dim1 (fun s -> st_new s v (L d)) $ (* let-bind the assertion code?*)
 	(ret (R (.<let v = .~cd in assert (Array.length v = d); v>.,v)))
+    | (v,[(v1,V v2)]) when v = v1 or v = v2 ->
+	let _ = assert (not (v1 = v2)) in
+	let () = Printf.printf "\nvec_read, v %d (v1 %d, v2 %d)\n" v v1 v2 in
+	let vo = if v = v1 then v2 else v1 in
+	bind (retN cd) (fun cd ->
+	let lencd = .<o_len .~cd>. in
+	bind (get_dim1D vo) (function 
+	  | None -> 			(* vo hasn't been created yet *)
+	      if vo < v then raise (NewCtxRe [(v,V vo)]) else
+	      bind (retN lencd) (fun ncd ->
+		upd_dim1D (fun s -> st_new s v ncd) $
+		(ret (R (cd,v))))
+	  | Some cdo ->
+	      upd_dim1 (fun s -> st_new s v (V vo)) $
+	      (ret (R (.<(assert (.~lencd = .~cdo); .~cd)>.,v))) (* let-bind?*)
+		  ))
+    | (v,([(v',V _)] as ctx)) -> 
+	let () = Printf.printf "\nvec_read, not us: v %d, v' %d\n" v v' in
+	raise (NewCtxRe ctx)
     | (v,_) ->
 	failwith (Printf.sprintf "vec_read: unrecognized ctx for v %d" v)
 		       )
@@ -256,6 +269,10 @@ let vec_assign eto efrom =
 	  raise (NewCtx [(vto,L dfrom)])
       |	(Some (L dto),None) ->
 	  raise (NewCtx [(vfrom,L dto)])
+      |	(None,None) ->
+	  raise (NewCtx [(vfrom,V vto)])
+      |	(Some (V v),None) when v = vfrom -> ret res
+      |	(None,Some (V v)) when v = vto   -> ret res
 	      )))))
 ;;
 
@@ -311,6 +328,22 @@ let test32 () =
 let test32r = run (test32 ());;
 
 
+
+let test41 () =
+  let_ (vec_read [1.0;2.0;3.0]) (fun v1 ->
+  let_ (vec_read [11.0;12.0;13.0]) (fun v2 ->
+  let_ (vec_copy (ret v1)) (fun v3 ->
+  vec_assign  (ret v2) (ret v3))))
+;;
+let test41r = run (test41 ());;
+
+let test42 () =
+  let_ (vec_read [1.0;2.0;3.0]) (fun v1 ->
+  let_ (vec_read [11.0;12.0;13.0]) (fun v2 ->
+  let_ (vec_copy (ret v1)) (fun v3 ->
+  vec_assign  (ret v3) (ret v2))))
+;;
+let test42r = run (test42 ());;
 
 (* ------------------------- Some old code 
 
