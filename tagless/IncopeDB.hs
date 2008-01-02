@@ -2,13 +2,14 @@
 
 -- Interpreter, Compiler, Partial Evaluator
 
-module Incope where
+module IncopeDB where
 
 {-
   The language is simply-typed lambda-calculus with fixpoint,
-  integers, booleans and comparison.
+  integers, booleans and comparison. We use de Bruijn indices.
 
-  Lam hoas_fn | App e e | Fix hoas_fn |
+  Z | S e
+  Lam fn | App e e | Fix fn |
   I Int | B Bool | Add ie1 ie2 | Mul ie1 ie2 | Leq ie1 ie2 |
   IF b e-then e-else
   
@@ -20,98 +21,112 @@ module Incope where
   There is no pattern-match failure possible: the evaluators never
   get stuck.
 
-  The implementation below is *almost* possible in OCaml. Indeed,
-  one can emulate Haskell typeclasses using explicit dictionary passing.
-  The dictionary will by a polymorphic (rank-2) record -- but it is OK,
-  OCaml permits it. Alas, The typeclass below uses higher-order type
-  constructors: repr is of a kind * -> *. OCaml does not support
-  higher-order polymorphism.
-
 -}
 
 -- This class defines syntax (and its instances, semantics) of our language
 -- This class is Haskell98!
+-- We probably need yet another parameter, h of the kind * -> *
+-- so we could write
+--  z :: repr h (h a,r) a
+-- h determines what is in the (hypothetical) environment
 class Symantics repr where
-    int :: Int -> repr Int                -- int literal
-    bool :: Bool -> repr Bool             -- bool literal
+    int :: Int -> repr r Int                -- int literal
+    bool :: Bool -> repr r Bool             -- bool literal
 
-    lam :: (repr a -> repr b) -> repr (a->b)
-    app :: repr (a->b) -> repr a -> repr b
-    fix :: (repr a -> repr a) -> repr a
+                                            -- First-order fragment
+    add :: repr r Int -> repr r Int -> repr r Int
+    mul :: repr r Int -> repr r Int -> repr r Int
+    if_ :: repr r Bool -> repr r a -> repr r a -> repr r a
+    leq :: repr r Int -> repr r Int -> repr r Bool
 
-    add :: repr Int -> repr Int -> repr Int
-    mul :: repr Int -> repr Int -> repr Int
-    if_ :: repr Bool -> repr a -> repr a -> repr a
-    leq :: repr Int -> repr Int -> repr Bool
+    z   :: repr (a,r) a			-- variables: z and s ... (s z)
+    s   :: repr r a -> repr (c,r) a
+    lam :: repr (a,r) b -> repr r (a->b)
+    app :: repr r (a->b) -> repr r a -> repr r b
+    fix :: repr (a,r) a -> repr r a
+
 
 -- The following `projection' function is specific to repr.
 -- It is like `run' of the monad
---    comp :: repr a -> something a
+--    comp :: repr e a -> something a
 
 test1 () = add (int 1) (int 2)
-test2 () = lam (\x -> add x x)
-test3 () = lam (\x -> add (app x (int 1)) (int 2))
+test2 () = lam (add z z)
 
-testgib () = lam (\x -> lam (\y ->
-                  fix (\self -> lam (\n ->
-                      if_ (leq n (int 0)) x
+test2b () = lam (add z (s z))
+-- inferred type: test2b :: (Symantics repr) => () -> repr (Int, e) (Int -> Int)
+-- the type says test2b is open! Needs the env with Int
+
+test3 () = lam (add (app z (int 1)) (int 2))
+
+
+testgib () = lam {- x -} (lam {- y -} (
+                  fix {- self -} (lam {- n -} (
+		  let n = z; self = s z; y = s (s z); x = s (s (s z))
+                  in  if_ (leq n (int 0)) x
                         (if_ (leq n (int 1)) y
                          (add (app self (add n (int (-1))))
                               (app self (add n (int (-2))))))))))
 
+-- the same form as in Incope
 testgib1 () = app (app (app (testgib ()) (int 1)) (int 1)) (int 5)
-testgib2 () = lam (\x -> (lam (\y ->app (app (app (testgib ()) x) y) (int 5))))
 
-testpowfix () = lam (\x ->
-                      fix (\self -> lam (\n ->
-                        if_ (leq n (int 0)) (int 1)
-                            (mul x (app self (add n (int (-1))))))))
-testpowfix7 () = lam (\x -> app (app (testpowfix ()) x) (int 7))
+testgib2 () = lam (lam (app (app (app (testgib ()) z) (s z)) (int 5)))
+
+testpowfix () = lam {- x -} (
+                  fix {- self -} (lam {- n -} (
+                  let n = z; self = s z; x = s (s z)    
+                  in  if_ (leq n (int 0)) (int 1)
+                          (mul x (app self (add n (int (-1))))))))
+testpowfix7 () = lam (app (app (testpowfix ()) z) (int 7))
 
 -- ------------------------------------------------------------------------
 -- The interpreter
 -- It is a typed, tagless interpreter: R is not a tag. The interpreter
 -- never gets stuck, because it evaluates typed terms only
+-- Essentially, the Reader monad
 
--- Note that everything going on in the interpreter is straight out of
--- "Boxes go Bananas" by Washburn and Weirich (intended or otherwise)
-newtype R a = R a deriving Show
+newtype R r a = R (r -> a) -- deriving Show
 unR (R x) = x
 
 instance Symantics R where
-    int x = R x
-    bool b = R b
+    int x = R (const x)
+    bool b = R (const b)
 
-    lam f = R (unR . f . R)
-    app e1 e2 = R( (unR e1) (unR e2) )
-    fix f = R( fx (unR . f . R)) where fx f = f (fx f)
+    z = R(\ (x,_) -> x)
+    s v = R(\ (_,r) -> unR v r)
+    lam b = R(\r -> \x -> unR b (x,r))
+    app e1 e2 = R(\r -> (unR e1 r)  (unR e2 r) )
+    fix b = R(\r -> let a = unR b (a,r) in a)
 
-    add e1 e2 = R( (unR e1) + (unR e2) )
-    mul e1 e2 = R( (unR e1) * (unR e2) )
-    leq e1 e2 = R( (unR e1) <= (unR e2) )
-    if_ be et ee = R( if (unR be) then unR et else unR ee )
+    add e1 e2 = R(\r -> (unR e1 r) + (unR e2 r) )
+    mul e1 e2 = R(\r -> (unR e1 r) * (unR e2 r) )
+    leq e1 e2 = R(\r -> (unR e1 r) <= (unR e2 r) )
+    if_ be et ee = R(\r -> if unR be r then unR et r else unR ee r )
 
-compR = unR
+compR m = unR m ()			-- Apply to the empty env
 
-mkitest f = compR (f ())
+mkrtest f = compR (f ())
 
 
-itest1 = mkitest test1
-itest2 = mkitest test2
-itest3 = mkitest test3
+rtest1 = mkrtest test1
+rtest2 = mkrtest test2
+-- rtest2b = mkrtest test2b -- type error: test2b is open!
+rtest3 = mkrtest test3
 
-itestgib  = mkitest testgib
-itestgib1 = mkitest testgib1
-itestgib2 = mkitest testgib2
 
-itestpw   = mkitest testpowfix
-itestpw7  = mkitest testpowfix7
-itestpw72 = mkitest (\() -> app (testpowfix7 ()) (int 2))
+rtestgib  = mkrtest testgib
+rtestgib1 = mkrtest testgib1 -- 8
+rtestgib2 = mkrtest testgib2 2 2 -- 16
+
+rtestpw   = mkrtest testpowfix
+rtestpw7  = mkrtest testpowfix7
+rtestpw72 = mkrtest (\() -> app (testpowfix7 ()) (int 2)) -- 128
 
 {-
-The expression "R (unR . f . R)" _looks_ like tag introduction and
+The expression with unR _looks_ like tag introduction and
 elimination.
-But. the function unR is *total*. There is no run-time error
+But the function unR is *total*. There is no run-time error
 is possible at all -- and this fact is fully apparent to the
 compiler.
 Note the corresponding code in incope.ml:
@@ -129,28 +144,36 @@ No tags at all...
 -- never gets stuck, because it evaluates typed terms only.
 -- This interpreter is also total: it determines the size of the term
 -- even if the term itself is divergent.
+-- The interpreter is the same as that it Incope.ml. The results of evaluating
+-- sample terms are the same, too.
 
-newtype L a = L Int deriving Show
+newtype L r a = L Int
 unL (L x) = x
 
 instance Symantics L where
     int _  = L 1
     bool _ = L 1
 
-    lam f = L( unL (f (L 0)) + 1 )
-    app e1 e2 = L( unL e1 + unL e2 + 1 )
-    fix f = L( unL (f (L 0)) + 1 )
+    z = L 0
+    s v = L 0
 
-    add e1 e2 = L( unL e1 + unL e2 + 1 )
-    mul e1 e2 = L( unL e1 + unL e2 + 1 )
-    leq e1 e2 = L( unL e1 + unL e2 + 1 )
-    if_ be et ee = L( unL be +  unL et + unL ee  + 1 )
+    lam b = L(unL b + 1 )
+    app e1 e2 = L(unL e1 + unL e2 + 1)
+    fix b = L( unL b + 1 )
 
+    add e1 e2 = L(unL e1 + unL e2 + 1)
+    mul e1 e2 = L(unL e1 + unL e2 + 1)
+    leq e1 e2 = L(unL e1 + unL e2 + 1)
+    if_ be et ee = L(unL be +  unL et + unL ee + 1)
+
+-- the signature makes compL to accept only closed terms
+compL :: L () a -> Int 
 compL = unL
 
-ltest1 = compL . test1 $ ()
-ltest2 = compL . test2 $ ()
-ltest3 = compL . test3 $ ()
+ltest1 = compL . test1 $ () -- 3
+ltest2 = compL . test2 $ () -- 2
+-- ltest2b = compL . test2b $ () -- type error: term is not closed
+ltest3 = compL . test3 $ () -- 5
 
 
 ltestgib  = compL . testgib  $ ()
@@ -166,18 +189,16 @@ ltestpw72 = compL (app (testpowfix7 ()) (int 2)) -- 17
 -- ------------------------------------------------------------------------
 -- The compiler
 -- We compile to GADT, to be understood as a typed assembly language
--- (typed bytecode). The GADT does _not_ use the higher-order abstract
--- syntax. We could have used template Haskell. Alas, its expressions
--- are untyped.
+-- (typed bytecode). The GADT does _not_ use deBruijn indices.
 -- Note how ByteCode represents MetaOCaml's `code'. Thus the compiler
 -- below neatly maps to the MetaOCaml (with no GADTs).
 -- Also note, that like MetaOCaml `code', we never pattern-match on
 -- ByteCode!
 -- Note how the compiler never raises any exception and matches no tags
--- (no generated code has any tags)
-
--- The LIFT bytecode operation is used only during evaluation and for fmap
--- it corresponds to a CSP in MetaOCaml.
+-- (no generated code has any tags).
+-- The ByteCode is exactly the same as that in Incope.hs.
+-- I guess the only real purpose for ByteCode is to be able to
+-- show arbitrary terms of our DSL, even those representing functions.
 
 data ByteCode t where
     Var :: Int -> ByteCode t                -- variables identified by numbers
@@ -190,7 +211,6 @@ data ByteCode t where
     Mul :: ByteCode Int -> ByteCode Int -> ByteCode Int
     Leq :: ByteCode t1 -> ByteCode t1 -> ByteCode Bool
     IF  :: ByteCode Bool -> ByteCode t -> ByteCode t -> ByteCode t
-    LIFT :: t -> ByteCode t                 -- Used only for eval and fmap
 
 instance Show (ByteCode t) where
     show (Var n) = "V" ++ show n
@@ -206,79 +226,60 @@ instance Show (ByteCode t) where
         = "(if " ++ show be ++ 
           " then " ++ show et ++ " else " ++ show ee ++ ")"
 
--- An evaluator for the ByteCode: the virtual machine
--- The evaluator is partial: if we attempt to evaluate an open code
--- (a variable not found in the env), we will get an error.
--- We use Dynamic to `assure' that variables are properly typed,
--- that is, that the variable name (counter) witnesses its type.
--- A better assurance is to use STRef. Strange correspondence:
--- mutation and lambda application. The essence of both is sharing.
-{-
-type BEnv = [(Int,Dynamic)]
-
-eval :: Typeable t => BEnv -> ByteCode t -> t
-eval env (Var n) | Just dv <- lookup n env,
-		   Just v  <- fromDynamic dv = v
-eval env v@Var{} = error $ "Open code? variable not found: " ++ show v
-eval env (Lam v b) = \x -> eval ((v,toDyn x):env) b
-eval env (App e1 e2) = (eval env e1) (eval env e2)
--- eval1 (Fix n b) e = 
-eval env (INT n) = n
-eval env (BOOL n) = n
-eval env (Add e1 e2) = eval env e1 + eval env e2
--- eval1 (IF be et ee) e = 
--}
-
 
 -- Int is the variable counter
 -- for allocation of fresh variables
-newtype C t = C (Int -> (ByteCode t, Int)) 
+type Env = [Int]			-- don't carry any types here...
+newtype C r t = C ((Int,Env) -> (ByteCode t, Int))
 unC (C t) vc0 = t vc0
 
-{-
-instance Functor C where
-    fmap f = app (C(\vc -> (LIFT f, vc)))
--}
+-- Although the interpreter is `untyped' (e.g., the variable names are
+-- just numbers), the typeability of source code expressions is still
+-- ensured by Symantics.
 
 instance Symantics C where
-    int x  = C(\vc -> (INT x, vc))
-    bool b = C(\vc -> (BOOL b, vc))
+    int x  = C(\ (vc,_) -> (INT x, vc))
+    bool b = C(\ (vc,_) -> (BOOL b, vc))
 
-    lam f = C(\vc -> let v = vc
-                         var = C(\vc -> (Var v, vc))
-                         (body,vc') = unC (f var) (succ vc)
-                     in (Lam v body, vc'))
-    app e1 e2 = C(\vc -> let (e1b,vc1) = unC e1 vc
-                             (e2b,vc2) = unC e2 vc1
-                         in (App e1b e2b,vc2))
+    z     = C(\ (vc,v:_) -> (Var v,vc))
+    s v   = C(\ (vc,_:r) -> unC v (vc,r))
+    lam b = C(\ (vc,r) -> let v = vc
+                              (body,vc') = unC b (succ vc,v:r)
+                          in (Lam v body, vc'))
 
-    fix f = C(\vc -> let v = vc
-                         var = C(\vc -> (Var v, vc))
-                         (body,vc') = unC (f var) (succ vc)
-                     in (Fix v body, vc'))
+    app e1 e2 = C(\ (vc,r) -> let (e1b,vc1) = unC e1 (vc,r)
+                                  (e2b,vc2) = unC e2 (vc1,r)
+                              in (App e1b e2b,vc2))
+    fix b = C(\ (vc,r) -> let v = vc
+                              (body,vc') = unC b (succ vc,v:r)
+                          in (Fix v body, vc'))
 
-    add e1 e2 = C(\vc -> let (e1b,vc1) = unC e1 vc
-                             (e2b,vc2) = unC e2 vc1
-                         in (Add e1b e2b,vc2))
+    add e1 e2 = C(\ (vc,r) -> let (e1b,vc1) = unC e1 (vc,r)
+                                  (e2b,vc2) = unC e2 (vc1,r)
+                              in (Add e1b e2b,vc2))
 
-    mul e1 e2 = C(\vc -> let (e1b,vc1) = unC e1 vc
-                             (e2b,vc2) = unC e2 vc1
-                         in (Mul e1b e2b,vc2))
+    mul e1 e2 = C(\ (vc,r) -> let (e1b,vc1) = unC e1 (vc,r)
+                                  (e2b,vc2) = unC e2 (vc1,r)
+                              in (Mul e1b e2b,vc2))
 
-    leq e1 e2 = C(\vc -> let (e1b,vc1) = unC e1 vc
-                             (e2b,vc2) = unC e2 vc1
-                         in (Leq e1b e2b,vc2))
+    leq e1 e2 = C(\ (vc,r) -> let (e1b,vc1) = unC e1 (vc,r)
+                                  (e2b,vc2) = unC e2 (vc1,r)
+                              in (Leq e1b e2b,vc2))
 
-    if_ be et ee = C(\vc -> let (beb,vc1) = unC be vc
-                                (etb,vc2)  = unC et vc1
-                                (eeb,vc3)  = unC ee vc2
-                         in (IF beb etb eeb,vc3))
+    if_ be et ee = C(\ (vc,r) -> let (beb,vc1) = unC be (vc,r)
+                                     (etb,vc2) = unC et (vc1,r)
+                                     (eeb,vc3) = unC ee (vc2,r)
+                                 in (IF beb etb eeb,vc3))
 
-compC repr = fst $ unC repr 0
+-- The signature enforces only closed terms
+-- Since our Env is just a regular list, the absence of variable proj
+-- error is no longer syntactically apparent...
+compC :: C () t -> ByteCode t
+compC repr = fst $ unC repr (0,[])
 
 ctest1 = compC . test1 $ ()
-ctest2 = compC . test2 $ ()
-ctest3 = compC . test3 $ ()
+ctest2 = compC . test2 $ () -- (\V0 -> (V0 + V0))
+ctest3 = compC . test3 $ () -- (\V0 -> ((V0 1) + 2))
 
 ctestgib  = compC . testgib  $ ()
 ctestgib1 = compC . testgib1 $ ()
@@ -288,6 +289,7 @@ ctestpw   = compC . testpowfix $ ()
 ctestpw7  = compC . testpowfix7 $ ()
 ctestpw72 = compC  (app (testpowfix7 ()) (int 2))
 
+{-
 -- ------------------------------------------------------------------------
 -- The partial evaluator: the combination of the interpreter (R) and
 -- the compiler (C).
@@ -1023,4 +1025,5 @@ htest6r = compC . hdyn $ htest6 ()
 
 htest7 () = hlam (\x -> hlam (\y -> (haddtest () `happ` x) `happ` x))
 htest7r = compC . hdyn $ htest7 ()
+-}
 -}
