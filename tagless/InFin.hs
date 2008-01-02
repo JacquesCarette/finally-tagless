@@ -23,6 +23,9 @@ module InFin where
   get stuck.
 -}
 
+-- ======================================================================
+-- Final Tagless representation
+
 -- This class defines syntax (and its instances, semantics) of our language
 -- This class is Haskell98!
 class Symantics repr where
@@ -63,8 +66,6 @@ testpowfix7 () = lam (\x -> app (app (testpowfix ()) x) (int 7))
 -- It is a typed, tagless interpreter: R is not a tag. The interpreter
 -- never gets stuck, because it evaluates typed terms only
 
--- Note that everything going on in the interpreter is straight out of
--- "Boxes go Bananas" by Washburn and Weirich (intended or otherwise)
 newtype R a = R a deriving Show
 unR (R x) = x
 
@@ -101,37 +102,61 @@ rtestpw72 = mkrtest (\() -> app (testpowfix7 ()) (int 2))
 {-
 The expression "R (unR . f . R)" _looks_ like tag introduction and
 elimination.
-But. the function unR is *total*. There is no run-time error
+But the function unR is *total*. There is no run-time error
 is possible at all -- and this fact is fully apparent to the
 compiler.
-Note the corresponding code in incope.ml:
-  let int (x:int) = x
-  let add e1 e2 = e1 + e2
-
-  let lam f = f
-No tags at all...
 -}
 
 -- ------------------------------------------------------------------------
--- The HOAS bytecode compiler
--- We compile to GADT, to be understood as a typed assembly language
--- (typed bytecode). 
--- One may argue that this bytecode still faithfully represents
--- MetaOCaml's `code': this is because the function
--- 'a code -> 'b code is trivially convertible to ('a->'b) code.
--- Also, HOAS bytecode certainly seems to match better with MetaOCaml's
--- syntax for functions.
--- Also note, that like MetaOCaml `code', we never pattern-match on
--- HByteCode!
--- Note how the compiler never raises any exception and matches no tags
--- (no generated code has any tags)
+-- Another interpreter: it interprets each term to give its size
+-- (the number of constructors)
+-- It is a typed, tagless interpreter: L is not a tag. The interpreter
+-- never gets stuck, because it evaluates typed terms only.
+-- This interpreter is also total: it determines the size of the term
+-- even if the term itself is divergent.
 
--- The HVar bytecode operation is used only during evaluation
--- it corresponds to a CSP in MetaOCaml.
+newtype L a = L Int deriving Show
+unL (L x) = x
+
+instance Symantics L where
+    int _  = L 1
+    bool _ = L 1
+
+    lam f = L( unL (f (L 0)) + 1 )
+    app e1 e2 = L( unL e1 + unL e2 + 1 )
+    fix f = L( unL (f (L 0)) + 1 )
+
+    add e1 e2 = L( unL e1 + unL e2 + 1 )
+    mul e1 e2 = L( unL e1 + unL e2 + 1 )
+    leq e1 e2 = L( unL e1 + unL e2 + 1 )
+    if_ be et ee = L( unL be +  unL et + unL ee  + 1 )
+
+compL = unL
+
+ltest1 = compL . test1 $ ()
+ltest2 = compL . test2 $ ()
+ltest3 = compL . test3 $ ()
+
+
+ltestgib  = compL . testgib  $ ()
+ltestgib1 = compL . testgib1 $ ()
+ltestgib2 = compL . testgib2 $ ()
+
+ltestpw   = compL . testpowfix $ ()
+ltestpw7  = compL . testpowfix7 $ ()
+ltestpw72 = compL (app (testpowfix7 ()) (int 2))
+
+
+-- ======================================================================
+-- Initial Tagless representation, using GADT with HOAS
+
+-- The HVar operation is used only during evaluation
+-- it corresponds to a CSP in MetaOCaml or Lift in Xi, Chen and Chen (POPL2003)
+-- The parameter h is the `hypothetical environment'
 
 data IR h t where
     Var  :: h t -> IR h t
-    INT  :: Int -> IR h Int
+    INT  :: Int  -> IR h Int
     BOOL :: Bool -> IR h Bool
     Lam  :: (IR h t1 -> IR h t2) -> IR h (t1->t2)
     App  :: IR h (t1->t2) -> IR h t1  -> IR h t2
@@ -141,41 +166,25 @@ data IR h t where
     Leq  :: IR h Int -> IR h Int -> IR h Bool
     IF   :: IR h Bool -> IR h t -> IR h t -> IR h t
 
-
 -- An evaluator for IR: the virtual machine
 -- It is total (modulo potential non-termination in fix)
 -- No exceptions are to be raised, and no pattern-match failure
 -- may occur. All pattern-matching is _syntactically_, patently complete.
 evalI :: IR R t -> t
-evalI (Var v) = unR v
-evalI (Lam b) = \x -> evalI (b . Var . R $ x)
-evalI (App e1 e2) = (evalI e1) (evalI e2)
-evalI (Fix f) = evalI (f (Fix f))
 evalI (INT n)  = n
 evalI (BOOL n) = n
 evalI (Add e1 e2) = evalI e1 + evalI e2
 evalI (Mul e1 e2) = evalI e1 * evalI e2
 evalI (Leq e1 e2) = evalI e1 <= evalI e2
 evalI (IF be et ee) = if (evalI be) then evalI et else evalI ee
+evalI (Var v) = unR v
+evalI (Lam b) = \x -> evalI (b . Var . R $ x)
+evalI (App e1 e2) = (evalI e1) (evalI e2)
+evalI (Fix f) = evalI (f (Fix f))
 
 
-{- Showing HOAS has always been problematic... We just skip it for now...
-instance Show (ByteCode t) where
-    show (Var n) = "V" ++ show n
-    show (Lam n b) = "(\\V" ++ show n ++ " -> " ++ show b ++ ")"
-    show (App e1 e2) = "(" ++ show e1 ++ " " ++ show e2 ++ ")"
-    show (Fix n b) = "(fix\\V" ++ show n ++ " " ++ show b ++ ")"
-    show (INT n) = show n
-    show (BOOL b) = show b
-    show (Add e1 e2) = "(" ++ show e1 ++ " + " ++ show e2 ++ ")"
-    show (Mul e1 e2) = "(" ++ show e1 ++ " * " ++ show e2 ++ ")"
-    show (Leq e1 e2) = "(" ++ show e1 ++ " <= " ++ show e2 ++ ")"
-    show (IF be et ee)
-        = "(if " ++ show be ++ 
-          " then " ++ show et ++ " else " ++ show ee ++ ")"
--}
-
-
+-- ======================================================================
+-- Relating Initial and Final Tagless representations
 
 
 -- Conversion from the Final to the Initial representations
@@ -220,11 +229,11 @@ itf (Mul e1 e2) = mul (itf e1) (itf e2)
 itf (Leq e1 e2) = leq (itf e1) (itf e2)
 itf (IF be et ee) = if_ (itf be) (itf et) (itf ee)
 itf (Var v) = v
-itf (Lam b) = lam(\x -> itf (b (Var x)))
-itf (App e1 e2) = app (itf e1) (itf e2)
+itf (Lam b) = lam(\x -> itf (b (Var x))) -- should not give any pattern-match
+itf (App e1 e2) = app (itf e1) (itf e2)  --   errors
 itf (Fix b) = fix(\x -> itf (b (Var x)))
 
--- Veryfying Initial -> Final -> Initial
+-- Verifying Initial -> Final -> Initial
 -- ifi :: IR (IR h) t -> IR h t
 ifi ir = compI . itf $ ir
 ifi_12i = (evalI (Lam (\x -> App x (INT 1)))) (+6) -- 7
@@ -234,10 +243,13 @@ ifi_gib1i = evalI (testgib1 ())       -- 8
 ifi_gib1r = evalI (ifi (testgib1 ())) -- 8
 
 
--- Veryfying Final -> Initial -> Final
+-- Verifying Final -> Initial -> Final
 -- fif :: (Symantics h) => IR h t -> h t
 fif fr = itf . compI $ fr
 
 fif_gib1i = compR (testgib1 ())       -- 8
 fif_gib1r = compR (fif (testgib1 ())) -- 8
 
+-- Using a different final interpreter
+fif_gibl1i = compL (testgib1 ())       -- 23
+fif_gibl1r = compL (fif (testgib1 ())) -- 23
