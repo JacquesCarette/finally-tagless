@@ -40,7 +40,7 @@ incope.ml	        Tagless typed interpreters, compilers,
 
 	In Haskell:
 
-incope.hs		Tagless typed interpreters, (byte) compilers,
+Incope.hs		Tagless typed interpreters, (byte) compilers,
 			partial evaluator, HOAS bytecode compiler,
 			various self-interpreters.
 			Byte-compilers use GADT to emulate safe
@@ -55,5 +55,5 @@ incope1.hs		Tagless interpreter, compiler, partial evaluator.
 
 
 
-Last updated: September 2007.
+Last updated: November 2007.
 
