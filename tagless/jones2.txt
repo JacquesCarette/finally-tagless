@@ -1,0 +1,70 @@
+Dear Professor Jones,
+
+        It was informative and insightful to talk to you at POPL about
+optimality. It is fortuitous that our conversation followed the PEPM08
+talk by Feigin and Mycroft about the optimality of virtual machine
+monitors. Although their paper had no implementation, they introduce
+an extensional framework for optimality of interpreters, generalizing
+your earlier work. We seek your opinion on their framework and a slight
+extension of it described at the end of this message. Our interest is to
+argue not just intensionally but also extensionally that our `tagless
+final' approach to typed interpretation and PE is optimal, without
+needing a full self-interpreter.
+
+        As you requested, here is a brief summary of our tagless
+final approach (which was presented at APLAS 2007). We want to write
+evaluators, PEs, and program transformers for a typed object language
+in a typed metalanguage. As you observed in our conversation, although
+types are a static discipline, they may affect performance: the
+naive way of getting an interpreter to type in a metalanguage requires
+introducing a Universal type and the corresponding type-tag matching
+at run-time (which would not be needed to interpret an object program
+directly). Performance thus suffers. The desire to eliminate such tag
+matching has been used to motivate typing complexities such as dependent
+types and generalized algebraic datatypes (GADTs). In contrast, by
+encoding terms using ordinary functions rather than data constructors,
+we achieve a tagless interpreter of a typed object language in a
+metalanguage with a very simple type system. For example, we encode the
+object term (incrementing 3)
+    (\x -> x + 1) 3
+as the metalanguage term
+    app (lam (\x -> add x (int 1))) (int 3)
+The interpreter uses no Universal type, and it is obvious to the
+compiler that non-termination can only result from interpreting the
+fixpoint combinator /fix/. If the source language is strongly normalizing,
+our interpreter is total. Our actual source language is higher-order
+and contains fix and primitive integer operations, enough to express
+Fibonacci, factorial, and power. We can add mutable state as well.
+
+The term `constructor' functions "lam", "app", etc. above look like free
+variables in the encoding of an object term. Defining these functions in
+different ways gives rise to different evaluators, staged interpreters,
+CPS transformers and even a partial evaluator that outputs tagless code.
+We have implemented the above in both (Meta)OCaml and Haskell: with the
+help of the ML module system or Haskell 98 type classes, we are able to
+abstract over the interpreters.
+
+Our approach makes it easy to write a tagless interpreter when the
+object language is a subset of the metalanguage, but it is tricky when
+the object language is exactly the same as the metalanguage, due to
+a need for polymorphism. We are very interested therefore in how to
+extensionally define optimality in terms of a metacircular interpreter
+that is not a full self-interpreter.
+
+It seems to us that a slight extension of Feigin and Mycroft's approach
+might be able to answer the question. Their paper argues that a
+specializer /mix/ is optimal if there is a self-interpreter /sint/ so that
+for any object program p and any dynamic input d
+    T([[mix]](sint,p);d) <= T(p;d)
+where T(p;d) is the trace of executing p on the dynamic input d and
+<= is the trace inclusion (or, `simulated by') relation. What if the
+program p is written in a subset of the language used to write sint (and
+mix)? That is, suppose we have a language L. Let p be a program written
+in a subset L' of L. Let /eint/ be a compiler from L' to L. Can we claim
+then that eint is optimal if
+    T(eint[p];d) <= T(p;d)
+for all dynamic inputs d?
+
+Thank you,
+Jacques Carette, Oleg Kiselyov and Chung-chieh Shan
+
