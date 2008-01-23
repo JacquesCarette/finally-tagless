@@ -1,0 +1,313 @@
+Ms. Ref. No.:  SCICO-D-07-00043
+Title: Multi-stage programming with functors and monads:
+eliminating abstraction overhead from generic code
+Science of Computer Programming
+
+Dear Jacques Carette,
+
+I'm happy to let your know the guest editor accepted your paper under the
+condition of a minor revision. For your guidance, reviewers' comments are
+appended below.
+
+You don't have to submit a list of changes or a rebuttal against each point which is being raised when you submit the revised manuscript. However, if there are issues you want to return to the referees, feel free to do so.
+
+To submit a revision, please go to http://ees.elsevier.com/scico/ and login as an Author. 
+Your username is: carette
+Your password is: carette2462 
+On your Main Menu page is a folder entitled "Submissions Needing Revision". You
+will find your submission record there. 
+
+Yours sincerely,
+
+Bas van Vlijmen
+on behalf of J. Bergstra
+Editor-in-Chief
+Science of Computer Programming
+
+Reviewers' comments:
+
+Guest Editors:
+
+Please take the comments of the reviewers into account when preparing your
+final revision.
+
+
+Reviewer #1: The aim of multi-stage programming is to support programming
+abstractions without paying an extra runtime cost. Ideally, the programmer
+should be able to easily transform a generic program into a program generator,
+and the generator should produce efficient code where the abstractions have
+been eliminated. Unfortunately this is ideal is very hard to achieve in
+realistic applications, and the generator has to be written in a substantially
+different way in order to obtain the desired result. Typically, the generator
+writer uses techniques such as CPS transformations, which are very cumbersome
+to compose. In addition, some applications provide highly configurable
+algorithms, whose behaviour changes significantly depending on some initial
+parameters. Numeric algorithms, such as the running example presented in the
+paper, are typical examples, where parameters may include the numerical domain,
+the internal representation, and several implementation policies. The challenge
+is to produce a single generator, even when there are complex dependencies
+between the parameters of the application.
+
+This paper presents a thorough case study of the LU algorithms found in the
+implementation of Maple's package for Gaussian elimination. The first
+contribution is a careful analysis of several aspects involved in the LU
+algorithms, and their inter-dependencies, which affect the design choices in
+the rest of the paper. The second contribution is the use of monadic
+programming to encapsulate the details of several program transformations, such
+as CPS and generation of new names, while keeping the source code of the
+generator compact and understandable. The third contribution is to use the ML
+module system to parameterize the generator with respect to distinct aspects,
+such as the choice of the numerical domain, or the internal representation of
+the determinant. An added benefit of this choice is that domain specific
+constraints (which choices of aspects are compatible) can be encoded as
+constraints on the modules, and therefore are checked before code generation.
+
+The paper is written in a very clear style. I particularly enjoyed how the
+reader is taken step by step trough the whole process of analysis, design and
+implementation of an impressive application of multi-staged programming. An
+interesting paper for the expert as well as the novice.
+
+
+Detailed comments follow
+
+p.2 "Other problems is" --> "Other problems are"
+
+p.2 "bear as semblance" --> "bear resemblance"
+
+p.3 "our contributions:" --> "our contributions are:"
+
+p.15 module Idx is not terminated by "end"
+
+p.28 "described a combination" --> "described as a combination"
+
+p.28 "between information is inevitable" --> "between information are
+inevitable"
+
+references: [23,35] show latex command \url
+
+Reviewer #2: Summary of the submission:
+The paper describes using multi-stage programming combined with functors to
+create clear, expressive and modular code generators for scientific computing.
+Section 1 introduces the abstraction/performance problem in the context of LU
+decomposition and lists various generative programming approaches with their
+associated pros and cons. Section 2 describes how the family of LU
+decomposition algorithms can be considered along different aspects. Section 3
+describes multi-stage programming in MetaOCaml, monads and CPS. Section 4
+describes implementing various aspects (domain, container, determinant and
+output) of the LU decomposition algorithm family and is the main content of the
+paper. Related work and conclusion follows.
+
+The main contribution of this paper is the combination of multi-stage
+programming and functors to address the abstraction/performance problem in a
+complex domain such as numerical computing. This is a significant contribution
+for numerical computing because algorithms in this area can be easily
+generalized through abstraction but must execute with maximum performance,
+leading to many practical difficulties when writing software in this area. This
+paper helps relieve these difficulties. The paper's contribution is also
+significant from a programming language perspective as the combination of MSP
+and functors is novel and interesting and it explores in depth how these
+features work together to build abstractions that have not been programmed
+before. Functors are employed in a novel and elegant way to provide much-needed
+high-level structure to multi-stage code. Previously there was no known
+satisfying and general way to structure multi-stage code at a high level. The
+paper is relevant to the journal. I recommend this paper for publication with
+some minor changes outlined below.
+
+Analysis of the submission:
+p2, line 1, For an introduction paragraph this could be clearer and stronger.
+What are the "aspects of linear algebra"? How are they addressed and by what?
+(I know they are explained later on.) Why is "may" emphasized?
+
+p2, line 6, LU decomposition is a particular case of Gaussian Elimination, not
+vice-versa
+
+p2, line 10, this paper doesn't not discuss hardware-architecture-specific
+optimization, in fact native code generation seems beyond the scope of this
+paper, I think all you want to say is that generative programming allows the
+programmer to express domain-specific optimizations
+
+p2, line -17, "Other problems is..." -> "Other problems are..."
+
+p3, line 21, "and" -> "for"?
+
+p4, line 15, "programmings" -> "programming"
+
+p5, line -1, "software" -> "software."
+
+p4, "The design space", this decomposition of the design space is very
+interesting and an important result, but it would be good if this section was
+more compact. E.g., maybe present the aspects in their groups straight up
+instead of two lists.
+
+p9, line -1, "etc" -> "etc."
+
+p10, Figure 1, you haven't explained what "perform" means yet
+
+p10, line 9, "et cetera" -> "etc."
+
+p10,-9, "generation, we" -> "generation we", "variable, environment" ->
+"variable for environment", "classifier" -> "classifiers"
+
+p10, the type variable 'p and its constraint: could you explain the problem
+with classifiers in more detail? if the type was "type ('s, 'w, 'v) monad"
+what's wrong with having types like "('a state, 'w, ('a, 'v) code) monad"?
+
+p10, Figure 1, I don't follow the intuition behind naming the operation "retN";
+I don't see how the operation is similar to ordinary monadic "ret", or what the
+"N" means; wouldn't a name like "letM" be better?
+
+p10, Figure 1, showing the type of "retN" and maybe some other values would be
+helpful
+
+p14, line 4, don't you want to assert that "ZpMake" is a "DOMAIN" as was done
+for "IntegerDomain"?
+
+p15, line 9, "We" -> "we"
+
+p15, shouldn't the code here appear as the "code type" implementation of an
+"abstract code" module?
+
+p15, missing "end" in "Idx" module
+
+p15, line -2, "twice" -> "in two ways", "twice" suggests they are lifted twice
+in series
+
+p15, what are "Logic" and "Idx" used for?
+
+p16, what is the point of the "S" module? why can't "DOMAINL" be parameterized
+by "T" (containing "rep") directly?
+
+p16, Section 4.2, none of the abstract code combinators were used in the second
+half of this section: was the first half necessary? what is the relationship
+between these two halves that warrants them being in the same subsection?
+
+p16, Section 4.2, I understand the purposes of abstracting code representation.
+Additionally it adds to the genericity of the code generator, which is good,
+but doesn't incur any abstraction overhead, which is also good. However for the
+purposes of this paper it is perhaps an abstraction too far: the paper never
+needs to generate anything other than MetaOCaml code and it increases the
+complexity of code snippets. Mentioning that you do abstract code
+representation in the real implementation but elide it for the paper might make
+the paper more succinct and clearer.
+
+p16, line -5, first state what a "container" is used for
+
+p17, line 4, where does the identifier "rep" come from in this code?
+
+p17, line 4, what is the design decision for making "Dom" a definition inside
+"CONTAINER2D" instead of a parameter of "CONTAINER2D"? For readers not familiar
+with the OCaml module system it might be helpful to provide a brief
+introduction somewhere.
+
+p17, line -12, now in the module implementation "Dom" is made functor
+parameter, why? and why can you just replace "rep" with "code"?
+
+p17, line -2, what accompanying code?
+
+p18, line 4, what is the "decl" function?
+
+p18, although most readers are probably familiar with simple LU decomposition,
+a brief overview that shows how determinant and rank are computed in the
+algorithm with an unstaged code example showing the state needed for tracking
+would be helpful to demonstrate the problems stated here
+
+p18, line -8, this paragraph is unclear
+
+p19, showing the types of these functions would be helpful
+
+p19, line -3, what is the "DETERMINANT" module? it hasn't been introduced yet
+
+p19, line -2, why do you need to track the determinant for integer matrices
+
+p20, line 5, "e.g., a piece of code...": the type of "lstate" depends on the
+implementation and neither of the implementations shown set "lstate" to "v
+ref".
+
+p20, line 23, what is "Det"?
+
+p20, what are "cmonad" and "omonad"?
+
+p20, what is "classif" used for? initially I thought it meant "class if", but I
+just worked out it means "classifier", so this relates to an earlier comment,
+so I think it is important you explain in detail why you need to put the
+classifier in this object.
+
+p20, shouldn't there be an "answer" method in the state objects?
+
+p21, line 3, what is "abstract" and where does it come from?
+
+p21, the "unitL" in "decl" is superfluous, right? "mo_extend" will already
+return a monadic unit result
+
+p21, provide a comment for "dsdecl"
+
+p21, keep the names of the sign and magnitude(?) state consistent across
+"decl", "upd_sign" and "fin"; also keep the code to retrieve the sign and
+magnitude state consistent across "upd_sign" and "fin"
+
+p20, what do "acc", "get", "set" do?
+
+p21, what is "wmatrix"? shouldn't this be an instance of "CONTAINER2D"?
+
+p21, "(...,res) monad" what does "..." mean?
+
+p22, line 15, "Det" -> "DETERMINANT"
+
+p23, what does "GenLA" do?
+
+p23, "off-shoring": give relevant citation
+
+p23, it would be nice to see the module signatures for the other features not
+discussed thus far
+
+p24, "module O = F.Output(F)" the functor "Output" takes a "OUTPUTDEP" not a
+"FEATURES", right?
+
+p24, missing "perform" in "init"
+
+p26, line -4, "Object-Oriented language" -> "object-oriented languages"
+
+Two larger changes I suggest are restructuring section 4 and performing
+stronger evaluation of the work.
+
+Restructuring section 4
+The subsections of section 4 are rather random and disjoint. There needs to be
+a more cohesive plan about what is going on in this section. Better yet a
+concrete example that gets built upon in each subsection and motivates the
+subsection's functionality. Sections 4.1, 4.3, 4.5, 4.6 seem to be about
+defining modules for particular aspects. Part of Section 4.2 seems superfluous
+from the comment above. The "DOMAIN" module seems superfluous too: you never
+need to do real operations on values, but only generate code for operations on
+values. Hence "DOMAINL" is what you need and "DOMAIN" is not needed. Also I
+don't think "CONTAINER2D" is ever seen again after being introduced in Section
+4.2 -- this seems troubling. Section 4.4 is about programming in OCaml and how
+to maintain the algorithm's state. Section 4.7 is about putting it all
+together.
+
+From my understanding of your work here is an idea to make your paper more
+precise and concise.
+- Move Section 4.4 into Section 3 because that section seems to deal with
+  low-level programming issues.
+- In the intro of Section 4 make a link to the list in Section 2 and say your
+  going to pick some of those aspects and explain how they are implemented -
+  one per subsection.
+- Delete the first half of 4.2.
+- Combine 4.1 with the second half of 4.2, dropping the use of "DOMAIN" and
+  just do everything in terms of "DOMAINL".
+- Sections 4.3, 4.5, 4.6 then become Sections 4.2, 4.3, 4.4.
+- Section 4.7 could be the last subsection of 4 or a new whole section with more detail.
+
+Strengthening evaluation
+I understand that program generators are complex programs, that explaining them
+can be difficult and that providing concise and meaningful code snippets about
+them can also be hard. Nevertheless a good paper on programming program
+generators needs to do these things. At the end of your paper I thought you had
+laid down all the pieces of the machinery well, but I didn't have much of a
+sense of how the machine runs. So I kind of have to take your word that
+everything works, especially since the code on p24-5 is not explained in detail
+and the appendix code is not readable (by itself it's not very convincing: how
+can I tell this code demonstrates something good?). In general, and this would
+strengthen the merit of the paper, code snippets need to be explained better -
+too often I see a new identifier in the code that is not explained.
+
+Showing and explaining the code for the unstaged algorithm might help and would give a point of reference to compare the generated code with. Explaining the generated code could also be helpful, but maybe too hard. Maybe it would be possible to focus on one or more small areas of the algorithm and show: this is what the area looks like in unstaged program, this is the part of the code generator responsible for producing code for this area, and this is the area in the generated code. Something like this would give the reader a greater understanding of how logic flows through your generation process and how your functor technique is ultimately in control of fine-grained details of code building. 
