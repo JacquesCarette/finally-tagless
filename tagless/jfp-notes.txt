@@ -1,0 +1,518 @@
+I think we should keep our notes separate from the original JFP reviews.
+Probably the best thing is to start these 'notes' here from the reviews,
+but keep annotating these until we are happy with the results.  From this
+we should also be able to generate the response to the editor on what we
+did.  So right now, I will 'dump' the original reviews in here, and expect
+that this file will get edited lots -- but we'll always be able to refer to
+the original reviewer's text in jfp-reviews.txt.
+
+Jacques
+
+==========================================================================
+
+
+I am the JFP editor dealing with your paper.  Three referees all agree that
+your paper merits publication, and includes some excellent material, but it
+does need revision.  Due to an unusual combination of circumstances, one
+referee has only been able to send a brief indication of their view, but they
+endorse the comments of the other referees. Rather than wait any longer, I
+attach comments from the two full reports.  Please revise your paper as soon as
+you can, and re-submit it directly to me, indicating how you have addressed the
+referees' comments.
+
+Regards,
+Colin Runciman
+
+
+
+REPORT FROM REFEREE #1
+
+SUMMARY
+
+The paper is a good read with
+interesting ideas and a very concrete approach.
+It  shows that the terms of a typed object language can be
+represented and manipulated (interpreted, analysed, transformed)
+without tagging overhead using modern typed meta languages such as
+Haskell and OCaml/MetaOCaml.  Until now this was believed to be
+impossible, but this paper shows that by using (Haskell) constructor
+classes, or OCaml functors and record types, in addition to the core
+Hindley-Milner polymorphic types of these languages, such a
+representation is indeed possible.
+
+SCOPE AND INTEREST
+
+The paper is within the scope of JFP and should be interesting to many
+readers.  It is clearly written, of reasonable length, and highly
+constructive with the full source code for the paper's constructions
+available online.  Moreover, the submission is nearly free of
+misprints and other problems.
+
+OVERALL COMMENTS
+
+The main shortcoming of the paper is the lack of discussion of which
+features of the meta languages are essential for typed and tag-less
+term representation.  For instance, it seems to be important that one
+can abstract over a signature (a type and its operations), whether
+done using Haskell constructor classes or OCaml signatures and
+functors.  But is this just an accidental feature of this technique,
+or essential to solving the problem?  However, the paper is worthwhile
+as is, also without a definite answer to this question.
+
+In any case the paper should present, early on, what features of the
+meta languages (Haskell and OCaml) are used, and discuss to what
+extent similar encodings would be possible in Standard ML (using only
+signatures, functors and the core type system as defined by Milner et
+al 1997).
+
+Also, the paper should discuss up front what is lost when using this
+encoding.  For instance, could it happen that an existing well-formed
+term (written as an OCaml functor, say) will become ill-typed or may
+have to be rewritten when the object language (the functor argument)
+is extended with new syntactic constructs?  Or will such existing
+terms be oblivious to pure extensions?
+
+DETAILED COMMENTS
+
+Page 4 line -5: Is there some underlining or other part of the OCaml
+error message missing?  One has to read further to see that "this
+expression" refers to the argument "()".
+
+Page 5 line -8: The "d" in "typed-preserving interpretation" looks
+like a misprint.
+
+Page 8 fig 2: The "as" in types is a pure abbreviatory device I
+suppose, but not one I'm familiar with.  Maybe mention it in the text.
+
+Page 10: "Inserting brackets and escapes appropriately" is a little
+too glib.  You should say what assumptions it must be "appropriate"
+for, such as the term structure being static but the values of
+arguments and variables being dynamic.
+
+Page 12: Please give mnemonic help to the constructor names "S0" and
+"E0".
+
+Torben Mogensen was the first to use a dual representation of terms
+and values (in his HOAS-based self-interpreter for the untyped lambda
+calculus, JFP ca 1994).
+
+Page 12 line -1: "is always present" --> "is always available".  Avoid
+"present" in a context that's full of temporal references.
+
+Page 14: In the definition of "abstr" maybe use C.int, C.bool and so
+on to indicate where these terms come from.
+
+Page 16 bottom and page 17 top: Rephrase to "that is, whenever the
+argument is static, it unfolds fix rather than residualize it".
+
+Page 17: Introduce the abbreviation CPS somewhere.
+
+Some people would say that Haskell has call-by-need rather than
+call-by-name.
+
+Page 18: "Happily" --> "Luckily"
+
+Here the OCaml higher-rank record types seem to play an essential
+role.  This raises the question whether the same encoding could be
+made in Standard ML (as defined by the Milner et al book 1997)?  This
+question must be answered in the paper.
+
+Page 19: "whether it is an evaluator" --> "whether or not it is an
+evaluator"
+
+Page 20: "To save space" -- this must refer to the paper, not the
+computer, so better say "For brevity".  
+
+Also, say whether the additional phantom type parameter to repr causes
+any real problems (other than verbosity).
+
+Page 21: Put a pair of parentheses in "case !state of ... + !state" to
+make its parsing unambiguous.
+
+Page 23 line 1: "object terms e" --> "object term e"
+
+Page 25: The discussion of context, holes and plugging should be made
+clearer and more concrete, using a tiny example if possible.  For
+instance, the statement that "context is a euphemism for a polymorphic
+argument" is puzzling, since a context can also be seen as a function
+from term to term, with the context's hole being the argument.  So the
+reader wonders whether you or he has misunderstood something or
+whether you are proposing a reinterpretation of contexts (as I think
+you are).
+
+Page 26 line -2: I don't think there is an universally agreed
+distinction between "metacircular interpreter" and "self-interpreter",
+so this statement requires some clarification.
+
+Page 28 section 8 line -3: This is the paper's first mention of
+primitive recursion.  This should be discussed much earlier, when the
+term representation is introduced.  Also, it is unclear what would be
+gained by a non-primitive recursive term representation.
+
+
+
+
+REPORT FROM REFEREE #2
+
+SUMMARY
+
+The authors propose a way to express tagless interpretation in a
+Hindley-Milner-typed metalanguage. They parametrize this
+interpretation by exploiting the OCaml module system and thus
+demonstrate to achieve different styles of interpretation:
+compilation, partial evaluation, cps transformation.
+They also show that a similar parametrization can be achieved with
+Haskell's class system. They express self-interpretation via
+context-filling and claim to achieve Jones-optimal partial evaluation
+in this way.
+
+OVERALL EVALUATION
+
+The authors have picked up ideas that were lying around for a long
+time and have put them together in an original way. A very short way
+of summarizing the paper would be that it proposes a way to write a
+typed fold function over a typed term.
+
+The main contribution of the paper is the realization that the OCaml
+module system as well as Haskell's class system can be used to
+parametrize the semantics of a particular style of syntax encoding for
+lambda terms. The demonstration of this contribution is done
+meticulously and convincingly.
+
+The main weakness of the paper its sloppiness with respect to any
+formal claim. Several propositions are stated without offering any
+proof. Only a few of them have obviously trivial proofs, but for some
+of them I don't have a good idea of how to formalize these claims
+properly, let alone how to prove them. 
+
+The rapid change between OCaml and Haskell is not always helpful. It
+would be better to stick to one formulation throughout the paper
+and explain the other e.g. in an appendix.
+
+As it stands, the paper is not sufficiently focused and the main
+contribution is sometimes drowned in distracting details. Some of the
+"historical context" is also missing in the present submission and
+should be added. Furthermore, some technical sloppiness should be
+tightened up.
+
+DETAILS
+
+The main ideas in the paper date back a long time. I believe they can
+be found in more or less diluted form in
+
+  author =       "Carsten Kehler Holst",
+  title =        "Language Triplets: The {AMIX} Approach",
+  YEAR = 1988,
+  pages =        "167-186",
+  BOOKTITLE = {Partial Evaluation and Mixed Computation},
+  EDITOR = {Dines Bj{\o}rner and Andrei P. Ershov and Neil D. Jones},
+  PUBLISHER = {North-Holland},
+  ADDRESS = {Amsterdam},
+
+The idea that terms can either be encoded by data types or by
+higher-order functions (in an executable way) is also due to Reynolds
+(might also be in his other 1974 paper):
+
+  author =       "John C. Reynolds",
+  title =        "On the Relation between Direct and Continuation Semantics",
+  editor =       "Jacques Loeckx",
+  volume =       14,
+  series =       LNCS,
+  pages =        "141-156",
+  booktitle =    "2nd Coloquium on Automata, Languages and Programming",
+  year =         1974,
+
+Then there is the typed version of the (Thiemann 1996) paper that you
+are citing. It presents a typed partial evaluator encoded exactly like
+your interpreters and pe functions, but for offline partial
+evaluation. It does not make use of the module system and hence does
+not parametrize over different semantics.
+
+  author = 	 {Peter Thiemann},
+  title = 	 {Combinators for Program Generation},
+  journal = 	 jfp,
+  year = 	 1999,
+  volume =	 {9},
+  number =	 {5},
+  pages =	 {483-525},
+  month =	 sep
+
+There is also a Haskell version using type classes which appeared in
+some obscure place.
+
+  author =       "Peter Thiemann and Michael Sperber",
+  title =        "Program Generation With Class",
+  crossref =     "ATP1997",
+  pages =        "582--592"
+  booktitle =    "Proceedings Informatik'97",
+  editor =       "M. Jarke and K. Pasedach and K. Pohl",
+  year =         1997,
+  series =       "Reihe Informatik aktuell",
+  publisher =    "Springer-Verlag",
+  address =      "Aachen",
+  month =        sep,
+
+The idea to parametrize (abstract) semantics and express them in
+combinator style is due to Flemming Nielson:
+
+AUTHOR = "Flemming Nielson",
+TITLE  = "Strictness Analysis and Denotational Abstract Interpretation",
+journal = iandc,
+VOLUME = 76,
+YEAR = 1988, 
+PAGES  = "29--92"
+
+The idea of dual representation which is attributed to Asai also
+appears in 
+
+   author =       "Michael Sperber",
+   title =        "Self-Applicable Online Partial Evaluation",
+   pages =        "465-480"
+   BookTitle  = {Partial Evaluation},
+   Editor     = {Danvy, Olivier and Gl{\"u}ck, Robert and Thiemann, Peter},
+   Series     = lncs,
+   Publisher  = SP,
+   Number     = 1110,
+   month      = feb,
+   address    = {Schlo{\ss} Dagstuhl, Germany},
+   Year       = 1996
+
+p1, abstract
+    "no dependant types, ..."
+    I believe you want to say "no language extensions beyond the
+    published standards"
+
+p1, citation
+    The other Reynolds citation that emphasizes the duality between
+    first-order and higher-order term representations would be more
+    appropriate. 
+
+p2, section 1
+    The translation between the object language and its encoding
+    should be made explicit. I was very surprised when section 6
+    returned to the object notation without any explanation.
+
+p3, line -1
+    "the universal type solution is unsatisfactory because it does not
+    preserve typing" 
+    I don't understand this remark. The encoding certainly preserves
+    typing. But that typing does not reflect the type of the encoded
+    term. 
+
+p4, section 1.3
+    Clearly the encoding is monadic but you are not mentioning this
+    fact at all. I miss a discussion why an abstraction over a monad
+    would not be sufficient to achieve all you want to achieve.
+
+    It should also be discussed in what way the type system of the
+    metalanguage restricts the expressible type systems for the object
+    language.
+
+p5, section 1.4
+    "even call-by-name CPS"
+    Why is CBN more difficult or more complicated than CBV in this
+    context? 
+
+p6, "inference-preserving module system"
+    What's that?
+
+p7, proposition 1
+    This statement sounds fine on the surface, but how would you prove
+    it? What is the relation between object types and the types of
+    their encodings? How is the statement generalized to open terms
+    (as it would be necessary for a proof by induction)?
+
+p8, section 2.2
+    you are abstracting the interpreter over the term representation,
+    not the other way round (or I'm missing something).
+    "Each interpreter [is] ..."
+    -> [can be expressed as]
+
+p9, module R
+    You claim in the abstract that you are not using dependent
+    types. However, using the module system means that you are, in
+    fact, using dependent types, at least in a stylized way. Hence, as
+    it stands, the abstract is incorrect.
+
+    proposition 2
+    makes no distinction between meta types and object types
+
+    proposition 3
+    This is very fuzzy. I have no immediate intuition how to formalize
+    the statement of this proposition.
+
+p11, proposition 4
+     This is not formalized, but really obvious (unlike the
+     others). However, the mentioned properties of .~ and .< >. that
+     you rely on are tricky and non-obvious.
+
+p11, section 4
+     "Surprisingly ..."
+     Not that surprising in the light of Filinski's work on
+     normalization by evaluation.
+
+     It would be appropriate for you to state that you are after
+     online partial evaluation in this section and to briefly explain
+     what that means.
+
+p13, section 4.3
+     I do not understand the purpose of this section. 
+     * It leads to a dead end and clarifies nothing (for me).
+     * It rephrases known results.
+     * Its interpreter still involves tagging.
+     * It runs counter the advertizing in the abstract that no GADTS
+       are needed for the purposes of this paper.
+     Hence, I suggest that this subsection be removed.
+
+p15, section 4.4
+     "[that] is not portable"
+     -> [this section]
+
+     "R, L, and C [above]"
+     use exact references to numbered entities instead of vague
+     phrases like "above"
+
+     btw, I do not find these names R, L, and C very intuitive or
+     readable. 
+
+p16, "the type equation for repr_pe above"
+     * "above" is fuzzy
+     * it expresses the data definition, but not the type function
+
+     The optimizing online pe is completely besides the point of this
+     work and obscures the code in Fig 5. 
+
+     Also, online pe is intrinsically tagged so offline pe would
+     provide a better demonstration.
+
+p17, "how much to unfold"
+     The original source for this result is 
+
+  author =       {Neil D. Jones and Peter Sestoft and Harald S?ndergaard},
+  title =        "Mix: A Self-applicable Partial Evaluator for
+  Experiments in Compiler Generation",
+  journal =      lasc,
+  year =         1989,
+  volume =       2,
+  number =       1,
+  pages =        "9-50",
+
+      "let insertion"
+      The original source for this result is
+
+        AUTHOR = {Anders Bondorf and Olivier Danvy},
+        TITLE = {Automatic Autoprojection of Recursive Equations with Global Variables and Abstract Data Types},
+        JOURNAL = scp,
+        YEAR = 1991,
+        VOLUME = 16,
+        NUMBER = 2,
+        PAGES = {151-195}
+
+p17, "partial evaluation ... gives the desired result:"
+     But the good result is due to the extra cleverness put into the
+     implementation of 'add' and 'mul': without those, the result
+     would not be much different.
+
+p18, CPS interpretation
+     The cbv version is almost literally in the above-cited paper
+     (Thiemann 1999).
+
+     A few details of the representation should be discussed in the
+     paper. In particular, you should discuss why you cannot pull this
+     strategy off for a Plotkin-style CBV-CPS interpreter (you need to
+     use Reynolds style as shown later in the paper, but without
+     explanation why it has to be this complicated). 
+
+     Actually, you can write a CBV-CPS interpreter which implements
+     lam f in exactly the same way as stated in the paper by extending
+     the Symantics signature accordingly.
+
+p19, starting with CPST
+     It's nice to see that you can unify all these transformations
+     under one signature, but is this still a natural way of dealing
+     with the transformations? It seems to me like each transformation
+     needs its specific type infrastructure. To me, the interesting
+     question here is, where does this specialization stop? Which
+     features are needed to obtain a "fixpoint"?
+
+p20, section 5.3
+     This feels like a hack to me. Why can't you write everything in
+     monadic style and then plug in a state monad when needed?
+
+     If you do something specialized for state, then a polymorphic
+     treatment of reference operators would be more convincing to me!
+
+p21, lapp is monadic let!
+     It's only needed to drive the CPS transformation. 
+     Its presence should be explained like that.
+
+     Why is the ... result type in RCPS needed?
+
+p22, section 6
+     I was confused by the switch in syntax (which makes sense once
+     you think about it). Some comments in the text as to why you
+     switch notation  would make it easier to your readers.
+     
+     "optimal with respect to si"
+     Why the change in typeface? Is this another SI?
+
+p23, line 1
+     "each object term[s] ..."
+     "definitions [above]" more precision
+     "evaluator [above]"   more precision
+
+p24, "pre-encoding of a let-"
+     Why not encode a let as a function like any other syntax
+     constructor? It is a bit counter-intuitive that you don't encode
+     it as "let 'e1' (\x. 'e2')"
+
+     To me, using the contexts and context plugging is changing the
+     problem: The problem statement says "apply the SI".
+     The really interesting question is whcih feature set is needed to
+     obtain an SI without changing the question.
+
+p25, proposition 5
+     proof?
+
+     "Our partial evaluator ..."
+     should start on a new line.
+
+     proposition 6
+     It is immediate that PE (SI['e']) is observationally equivalent
+     to PE(e), but I do not see how you prove that they are
+     alpha-equivalent.
+
+p25, section 6.3
+     The second paragraph contains rather haphazard statements. These
+     statements need to be properly formulated and require proof. It
+     is not enough to just throw in a few provocative statements:
+     proof is needed!
+
+     "tag elimination"
+     This term has been invented and first implemented by Henning Makholm:
+
+  author =       "Henning Makholm",
+  year =         "2000",
+  title =        "On {Jones}-Optimal Specialization for Strongly Typed
+                 Languages",
+  booktitle =    "Semantics, Applications and Implementation of Program
+                 Generation",
+  editor =       "Walid Taha",
+  publisher =    "Springer-Verlag",
+  address =      "Montreal, Canada",
+  series =       "Lecture Notes In Computer Science",
+  volume =       "1924",
+  pages =        "129--148",
+  month =        "20 " # sep,
+
+p26, "Put another way, we manual[ly] apply ..."
+
+p28, line 3, "include[s]"
+
+     "This shift also underlies ..."
+     I don't see the connection to the present work.
+
+     "higher-kind polymorphism"
+     Where is that needed in the present work?
+
+
