@@ -157,7 +157,7 @@ generated code is well-formed. This is a challenge in string-based
 generation systems, which generally do not offer any guarantees and
 therefore make it very difficult to determine which part of the
 generator is at fault when the generated code cannot be parsed. Other
-problems is preventing accidental variable capture (so-called hygiene
+problems are preventing accidental variable capture (so-called hygiene
 \cite{HygienicMacros}) and ensuring the generated code is
 well-typed. Lisp-style macros, Scheme hygienic macros, the camlp4
 preprocessor \cite{camlp4}, C++ template meta-programming, and Template
@@ -170,7 +170,7 @@ the generated code \cite{TahaSheard97,TahaThesis}.
 But more difficult problems remain. Is the generated code optimal? Do
 we still need post-processing to eliminate common subexpressions,
 fold constants, and remove redundant bindings? Is the generator readable?
-Does it bear as semblance to the original algorithm? Is the generator
+Does it bear resemblance to the original algorithm? Is the generator
 extensible? Are the aspects truly modular? Can we add another aspect to it or
 another instance of the existing aspect without affecting the existing ones?
 Finally, can we express domain-specific knowledge (for instance one should not
@@ -215,7 +215,7 @@ In this paper, we report on our continued progress \cite{CaretteKiselyov05}
 in using code generation for scientific (both numeric and symbolic)
 software.  We will use the algorithm family of LU decomposition 
 and linear system solving as our running examples to demonstrate our
-techniques.  Specifically, our contributions:
+techniques.  Specifically, our contributions are:
 \begin{itemize}
     \item Extending a let-insertion, memoizing monad of
       \cite{KiselyovTaha,MSP:PADL04} for generating control structures
@@ -258,7 +258,7 @@ LU decomposition algorithm family as separate
 modules.  We discuss related work in
 Section~\ref{related} and outline future work. In our
 conclusion (Section~\ref{conclusion}) we comment
-on programmings with aspects and sum up our guiding methodology.
+on programming with aspects and sum up our guiding methodology.
 Appendices give samples of the generated code, available in
 full at \cite{metamonadsURL}.
 
@@ -950,6 +950,7 @@ module Idx = struct
   let succ a = .< .~a + 1 >.  and  pred a = .< .~a - 1 >.
   let less a b = .< .~a < .~b >.
   let uminus a = .< - .~a >.  and  add a b = .< .~a + .~b >.
+end
 
 let update a f = let b = f (liftGet a) in .< .~a := .~b >.
 let assign a b = .< .~a := .~b >.
@@ -1664,7 +1665,7 @@ entities can be directly encoded in machine-checkable form.
 
 \subsection{Methodology}
 
-Our overall approach can best be described a combination 
+Our overall approach can best be described as a combination 
 of two approaches: hand-writing a code generator (cogen) suitable
 for multi-level specialization \cite{Gluck95,GluckJ97} and creating
 an embedded domain-specific language (EDSL) \cite{edsl,WhenHowDSL}.
@@ -1717,7 +1718,8 @@ it is still a difficult design problem to properly encode this information.
 One important item is to try to keep the various pieces of generation-time
 information as orthogonal as possible.  This is unlike ordinary encodings
 of run-time information, where compression and elision frequently lead
-to increased efficiency.  Whenever dependencies between information is
+to increased efficiency.  Whenever dependency between various bits of
+information is
 inevitable, then higher-order encodings should be sought.  When choices
 need to be made based on some (static) information, it is important to
 encode this information by using semantic concepts.
@@ -1867,8 +1869,7 @@ J.~Carette, O.~Kiselyov, Multi-stage programming with {F}unctors and {M}onads:
 J.~L. Eckhardt, R.~Kaiabachev, K.~N. Swadi, W.~Taha, O.~Kiselyov, Practical
   aspects of multi-stage programming, rice University Techical Report
   {TR05}-451,
-  \url{http://www.cs.rice.edu/~taha/publications/preprints/2004-02-16.pdf}
-  (Feb. 2004).
+  \url{http://www.cs.rice.edu/~taha/publications/preprints/2004-02-16.pdf}.
 
 \bibitem{metamonadsURL}
 {Source code}, \url{http://www.cas.mcmaster.ca/~carette/metamonads/}.

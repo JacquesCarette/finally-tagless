@@ -1,38 +1,9 @@
-Ms. Ref. No.:  SCICO-D-07-00043
-Title: Multi-stage programming with functors and monads:
-eliminating abstraction overhead from generic code
-Science of Computer Programming
+[Below the === line, everything has been taken care of; all reviewer comments
+which do not need any actions have been deleted from here, see 'reviews.txt'
+for the original.  Otherwise, see embedded notes.  Repeated comments removed.]
 
-Dear Jacques Carette,
-
-I'm happy to let your know the guest editor accepted your paper under the
-condition of a minor revision. For your guidance, reviewers' comments are
-appended below.
-
-You don't have to submit a list of changes or a rebuttal against each point which is being raised when you submit the revised manuscript. However, if there are issues you want to return to the referees, feel free to do so.
-
-To submit a revision, please go to http://ees.elsevier.com/scico/ and login as an Author. 
-Your username is: carette
-Your password is: carette2462 
-On your Main Menu page is a folder entitled "Submissions Needing Revision". You
-will find your submission record there. 
-
-Yours sincerely,
-
-Bas van Vlijmen
-on behalf of J. Bergstra
-Editor-in-Chief
-Science of Computer Programming
-
-Reviewers' comments:
-
-Guest Editors:
-
-Please take the comments of the reviewers into account when preparing your
-final revision.
-
-
-Reviewer #1: The aim of multi-stage programming is to support programming
+Reviewer #1: 
+The aim of multi-stage programming is to support programming
 abstractions without paying an extra runtime cost. Ideally, the programmer
 should be able to easily transform a generic program into a program generator,
 and the generator should produce efficient code where the abstractions have
@@ -62,57 +33,13 @@ the determinant. An added benefit of this choice is that domain specific
 constraints (which choices of aspects are compatible) can be encoded as
 constraints on the modules, and therefore are checked before code generation.
 
-The paper is written in a very clear style. I particularly enjoyed how the
-reader is taken step by step trough the whole process of analysis, design and
-implementation of an impressive application of multi-staged programming. An
-interesting paper for the expert as well as the novice.
-
-
-Detailed comments follow
-
-p.2 "Other problems is" --> "Other problems are"
-
-p.2 "bear as semblance" --> "bear resemblance"
-
-p.3 "our contributions:" --> "our contributions are:"
-
-p.15 module Idx is not terminated by "end"
-
-p.28 "described a combination" --> "described as a combination"
-
-p.28 "between information is inevitable" --> "between information are
-inevitable"
+\jacques{the above summary is quite good - perhaps some of these words should
+be borrowed for the introduction/abstract of the paper itself!}
 
 references: [23,35] show latex command \url
+\jacques{the bibliography needs serious editing}
 
 Reviewer #2: Summary of the submission:
-The paper describes using multi-stage programming combined with functors to
-create clear, expressive and modular code generators for scientific computing.
-Section 1 introduces the abstraction/performance problem in the context of LU
-decomposition and lists various generative programming approaches with their
-associated pros and cons. Section 2 describes how the family of LU
-decomposition algorithms can be considered along different aspects. Section 3
-describes multi-stage programming in MetaOCaml, monads and CPS. Section 4
-describes implementing various aspects (domain, container, determinant and
-output) of the LU decomposition algorithm family and is the main content of the
-paper. Related work and conclusion follows.
-
-The main contribution of this paper is the combination of multi-stage
-programming and functors to address the abstraction/performance problem in a
-complex domain such as numerical computing. This is a significant contribution
-for numerical computing because algorithms in this area can be easily
-generalized through abstraction but must execute with maximum performance,
-leading to many practical difficulties when writing software in this area. This
-paper helps relieve these difficulties. The paper's contribution is also
-significant from a programming language perspective as the combination of MSP
-and functors is novel and interesting and it explores in depth how these
-features work together to build abstractions that have not been programmed
-before. Functors are employed in a novel and elegant way to provide much-needed
-high-level structure to multi-stage code. Previously there was no known
-satisfying and general way to structure multi-stage code at a high level. The
-paper is relevant to the journal. I recommend this paper for publication with
-some minor changes outlined below.
-
 Analysis of the submission:
 p2, line 1, For an introduction paragraph this could be clearer and stronger.
 What are the "aspects of linear algebra"? How are they addressed and by what?
@@ -125,8 +52,6 @@ p2, line 10, this paper doesn't not discuss hardware-architecture-specific
 optimization, in fact native code generation seems beyond the scope of this
 paper, I think all you want to say is that generative programming allows the
 programmer to express domain-specific optimizations
-
-p2, line -17, "Other problems is..." -> "Other problems are..."
 
 p3, line 21, "and" -> "for"?
 
@@ -166,8 +91,6 @@ p15, line 9, "We" -> "we"
 
 p15, shouldn't the code here appear as the "code type" implementation of an
 "abstract code" module?
-
-p15, missing "end" in "Idx" module
 
 p15, line -2, "twice" -> "in two ways", "twice" suggests they are lifted twice
 in series
@@ -310,4 +233,31 @@ can I tell this code demonstrates something good?). In general, and this would
 strengthen the merit of the paper, code snippets need to be explained better -
 too often I see a new identifier in the code that is not explained.
 
-Showing and explaining the code for the unstaged algorithm might help and would give a point of reference to compare the generated code with. Explaining the generated code could also be helpful, but maybe too hard. Maybe it would be possible to focus on one or more small areas of the algorithm and show: this is what the area looks like in unstaged program, this is the part of the code generator responsible for producing code for this area, and this is the area in the generated code. Something like this would give the reader a greater understanding of how logic flows through your generation process and how your functor technique is ultimately in control of fine-grained details of code building. 
+Showing and explaining the code for the unstaged algorithm might help and would
+give a point of reference to compare the generated code with. Explaining the
+generated code could also be helpful, but maybe too hard. Maybe it would be
+possible to focus on one or more small areas of the algorithm and show: this is
+what the area looks like in unstaged program, this is the part of the code
+generator responsible for producing code for this area, and this is the area in
+the generated code. Something like this would give the reader a greater
+understanding of how logic flows through your generation process and how your
+functor technique is ultimately in control of fine-grained details of code
+building. 
+
+==========================================================================
+From reviewer #1
+
+p.2 "Other problems is" --> "Other problems are"
+
+p.2 "bear as semblance" --> "bear resemblance"
+
+p.3 "our contributions:" --> "our contributions are:"
+
+p.15 module Idx is not terminated by "end"
+
+p.28 "described a combination" --> "described as a combination"
+
+p.28 "between information is inevitable" --> "between information are
+inevitable"
+
+From reviewer #2
