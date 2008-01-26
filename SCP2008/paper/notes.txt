@@ -70,7 +70,7 @@ I don't see how the operation is similar to ordinary monadic "ret", or what the
 consistency with Swadi et al papers, weher it was first introduced}
 
 p10, Figure 1, showing the type of "retN" and maybe some other values would be
-helpful
+helpful\oleg{done for retN}
 
 
 p15, line 9, "We" -> "we"
