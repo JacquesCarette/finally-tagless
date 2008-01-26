@@ -818,7 +818,7 @@ module GenGE(F : FEATURES) = struct
              cc <-- retN (liftGet c);
              let cp  = {rowpos=rr; colpos=cc} in
              let module Pivot = F.PivotF(F.Det)(IF.P) in
-             pivot <-- l1 retN (Pivot.findpivot mat cp);
+             pivot <-- bind (Pivot.findpivot mat cp) retN;
              seqM (matchM pivot (fun pv -> 
                       seqM (zerobelow mat {p=cp; curval=pv} )
                            (IF.R.succ ()) )
