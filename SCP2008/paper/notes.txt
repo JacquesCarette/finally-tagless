@@ -35,9 +35,7 @@ constraints on the modules, and therefore are checked before code generation.
 
 \jacques{the above summary is quite good - perhaps some of these words should
 be borrowed for the introduction/abstract of the paper itself!}
-
-references: [23,35] show latex command \url
-\jacques{the bibliography needs serious editing}
+\oleg{yes, I agree}
 
 Reviewer #2: Summary of the submission:
 Analysis of the submission:
@@ -47,6 +45,7 @@ What are the "aspects of linear algebra"? How are they addressed and by what?
 
 p2, line 6, LU decomposition is a particular case of Gaussian Elimination, not
 vice-versa
+\oleg{we need a specific reference here}
 
 p2, line 10, this paper doesn't not discuss hardware-architecture-specific
 optimization, in fact native code generation seems beyond the scope of this
@@ -178,7 +177,6 @@ p22, line 15, "Det" -> "DETERMINANT"
 
 p23, what does "GenLA" do?
 
-p23, "off-shoring": give relevant citation
 
 p23, it would be nice to see the module signatures for the other features not
 discussed thus far
@@ -261,3 +259,8 @@ p.28 "between information is inevitable" --> "between information are
 inevitable"
 
 From reviewer #2
+
+p23, "off-shoring": give relevant citation
+\oleg{btw, Walid spells offshoring without the hyphen}
+
+references: [23,35] show latex command \url

@@ -194,7 +194,7 @@ Therefore, in MetaOCaml, code must be generated just right (see
 \cite{TahaThesis} for many simple examples).  For more complex
 examples, new techniques are necessary, e.g., abstract interpretation
 \cite{KiselyovTaha}.  But more problems remain
-\cite{Padua:MetaOcaml:04}: generating binding forms (``names'')
+\cite{scp-CohenDGHKP06}: generating binding forms (``names'')
 when generating loop bodies or conditional branches, and making
 continuation-passing style (CPS) code clear.  Many authors
 understandably shy away from CPS code as it quickly becomes
@@ -218,7 +218,7 @@ and linear system solving as our running examples to demonstrate our
 techniques.  Specifically, our contributions are:
 \begin{itemize}
     \item Extending a let-insertion, memoizing monad of
-      \cite{KiselyovTaha,MSP:PADL04} for generating control structures
+      \cite{KiselyovTaha,SwadiMonadic06} for generating control structures
       such as loops and conditionals. The extension is non-trivial
 	  because of control dependencies and because let-insertion, as we argue,
 	  is a control effect on its own: for example
@@ -570,7 +570,7 @@ complete.
 
 The solution to this problem is to use continuation-passing style (CPS). Its
 benefits were first pointed out by \cite{Bondorf:92} in the context of partial
-evaluation, and extensively used by \cite{MSP:PADL04,KiselyovTaha} for
+evaluation, and extensively used by \cite{SwadiMonadic06,KiselyovTaha} for
 code generation. Like \cite{conf/pepm/BondorfD94}, we use this in the 
 context of writing a cogen by hand.  Now, |param_code2 plus one| gives us the
 desired code.
@@ -1386,7 +1386,7 @@ pivot, fraction-free update, operate on non-augmented matrix and
 return the |U| factor, determinant and the rank. We run the monad
 passing the initial state |[]| and obtain the code, which we can see
 by printing |resIV5|. The code can then be ``compiled'' as |!. resIV5|
-or with off-shoring. The code for |resIV5|
+or with offshoring\cite{offshoring}. The code for |resIV5|
 (App.~\ref{app:code-GenIV5}) shows full
 pivoting, determinant and rank tracking. The code for all these
 aspects is fully inlined; no extra functions are invoked and no tests
@@ -1523,7 +1523,7 @@ before |resIV5| is computed).
 \section{Related and future work}\label{related}
 
 The monad in this paper is similar to the one described in
-\cite{MSP:PADL04,KiselyovTaha}.  However those papers used only
+\cite{SwadiMonadic06,KiselyovTaha}.  However those papers used only
 |retN| and fixpoints (for generation-time iterations).  This paper
 does not involve monadic fixpoints because the generator is not
 recursive, but heavily relies on monadic operations for generating
@@ -1622,7 +1622,7 @@ aspect.
 There are many more aspects which can also be handled:
 error reporting (i.e. asking for the determinant of a 
 non-square matrix), memory hierarchy issues, loop-unrolling
-\cite{Padua:MetaOcaml:04},
+\cite{scp-CohenDGHKP06},
 warnings when zero-testing is undecidable and
 a value is only probabilistically non-zero, etc.
 
@@ -1731,250 +1731,14 @@ appreciated. The implementation of the monadic notation, |perform|,
 was joint work with Lydia van Dijk.
 
 % Embed .bbl file directly to make document self-contained
-% \bibliography{metamonads}
-% \bibliographystyle{elsart-num}
+\bibliography{metamonads}
+\bibliographystyle{elsart-num}
 
-\begin{thebibliography}{10}
-\expandafter\ifx\csname url\endcsname\relax
-  \def\url#1{\texttt{#1}}\fi
-\expandafter\ifx\csname urlprefix\endcsname\relax\def\urlprefix{URL }\fi
+%% \begin{thebibliography}{10}
+%% \expandafter\ifx\csname url\endcsname\relax
+%%   \def\url#1{\texttt{#1}}\fi
+%% \expandafter\ifx\csname urlprefix\endcsname\relax\def\urlprefix{URL }\fi
 
-\bibitem{Carette06}
-J.~Carette, Gaussian {E}limination: a case study in efficient genericity with
-  {MetaOCaml}, Science of Computer Programming 62~(1) (2006) 3--24, special
-  Issue on the First MetaOCaml Workshop 2004.
-
-\bibitem{Monagan:2001:M7P}
-M.~B. Monagan, K.~O. Geddes, K.~M. Heal, G.~Labahn, S.~M. Vorkoetter,
-  J.~McCarron, P.~DeMarco, Maple 7 Programming Guide, Waterloo Maple Inc.,
-  2001.
-
-\bibitem{Gruntz:1994:IG}
-D.~Gruntz, M.~Monagan, Introduction to {Gauss}, \textsc{SIGSAM Bulletin}:
-  Communications on Computer Algebra 28~(2) (1994) 3--19.
-
-\bibitem{Axiom}
-R.~D. Jenks, R.~S. Sutor, {AXIOM}: The Scientific Computation System, Springer
-  Verlag, 1992.
-
-\bibitem{Czarnecki}
-K.~Czarnecki, U.~W. Eisenecker, Generative programming: methods, tools, and
-  applications, ACM Press/Addison-Wesley Publishing Co., 2000.
-
-\bibitem{Veldhuizen:1998:ISCOPE}
-T.~L. Veldhuizen, Arrays in {Blitz++}, in: Proceedings of the 2nd International
-  Scientific Computing in Object-Oriented Parallel Environments (ISCOPE'98),
-  Lecture Notes in Computer Science, Springer-Verlag, 1998.
-
-\bibitem{musser89generic}
-D.~R. Musser, A.~A. Stepanov, Generic programming, in: {ISSAC 1988}:
-  Proceedings of the International Symposium on Symbolic and Algebraic
-  Computation, Vol. 358 of Lecture Notes in Computer Science, Springer-Verlag,
-  1989, pp. 13--25.
-
-\bibitem{musser94algorithmoriented}
-D.~R. Musser, A.~A. Stepanov, Algorithm-oriented generic libraries, Software -
-  Practice and Experience 24~(7) (1994) 623--642.
-
-\bibitem{BOOST}
-J.~Siek, L.-Q. Lee, A.~Lumsdaine, The Boost Graph Library: User Guide and
-  Reference Manual, Addison-Wesley, 2002.
-
-\bibitem{POOMA}
-I.~John V.W.~Reynders, J.~C. Cummings, The {POOMA} framework, Comput. Phys.
-  12~(5) (1998) 453--459.
-
-\bibitem{ATLAS}
-R.~C. Whaley, A.~Petitet, J.~J. Dongarra, Automated empirical optimization of
-  software and the {ATLAS} project, Parallel Computing 27~(1--2) (2001) 3--35.
-
-\bibitem{HygienicMacros}
-E.~E. Kohlbecker, D.~P. Friedman, M.~Felleisen, B.~F. Duba, Hygienic macro
-  expansion., in: LISP and Functional Programming, 1986, pp. 151--161.
-
-\bibitem{camlp4}
-D.~de~Rauglaudre, Camlp4 reference manual,
-  \url{http://caml.inria.fr/camlp4/manual/} (Jan. 2002).
-
-\bibitem{conf/dagstuhl/CzarneckiOST03}
-K.~Czarnecki, J.~T. O'Donnell, J.~Striegnitz, W.~Taha, {DSL} implementation in
-  {MetaOCaml}, {Template Haskell}, and {C++}., in: C.~Lengauer, D.~S. Batory,
-  C.~Consel, M.~Odersky (Eds.), Domain-Specific Program Generation, Vol. 3016
-  of Lecture Notes in Computer Science, Springer, 2003, pp. 51--72.
-
-\bibitem{CTHL03}
-C.~Calcagno, W.~Taha, L.~Huang, X.~Leroy, Implementing multi-stage languages
-  using asts, gensym, and reflection, in: K.~Czarnecki, F.~Pfenning,
-  Y.~Smaragdakis (Eds.), Generative Programming and Component Engineering
-  (GPCE), LNCS, Springer-Verlag, 2003.
-
-\bibitem{metaocaml-org}
-{MetaOCaml}, \url{http://www.metaocaml.org}.
-
-\bibitem{TahaSheard97}
-W.~Taha, T.~Sheard, Multi-stage programming with explicit annotations, in:
-  Proceedings of the Symposium on Partial Evaluation and Semantic-Based Program
-  Manipulation {(PEPM)}, ACM Press, Amsterdam, 1997, pp. 203--217.
-
-\bibitem{TahaThesis}
-W.~Taha, Multi-stage programming: its theory and applications, Ph.D. thesis,
-  Oregon Graduate Institute of Science and Technology (1999).
-
-\bibitem{Taha2000}
-W.~Taha, A sound reduction semantics for untyped {CBN} multi-stage computation.
-  {Or}, the theory of {MetaML} is non-trival., in: PEPM, 2000, pp. 34--43.
-
-\bibitem{Pueschel:05}
-M.~P{\"u}schel, J.~M.~F. Moura, J.~Johnson, D.~Padua, M.~Veloso, B.~W. Singer,
-  J.~Xiong, F.~Franchetti, A.~Ga\v{c}i\'{c}, Y.~Voronenko, K.~Chen, R.~W.
-  Johnson, N.~Rizzolo, {SPIRAL}: Code generation for {DSP} transforms,
-  Proceedings of the IEEE, special issue on "Program Generation, Optimization,
-  and Adaptation" 93~(2).
-
-\bibitem{Kennedy01Telescoping}
-K.~Kennedy, B.~Broom, K.~Cooper, J.~Dongarra, R.~Fowler, D.~Gannon,
-  L.~Johnsson, J.~Mellor-Crummey, L.~Torczon, Telescoping languages: A strategy
-  for automatic generation of scientific problem-solving systems from annotated
-  libraries, Journal of Parallel and Distributed Computing 61~(12) (2001)
-  1803--1826.
-
-\bibitem{dongarra7}
-Z.~Chen, J.~Dongarra, P.~Luszczek, K.~Rothe, Lapack for clusters project: An
-  example of self adapting numerical software, Hawaii International Conference
-  on System Sciences HICSS-37.
-
-\bibitem{Veldhuizen:2004}
-T.~L. Veldhuizen, Active libraries and universal languages, Ph.D. thesis,
-  Indiana University Computer Science (May 2004).
-\newline\urlprefix\url{\url{http://osl.iu.edu/~tveldhui/papers/2004/dissertati%
-on.pdf}}
-
-\bibitem{KiselyovTaha}
-O.~Kiselyov, K.~N. Swadi, W.~Taha, A methodology for generating verified
-  combinatorial circuits, in: EMSOFT '04: Proceedings of the fourth ACM
-  international conference on Embedded software, ACM Press, New York, NY, USA,
-  2004, pp. 249--258.
-
-\bibitem{Padua:MetaOcaml:04}
-A.~Cohen, S.~Donadio, M.~J. Garzara'n, C.~Herrmann, D.~Padua, In search for a
-  program generator to implement generic transformations for high-performance
-  computing, metaOCaml Workshop, October 2004.
-
-\bibitem{CaretteKiselyov05}
-J.~Carette, O.~Kiselyov, Multi-stage programming with {F}unctors and {M}onads:
-  eliminating abstraction overhead from generic code, in: Generative
-  Programming and Component-based Engineering {GPCE}, 2005, pp. 256--274.
-
-\bibitem{MSP:PADL04}
-J.~L. Eckhardt, R.~Kaiabachev, K.~N. Swadi, W.~Taha, O.~Kiselyov, Practical
-  aspects of multi-stage programming, rice University Techical Report
-  {TR05}-451,
-  \url{http://www.cs.rice.edu/~taha/publications/preprints/2004-02-16.pdf}.
-
-\bibitem{metamonadsURL}
-{Source code}, \url{http://www.cas.mcmaster.ca/~carette/metamonads/}.
-
-\bibitem{Golub-vanLoan}
-G.~H. {Golub}, C.~F. {Van Loan}, Matrix Computations, 3rd Edition, Johns
-  Hopkins University Press, Baltimore, MD, 1996.
-
-\bibitem{kiczales97aspectoriented}
-G.~Kiczales, J.~Lamping, A.~Menhdhekar, C.~Maeda, C.~Lopes, J.-M. Loingtier,
-  J.~Irwin, Aspect-oriented programming, in: M.~Ak\c{s}it, S.~Matsuoka (Eds.),
-  Proceedings European Conference on Object-Oriented Programming, Vol. 1241,
-  Springer-Verlag, Berlin, Heidelberg, and New York, 1997, pp. 220--242.
-
-\bibitem{709568}
-J.~Irwin, J.-M. Loingtier, J.~R. Gilbert, G.~Kiczales, J.~Lamping,
-  A.~Mendhekar, T.~Shpeisman, Aspect-oriented programming of sparse matrix
-  code, in: ISCOPE '97: Proceedings of the Scientific Computing in
-  Object-Oriented Parallel Environments, Springer-Verlag, London, UK, 1997, pp.
-  249--256.
-
-\bibitem{mendhekar97rg}
-A.~Mendhekar, G.~Kiczales, J.~Lamping, {RG}: {A} case-study for aspect-oriented
-  programming, Tech. Rep. SPL97-009 P9710044, Palo Alto, CA, USA (February
-  1997).
-
-\bibitem{journals/cacm/parnas72a}
-D.~L. Parnas, On the criteria to be used in decomposing systems into modules.,
-  Commun. ACM 15~(12) (1972) 1053--1058.
-
-\bibitem{journals/tse/Parnas76}
-D.~L. Parnas, On the design and development of program families., IEEE Trans.
-  Software Eng. 2~(1) (1976) 1--9.
-
-\bibitem{EWD:EWD447}
-E.~W. Dijkstra, On the role of scientific thought, published as
-  \cite{EWD:EWD447pub}.
-\newline\urlprefix\url{\url{http://www.cs.utexas.edu/users/EWD/ewd04xx/EWD447.%
-PDF}}
-
-\bibitem{ZhCaJeMo06a}
-W.~Zhou, J.~Carette, D.~J. Jeffrey, M.~B. Monagan, Hierarchical representations
-  with signatures for large expression management, in: Proceedings of
-  Artificial Intelligence and Symbolic Computation, Vol. 4120 of Lecture Notes
-  in Computer Science, 2006, pp. 254--268.
-
-\bibitem{Bondorf:92}
-A.~Bondorf, Improving binding times without explicit {CPS}-conversion, in: 1992
-  ACM Conference on Lisp and Functional Programming. San Francisco, California,
-  1992, pp. 1--10.
-
-\bibitem{conf/pepm/BondorfD94}
-A.~Bondorf, D.~Dussart, Improving {CPS}-based partial evaluation: Writing cogen
-  by hand., in: PEPM, 1994, pp. 1--9.
-
-\bibitem{Haskell98Report}
-S.~Peyton~Jones, et~al., The Revised Haskell 98 Report, Cambridge Univ.\null{}
-  Press, 2003, also on \url{http://haskell.org/}.
-
-\bibitem{moggi-notions}
-E.~Moggi, Notions of computation and monads, Information and Computation 93~(1)
-  (1991) 55--92.
-
-\bibitem{Filinski:Representing}
-A.~Filinski, Representing monads., in: POPL, 1994, pp. 446--457.
-
-\bibitem{liang-interpreter}
-S.~Liang, P.~Hudak, M.~Jones, Monad transformers and modular interpreters, in:
-  {POPL} '95: Conference Record of the Annual {ACM} Symposium on Principles of
-  Programming Languages, {ACM} {P}ress, {N}ew {Y}ork, 1995, pp. 333--343.
-
-\bibitem{taha-environment}
-W.~Taha, M.~F. Nielsen, Environment classifiers, in: {POPL} '03: Conference
-  Record of the Annual {ACM} Symposium on Principles of Programming Languages,
-  {ACM} {P}ress, {N}ew {Y}ork, 2003, pp. 26--37.
-
-\bibitem{mlton-proplist}
-{{MLton} team}, Property list, \url{http://mlton.org/PropertyList}.
-
-\bibitem{Watt:2002:HCA}
-S.~M. Watt, Aldor, in: J.~Grabmeier, E.~Kaltofen, V.~Weispfennig (Eds.),
-  Computer Algebra Handbook: Foundations, Applications, Systems, Springer
-  Verlag, 2003.
-
-\bibitem{Gluck95}
-R.~Gl{\"u}ck, R.~Nakashige, R.~Z{\"o}chling, Binding-time analysis applied to
-  mathematical algorithms, in: System Modelling and Optimization, 1995.
-
-\bibitem{GluckJ97}
-R.~Gl{\"u}ck, J.~J{\o}rgensen, An automatic program generator for multi-level
-  specialization., Lisp and Symbolic Computation 10~(2) (1997) 113--158.
-
-\bibitem{edsl}
-P.~Hudak, Building domain-specific embedded languages, ACM Comput. Surv.
-  28~(4es) (1996) 196.
-
-\bibitem{WhenHowDSL}
-M.~Mernik, J.~Heering, A.~M. Sloane, When and how to develop domain-specific
-  languages, ACM Comput. Surv. 37~(4) (2005) 316--344.
-
-\bibitem{EWD:EWD447pub}
-E.~W. Dijkstra, On the role of scientific thought, in: Selected Writings on
-  Computing: A Personal Perspective, Springer-Verlag, 1982, pp. 60--66.
-
-\end{thebibliography}
 \appendix
 \section{The \texttt{perform} monad notation}
 \label{app:perform}
