@@ -39,18 +39,7 @@ be borrowed for the introduction/abstract of the paper itself!}
 
 Reviewer #2: Summary of the submission:
 Analysis of the submission:
-p2, line 1, For an introduction paragraph this could be clearer and stronger.
-What are the "aspects of linear algebra"? How are they addressed and by what?
-(I know they are explained later on.) Why is "may" emphasized?
 
-p2, line 6, LU decomposition is a particular case of Gaussian Elimination, not
-vice-versa
-\oleg{we need a specific reference here}
-
-p2, line 10, this paper doesn't not discuss hardware-architecture-specific
-optimization, in fact native code generation seems beyond the scope of this
-paper, I think all you want to say is that generative programming allows the
-programmer to express domain-specific optimizations
 
 p3, line 21, "and" -> "for"?
 
@@ -63,11 +52,9 @@ interesting and an important result, but it would be good if this section was
 more compact. E.g., maybe present the aspects in their groups straight up
 instead of two lists.
 
-p9, line -1, "etc" -> "etc."
 
 p10, Figure 1, you haven't explained what "perform" means yet
 
-p10, line 9, "et cetera" -> "etc."
 
 p10,-9, "generation, we" -> "generation we", "variable, environment" ->
 "variable for environment", "classifier" -> "classifiers"
@@ -79,12 +66,12 @@ what's wrong with having types like "('a state, 'w, ('a, 'v) code) monad"?
 p10, Figure 1, I don't follow the intuition behind naming the operation "retN";
 I don't see how the operation is similar to ordinary monadic "ret", or what the
 "N" means; wouldn't a name like "letM" be better?
+\oleg{well, retN in form is similar to ret; also we chose retN for
+consistency with Swadi et al papers, weher it was first introduced}
 
 p10, Figure 1, showing the type of "retN" and maybe some other values would be
 helpful
 
-p14, line 4, don't you want to assert that "ZpMake" is a "DOMAIN" as was done
-for "IntegerDomain"?
 
 p15, line 9, "We" -> "we"
 
@@ -245,6 +232,8 @@ building.
 ==========================================================================
 From reviewer #1
 
+references: [23,35] show latex command \url
+
 p.2 "Other problems is" --> "Other problems are"
 
 p.2 "bear as semblance" --> "bear resemblance"
@@ -263,4 +252,27 @@ From reviewer #2
 p23, "off-shoring": give relevant citation
 \oleg{btw, Walid spells offshoring without the hyphen}
 
-references: [23,35] show latex command \url
+
+p2, line 1, For an introduction paragraph this could be clearer and stronger.
+What are the "aspects of linear algebra"? How are they addressed and by what?
+(I know they are explained later on.) Why is "may" emphasized?
+\oleg{fully re-written}
+
+p2, line 6, LU decomposition is a particular case of Gaussian Elimination, not
+vice-versa
+\oleg{It seems neither subsumes the other: LU can be achieved by other
+methods than GE; and GE can be used for other things than doing LU. I
+re-wrote the text to avoid the issue of which is more general.}
+
+p2, line 10, this paper doesn't not discuss hardware-architecture-specific
+optimization, in fact native code generation seems beyond the scope of this
+paper, I think all you want to say is that generative programming allows the
+programmer to express domain-specific optimizations
+
+p10, line 9, "et cetera" -> "etc."
+
+p9, line -1, "etc" -> "etc."
+
+p14, line 4, don't you want to assert that "ZpMake" is a "DOMAIN" as was done
+for "IntegerDomain"?
+\oleg{no; explained in text}

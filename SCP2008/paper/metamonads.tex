@@ -1,4 +1,4 @@
-\documentclass{elsart}
+                        \documentclass{elsart}
 
 % Reduce display spacing
 \divide\abovedisplayskip 2
@@ -102,7 +102,7 @@ representative family of symbolic and numeric algorithms.
 We parameterize our code to a great extent --
 over domain, input and permutation matrix representations, 
 determinant and rank tracking, 
-pivoting policies, result types, etc -- at no run-time cost.  Because
+pivoting policies, result types, etc. -- at no run-time cost.  Because
 the resulting code is generated just right and not changed afterwards,
 MetaOCaml guarantees that the generated code is well-typed.
 We further demonstrate that various abstraction parameters (aspects)
@@ -125,9 +125,44 @@ MetaOCaml \sep linear algebra \sep genericity \sep generative \sep staging
 
 In high-performance symbolic and numeric computing, there is a
 well-known issue of balancing between maximal performance and the
-level of abstraction at which code is written.  Furthermore, already
-in linear algebra, there is a wealth of different aspects that
-\emph{may} need to be addressed. Implementations of the
+level of abstraction at which code is written. Widely used Gaussian
+Elimination (GE) -- the running example of our paper -- is typically
+presented in textbooks as a closely related family of algorithms for
+solving simultaneous linear equations, LU matrix decomposition, and
+computing the determinant and the rank of the matrix. All members of
+the family share the same pattern of applying elementary row
+operations to all rows of the matrix in order. The individual
+algorithms differ in the output, in application of pivoting, in
+algebraic domain and the use of full division. Modern architectures
+demand further splits \oleg{specializations? instantiations?
+  divisions?} of the family for particular matrix layouts, e.g.,
+sparsed or tiled.
+
+A survey \cite{Carette06} of
+Gaussian elimination implementations in the industrial package Maple
+\cite{Monagan:2001:M7P}
+found 6 clearly identifiable aspects and 35 different implementations of the
+algorithm, as well as 45 implementations of directly related
+algorithms such as Cholesky decomposition, and so on.  We could
+manually write each of these implementations optimizing for particular aspects
+and using cut-and-paste to ``share'' similar pieces of code.
+Or we can write a very generic procedure that accounts for
+all the aspects with appropriate abstractions \cite{Gruntz:1994:IG,Axiom}. The
+abstraction mechanisms however -- be they procedure, method or a
+function call -- have a significant cost, especially for
+high-performance numerical computing \cite{Carette06}. Eliminating
+this abstraction overhead involves either complex analyses or
+domain-specific knowledge and so cannot reliably \oleg{assuredly?}
+be done by the compiler \oleg{cite telescopic languages, active
+  libraries, or at least scp-CohenDGHKP06?}.
+
+\begin{comment}
+% Old text
+Furthermore, already
+in linear algebra, there is a wealth of different aspects 
+such as pivoting, algebraic domain, and matrix representation
+that \emph{may}\oleg{indeed, why may is emphasized?} need to be
+addressed. Implementations of the
 widely used LU decomposition algorithm and its particular case Gaussian 
 Elimination (GE) --- the running
 example of our paper --- may need to account for the representation of
@@ -135,20 +170,7 @@ the matrix, whether to compute and return the determinant or rank, how
 and whether search for a pivot, etc. Furthermore, current architectures
 demand more and more frequent tweaks which, in general, cannot be done by the
 compiler because the tweaking often involves domain knowledge. 
-
-A survey \cite{Carette06} of
-Gaussian elimination implementations in the industrial package Maple
-\cite{Monagan:2001:M7P}
-found 6 clearly identifiable aspects and 35 different implementations of the
-algorithm, as well as 45 implementations of directly related algorithms such as
-LU decomposition, Cholesky decomposition, and so on.  We could
-manually write each of these implementations optimizing for particular aspects
-and using cut-and-paste to ``share'' similar pieces of code.
-Or we can write a very generic procedure that accounts for
-all the aspects with appropriate abstractions \cite{Gruntz:1994:IG,Axiom}. The
-abstraction mechanisms however -- be they procedure, method or a
-function call -- have a significant cost, especially for
-high-performance numerical computing \cite{Carette06}. 
+\end{comment}
 
 A more appealing approach is generative programming
 \cite{Czarnecki,Veldhuizen:1998:ISCOPE,musser89generic,musser94algorithmoriented,BOOST,POOMA,ATLAS}.
@@ -171,7 +193,7 @@ But more difficult problems remain. Is the generated code optimal? Do
 we still need post-processing to eliminate common subexpressions,
 fold constants, and remove redundant bindings? Is the generator readable?
 Does it bear resemblance to the original algorithm? Is the generator
-extensible? Are the aspects truly modular? Can we add another aspect to it or
+extensible? Are the aspects truly modular? Can we add another aspect or
 another instance of the existing aspect without affecting the existing ones?
 Finally, can we express domain-specific knowledge (for instance one should not
 attempt to use full division when dealing with matrices of exact integers, nor
@@ -202,7 +224,7 @@ unreadable.  But this is needed for proper name generation.
 The problems of compositionality of code generators, expressing
 dependencies among them and domain-specific knowledge remain.
 
-In this paper, we report on our continued progress \cite{CaretteKiselyov05}
+In this paper, we report on our continued progress \cite{CaretteKiselyov05}%
 \footnote{We describe here a new version of our generator
   dealing with the complete LU decomposition algorithm, as well as
   linear solving. We worked out previously missing aspects of in-place
@@ -231,10 +253,10 @@ techniques.  Specifically, our contributions are:
       various types) and \emph{insure composability of aspects} even
       for aspects that use state and have to be accounted for in many
       places in the generated code.
-    \item Encode domain-specific knowledge in the generators which 
-      will catch domain-specific instantiation errors at generation
+    \item Encode domain-specific knowledge in the generators so to
+      catch domain-specific instantiation errors at generation
       time.
-    \item Provide a thorough breakdown of the family of LU decomposition
+    \item Provide a thorough calssification of the family of LU decomposition
       algorithms.
 \end{itemize}
 
@@ -347,7 +369,7 @@ implementations (in various languages and settings).
 	  choices also include
 		the rank, the determinant, and the sequence of 
 		pivots.  For example, Maple's
-		\texttt{LinearAlgebra:-LUDecomposition} routine has
+		\texttt{LinearAlgebra:\hyp LUDecomposition} routine has
 		$2^6 + 2^5 + 2^2 = 100$ possible outputs, depending on whether
 		one chooses a $PLU$, $PLUR$ or \emph{Cholesky} 
 		decomposition.  We chose to only consider $PLU$ for now.
@@ -356,7 +378,7 @@ implementations (in various languages and settings).
 	\item \textbf{Determinant}:  Whether to explicitly track the determinant
 		of the matrix as the algorithm proceeds.
 	\item \textbf{Code representation}: the form and the language
-	  for the generated code (OCaml, C, Fortran, etc). A
+	  for the generated code (OCaml, C, Fortran, etc.). A
 	  degenerate case, useful for testing, is for the generator
 	  to run the LU algorithm directly (albeit with great
 	  abstraction overhead).
@@ -616,7 +638,7 @@ to write CPS code in a conventional-looking style. The
 Not only can monadic code represent CPS \cite{Filinski:Representing},
 it also helps with composability by giving complete control over how
 different effects are layered
-(state, exception, non-determinism, etc) on top of the
+(state, exception, non-determinism, etc.) on top of the
 basic monad \cite{liang-interpreter}.
 
 A monad \cite{moggi-notions} is an abstract data type representing
@@ -640,10 +662,9 @@ let fetch s k = k s s  and  store v _ k = k v ()
 let k0 _ v = v
 let runM m = fun s0 -> m s0 k0 
 
-let l1 f = fun x     -> perform t <-- x; f t
-let l2 f = fun x y   -> perform tx <-- x; ty <-- y; f tx ty
-
-let retN a = fun s k -> .<let t = .~a in .~(k s .<t>.)>.
+let retN (a : ('c,'v)code) : 
+ (<classif: 'c; answer: ('c,'w)code; ..>,('c,'v)code) monad 
+   = fun s k -> .<let t = .~a in .~(k s .<t>.)>.
 
 let ifL test th el = ret .< if .~test then .~th else .~el >.
 let ifM test th el = fun s k -> 
@@ -654,8 +675,7 @@ let ifM test th el = fun s k ->
 
 Our monad encapsulates two kinds of computational effects: reading and
 writing a computation-wide state, and control effects. The latter are
-normally associated with exceptions, forking of computations, et
-cetera --
+normally associated with exceptions, forking of computations, etc. --
 in general, whenever a computation ends with something other than
 invoking its natural continuation in the tail position. In our case
 the control effects manifest themselves as code generation.
@@ -743,13 +763,9 @@ let ifM' test th el = perform
   testc <-- test; thc <-- th; elc <-- el;
   ifL testc thc elc
 \end{code}
-We define functions |l1|,
-|l2|, |l3| (analogues of |liftM|, |liftM2|, |liftM3| of Haskell) 
-to make such a lifting generic. However we also need
-another |ifM| function, with the same
+However we also need another |ifM| function, with the same
 interface (see Figure~\ref{ourmonad}).
-The difference between them is
-apparent from the following example:
+The difference between them is apparent from the following example:
 \begin{code}
 let gen a i = ifM' (ret .<(.~i) >= 0>.) 
                    (retN .<Some (.~a).(.~i)>.) (ret .<None>.)
@@ -820,14 +836,14 @@ module type DOMAIN = sig
   type v
   val kind : domain_kind
   val zero : v
-  val one : v
+  val one  : v
   val plus : v -> v -> v
-  val times : v -> v -> v
-  val minus : v -> v -> v
+  val times  : v -> v -> v
+  val minus  : v -> v -> v
   val uminus : v -> v
-  val div : v -> v -> v
+  val div    : v -> v -> v
   val better_than : (v -> v -> bool) option
-  val normalizer : (v -> v) option
+  val normalizer  : (v -> v) option
 end 
 
 module IntegerDomain : DOMAIN = struct
@@ -842,11 +858,11 @@ module IntegerDomain : DOMAIN = struct
 end
 \end{code}
 
-One particular domain instance is |IntegerDomain|. The notation\\
-|module IntegerDomain : DOMAIN| makes the compiler verify that our
-|IntegerDomain| is indeed a |DOMAIN|. 
-The constraint |DOMAIN| may be omitted; in that case, the
-compiler will verify the type when we try to use that structure as a
+One particular domain instance is |IntegerDomain|. The type annotation
+|DOMAIN| in the definition of |IntegerDomain| makes the 
+compiler verify that the defined structure is indeed of a type |DOMAIN|. 
+The annotation may be omitted (see |ZpMake| below), in which
+case the compiler will verify the type when we try to use that structure as a
 |DOMAIN|. In any case, the errors such as missing ``methods'' or
 methods with incorrect types will be caught statically, 
 \emph{before} any code generation takes place. The variant
@@ -976,14 +992,14 @@ module type DOMAINL = sig
   include DOMAIN
   type 'a vc = ('a,v) rep
   val zeroL : 'a vc
-  val oneL : 'a vc
+  val oneL  : 'a vc
   val ( +^ ) : 'a vc -> 'a vc -> 'a vc
   val ( *^ ) : 'a vc -> 'a vc -> 'a vc
   val ( -^ ) : 'a vc -> 'a vc -> 'a vc
   val uminusL : 'a vc -> 'a vc
-  val divL : 'a vc -> 'a vc -> 'a vc
+  val divL    : 'a vc -> 'a vc -> 'a vc
   val better_thanL : ('a vc -> 'a vc -> ('a,bool) rep) option
-  val normalizerL : ('a vc -> 'a vc) option
+  val normalizerL  : ('a vc -> 'a vc) option
 end 
 \end{code}
 (part of a larger module |Domains_sig|) that is parameterised by
@@ -1453,8 +1469,8 @@ module GenGE(F : FEATURES) = struct
                 (C.Dom.divL bjc pos.curval))) in
       perform
         seqM (Iters.row_iter mat.matrix pos.p.colpos
-          (Idx.succ pos.p.rowpos)
-          (Idx.pred mat.numrow) C.getL innerbody UP) 
+               (Idx.succ pos.p.rowpos)
+               (Idx.pred mat.numrow) C.getL innerbody UP)
              (U.update_det pos.curval)
 
  let init input = perform
@@ -1469,7 +1485,7 @@ module GenGE(F : FEATURES) = struct
       F.Det.decl ();
       IF.P.decl rmar;
       _ <-- IF.L.decl (if wants_pack then b else C.identity rmar m);
-      let mat = {matrix=b; numrow=n; numcol=m} in
+      let mat = \{matrix=b; numrow=n; numcol=m\} in
       ret (mat, r, c, rmar)
 
  let forward_elim (mat, r, c, rmar) = perform
@@ -1479,11 +1495,11 @@ module GenGE(F : FEATURES) = struct
        ( perform
        rr <-- retN (liftGet r);
        cc <-- retN (liftGet c);
-       let cp  = {rowpos=rr; colpos=cc} in
+       let cp  = \{rowpos=rr; colpos=cc\} in
        let module Pivot = F.PivotF(F.Det)(IF.P) in
-       pivot <-- l1 retN (Pivot.findpivot mat cp);
+       pivot <-- bind (Pivot.findpivot mat cp) retN;
        seqM (matchM pivot (fun pv -> 
-              seqM (zerobelow mat {p=cp; curval=pv} )
+              seqM (zerobelow mat \{p=cp; curval=pv\} )
                    (IF.R.succ ()) )
               (F.Det.zero_sign () ))
             (updateM c Idx.succ) )
