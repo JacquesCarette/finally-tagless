@@ -1,4 +1,4 @@
-                        \documentclass{elsart}
+\documentclass{elsart}
 
 % Reduce display spacing
 \divide\abovedisplayskip 2
@@ -129,13 +129,12 @@ level of abstraction at which code is written. Widely used Gaussian
 Elimination (GE) -- the running example of our paper -- is typically
 presented in textbooks as a closely related family of algorithms for
 solving simultaneous linear equations, LU matrix decomposition, and
-computing the determinant and the rank of the matrix. All members of
+computing the determinant and the rank of a matrix. All members of
 the family share the same pattern of applying elementary row
-operations to all rows of the matrix in order. The individual
-algorithms differ in the output, in application of pivoting, in
+operations to rows of the matrix in a particular order. The individual
+algorithms differ in their output, in application of pivoting, in
 algebraic domain and the use of full division. Modern architectures
-demand further splits \oleg{specializations? instantiations?
-  divisions?} of the family for particular matrix layouts, e.g.,
+demand further divisions of the family for particular matrix layouts, e.g.,
 sparsed or tiled.
 
 A survey \cite{Carette06} of
@@ -152,25 +151,10 @@ abstraction mechanisms however -- be they procedure, method or a
 function call -- have a significant cost, especially for
 high-performance numerical computing \cite{Carette06}. Eliminating
 this abstraction overhead involves either complex analyses or
-domain-specific knowledge and so cannot reliably \oleg{assuredly?}
-be done by the compiler \oleg{cite telescopic languages, active
-  libraries, or at least scp-CohenDGHKP06?}.
-
-\begin{comment}
-% Old text
-Furthermore, already
-in linear algebra, there is a wealth of different aspects 
-such as pivoting, algebraic domain, and matrix representation
-that \emph{may}\oleg{indeed, why may is emphasized?} need to be
-addressed. Implementations of the
-widely used LU decomposition algorithm and its particular case Gaussian 
-Elimination (GE) --- the running
-example of our paper --- may need to account for the representation of
-the matrix, whether to compute and return the determinant or rank, how
-and whether search for a pivot, etc. Furthermore, current architectures
-demand more and more frequent tweaks which, in general, cannot be done by the
-compiler because the tweaking often involves domain knowledge. 
-\end{comment}
+domain-specific knowledge (or both!)
+\cite{Kennedy01Telescoping,Veldhuisen:2004,scp-CohenDGHKP06?},
+and so we can not rely on a general
+purpose compiler to assuredly perform such optimizations 
 
 A more appealing approach is generative programming
 \cite{Czarnecki,Veldhuizen:1998:ISCOPE,musser89generic,musser94algorithmoriented,BOOST,POOMA,ATLAS}.
@@ -242,8 +226,8 @@ techniques.  Specifically, our contributions are:
     \item Extending a let-insertion, memoizing monad of
       \cite{KiselyovTaha,SwadiMonadic06} for generating control structures
       such as loops and conditionals. The extension is non-trivial
-	  because of control dependencies and because let-insertion, as we argue,
-	  is a control effect on its own: for example
+      because of control dependencies and because let-insertion, as we argue,
+      is a control effect on its own: for example
       \texttt{let x = exp in \dots} has a different \emph{effect} within a
       conditional branch.
     \item Implementation of the |perform|-notation (patterned after
@@ -253,10 +237,10 @@ techniques.  Specifically, our contributions are:
       various types) and \emph{insure composability of aspects} even
       for aspects that use state and have to be accounted for in many
       places in the generated code.
-    \item Encode domain-specific knowledge in the generators so to
+    \item Encode domain-specific knowledge in the generators so as to
       catch domain-specific instantiation errors at generation
       time.
-    \item Provide a thorough calssification of the family of LU decomposition
+    \item Provide a thorough classification of the family of LU decomposition
       algorithms.
 \end{itemize}
 
@@ -333,79 +317,79 @@ implementations (in various languages and settings).
 
 \newcounter{naspects}
 \begin{enumerate}
-	\item \textbf{Domain}: the (algebraic) domain of matrix
-		elements.  Some implementations were very specific
-		($\mathbb{Z}, \mathbb{Q}, \mathbb{Z_p}, 
-		\mathbb{Z}_p\left[\alpha_1,\ldots,\alpha_n\right], 
-		\mathbb{Z}\left[x\right]$, $\mathbb{Q}\left(x\right)$, 
-		$\mathbb{Q}\left[\alpha\right]$, and floating point numbers 
-		($\floats$) for 
-		example), while others were generic for elements of a field,
-		multivariate polynomials over a field, or elements of a division ring
-		with possibly undecidable zero-equivalence.  In the roughly 85 pieces
-		of code we surveyed, 20 different domains were encountered.
-	\item \textbf{Representation of the matrix}: Whether the matrix
-		was represented as an array of arrays, a
-		one-dimensional array with C or Fortran indexing styles, 
-		a hash table, etc. Efficient row exchanges, if available for a
-		particular representation, were sometimes used.
-	\item \textbf{Fraction-free}: Whether the 
-		algorithm is allowed to use unrestricted division, or only
-		exact (remainder-free) division.
-	\item \textbf{Length measure (for pivoting)}:  For stability reasons
-		(whether numerical or coefficient growth), if a domain 
-		possesses an appropriate length measure, it was sometimes used to
-		choose an ``optimal'' pivot.  Not all domains have such a measure.
-	\item \textbf{Full division}: Whether the input domain supports full
-		division (i.e. is a \emph{field} or pretends to be ($\floats$)) 
-		or only exact division (i.e. a \emph{division ring}).
-	\item \textbf{Domain normalization}: Whether the arithmetic operations
-		of the base domain keep the results in normal form, or whether
-		an extra normalization step is required.  For example, some 
-		representations of polynomials require an extra step for
-		zero-testing.
-	\item \textbf{Output choices}:  Just the reduced matrix
-		(the `U' factor) or both L and U factors. The output
-	  choices also include
-		the rank, the determinant, and the sequence of 
-		pivots.  For example, Maple's
-		\texttt{LinearAlgebra:\hyp LUDecomposition} routine has
-		$2^6 + 2^5 + 2^2 = 100$ possible outputs, depending on whether
-		one chooses a $PLU$, $PLUR$ or \emph{Cholesky} 
-		decomposition.  We chose to only consider $PLU$ for now.
-	\item \textbf{Rank}: Whether to explicitly track the rank of the matrix
-		as the algorithm proceeds.
-	\item \textbf{Determinant}:  Whether to explicitly track the determinant
-		of the matrix as the algorithm proceeds.
-	\item \textbf{Code representation}: the form and the language
-	  for the generated code (OCaml, C, Fortran, etc.). A
-	  degenerate case, useful for testing, is for the generator
-	  to run the LU algorithm directly (albeit with great
-	  abstraction overhead).
-	\item \textbf{Zero-equivalence}: Whether the 
-		arithmetic operations require a specialized zero-equivalence 
-		routine.  For certain classes
-		of \emph{expressions}, it turns out convenient to use 
-		a zero-equivalence
-		test that is separate from the domain normalization.  This is
-		usually the case when zero-equivalence is formally undecidable
-		but semi-algorithms or probabilistic algorithms do exist.
-		See~\cite{ZhCaJeMo06a} for an example.
+    \item \textbf{Domain}: the (algebraic) domain of matrix
+        elements.  Some implementations were very specific
+        ($\mathbb{Z}, \mathbb{Q}, \mathbb{Z_p}, 
+        \mathbb{Z}_p\left[\alpha_1,\ldots,\alpha_n\right], 
+        \mathbb{Z}\left[x\right]$, $\mathbb{Q}\left(x\right)$, 
+        $\mathbb{Q}\left[\alpha\right]$, and floating point numbers 
+        ($\floats$) for 
+        example), while others were generic for elements of a field,
+        multivariate polynomials over a field, or elements of a division ring
+        with possibly undecidable zero-equivalence.  In the roughly 85 pieces
+        of code we surveyed, 20 different domains were encountered.
+    \item \textbf{Representation of the matrix}: Whether the matrix
+        was represented as an array of arrays, a
+        one-dimensional array with C or Fortran indexing styles, 
+        a hash table, etc. Efficient row exchanges, if available for a
+        particular representation, were sometimes used.
+    \item \textbf{Fraction-free}: Whether the 
+        algorithm is allowed to use unrestricted division, or only
+        exact (remainder-free) division.
+    \item \textbf{Length measure (for pivoting)}:  For stability reasons
+        (whether numerical or coefficient growth), if a domain 
+        possesses an appropriate length measure, it was sometimes used to
+        choose an ``optimal'' pivot.  Not all domains have such a measure.
+    \item \textbf{Full division}: Whether the input domain supports full
+        division (i.e. is a \emph{field} or pretends to be ($\floats$)) 
+        or only exact division (i.e. a \emph{division ring}).
+    \item \textbf{Domain normalization}: Whether the arithmetic operations
+        of the base domain keep the results in normal form, or whether
+        an extra normalization step is required.  For example, some 
+        representations of polynomials require an extra step for
+        zero-testing.
+    \item \textbf{Output choices}:  Just the reduced matrix
+        (the `U' factor) or both L and U factors. The output
+      choices also include
+        the rank, the determinant, and the sequence of 
+        pivots.  For example, Maple's
+        \texttt{LinearAlgebra:\hyp LUDecomposition} routine has
+        $2^6 + 2^5 + 2^2 = 100$ possible outputs, depending on whether
+        one chooses a $PLU$, $PLUR$ or \emph{Cholesky} 
+        decomposition.  We chose to only consider $PLU$ for now.
+    \item \textbf{Rank}: Whether to explicitly track the rank of the matrix
+        as the algorithm proceeds.
+    \item \textbf{Determinant}:  Whether to explicitly track the determinant
+        of the matrix as the algorithm proceeds.
+    \item \textbf{Code representation}: the form and the language
+      for the generated code (OCaml, C, Fortran, etc.). A
+      degenerate case, useful for testing, is for the generator
+      to run the LU algorithm directly (albeit with great
+      abstraction overhead).
+    \item \textbf{Zero-equivalence}: Whether the 
+        arithmetic operations require a specialized zero-equivalence 
+        routine.  For certain classes
+        of \emph{expressions}, it turns out convenient to use 
+        a zero-equivalence
+        test that is separate from the domain normalization.  This is
+        usually the case when zero-equivalence is formally undecidable
+        but semi-algorithms or probabilistic algorithms do exist.
+        See~\cite{ZhCaJeMo06a} for an example.
     \item \textbf{Pivoting}: Whether to use no, 
         column-wise, or full pivoting.
     \item \textbf{Augmented Matrices}: Whether all or only some
       columns of the matrix participate in elimination.
-	\item \textbf{Pivot representation}: Whether the pivot is represented
-	  as a list of row and column exchanges, as a unitary matrix,
-	  or as a permutation vector.
+    \item \textbf{Pivot representation}: Whether the pivot is represented
+      as a list of row and column exchanges, as a unitary matrix,
+      or as a permutation vector.
   \item \textbf{Lower matrix}: whether the matrix $L$ should be tracked
-	  as the algorithm proceeds, reconstructed at the end of the
-	  algorithm, or not tracked at all.
+      as the algorithm proceeds, reconstructed at the end of the
+      algorithm, or not tracked at all.
   \item \textbf{Input choices}: Grouping all the potential
-	  choices of inputs -- currently only augmented matrices require
-	  an extra input.
+      choices of inputs -- currently only augmented matrices require
+      an extra input.
   \item \textbf{Packed}: Whether the output matrices $L$ and $U$ are
-	  packed into a single matrix for output.
+      packed into a single matrix for output.
 \setcounter{naspects}{\value{enumi}}
 \end{enumerate}
 
@@ -451,22 +435,22 @@ mixed representation (i.e. data-structure) issues with abstraction
 domain issues.  We hope to rectify this in the future.}
 
 \begin{enumerate}
-	\item \textbf{Abstract domain}.  This group includes
-	  `mathematical' aspects: domain of matrix elements, length
-	  measure, full division, normalization, zero testing,
-	  symmetry and other matrix structure.
-	\item \textbf{Concrete representation}: choosing data
-	  structures for domains, containers, permutation
-	  matrices. This group also includes packing, in-place
-	  decomposition, and the
-	  representation of sparse matrices.
-	\item \textbf{Interface} of each generated function, including
-	  the input and output choices, logging and error reporting.
-	\item \textbf{Algorithmic Strategy}, such as fraction-free
-	  updates, pivoting strategies, augmented matrices.
-	\item \textbf{Tracking}, of determinant, rank, or pivot, etc.
-	\item \textbf{Staging}: whether the result is the program or a
-	  generator that will produce the program.
+    \item \textbf{Abstract domain}.  This group includes
+      `mathematical' aspects: domain of matrix elements, length
+      measure, full division, normalization, zero testing,
+      symmetry and other matrix structure.
+    \item \textbf{Concrete representation}: choosing data
+      structures for domains, containers, permutation
+      matrices. This group also includes packing, in-place
+      decomposition, and the
+      representation of sparse matrices.
+    \item \textbf{Interface} of each generated function, including
+      the input and output choices, logging and error reporting.
+    \item \textbf{Algorithmic Strategy}, such as fraction-free
+      updates, pivoting strategies, augmented matrices.
+    \item \textbf{Tracking}, of determinant, rank, or pivot, etc.
+    \item \textbf{Staging}: whether the result is the program or a
+      generator that will produce the program.
 \end{enumerate}
 
 %% \oleg{In-place updates is also the issue of concrete
@@ -847,20 +831,24 @@ module type DOMAIN = sig
 end 
 
 module IntegerDomain : DOMAIN = struct
-    type v = int
-    let kind = Domain_is_Ring
-    let zero = 0 and one = 1
-    let plus x y = x + y  and  minus x y = x - y
-    let times x y = x * y and  div x y = x / y
-    let uminus x = -x
-    let normalizer = None
-    let better_than = Some (fun x y -> abs x > abs y)
+  type v = int
+  let kind = Domain_is_Ring
+  let zero = 0 and one = 1
+  let plus x y = x + y  and  minus x y = x - y
+  let times x y = x * y and  div x y = x / y
+  let uminus x = -x
+  let normalizer = None
+  let better_than = Some (fun x y -> abs x > abs y)
 end
 \end{code}
 
 One particular domain instance is |IntegerDomain|. The type annotation
 |DOMAIN| in the definition of |IntegerDomain| makes the 
 compiler verify that the defined structure is indeed of a type |DOMAIN|. 
+\jacques{In fact, it seems that this annotation cannot be put there
+because that will make type v abstract, which will result in compilation
+errors for the "lifted" domain which needs to have this type be
+available.}
 The annotation may be omitted (see |ZpMake| below), in which
 case the compiler will verify the type when we try to use that structure as a
 |DOMAIN|. In any case, the errors such as missing ``methods'' or
