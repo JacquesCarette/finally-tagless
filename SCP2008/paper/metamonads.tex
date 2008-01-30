@@ -205,8 +205,9 @@ when generating loop bodies or conditional branches, and making
 continuation-passing style (CPS) code clear.  Many authors
 understandably shy away from CPS code as it quickly becomes
 unreadable.  But this is needed for proper name generation.
-The problems of compositionality of code generators, expressing
-dependencies among them and domain-specific knowledge remain.
+To be able to build modular code generators, three important problems
+remain: compositionality, expressing dependencies, and integration of
+domain-specific knowledge.
 
 In this paper, we report on our continued progress \cite{CaretteKiselyov05}%
 \footnote{We describe here a new version of our generator
@@ -297,7 +298,7 @@ of LU decomposition algorithms.  While our use shares the
 spirit of aspect-oriented programming (AOP)~\cite{kiczales97aspectoriented},
 our implementation methodology is radically different\footnote{However it seems
 that we are closer to the original ideas of AOP~\cite{709568,mendhekar97rg}
-which were also concerned with scientific software}.  We firmly believe that
+which were also concerned with scientific software.}.  We firmly believe that
 our typed generative methodology is much better suited to functional
 programming, compared to attempts to graft the program-trace-based
 methodology of object-oriented versions of AOP.  
@@ -509,8 +510,8 @@ integers, which we can apply: |(.! simplest_code) 1 2|. The original
 |simplest_code| is not a function on integers -- it is a code
 expression which \emph{represents} (or encodes) a function.
 
-To see the benefit of code generation, we notice that we can easily
-parameterize our code:
+By parametrizing our code, we can make the benefits of code generation
+evident:
 
 \begin{code}
 let simplest_param_code plus one =
@@ -646,8 +647,8 @@ let fetch s k = k s s  and  store v _ k = k v ()
 let k0 _ v = v
 let runM m = fun s0 -> m s0 k0 
 
-let retN (a : ('c,'v)code) : 
- (<classif: 'c; answer: ('c,'w)code; ..>,('c,'v)code) monad 
+let retN (a : ('c,'v) code) : 
+ (<classif: 'c; answer: ('c,'w) code; ..>,('c,'v) code) monad 
    = fun s k -> .<let t = .~a in .~(k s .<t>.)>.
 
 let ifL test th el = ret .< if .~test then .~th else .~el >.
@@ -671,8 +672,8 @@ continuation receives the current state and a value, and
 yields an answer of type |w|.  The monad is polymorphic over the
 three type parameters, which would require |monad| to be a type
 constructor with three arguments. When we use this monad for code
-generation, we will need yet another type variable, environment
-classifier \cite{taha-environment}. With type constructors taking more
+generation, we will need yet another type variable for the environment
+classifiers \cite{taha-environment}. With type constructors taking more
 and more arguments, it becomes increasingly difficult to read and write
 types -- which we will be doing extensively when writing module
 signatures in Section~\ref{functors}. The fact that OCaml renames all type
@@ -704,8 +705,10 @@ The operation |retN a| is the let-insertion operation, whose simpler
 version we called |letgen| earlier. It is the first computation with
 a control effect: indeed, the result of |retN a| is \emph{not} the
 result of invoking its continuation |k|. Rather, its result is a |let|
-code expression. Such a behavior is symptomatic of control operators
-(in particular, |abort|).
+code expression. Such behavior is symptomatic of control operators
+(in particular, |abort|).  The name can be taken to mean \emph{return
+a Named computation}; the name allows for proper sharing, but otherwise 
+|retN| is used in writing generators in the same way as |ret|.
 
 Finally, |runM| runs our monad, that is, given the initial state,
 it performs the computation of
@@ -924,7 +927,7 @@ combine values of the type of \emph{abstract code}.
 
 This encapsulation of staging annotations into code combinators lets
 us easily change the output form of our generated LU programs.  For example,
-We may use single-stage thunks rather than MetaOCaml staged |('a,'v) code|
+we may use single-stage thunks rather than MetaOCaml staged |('a,'v) code|
 values, for benchmarking and regression tests purposes. We could also use
 code combinators producing C or Fortran code.
 

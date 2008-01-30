@@ -40,40 +40,16 @@ be borrowed for the introduction/abstract of the paper itself!}
 Reviewer #2: Summary of the submission:
 Analysis of the submission:
 
-
-p3, line 21, "and" -> "for"?
-
-p4, line 15, "programmings" -> "programming"
-
-p5, line -1, "software" -> "software."
-
-p4, "The design space", this decomposition of the design space is very
-interesting and an important result, but it would be good if this section was
-more compact. E.g., maybe present the aspects in their groups straight up
-instead of two lists.
-
-
-p10, Figure 1, you haven't explained what "perform" means yet
-
-
-p10,-9, "generation, we" -> "generation we", "variable, environment" ->
-"variable for environment", "classifier" -> "classifiers"
-
 p10, the type variable 'p and its constraint: could you explain the problem
 with classifiers in more detail? if the type was "type ('s, 'w, 'v) monad"
 what's wrong with having types like "('a state, 'w, ('a, 'v) code) monad"?
-
-p10, Figure 1, I don't follow the intuition behind naming the operation "retN";
-I don't see how the operation is similar to ordinary monadic "ret", or what the
-"N" means; wouldn't a name like "letM" be better?
-\oleg{well, retN in form is similar to ret; also we chose retN for
-consistency with Swadi et al papers, weher it was first introduced}
+\jacques{There is an explanation on page 11; perhaps the problem that this
+solves needs to be explained further?}
 
 p10, Figure 1, showing the type of "retN" and maybe some other values would be
 helpful\oleg{done for retN}
-
-
-p15, line 9, "We" -> "we"
+\jacques{the type for bind might be useful too, but I am not sure if it 
+really 'helpful'}
 
 p15, shouldn't the code here appear as the "code type" implementation of an
 "abstract code" module?
@@ -269,10 +245,42 @@ optimization, in fact native code generation seems beyond the scope of this
 paper, I think all you want to say is that generative programming allows the
 programmer to express domain-specific optimizations
 
-p10, line 9, "et cetera" -> "etc."
+p3, line 21, "and" -> "for"?
+\jacques{completely rewrote sentence}
+
+p4, line 15, "programmings" -> "programming"
+
+p4, "The design space", this decomposition of the design space is very
+interesting and an important result, but it would be good if this section was
+more compact. E.g., maybe present the aspects in their groups straight up
+instead of two lists.
+\jacques{in theory, I agree.  However, as this is important, it needs to
+be explained in detail, so that all the relevant information is recorded,
+in writing.  I am not against adding a "summary table", but I don't really
+want to 'compress' this information.}
+
+
+p5, line -1, "software" -> "software."
 
 p9, line -1, "etc" -> "etc."
+
+p10, line 9, "et cetera" -> "etc."
+
+p10, Figure 1, you haven't explained what "perform" means yet
+
+p10, Figure 1, I don't follow the intuition behind naming the operation "retN";
+I don't see how the operation is similar to ordinary monadic "ret", or what the
+"N" means; wouldn't a name like "letM" be better?
+\oleg{well, retN in form is similar to ret; also we chose retN for
+consistency with Swadi et al papers, weher it was first introduced}
+\jacques{take a look at my explanation.  retN does make sense!}
+
+p10,-9, "generation, we" -> "generation we", "variable, environment" ->
+"variable for environment", "classifier" -> "classifiers"
 
 p14, line 4, don't you want to assert that "ZpMake" is a "DOMAIN" as was done
 for "IntegerDomain"?
 \oleg{no; explained in text}
+
+p15, line 9, "We" -> "we"
+
