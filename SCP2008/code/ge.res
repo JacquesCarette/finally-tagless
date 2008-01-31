@@ -102,8 +102,10 @@
           ('a -> ('c, int) Code.abstract -> 'b -> ('c, 'd) Code.abstract) ->
           (('c, int) Code.abstract ->
            ('c, 'd) Code.abstract ->
-           'e -> ('f -> 'g -> 'g) -> ('c, 'h) Code.abstract) ->
-          Prelude.dir -> 'e -> ('e -> ('c, unit) Code.abstract -> 'i) -> 'i
+           (< answer : ('c, 'e) Code.abstract; state : 'f; .. >,
+            ('c, 'e) Code.abstract)
+           StateCPSMonad.monad) ->
+          Prelude.dir -> 'f -> ('f -> ('c, unit) Code.abstract -> 'g) -> 'g
         val col_iter :
           'a ->
           'b ->
@@ -111,8 +113,11 @@
           ('c, int) Code.abstract ->
           ('a -> 'b -> ('c, int) Code.abstract -> 'd) ->
           (('c, int) Code.abstract ->
-           'd -> 'e -> ('f -> 'g -> 'g) -> ('c, 'h) Code.abstract) ->
-          Prelude.dir -> 'e -> ('e -> ('c, unit) Code.abstract -> 'i) -> 'i
+           'd ->
+           (< answer : ('c, 'e) Code.abstract; state : 'f; .. >,
+            ('c, 'e) Code.abstract)
+           StateCPSMonad.monad) ->
+          Prelude.dir -> 'f -> ('f -> ('c, unit) Code.abstract -> 'g) -> 'g
       end
     module TrackRank :
       sig
@@ -126,13 +131,16 @@
           ('a -> [> `TRan of 'a ]) * ([> `TRan of 'b ] -> 'b option) * string
         val decl :
           unit ->
-          ([> `TRan of ('b, int ref) Code.abstract ] as 'a) list ->
-          ('a list -> ('b, int ref) Code.abstract -> ('b, 'c) Code.abstract) ->
-          ('b, 'c) Code.abstract
+          (< answer : ('a, 'b) Code.abstract;
+             state : [> `TRan of ('a, int ref) Code.abstract ] list; .. >,
+           ('a, int ref) Code.abstract)
+          StateCPSMonad.monad
         val succ :
           unit ->
-          ([> `TRan of ('b, int ref) Code.abstract ] as 'a) list ->
-          ('a list -> ('b, unit) Code.abstract -> 'c) -> 'c
+          (< answer : 'a;
+             state : [> `TRan of ('b, int ref) Code.abstract ] list; .. >,
+           ('b, unit) Code.abstract)
+          StateCPSMonad.monad
         module type RANK =
           sig
             type 'a tag_lstate = 'a tag_lstate_
@@ -165,13 +173,16 @@
           ('a -> [> `TRan of 'a ]) * ([> `TRan of 'b ] -> 'b option) * string
         val decl :
           unit ->
-          ([> `TRan of ('b, int ref) Code.abstract ] as 'a) list ->
-          ('a list -> ('b, int ref) Code.abstract -> ('b, 'c) Code.abstract) ->
-          ('b, 'c) Code.abstract
+          (< answer : ('a, 'b) Code.abstract;
+             state : [> `TRan of ('a, int ref) Code.abstract ] list; .. >,
+           ('a, int ref) Code.abstract)
+          StateCPSMonad.monad
         val succ :
           unit ->
-          ([> `TRan of ('b, int ref) Code.abstract ] as 'a) list ->
-          ('a list -> ('b, unit) Code.abstract -> 'c) -> 'c
+          (< answer : 'a;
+             state : [> `TRan of ('b, int ref) Code.abstract ] list; .. >,
+           ('b, unit) Code.abstract)
+          StateCPSMonad.monad
         module type RANK =
           sig
             type 'a tag_lstate = 'a tag_lstate_
@@ -193,8 +204,10 @@
           end
         val fin :
           unit ->
-          ([> `TRan of ('b, 'c ref) Code.abstract ] as 'a) list ->
-          ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd
+          (< answer : 'a;
+             state : [> `TRan of ('b, 'c ref) Code.abstract ] list; .. >,
+           ('b, 'c) Code.abstract)
+          StateCPSMonad.monad
       end
     module NoRank :
       sig
@@ -208,13 +221,16 @@
           ('a -> [> `TRan of 'a ]) * ([> `TRan of 'b ] -> 'b option) * string
         val decl :
           unit ->
-          ([> `TRan of ('b, int ref) Code.abstract ] as 'a) list ->
-          ('a list -> ('b, int ref) Code.abstract -> ('b, 'c) Code.abstract) ->
-          ('b, 'c) Code.abstract
+          (< answer : ('a, 'b) Code.abstract;
+             state : [> `TRan of ('a, int ref) Code.abstract ] list; .. >,
+           ('a, int ref) Code.abstract)
+          StateCPSMonad.monad
         val succ :
           unit ->
-          ([> `TRan of ('b, int ref) Code.abstract ] as 'a) list ->
-          ('a list -> ('b, unit) Code.abstract -> 'c) -> 'c
+          (< answer : 'a;
+             state : [> `TRan of ('b, int ref) Code.abstract ] list; .. >,
+           ('b, unit) Code.abstract)
+          StateCPSMonad.monad
         module type RANK =
           sig
             type 'a tag_lstate = 'a tag_lstate_
@@ -352,17 +368,26 @@
             string
           val decl :
             'a PK.ira ->
-            ([> `TPivot of ('a, PK.perm_rep ref) Code.abstract ] as 'b) list ->
-            ('b list -> ('c, unit) Code.abstract -> ('a, 'd) Code.abstract) ->
-            ('a, 'd) Code.abstract
+            (< answer : ('a, 'b) Code.abstract;
+               state : [> `TPivot of ('a, PK.perm_rep ref) Code.abstract ]
+                       list;
+               .. >,
+             ('c, unit) Code.abstract)
+            StateCPSMonad.monad
           val add :
             'a PK.fra ->
-            ([> `TPivot of ('a, PK.perm_rep ref) Code.abstract ] as 'b) list ->
-            ('b list -> ('a, unit) Code.abstract option -> 'c) -> 'c
+            (< answer : 'b;
+               state : [> `TPivot of ('a, PK.perm_rep ref) Code.abstract ]
+                       list;
+               .. >,
+             ('a, unit) Code.abstract option)
+            StateCPSMonad.monad
           val fin :
             unit ->
-            ([> `TPivot of ('b, 'c ref) Code.abstract ] as 'a) list ->
-            ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd
+            (< answer : 'a;
+               state : [> `TPivot of ('b, 'c ref) Code.abstract ] list; .. >,
+             ('b, 'c) Code.abstract)
+            StateCPSMonad.monad
         end
     module DiscardPivot :
       sig
@@ -523,41 +548,59 @@
                 string
               val decl :
                 unit ->
-                ([> `TDet of
-                      ('b, int ref) Code.abstract *
-                      ('b, C.Dom.v ref) Code.abstract ]
-                 as 'a)
-                list ->
-                ('a list ->
-                 ('c, unit) Code.abstract -> ('b, 'd) Code.abstract) ->
-                ('b, 'd) Code.abstract
+                (< answer : ('a, 'b) Code.abstract;
+                   state : [> `TDet of
+                                ('a, int ref) Code.abstract *
+                                ('a, C.Dom.v ref) Code.abstract ]
+                           list;
+                   .. >,
+                 ('c, unit) Code.abstract)
+                StateCPSMonad.monad
               val upd_sign :
                 unit ->
-                ([> `TDet of ('b, int ref) Code.abstract * 'c ] as 'a) list ->
-                ('a list -> ('b, unit) Code.abstract option -> 'd) -> 'd
+                (< answer : 'a;
+                   state : [> `TDet of ('b, int ref) Code.abstract * 'c ]
+                           list;
+                   .. >,
+                 ('b, unit) Code.abstract option)
+                StateCPSMonad.monad
               val zero_sign :
                 unit ->
-                ([> `TDet of ('b, int ref) Code.abstract * 'c ] as 'a) list ->
-                ('a list -> ('b, unit) Code.abstract -> 'd) -> 'd
+                (< answer : 'a;
+                   state : [> `TDet of ('b, int ref) Code.abstract * 'c ]
+                           list;
+                   .. >,
+                 ('b, unit) Code.abstract)
+                StateCPSMonad.monad
               val get :
                 unit ->
-                ([> `TDet of 'b * 'c ] as 'a) list ->
-                ('a list -> 'c -> 'd) -> 'd
+                (< answer : 'a; state : [> `TDet of 'b * 'c ] list; .. >, 'c)
+                StateCPSMonad.monad
               val set :
                 ('a, 'b) Code.abstract ->
-                ([> `TDet of 'd * ('a, 'b ref) Code.abstract ] as 'c) list ->
-                ('c list -> ('a, unit) Code.abstract -> 'e) -> 'e
+                (< answer : 'c;
+                   state : [> `TDet of 'd * ('a, 'b ref) Code.abstract ] list;
+                   .. >,
+                 ('a, unit) Code.abstract)
+                StateCPSMonad.monad
               val acc :
                 'a C.Dom.vc ->
-                ([> `TDet of 'c * ('a, C.Dom.v ref) Code.abstract ] as 'b)
-                list -> ('b list -> ('a, unit) Code.abstract -> 'd) -> 'd
+                (< answer : 'b;
+                   state : [> `TDet of 'c * ('a, C.Dom.v ref) Code.abstract ]
+                           list;
+                   .. >,
+                 ('a, unit) Code.abstract)
+                StateCPSMonad.monad
               val fin :
                 unit ->
-                ([> `TDet of
-                      ('b, int ref) Code.abstract *
-                      ('b, C.Dom.v ref) Code.abstract ]
-                 as 'a)
-                list -> ('a list -> ('b, C.Dom.v) Code.abstract -> 'c) -> 'c
+                (< answer : 'a;
+                   state : [> `TDet of
+                                ('b, int ref) Code.abstract *
+                                ('b, C.Dom.v ref) Code.abstract ]
+                           list;
+                   .. >,
+                 ('b, C.Dom.v) Code.abstract)
+                StateCPSMonad.monad
             end
           module type UPDATE =
             functor (D : DETERMINANT) ->
@@ -592,7 +635,9 @@
                       'a C.Dom.vc ->
                       'a C.Dom.vc ->
                       ('a C.Dom.vc -> 'b) ->
-                      'c -> 'd -> ('d -> 'b -> 'e) -> 'e
+                      'c ->
+                      (< answer : 'd; state : 'e; .. >, 'b)
+                      StateCPSMonad.monad
                     val update_det :
                       ('a, C.Dom.v) Code.abstract ->
                       (< answer : 'b; classif : 'a;
@@ -612,7 +657,8 @@
                       'a C.Dom.vc ->
                       ('a C.Dom.vc -> 'b) ->
                       ('a, C.Dom.v ref) Code.abstract ->
-                      'c -> ('c -> 'b -> 'd) -> 'd
+                      (< answer : 'c; state : 'd; .. >, 'b)
+                      StateCPSMonad.monad
                     val update_det :
                       ('a, C.Dom.v) Code.abstract ->
                       (< answer : 'b; classif : 'a;
@@ -675,23 +721,26 @@
                     ([> `TLower of 'b ] -> 'b option) * string
                   val decl :
                     ('a, 'b) Code.abstract ->
-                    ([> `TLower of ('a, 'b) Code.abstract ] as 'c) list ->
-                    ('c list ->
-                     ('a, 'b) Code.abstract -> ('a, 'd) Code.abstract) ->
-                    ('a, 'd) Code.abstract
+                    (< answer : ('a, 'c) Code.abstract;
+                       state : [> `TLower of ('a, 'b) Code.abstract ] list;
+                       .. >,
+                     ('a, 'b) Code.abstract)
+                    StateCPSMonad.monad
                   val updt :
                     'a C.vc ->
                     ('a, int) Code.abstract ->
                     ('a, int) Code.abstract ->
                     'a C.vo ->
                     'a C.vo ->
-                    (([> `TLower of 'a C.vc ] as 'b) list ->
-                     ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c)
-                    option
+                    (< answer : 'b; state : [> `TLower of 'a C.vc ] list;
+                       .. >,
+                     ('a, unit) Code.abstract)
+                    StateCPSMonad.monad option
                   val fin :
                     unit ->
-                    ([> `TLower of 'b ] as 'a) list ->
-                    ('a list -> 'b -> 'c) -> 'c
+                    (< answer : 'a; state : [> `TLower of 'b ] list; .. >,
+                     'b)
+                    StateCPSMonad.monad
                   val wants_pack : bool
                 end
               module PackedLower :
@@ -706,13 +755,15 @@
                     ([> `TLower of 'b ] -> 'b option) * string
                   val decl :
                     'a ->
-                    ([> `TLower of 'a ] as 'b) list ->
-                    ('b list -> 'a -> 'c) -> 'c
+                    (< answer : 'b; state : [> `TLower of 'a ] list; .. >,
+                     'a)
+                    StateCPSMonad.monad
                   val updt : 'a -> 'b -> 'c -> 'd -> 'e -> 'f option
                   val fin :
                     unit ->
-                    ([> `TLower of 'b ] as 'a) list ->
-                    ('a list -> 'b -> 'c) -> 'c
+                    (< answer : 'a; state : [> `TLower of 'b ] list; .. >,
+                     'b)
+                    StateCPSMonad.monad
                   val wants_pack : bool
                 end
               module NoLower :
@@ -764,11 +815,9 @@
                   type inp = C.contr * int
                   val get_input :
                     ('a, 'b * 'c) Code.abstract ->
-                    'd ->
-                    ('d ->
-                     ('a, 'b) Code.abstract * ('a, 'c) Code.abstract * bool ->
-                     'e) ->
-                    'e
+                    (< answer : 'd; state : 'e; .. >,
+                     ('a, 'b) Code.abstract * ('a, 'c) Code.abstract * bool)
+                    StateCPSMonad.monad
                 end
               module RowPivot :
                 functor (Det : DETERMINANT) ->
@@ -777,13 +826,13 @@
                       val findpivot :
                         'a wmatrix ->
                         'a curpos ->
-                        ([> `TDet of 'a Det.lstate | `TPivot of 'a P.lstate ]
-                         as 'b)
-                        list ->
-                        ('b list ->
-                         ('a, C.Dom.v option) Code.abstract ->
-                         ('a, 'c) Code.abstract) ->
-                        ('a, 'c) Code.abstract
+                        (< answer : ('a, 'b) Code.abstract;
+                           state : [> `TDet of 'a Det.lstate
+                                    | `TPivot of 'a P.lstate ]
+                                   list;
+                           .. >,
+                         ('a, C.Dom.v option) Code.abstract)
+                        StateCPSMonad.monad
                     end
               module FullPivot :
                 functor (Det : DETERMINANT) ->
@@ -792,13 +841,13 @@
                       val findpivot :
                         'a wmatrix ->
                         'a curpos ->
-                        ([> `TDet of 'a Det.lstate | `TPivot of 'a P.lstate ]
-                         as 'b)
-                        list ->
-                        ('b list ->
-                         ('a, C.Dom.v option) Code.abstract ->
-                         ('a, 'c) Code.abstract) ->
-                        ('a, 'c) Code.abstract
+                        (< answer : ('a, 'b) Code.abstract;
+                           state : [> `TDet of 'a Det.lstate
+                                    | `TPivot of 'a P.lstate ]
+                                   list;
+                           .. >,
+                         ('a, C.Dom.v option) Code.abstract)
+                        StateCPSMonad.monad
                     end
               module NoPivot :
                 functor (Det : DETERMINANT) ->
@@ -832,20 +881,22 @@
                               ([> `TRan of 'b ] -> 'b option) * string
                             val decl :
                               unit ->
-                              ([> `TRan of ('b, int ref) Code.abstract ]
-                               as 'a)
-                              list ->
-                              ('a list ->
-                               ('b, int ref) Code.abstract ->
-                               ('b, 'c) Code.abstract) ->
-                              ('b, 'c) Code.abstract
+                              (< answer : ('a, 'b) Code.abstract;
+                                 state : [> `TRan of
+                                              ('a, int ref) Code.abstract ]
+                                         list;
+                                 .. >,
+                               ('a, int ref) Code.abstract)
+                              StateCPSMonad.monad
                             val succ :
                               unit ->
-                              ([> `TRan of ('b, int ref) Code.abstract ]
-                               as 'a)
-                              list ->
-                              ('a list -> ('b, unit) Code.abstract -> 'c) ->
-                              'c
+                              (< answer : 'a;
+                                 state : [> `TRan of
+                                              ('b, int ref) Code.abstract ]
+                                         list;
+                                 .. >,
+                               ('b, unit) Code.abstract)
+                              StateCPSMonad.monad
                             module type RANK =
                               sig
                                 type 'a tag_lstate = 'a tag_lstate_
@@ -953,20 +1004,22 @@
                               ([> `TRan of 'b ] -> 'b option) * string
                             val decl :
                               unit ->
-                              ([> `TRan of ('b, int ref) Code.abstract ]
-                               as 'a)
-                              list ->
-                              ('a list ->
-                               ('b, int ref) Code.abstract ->
-                               ('b, 'c) Code.abstract) ->
-                              ('b, 'c) Code.abstract
+                              (< answer : ('a, 'b) Code.abstract;
+                                 state : [> `TRan of
+                                              ('a, int ref) Code.abstract ]
+                                         list;
+                                 .. >,
+                               ('a, int ref) Code.abstract)
+                              StateCPSMonad.monad
                             val succ :
                               unit ->
-                              ([> `TRan of ('b, int ref) Code.abstract ]
-                               as 'a)
-                              list ->
-                              ('a list -> ('b, unit) Code.abstract -> 'c) ->
-                              'c
+                              (< answer : 'a;
+                                 state : [> `TRan of
+                                              ('b, int ref) Code.abstract ]
+                                         list;
+                                 .. >,
+                               ('b, unit) Code.abstract)
+                              StateCPSMonad.monad
                             module type RANK =
                               sig
                                 type 'a tag_lstate = 'a tag_lstate_
@@ -1052,11 +1105,10 @@
                     type res = C.contr * C.Dom.v
                     val make_result :
                       'a wmatrix ->
-                      ([> `TDet of 'a OD.Det.lstate ] as 'b) list ->
-                      ('b list ->
-                       ('a, C.contr * C.Dom.v) Code.abstract ->
-                       ('a, 'c) Code.abstract) ->
-                      ('a, 'c) Code.abstract
+                      (< answer : ('a, 'b) Code.abstract;
+                         state : [> `TDet of 'a OD.Det.lstate ] list; .. >,
+                       ('a, C.contr * C.Dom.v) Code.abstract)
+                      StateCPSMonad.monad
                   end
               module OutRank :
                 functor (OD : OUTPUTDEP) ->
@@ -1077,20 +1129,22 @@
                               ([> `TRan of 'b ] -> 'b option) * string
                             val decl :
                               unit ->
-                              ([> `TRan of ('b, int ref) Code.abstract ]
-                               as 'a)
-                              list ->
-                              ('a list ->
-                               ('b, int ref) Code.abstract ->
-                               ('b, 'c) Code.abstract) ->
-                              ('b, 'c) Code.abstract
+                              (< answer : ('a, 'b) Code.abstract;
+                                 state : [> `TRan of
+                                              ('a, int ref) Code.abstract ]
+                                         list;
+                                 .. >,
+                               ('a, int ref) Code.abstract)
+                              StateCPSMonad.monad
                             val succ :
                               unit ->
-                              ([> `TRan of ('b, int ref) Code.abstract ]
-                               as 'a)
-                              list ->
-                              ('a list -> ('b, unit) Code.abstract -> 'c) ->
-                              'c
+                              (< answer : 'a;
+                                 state : [> `TRan of
+                                              ('b, int ref) Code.abstract ]
+                                         list;
+                                 .. >,
+                               ('b, unit) Code.abstract)
+                              StateCPSMonad.monad
                             module type RANK =
                               sig
                                 type 'a tag_lstate = 'a tag_lstate_
@@ -1115,9 +1169,13 @@
                               end
                             val fin :
                               unit ->
-                              ([> `TRan of ('b, 'c ref) Code.abstract ] as 'a)
-                              list ->
-                              ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd
+                              (< answer : 'a;
+                                 state : [> `TRan of
+                                              ('b, 'c ref) Code.abstract ]
+                                         list;
+                                 .. >,
+                               ('b, 'c) Code.abstract)
+                              StateCPSMonad.monad
                           end
                         module P :
                           sig
@@ -1180,9 +1238,12 @@
                     type res = C.contr * int
                     val make_result :
                       'a wmatrix ->
-                      ([> `TRan of ('a, 'c ref) Code.abstract ] as 'b) list ->
-                      ('b list -> ('a, C.contr * 'c) Code.abstract -> 'd) ->
-                      'd
+                      (< answer : 'b;
+                         state : [> `TRan of ('a, 'c ref) Code.abstract ]
+                                 list;
+                         .. >,
+                       ('a, C.contr * 'c) Code.abstract)
+                      StateCPSMonad.monad
                   end
               module OutDetRank :
                 functor (OD : OUTPUTDEP) ->
@@ -1203,20 +1264,22 @@
                               ([> `TRan of 'b ] -> 'b option) * string
                             val decl :
                               unit ->
-                              ([> `TRan of ('b, int ref) Code.abstract ]
-                               as 'a)
-                              list ->
-                              ('a list ->
-                               ('b, int ref) Code.abstract ->
-                               ('b, 'c) Code.abstract) ->
-                              ('b, 'c) Code.abstract
+                              (< answer : ('a, 'b) Code.abstract;
+                                 state : [> `TRan of
+                                              ('a, int ref) Code.abstract ]
+                                         list;
+                                 .. >,
+                               ('a, int ref) Code.abstract)
+                              StateCPSMonad.monad
                             val succ :
                               unit ->
-                              ([> `TRan of ('b, int ref) Code.abstract ]
-                               as 'a)
-                              list ->
-                              ('a list -> ('b, unit) Code.abstract -> 'c) ->
-                              'c
+                              (< answer : 'a;
+                                 state : [> `TRan of
+                                              ('b, int ref) Code.abstract ]
+                                         list;
+                                 .. >,
+                               ('b, unit) Code.abstract)
+                              StateCPSMonad.monad
                             module type RANK =
                               sig
                                 type 'a tag_lstate = 'a tag_lstate_
@@ -1241,9 +1304,13 @@
                               end
                             val fin :
                               unit ->
-                              ([> `TRan of ('b, 'c ref) Code.abstract ] as 'a)
-                              list ->
-                              ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd
+                              (< answer : 'a;
+                                 state : [> `TRan of
+                                              ('b, 'c ref) Code.abstract ]
+                                         list;
+                                 .. >,
+                               ('b, 'c) Code.abstract)
+                              StateCPSMonad.monad
                           end
                         module P :
                           sig
@@ -1306,14 +1373,13 @@
                     type res = C.contr * C.Dom.v * int
                     val make_result :
                       'a wmatrix ->
-                      ([> `TDet of 'a OD.Det.lstate
-                        | `TRan of ('a, 'c ref) Code.abstract ]
-                       as 'b)
-                      list ->
-                      ('b list ->
-                       ('a, C.contr * C.Dom.v * 'c) Code.abstract ->
-                       ('a, 'd) Code.abstract) ->
-                      ('a, 'd) Code.abstract
+                      (< answer : ('a, 'b) Code.abstract;
+                         state : [> `TDet of 'a OD.Det.lstate
+                                  | `TRan of ('a, 'c ref) Code.abstract ]
+                                 list;
+                         .. >,
+                       ('a, C.contr * C.Dom.v * 'c) Code.abstract)
+                      StateCPSMonad.monad
                   end
               module OutDetRankPivot :
                 functor (OD : OUTPUTDEP) ->
@@ -1334,20 +1400,22 @@
                               ([> `TRan of 'b ] -> 'b option) * string
                             val decl :
                               unit ->
-                              ([> `TRan of ('b, int ref) Code.abstract ]
-                               as 'a)
-                              list ->
-                              ('a list ->
-                               ('b, int ref) Code.abstract ->
-                               ('b, 'c) Code.abstract) ->
-                              ('b, 'c) Code.abstract
+                              (< answer : ('a, 'b) Code.abstract;
+                                 state : [> `TRan of
+                                              ('a, int ref) Code.abstract ]
+                                         list;
+                                 .. >,
+                               ('a, int ref) Code.abstract)
+                              StateCPSMonad.monad
                             val succ :
                               unit ->
-                              ([> `TRan of ('b, int ref) Code.abstract ]
-                               as 'a)
-                              list ->
-                              ('a list -> ('b, unit) Code.abstract -> 'c) ->
-                              'c
+                              (< answer : 'a;
+                                 state : [> `TRan of
+                                              ('b, int ref) Code.abstract ]
+                                         list;
+                                 .. >,
+                               ('b, unit) Code.abstract)
+                              StateCPSMonad.monad
                             module type RANK =
                               sig
                                 type 'a tag_lstate = 'a tag_lstate_
@@ -1372,9 +1440,13 @@
                               end
                             val fin :
                               unit ->
-                              ([> `TRan of ('b, 'c ref) Code.abstract ] as 'a)
-                              list ->
-                              ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd
+                              (< answer : 'a;
+                                 state : [> `TRan of
+                                              ('b, 'c ref) Code.abstract ]
+                                         list;
+                                 .. >,
+                               ('b, 'c) Code.abstract)
+                              StateCPSMonad.monad
                           end
                         module P :
                           sig
@@ -1399,31 +1471,33 @@
                               ([> `TPivot of 'b ] -> 'b option) * string
                             val decl :
                               'a OD.PivotRep.ira ->
-                              ([> `TPivot of
-                                    ('a, OD.PivotRep.perm_rep ref)
-                                    Code.abstract ]
-                               as 'b)
-                              list ->
-                              ('b list ->
-                               ('c, unit) Code.abstract ->
-                               ('a, 'd) Code.abstract) ->
-                              ('a, 'd) Code.abstract
+                              (< answer : ('a, 'b) Code.abstract;
+                                 state : [> `TPivot of
+                                              ('a, OD.PivotRep.perm_rep ref)
+                                              Code.abstract ]
+                                         list;
+                                 .. >,
+                               ('c, unit) Code.abstract)
+                              StateCPSMonad.monad
                             val add :
                               'a OD.PivotRep.fra ->
-                              ([> `TPivot of
-                                    ('a, OD.PivotRep.perm_rep ref)
-                                    Code.abstract ]
-                               as 'b)
-                              list ->
-                              ('b list ->
-                               ('a, unit) Code.abstract option -> 'c) ->
-                              'c
+                              (< answer : 'b;
+                                 state : [> `TPivot of
+                                              ('a, OD.PivotRep.perm_rep ref)
+                                              Code.abstract ]
+                                         list;
+                                 .. >,
+                               ('a, unit) Code.abstract option)
+                              StateCPSMonad.monad
                             val fin :
                               unit ->
-                              ([> `TPivot of ('b, 'c ref) Code.abstract ]
-                               as 'a)
-                              list ->
-                              ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd
+                              (< answer : 'a;
+                                 state : [> `TPivot of
+                                              ('b, 'c ref) Code.abstract ]
+                                         list;
+                                 .. >,
+                               ('b, 'c) Code.abstract)
+                              StateCPSMonad.monad
                           end
                         module L :
                           sig
@@ -1455,15 +1529,14 @@
                     type res = C.contr * C.Dom.v * int * IF.P.perm_rep
                     val make_result :
                       'a wmatrix ->
-                      ([> `TDet of 'a OD.Det.lstate
-                        | `TPivot of ('a, 'c ref) Code.abstract
-                        | `TRan of ('a, 'd ref) Code.abstract ]
-                       as 'b)
-                      list ->
-                      ('b list ->
-                       ('a, C.contr * C.Dom.v * 'd * 'c) Code.abstract ->
-                       ('a, 'e) Code.abstract) ->
-                      ('a, 'e) Code.abstract
+                      (< answer : ('a, 'b) Code.abstract;
+                         state : [> `TDet of 'a OD.Det.lstate
+                                  | `TPivot of ('a, 'c ref) Code.abstract
+                                  | `TRan of ('a, 'd ref) Code.abstract ]
+                                 list;
+                         .. >,
+                       ('a, C.contr * C.Dom.v * 'd * 'c) Code.abstract)
+                      StateCPSMonad.monad
                   end
               module Out_L_U :
                 functor (OD : OUTPUTDEP) ->
@@ -1484,20 +1557,22 @@
                               ([> `TRan of 'b ] -> 'b option) * string
                             val decl :
                               unit ->
-                              ([> `TRan of ('b, int ref) Code.abstract ]
-                               as 'a)
-                              list ->
-                              ('a list ->
-                               ('b, int ref) Code.abstract ->
-                               ('b, 'c) Code.abstract) ->
-                              ('b, 'c) Code.abstract
+                              (< answer : ('a, 'b) Code.abstract;
+                                 state : [> `TRan of
+                                              ('a, int ref) Code.abstract ]
+                                         list;
+                                 .. >,
+                               ('a, int ref) Code.abstract)
+                              StateCPSMonad.monad
                             val succ :
                               unit ->
-                              ([> `TRan of ('b, int ref) Code.abstract ]
-                               as 'a)
-                              list ->
-                              ('a list -> ('b, unit) Code.abstract -> 'c) ->
-                              'c
+                              (< answer : 'a;
+                                 state : [> `TRan of
+                                              ('b, int ref) Code.abstract ]
+                                         list;
+                                 .. >,
+                               ('b, unit) Code.abstract)
+                              StateCPSMonad.monad
                             module type RANK =
                               sig
                                 type 'a tag_lstate = 'a tag_lstate_
@@ -1545,31 +1620,33 @@
                               ([> `TPivot of 'b ] -> 'b option) * string
                             val decl :
                               'a OD.PivotRep.ira ->
-                              ([> `TPivot of
-                                    ('a, OD.PivotRep.perm_rep ref)
-                                    Code.abstract ]
-                               as 'b)
-                              list ->
-                              ('b list ->
-                               ('c, unit) Code.abstract ->
-                               ('a, 'd) Code.abstract) ->
-                              ('a, 'd) Code.abstract
+                              (< answer : ('a, 'b) Code.abstract;
+                                 state : [> `TPivot of
+                                              ('a, OD.PivotRep.perm_rep ref)
+                                              Code.abstract ]
+                                         list;
+                                 .. >,
+                               ('c, unit) Code.abstract)
+                              StateCPSMonad.monad
                             val add :
                               'a OD.PivotRep.fra ->
-                              ([> `TPivot of
-                                    ('a, OD.PivotRep.perm_rep ref)
-                                    Code.abstract ]
-                               as 'b)
-                              list ->
-                              ('b list ->
-                               ('a, unit) Code.abstract option -> 'c) ->
-                              'c
+                              (< answer : 'b;
+                                 state : [> `TPivot of
+                                              ('a, OD.PivotRep.perm_rep ref)
+                                              Code.abstract ]
+                                         list;
+                                 .. >,
+                               ('a, unit) Code.abstract option)
+                              StateCPSMonad.monad
                             val fin :
                               unit ->
-                              ([> `TPivot of ('b, 'c ref) Code.abstract ]
-                               as 'a)
-                              list ->
-                              ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd
+                              (< answer : 'a;
+                                 state : [> `TPivot of
+                                              ('b, 'c ref) Code.abstract ]
+                                         list;
+                                 .. >,
+                               ('b, 'c) Code.abstract)
+                              StateCPSMonad.monad
                           end
                         module L :
                           sig
@@ -1583,38 +1660,41 @@
                               ([> `TLower of 'b ] -> 'b option) * string
                             val decl :
                               ('a, 'b) Code.abstract ->
-                              ([> `TLower of ('a, 'b) Code.abstract ] as 'c)
-                              list ->
-                              ('c list ->
-                               ('a, 'b) Code.abstract ->
-                               ('a, 'd) Code.abstract) ->
-                              ('a, 'd) Code.abstract
+                              (< answer : ('a, 'c) Code.abstract;
+                                 state : [> `TLower of ('a, 'b) Code.abstract ]
+                                         list;
+                                 .. >,
+                               ('a, 'b) Code.abstract)
+                              StateCPSMonad.monad
                             val updt :
                               'a C.vc ->
                               ('a, int) Code.abstract ->
                               ('a, int) Code.abstract ->
                               'a C.vo ->
                               'a C.vo ->
-                              (([> `TLower of 'a C.vc ] as 'b) list ->
-                               ('b list -> ('a, unit) Code.abstract -> 'c) ->
-                               'c)
-                              option
+                              (< answer : 'b;
+                                 state : [> `TLower of 'a C.vc ] list; .. >,
+                               ('a, unit) Code.abstract)
+                              StateCPSMonad.monad option
                             val fin :
                               unit ->
-                              ([> `TLower of 'b ] as 'a) list ->
-                              ('a list -> 'b -> 'c) -> 'c
+                              (< answer : 'a;
+                                 state : [> `TLower of 'b ] list; .. >,
+                               'b)
+                              StateCPSMonad.monad
                             val wants_pack : bool
                           end
                       end
                     type res = C.contr * C.contr * IF.P.perm_rep
                     val make_result :
                       'a wmatrix ->
-                      ([> `TLower of ('a, 'c) Code.abstract
-                        | `TPivot of ('a, 'd ref) Code.abstract ]
-                       as 'b)
-                      list ->
-                      ('b list -> ('a, C.contr * 'c * 'd) Code.abstract -> 'e) ->
-                      'e
+                      (< answer : 'b;
+                         state : [> `TLower of ('a, 'c) Code.abstract
+                                  | `TPivot of ('a, 'd ref) Code.abstract ]
+                                 list;
+                         .. >,
+                       ('a, C.contr * 'c * 'd) Code.abstract)
+                      StateCPSMonad.monad
                   end
               module Out_LU_Packed :
                 functor (OD : OUTPUTDEP) ->
@@ -1635,20 +1715,22 @@
                               ([> `TRan of 'b ] -> 'b option) * string
                             val decl :
                               unit ->
-                              ([> `TRan of ('b, int ref) Code.abstract ]
-                               as 'a)
-                              list ->
-                              ('a list ->
-                               ('b, int ref) Code.abstract ->
-                               ('b, 'c) Code.abstract) ->
-                              ('b, 'c) Code.abstract
+                              (< answer : ('a, 'b) Code.abstract;
+                                 state : [> `TRan of
+                                              ('a, int ref) Code.abstract ]
+                                         list;
+                                 .. >,
+                               ('a, int ref) Code.abstract)
+                              StateCPSMonad.monad
                             val succ :
                               unit ->
-                              ([> `TRan of ('b, int ref) Code.abstract ]
-                               as 'a)
-                              list ->
-                              ('a list -> ('b, unit) Code.abstract -> 'c) ->
-                              'c
+                              (< answer : 'a;
+                                 state : [> `TRan of
+                                              ('b, int ref) Code.abstract ]
+                                         list;
+                                 .. >,
+                               ('b, unit) Code.abstract)
+                              StateCPSMonad.monad
                             module type RANK =
                               sig
                                 type 'a tag_lstate = 'a tag_lstate_
@@ -1696,31 +1778,33 @@
                               ([> `TPivot of 'b ] -> 'b option) * string
                             val decl :
                               'a OD.PivotRep.ira ->
-                              ([> `TPivot of
-                                    ('a, OD.PivotRep.perm_rep ref)
-                                    Code.abstract ]
-                               as 'b)
-                              list ->
-                              ('b list ->
-                               ('c, unit) Code.abstract ->
-                               ('a, 'd) Code.abstract) ->
-                              ('a, 'd) Code.abstract
+                              (< answer : ('a, 'b) Code.abstract;
+                                 state : [> `TPivot of
+                                              ('a, OD.PivotRep.perm_rep ref)
+                                              Code.abstract ]
+                                         list;
+                                 .. >,
+                               ('c, unit) Code.abstract)
+                              StateCPSMonad.monad
                             val add :
                               'a OD.PivotRep.fra ->
-                              ([> `TPivot of
-                                    ('a, OD.PivotRep.perm_rep ref)
-                                    Code.abstract ]
-                               as 'b)
-                              list ->
-                              ('b list ->
-                               ('a, unit) Code.abstract option -> 'c) ->
-                              'c
+                              (< answer : 'b;
+                                 state : [> `TPivot of
+                                              ('a, OD.PivotRep.perm_rep ref)
+                                              Code.abstract ]
+                                         list;
+                                 .. >,
+                               ('a, unit) Code.abstract option)
+                              StateCPSMonad.monad
                             val fin :
                               unit ->
-                              ([> `TPivot of ('b, 'c ref) Code.abstract ]
-                               as 'a)
-                              list ->
-                              ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd
+                              (< answer : 'a;
+                                 state : [> `TPivot of
+                                              ('b, 'c ref) Code.abstract ]
+                                         list;
+                                 .. >,
+                               ('b, 'c) Code.abstract)
+                              StateCPSMonad.monad
                           end
                         module L :
                           sig
@@ -1734,25 +1818,31 @@
                               ([> `TLower of 'b ] -> 'b option) * string
                             val decl :
                               'a ->
-                              ([> `TLower of 'a ] as 'b) list ->
-                              ('b list -> 'a -> 'c) -> 'c
+                              (< answer : 'b;
+                                 state : [> `TLower of 'a ] list; .. >,
+                               'a)
+                              StateCPSMonad.monad
                             val updt :
                               'a -> 'b -> 'c -> 'd -> 'e -> 'f option
                             val fin :
                               unit ->
-                              ([> `TLower of 'b ] as 'a) list ->
-                              ('a list -> 'b -> 'c) -> 'c
+                              (< answer : 'a;
+                                 state : [> `TLower of 'b ] list; .. >,
+                               'b)
+                              StateCPSMonad.monad
                             val wants_pack : bool
                           end
                       end
                     type res = C.contr * IF.P.perm_rep
                     val make_result :
                       'a ->
-                      ([> `TLower of ('c, 'd) Code.abstract
-                        | `TPivot of ('c, 'e ref) Code.abstract ]
-                       as 'b)
-                      list ->
-                      ('b list -> ('c, 'd * 'e) Code.abstract -> 'f) -> 'f
+                      (< answer : 'b;
+                         state : [> `TLower of ('c, 'd) Code.abstract
+                                  | `TPivot of ('c, 'e ref) Code.abstract ]
+                                 list;
+                         .. >,
+                       ('c, 'd * 'e) Code.abstract)
+                      StateCPSMonad.monad
                   end
               module type INTERNAL_FEATURES =
                 sig
@@ -1905,17 +1995,16 @@
                       ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
                     val init :
                       ('a, F.Input.inp) Code.abstract ->
-                      ([> `TDet of 'a F.Det.lstate
-                        | `TLower of ('a, C.contr) Code.abstract
-                        | `TPivot of 'a F.Output(F).IF.P.lstate
-                        | `TRan of 'a TrackRank.lstate ]
-                       as 'b)
-                      list ->
-                      ('b list ->
+                      (< answer : ('a, 'b) Code.abstract;
+                         state : [> `TDet of 'a F.Det.lstate
+                                  | `TLower of ('a, C.contr) Code.abstract
+                                  | `TPivot of 'a F.Output(F).IF.P.lstate
+                                  | `TRan of 'a TrackRank.lstate ]
+                                 list;
+                         .. >,
                        'a wmatrix * ('a, int ref) Code.abstract *
-                       ('a, int ref) Code.abstract * ('a, int) Code.abstract ->
-                       ('a, 'c) Code.abstract) ->
-                      ('a, 'c) Code.abstract
+                       ('a, int ref) Code.abstract * ('a, int) Code.abstract)
+                      StateCPSMonad.monad
                     val forward_elim :
                       'a wmatrix * ('a, int ref) Code.abstract *
                       ('a, int ref) Code.abstract * ('a, int) Code.abstract ->
@@ -1928,15 +2017,15 @@
                       ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
                     val gen :
                       ('a, F.Input.inp) Code.abstract ->
-                      ([> `TDet of 'a F.Det.lstate
-                        | `TLower of 'a O.IF.L.lstate
-                        | `TPivot of 'a O.IF.P.lstate
-                        | `TRan of 'a TrackRank.lstate ]
-                       as 'b)
-                      list ->
-                      ('b list ->
-                       ('a, O.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-                      ('a, 'c) Code.abstract
+                      (< answer : ('a, 'b) Code.abstract;
+                         state : [> `TDet of 'a F.Det.lstate
+                                  | `TLower of 'a O.IF.L.lstate
+                                  | `TPivot of 'a O.IF.P.lstate
+                                  | `TRan of 'a TrackRank.lstate ]
+                                 list;
+                         .. >,
+                       ('a, O.res) Code.abstract)
+                      StateCPSMonad.monad
                   end
             end
           module Solve :
@@ -1957,11 +2046,9 @@
                   type rhs = C.contr
                   val get_input :
                     ('a, 'b * 'c) Code.abstract ->
-                    'd ->
-                    ('d ->
-                     ('a, 'b) Code.abstract * ('a, 'c) Code.abstract ->
-                     ('a, 'e) Code.abstract) ->
-                    ('a, 'e) Code.abstract
+                    (< answer : ('a, 'd) Code.abstract; state : 'e; .. >,
+                     ('a, 'b) Code.abstract * ('a, 'c) Code.abstract)
+                    StateCPSMonad.monad
                 end
               module type OUTPUT =
                 sig
@@ -2127,18 +2214,20 @@
                           ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
                         val init :
                           ('a, C.contr * int) Code.abstract ->
-                          ([> `TDet of 'a F.Det.lstate
-                            | `TLower of ('a, C.contr) Code.abstract
-                            | `TPivot of
-                                ('a, PermList.perm_rep ref) Code.abstract
-                            | `TRan of 'a TrackRank.lstate ]
-                           as 'b)
-                          list ->
-                          ('b list ->
+                          (< answer : ('a, 'b) Code.abstract;
+                             state : [> `TDet of 'a F.Det.lstate
+                                      | `TLower of
+                                          ('a, C.contr) Code.abstract
+                                      | `TPivot of
+                                          ('a, PermList.perm_rep ref)
+                                          Code.abstract
+                                      | `TRan of 'a TrackRank.lstate ]
+                                     list;
+                             .. >,
                            'a wmatrix * ('a, int ref) Code.abstract *
                            ('a, int ref) Code.abstract *
-                           ('a, int) Code.abstract -> ('a, 'c) Code.abstract) ->
-                          ('a, 'c) Code.abstract
+                           ('a, int) Code.abstract)
+                          StateCPSMonad.monad
                         val forward_elim :
                           'a wmatrix * ('a, int ref) Code.abstract *
                           ('a, int ref) Code.abstract *
@@ -2153,24 +2242,22 @@
                           ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
                         val gen :
                           ('a, C.contr * int) Code.abstract ->
-                          ([> `TDet of 'a F.Det.lstate
-                            | `TLower of 'a O.IF.L.lstate
-                            | `TPivot of 'a O.IF.P.lstate
-                            | `TRan of 'a TrackRank.lstate ]
-                           as 'b)
-                          list ->
-                          ('b list ->
-                           ('a, O.res) Code.abstract ->
-                           ('a, 'c) Code.abstract) ->
-                          ('a, 'c) Code.abstract
+                          (< answer : ('a, 'b) Code.abstract;
+                             state : [> `TDet of 'a F.Det.lstate
+                                      | `TLower of 'a O.IF.L.lstate
+                                      | `TPivot of 'a O.IF.P.lstate
+                                      | `TRan of 'a TrackRank.lstate ]
+                                     list;
+                             .. >,
+                           ('a, O.res) Code.abstract)
+                          StateCPSMonad.monad
                       end
                     val init :
                       ('a, F.Input.inp) Code.abstract ->
-                      'b ->
-                      ('b ->
+                      (< answer : 'b; state : 'c; .. >,
                        ('a, C.contr) Code.abstract *
-                       ('a, F.Input.rhs) Code.abstract -> 'c) ->
-                      'c
+                       ('a, F.Input.rhs) Code.abstract)
+                      StateCPSMonad.monad
                     val back_elim :
                       'a C.vc ->
                       ('a, int) Code.abstract ->
@@ -2178,16 +2265,15 @@
                       'b -> ('b -> ('a, C.contr) Code.abstract -> 'c) -> 'c
                     val gen :
                       ('a, F.Input.inp) Code.abstract ->
-                      ([> `TDet of 'a F.Det.lstate
-                        | `TLower of 'a GE'.O.IF.L.lstate
-                        | `TPivot of 'a GE'.O.IF.P.lstate
-                        | `TRan of 'a TrackRank.lstate ]
-                       as 'b)
-                      list ->
-                      ('b list ->
-                       ('a, F.Output.res) Code.abstract ->
-                       ('a, 'c) Code.abstract) ->
-                      ('a, 'c) Code.abstract
+                      (< answer : ('a, 'b) Code.abstract;
+                         state : [> `TDet of 'a F.Det.lstate
+                                  | `TLower of 'a GE'.O.IF.L.lstate
+                                  | `TPivot of 'a GE'.O.IF.P.lstate
+                                  | `TRan of 'a TrackRank.lstate ]
+                                 list;
+                         .. >,
+                       ('a, F.Output.res) Code.abstract)
+                      StateCPSMonad.monad
                   end
             end
         end
@@ -2874,39 +2960,56 @@ module G_GAC_F :
           ('a -> [> `TDet of 'a ]) * ([> `TDet of 'b ] -> 'b option) * string
         val decl :
           unit ->
-          ([> `TDet of
-                ('b, int ref) Code.abstract *
-                ('b, GAC_F.Dom.v ref) Code.abstract ]
-           as 'a)
-          list ->
-          ('a list -> ('c, unit) Code.abstract -> ('b, 'd) Code.abstract) ->
-          ('b, 'd) Code.abstract
+          (< answer : ('a, 'b) Code.abstract;
+             state : [> `TDet of
+                          ('a, int ref) Code.abstract *
+                          ('a, GAC_F.Dom.v ref) Code.abstract ]
+                     list;
+             .. >,
+           ('c, unit) Code.abstract)
+          StateCPSMonad.monad
         val upd_sign :
           unit ->
-          ([> `TDet of ('b, int ref) Code.abstract * 'c ] as 'a) list ->
-          ('a list -> ('b, unit) Code.abstract option -> 'd) -> 'd
+          (< answer : 'a;
+             state : [> `TDet of ('b, int ref) Code.abstract * 'c ] list;
+             .. >,
+           ('b, unit) Code.abstract option)
+          StateCPSMonad.monad
         val zero_sign :
           unit ->
-          ([> `TDet of ('b, int ref) Code.abstract * 'c ] as 'a) list ->
-          ('a list -> ('b, unit) Code.abstract -> 'd) -> 'd
+          (< answer : 'a;
+             state : [> `TDet of ('b, int ref) Code.abstract * 'c ] list;
+             .. >,
+           ('b, unit) Code.abstract)
+          StateCPSMonad.monad
         val get :
           unit ->
-          ([> `TDet of 'b * 'c ] as 'a) list -> ('a list -> 'c -> 'd) -> 'd
+          (< answer : 'a; state : [> `TDet of 'b * 'c ] list; .. >, 'c)
+          StateCPSMonad.monad
         val set :
           ('a, 'b) Code.abstract ->
-          ([> `TDet of 'd * ('a, 'b ref) Code.abstract ] as 'c) list ->
-          ('c list -> ('a, unit) Code.abstract -> 'e) -> 'e
+          (< answer : 'c;
+             state : [> `TDet of 'd * ('a, 'b ref) Code.abstract ] list; .. >,
+           ('a, unit) Code.abstract)
+          StateCPSMonad.monad
         val acc :
           'a GAC_F.Dom.vc ->
-          ([> `TDet of 'c * ('a, GAC_F.Dom.v ref) Code.abstract ] as 'b) list ->
-          ('b list -> ('a, unit) Code.abstract -> 'd) -> 'd
+          (< answer : 'b;
+             state : [> `TDet of 'c * ('a, GAC_F.Dom.v ref) Code.abstract ]
+                     list;
+             .. >,
+           ('a, unit) Code.abstract)
+          StateCPSMonad.monad
         val fin :
           unit ->
-          ([> `TDet of
-                ('b, int ref) Code.abstract *
-                ('b, GAC_F.Dom.v ref) Code.abstract ]
-           as 'a)
-          list -> ('a list -> ('b, GAC_F.Dom.v) Code.abstract -> 'c) -> 'c
+          (< answer : 'a;
+             state : [> `TDet of
+                          ('b, int ref) Code.abstract *
+                          ('b, GAC_F.Dom.v ref) Code.abstract ]
+                     list;
+             .. >,
+           ('b, GAC_F.Dom.v) Code.abstract)
+          StateCPSMonad.monad
       end
     module type UPDATE =
       functor (D : DETERMINANT) ->
@@ -2939,7 +3042,9 @@ module G_GAC_F :
                 'a GAC_F.Dom.vc ->
                 'a GAC_F.Dom.vc ->
                 'a GAC_F.Dom.vc ->
-                ('a GAC_F.Dom.vc -> 'b) -> 'c -> 'd -> ('d -> 'b -> 'e) -> 'e
+                ('a GAC_F.Dom.vc -> 'b) ->
+                'c ->
+                (< answer : 'd; state : 'e; .. >, 'b) StateCPSMonad.monad
               val update_det :
                 ('a, GAC_F.Dom.v) Code.abstract ->
                 (< answer : 'b; classif : 'a;
@@ -2959,7 +3064,7 @@ module G_GAC_F :
                 'a GAC_F.Dom.vc ->
                 ('a GAC_F.Dom.vc -> 'b) ->
                 ('a, GAC_F.Dom.v ref) Code.abstract ->
-                'c -> ('c -> 'b -> 'd) -> 'd
+                (< answer : 'c; state : 'd; .. >, 'b) StateCPSMonad.monad
               val update_det :
                 ('a, GAC_F.Dom.v) Code.abstract ->
                 (< answer : 'b; classif : 'a;
@@ -3022,21 +3127,23 @@ module G_GAC_F :
               ([> `TLower of 'b ] -> 'b option) * string
             val decl :
               ('a, 'b) Code.abstract ->
-              ([> `TLower of ('a, 'b) Code.abstract ] as 'c) list ->
-              ('c list -> ('a, 'b) Code.abstract -> ('a, 'd) Code.abstract) ->
-              ('a, 'd) Code.abstract
+              (< answer : ('a, 'c) Code.abstract;
+                 state : [> `TLower of ('a, 'b) Code.abstract ] list; .. >,
+               ('a, 'b) Code.abstract)
+              StateCPSMonad.monad
             val updt :
               'a GAC_F.vc ->
               ('a, int) Code.abstract ->
               ('a, int) Code.abstract ->
               'a GAC_F.vo ->
               'a GAC_F.vo ->
-              (([> `TLower of 'a GAC_F.vc ] as 'b) list ->
-               ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c)
-              option
+              (< answer : 'b; state : [> `TLower of 'a GAC_F.vc ] list; .. >,
+               ('a, unit) Code.abstract)
+              StateCPSMonad.monad option
             val fin :
               unit ->
-              ([> `TLower of 'b ] as 'a) list -> ('a list -> 'b -> 'c) -> 'c
+              (< answer : 'a; state : [> `TLower of 'b ] list; .. >, 'b)
+              StateCPSMonad.monad
             val wants_pack : bool
           end
         module PackedLower :
@@ -3051,11 +3158,13 @@ module G_GAC_F :
               ([> `TLower of 'b ] -> 'b option) * string
             val decl :
               'a ->
-              ([> `TLower of 'a ] as 'b) list -> ('b list -> 'a -> 'c) -> 'c
+              (< answer : 'b; state : [> `TLower of 'a ] list; .. >, 'a)
+              StateCPSMonad.monad
             val updt : 'a -> 'b -> 'c -> 'd -> 'e -> 'f option
             val fin :
               unit ->
-              ([> `TLower of 'b ] as 'a) list -> ('a list -> 'b -> 'c) -> 'c
+              (< answer : 'a; state : [> `TLower of 'b ] list; .. >, 'b)
+              StateCPSMonad.monad
             val wants_pack : bool
           end
         module NoLower :
@@ -3105,10 +3214,9 @@ module G_GAC_F :
             type inp = GAC_F.contr * int
             val get_input :
               ('a, 'b * 'c) Code.abstract ->
-              'd ->
-              ('d ->
-               ('a, 'b) Code.abstract * ('a, 'c) Code.abstract * bool -> 'e) ->
-              'e
+              (< answer : 'd; state : 'e; .. >,
+               ('a, 'b) Code.abstract * ('a, 'c) Code.abstract * bool)
+              StateCPSMonad.monad
           end
         module RowPivot :
           functor (Det : DETERMINANT) ->
@@ -3117,12 +3225,13 @@ module G_GAC_F :
                 val findpivot :
                   'a wmatrix ->
                   'a curpos ->
-                  ([> `TDet of 'a Det.lstate | `TPivot of 'a P.lstate ] as 'b)
-                  list ->
-                  ('b list ->
-                   ('a, GAC_F.Dom.v option) Code.abstract ->
-                   ('a, 'c) Code.abstract) ->
-                  ('a, 'c) Code.abstract
+                  (< answer : ('a, 'b) Code.abstract;
+                     state : [> `TDet of 'a Det.lstate
+                              | `TPivot of 'a P.lstate ]
+                             list;
+                     .. >,
+                   ('a, GAC_F.Dom.v option) Code.abstract)
+                  StateCPSMonad.monad
               end
         module FullPivot :
           functor (Det : DETERMINANT) ->
@@ -3131,12 +3240,13 @@ module G_GAC_F :
                 val findpivot :
                   'a wmatrix ->
                   'a curpos ->
-                  ([> `TDet of 'a Det.lstate | `TPivot of 'a P.lstate ] as 'b)
-                  list ->
-                  ('b list ->
-                   ('a, GAC_F.Dom.v option) Code.abstract ->
-                   ('a, 'c) Code.abstract) ->
-                  ('a, 'c) Code.abstract
+                  (< answer : ('a, 'b) Code.abstract;
+                     state : [> `TDet of 'a Det.lstate
+                              | `TPivot of 'a P.lstate ]
+                             list;
+                     .. >,
+                   ('a, GAC_F.Dom.v option) Code.abstract)
+                  StateCPSMonad.monad
               end
         module NoPivot :
           functor (Det : DETERMINANT) ->
@@ -3170,17 +3280,20 @@ module G_GAC_F :
                         ([> `TRan of 'b ] -> 'b option) * string
                       val decl :
                         unit ->
-                        ([> `TRan of ('b, int ref) Code.abstract ] as 'a)
-                        list ->
-                        ('a list ->
-                         ('b, int ref) Code.abstract ->
-                         ('b, 'c) Code.abstract) ->
-                        ('b, 'c) Code.abstract
+                        (< answer : ('a, 'b) Code.abstract;
+                           state : [> `TRan of ('a, int ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('a, int ref) Code.abstract)
+                        StateCPSMonad.monad
                       val succ :
                         unit ->
-                        ([> `TRan of ('b, int ref) Code.abstract ] as 'a)
-                        list ->
-                        ('a list -> ('b, unit) Code.abstract -> 'c) -> 'c
+                        (< answer : 'a;
+                           state : [> `TRan of ('b, int ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('b, unit) Code.abstract)
+                        StateCPSMonad.monad
                       module type RANK =
                         sig
                           type 'a tag_lstate = 'a tag_lstate_
@@ -3287,17 +3400,20 @@ module G_GAC_F :
                         ([> `TRan of 'b ] -> 'b option) * string
                       val decl :
                         unit ->
-                        ([> `TRan of ('b, int ref) Code.abstract ] as 'a)
-                        list ->
-                        ('a list ->
-                         ('b, int ref) Code.abstract ->
-                         ('b, 'c) Code.abstract) ->
-                        ('b, 'c) Code.abstract
+                        (< answer : ('a, 'b) Code.abstract;
+                           state : [> `TRan of ('a, int ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('a, int ref) Code.abstract)
+                        StateCPSMonad.monad
                       val succ :
                         unit ->
-                        ([> `TRan of ('b, int ref) Code.abstract ] as 'a)
-                        list ->
-                        ('a list -> ('b, unit) Code.abstract -> 'c) -> 'c
+                        (< answer : 'a;
+                           state : [> `TRan of ('b, int ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('b, unit) Code.abstract)
+                        StateCPSMonad.monad
                       module type RANK =
                         sig
                           type 'a tag_lstate = 'a tag_lstate_
@@ -3382,11 +3498,10 @@ module G_GAC_F :
               type res = GAC_F.contr * GAC_F.Dom.v
               val make_result :
                 'a wmatrix ->
-                ([> `TDet of 'a OD.Det.lstate ] as 'b) list ->
-                ('b list ->
-                 ('a, GAC_F.contr * GAC_F.Dom.v) Code.abstract ->
-                 ('a, 'c) Code.abstract) ->
-                ('a, 'c) Code.abstract
+                (< answer : ('a, 'b) Code.abstract;
+                   state : [> `TDet of 'a OD.Det.lstate ] list; .. >,
+                 ('a, GAC_F.contr * GAC_F.Dom.v) Code.abstract)
+                StateCPSMonad.monad
             end
         module OutRank :
           functor (OD : OUTPUTDEP) ->
@@ -3407,17 +3522,20 @@ module G_GAC_F :
                         ([> `TRan of 'b ] -> 'b option) * string
                       val decl :
                         unit ->
-                        ([> `TRan of ('b, int ref) Code.abstract ] as 'a)
-                        list ->
-                        ('a list ->
-                         ('b, int ref) Code.abstract ->
-                         ('b, 'c) Code.abstract) ->
-                        ('b, 'c) Code.abstract
+                        (< answer : ('a, 'b) Code.abstract;
+                           state : [> `TRan of ('a, int ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('a, int ref) Code.abstract)
+                        StateCPSMonad.monad
                       val succ :
                         unit ->
-                        ([> `TRan of ('b, int ref) Code.abstract ] as 'a)
-                        list ->
-                        ('a list -> ('b, unit) Code.abstract -> 'c) -> 'c
+                        (< answer : 'a;
+                           state : [> `TRan of ('b, int ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('b, unit) Code.abstract)
+                        StateCPSMonad.monad
                       module type RANK =
                         sig
                           type 'a tag_lstate = 'a tag_lstate_
@@ -3442,8 +3560,12 @@ module G_GAC_F :
                         end
                       val fin :
                         unit ->
-                        ([> `TRan of ('b, 'c ref) Code.abstract ] as 'a) list ->
-                        ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd
+                        (< answer : 'a;
+                           state : [> `TRan of ('b, 'c ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('b, 'c) Code.abstract)
+                        StateCPSMonad.monad
                     end
                   module P :
                     sig
@@ -3505,8 +3627,11 @@ module G_GAC_F :
               type res = GAC_F.contr * int
               val make_result :
                 'a wmatrix ->
-                ([> `TRan of ('a, 'c ref) Code.abstract ] as 'b) list ->
-                ('b list -> ('a, GAC_F.contr * 'c) Code.abstract -> 'd) -> 'd
+                (< answer : 'b;
+                   state : [> `TRan of ('a, 'c ref) Code.abstract ] list;
+                   .. >,
+                 ('a, GAC_F.contr * 'c) Code.abstract)
+                StateCPSMonad.monad
             end
         module OutDetRank :
           functor (OD : OUTPUTDEP) ->
@@ -3527,17 +3652,20 @@ module G_GAC_F :
                         ([> `TRan of 'b ] -> 'b option) * string
                       val decl :
                         unit ->
-                        ([> `TRan of ('b, int ref) Code.abstract ] as 'a)
-                        list ->
-                        ('a list ->
-                         ('b, int ref) Code.abstract ->
-                         ('b, 'c) Code.abstract) ->
-                        ('b, 'c) Code.abstract
+                        (< answer : ('a, 'b) Code.abstract;
+                           state : [> `TRan of ('a, int ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('a, int ref) Code.abstract)
+                        StateCPSMonad.monad
                       val succ :
                         unit ->
-                        ([> `TRan of ('b, int ref) Code.abstract ] as 'a)
-                        list ->
-                        ('a list -> ('b, unit) Code.abstract -> 'c) -> 'c
+                        (< answer : 'a;
+                           state : [> `TRan of ('b, int ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('b, unit) Code.abstract)
+                        StateCPSMonad.monad
                       module type RANK =
                         sig
                           type 'a tag_lstate = 'a tag_lstate_
@@ -3562,8 +3690,12 @@ module G_GAC_F :
                         end
                       val fin :
                         unit ->
-                        ([> `TRan of ('b, 'c ref) Code.abstract ] as 'a) list ->
-                        ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd
+                        (< answer : 'a;
+                           state : [> `TRan of ('b, 'c ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('b, 'c) Code.abstract)
+                        StateCPSMonad.monad
                     end
                   module P :
                     sig
@@ -3625,14 +3757,13 @@ module G_GAC_F :
               type res = GAC_F.contr * GAC_F.Dom.v * int
               val make_result :
                 'a wmatrix ->
-                ([> `TDet of 'a OD.Det.lstate
-                  | `TRan of ('a, 'c ref) Code.abstract ]
-                 as 'b)
-                list ->
-                ('b list ->
-                 ('a, GAC_F.contr * GAC_F.Dom.v * 'c) Code.abstract ->
-                 ('a, 'd) Code.abstract) ->
-                ('a, 'd) Code.abstract
+                (< answer : ('a, 'b) Code.abstract;
+                   state : [> `TDet of 'a OD.Det.lstate
+                            | `TRan of ('a, 'c ref) Code.abstract ]
+                           list;
+                   .. >,
+                 ('a, GAC_F.contr * GAC_F.Dom.v * 'c) Code.abstract)
+                StateCPSMonad.monad
             end
         module OutDetRankPivot :
           functor (OD : OUTPUTDEP) ->
@@ -3653,17 +3784,20 @@ module G_GAC_F :
                         ([> `TRan of 'b ] -> 'b option) * string
                       val decl :
                         unit ->
-                        ([> `TRan of ('b, int ref) Code.abstract ] as 'a)
-                        list ->
-                        ('a list ->
-                         ('b, int ref) Code.abstract ->
-                         ('b, 'c) Code.abstract) ->
-                        ('b, 'c) Code.abstract
+                        (< answer : ('a, 'b) Code.abstract;
+                           state : [> `TRan of ('a, int ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('a, int ref) Code.abstract)
+                        StateCPSMonad.monad
                       val succ :
                         unit ->
-                        ([> `TRan of ('b, int ref) Code.abstract ] as 'a)
-                        list ->
-                        ('a list -> ('b, unit) Code.abstract -> 'c) -> 'c
+                        (< answer : 'a;
+                           state : [> `TRan of ('b, int ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('b, unit) Code.abstract)
+                        StateCPSMonad.monad
                       module type RANK =
                         sig
                           type 'a tag_lstate = 'a tag_lstate_
@@ -3688,8 +3822,12 @@ module G_GAC_F :
                         end
                       val fin :
                         unit ->
-                        ([> `TRan of ('b, 'c ref) Code.abstract ] as 'a) list ->
-                        ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd
+                        (< answer : 'a;
+                           state : [> `TRan of ('b, 'c ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('b, 'c) Code.abstract)
+                        StateCPSMonad.monad
                     end
                   module P :
                     sig
@@ -3714,26 +3852,32 @@ module G_GAC_F :
                         ([> `TPivot of 'b ] -> 'b option) * string
                       val decl :
                         'a OD.PivotRep.ira ->
-                        ([> `TPivot of
-                              ('a, OD.PivotRep.perm_rep ref) Code.abstract ]
-                         as 'b)
-                        list ->
-                        ('b list ->
-                         ('c, unit) Code.abstract -> ('a, 'd) Code.abstract) ->
-                        ('a, 'd) Code.abstract
+                        (< answer : ('a, 'b) Code.abstract;
+                           state : [> `TPivot of
+                                        ('a, OD.PivotRep.perm_rep ref)
+                                        Code.abstract ]
+                                   list;
+                           .. >,
+                         ('c, unit) Code.abstract)
+                        StateCPSMonad.monad
                       val add :
                         'a OD.PivotRep.fra ->
-                        ([> `TPivot of
-                              ('a, OD.PivotRep.perm_rep ref) Code.abstract ]
-                         as 'b)
-                        list ->
-                        ('b list -> ('a, unit) Code.abstract option -> 'c) ->
-                        'c
+                        (< answer : 'b;
+                           state : [> `TPivot of
+                                        ('a, OD.PivotRep.perm_rep ref)
+                                        Code.abstract ]
+                                   list;
+                           .. >,
+                         ('a, unit) Code.abstract option)
+                        StateCPSMonad.monad
                       val fin :
                         unit ->
-                        ([> `TPivot of ('b, 'c ref) Code.abstract ] as 'a)
-                        list ->
-                        ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd
+                        (< answer : 'a;
+                           state : [> `TPivot of ('b, 'c ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('b, 'c) Code.abstract)
+                        StateCPSMonad.monad
                     end
                   module L :
                     sig
@@ -3765,15 +3909,14 @@ module G_GAC_F :
               type res = GAC_F.contr * GAC_F.Dom.v * int * IF.P.perm_rep
               val make_result :
                 'a wmatrix ->
-                ([> `TDet of 'a OD.Det.lstate
-                  | `TPivot of ('a, 'c ref) Code.abstract
-                  | `TRan of ('a, 'd ref) Code.abstract ]
-                 as 'b)
-                list ->
-                ('b list ->
-                 ('a, GAC_F.contr * GAC_F.Dom.v * 'd * 'c) Code.abstract ->
-                 ('a, 'e) Code.abstract) ->
-                ('a, 'e) Code.abstract
+                (< answer : ('a, 'b) Code.abstract;
+                   state : [> `TDet of 'a OD.Det.lstate
+                            | `TPivot of ('a, 'c ref) Code.abstract
+                            | `TRan of ('a, 'd ref) Code.abstract ]
+                           list;
+                   .. >,
+                 ('a, GAC_F.contr * GAC_F.Dom.v * 'd * 'c) Code.abstract)
+                StateCPSMonad.monad
             end
         module Out_L_U :
           functor (OD : OUTPUTDEP) ->
@@ -3794,17 +3937,20 @@ module G_GAC_F :
                         ([> `TRan of 'b ] -> 'b option) * string
                       val decl :
                         unit ->
-                        ([> `TRan of ('b, int ref) Code.abstract ] as 'a)
-                        list ->
-                        ('a list ->
-                         ('b, int ref) Code.abstract ->
-                         ('b, 'c) Code.abstract) ->
-                        ('b, 'c) Code.abstract
+                        (< answer : ('a, 'b) Code.abstract;
+                           state : [> `TRan of ('a, int ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('a, int ref) Code.abstract)
+                        StateCPSMonad.monad
                       val succ :
                         unit ->
-                        ([> `TRan of ('b, int ref) Code.abstract ] as 'a)
-                        list ->
-                        ('a list -> ('b, unit) Code.abstract -> 'c) -> 'c
+                        (< answer : 'a;
+                           state : [> `TRan of ('b, int ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('b, unit) Code.abstract)
+                        StateCPSMonad.monad
                       module type RANK =
                         sig
                           type 'a tag_lstate = 'a tag_lstate_
@@ -3852,26 +3998,32 @@ module G_GAC_F :
                         ([> `TPivot of 'b ] -> 'b option) * string
                       val decl :
                         'a OD.PivotRep.ira ->
-                        ([> `TPivot of
-                              ('a, OD.PivotRep.perm_rep ref) Code.abstract ]
-                         as 'b)
-                        list ->
-                        ('b list ->
-                         ('c, unit) Code.abstract -> ('a, 'd) Code.abstract) ->
-                        ('a, 'd) Code.abstract
+                        (< answer : ('a, 'b) Code.abstract;
+                           state : [> `TPivot of
+                                        ('a, OD.PivotRep.perm_rep ref)
+                                        Code.abstract ]
+                                   list;
+                           .. >,
+                         ('c, unit) Code.abstract)
+                        StateCPSMonad.monad
                       val add :
                         'a OD.PivotRep.fra ->
-                        ([> `TPivot of
-                              ('a, OD.PivotRep.perm_rep ref) Code.abstract ]
-                         as 'b)
-                        list ->
-                        ('b list -> ('a, unit) Code.abstract option -> 'c) ->
-                        'c
+                        (< answer : 'b;
+                           state : [> `TPivot of
+                                        ('a, OD.PivotRep.perm_rep ref)
+                                        Code.abstract ]
+                                   list;
+                           .. >,
+                         ('a, unit) Code.abstract option)
+                        StateCPSMonad.monad
                       val fin :
                         unit ->
-                        ([> `TPivot of ('b, 'c ref) Code.abstract ] as 'a)
-                        list ->
-                        ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd
+                        (< answer : 'a;
+                           state : [> `TPivot of ('b, 'c ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('b, 'c) Code.abstract)
+                        StateCPSMonad.monad
                     end
                   module L :
                     sig
@@ -3885,35 +4037,40 @@ module G_GAC_F :
                         ([> `TLower of 'b ] -> 'b option) * string
                       val decl :
                         ('a, 'b) Code.abstract ->
-                        ([> `TLower of ('a, 'b) Code.abstract ] as 'c) list ->
-                        ('c list ->
-                         ('a, 'b) Code.abstract -> ('a, 'd) Code.abstract) ->
-                        ('a, 'd) Code.abstract
+                        (< answer : ('a, 'c) Code.abstract;
+                           state : [> `TLower of ('a, 'b) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('a, 'b) Code.abstract)
+                        StateCPSMonad.monad
                       val updt :
                         'a GAC_F.vc ->
                         ('a, int) Code.abstract ->
                         ('a, int) Code.abstract ->
                         'a GAC_F.vo ->
                         'a GAC_F.vo ->
-                        (([> `TLower of 'a GAC_F.vc ] as 'b) list ->
-                         ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c)
-                        option
+                        (< answer : 'b;
+                           state : [> `TLower of 'a GAC_F.vc ] list; .. >,
+                         ('a, unit) Code.abstract)
+                        StateCPSMonad.monad option
                       val fin :
                         unit ->
-                        ([> `TLower of 'b ] as 'a) list ->
-                        ('a list -> 'b -> 'c) -> 'c
+                        (< answer : 'a; state : [> `TLower of 'b ] list; .. >,
+                         'b)
+                        StateCPSMonad.monad
                       val wants_pack : bool
                     end
                 end
               type res = GAC_F.contr * GAC_F.contr * IF.P.perm_rep
               val make_result :
                 'a wmatrix ->
-                ([> `TLower of ('a, 'c) Code.abstract
-                  | `TPivot of ('a, 'd ref) Code.abstract ]
-                 as 'b)
-                list ->
-                ('b list -> ('a, GAC_F.contr * 'c * 'd) Code.abstract -> 'e) ->
-                'e
+                (< answer : 'b;
+                   state : [> `TLower of ('a, 'c) Code.abstract
+                            | `TPivot of ('a, 'd ref) Code.abstract ]
+                           list;
+                   .. >,
+                 ('a, GAC_F.contr * 'c * 'd) Code.abstract)
+                StateCPSMonad.monad
             end
         module Out_LU_Packed :
           functor (OD : OUTPUTDEP) ->
@@ -3934,17 +4091,20 @@ module G_GAC_F :
                         ([> `TRan of 'b ] -> 'b option) * string
                       val decl :
                         unit ->
-                        ([> `TRan of ('b, int ref) Code.abstract ] as 'a)
-                        list ->
-                        ('a list ->
-                         ('b, int ref) Code.abstract ->
-                         ('b, 'c) Code.abstract) ->
-                        ('b, 'c) Code.abstract
+                        (< answer : ('a, 'b) Code.abstract;
+                           state : [> `TRan of ('a, int ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('a, int ref) Code.abstract)
+                        StateCPSMonad.monad
                       val succ :
                         unit ->
-                        ([> `TRan of ('b, int ref) Code.abstract ] as 'a)
-                        list ->
-                        ('a list -> ('b, unit) Code.abstract -> 'c) -> 'c
+                        (< answer : 'a;
+                           state : [> `TRan of ('b, int ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('b, unit) Code.abstract)
+                        StateCPSMonad.monad
                       module type RANK =
                         sig
                           type 'a tag_lstate = 'a tag_lstate_
@@ -3992,26 +4152,32 @@ module G_GAC_F :
                         ([> `TPivot of 'b ] -> 'b option) * string
                       val decl :
                         'a OD.PivotRep.ira ->
-                        ([> `TPivot of
-                              ('a, OD.PivotRep.perm_rep ref) Code.abstract ]
-                         as 'b)
-                        list ->
-                        ('b list ->
-                         ('c, unit) Code.abstract -> ('a, 'd) Code.abstract) ->
-                        ('a, 'd) Code.abstract
+                        (< answer : ('a, 'b) Code.abstract;
+                           state : [> `TPivot of
+                                        ('a, OD.PivotRep.perm_rep ref)
+                                        Code.abstract ]
+                                   list;
+                           .. >,
+                         ('c, unit) Code.abstract)
+                        StateCPSMonad.monad
                       val add :
                         'a OD.PivotRep.fra ->
-                        ([> `TPivot of
-                              ('a, OD.PivotRep.perm_rep ref) Code.abstract ]
-                         as 'b)
-                        list ->
-                        ('b list -> ('a, unit) Code.abstract option -> 'c) ->
-                        'c
+                        (< answer : 'b;
+                           state : [> `TPivot of
+                                        ('a, OD.PivotRep.perm_rep ref)
+                                        Code.abstract ]
+                                   list;
+                           .. >,
+                         ('a, unit) Code.abstract option)
+                        StateCPSMonad.monad
                       val fin :
                         unit ->
-                        ([> `TPivot of ('b, 'c ref) Code.abstract ] as 'a)
-                        list ->
-                        ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd
+                        (< answer : 'a;
+                           state : [> `TPivot of ('b, 'c ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('b, 'c) Code.abstract)
+                        StateCPSMonad.monad
                     end
                   module L :
                     sig
@@ -4025,23 +4191,28 @@ module G_GAC_F :
                         ([> `TLower of 'b ] -> 'b option) * string
                       val decl :
                         'a ->
-                        ([> `TLower of 'a ] as 'b) list ->
-                        ('b list -> 'a -> 'c) -> 'c
+                        (< answer : 'b; state : [> `TLower of 'a ] list; .. >,
+                         'a)
+                        StateCPSMonad.monad
                       val updt : 'a -> 'b -> 'c -> 'd -> 'e -> 'f option
                       val fin :
                         unit ->
-                        ([> `TLower of 'b ] as 'a) list ->
-                        ('a list -> 'b -> 'c) -> 'c
+                        (< answer : 'a; state : [> `TLower of 'b ] list; .. >,
+                         'b)
+                        StateCPSMonad.monad
                       val wants_pack : bool
                     end
                 end
               type res = GAC_F.contr * IF.P.perm_rep
               val make_result :
                 'a ->
-                ([> `TLower of ('c, 'd) Code.abstract
-                  | `TPivot of ('c, 'e ref) Code.abstract ]
-                 as 'b)
-                list -> ('b list -> ('c, 'd * 'e) Code.abstract -> 'f) -> 'f
+                (< answer : 'b;
+                   state : [> `TLower of ('c, 'd) Code.abstract
+                            | `TPivot of ('c, 'e ref) Code.abstract ]
+                           list;
+                   .. >,
+                 ('c, 'd * 'e) Code.abstract)
+                StateCPSMonad.monad
             end
         module type INTERNAL_FEATURES =
           sig
@@ -4190,17 +4361,16 @@ module G_GAC_F :
                 list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
               val init :
                 ('a, F.Input.inp) Code.abstract ->
-                ([> `TDet of 'a F.Det.lstate
-                  | `TLower of ('a, GAC_F.contr) Code.abstract
-                  | `TPivot of 'a F.Output(F).IF.P.lstate
-                  | `TRan of 'a GEF.TrackRank.lstate ]
-                 as 'b)
-                list ->
-                ('b list ->
+                (< answer : ('a, 'b) Code.abstract;
+                   state : [> `TDet of 'a F.Det.lstate
+                            | `TLower of ('a, GAC_F.contr) Code.abstract
+                            | `TPivot of 'a F.Output(F).IF.P.lstate
+                            | `TRan of 'a GEF.TrackRank.lstate ]
+                           list;
+                   .. >,
                  'a wmatrix * ('a, int ref) Code.abstract *
-                 ('a, int ref) Code.abstract * ('a, int) Code.abstract ->
-                 ('a, 'c) Code.abstract) ->
-                ('a, 'c) Code.abstract
+                 ('a, int ref) Code.abstract * ('a, int) Code.abstract)
+                StateCPSMonad.monad
               val forward_elim :
                 'a wmatrix * ('a, int ref) Code.abstract *
                 ('a, int ref) Code.abstract * ('a, int) Code.abstract ->
@@ -4212,15 +4382,15 @@ module G_GAC_F :
                 list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
               val gen :
                 ('a, F.Input.inp) Code.abstract ->
-                ([> `TDet of 'a F.Det.lstate
-                  | `TLower of 'a O.IF.L.lstate
-                  | `TPivot of 'a O.IF.P.lstate
-                  | `TRan of 'a GEF.TrackRank.lstate ]
-                 as 'b)
-                list ->
-                ('b list ->
-                 ('a, O.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-                ('a, 'c) Code.abstract
+                (< answer : ('a, 'b) Code.abstract;
+                   state : [> `TDet of 'a F.Det.lstate
+                            | `TLower of 'a O.IF.L.lstate
+                            | `TPivot of 'a O.IF.P.lstate
+                            | `TRan of 'a GEF.TrackRank.lstate ]
+                           list;
+                   .. >,
+                 ('a, O.res) Code.abstract)
+                StateCPSMonad.monad
             end
       end
     module Solve :
@@ -4241,11 +4411,9 @@ module G_GAC_F :
             type rhs = GAC_F.contr
             val get_input :
               ('a, 'b * 'c) Code.abstract ->
-              'd ->
-              ('d ->
-               ('a, 'b) Code.abstract * ('a, 'c) Code.abstract ->
-               ('a, 'e) Code.abstract) ->
-              ('a, 'e) Code.abstract
+              (< answer : ('a, 'd) Code.abstract; state : 'e; .. >,
+               ('a, 'b) Code.abstract * ('a, 'c) Code.abstract)
+              StateCPSMonad.monad
           end
         module type OUTPUT =
           sig
@@ -4401,18 +4569,18 @@ module G_GAC_F :
                     list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
                   val init :
                     ('a, GAC_F.contr * int) Code.abstract ->
-                    ([> `TDet of 'a F.Det.lstate
-                      | `TLower of ('a, GAC_F.contr) Code.abstract
-                      | `TPivot of
-                          ('a, GEF.PermList.perm_rep ref) Code.abstract
-                      | `TRan of 'a GEF.TrackRank.lstate ]
-                     as 'b)
-                    list ->
-                    ('b list ->
+                    (< answer : ('a, 'b) Code.abstract;
+                       state : [> `TDet of 'a F.Det.lstate
+                                | `TLower of ('a, GAC_F.contr) Code.abstract
+                                | `TPivot of
+                                    ('a, GEF.PermList.perm_rep ref)
+                                    Code.abstract
+                                | `TRan of 'a GEF.TrackRank.lstate ]
+                               list;
+                       .. >,
                      'a wmatrix * ('a, int ref) Code.abstract *
-                     ('a, int ref) Code.abstract * ('a, int) Code.abstract ->
-                     ('a, 'c) Code.abstract) ->
-                    ('a, 'c) Code.abstract
+                     ('a, int ref) Code.abstract * ('a, int) Code.abstract)
+                    StateCPSMonad.monad
                   val forward_elim :
                     'a wmatrix * ('a, int ref) Code.abstract *
                     ('a, int ref) Code.abstract * ('a, int) Code.abstract ->
@@ -4425,23 +4593,22 @@ module G_GAC_F :
                     list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
                   val gen :
                     ('a, GAC_F.contr * int) Code.abstract ->
-                    ([> `TDet of 'a F.Det.lstate
-                      | `TLower of 'a O.IF.L.lstate
-                      | `TPivot of 'a O.IF.P.lstate
-                      | `TRan of 'a GEF.TrackRank.lstate ]
-                     as 'b)
-                    list ->
-                    ('b list ->
-                     ('a, O.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-                    ('a, 'c) Code.abstract
+                    (< answer : ('a, 'b) Code.abstract;
+                       state : [> `TDet of 'a F.Det.lstate
+                                | `TLower of 'a O.IF.L.lstate
+                                | `TPivot of 'a O.IF.P.lstate
+                                | `TRan of 'a GEF.TrackRank.lstate ]
+                               list;
+                       .. >,
+                     ('a, O.res) Code.abstract)
+                    StateCPSMonad.monad
                 end
               val init :
                 ('a, F.Input.inp) Code.abstract ->
-                'b ->
-                ('b ->
+                (< answer : 'b; state : 'c; .. >,
                  ('a, GAC_F.contr) Code.abstract *
-                 ('a, F.Input.rhs) Code.abstract -> 'c) ->
-                'c
+                 ('a, F.Input.rhs) Code.abstract)
+                StateCPSMonad.monad
               val back_elim :
                 'a GAC_F.vc ->
                 ('a, int) Code.abstract ->
@@ -4449,15 +4616,15 @@ module G_GAC_F :
                 'b -> ('b -> ('a, GAC_F.contr) Code.abstract -> 'c) -> 'c
               val gen :
                 ('a, F.Input.inp) Code.abstract ->
-                ([> `TDet of 'a F.Det.lstate
-                  | `TLower of 'a GE'.O.IF.L.lstate
-                  | `TPivot of 'a GE'.O.IF.P.lstate
-                  | `TRan of 'a GEF.TrackRank.lstate ]
-                 as 'b)
-                list ->
-                ('b list ->
-                 ('a, F.Output.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-                ('a, 'c) Code.abstract
+                (< answer : ('a, 'b) Code.abstract;
+                   state : [> `TDet of 'a F.Det.lstate
+                            | `TLower of 'a GE'.O.IF.L.lstate
+                            | `TPivot of 'a GE'.O.IF.P.lstate
+                            | `TRan of 'a GEF.TrackRank.lstate ]
+                           list;
+                   .. >,
+                 ('a, F.Output.res) Code.abstract)
+                StateCPSMonad.monad
             end
       end
   end
@@ -4584,39 +4751,56 @@ module G_GVC_F :
           ('a -> [> `TDet of 'a ]) * ([> `TDet of 'b ] -> 'b option) * string
         val decl :
           unit ->
-          ([> `TDet of
-                ('b, int ref) Code.abstract *
-                ('b, GVC_F.Dom.v ref) Code.abstract ]
-           as 'a)
-          list ->
-          ('a list -> ('c, unit) Code.abstract -> ('b, 'd) Code.abstract) ->
-          ('b, 'd) Code.abstract
+          (< answer : ('a, 'b) Code.abstract;
+             state : [> `TDet of
+                          ('a, int ref) Code.abstract *
+                          ('a, GVC_F.Dom.v ref) Code.abstract ]
+                     list;
+             .. >,
+           ('c, unit) Code.abstract)
+          StateCPSMonad.monad
         val upd_sign :
           unit ->
-          ([> `TDet of ('b, int ref) Code.abstract * 'c ] as 'a) list ->
-          ('a list -> ('b, unit) Code.abstract option -> 'd) -> 'd
+          (< answer : 'a;
+             state : [> `TDet of ('b, int ref) Code.abstract * 'c ] list;
+             .. >,
+           ('b, unit) Code.abstract option)
+          StateCPSMonad.monad
         val zero_sign :
           unit ->
-          ([> `TDet of ('b, int ref) Code.abstract * 'c ] as 'a) list ->
-          ('a list -> ('b, unit) Code.abstract -> 'd) -> 'd
+          (< answer : 'a;
+             state : [> `TDet of ('b, int ref) Code.abstract * 'c ] list;
+             .. >,
+           ('b, unit) Code.abstract)
+          StateCPSMonad.monad
         val get :
           unit ->
-          ([> `TDet of 'b * 'c ] as 'a) list -> ('a list -> 'c -> 'd) -> 'd
+          (< answer : 'a; state : [> `TDet of 'b * 'c ] list; .. >, 'c)
+          StateCPSMonad.monad
         val set :
           ('a, 'b) Code.abstract ->
-          ([> `TDet of 'd * ('a, 'b ref) Code.abstract ] as 'c) list ->
-          ('c list -> ('a, unit) Code.abstract -> 'e) -> 'e
+          (< answer : 'c;
+             state : [> `TDet of 'd * ('a, 'b ref) Code.abstract ] list; .. >,
+           ('a, unit) Code.abstract)
+          StateCPSMonad.monad
         val acc :
           'a GVC_F.Dom.vc ->
-          ([> `TDet of 'c * ('a, GVC_F.Dom.v ref) Code.abstract ] as 'b) list ->
-          ('b list -> ('a, unit) Code.abstract -> 'd) -> 'd
+          (< answer : 'b;
+             state : [> `TDet of 'c * ('a, GVC_F.Dom.v ref) Code.abstract ]
+                     list;
+             .. >,
+           ('a, unit) Code.abstract)
+          StateCPSMonad.monad
         val fin :
           unit ->
-          ([> `TDet of
-                ('b, int ref) Code.abstract *
-                ('b, GVC_F.Dom.v ref) Code.abstract ]
-           as 'a)
-          list -> ('a list -> ('b, GVC_F.Dom.v) Code.abstract -> 'c) -> 'c
+          (< answer : 'a;
+             state : [> `TDet of
+                          ('b, int ref) Code.abstract *
+                          ('b, GVC_F.Dom.v ref) Code.abstract ]
+                     list;
+             .. >,
+           ('b, GVC_F.Dom.v) Code.abstract)
+          StateCPSMonad.monad
       end
     module type UPDATE =
       functor (D : DETERMINANT) ->
@@ -4649,7 +4833,9 @@ module G_GVC_F :
                 'a GVC_F.Dom.vc ->
                 'a GVC_F.Dom.vc ->
                 'a GVC_F.Dom.vc ->
-                ('a GVC_F.Dom.vc -> 'b) -> 'c -> 'd -> ('d -> 'b -> 'e) -> 'e
+                ('a GVC_F.Dom.vc -> 'b) ->
+                'c ->
+                (< answer : 'd; state : 'e; .. >, 'b) StateCPSMonad.monad
               val update_det :
                 ('a, GVC_F.Dom.v) Code.abstract ->
                 (< answer : 'b; classif : 'a;
@@ -4669,7 +4855,7 @@ module G_GVC_F :
                 'a GVC_F.Dom.vc ->
                 ('a GVC_F.Dom.vc -> 'b) ->
                 ('a, GVC_F.Dom.v ref) Code.abstract ->
-                'c -> ('c -> 'b -> 'd) -> 'd
+                (< answer : 'c; state : 'd; .. >, 'b) StateCPSMonad.monad
               val update_det :
                 ('a, GVC_F.Dom.v) Code.abstract ->
                 (< answer : 'b; classif : 'a;
@@ -4732,21 +4918,23 @@ module G_GVC_F :
               ([> `TLower of 'b ] -> 'b option) * string
             val decl :
               ('a, 'b) Code.abstract ->
-              ([> `TLower of ('a, 'b) Code.abstract ] as 'c) list ->
-              ('c list -> ('a, 'b) Code.abstract -> ('a, 'd) Code.abstract) ->
-              ('a, 'd) Code.abstract
+              (< answer : ('a, 'c) Code.abstract;
+                 state : [> `TLower of ('a, 'b) Code.abstract ] list; .. >,
+               ('a, 'b) Code.abstract)
+              StateCPSMonad.monad
             val updt :
               'a GVC_F.vc ->
               ('a, int) Code.abstract ->
               ('a, int) Code.abstract ->
               'a GVC_F.vo ->
               'a GVC_F.vo ->
-              (([> `TLower of 'a GVC_F.vc ] as 'b) list ->
-               ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c)
-              option
+              (< answer : 'b; state : [> `TLower of 'a GVC_F.vc ] list; .. >,
+               ('a, unit) Code.abstract)
+              StateCPSMonad.monad option
             val fin :
               unit ->
-              ([> `TLower of 'b ] as 'a) list -> ('a list -> 'b -> 'c) -> 'c
+              (< answer : 'a; state : [> `TLower of 'b ] list; .. >, 'b)
+              StateCPSMonad.monad
             val wants_pack : bool
           end
         module PackedLower :
@@ -4761,11 +4949,13 @@ module G_GVC_F :
               ([> `TLower of 'b ] -> 'b option) * string
             val decl :
               'a ->
-              ([> `TLower of 'a ] as 'b) list -> ('b list -> 'a -> 'c) -> 'c
+              (< answer : 'b; state : [> `TLower of 'a ] list; .. >, 'a)
+              StateCPSMonad.monad
             val updt : 'a -> 'b -> 'c -> 'd -> 'e -> 'f option
             val fin :
               unit ->
-              ([> `TLower of 'b ] as 'a) list -> ('a list -> 'b -> 'c) -> 'c
+              (< answer : 'a; state : [> `TLower of 'b ] list; .. >, 'b)
+              StateCPSMonad.monad
             val wants_pack : bool
           end
         module NoLower :
@@ -4815,10 +5005,9 @@ module G_GVC_F :
             type inp = GVC_F.contr * int
             val get_input :
               ('a, 'b * 'c) Code.abstract ->
-              'd ->
-              ('d ->
-               ('a, 'b) Code.abstract * ('a, 'c) Code.abstract * bool -> 'e) ->
-              'e
+              (< answer : 'd; state : 'e; .. >,
+               ('a, 'b) Code.abstract * ('a, 'c) Code.abstract * bool)
+              StateCPSMonad.monad
           end
         module RowPivot :
           functor (Det : DETERMINANT) ->
@@ -4827,12 +5016,13 @@ module G_GVC_F :
                 val findpivot :
                   'a wmatrix ->
                   'a curpos ->
-                  ([> `TDet of 'a Det.lstate | `TPivot of 'a P.lstate ] as 'b)
-                  list ->
-                  ('b list ->
-                   ('a, GVC_F.Dom.v option) Code.abstract ->
-                   ('a, 'c) Code.abstract) ->
-                  ('a, 'c) Code.abstract
+                  (< answer : ('a, 'b) Code.abstract;
+                     state : [> `TDet of 'a Det.lstate
+                              | `TPivot of 'a P.lstate ]
+                             list;
+                     .. >,
+                   ('a, GVC_F.Dom.v option) Code.abstract)
+                  StateCPSMonad.monad
               end
         module FullPivot :
           functor (Det : DETERMINANT) ->
@@ -4841,12 +5031,13 @@ module G_GVC_F :
                 val findpivot :
                   'a wmatrix ->
                   'a curpos ->
-                  ([> `TDet of 'a Det.lstate | `TPivot of 'a P.lstate ] as 'b)
-                  list ->
-                  ('b list ->
-                   ('a, GVC_F.Dom.v option) Code.abstract ->
-                   ('a, 'c) Code.abstract) ->
-                  ('a, 'c) Code.abstract
+                  (< answer : ('a, 'b) Code.abstract;
+                     state : [> `TDet of 'a Det.lstate
+                              | `TPivot of 'a P.lstate ]
+                             list;
+                     .. >,
+                   ('a, GVC_F.Dom.v option) Code.abstract)
+                  StateCPSMonad.monad
               end
         module NoPivot :
           functor (Det : DETERMINANT) ->
@@ -4880,17 +5071,20 @@ module G_GVC_F :
                         ([> `TRan of 'b ] -> 'b option) * string
                       val decl :
                         unit ->
-                        ([> `TRan of ('b, int ref) Code.abstract ] as 'a)
-                        list ->
-                        ('a list ->
-                         ('b, int ref) Code.abstract ->
-                         ('b, 'c) Code.abstract) ->
-                        ('b, 'c) Code.abstract
+                        (< answer : ('a, 'b) Code.abstract;
+                           state : [> `TRan of ('a, int ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('a, int ref) Code.abstract)
+                        StateCPSMonad.monad
                       val succ :
                         unit ->
-                        ([> `TRan of ('b, int ref) Code.abstract ] as 'a)
-                        list ->
-                        ('a list -> ('b, unit) Code.abstract -> 'c) -> 'c
+                        (< answer : 'a;
+                           state : [> `TRan of ('b, int ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('b, unit) Code.abstract)
+                        StateCPSMonad.monad
                       module type RANK =
                         sig
                           type 'a tag_lstate = 'a tag_lstate_
@@ -4997,17 +5191,20 @@ module G_GVC_F :
                         ([> `TRan of 'b ] -> 'b option) * string
                       val decl :
                         unit ->
-                        ([> `TRan of ('b, int ref) Code.abstract ] as 'a)
-                        list ->
-                        ('a list ->
-                         ('b, int ref) Code.abstract ->
-                         ('b, 'c) Code.abstract) ->
-                        ('b, 'c) Code.abstract
+                        (< answer : ('a, 'b) Code.abstract;
+                           state : [> `TRan of ('a, int ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('a, int ref) Code.abstract)
+                        StateCPSMonad.monad
                       val succ :
                         unit ->
-                        ([> `TRan of ('b, int ref) Code.abstract ] as 'a)
-                        list ->
-                        ('a list -> ('b, unit) Code.abstract -> 'c) -> 'c
+                        (< answer : 'a;
+                           state : [> `TRan of ('b, int ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('b, unit) Code.abstract)
+                        StateCPSMonad.monad
                       module type RANK =
                         sig
                           type 'a tag_lstate = 'a tag_lstate_
@@ -5092,11 +5289,10 @@ module G_GVC_F :
               type res = GVC_F.contr * GVC_F.Dom.v
               val make_result :
                 'a wmatrix ->
-                ([> `TDet of 'a OD.Det.lstate ] as 'b) list ->
-                ('b list ->
-                 ('a, GVC_F.contr * GVC_F.Dom.v) Code.abstract ->
-                 ('a, 'c) Code.abstract) ->
-                ('a, 'c) Code.abstract
+                (< answer : ('a, 'b) Code.abstract;
+                   state : [> `TDet of 'a OD.Det.lstate ] list; .. >,
+                 ('a, GVC_F.contr * GVC_F.Dom.v) Code.abstract)
+                StateCPSMonad.monad
             end
         module OutRank :
           functor (OD : OUTPUTDEP) ->
@@ -5117,17 +5313,20 @@ module G_GVC_F :
                         ([> `TRan of 'b ] -> 'b option) * string
                       val decl :
                         unit ->
-                        ([> `TRan of ('b, int ref) Code.abstract ] as 'a)
-                        list ->
-                        ('a list ->
-                         ('b, int ref) Code.abstract ->
-                         ('b, 'c) Code.abstract) ->
-                        ('b, 'c) Code.abstract
+                        (< answer : ('a, 'b) Code.abstract;
+                           state : [> `TRan of ('a, int ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('a, int ref) Code.abstract)
+                        StateCPSMonad.monad
                       val succ :
                         unit ->
-                        ([> `TRan of ('b, int ref) Code.abstract ] as 'a)
-                        list ->
-                        ('a list -> ('b, unit) Code.abstract -> 'c) -> 'c
+                        (< answer : 'a;
+                           state : [> `TRan of ('b, int ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('b, unit) Code.abstract)
+                        StateCPSMonad.monad
                       module type RANK =
                         sig
                           type 'a tag_lstate = 'a tag_lstate_
@@ -5152,8 +5351,12 @@ module G_GVC_F :
                         end
                       val fin :
                         unit ->
-                        ([> `TRan of ('b, 'c ref) Code.abstract ] as 'a) list ->
-                        ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd
+                        (< answer : 'a;
+                           state : [> `TRan of ('b, 'c ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('b, 'c) Code.abstract)
+                        StateCPSMonad.monad
                     end
                   module P :
                     sig
@@ -5215,8 +5418,11 @@ module G_GVC_F :
               type res = GVC_F.contr * int
               val make_result :
                 'a wmatrix ->
-                ([> `TRan of ('a, 'c ref) Code.abstract ] as 'b) list ->
-                ('b list -> ('a, GVC_F.contr * 'c) Code.abstract -> 'd) -> 'd
+                (< answer : 'b;
+                   state : [> `TRan of ('a, 'c ref) Code.abstract ] list;
+                   .. >,
+                 ('a, GVC_F.contr * 'c) Code.abstract)
+                StateCPSMonad.monad
             end
         module OutDetRank :
           functor (OD : OUTPUTDEP) ->
@@ -5237,17 +5443,20 @@ module G_GVC_F :
                         ([> `TRan of 'b ] -> 'b option) * string
                       val decl :
                         unit ->
-                        ([> `TRan of ('b, int ref) Code.abstract ] as 'a)
-                        list ->
-                        ('a list ->
-                         ('b, int ref) Code.abstract ->
-                         ('b, 'c) Code.abstract) ->
-                        ('b, 'c) Code.abstract
+                        (< answer : ('a, 'b) Code.abstract;
+                           state : [> `TRan of ('a, int ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('a, int ref) Code.abstract)
+                        StateCPSMonad.monad
                       val succ :
                         unit ->
-                        ([> `TRan of ('b, int ref) Code.abstract ] as 'a)
-                        list ->
-                        ('a list -> ('b, unit) Code.abstract -> 'c) -> 'c
+                        (< answer : 'a;
+                           state : [> `TRan of ('b, int ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('b, unit) Code.abstract)
+                        StateCPSMonad.monad
                       module type RANK =
                         sig
                           type 'a tag_lstate = 'a tag_lstate_
@@ -5272,8 +5481,12 @@ module G_GVC_F :
                         end
                       val fin :
                         unit ->
-                        ([> `TRan of ('b, 'c ref) Code.abstract ] as 'a) list ->
-                        ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd
+                        (< answer : 'a;
+                           state : [> `TRan of ('b, 'c ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('b, 'c) Code.abstract)
+                        StateCPSMonad.monad
                     end
                   module P :
                     sig
@@ -5335,14 +5548,13 @@ module G_GVC_F :
               type res = GVC_F.contr * GVC_F.Dom.v * int
               val make_result :
                 'a wmatrix ->
-                ([> `TDet of 'a OD.Det.lstate
-                  | `TRan of ('a, 'c ref) Code.abstract ]
-                 as 'b)
-                list ->
-                ('b list ->
-                 ('a, GVC_F.contr * GVC_F.Dom.v * 'c) Code.abstract ->
-                 ('a, 'd) Code.abstract) ->
-                ('a, 'd) Code.abstract
+                (< answer : ('a, 'b) Code.abstract;
+                   state : [> `TDet of 'a OD.Det.lstate
+                            | `TRan of ('a, 'c ref) Code.abstract ]
+                           list;
+                   .. >,
+                 ('a, GVC_F.contr * GVC_F.Dom.v * 'c) Code.abstract)
+                StateCPSMonad.monad
             end
         module OutDetRankPivot :
           functor (OD : OUTPUTDEP) ->
@@ -5363,17 +5575,20 @@ module G_GVC_F :
                         ([> `TRan of 'b ] -> 'b option) * string
                       val decl :
                         unit ->
-                        ([> `TRan of ('b, int ref) Code.abstract ] as 'a)
-                        list ->
-                        ('a list ->
-                         ('b, int ref) Code.abstract ->
-                         ('b, 'c) Code.abstract) ->
-                        ('b, 'c) Code.abstract
+                        (< answer : ('a, 'b) Code.abstract;
+                           state : [> `TRan of ('a, int ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('a, int ref) Code.abstract)
+                        StateCPSMonad.monad
                       val succ :
                         unit ->
-                        ([> `TRan of ('b, int ref) Code.abstract ] as 'a)
-                        list ->
-                        ('a list -> ('b, unit) Code.abstract -> 'c) -> 'c
+                        (< answer : 'a;
+                           state : [> `TRan of ('b, int ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('b, unit) Code.abstract)
+                        StateCPSMonad.monad
                       module type RANK =
                         sig
                           type 'a tag_lstate = 'a tag_lstate_
@@ -5398,8 +5613,12 @@ module G_GVC_F :
                         end
                       val fin :
                         unit ->
-                        ([> `TRan of ('b, 'c ref) Code.abstract ] as 'a) list ->
-                        ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd
+                        (< answer : 'a;
+                           state : [> `TRan of ('b, 'c ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('b, 'c) Code.abstract)
+                        StateCPSMonad.monad
                     end
                   module P :
                     sig
@@ -5424,26 +5643,32 @@ module G_GVC_F :
                         ([> `TPivot of 'b ] -> 'b option) * string
                       val decl :
                         'a OD.PivotRep.ira ->
-                        ([> `TPivot of
-                              ('a, OD.PivotRep.perm_rep ref) Code.abstract ]
-                         as 'b)
-                        list ->
-                        ('b list ->
-                         ('c, unit) Code.abstract -> ('a, 'd) Code.abstract) ->
-                        ('a, 'd) Code.abstract
+                        (< answer : ('a, 'b) Code.abstract;
+                           state : [> `TPivot of
+                                        ('a, OD.PivotRep.perm_rep ref)
+                                        Code.abstract ]
+                                   list;
+                           .. >,
+                         ('c, unit) Code.abstract)
+                        StateCPSMonad.monad
                       val add :
                         'a OD.PivotRep.fra ->
-                        ([> `TPivot of
-                              ('a, OD.PivotRep.perm_rep ref) Code.abstract ]
-                         as 'b)
-                        list ->
-                        ('b list -> ('a, unit) Code.abstract option -> 'c) ->
-                        'c
+                        (< answer : 'b;
+                           state : [> `TPivot of
+                                        ('a, OD.PivotRep.perm_rep ref)
+                                        Code.abstract ]
+                                   list;
+                           .. >,
+                         ('a, unit) Code.abstract option)
+                        StateCPSMonad.monad
                       val fin :
                         unit ->
-                        ([> `TPivot of ('b, 'c ref) Code.abstract ] as 'a)
-                        list ->
-                        ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd
+                        (< answer : 'a;
+                           state : [> `TPivot of ('b, 'c ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('b, 'c) Code.abstract)
+                        StateCPSMonad.monad
                     end
                   module L :
                     sig
@@ -5475,15 +5700,14 @@ module G_GVC_F :
               type res = GVC_F.contr * GVC_F.Dom.v * int * IF.P.perm_rep
               val make_result :
                 'a wmatrix ->
-                ([> `TDet of 'a OD.Det.lstate
-                  | `TPivot of ('a, 'c ref) Code.abstract
-                  | `TRan of ('a, 'd ref) Code.abstract ]
-                 as 'b)
-                list ->
-                ('b list ->
-                 ('a, GVC_F.contr * GVC_F.Dom.v * 'd * 'c) Code.abstract ->
-                 ('a, 'e) Code.abstract) ->
-                ('a, 'e) Code.abstract
+                (< answer : ('a, 'b) Code.abstract;
+                   state : [> `TDet of 'a OD.Det.lstate
+                            | `TPivot of ('a, 'c ref) Code.abstract
+                            | `TRan of ('a, 'd ref) Code.abstract ]
+                           list;
+                   .. >,
+                 ('a, GVC_F.contr * GVC_F.Dom.v * 'd * 'c) Code.abstract)
+                StateCPSMonad.monad
             end
         module Out_L_U :
           functor (OD : OUTPUTDEP) ->
@@ -5504,17 +5728,20 @@ module G_GVC_F :
                         ([> `TRan of 'b ] -> 'b option) * string
                       val decl :
                         unit ->
-                        ([> `TRan of ('b, int ref) Code.abstract ] as 'a)
-                        list ->
-                        ('a list ->
-                         ('b, int ref) Code.abstract ->
-                         ('b, 'c) Code.abstract) ->
-                        ('b, 'c) Code.abstract
+                        (< answer : ('a, 'b) Code.abstract;
+                           state : [> `TRan of ('a, int ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('a, int ref) Code.abstract)
+                        StateCPSMonad.monad
                       val succ :
                         unit ->
-                        ([> `TRan of ('b, int ref) Code.abstract ] as 'a)
-                        list ->
-                        ('a list -> ('b, unit) Code.abstract -> 'c) -> 'c
+                        (< answer : 'a;
+                           state : [> `TRan of ('b, int ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('b, unit) Code.abstract)
+                        StateCPSMonad.monad
                       module type RANK =
                         sig
                           type 'a tag_lstate = 'a tag_lstate_
@@ -5562,26 +5789,32 @@ module G_GVC_F :
                         ([> `TPivot of 'b ] -> 'b option) * string
                       val decl :
                         'a OD.PivotRep.ira ->
-                        ([> `TPivot of
-                              ('a, OD.PivotRep.perm_rep ref) Code.abstract ]
-                         as 'b)
-                        list ->
-                        ('b list ->
-                         ('c, unit) Code.abstract -> ('a, 'd) Code.abstract) ->
-                        ('a, 'd) Code.abstract
+                        (< answer : ('a, 'b) Code.abstract;
+                           state : [> `TPivot of
+                                        ('a, OD.PivotRep.perm_rep ref)
+                                        Code.abstract ]
+                                   list;
+                           .. >,
+                         ('c, unit) Code.abstract)
+                        StateCPSMonad.monad
                       val add :
                         'a OD.PivotRep.fra ->
-                        ([> `TPivot of
-                              ('a, OD.PivotRep.perm_rep ref) Code.abstract ]
-                         as 'b)
-                        list ->
-                        ('b list -> ('a, unit) Code.abstract option -> 'c) ->
-                        'c
+                        (< answer : 'b;
+                           state : [> `TPivot of
+                                        ('a, OD.PivotRep.perm_rep ref)
+                                        Code.abstract ]
+                                   list;
+                           .. >,
+                         ('a, unit) Code.abstract option)
+                        StateCPSMonad.monad
                       val fin :
                         unit ->
-                        ([> `TPivot of ('b, 'c ref) Code.abstract ] as 'a)
-                        list ->
-                        ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd
+                        (< answer : 'a;
+                           state : [> `TPivot of ('b, 'c ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('b, 'c) Code.abstract)
+                        StateCPSMonad.monad
                     end
                   module L :
                     sig
@@ -5595,35 +5828,40 @@ module G_GVC_F :
                         ([> `TLower of 'b ] -> 'b option) * string
                       val decl :
                         ('a, 'b) Code.abstract ->
-                        ([> `TLower of ('a, 'b) Code.abstract ] as 'c) list ->
-                        ('c list ->
-                         ('a, 'b) Code.abstract -> ('a, 'd) Code.abstract) ->
-                        ('a, 'd) Code.abstract
+                        (< answer : ('a, 'c) Code.abstract;
+                           state : [> `TLower of ('a, 'b) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('a, 'b) Code.abstract)
+                        StateCPSMonad.monad
                       val updt :
                         'a GVC_F.vc ->
                         ('a, int) Code.abstract ->
                         ('a, int) Code.abstract ->
                         'a GVC_F.vo ->
                         'a GVC_F.vo ->
-                        (([> `TLower of 'a GVC_F.vc ] as 'b) list ->
-                         ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c)
-                        option
+                        (< answer : 'b;
+                           state : [> `TLower of 'a GVC_F.vc ] list; .. >,
+                         ('a, unit) Code.abstract)
+                        StateCPSMonad.monad option
                       val fin :
                         unit ->
-                        ([> `TLower of 'b ] as 'a) list ->
-                        ('a list -> 'b -> 'c) -> 'c
+                        (< answer : 'a; state : [> `TLower of 'b ] list; .. >,
+                         'b)
+                        StateCPSMonad.monad
                       val wants_pack : bool
                     end
                 end
               type res = GVC_F.contr * GVC_F.contr * IF.P.perm_rep
               val make_result :
                 'a wmatrix ->
-                ([> `TLower of ('a, 'c) Code.abstract
-                  | `TPivot of ('a, 'd ref) Code.abstract ]
-                 as 'b)
-                list ->
-                ('b list -> ('a, GVC_F.contr * 'c * 'd) Code.abstract -> 'e) ->
-                'e
+                (< answer : 'b;
+                   state : [> `TLower of ('a, 'c) Code.abstract
+                            | `TPivot of ('a, 'd ref) Code.abstract ]
+                           list;
+                   .. >,
+                 ('a, GVC_F.contr * 'c * 'd) Code.abstract)
+                StateCPSMonad.monad
             end
         module Out_LU_Packed :
           functor (OD : OUTPUTDEP) ->
@@ -5644,17 +5882,20 @@ module G_GVC_F :
                         ([> `TRan of 'b ] -> 'b option) * string
                       val decl :
                         unit ->
-                        ([> `TRan of ('b, int ref) Code.abstract ] as 'a)
-                        list ->
-                        ('a list ->
-                         ('b, int ref) Code.abstract ->
-                         ('b, 'c) Code.abstract) ->
-                        ('b, 'c) Code.abstract
+                        (< answer : ('a, 'b) Code.abstract;
+                           state : [> `TRan of ('a, int ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('a, int ref) Code.abstract)
+                        StateCPSMonad.monad
                       val succ :
                         unit ->
-                        ([> `TRan of ('b, int ref) Code.abstract ] as 'a)
-                        list ->
-                        ('a list -> ('b, unit) Code.abstract -> 'c) -> 'c
+                        (< answer : 'a;
+                           state : [> `TRan of ('b, int ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('b, unit) Code.abstract)
+                        StateCPSMonad.monad
                       module type RANK =
                         sig
                           type 'a tag_lstate = 'a tag_lstate_
@@ -5702,26 +5943,32 @@ module G_GVC_F :
                         ([> `TPivot of 'b ] -> 'b option) * string
                       val decl :
                         'a OD.PivotRep.ira ->
-                        ([> `TPivot of
-                              ('a, OD.PivotRep.perm_rep ref) Code.abstract ]
-                         as 'b)
-                        list ->
-                        ('b list ->
-                         ('c, unit) Code.abstract -> ('a, 'd) Code.abstract) ->
-                        ('a, 'd) Code.abstract
+                        (< answer : ('a, 'b) Code.abstract;
+                           state : [> `TPivot of
+                                        ('a, OD.PivotRep.perm_rep ref)
+                                        Code.abstract ]
+                                   list;
+                           .. >,
+                         ('c, unit) Code.abstract)
+                        StateCPSMonad.monad
                       val add :
                         'a OD.PivotRep.fra ->
-                        ([> `TPivot of
-                              ('a, OD.PivotRep.perm_rep ref) Code.abstract ]
-                         as 'b)
-                        list ->
-                        ('b list -> ('a, unit) Code.abstract option -> 'c) ->
-                        'c
+                        (< answer : 'b;
+                           state : [> `TPivot of
+                                        ('a, OD.PivotRep.perm_rep ref)
+                                        Code.abstract ]
+                                   list;
+                           .. >,
+                         ('a, unit) Code.abstract option)
+                        StateCPSMonad.monad
                       val fin :
                         unit ->
-                        ([> `TPivot of ('b, 'c ref) Code.abstract ] as 'a)
-                        list ->
-                        ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd
+                        (< answer : 'a;
+                           state : [> `TPivot of ('b, 'c ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('b, 'c) Code.abstract)
+                        StateCPSMonad.monad
                     end
                   module L :
                     sig
@@ -5735,23 +5982,28 @@ module G_GVC_F :
                         ([> `TLower of 'b ] -> 'b option) * string
                       val decl :
                         'a ->
-                        ([> `TLower of 'a ] as 'b) list ->
-                        ('b list -> 'a -> 'c) -> 'c
+                        (< answer : 'b; state : [> `TLower of 'a ] list; .. >,
+                         'a)
+                        StateCPSMonad.monad
                       val updt : 'a -> 'b -> 'c -> 'd -> 'e -> 'f option
                       val fin :
                         unit ->
-                        ([> `TLower of 'b ] as 'a) list ->
-                        ('a list -> 'b -> 'c) -> 'c
+                        (< answer : 'a; state : [> `TLower of 'b ] list; .. >,
+                         'b)
+                        StateCPSMonad.monad
                       val wants_pack : bool
                     end
                 end
               type res = GVC_F.contr * IF.P.perm_rep
               val make_result :
                 'a ->
-                ([> `TLower of ('c, 'd) Code.abstract
-                  | `TPivot of ('c, 'e ref) Code.abstract ]
-                 as 'b)
-                list -> ('b list -> ('c, 'd * 'e) Code.abstract -> 'f) -> 'f
+                (< answer : 'b;
+                   state : [> `TLower of ('c, 'd) Code.abstract
+                            | `TPivot of ('c, 'e ref) Code.abstract ]
+                           list;
+                   .. >,
+                 ('c, 'd * 'e) Code.abstract)
+                StateCPSMonad.monad
             end
         module type INTERNAL_FEATURES =
           sig
@@ -5900,17 +6152,16 @@ module G_GVC_F :
                 list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
               val init :
                 ('a, F.Input.inp) Code.abstract ->
-                ([> `TDet of 'a F.Det.lstate
-                  | `TLower of ('a, GVC_F.contr) Code.abstract
-                  | `TPivot of 'a F.Output(F).IF.P.lstate
-                  | `TRan of 'a GEF.TrackRank.lstate ]
-                 as 'b)
-                list ->
-                ('b list ->
+                (< answer : ('a, 'b) Code.abstract;
+                   state : [> `TDet of 'a F.Det.lstate
+                            | `TLower of ('a, GVC_F.contr) Code.abstract
+                            | `TPivot of 'a F.Output(F).IF.P.lstate
+                            | `TRan of 'a GEF.TrackRank.lstate ]
+                           list;
+                   .. >,
                  'a wmatrix * ('a, int ref) Code.abstract *
-                 ('a, int ref) Code.abstract * ('a, int) Code.abstract ->
-                 ('a, 'c) Code.abstract) ->
-                ('a, 'c) Code.abstract
+                 ('a, int ref) Code.abstract * ('a, int) Code.abstract)
+                StateCPSMonad.monad
               val forward_elim :
                 'a wmatrix * ('a, int ref) Code.abstract *
                 ('a, int ref) Code.abstract * ('a, int) Code.abstract ->
@@ -5922,15 +6173,15 @@ module G_GVC_F :
                 list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
               val gen :
                 ('a, F.Input.inp) Code.abstract ->
-                ([> `TDet of 'a F.Det.lstate
-                  | `TLower of 'a O.IF.L.lstate
-                  | `TPivot of 'a O.IF.P.lstate
-                  | `TRan of 'a GEF.TrackRank.lstate ]
-                 as 'b)
-                list ->
-                ('b list ->
-                 ('a, O.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-                ('a, 'c) Code.abstract
+                (< answer : ('a, 'b) Code.abstract;
+                   state : [> `TDet of 'a F.Det.lstate
+                            | `TLower of 'a O.IF.L.lstate
+                            | `TPivot of 'a O.IF.P.lstate
+                            | `TRan of 'a GEF.TrackRank.lstate ]
+                           list;
+                   .. >,
+                 ('a, O.res) Code.abstract)
+                StateCPSMonad.monad
             end
       end
     module Solve :
@@ -5951,11 +6202,9 @@ module G_GVC_F :
             type rhs = GVC_F.contr
             val get_input :
               ('a, 'b * 'c) Code.abstract ->
-              'd ->
-              ('d ->
-               ('a, 'b) Code.abstract * ('a, 'c) Code.abstract ->
-               ('a, 'e) Code.abstract) ->
-              ('a, 'e) Code.abstract
+              (< answer : ('a, 'd) Code.abstract; state : 'e; .. >,
+               ('a, 'b) Code.abstract * ('a, 'c) Code.abstract)
+              StateCPSMonad.monad
           end
         module type OUTPUT =
           sig
@@ -6111,18 +6360,18 @@ module G_GVC_F :
                     list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
                   val init :
                     ('a, GVC_F.contr * int) Code.abstract ->
-                    ([> `TDet of 'a F.Det.lstate
-                      | `TLower of ('a, GVC_F.contr) Code.abstract
-                      | `TPivot of
-                          ('a, GEF.PermList.perm_rep ref) Code.abstract
-                      | `TRan of 'a GEF.TrackRank.lstate ]
-                     as 'b)
-                    list ->
-                    ('b list ->
+                    (< answer : ('a, 'b) Code.abstract;
+                       state : [> `TDet of 'a F.Det.lstate
+                                | `TLower of ('a, GVC_F.contr) Code.abstract
+                                | `TPivot of
+                                    ('a, GEF.PermList.perm_rep ref)
+                                    Code.abstract
+                                | `TRan of 'a GEF.TrackRank.lstate ]
+                               list;
+                       .. >,
                      'a wmatrix * ('a, int ref) Code.abstract *
-                     ('a, int ref) Code.abstract * ('a, int) Code.abstract ->
-                     ('a, 'c) Code.abstract) ->
-                    ('a, 'c) Code.abstract
+                     ('a, int ref) Code.abstract * ('a, int) Code.abstract)
+                    StateCPSMonad.monad
                   val forward_elim :
                     'a wmatrix * ('a, int ref) Code.abstract *
                     ('a, int ref) Code.abstract * ('a, int) Code.abstract ->
@@ -6135,23 +6384,22 @@ module G_GVC_F :
                     list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
                   val gen :
                     ('a, GVC_F.contr * int) Code.abstract ->
-                    ([> `TDet of 'a F.Det.lstate
-                      | `TLower of 'a O.IF.L.lstate
-                      | `TPivot of 'a O.IF.P.lstate
-                      | `TRan of 'a GEF.TrackRank.lstate ]
-                     as 'b)
-                    list ->
-                    ('b list ->
-                     ('a, O.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-                    ('a, 'c) Code.abstract
+                    (< answer : ('a, 'b) Code.abstract;
+                       state : [> `TDet of 'a F.Det.lstate
+                                | `TLower of 'a O.IF.L.lstate
+                                | `TPivot of 'a O.IF.P.lstate
+                                | `TRan of 'a GEF.TrackRank.lstate ]
+                               list;
+                       .. >,
+                     ('a, O.res) Code.abstract)
+                    StateCPSMonad.monad
                 end
               val init :
                 ('a, F.Input.inp) Code.abstract ->
-                'b ->
-                ('b ->
+                (< answer : 'b; state : 'c; .. >,
                  ('a, GVC_F.contr) Code.abstract *
-                 ('a, F.Input.rhs) Code.abstract -> 'c) ->
-                'c
+                 ('a, F.Input.rhs) Code.abstract)
+                StateCPSMonad.monad
               val back_elim :
                 'a GVC_F.vc ->
                 ('a, int) Code.abstract ->
@@ -6159,15 +6407,15 @@ module G_GVC_F :
                 'b -> ('b -> ('a, GVC_F.contr) Code.abstract -> 'c) -> 'c
               val gen :
                 ('a, F.Input.inp) Code.abstract ->
-                ([> `TDet of 'a F.Det.lstate
-                  | `TLower of 'a GE'.O.IF.L.lstate
-                  | `TPivot of 'a GE'.O.IF.P.lstate
-                  | `TRan of 'a GEF.TrackRank.lstate ]
-                 as 'b)
-                list ->
-                ('b list ->
-                 ('a, F.Output.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-                ('a, 'c) Code.abstract
+                (< answer : ('a, 'b) Code.abstract;
+                   state : [> `TDet of 'a F.Det.lstate
+                            | `TLower of 'a GE'.O.IF.L.lstate
+                            | `TPivot of 'a GE'.O.IF.P.lstate
+                            | `TRan of 'a GEF.TrackRank.lstate ]
+                           list;
+                   .. >,
+                 ('a, F.Output.res) Code.abstract)
+                StateCPSMonad.monad
             end
       end
   end
@@ -6294,39 +6542,56 @@ module G_GAC_I :
           ('a -> [> `TDet of 'a ]) * ([> `TDet of 'b ] -> 'b option) * string
         val decl :
           unit ->
-          ([> `TDet of
-                ('b, int ref) Code.abstract *
-                ('b, GAC_I.Dom.v ref) Code.abstract ]
-           as 'a)
-          list ->
-          ('a list -> ('c, unit) Code.abstract -> ('b, 'd) Code.abstract) ->
-          ('b, 'd) Code.abstract
+          (< answer : ('a, 'b) Code.abstract;
+             state : [> `TDet of
+                          ('a, int ref) Code.abstract *
+                          ('a, GAC_I.Dom.v ref) Code.abstract ]
+                     list;
+             .. >,
+           ('c, unit) Code.abstract)
+          StateCPSMonad.monad
         val upd_sign :
           unit ->
-          ([> `TDet of ('b, int ref) Code.abstract * 'c ] as 'a) list ->
-          ('a list -> ('b, unit) Code.abstract option -> 'd) -> 'd
+          (< answer : 'a;
+             state : [> `TDet of ('b, int ref) Code.abstract * 'c ] list;
+             .. >,
+           ('b, unit) Code.abstract option)
+          StateCPSMonad.monad
         val zero_sign :
           unit ->
-          ([> `TDet of ('b, int ref) Code.abstract * 'c ] as 'a) list ->
-          ('a list -> ('b, unit) Code.abstract -> 'd) -> 'd
+          (< answer : 'a;
+             state : [> `TDet of ('b, int ref) Code.abstract * 'c ] list;
+             .. >,
+           ('b, unit) Code.abstract)
+          StateCPSMonad.monad
         val get :
           unit ->
-          ([> `TDet of 'b * 'c ] as 'a) list -> ('a list -> 'c -> 'd) -> 'd
+          (< answer : 'a; state : [> `TDet of 'b * 'c ] list; .. >, 'c)
+          StateCPSMonad.monad
         val set :
           ('a, 'b) Code.abstract ->
-          ([> `TDet of 'd * ('a, 'b ref) Code.abstract ] as 'c) list ->
-          ('c list -> ('a, unit) Code.abstract -> 'e) -> 'e
+          (< answer : 'c;
+             state : [> `TDet of 'd * ('a, 'b ref) Code.abstract ] list; .. >,
+           ('a, unit) Code.abstract)
+          StateCPSMonad.monad
         val acc :
           'a GAC_I.Dom.vc ->
-          ([> `TDet of 'c * ('a, GAC_I.Dom.v ref) Code.abstract ] as 'b) list ->
-          ('b list -> ('a, unit) Code.abstract -> 'd) -> 'd
+          (< answer : 'b;
+             state : [> `TDet of 'c * ('a, GAC_I.Dom.v ref) Code.abstract ]
+                     list;
+             .. >,
+           ('a, unit) Code.abstract)
+          StateCPSMonad.monad
         val fin :
           unit ->
-          ([> `TDet of
-                ('b, int ref) Code.abstract *
-                ('b, GAC_I.Dom.v ref) Code.abstract ]
-           as 'a)
-          list -> ('a list -> ('b, GAC_I.Dom.v) Code.abstract -> 'c) -> 'c
+          (< answer : 'a;
+             state : [> `TDet of
+                          ('b, int ref) Code.abstract *
+                          ('b, GAC_I.Dom.v ref) Code.abstract ]
+                     list;
+             .. >,
+           ('b, GAC_I.Dom.v) Code.abstract)
+          StateCPSMonad.monad
       end
     module type UPDATE =
       functor (D : DETERMINANT) ->
@@ -6359,7 +6624,9 @@ module G_GAC_I :
                 'a GAC_I.Dom.vc ->
                 'a GAC_I.Dom.vc ->
                 'a GAC_I.Dom.vc ->
-                ('a GAC_I.Dom.vc -> 'b) -> 'c -> 'd -> ('d -> 'b -> 'e) -> 'e
+                ('a GAC_I.Dom.vc -> 'b) ->
+                'c ->
+                (< answer : 'd; state : 'e; .. >, 'b) StateCPSMonad.monad
               val update_det :
                 ('a, GAC_I.Dom.v) Code.abstract ->
                 (< answer : 'b; classif : 'a;
@@ -6379,7 +6646,7 @@ module G_GAC_I :
                 'a GAC_I.Dom.vc ->
                 ('a GAC_I.Dom.vc -> 'b) ->
                 ('a, GAC_I.Dom.v ref) Code.abstract ->
-                'c -> ('c -> 'b -> 'd) -> 'd
+                (< answer : 'c; state : 'd; .. >, 'b) StateCPSMonad.monad
               val update_det :
                 ('a, GAC_I.Dom.v) Code.abstract ->
                 (< answer : 'b; classif : 'a;
@@ -6442,21 +6709,23 @@ module G_GAC_I :
               ([> `TLower of 'b ] -> 'b option) * string
             val decl :
               ('a, 'b) Code.abstract ->
-              ([> `TLower of ('a, 'b) Code.abstract ] as 'c) list ->
-              ('c list -> ('a, 'b) Code.abstract -> ('a, 'd) Code.abstract) ->
-              ('a, 'd) Code.abstract
+              (< answer : ('a, 'c) Code.abstract;
+                 state : [> `TLower of ('a, 'b) Code.abstract ] list; .. >,
+               ('a, 'b) Code.abstract)
+              StateCPSMonad.monad
             val updt :
               'a GAC_I.vc ->
               ('a, int) Code.abstract ->
               ('a, int) Code.abstract ->
               'a GAC_I.vo ->
               'a GAC_I.vo ->
-              (([> `TLower of 'a GAC_I.vc ] as 'b) list ->
-               ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c)
-              option
+              (< answer : 'b; state : [> `TLower of 'a GAC_I.vc ] list; .. >,
+               ('a, unit) Code.abstract)
+              StateCPSMonad.monad option
             val fin :
               unit ->
-              ([> `TLower of 'b ] as 'a) list -> ('a list -> 'b -> 'c) -> 'c
+              (< answer : 'a; state : [> `TLower of 'b ] list; .. >, 'b)
+              StateCPSMonad.monad
             val wants_pack : bool
           end
         module PackedLower :
@@ -6471,11 +6740,13 @@ module G_GAC_I :
               ([> `TLower of 'b ] -> 'b option) * string
             val decl :
               'a ->
-              ([> `TLower of 'a ] as 'b) list -> ('b list -> 'a -> 'c) -> 'c
+              (< answer : 'b; state : [> `TLower of 'a ] list; .. >, 'a)
+              StateCPSMonad.monad
             val updt : 'a -> 'b -> 'c -> 'd -> 'e -> 'f option
             val fin :
               unit ->
-              ([> `TLower of 'b ] as 'a) list -> ('a list -> 'b -> 'c) -> 'c
+              (< answer : 'a; state : [> `TLower of 'b ] list; .. >, 'b)
+              StateCPSMonad.monad
             val wants_pack : bool
           end
         module NoLower :
@@ -6525,10 +6796,9 @@ module G_GAC_I :
             type inp = GAC_I.contr * int
             val get_input :
               ('a, 'b * 'c) Code.abstract ->
-              'd ->
-              ('d ->
-               ('a, 'b) Code.abstract * ('a, 'c) Code.abstract * bool -> 'e) ->
-              'e
+              (< answer : 'd; state : 'e; .. >,
+               ('a, 'b) Code.abstract * ('a, 'c) Code.abstract * bool)
+              StateCPSMonad.monad
           end
         module RowPivot :
           functor (Det : DETERMINANT) ->
@@ -6537,12 +6807,13 @@ module G_GAC_I :
                 val findpivot :
                   'a wmatrix ->
                   'a curpos ->
-                  ([> `TDet of 'a Det.lstate | `TPivot of 'a P.lstate ] as 'b)
-                  list ->
-                  ('b list ->
-                   ('a, GAC_I.Dom.v option) Code.abstract ->
-                   ('a, 'c) Code.abstract) ->
-                  ('a, 'c) Code.abstract
+                  (< answer : ('a, 'b) Code.abstract;
+                     state : [> `TDet of 'a Det.lstate
+                              | `TPivot of 'a P.lstate ]
+                             list;
+                     .. >,
+                   ('a, GAC_I.Dom.v option) Code.abstract)
+                  StateCPSMonad.monad
               end
         module FullPivot :
           functor (Det : DETERMINANT) ->
@@ -6551,12 +6822,13 @@ module G_GAC_I :
                 val findpivot :
                   'a wmatrix ->
                   'a curpos ->
-                  ([> `TDet of 'a Det.lstate | `TPivot of 'a P.lstate ] as 'b)
-                  list ->
-                  ('b list ->
-                   ('a, GAC_I.Dom.v option) Code.abstract ->
-                   ('a, 'c) Code.abstract) ->
-                  ('a, 'c) Code.abstract
+                  (< answer : ('a, 'b) Code.abstract;
+                     state : [> `TDet of 'a Det.lstate
+                              | `TPivot of 'a P.lstate ]
+                             list;
+                     .. >,
+                   ('a, GAC_I.Dom.v option) Code.abstract)
+                  StateCPSMonad.monad
               end
         module NoPivot :
           functor (Det : DETERMINANT) ->
@@ -6590,17 +6862,20 @@ module G_GAC_I :
                         ([> `TRan of 'b ] -> 'b option) * string
                       val decl :
                         unit ->
-                        ([> `TRan of ('b, int ref) Code.abstract ] as 'a)
-                        list ->
-                        ('a list ->
-                         ('b, int ref) Code.abstract ->
-                         ('b, 'c) Code.abstract) ->
-                        ('b, 'c) Code.abstract
+                        (< answer : ('a, 'b) Code.abstract;
+                           state : [> `TRan of ('a, int ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('a, int ref) Code.abstract)
+                        StateCPSMonad.monad
                       val succ :
                         unit ->
-                        ([> `TRan of ('b, int ref) Code.abstract ] as 'a)
-                        list ->
-                        ('a list -> ('b, unit) Code.abstract -> 'c) -> 'c
+                        (< answer : 'a;
+                           state : [> `TRan of ('b, int ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('b, unit) Code.abstract)
+                        StateCPSMonad.monad
                       module type RANK =
                         sig
                           type 'a tag_lstate = 'a tag_lstate_
@@ -6707,17 +6982,20 @@ module G_GAC_I :
                         ([> `TRan of 'b ] -> 'b option) * string
                       val decl :
                         unit ->
-                        ([> `TRan of ('b, int ref) Code.abstract ] as 'a)
-                        list ->
-                        ('a list ->
-                         ('b, int ref) Code.abstract ->
-                         ('b, 'c) Code.abstract) ->
-                        ('b, 'c) Code.abstract
+                        (< answer : ('a, 'b) Code.abstract;
+                           state : [> `TRan of ('a, int ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('a, int ref) Code.abstract)
+                        StateCPSMonad.monad
                       val succ :
                         unit ->
-                        ([> `TRan of ('b, int ref) Code.abstract ] as 'a)
-                        list ->
-                        ('a list -> ('b, unit) Code.abstract -> 'c) -> 'c
+                        (< answer : 'a;
+                           state : [> `TRan of ('b, int ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('b, unit) Code.abstract)
+                        StateCPSMonad.monad
                       module type RANK =
                         sig
                           type 'a tag_lstate = 'a tag_lstate_
@@ -6802,11 +7080,10 @@ module G_GAC_I :
               type res = GAC_I.contr * GAC_I.Dom.v
               val make_result :
                 'a wmatrix ->
-                ([> `TDet of 'a OD.Det.lstate ] as 'b) list ->
-                ('b list ->
-                 ('a, GAC_I.contr * GAC_I.Dom.v) Code.abstract ->
-                 ('a, 'c) Code.abstract) ->
-                ('a, 'c) Code.abstract
+                (< answer : ('a, 'b) Code.abstract;
+                   state : [> `TDet of 'a OD.Det.lstate ] list; .. >,
+                 ('a, GAC_I.contr * GAC_I.Dom.v) Code.abstract)
+                StateCPSMonad.monad
             end
         module OutRank :
           functor (OD : OUTPUTDEP) ->
@@ -6827,17 +7104,20 @@ module G_GAC_I :
                         ([> `TRan of 'b ] -> 'b option) * string
                       val decl :
                         unit ->
-                        ([> `TRan of ('b, int ref) Code.abstract ] as 'a)
-                        list ->
-                        ('a list ->
-                         ('b, int ref) Code.abstract ->
-                         ('b, 'c) Code.abstract) ->
-                        ('b, 'c) Code.abstract
+                        (< answer : ('a, 'b) Code.abstract;
+                           state : [> `TRan of ('a, int ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('a, int ref) Code.abstract)
+                        StateCPSMonad.monad
                       val succ :
                         unit ->
-                        ([> `TRan of ('b, int ref) Code.abstract ] as 'a)
-                        list ->
-                        ('a list -> ('b, unit) Code.abstract -> 'c) -> 'c
+                        (< answer : 'a;
+                           state : [> `TRan of ('b, int ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('b, unit) Code.abstract)
+                        StateCPSMonad.monad
                       module type RANK =
                         sig
                           type 'a tag_lstate = 'a tag_lstate_
@@ -6862,8 +7142,12 @@ module G_GAC_I :
                         end
                       val fin :
                         unit ->
-                        ([> `TRan of ('b, 'c ref) Code.abstract ] as 'a) list ->
-                        ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd
+                        (< answer : 'a;
+                           state : [> `TRan of ('b, 'c ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('b, 'c) Code.abstract)
+                        StateCPSMonad.monad
                     end
                   module P :
                     sig
@@ -6925,8 +7209,11 @@ module G_GAC_I :
               type res = GAC_I.contr * int
               val make_result :
                 'a wmatrix ->
-                ([> `TRan of ('a, 'c ref) Code.abstract ] as 'b) list ->
-                ('b list -> ('a, GAC_I.contr * 'c) Code.abstract -> 'd) -> 'd
+                (< answer : 'b;
+                   state : [> `TRan of ('a, 'c ref) Code.abstract ] list;
+                   .. >,
+                 ('a, GAC_I.contr * 'c) Code.abstract)
+                StateCPSMonad.monad
             end
         module OutDetRank :
           functor (OD : OUTPUTDEP) ->
@@ -6947,17 +7234,20 @@ module G_GAC_I :
                         ([> `TRan of 'b ] -> 'b option) * string
                       val decl :
                         unit ->
-                        ([> `TRan of ('b, int ref) Code.abstract ] as 'a)
-                        list ->
-                        ('a list ->
-                         ('b, int ref) Code.abstract ->
-                         ('b, 'c) Code.abstract) ->
-                        ('b, 'c) Code.abstract
+                        (< answer : ('a, 'b) Code.abstract;
+                           state : [> `TRan of ('a, int ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('a, int ref) Code.abstract)
+                        StateCPSMonad.monad
                       val succ :
                         unit ->
-                        ([> `TRan of ('b, int ref) Code.abstract ] as 'a)
-                        list ->
-                        ('a list -> ('b, unit) Code.abstract -> 'c) -> 'c
+                        (< answer : 'a;
+                           state : [> `TRan of ('b, int ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('b, unit) Code.abstract)
+                        StateCPSMonad.monad
                       module type RANK =
                         sig
                           type 'a tag_lstate = 'a tag_lstate_
@@ -6982,8 +7272,12 @@ module G_GAC_I :
                         end
                       val fin :
                         unit ->
-                        ([> `TRan of ('b, 'c ref) Code.abstract ] as 'a) list ->
-                        ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd
+                        (< answer : 'a;
+                           state : [> `TRan of ('b, 'c ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('b, 'c) Code.abstract)
+                        StateCPSMonad.monad
                     end
                   module P :
                     sig
@@ -7045,14 +7339,13 @@ module G_GAC_I :
               type res = GAC_I.contr * GAC_I.Dom.v * int
               val make_result :
                 'a wmatrix ->
-                ([> `TDet of 'a OD.Det.lstate
-                  | `TRan of ('a, 'c ref) Code.abstract ]
-                 as 'b)
-                list ->
-                ('b list ->
-                 ('a, GAC_I.contr * GAC_I.Dom.v * 'c) Code.abstract ->
-                 ('a, 'd) Code.abstract) ->
-                ('a, 'd) Code.abstract
+                (< answer : ('a, 'b) Code.abstract;
+                   state : [> `TDet of 'a OD.Det.lstate
+                            | `TRan of ('a, 'c ref) Code.abstract ]
+                           list;
+                   .. >,
+                 ('a, GAC_I.contr * GAC_I.Dom.v * 'c) Code.abstract)
+                StateCPSMonad.monad
             end
         module OutDetRankPivot :
           functor (OD : OUTPUTDEP) ->
@@ -7073,17 +7366,20 @@ module G_GAC_I :
                         ([> `TRan of 'b ] -> 'b option) * string
                       val decl :
                         unit ->
-                        ([> `TRan of ('b, int ref) Code.abstract ] as 'a)
-                        list ->
-                        ('a list ->
-                         ('b, int ref) Code.abstract ->
-                         ('b, 'c) Code.abstract) ->
-                        ('b, 'c) Code.abstract
+                        (< answer : ('a, 'b) Code.abstract;
+                           state : [> `TRan of ('a, int ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('a, int ref) Code.abstract)
+                        StateCPSMonad.monad
                       val succ :
                         unit ->
-                        ([> `TRan of ('b, int ref) Code.abstract ] as 'a)
-                        list ->
-                        ('a list -> ('b, unit) Code.abstract -> 'c) -> 'c
+                        (< answer : 'a;
+                           state : [> `TRan of ('b, int ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('b, unit) Code.abstract)
+                        StateCPSMonad.monad
                       module type RANK =
                         sig
                           type 'a tag_lstate = 'a tag_lstate_
@@ -7108,8 +7404,12 @@ module G_GAC_I :
                         end
                       val fin :
                         unit ->
-                        ([> `TRan of ('b, 'c ref) Code.abstract ] as 'a) list ->
-                        ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd
+                        (< answer : 'a;
+                           state : [> `TRan of ('b, 'c ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('b, 'c) Code.abstract)
+                        StateCPSMonad.monad
                     end
                   module P :
                     sig
@@ -7134,26 +7434,32 @@ module G_GAC_I :
                         ([> `TPivot of 'b ] -> 'b option) * string
                       val decl :
                         'a OD.PivotRep.ira ->
-                        ([> `TPivot of
-                              ('a, OD.PivotRep.perm_rep ref) Code.abstract ]
-                         as 'b)
-                        list ->
-                        ('b list ->
-                         ('c, unit) Code.abstract -> ('a, 'd) Code.abstract) ->
-                        ('a, 'd) Code.abstract
+                        (< answer : ('a, 'b) Code.abstract;
+                           state : [> `TPivot of
+                                        ('a, OD.PivotRep.perm_rep ref)
+                                        Code.abstract ]
+                                   list;
+                           .. >,
+                         ('c, unit) Code.abstract)
+                        StateCPSMonad.monad
                       val add :
                         'a OD.PivotRep.fra ->
-                        ([> `TPivot of
-                              ('a, OD.PivotRep.perm_rep ref) Code.abstract ]
-                         as 'b)
-                        list ->
-                        ('b list -> ('a, unit) Code.abstract option -> 'c) ->
-                        'c
+                        (< answer : 'b;
+                           state : [> `TPivot of
+                                        ('a, OD.PivotRep.perm_rep ref)
+                                        Code.abstract ]
+                                   list;
+                           .. >,
+                         ('a, unit) Code.abstract option)
+                        StateCPSMonad.monad
                       val fin :
                         unit ->
-                        ([> `TPivot of ('b, 'c ref) Code.abstract ] as 'a)
-                        list ->
-                        ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd
+                        (< answer : 'a;
+                           state : [> `TPivot of ('b, 'c ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('b, 'c) Code.abstract)
+                        StateCPSMonad.monad
                     end
                   module L :
                     sig
@@ -7185,15 +7491,14 @@ module G_GAC_I :
               type res = GAC_I.contr * GAC_I.Dom.v * int * IF.P.perm_rep
               val make_result :
                 'a wmatrix ->
-                ([> `TDet of 'a OD.Det.lstate
-                  | `TPivot of ('a, 'c ref) Code.abstract
-                  | `TRan of ('a, 'd ref) Code.abstract ]
-                 as 'b)
-                list ->
-                ('b list ->
-                 ('a, GAC_I.contr * GAC_I.Dom.v * 'd * 'c) Code.abstract ->
-                 ('a, 'e) Code.abstract) ->
-                ('a, 'e) Code.abstract
+                (< answer : ('a, 'b) Code.abstract;
+                   state : [> `TDet of 'a OD.Det.lstate
+                            | `TPivot of ('a, 'c ref) Code.abstract
+                            | `TRan of ('a, 'd ref) Code.abstract ]
+                           list;
+                   .. >,
+                 ('a, GAC_I.contr * GAC_I.Dom.v * 'd * 'c) Code.abstract)
+                StateCPSMonad.monad
             end
         module Out_L_U :
           functor (OD : OUTPUTDEP) ->
@@ -7214,17 +7519,20 @@ module G_GAC_I :
                         ([> `TRan of 'b ] -> 'b option) * string
                       val decl :
                         unit ->
-                        ([> `TRan of ('b, int ref) Code.abstract ] as 'a)
-                        list ->
-                        ('a list ->
-                         ('b, int ref) Code.abstract ->
-                         ('b, 'c) Code.abstract) ->
-                        ('b, 'c) Code.abstract
+                        (< answer : ('a, 'b) Code.abstract;
+                           state : [> `TRan of ('a, int ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('a, int ref) Code.abstract)
+                        StateCPSMonad.monad
                       val succ :
                         unit ->
-                        ([> `TRan of ('b, int ref) Code.abstract ] as 'a)
-                        list ->
-                        ('a list -> ('b, unit) Code.abstract -> 'c) -> 'c
+                        (< answer : 'a;
+                           state : [> `TRan of ('b, int ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('b, unit) Code.abstract)
+                        StateCPSMonad.monad
                       module type RANK =
                         sig
                           type 'a tag_lstate = 'a tag_lstate_
@@ -7272,26 +7580,32 @@ module G_GAC_I :
                         ([> `TPivot of 'b ] -> 'b option) * string
                       val decl :
                         'a OD.PivotRep.ira ->
-                        ([> `TPivot of
-                              ('a, OD.PivotRep.perm_rep ref) Code.abstract ]
-                         as 'b)
-                        list ->
-                        ('b list ->
-                         ('c, unit) Code.abstract -> ('a, 'd) Code.abstract) ->
-                        ('a, 'd) Code.abstract
+                        (< answer : ('a, 'b) Code.abstract;
+                           state : [> `TPivot of
+                                        ('a, OD.PivotRep.perm_rep ref)
+                                        Code.abstract ]
+                                   list;
+                           .. >,
+                         ('c, unit) Code.abstract)
+                        StateCPSMonad.monad
                       val add :
                         'a OD.PivotRep.fra ->
-                        ([> `TPivot of
-                              ('a, OD.PivotRep.perm_rep ref) Code.abstract ]
-                         as 'b)
-                        list ->
-                        ('b list -> ('a, unit) Code.abstract option -> 'c) ->
-                        'c
+                        (< answer : 'b;
+                           state : [> `TPivot of
+                                        ('a, OD.PivotRep.perm_rep ref)
+                                        Code.abstract ]
+                                   list;
+                           .. >,
+                         ('a, unit) Code.abstract option)
+                        StateCPSMonad.monad
                       val fin :
                         unit ->
-                        ([> `TPivot of ('b, 'c ref) Code.abstract ] as 'a)
-                        list ->
-                        ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd
+                        (< answer : 'a;
+                           state : [> `TPivot of ('b, 'c ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('b, 'c) Code.abstract)
+                        StateCPSMonad.monad
                     end
                   module L :
                     sig
@@ -7305,35 +7619,40 @@ module G_GAC_I :
                         ([> `TLower of 'b ] -> 'b option) * string
                       val decl :
                         ('a, 'b) Code.abstract ->
-                        ([> `TLower of ('a, 'b) Code.abstract ] as 'c) list ->
-                        ('c list ->
-                         ('a, 'b) Code.abstract -> ('a, 'd) Code.abstract) ->
-                        ('a, 'd) Code.abstract
+                        (< answer : ('a, 'c) Code.abstract;
+                           state : [> `TLower of ('a, 'b) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('a, 'b) Code.abstract)
+                        StateCPSMonad.monad
                       val updt :
                         'a GAC_I.vc ->
                         ('a, int) Code.abstract ->
                         ('a, int) Code.abstract ->
                         'a GAC_I.vo ->
                         'a GAC_I.vo ->
-                        (([> `TLower of 'a GAC_I.vc ] as 'b) list ->
-                         ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c)
-                        option
+                        (< answer : 'b;
+                           state : [> `TLower of 'a GAC_I.vc ] list; .. >,
+                         ('a, unit) Code.abstract)
+                        StateCPSMonad.monad option
                       val fin :
                         unit ->
-                        ([> `TLower of 'b ] as 'a) list ->
-                        ('a list -> 'b -> 'c) -> 'c
+                        (< answer : 'a; state : [> `TLower of 'b ] list; .. >,
+                         'b)
+                        StateCPSMonad.monad
                       val wants_pack : bool
                     end
                 end
               type res = GAC_I.contr * GAC_I.contr * IF.P.perm_rep
               val make_result :
                 'a wmatrix ->
-                ([> `TLower of ('a, 'c) Code.abstract
-                  | `TPivot of ('a, 'd ref) Code.abstract ]
-                 as 'b)
-                list ->
-                ('b list -> ('a, GAC_I.contr * 'c * 'd) Code.abstract -> 'e) ->
-                'e
+                (< answer : 'b;
+                   state : [> `TLower of ('a, 'c) Code.abstract
+                            | `TPivot of ('a, 'd ref) Code.abstract ]
+                           list;
+                   .. >,
+                 ('a, GAC_I.contr * 'c * 'd) Code.abstract)
+                StateCPSMonad.monad
             end
         module Out_LU_Packed :
           functor (OD : OUTPUTDEP) ->
@@ -7354,17 +7673,20 @@ module G_GAC_I :
                         ([> `TRan of 'b ] -> 'b option) * string
                       val decl :
                         unit ->
-                        ([> `TRan of ('b, int ref) Code.abstract ] as 'a)
-                        list ->
-                        ('a list ->
-                         ('b, int ref) Code.abstract ->
-                         ('b, 'c) Code.abstract) ->
-                        ('b, 'c) Code.abstract
+                        (< answer : ('a, 'b) Code.abstract;
+                           state : [> `TRan of ('a, int ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('a, int ref) Code.abstract)
+                        StateCPSMonad.monad
                       val succ :
                         unit ->
-                        ([> `TRan of ('b, int ref) Code.abstract ] as 'a)
-                        list ->
-                        ('a list -> ('b, unit) Code.abstract -> 'c) -> 'c
+                        (< answer : 'a;
+                           state : [> `TRan of ('b, int ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('b, unit) Code.abstract)
+                        StateCPSMonad.monad
                       module type RANK =
                         sig
                           type 'a tag_lstate = 'a tag_lstate_
@@ -7412,26 +7734,32 @@ module G_GAC_I :
                         ([> `TPivot of 'b ] -> 'b option) * string
                       val decl :
                         'a OD.PivotRep.ira ->
-                        ([> `TPivot of
-                              ('a, OD.PivotRep.perm_rep ref) Code.abstract ]
-                         as 'b)
-                        list ->
-                        ('b list ->
-                         ('c, unit) Code.abstract -> ('a, 'd) Code.abstract) ->
-                        ('a, 'd) Code.abstract
+                        (< answer : ('a, 'b) Code.abstract;
+                           state : [> `TPivot of
+                                        ('a, OD.PivotRep.perm_rep ref)
+                                        Code.abstract ]
+                                   list;
+                           .. >,
+                         ('c, unit) Code.abstract)
+                        StateCPSMonad.monad
                       val add :
                         'a OD.PivotRep.fra ->
-                        ([> `TPivot of
-                              ('a, OD.PivotRep.perm_rep ref) Code.abstract ]
-                         as 'b)
-                        list ->
-                        ('b list -> ('a, unit) Code.abstract option -> 'c) ->
-                        'c
+                        (< answer : 'b;
+                           state : [> `TPivot of
+                                        ('a, OD.PivotRep.perm_rep ref)
+                                        Code.abstract ]
+                                   list;
+                           .. >,
+                         ('a, unit) Code.abstract option)
+                        StateCPSMonad.monad
                       val fin :
                         unit ->
-                        ([> `TPivot of ('b, 'c ref) Code.abstract ] as 'a)
-                        list ->
-                        ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd
+                        (< answer : 'a;
+                           state : [> `TPivot of ('b, 'c ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('b, 'c) Code.abstract)
+                        StateCPSMonad.monad
                     end
                   module L :
                     sig
@@ -7445,23 +7773,28 @@ module G_GAC_I :
                         ([> `TLower of 'b ] -> 'b option) * string
                       val decl :
                         'a ->
-                        ([> `TLower of 'a ] as 'b) list ->
-                        ('b list -> 'a -> 'c) -> 'c
+                        (< answer : 'b; state : [> `TLower of 'a ] list; .. >,
+                         'a)
+                        StateCPSMonad.monad
                       val updt : 'a -> 'b -> 'c -> 'd -> 'e -> 'f option
                       val fin :
                         unit ->
-                        ([> `TLower of 'b ] as 'a) list ->
-                        ('a list -> 'b -> 'c) -> 'c
+                        (< answer : 'a; state : [> `TLower of 'b ] list; .. >,
+                         'b)
+                        StateCPSMonad.monad
                       val wants_pack : bool
                     end
                 end
               type res = GAC_I.contr * IF.P.perm_rep
               val make_result :
                 'a ->
-                ([> `TLower of ('c, 'd) Code.abstract
-                  | `TPivot of ('c, 'e ref) Code.abstract ]
-                 as 'b)
-                list -> ('b list -> ('c, 'd * 'e) Code.abstract -> 'f) -> 'f
+                (< answer : 'b;
+                   state : [> `TLower of ('c, 'd) Code.abstract
+                            | `TPivot of ('c, 'e ref) Code.abstract ]
+                           list;
+                   .. >,
+                 ('c, 'd * 'e) Code.abstract)
+                StateCPSMonad.monad
             end
         module type INTERNAL_FEATURES =
           sig
@@ -7610,17 +7943,16 @@ module G_GAC_I :
                 list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
               val init :
                 ('a, F.Input.inp) Code.abstract ->
-                ([> `TDet of 'a F.Det.lstate
-                  | `TLower of ('a, GAC_I.contr) Code.abstract
-                  | `TPivot of 'a F.Output(F).IF.P.lstate
-                  | `TRan of 'a GEF.TrackRank.lstate ]
-                 as 'b)
-                list ->
-                ('b list ->
+                (< answer : ('a, 'b) Code.abstract;
+                   state : [> `TDet of 'a F.Det.lstate
+                            | `TLower of ('a, GAC_I.contr) Code.abstract
+                            | `TPivot of 'a F.Output(F).IF.P.lstate
+                            | `TRan of 'a GEF.TrackRank.lstate ]
+                           list;
+                   .. >,
                  'a wmatrix * ('a, int ref) Code.abstract *
-                 ('a, int ref) Code.abstract * ('a, int) Code.abstract ->
-                 ('a, 'c) Code.abstract) ->
-                ('a, 'c) Code.abstract
+                 ('a, int ref) Code.abstract * ('a, int) Code.abstract)
+                StateCPSMonad.monad
               val forward_elim :
                 'a wmatrix * ('a, int ref) Code.abstract *
                 ('a, int ref) Code.abstract * ('a, int) Code.abstract ->
@@ -7632,15 +7964,15 @@ module G_GAC_I :
                 list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
               val gen :
                 ('a, F.Input.inp) Code.abstract ->
-                ([> `TDet of 'a F.Det.lstate
-                  | `TLower of 'a O.IF.L.lstate
-                  | `TPivot of 'a O.IF.P.lstate
-                  | `TRan of 'a GEF.TrackRank.lstate ]
-                 as 'b)
-                list ->
-                ('b list ->
-                 ('a, O.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-                ('a, 'c) Code.abstract
+                (< answer : ('a, 'b) Code.abstract;
+                   state : [> `TDet of 'a F.Det.lstate
+                            | `TLower of 'a O.IF.L.lstate
+                            | `TPivot of 'a O.IF.P.lstate
+                            | `TRan of 'a GEF.TrackRank.lstate ]
+                           list;
+                   .. >,
+                 ('a, O.res) Code.abstract)
+                StateCPSMonad.monad
             end
       end
     module Solve :
@@ -7661,11 +7993,9 @@ module G_GAC_I :
             type rhs = GAC_I.contr
             val get_input :
               ('a, 'b * 'c) Code.abstract ->
-              'd ->
-              ('d ->
-               ('a, 'b) Code.abstract * ('a, 'c) Code.abstract ->
-               ('a, 'e) Code.abstract) ->
-              ('a, 'e) Code.abstract
+              (< answer : ('a, 'd) Code.abstract; state : 'e; .. >,
+               ('a, 'b) Code.abstract * ('a, 'c) Code.abstract)
+              StateCPSMonad.monad
           end
         module type OUTPUT =
           sig
@@ -7821,18 +8151,18 @@ module G_GAC_I :
                     list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
                   val init :
                     ('a, GAC_I.contr * int) Code.abstract ->
-                    ([> `TDet of 'a F.Det.lstate
-                      | `TLower of ('a, GAC_I.contr) Code.abstract
-                      | `TPivot of
-                          ('a, GEF.PermList.perm_rep ref) Code.abstract
-                      | `TRan of 'a GEF.TrackRank.lstate ]
-                     as 'b)
-                    list ->
-                    ('b list ->
+                    (< answer : ('a, 'b) Code.abstract;
+                       state : [> `TDet of 'a F.Det.lstate
+                                | `TLower of ('a, GAC_I.contr) Code.abstract
+                                | `TPivot of
+                                    ('a, GEF.PermList.perm_rep ref)
+                                    Code.abstract
+                                | `TRan of 'a GEF.TrackRank.lstate ]
+                               list;
+                       .. >,
                      'a wmatrix * ('a, int ref) Code.abstract *
-                     ('a, int ref) Code.abstract * ('a, int) Code.abstract ->
-                     ('a, 'c) Code.abstract) ->
-                    ('a, 'c) Code.abstract
+                     ('a, int ref) Code.abstract * ('a, int) Code.abstract)
+                    StateCPSMonad.monad
                   val forward_elim :
                     'a wmatrix * ('a, int ref) Code.abstract *
                     ('a, int ref) Code.abstract * ('a, int) Code.abstract ->
@@ -7845,23 +8175,22 @@ module G_GAC_I :
                     list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
                   val gen :
                     ('a, GAC_I.contr * int) Code.abstract ->
-                    ([> `TDet of 'a F.Det.lstate
-                      | `TLower of 'a O.IF.L.lstate
-                      | `TPivot of 'a O.IF.P.lstate
-                      | `TRan of 'a GEF.TrackRank.lstate ]
-                     as 'b)
-                    list ->
-                    ('b list ->
-                     ('a, O.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-                    ('a, 'c) Code.abstract
+                    (< answer : ('a, 'b) Code.abstract;
+                       state : [> `TDet of 'a F.Det.lstate
+                                | `TLower of 'a O.IF.L.lstate
+                                | `TPivot of 'a O.IF.P.lstate
+                                | `TRan of 'a GEF.TrackRank.lstate ]
+                               list;
+                       .. >,
+                     ('a, O.res) Code.abstract)
+                    StateCPSMonad.monad
                 end
               val init :
                 ('a, F.Input.inp) Code.abstract ->
-                'b ->
-                ('b ->
+                (< answer : 'b; state : 'c; .. >,
                  ('a, GAC_I.contr) Code.abstract *
-                 ('a, F.Input.rhs) Code.abstract -> 'c) ->
-                'c
+                 ('a, F.Input.rhs) Code.abstract)
+                StateCPSMonad.monad
               val back_elim :
                 'a GAC_I.vc ->
                 ('a, int) Code.abstract ->
@@ -7869,15 +8198,15 @@ module G_GAC_I :
                 'b -> ('b -> ('a, GAC_I.contr) Code.abstract -> 'c) -> 'c
               val gen :
                 ('a, F.Input.inp) Code.abstract ->
-                ([> `TDet of 'a F.Det.lstate
-                  | `TLower of 'a GE'.O.IF.L.lstate
-                  | `TPivot of 'a GE'.O.IF.P.lstate
-                  | `TRan of 'a GEF.TrackRank.lstate ]
-                 as 'b)
-                list ->
-                ('b list ->
-                 ('a, F.Output.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-                ('a, 'c) Code.abstract
+                (< answer : ('a, 'b) Code.abstract;
+                   state : [> `TDet of 'a F.Det.lstate
+                            | `TLower of 'a GE'.O.IF.L.lstate
+                            | `TPivot of 'a GE'.O.IF.P.lstate
+                            | `TRan of 'a GEF.TrackRank.lstate ]
+                           list;
+                   .. >,
+                 ('a, F.Output.res) Code.abstract)
+                StateCPSMonad.monad
             end
       end
   end
@@ -8004,39 +8333,56 @@ module G_GVC_I :
           ('a -> [> `TDet of 'a ]) * ([> `TDet of 'b ] -> 'b option) * string
         val decl :
           unit ->
-          ([> `TDet of
-                ('b, int ref) Code.abstract *
-                ('b, GVC_I.Dom.v ref) Code.abstract ]
-           as 'a)
-          list ->
-          ('a list -> ('c, unit) Code.abstract -> ('b, 'd) Code.abstract) ->
-          ('b, 'd) Code.abstract
+          (< answer : ('a, 'b) Code.abstract;
+             state : [> `TDet of
+                          ('a, int ref) Code.abstract *
+                          ('a, GVC_I.Dom.v ref) Code.abstract ]
+                     list;
+             .. >,
+           ('c, unit) Code.abstract)
+          StateCPSMonad.monad
         val upd_sign :
           unit ->
-          ([> `TDet of ('b, int ref) Code.abstract * 'c ] as 'a) list ->
-          ('a list -> ('b, unit) Code.abstract option -> 'd) -> 'd
+          (< answer : 'a;
+             state : [> `TDet of ('b, int ref) Code.abstract * 'c ] list;
+             .. >,
+           ('b, unit) Code.abstract option)
+          StateCPSMonad.monad
         val zero_sign :
           unit ->
-          ([> `TDet of ('b, int ref) Code.abstract * 'c ] as 'a) list ->
-          ('a list -> ('b, unit) Code.abstract -> 'd) -> 'd
+          (< answer : 'a;
+             state : [> `TDet of ('b, int ref) Code.abstract * 'c ] list;
+             .. >,
+           ('b, unit) Code.abstract)
+          StateCPSMonad.monad
         val get :
           unit ->
-          ([> `TDet of 'b * 'c ] as 'a) list -> ('a list -> 'c -> 'd) -> 'd
+          (< answer : 'a; state : [> `TDet of 'b * 'c ] list; .. >, 'c)
+          StateCPSMonad.monad
         val set :
           ('a, 'b) Code.abstract ->
-          ([> `TDet of 'd * ('a, 'b ref) Code.abstract ] as 'c) list ->
-          ('c list -> ('a, unit) Code.abstract -> 'e) -> 'e
+          (< answer : 'c;
+             state : [> `TDet of 'd * ('a, 'b ref) Code.abstract ] list; .. >,
+           ('a, unit) Code.abstract)
+          StateCPSMonad.monad
         val acc :
           'a GVC_I.Dom.vc ->
-          ([> `TDet of 'c * ('a, GVC_I.Dom.v ref) Code.abstract ] as 'b) list ->
-          ('b list -> ('a, unit) Code.abstract -> 'd) -> 'd
+          (< answer : 'b;
+             state : [> `TDet of 'c * ('a, GVC_I.Dom.v ref) Code.abstract ]
+                     list;
+             .. >,
+           ('a, unit) Code.abstract)
+          StateCPSMonad.monad
         val fin :
           unit ->
-          ([> `TDet of
-                ('b, int ref) Code.abstract *
-                ('b, GVC_I.Dom.v ref) Code.abstract ]
-           as 'a)
-          list -> ('a list -> ('b, GVC_I.Dom.v) Code.abstract -> 'c) -> 'c
+          (< answer : 'a;
+             state : [> `TDet of
+                          ('b, int ref) Code.abstract *
+                          ('b, GVC_I.Dom.v ref) Code.abstract ]
+                     list;
+             .. >,
+           ('b, GVC_I.Dom.v) Code.abstract)
+          StateCPSMonad.monad
       end
     module type UPDATE =
       functor (D : DETERMINANT) ->
@@ -8069,7 +8415,9 @@ module G_GVC_I :
                 'a GVC_I.Dom.vc ->
                 'a GVC_I.Dom.vc ->
                 'a GVC_I.Dom.vc ->
-                ('a GVC_I.Dom.vc -> 'b) -> 'c -> 'd -> ('d -> 'b -> 'e) -> 'e
+                ('a GVC_I.Dom.vc -> 'b) ->
+                'c ->
+                (< answer : 'd; state : 'e; .. >, 'b) StateCPSMonad.monad
               val update_det :
                 ('a, GVC_I.Dom.v) Code.abstract ->
                 (< answer : 'b; classif : 'a;
@@ -8089,7 +8437,7 @@ module G_GVC_I :
                 'a GVC_I.Dom.vc ->
                 ('a GVC_I.Dom.vc -> 'b) ->
                 ('a, GVC_I.Dom.v ref) Code.abstract ->
-                'c -> ('c -> 'b -> 'd) -> 'd
+                (< answer : 'c; state : 'd; .. >, 'b) StateCPSMonad.monad
               val update_det :
                 ('a, GVC_I.Dom.v) Code.abstract ->
                 (< answer : 'b; classif : 'a;
@@ -8152,21 +8500,23 @@ module G_GVC_I :
               ([> `TLower of 'b ] -> 'b option) * string
             val decl :
               ('a, 'b) Code.abstract ->
-              ([> `TLower of ('a, 'b) Code.abstract ] as 'c) list ->
-              ('c list -> ('a, 'b) Code.abstract -> ('a, 'd) Code.abstract) ->
-              ('a, 'd) Code.abstract
+              (< answer : ('a, 'c) Code.abstract;
+                 state : [> `TLower of ('a, 'b) Code.abstract ] list; .. >,
+               ('a, 'b) Code.abstract)
+              StateCPSMonad.monad
             val updt :
               'a GVC_I.vc ->
               ('a, int) Code.abstract ->
               ('a, int) Code.abstract ->
               'a GVC_I.vo ->
               'a GVC_I.vo ->
-              (([> `TLower of 'a GVC_I.vc ] as 'b) list ->
-               ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c)
-              option
+              (< answer : 'b; state : [> `TLower of 'a GVC_I.vc ] list; .. >,
+               ('a, unit) Code.abstract)
+              StateCPSMonad.monad option
             val fin :
               unit ->
-              ([> `TLower of 'b ] as 'a) list -> ('a list -> 'b -> 'c) -> 'c
+              (< answer : 'a; state : [> `TLower of 'b ] list; .. >, 'b)
+              StateCPSMonad.monad
             val wants_pack : bool
           end
         module PackedLower :
@@ -8181,11 +8531,13 @@ module G_GVC_I :
               ([> `TLower of 'b ] -> 'b option) * string
             val decl :
               'a ->
-              ([> `TLower of 'a ] as 'b) list -> ('b list -> 'a -> 'c) -> 'c
+              (< answer : 'b; state : [> `TLower of 'a ] list; .. >, 'a)
+              StateCPSMonad.monad
             val updt : 'a -> 'b -> 'c -> 'd -> 'e -> 'f option
             val fin :
               unit ->
-              ([> `TLower of 'b ] as 'a) list -> ('a list -> 'b -> 'c) -> 'c
+              (< answer : 'a; state : [> `TLower of 'b ] list; .. >, 'b)
+              StateCPSMonad.monad
             val wants_pack : bool
           end
         module NoLower :
@@ -8235,10 +8587,9 @@ module G_GVC_I :
             type inp = GVC_I.contr * int
             val get_input :
               ('a, 'b * 'c) Code.abstract ->
-              'd ->
-              ('d ->
-               ('a, 'b) Code.abstract * ('a, 'c) Code.abstract * bool -> 'e) ->
-              'e
+              (< answer : 'd; state : 'e; .. >,
+               ('a, 'b) Code.abstract * ('a, 'c) Code.abstract * bool)
+              StateCPSMonad.monad
           end
         module RowPivot :
           functor (Det : DETERMINANT) ->
@@ -8247,12 +8598,13 @@ module G_GVC_I :
                 val findpivot :
                   'a wmatrix ->
                   'a curpos ->
-                  ([> `TDet of 'a Det.lstate | `TPivot of 'a P.lstate ] as 'b)
-                  list ->
-                  ('b list ->
-                   ('a, GVC_I.Dom.v option) Code.abstract ->
-                   ('a, 'c) Code.abstract) ->
-                  ('a, 'c) Code.abstract
+                  (< answer : ('a, 'b) Code.abstract;
+                     state : [> `TDet of 'a Det.lstate
+                              | `TPivot of 'a P.lstate ]
+                             list;
+                     .. >,
+                   ('a, GVC_I.Dom.v option) Code.abstract)
+                  StateCPSMonad.monad
               end
         module FullPivot :
           functor (Det : DETERMINANT) ->
@@ -8261,12 +8613,13 @@ module G_GVC_I :
                 val findpivot :
                   'a wmatrix ->
                   'a curpos ->
-                  ([> `TDet of 'a Det.lstate | `TPivot of 'a P.lstate ] as 'b)
-                  list ->
-                  ('b list ->
-                   ('a, GVC_I.Dom.v option) Code.abstract ->
-                   ('a, 'c) Code.abstract) ->
-                  ('a, 'c) Code.abstract
+                  (< answer : ('a, 'b) Code.abstract;
+                     state : [> `TDet of 'a Det.lstate
+                              | `TPivot of 'a P.lstate ]
+                             list;
+                     .. >,
+                   ('a, GVC_I.Dom.v option) Code.abstract)
+                  StateCPSMonad.monad
               end
         module NoPivot :
           functor (Det : DETERMINANT) ->
@@ -8300,17 +8653,20 @@ module G_GVC_I :
                         ([> `TRan of 'b ] -> 'b option) * string
                       val decl :
                         unit ->
-                        ([> `TRan of ('b, int ref) Code.abstract ] as 'a)
-                        list ->
-                        ('a list ->
-                         ('b, int ref) Code.abstract ->
-                         ('b, 'c) Code.abstract) ->
-                        ('b, 'c) Code.abstract
+                        (< answer : ('a, 'b) Code.abstract;
+                           state : [> `TRan of ('a, int ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('a, int ref) Code.abstract)
+                        StateCPSMonad.monad
                       val succ :
                         unit ->
-                        ([> `TRan of ('b, int ref) Code.abstract ] as 'a)
-                        list ->
-                        ('a list -> ('b, unit) Code.abstract -> 'c) -> 'c
+                        (< answer : 'a;
+                           state : [> `TRan of ('b, int ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('b, unit) Code.abstract)
+                        StateCPSMonad.monad
                       module type RANK =
                         sig
                           type 'a tag_lstate = 'a tag_lstate_
@@ -8417,17 +8773,20 @@ module G_GVC_I :
                         ([> `TRan of 'b ] -> 'b option) * string
                       val decl :
                         unit ->
-                        ([> `TRan of ('b, int ref) Code.abstract ] as 'a)
-                        list ->
-                        ('a list ->
-                         ('b, int ref) Code.abstract ->
-                         ('b, 'c) Code.abstract) ->
-                        ('b, 'c) Code.abstract
+                        (< answer : ('a, 'b) Code.abstract;
+                           state : [> `TRan of ('a, int ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('a, int ref) Code.abstract)
+                        StateCPSMonad.monad
                       val succ :
                         unit ->
-                        ([> `TRan of ('b, int ref) Code.abstract ] as 'a)
-                        list ->
-                        ('a list -> ('b, unit) Code.abstract -> 'c) -> 'c
+                        (< answer : 'a;
+                           state : [> `TRan of ('b, int ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('b, unit) Code.abstract)
+                        StateCPSMonad.monad
                       module type RANK =
                         sig
                           type 'a tag_lstate = 'a tag_lstate_
@@ -8512,11 +8871,10 @@ module G_GVC_I :
               type res = GVC_I.contr * GVC_I.Dom.v
               val make_result :
                 'a wmatrix ->
-                ([> `TDet of 'a OD.Det.lstate ] as 'b) list ->
-                ('b list ->
-                 ('a, GVC_I.contr * GVC_I.Dom.v) Code.abstract ->
-                 ('a, 'c) Code.abstract) ->
-                ('a, 'c) Code.abstract
+                (< answer : ('a, 'b) Code.abstract;
+                   state : [> `TDet of 'a OD.Det.lstate ] list; .. >,
+                 ('a, GVC_I.contr * GVC_I.Dom.v) Code.abstract)
+                StateCPSMonad.monad
             end
         module OutRank :
           functor (OD : OUTPUTDEP) ->
@@ -8537,17 +8895,20 @@ module G_GVC_I :
                         ([> `TRan of 'b ] -> 'b option) * string
                       val decl :
                         unit ->
-                        ([> `TRan of ('b, int ref) Code.abstract ] as 'a)
-                        list ->
-                        ('a list ->
-                         ('b, int ref) Code.abstract ->
-                         ('b, 'c) Code.abstract) ->
-                        ('b, 'c) Code.abstract
+                        (< answer : ('a, 'b) Code.abstract;
+                           state : [> `TRan of ('a, int ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('a, int ref) Code.abstract)
+                        StateCPSMonad.monad
                       val succ :
                         unit ->
-                        ([> `TRan of ('b, int ref) Code.abstract ] as 'a)
-                        list ->
-                        ('a list -> ('b, unit) Code.abstract -> 'c) -> 'c
+                        (< answer : 'a;
+                           state : [> `TRan of ('b, int ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('b, unit) Code.abstract)
+                        StateCPSMonad.monad
                       module type RANK =
                         sig
                           type 'a tag_lstate = 'a tag_lstate_
@@ -8572,8 +8933,12 @@ module G_GVC_I :
                         end
                       val fin :
                         unit ->
-                        ([> `TRan of ('b, 'c ref) Code.abstract ] as 'a) list ->
-                        ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd
+                        (< answer : 'a;
+                           state : [> `TRan of ('b, 'c ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('b, 'c) Code.abstract)
+                        StateCPSMonad.monad
                     end
                   module P :
                     sig
@@ -8635,8 +9000,11 @@ module G_GVC_I :
               type res = GVC_I.contr * int
               val make_result :
                 'a wmatrix ->
-                ([> `TRan of ('a, 'c ref) Code.abstract ] as 'b) list ->
-                ('b list -> ('a, GVC_I.contr * 'c) Code.abstract -> 'd) -> 'd
+                (< answer : 'b;
+                   state : [> `TRan of ('a, 'c ref) Code.abstract ] list;
+                   .. >,
+                 ('a, GVC_I.contr * 'c) Code.abstract)
+                StateCPSMonad.monad
             end
         module OutDetRank :
           functor (OD : OUTPUTDEP) ->
@@ -8657,17 +9025,20 @@ module G_GVC_I :
                         ([> `TRan of 'b ] -> 'b option) * string
                       val decl :
                         unit ->
-                        ([> `TRan of ('b, int ref) Code.abstract ] as 'a)
-                        list ->
-                        ('a list ->
-                         ('b, int ref) Code.abstract ->
-                         ('b, 'c) Code.abstract) ->
-                        ('b, 'c) Code.abstract
+                        (< answer : ('a, 'b) Code.abstract;
+                           state : [> `TRan of ('a, int ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('a, int ref) Code.abstract)
+                        StateCPSMonad.monad
                       val succ :
                         unit ->
-                        ([> `TRan of ('b, int ref) Code.abstract ] as 'a)
-                        list ->
-                        ('a list -> ('b, unit) Code.abstract -> 'c) -> 'c
+                        (< answer : 'a;
+                           state : [> `TRan of ('b, int ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('b, unit) Code.abstract)
+                        StateCPSMonad.monad
                       module type RANK =
                         sig
                           type 'a tag_lstate = 'a tag_lstate_
@@ -8692,8 +9063,12 @@ module G_GVC_I :
                         end
                       val fin :
                         unit ->
-                        ([> `TRan of ('b, 'c ref) Code.abstract ] as 'a) list ->
-                        ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd
+                        (< answer : 'a;
+                           state : [> `TRan of ('b, 'c ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('b, 'c) Code.abstract)
+                        StateCPSMonad.monad
                     end
                   module P :
                     sig
@@ -8755,14 +9130,13 @@ module G_GVC_I :
               type res = GVC_I.contr * GVC_I.Dom.v * int
               val make_result :
                 'a wmatrix ->
-                ([> `TDet of 'a OD.Det.lstate
-                  | `TRan of ('a, 'c ref) Code.abstract ]
-                 as 'b)
-                list ->
-                ('b list ->
-                 ('a, GVC_I.contr * GVC_I.Dom.v * 'c) Code.abstract ->
-                 ('a, 'd) Code.abstract) ->
-                ('a, 'd) Code.abstract
+                (< answer : ('a, 'b) Code.abstract;
+                   state : [> `TDet of 'a OD.Det.lstate
+                            | `TRan of ('a, 'c ref) Code.abstract ]
+                           list;
+                   .. >,
+                 ('a, GVC_I.contr * GVC_I.Dom.v * 'c) Code.abstract)
+                StateCPSMonad.monad
             end
         module OutDetRankPivot :
           functor (OD : OUTPUTDEP) ->
@@ -8783,17 +9157,20 @@ module G_GVC_I :
                         ([> `TRan of 'b ] -> 'b option) * string
                       val decl :
                         unit ->
-                        ([> `TRan of ('b, int ref) Code.abstract ] as 'a)
-                        list ->
-                        ('a list ->
-                         ('b, int ref) Code.abstract ->
-                         ('b, 'c) Code.abstract) ->
-                        ('b, 'c) Code.abstract
+                        (< answer : ('a, 'b) Code.abstract;
+                           state : [> `TRan of ('a, int ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('a, int ref) Code.abstract)
+                        StateCPSMonad.monad
                       val succ :
                         unit ->
-                        ([> `TRan of ('b, int ref) Code.abstract ] as 'a)
-                        list ->
-                        ('a list -> ('b, unit) Code.abstract -> 'c) -> 'c
+                        (< answer : 'a;
+                           state : [> `TRan of ('b, int ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('b, unit) Code.abstract)
+                        StateCPSMonad.monad
                       module type RANK =
                         sig
                           type 'a tag_lstate = 'a tag_lstate_
@@ -8818,8 +9195,12 @@ module G_GVC_I :
                         end
                       val fin :
                         unit ->
-                        ([> `TRan of ('b, 'c ref) Code.abstract ] as 'a) list ->
-                        ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd
+                        (< answer : 'a;
+                           state : [> `TRan of ('b, 'c ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('b, 'c) Code.abstract)
+                        StateCPSMonad.monad
                     end
                   module P :
                     sig
@@ -8844,26 +9225,32 @@ module G_GVC_I :
                         ([> `TPivot of 'b ] -> 'b option) * string
                       val decl :
                         'a OD.PivotRep.ira ->
-                        ([> `TPivot of
-                              ('a, OD.PivotRep.perm_rep ref) Code.abstract ]
-                         as 'b)
-                        list ->
-                        ('b list ->
-                         ('c, unit) Code.abstract -> ('a, 'd) Code.abstract) ->
-                        ('a, 'd) Code.abstract
+                        (< answer : ('a, 'b) Code.abstract;
+                           state : [> `TPivot of
+                                        ('a, OD.PivotRep.perm_rep ref)
+                                        Code.abstract ]
+                                   list;
+                           .. >,
+                         ('c, unit) Code.abstract)
+                        StateCPSMonad.monad
                       val add :
                         'a OD.PivotRep.fra ->
-                        ([> `TPivot of
-                              ('a, OD.PivotRep.perm_rep ref) Code.abstract ]
-                         as 'b)
-                        list ->
-                        ('b list -> ('a, unit) Code.abstract option -> 'c) ->
-                        'c
+                        (< answer : 'b;
+                           state : [> `TPivot of
+                                        ('a, OD.PivotRep.perm_rep ref)
+                                        Code.abstract ]
+                                   list;
+                           .. >,
+                         ('a, unit) Code.abstract option)
+                        StateCPSMonad.monad
                       val fin :
                         unit ->
-                        ([> `TPivot of ('b, 'c ref) Code.abstract ] as 'a)
-                        list ->
-                        ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd
+                        (< answer : 'a;
+                           state : [> `TPivot of ('b, 'c ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('b, 'c) Code.abstract)
+                        StateCPSMonad.monad
                     end
                   module L :
                     sig
@@ -8895,15 +9282,14 @@ module G_GVC_I :
               type res = GVC_I.contr * GVC_I.Dom.v * int * IF.P.perm_rep
               val make_result :
                 'a wmatrix ->
-                ([> `TDet of 'a OD.Det.lstate
-                  | `TPivot of ('a, 'c ref) Code.abstract
-                  | `TRan of ('a, 'd ref) Code.abstract ]
-                 as 'b)
-                list ->
-                ('b list ->
-                 ('a, GVC_I.contr * GVC_I.Dom.v * 'd * 'c) Code.abstract ->
-                 ('a, 'e) Code.abstract) ->
-                ('a, 'e) Code.abstract
+                (< answer : ('a, 'b) Code.abstract;
+                   state : [> `TDet of 'a OD.Det.lstate
+                            | `TPivot of ('a, 'c ref) Code.abstract
+                            | `TRan of ('a, 'd ref) Code.abstract ]
+                           list;
+                   .. >,
+                 ('a, GVC_I.contr * GVC_I.Dom.v * 'd * 'c) Code.abstract)
+                StateCPSMonad.monad
             end
         module Out_L_U :
           functor (OD : OUTPUTDEP) ->
@@ -8924,17 +9310,20 @@ module G_GVC_I :
                         ([> `TRan of 'b ] -> 'b option) * string
                       val decl :
                         unit ->
-                        ([> `TRan of ('b, int ref) Code.abstract ] as 'a)
-                        list ->
-                        ('a list ->
-                         ('b, int ref) Code.abstract ->
-                         ('b, 'c) Code.abstract) ->
-                        ('b, 'c) Code.abstract
+                        (< answer : ('a, 'b) Code.abstract;
+                           state : [> `TRan of ('a, int ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('a, int ref) Code.abstract)
+                        StateCPSMonad.monad
                       val succ :
                         unit ->
-                        ([> `TRan of ('b, int ref) Code.abstract ] as 'a)
-                        list ->
-                        ('a list -> ('b, unit) Code.abstract -> 'c) -> 'c
+                        (< answer : 'a;
+                           state : [> `TRan of ('b, int ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('b, unit) Code.abstract)
+                        StateCPSMonad.monad
                       module type RANK =
                         sig
                           type 'a tag_lstate = 'a tag_lstate_
@@ -8982,26 +9371,32 @@ module G_GVC_I :
                         ([> `TPivot of 'b ] -> 'b option) * string
                       val decl :
                         'a OD.PivotRep.ira ->
-                        ([> `TPivot of
-                              ('a, OD.PivotRep.perm_rep ref) Code.abstract ]
-                         as 'b)
-                        list ->
-                        ('b list ->
-                         ('c, unit) Code.abstract -> ('a, 'd) Code.abstract) ->
-                        ('a, 'd) Code.abstract
+                        (< answer : ('a, 'b) Code.abstract;
+                           state : [> `TPivot of
+                                        ('a, OD.PivotRep.perm_rep ref)
+                                        Code.abstract ]
+                                   list;
+                           .. >,
+                         ('c, unit) Code.abstract)
+                        StateCPSMonad.monad
                       val add :
                         'a OD.PivotRep.fra ->
-                        ([> `TPivot of
-                              ('a, OD.PivotRep.perm_rep ref) Code.abstract ]
-                         as 'b)
-                        list ->
-                        ('b list -> ('a, unit) Code.abstract option -> 'c) ->
-                        'c
+                        (< answer : 'b;
+                           state : [> `TPivot of
+                                        ('a, OD.PivotRep.perm_rep ref)
+                                        Code.abstract ]
+                                   list;
+                           .. >,
+                         ('a, unit) Code.abstract option)
+                        StateCPSMonad.monad
                       val fin :
                         unit ->
-                        ([> `TPivot of ('b, 'c ref) Code.abstract ] as 'a)
-                        list ->
-                        ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd
+                        (< answer : 'a;
+                           state : [> `TPivot of ('b, 'c ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('b, 'c) Code.abstract)
+                        StateCPSMonad.monad
                     end
                   module L :
                     sig
@@ -9015,35 +9410,40 @@ module G_GVC_I :
                         ([> `TLower of 'b ] -> 'b option) * string
                       val decl :
                         ('a, 'b) Code.abstract ->
-                        ([> `TLower of ('a, 'b) Code.abstract ] as 'c) list ->
-                        ('c list ->
-                         ('a, 'b) Code.abstract -> ('a, 'd) Code.abstract) ->
-                        ('a, 'd) Code.abstract
+                        (< answer : ('a, 'c) Code.abstract;
+                           state : [> `TLower of ('a, 'b) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('a, 'b) Code.abstract)
+                        StateCPSMonad.monad
                       val updt :
                         'a GVC_I.vc ->
                         ('a, int) Code.abstract ->
                         ('a, int) Code.abstract ->
                         'a GVC_I.vo ->
                         'a GVC_I.vo ->
-                        (([> `TLower of 'a GVC_I.vc ] as 'b) list ->
-                         ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c)
-                        option
+                        (< answer : 'b;
+                           state : [> `TLower of 'a GVC_I.vc ] list; .. >,
+                         ('a, unit) Code.abstract)
+                        StateCPSMonad.monad option
                       val fin :
                         unit ->
-                        ([> `TLower of 'b ] as 'a) list ->
-                        ('a list -> 'b -> 'c) -> 'c
+                        (< answer : 'a; state : [> `TLower of 'b ] list; .. >,
+                         'b)
+                        StateCPSMonad.monad
                       val wants_pack : bool
                     end
                 end
               type res = GVC_I.contr * GVC_I.contr * IF.P.perm_rep
               val make_result :
                 'a wmatrix ->
-                ([> `TLower of ('a, 'c) Code.abstract
-                  | `TPivot of ('a, 'd ref) Code.abstract ]
-                 as 'b)
-                list ->
-                ('b list -> ('a, GVC_I.contr * 'c * 'd) Code.abstract -> 'e) ->
-                'e
+                (< answer : 'b;
+                   state : [> `TLower of ('a, 'c) Code.abstract
+                            | `TPivot of ('a, 'd ref) Code.abstract ]
+                           list;
+                   .. >,
+                 ('a, GVC_I.contr * 'c * 'd) Code.abstract)
+                StateCPSMonad.monad
             end
         module Out_LU_Packed :
           functor (OD : OUTPUTDEP) ->
@@ -9064,17 +9464,20 @@ module G_GVC_I :
                         ([> `TRan of 'b ] -> 'b option) * string
                       val decl :
                         unit ->
-                        ([> `TRan of ('b, int ref) Code.abstract ] as 'a)
-                        list ->
-                        ('a list ->
-                         ('b, int ref) Code.abstract ->
-                         ('b, 'c) Code.abstract) ->
-                        ('b, 'c) Code.abstract
+                        (< answer : ('a, 'b) Code.abstract;
+                           state : [> `TRan of ('a, int ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('a, int ref) Code.abstract)
+                        StateCPSMonad.monad
                       val succ :
                         unit ->
-                        ([> `TRan of ('b, int ref) Code.abstract ] as 'a)
-                        list ->
-                        ('a list -> ('b, unit) Code.abstract -> 'c) -> 'c
+                        (< answer : 'a;
+                           state : [> `TRan of ('b, int ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('b, unit) Code.abstract)
+                        StateCPSMonad.monad
                       module type RANK =
                         sig
                           type 'a tag_lstate = 'a tag_lstate_
@@ -9122,26 +9525,32 @@ module G_GVC_I :
                         ([> `TPivot of 'b ] -> 'b option) * string
                       val decl :
                         'a OD.PivotRep.ira ->
-                        ([> `TPivot of
-                              ('a, OD.PivotRep.perm_rep ref) Code.abstract ]
-                         as 'b)
-                        list ->
-                        ('b list ->
-                         ('c, unit) Code.abstract -> ('a, 'd) Code.abstract) ->
-                        ('a, 'd) Code.abstract
+                        (< answer : ('a, 'b) Code.abstract;
+                           state : [> `TPivot of
+                                        ('a, OD.PivotRep.perm_rep ref)
+                                        Code.abstract ]
+                                   list;
+                           .. >,
+                         ('c, unit) Code.abstract)
+                        StateCPSMonad.monad
                       val add :
                         'a OD.PivotRep.fra ->
-                        ([> `TPivot of
-                              ('a, OD.PivotRep.perm_rep ref) Code.abstract ]
-                         as 'b)
-                        list ->
-                        ('b list -> ('a, unit) Code.abstract option -> 'c) ->
-                        'c
+                        (< answer : 'b;
+                           state : [> `TPivot of
+                                        ('a, OD.PivotRep.perm_rep ref)
+                                        Code.abstract ]
+                                   list;
+                           .. >,
+                         ('a, unit) Code.abstract option)
+                        StateCPSMonad.monad
                       val fin :
                         unit ->
-                        ([> `TPivot of ('b, 'c ref) Code.abstract ] as 'a)
-                        list ->
-                        ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd
+                        (< answer : 'a;
+                           state : [> `TPivot of ('b, 'c ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('b, 'c) Code.abstract)
+                        StateCPSMonad.monad
                     end
                   module L :
                     sig
@@ -9155,23 +9564,28 @@ module G_GVC_I :
                         ([> `TLower of 'b ] -> 'b option) * string
                       val decl :
                         'a ->
-                        ([> `TLower of 'a ] as 'b) list ->
-                        ('b list -> 'a -> 'c) -> 'c
+                        (< answer : 'b; state : [> `TLower of 'a ] list; .. >,
+                         'a)
+                        StateCPSMonad.monad
                       val updt : 'a -> 'b -> 'c -> 'd -> 'e -> 'f option
                       val fin :
                         unit ->
-                        ([> `TLower of 'b ] as 'a) list ->
-                        ('a list -> 'b -> 'c) -> 'c
+                        (< answer : 'a; state : [> `TLower of 'b ] list; .. >,
+                         'b)
+                        StateCPSMonad.monad
                       val wants_pack : bool
                     end
                 end
               type res = GVC_I.contr * IF.P.perm_rep
               val make_result :
                 'a ->
-                ([> `TLower of ('c, 'd) Code.abstract
-                  | `TPivot of ('c, 'e ref) Code.abstract ]
-                 as 'b)
-                list -> ('b list -> ('c, 'd * 'e) Code.abstract -> 'f) -> 'f
+                (< answer : 'b;
+                   state : [> `TLower of ('c, 'd) Code.abstract
+                            | `TPivot of ('c, 'e ref) Code.abstract ]
+                           list;
+                   .. >,
+                 ('c, 'd * 'e) Code.abstract)
+                StateCPSMonad.monad
             end
         module type INTERNAL_FEATURES =
           sig
@@ -9320,17 +9734,16 @@ module G_GVC_I :
                 list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
               val init :
                 ('a, F.Input.inp) Code.abstract ->
-                ([> `TDet of 'a F.Det.lstate
-                  | `TLower of ('a, GVC_I.contr) Code.abstract
-                  | `TPivot of 'a F.Output(F).IF.P.lstate
-                  | `TRan of 'a GEF.TrackRank.lstate ]
-                 as 'b)
-                list ->
-                ('b list ->
+                (< answer : ('a, 'b) Code.abstract;
+                   state : [> `TDet of 'a F.Det.lstate
+                            | `TLower of ('a, GVC_I.contr) Code.abstract
+                            | `TPivot of 'a F.Output(F).IF.P.lstate
+                            | `TRan of 'a GEF.TrackRank.lstate ]
+                           list;
+                   .. >,
                  'a wmatrix * ('a, int ref) Code.abstract *
-                 ('a, int ref) Code.abstract * ('a, int) Code.abstract ->
-                 ('a, 'c) Code.abstract) ->
-                ('a, 'c) Code.abstract
+                 ('a, int ref) Code.abstract * ('a, int) Code.abstract)
+                StateCPSMonad.monad
               val forward_elim :
                 'a wmatrix * ('a, int ref) Code.abstract *
                 ('a, int ref) Code.abstract * ('a, int) Code.abstract ->
@@ -9342,15 +9755,15 @@ module G_GVC_I :
                 list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
               val gen :
                 ('a, F.Input.inp) Code.abstract ->
-                ([> `TDet of 'a F.Det.lstate
-                  | `TLower of 'a O.IF.L.lstate
-                  | `TPivot of 'a O.IF.P.lstate
-                  | `TRan of 'a GEF.TrackRank.lstate ]
-                 as 'b)
-                list ->
-                ('b list ->
-                 ('a, O.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-                ('a, 'c) Code.abstract
+                (< answer : ('a, 'b) Code.abstract;
+                   state : [> `TDet of 'a F.Det.lstate
+                            | `TLower of 'a O.IF.L.lstate
+                            | `TPivot of 'a O.IF.P.lstate
+                            | `TRan of 'a GEF.TrackRank.lstate ]
+                           list;
+                   .. >,
+                 ('a, O.res) Code.abstract)
+                StateCPSMonad.monad
             end
       end
     module Solve :
@@ -9371,11 +9784,9 @@ module G_GVC_I :
             type rhs = GVC_I.contr
             val get_input :
               ('a, 'b * 'c) Code.abstract ->
-              'd ->
-              ('d ->
-               ('a, 'b) Code.abstract * ('a, 'c) Code.abstract ->
-               ('a, 'e) Code.abstract) ->
-              ('a, 'e) Code.abstract
+              (< answer : ('a, 'd) Code.abstract; state : 'e; .. >,
+               ('a, 'b) Code.abstract * ('a, 'c) Code.abstract)
+              StateCPSMonad.monad
           end
         module type OUTPUT =
           sig
@@ -9531,18 +9942,18 @@ module G_GVC_I :
                     list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
                   val init :
                     ('a, GVC_I.contr * int) Code.abstract ->
-                    ([> `TDet of 'a F.Det.lstate
-                      | `TLower of ('a, GVC_I.contr) Code.abstract
-                      | `TPivot of
-                          ('a, GEF.PermList.perm_rep ref) Code.abstract
-                      | `TRan of 'a GEF.TrackRank.lstate ]
-                     as 'b)
-                    list ->
-                    ('b list ->
+                    (< answer : ('a, 'b) Code.abstract;
+                       state : [> `TDet of 'a F.Det.lstate
+                                | `TLower of ('a, GVC_I.contr) Code.abstract
+                                | `TPivot of
+                                    ('a, GEF.PermList.perm_rep ref)
+                                    Code.abstract
+                                | `TRan of 'a GEF.TrackRank.lstate ]
+                               list;
+                       .. >,
                      'a wmatrix * ('a, int ref) Code.abstract *
-                     ('a, int ref) Code.abstract * ('a, int) Code.abstract ->
-                     ('a, 'c) Code.abstract) ->
-                    ('a, 'c) Code.abstract
+                     ('a, int ref) Code.abstract * ('a, int) Code.abstract)
+                    StateCPSMonad.monad
                   val forward_elim :
                     'a wmatrix * ('a, int ref) Code.abstract *
                     ('a, int ref) Code.abstract * ('a, int) Code.abstract ->
@@ -9555,23 +9966,22 @@ module G_GVC_I :
                     list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
                   val gen :
                     ('a, GVC_I.contr * int) Code.abstract ->
-                    ([> `TDet of 'a F.Det.lstate
-                      | `TLower of 'a O.IF.L.lstate
-                      | `TPivot of 'a O.IF.P.lstate
-                      | `TRan of 'a GEF.TrackRank.lstate ]
-                     as 'b)
-                    list ->
-                    ('b list ->
-                     ('a, O.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-                    ('a, 'c) Code.abstract
+                    (< answer : ('a, 'b) Code.abstract;
+                       state : [> `TDet of 'a F.Det.lstate
+                                | `TLower of 'a O.IF.L.lstate
+                                | `TPivot of 'a O.IF.P.lstate
+                                | `TRan of 'a GEF.TrackRank.lstate ]
+                               list;
+                       .. >,
+                     ('a, O.res) Code.abstract)
+                    StateCPSMonad.monad
                 end
               val init :
                 ('a, F.Input.inp) Code.abstract ->
-                'b ->
-                ('b ->
+                (< answer : 'b; state : 'c; .. >,
                  ('a, GVC_I.contr) Code.abstract *
-                 ('a, F.Input.rhs) Code.abstract -> 'c) ->
-                'c
+                 ('a, F.Input.rhs) Code.abstract)
+                StateCPSMonad.monad
               val back_elim :
                 'a GVC_I.vc ->
                 ('a, int) Code.abstract ->
@@ -9579,15 +9989,15 @@ module G_GVC_I :
                 'b -> ('b -> ('a, GVC_I.contr) Code.abstract -> 'c) -> 'c
               val gen :
                 ('a, F.Input.inp) Code.abstract ->
-                ([> `TDet of 'a F.Det.lstate
-                  | `TLower of 'a GE'.O.IF.L.lstate
-                  | `TPivot of 'a GE'.O.IF.P.lstate
-                  | `TRan of 'a GEF.TrackRank.lstate ]
-                 as 'b)
-                list ->
-                ('b list ->
-                 ('a, F.Output.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-                ('a, 'c) Code.abstract
+                (< answer : ('a, 'b) Code.abstract;
+                   state : [> `TDet of 'a F.Det.lstate
+                            | `TLower of 'a GE'.O.IF.L.lstate
+                            | `TPivot of 'a GE'.O.IF.P.lstate
+                            | `TRan of 'a GEF.TrackRank.lstate ]
+                           list;
+                   .. >,
+                 ('a, F.Output.res) Code.abstract)
+                StateCPSMonad.monad
             end
       end
   end
@@ -9714,39 +10124,56 @@ module G_GAC_R :
           ('a -> [> `TDet of 'a ]) * ([> `TDet of 'b ] -> 'b option) * string
         val decl :
           unit ->
-          ([> `TDet of
-                ('b, int ref) Code.abstract *
-                ('b, GAC_R.Dom.v ref) Code.abstract ]
-           as 'a)
-          list ->
-          ('a list -> ('c, unit) Code.abstract -> ('b, 'd) Code.abstract) ->
-          ('b, 'd) Code.abstract
+          (< answer : ('a, 'b) Code.abstract;
+             state : [> `TDet of
+                          ('a, int ref) Code.abstract *
+                          ('a, GAC_R.Dom.v ref) Code.abstract ]
+                     list;
+             .. >,
+           ('c, unit) Code.abstract)
+          StateCPSMonad.monad
         val upd_sign :
           unit ->
-          ([> `TDet of ('b, int ref) Code.abstract * 'c ] as 'a) list ->
-          ('a list -> ('b, unit) Code.abstract option -> 'd) -> 'd
+          (< answer : 'a;
+             state : [> `TDet of ('b, int ref) Code.abstract * 'c ] list;
+             .. >,
+           ('b, unit) Code.abstract option)
+          StateCPSMonad.monad
         val zero_sign :
           unit ->
-          ([> `TDet of ('b, int ref) Code.abstract * 'c ] as 'a) list ->
-          ('a list -> ('b, unit) Code.abstract -> 'd) -> 'd
+          (< answer : 'a;
+             state : [> `TDet of ('b, int ref) Code.abstract * 'c ] list;
+             .. >,
+           ('b, unit) Code.abstract)
+          StateCPSMonad.monad
         val get :
           unit ->
-          ([> `TDet of 'b * 'c ] as 'a) list -> ('a list -> 'c -> 'd) -> 'd
+          (< answer : 'a; state : [> `TDet of 'b * 'c ] list; .. >, 'c)
+          StateCPSMonad.monad
         val set :
           ('a, 'b) Code.abstract ->
-          ([> `TDet of 'd * ('a, 'b ref) Code.abstract ] as 'c) list ->
-          ('c list -> ('a, unit) Code.abstract -> 'e) -> 'e
+          (< answer : 'c;
+             state : [> `TDet of 'd * ('a, 'b ref) Code.abstract ] list; .. >,
+           ('a, unit) Code.abstract)
+          StateCPSMonad.monad
         val acc :
           'a GAC_R.Dom.vc ->
-          ([> `TDet of 'c * ('a, GAC_R.Dom.v ref) Code.abstract ] as 'b) list ->
-          ('b list -> ('a, unit) Code.abstract -> 'd) -> 'd
+          (< answer : 'b;
+             state : [> `TDet of 'c * ('a, GAC_R.Dom.v ref) Code.abstract ]
+                     list;
+             .. >,
+           ('a, unit) Code.abstract)
+          StateCPSMonad.monad
         val fin :
           unit ->
-          ([> `TDet of
-                ('b, int ref) Code.abstract *
-                ('b, GAC_R.Dom.v ref) Code.abstract ]
-           as 'a)
-          list -> ('a list -> ('b, GAC_R.Dom.v) Code.abstract -> 'c) -> 'c
+          (< answer : 'a;
+             state : [> `TDet of
+                          ('b, int ref) Code.abstract *
+                          ('b, GAC_R.Dom.v ref) Code.abstract ]
+                     list;
+             .. >,
+           ('b, GAC_R.Dom.v) Code.abstract)
+          StateCPSMonad.monad
       end
     module type UPDATE =
       functor (D : DETERMINANT) ->
@@ -9779,7 +10206,9 @@ module G_GAC_R :
                 'a GAC_R.Dom.vc ->
                 'a GAC_R.Dom.vc ->
                 'a GAC_R.Dom.vc ->
-                ('a GAC_R.Dom.vc -> 'b) -> 'c -> 'd -> ('d -> 'b -> 'e) -> 'e
+                ('a GAC_R.Dom.vc -> 'b) ->
+                'c ->
+                (< answer : 'd; state : 'e; .. >, 'b) StateCPSMonad.monad
               val update_det :
                 ('a, GAC_R.Dom.v) Code.abstract ->
                 (< answer : 'b; classif : 'a;
@@ -9799,7 +10228,7 @@ module G_GAC_R :
                 'a GAC_R.Dom.vc ->
                 ('a GAC_R.Dom.vc -> 'b) ->
                 ('a, GAC_R.Dom.v ref) Code.abstract ->
-                'c -> ('c -> 'b -> 'd) -> 'd
+                (< answer : 'c; state : 'd; .. >, 'b) StateCPSMonad.monad
               val update_det :
                 ('a, GAC_R.Dom.v) Code.abstract ->
                 (< answer : 'b; classif : 'a;
@@ -9862,21 +10291,23 @@ module G_GAC_R :
               ([> `TLower of 'b ] -> 'b option) * string
             val decl :
               ('a, 'b) Code.abstract ->
-              ([> `TLower of ('a, 'b) Code.abstract ] as 'c) list ->
-              ('c list -> ('a, 'b) Code.abstract -> ('a, 'd) Code.abstract) ->
-              ('a, 'd) Code.abstract
+              (< answer : ('a, 'c) Code.abstract;
+                 state : [> `TLower of ('a, 'b) Code.abstract ] list; .. >,
+               ('a, 'b) Code.abstract)
+              StateCPSMonad.monad
             val updt :
               'a GAC_R.vc ->
               ('a, int) Code.abstract ->
               ('a, int) Code.abstract ->
               'a GAC_R.vo ->
               'a GAC_R.vo ->
-              (([> `TLower of 'a GAC_R.vc ] as 'b) list ->
-               ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c)
-              option
+              (< answer : 'b; state : [> `TLower of 'a GAC_R.vc ] list; .. >,
+               ('a, unit) Code.abstract)
+              StateCPSMonad.monad option
             val fin :
               unit ->
-              ([> `TLower of 'b ] as 'a) list -> ('a list -> 'b -> 'c) -> 'c
+              (< answer : 'a; state : [> `TLower of 'b ] list; .. >, 'b)
+              StateCPSMonad.monad
             val wants_pack : bool
           end
         module PackedLower :
@@ -9891,11 +10322,13 @@ module G_GAC_R :
               ([> `TLower of 'b ] -> 'b option) * string
             val decl :
               'a ->
-              ([> `TLower of 'a ] as 'b) list -> ('b list -> 'a -> 'c) -> 'c
+              (< answer : 'b; state : [> `TLower of 'a ] list; .. >, 'a)
+              StateCPSMonad.monad
             val updt : 'a -> 'b -> 'c -> 'd -> 'e -> 'f option
             val fin :
               unit ->
-              ([> `TLower of 'b ] as 'a) list -> ('a list -> 'b -> 'c) -> 'c
+              (< answer : 'a; state : [> `TLower of 'b ] list; .. >, 'b)
+              StateCPSMonad.monad
             val wants_pack : bool
           end
         module NoLower :
@@ -9945,10 +10378,9 @@ module G_GAC_R :
             type inp = GAC_R.contr * int
             val get_input :
               ('a, 'b * 'c) Code.abstract ->
-              'd ->
-              ('d ->
-               ('a, 'b) Code.abstract * ('a, 'c) Code.abstract * bool -> 'e) ->
-              'e
+              (< answer : 'd; state : 'e; .. >,
+               ('a, 'b) Code.abstract * ('a, 'c) Code.abstract * bool)
+              StateCPSMonad.monad
           end
         module RowPivot :
           functor (Det : DETERMINANT) ->
@@ -9957,12 +10389,13 @@ module G_GAC_R :
                 val findpivot :
                   'a wmatrix ->
                   'a curpos ->
-                  ([> `TDet of 'a Det.lstate | `TPivot of 'a P.lstate ] as 'b)
-                  list ->
-                  ('b list ->
-                   ('a, GAC_R.Dom.v option) Code.abstract ->
-                   ('a, 'c) Code.abstract) ->
-                  ('a, 'c) Code.abstract
+                  (< answer : ('a, 'b) Code.abstract;
+                     state : [> `TDet of 'a Det.lstate
+                              | `TPivot of 'a P.lstate ]
+                             list;
+                     .. >,
+                   ('a, GAC_R.Dom.v option) Code.abstract)
+                  StateCPSMonad.monad
               end
         module FullPivot :
           functor (Det : DETERMINANT) ->
@@ -9971,12 +10404,13 @@ module G_GAC_R :
                 val findpivot :
                   'a wmatrix ->
                   'a curpos ->
-                  ([> `TDet of 'a Det.lstate | `TPivot of 'a P.lstate ] as 'b)
-                  list ->
-                  ('b list ->
-                   ('a, GAC_R.Dom.v option) Code.abstract ->
-                   ('a, 'c) Code.abstract) ->
-                  ('a, 'c) Code.abstract
+                  (< answer : ('a, 'b) Code.abstract;
+                     state : [> `TDet of 'a Det.lstate
+                              | `TPivot of 'a P.lstate ]
+                             list;
+                     .. >,
+                   ('a, GAC_R.Dom.v option) Code.abstract)
+                  StateCPSMonad.monad
               end
         module NoPivot :
           functor (Det : DETERMINANT) ->
@@ -10010,17 +10444,20 @@ module G_GAC_R :
                         ([> `TRan of 'b ] -> 'b option) * string
                       val decl :
                         unit ->
-                        ([> `TRan of ('b, int ref) Code.abstract ] as 'a)
-                        list ->
-                        ('a list ->
-                         ('b, int ref) Code.abstract ->
-                         ('b, 'c) Code.abstract) ->
-                        ('b, 'c) Code.abstract
+                        (< answer : ('a, 'b) Code.abstract;
+                           state : [> `TRan of ('a, int ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('a, int ref) Code.abstract)
+                        StateCPSMonad.monad
                       val succ :
                         unit ->
-                        ([> `TRan of ('b, int ref) Code.abstract ] as 'a)
-                        list ->
-                        ('a list -> ('b, unit) Code.abstract -> 'c) -> 'c
+                        (< answer : 'a;
+                           state : [> `TRan of ('b, int ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('b, unit) Code.abstract)
+                        StateCPSMonad.monad
                       module type RANK =
                         sig
                           type 'a tag_lstate = 'a tag_lstate_
@@ -10127,17 +10564,20 @@ module G_GAC_R :
                         ([> `TRan of 'b ] -> 'b option) * string
                       val decl :
                         unit ->
-                        ([> `TRan of ('b, int ref) Code.abstract ] as 'a)
-                        list ->
-                        ('a list ->
-                         ('b, int ref) Code.abstract ->
-                         ('b, 'c) Code.abstract) ->
-                        ('b, 'c) Code.abstract
+                        (< answer : ('a, 'b) Code.abstract;
+                           state : [> `TRan of ('a, int ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('a, int ref) Code.abstract)
+                        StateCPSMonad.monad
                       val succ :
                         unit ->
-                        ([> `TRan of ('b, int ref) Code.abstract ] as 'a)
-                        list ->
-                        ('a list -> ('b, unit) Code.abstract -> 'c) -> 'c
+                        (< answer : 'a;
+                           state : [> `TRan of ('b, int ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('b, unit) Code.abstract)
+                        StateCPSMonad.monad
                       module type RANK =
                         sig
                           type 'a tag_lstate = 'a tag_lstate_
@@ -10222,11 +10662,10 @@ module G_GAC_R :
               type res = GAC_R.contr * GAC_R.Dom.v
               val make_result :
                 'a wmatrix ->
-                ([> `TDet of 'a OD.Det.lstate ] as 'b) list ->
-                ('b list ->
-                 ('a, GAC_R.contr * GAC_R.Dom.v) Code.abstract ->
-                 ('a, 'c) Code.abstract) ->
-                ('a, 'c) Code.abstract
+                (< answer : ('a, 'b) Code.abstract;
+                   state : [> `TDet of 'a OD.Det.lstate ] list; .. >,
+                 ('a, GAC_R.contr * GAC_R.Dom.v) Code.abstract)
+                StateCPSMonad.monad
             end
         module OutRank :
           functor (OD : OUTPUTDEP) ->
@@ -10247,17 +10686,20 @@ module G_GAC_R :
                         ([> `TRan of 'b ] -> 'b option) * string
                       val decl :
                         unit ->
-                        ([> `TRan of ('b, int ref) Code.abstract ] as 'a)
-                        list ->
-                        ('a list ->
-                         ('b, int ref) Code.abstract ->
-                         ('b, 'c) Code.abstract) ->
-                        ('b, 'c) Code.abstract
+                        (< answer : ('a, 'b) Code.abstract;
+                           state : [> `TRan of ('a, int ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('a, int ref) Code.abstract)
+                        StateCPSMonad.monad
                       val succ :
                         unit ->
-                        ([> `TRan of ('b, int ref) Code.abstract ] as 'a)
-                        list ->
-                        ('a list -> ('b, unit) Code.abstract -> 'c) -> 'c
+                        (< answer : 'a;
+                           state : [> `TRan of ('b, int ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('b, unit) Code.abstract)
+                        StateCPSMonad.monad
                       module type RANK =
                         sig
                           type 'a tag_lstate = 'a tag_lstate_
@@ -10282,8 +10724,12 @@ module G_GAC_R :
                         end
                       val fin :
                         unit ->
-                        ([> `TRan of ('b, 'c ref) Code.abstract ] as 'a) list ->
-                        ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd
+                        (< answer : 'a;
+                           state : [> `TRan of ('b, 'c ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('b, 'c) Code.abstract)
+                        StateCPSMonad.monad
                     end
                   module P :
                     sig
@@ -10345,8 +10791,11 @@ module G_GAC_R :
               type res = GAC_R.contr * int
               val make_result :
                 'a wmatrix ->
-                ([> `TRan of ('a, 'c ref) Code.abstract ] as 'b) list ->
-                ('b list -> ('a, GAC_R.contr * 'c) Code.abstract -> 'd) -> 'd
+                (< answer : 'b;
+                   state : [> `TRan of ('a, 'c ref) Code.abstract ] list;
+                   .. >,
+                 ('a, GAC_R.contr * 'c) Code.abstract)
+                StateCPSMonad.monad
             end
         module OutDetRank :
           functor (OD : OUTPUTDEP) ->
@@ -10367,17 +10816,20 @@ module G_GAC_R :
                         ([> `TRan of 'b ] -> 'b option) * string
                       val decl :
                         unit ->
-                        ([> `TRan of ('b, int ref) Code.abstract ] as 'a)
-                        list ->
-                        ('a list ->
-                         ('b, int ref) Code.abstract ->
-                         ('b, 'c) Code.abstract) ->
-                        ('b, 'c) Code.abstract
+                        (< answer : ('a, 'b) Code.abstract;
+                           state : [> `TRan of ('a, int ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('a, int ref) Code.abstract)
+                        StateCPSMonad.monad
                       val succ :
                         unit ->
-                        ([> `TRan of ('b, int ref) Code.abstract ] as 'a)
-                        list ->
-                        ('a list -> ('b, unit) Code.abstract -> 'c) -> 'c
+                        (< answer : 'a;
+                           state : [> `TRan of ('b, int ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('b, unit) Code.abstract)
+                        StateCPSMonad.monad
                       module type RANK =
                         sig
                           type 'a tag_lstate = 'a tag_lstate_
@@ -10402,8 +10854,12 @@ module G_GAC_R :
                         end
                       val fin :
                         unit ->
-                        ([> `TRan of ('b, 'c ref) Code.abstract ] as 'a) list ->
-                        ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd
+                        (< answer : 'a;
+                           state : [> `TRan of ('b, 'c ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('b, 'c) Code.abstract)
+                        StateCPSMonad.monad
                     end
                   module P :
                     sig
@@ -10465,14 +10921,13 @@ module G_GAC_R :
               type res = GAC_R.contr * GAC_R.Dom.v * int
               val make_result :
                 'a wmatrix ->
-                ([> `TDet of 'a OD.Det.lstate
-                  | `TRan of ('a, 'c ref) Code.abstract ]
-                 as 'b)
-                list ->
-                ('b list ->
-                 ('a, GAC_R.contr * GAC_R.Dom.v * 'c) Code.abstract ->
-                 ('a, 'd) Code.abstract) ->
-                ('a, 'd) Code.abstract
+                (< answer : ('a, 'b) Code.abstract;
+                   state : [> `TDet of 'a OD.Det.lstate
+                            | `TRan of ('a, 'c ref) Code.abstract ]
+                           list;
+                   .. >,
+                 ('a, GAC_R.contr * GAC_R.Dom.v * 'c) Code.abstract)
+                StateCPSMonad.monad
             end
         module OutDetRankPivot :
           functor (OD : OUTPUTDEP) ->
@@ -10493,17 +10948,20 @@ module G_GAC_R :
                         ([> `TRan of 'b ] -> 'b option) * string
                       val decl :
                         unit ->
-                        ([> `TRan of ('b, int ref) Code.abstract ] as 'a)
-                        list ->
-                        ('a list ->
-                         ('b, int ref) Code.abstract ->
-                         ('b, 'c) Code.abstract) ->
-                        ('b, 'c) Code.abstract
+                        (< answer : ('a, 'b) Code.abstract;
+                           state : [> `TRan of ('a, int ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('a, int ref) Code.abstract)
+                        StateCPSMonad.monad
                       val succ :
                         unit ->
-                        ([> `TRan of ('b, int ref) Code.abstract ] as 'a)
-                        list ->
-                        ('a list -> ('b, unit) Code.abstract -> 'c) -> 'c
+                        (< answer : 'a;
+                           state : [> `TRan of ('b, int ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('b, unit) Code.abstract)
+                        StateCPSMonad.monad
                       module type RANK =
                         sig
                           type 'a tag_lstate = 'a tag_lstate_
@@ -10528,8 +10986,12 @@ module G_GAC_R :
                         end
                       val fin :
                         unit ->
-                        ([> `TRan of ('b, 'c ref) Code.abstract ] as 'a) list ->
-                        ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd
+                        (< answer : 'a;
+                           state : [> `TRan of ('b, 'c ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('b, 'c) Code.abstract)
+                        StateCPSMonad.monad
                     end
                   module P :
                     sig
@@ -10554,26 +11016,32 @@ module G_GAC_R :
                         ([> `TPivot of 'b ] -> 'b option) * string
                       val decl :
                         'a OD.PivotRep.ira ->
-                        ([> `TPivot of
-                              ('a, OD.PivotRep.perm_rep ref) Code.abstract ]
-                         as 'b)
-                        list ->
-                        ('b list ->
-                         ('c, unit) Code.abstract -> ('a, 'd) Code.abstract) ->
-                        ('a, 'd) Code.abstract
+                        (< answer : ('a, 'b) Code.abstract;
+                           state : [> `TPivot of
+                                        ('a, OD.PivotRep.perm_rep ref)
+                                        Code.abstract ]
+                                   list;
+                           .. >,
+                         ('c, unit) Code.abstract)
+                        StateCPSMonad.monad
                       val add :
                         'a OD.PivotRep.fra ->
-                        ([> `TPivot of
-                              ('a, OD.PivotRep.perm_rep ref) Code.abstract ]
-                         as 'b)
-                        list ->
-                        ('b list -> ('a, unit) Code.abstract option -> 'c) ->
-                        'c
+                        (< answer : 'b;
+                           state : [> `TPivot of
+                                        ('a, OD.PivotRep.perm_rep ref)
+                                        Code.abstract ]
+                                   list;
+                           .. >,
+                         ('a, unit) Code.abstract option)
+                        StateCPSMonad.monad
                       val fin :
                         unit ->
-                        ([> `TPivot of ('b, 'c ref) Code.abstract ] as 'a)
-                        list ->
-                        ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd
+                        (< answer : 'a;
+                           state : [> `TPivot of ('b, 'c ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('b, 'c) Code.abstract)
+                        StateCPSMonad.monad
                     end
                   module L :
                     sig
@@ -10605,15 +11073,14 @@ module G_GAC_R :
               type res = GAC_R.contr * GAC_R.Dom.v * int * IF.P.perm_rep
               val make_result :
                 'a wmatrix ->
-                ([> `TDet of 'a OD.Det.lstate
-                  | `TPivot of ('a, 'c ref) Code.abstract
-                  | `TRan of ('a, 'd ref) Code.abstract ]
-                 as 'b)
-                list ->
-                ('b list ->
-                 ('a, GAC_R.contr * GAC_R.Dom.v * 'd * 'c) Code.abstract ->
-                 ('a, 'e) Code.abstract) ->
-                ('a, 'e) Code.abstract
+                (< answer : ('a, 'b) Code.abstract;
+                   state : [> `TDet of 'a OD.Det.lstate
+                            | `TPivot of ('a, 'c ref) Code.abstract
+                            | `TRan of ('a, 'd ref) Code.abstract ]
+                           list;
+                   .. >,
+                 ('a, GAC_R.contr * GAC_R.Dom.v * 'd * 'c) Code.abstract)
+                StateCPSMonad.monad
             end
         module Out_L_U :
           functor (OD : OUTPUTDEP) ->
@@ -10634,17 +11101,20 @@ module G_GAC_R :
                         ([> `TRan of 'b ] -> 'b option) * string
                       val decl :
                         unit ->
-                        ([> `TRan of ('b, int ref) Code.abstract ] as 'a)
-                        list ->
-                        ('a list ->
-                         ('b, int ref) Code.abstract ->
-                         ('b, 'c) Code.abstract) ->
-                        ('b, 'c) Code.abstract
+                        (< answer : ('a, 'b) Code.abstract;
+                           state : [> `TRan of ('a, int ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('a, int ref) Code.abstract)
+                        StateCPSMonad.monad
                       val succ :
                         unit ->
-                        ([> `TRan of ('b, int ref) Code.abstract ] as 'a)
-                        list ->
-                        ('a list -> ('b, unit) Code.abstract -> 'c) -> 'c
+                        (< answer : 'a;
+                           state : [> `TRan of ('b, int ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('b, unit) Code.abstract)
+                        StateCPSMonad.monad
                       module type RANK =
                         sig
                           type 'a tag_lstate = 'a tag_lstate_
@@ -10692,26 +11162,32 @@ module G_GAC_R :
                         ([> `TPivot of 'b ] -> 'b option) * string
                       val decl :
                         'a OD.PivotRep.ira ->
-                        ([> `TPivot of
-                              ('a, OD.PivotRep.perm_rep ref) Code.abstract ]
-                         as 'b)
-                        list ->
-                        ('b list ->
-                         ('c, unit) Code.abstract -> ('a, 'd) Code.abstract) ->
-                        ('a, 'd) Code.abstract
+                        (< answer : ('a, 'b) Code.abstract;
+                           state : [> `TPivot of
+                                        ('a, OD.PivotRep.perm_rep ref)
+                                        Code.abstract ]
+                                   list;
+                           .. >,
+                         ('c, unit) Code.abstract)
+                        StateCPSMonad.monad
                       val add :
                         'a OD.PivotRep.fra ->
-                        ([> `TPivot of
-                              ('a, OD.PivotRep.perm_rep ref) Code.abstract ]
-                         as 'b)
-                        list ->
-                        ('b list -> ('a, unit) Code.abstract option -> 'c) ->
-                        'c
+                        (< answer : 'b;
+                           state : [> `TPivot of
+                                        ('a, OD.PivotRep.perm_rep ref)
+                                        Code.abstract ]
+                                   list;
+                           .. >,
+                         ('a, unit) Code.abstract option)
+                        StateCPSMonad.monad
                       val fin :
                         unit ->
-                        ([> `TPivot of ('b, 'c ref) Code.abstract ] as 'a)
-                        list ->
-                        ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd
+                        (< answer : 'a;
+                           state : [> `TPivot of ('b, 'c ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('b, 'c) Code.abstract)
+                        StateCPSMonad.monad
                     end
                   module L :
                     sig
@@ -10725,35 +11201,40 @@ module G_GAC_R :
                         ([> `TLower of 'b ] -> 'b option) * string
                       val decl :
                         ('a, 'b) Code.abstract ->
-                        ([> `TLower of ('a, 'b) Code.abstract ] as 'c) list ->
-                        ('c list ->
-                         ('a, 'b) Code.abstract -> ('a, 'd) Code.abstract) ->
-                        ('a, 'd) Code.abstract
+                        (< answer : ('a, 'c) Code.abstract;
+                           state : [> `TLower of ('a, 'b) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('a, 'b) Code.abstract)
+                        StateCPSMonad.monad
                       val updt :
                         'a GAC_R.vc ->
                         ('a, int) Code.abstract ->
                         ('a, int) Code.abstract ->
                         'a GAC_R.vo ->
                         'a GAC_R.vo ->
-                        (([> `TLower of 'a GAC_R.vc ] as 'b) list ->
-                         ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c)
-                        option
+                        (< answer : 'b;
+                           state : [> `TLower of 'a GAC_R.vc ] list; .. >,
+                         ('a, unit) Code.abstract)
+                        StateCPSMonad.monad option
                       val fin :
                         unit ->
-                        ([> `TLower of 'b ] as 'a) list ->
-                        ('a list -> 'b -> 'c) -> 'c
+                        (< answer : 'a; state : [> `TLower of 'b ] list; .. >,
+                         'b)
+                        StateCPSMonad.monad
                       val wants_pack : bool
                     end
                 end
               type res = GAC_R.contr * GAC_R.contr * IF.P.perm_rep
               val make_result :
                 'a wmatrix ->
-                ([> `TLower of ('a, 'c) Code.abstract
-                  | `TPivot of ('a, 'd ref) Code.abstract ]
-                 as 'b)
-                list ->
-                ('b list -> ('a, GAC_R.contr * 'c * 'd) Code.abstract -> 'e) ->
-                'e
+                (< answer : 'b;
+                   state : [> `TLower of ('a, 'c) Code.abstract
+                            | `TPivot of ('a, 'd ref) Code.abstract ]
+                           list;
+                   .. >,
+                 ('a, GAC_R.contr * 'c * 'd) Code.abstract)
+                StateCPSMonad.monad
             end
         module Out_LU_Packed :
           functor (OD : OUTPUTDEP) ->
@@ -10774,17 +11255,20 @@ module G_GAC_R :
                         ([> `TRan of 'b ] -> 'b option) * string
                       val decl :
                         unit ->
-                        ([> `TRan of ('b, int ref) Code.abstract ] as 'a)
-                        list ->
-                        ('a list ->
-                         ('b, int ref) Code.abstract ->
-                         ('b, 'c) Code.abstract) ->
-                        ('b, 'c) Code.abstract
+                        (< answer : ('a, 'b) Code.abstract;
+                           state : [> `TRan of ('a, int ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('a, int ref) Code.abstract)
+                        StateCPSMonad.monad
                       val succ :
                         unit ->
-                        ([> `TRan of ('b, int ref) Code.abstract ] as 'a)
-                        list ->
-                        ('a list -> ('b, unit) Code.abstract -> 'c) -> 'c
+                        (< answer : 'a;
+                           state : [> `TRan of ('b, int ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('b, unit) Code.abstract)
+                        StateCPSMonad.monad
                       module type RANK =
                         sig
                           type 'a tag_lstate = 'a tag_lstate_
@@ -10832,26 +11316,32 @@ module G_GAC_R :
                         ([> `TPivot of 'b ] -> 'b option) * string
                       val decl :
                         'a OD.PivotRep.ira ->
-                        ([> `TPivot of
-                              ('a, OD.PivotRep.perm_rep ref) Code.abstract ]
-                         as 'b)
-                        list ->
-                        ('b list ->
-                         ('c, unit) Code.abstract -> ('a, 'd) Code.abstract) ->
-                        ('a, 'd) Code.abstract
+                        (< answer : ('a, 'b) Code.abstract;
+                           state : [> `TPivot of
+                                        ('a, OD.PivotRep.perm_rep ref)
+                                        Code.abstract ]
+                                   list;
+                           .. >,
+                         ('c, unit) Code.abstract)
+                        StateCPSMonad.monad
                       val add :
                         'a OD.PivotRep.fra ->
-                        ([> `TPivot of
-                              ('a, OD.PivotRep.perm_rep ref) Code.abstract ]
-                         as 'b)
-                        list ->
-                        ('b list -> ('a, unit) Code.abstract option -> 'c) ->
-                        'c
+                        (< answer : 'b;
+                           state : [> `TPivot of
+                                        ('a, OD.PivotRep.perm_rep ref)
+                                        Code.abstract ]
+                                   list;
+                           .. >,
+                         ('a, unit) Code.abstract option)
+                        StateCPSMonad.monad
                       val fin :
                         unit ->
-                        ([> `TPivot of ('b, 'c ref) Code.abstract ] as 'a)
-                        list ->
-                        ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd
+                        (< answer : 'a;
+                           state : [> `TPivot of ('b, 'c ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('b, 'c) Code.abstract)
+                        StateCPSMonad.monad
                     end
                   module L :
                     sig
@@ -10865,23 +11355,28 @@ module G_GAC_R :
                         ([> `TLower of 'b ] -> 'b option) * string
                       val decl :
                         'a ->
-                        ([> `TLower of 'a ] as 'b) list ->
-                        ('b list -> 'a -> 'c) -> 'c
+                        (< answer : 'b; state : [> `TLower of 'a ] list; .. >,
+                         'a)
+                        StateCPSMonad.monad
                       val updt : 'a -> 'b -> 'c -> 'd -> 'e -> 'f option
                       val fin :
                         unit ->
-                        ([> `TLower of 'b ] as 'a) list ->
-                        ('a list -> 'b -> 'c) -> 'c
+                        (< answer : 'a; state : [> `TLower of 'b ] list; .. >,
+                         'b)
+                        StateCPSMonad.monad
                       val wants_pack : bool
                     end
                 end
               type res = GAC_R.contr * IF.P.perm_rep
               val make_result :
                 'a ->
-                ([> `TLower of ('c, 'd) Code.abstract
-                  | `TPivot of ('c, 'e ref) Code.abstract ]
-                 as 'b)
-                list -> ('b list -> ('c, 'd * 'e) Code.abstract -> 'f) -> 'f
+                (< answer : 'b;
+                   state : [> `TLower of ('c, 'd) Code.abstract
+                            | `TPivot of ('c, 'e ref) Code.abstract ]
+                           list;
+                   .. >,
+                 ('c, 'd * 'e) Code.abstract)
+                StateCPSMonad.monad
             end
         module type INTERNAL_FEATURES =
           sig
@@ -11030,17 +11525,16 @@ module G_GAC_R :
                 list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
               val init :
                 ('a, F.Input.inp) Code.abstract ->
-                ([> `TDet of 'a F.Det.lstate
-                  | `TLower of ('a, GAC_R.contr) Code.abstract
-                  | `TPivot of 'a F.Output(F).IF.P.lstate
-                  | `TRan of 'a GEF.TrackRank.lstate ]
-                 as 'b)
-                list ->
-                ('b list ->
+                (< answer : ('a, 'b) Code.abstract;
+                   state : [> `TDet of 'a F.Det.lstate
+                            | `TLower of ('a, GAC_R.contr) Code.abstract
+                            | `TPivot of 'a F.Output(F).IF.P.lstate
+                            | `TRan of 'a GEF.TrackRank.lstate ]
+                           list;
+                   .. >,
                  'a wmatrix * ('a, int ref) Code.abstract *
-                 ('a, int ref) Code.abstract * ('a, int) Code.abstract ->
-                 ('a, 'c) Code.abstract) ->
-                ('a, 'c) Code.abstract
+                 ('a, int ref) Code.abstract * ('a, int) Code.abstract)
+                StateCPSMonad.monad
               val forward_elim :
                 'a wmatrix * ('a, int ref) Code.abstract *
                 ('a, int ref) Code.abstract * ('a, int) Code.abstract ->
@@ -11052,15 +11546,15 @@ module G_GAC_R :
                 list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
               val gen :
                 ('a, F.Input.inp) Code.abstract ->
-                ([> `TDet of 'a F.Det.lstate
-                  | `TLower of 'a O.IF.L.lstate
-                  | `TPivot of 'a O.IF.P.lstate
-                  | `TRan of 'a GEF.TrackRank.lstate ]
-                 as 'b)
-                list ->
-                ('b list ->
-                 ('a, O.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-                ('a, 'c) Code.abstract
+                (< answer : ('a, 'b) Code.abstract;
+                   state : [> `TDet of 'a F.Det.lstate
+                            | `TLower of 'a O.IF.L.lstate
+                            | `TPivot of 'a O.IF.P.lstate
+                            | `TRan of 'a GEF.TrackRank.lstate ]
+                           list;
+                   .. >,
+                 ('a, O.res) Code.abstract)
+                StateCPSMonad.monad
             end
       end
     module Solve :
@@ -11081,11 +11575,9 @@ module G_GAC_R :
             type rhs = GAC_R.contr
             val get_input :
               ('a, 'b * 'c) Code.abstract ->
-              'd ->
-              ('d ->
-               ('a, 'b) Code.abstract * ('a, 'c) Code.abstract ->
-               ('a, 'e) Code.abstract) ->
-              ('a, 'e) Code.abstract
+              (< answer : ('a, 'd) Code.abstract; state : 'e; .. >,
+               ('a, 'b) Code.abstract * ('a, 'c) Code.abstract)
+              StateCPSMonad.monad
           end
         module type OUTPUT =
           sig
@@ -11241,18 +11733,18 @@ module G_GAC_R :
                     list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
                   val init :
                     ('a, GAC_R.contr * int) Code.abstract ->
-                    ([> `TDet of 'a F.Det.lstate
-                      | `TLower of ('a, GAC_R.contr) Code.abstract
-                      | `TPivot of
-                          ('a, GEF.PermList.perm_rep ref) Code.abstract
-                      | `TRan of 'a GEF.TrackRank.lstate ]
-                     as 'b)
-                    list ->
-                    ('b list ->
+                    (< answer : ('a, 'b) Code.abstract;
+                       state : [> `TDet of 'a F.Det.lstate
+                                | `TLower of ('a, GAC_R.contr) Code.abstract
+                                | `TPivot of
+                                    ('a, GEF.PermList.perm_rep ref)
+                                    Code.abstract
+                                | `TRan of 'a GEF.TrackRank.lstate ]
+                               list;
+                       .. >,
                      'a wmatrix * ('a, int ref) Code.abstract *
-                     ('a, int ref) Code.abstract * ('a, int) Code.abstract ->
-                     ('a, 'c) Code.abstract) ->
-                    ('a, 'c) Code.abstract
+                     ('a, int ref) Code.abstract * ('a, int) Code.abstract)
+                    StateCPSMonad.monad
                   val forward_elim :
                     'a wmatrix * ('a, int ref) Code.abstract *
                     ('a, int ref) Code.abstract * ('a, int) Code.abstract ->
@@ -11265,23 +11757,22 @@ module G_GAC_R :
                     list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
                   val gen :
                     ('a, GAC_R.contr * int) Code.abstract ->
-                    ([> `TDet of 'a F.Det.lstate
-                      | `TLower of 'a O.IF.L.lstate
-                      | `TPivot of 'a O.IF.P.lstate
-                      | `TRan of 'a GEF.TrackRank.lstate ]
-                     as 'b)
-                    list ->
-                    ('b list ->
-                     ('a, O.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-                    ('a, 'c) Code.abstract
+                    (< answer : ('a, 'b) Code.abstract;
+                       state : [> `TDet of 'a F.Det.lstate
+                                | `TLower of 'a O.IF.L.lstate
+                                | `TPivot of 'a O.IF.P.lstate
+                                | `TRan of 'a GEF.TrackRank.lstate ]
+                               list;
+                       .. >,
+                     ('a, O.res) Code.abstract)
+                    StateCPSMonad.monad
                 end
               val init :
                 ('a, F.Input.inp) Code.abstract ->
-                'b ->
-                ('b ->
+                (< answer : 'b; state : 'c; .. >,
                  ('a, GAC_R.contr) Code.abstract *
-                 ('a, F.Input.rhs) Code.abstract -> 'c) ->
-                'c
+                 ('a, F.Input.rhs) Code.abstract)
+                StateCPSMonad.monad
               val back_elim :
                 'a GAC_R.vc ->
                 ('a, int) Code.abstract ->
@@ -11289,15 +11780,15 @@ module G_GAC_R :
                 'b -> ('b -> ('a, GAC_R.contr) Code.abstract -> 'c) -> 'c
               val gen :
                 ('a, F.Input.inp) Code.abstract ->
-                ([> `TDet of 'a F.Det.lstate
-                  | `TLower of 'a GE'.O.IF.L.lstate
-                  | `TPivot of 'a GE'.O.IF.P.lstate
-                  | `TRan of 'a GEF.TrackRank.lstate ]
-                 as 'b)
-                list ->
-                ('b list ->
-                 ('a, F.Output.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-                ('a, 'c) Code.abstract
+                (< answer : ('a, 'b) Code.abstract;
+                   state : [> `TDet of 'a F.Det.lstate
+                            | `TLower of 'a GE'.O.IF.L.lstate
+                            | `TPivot of 'a GE'.O.IF.P.lstate
+                            | `TRan of 'a GEF.TrackRank.lstate ]
+                           list;
+                   .. >,
+                 ('a, F.Output.res) Code.abstract)
+                StateCPSMonad.monad
             end
       end
   end
@@ -11424,39 +11915,56 @@ module G_GVC_Z3 :
           ('a -> [> `TDet of 'a ]) * ([> `TDet of 'b ] -> 'b option) * string
         val decl :
           unit ->
-          ([> `TDet of
-                ('b, int ref) Code.abstract *
-                ('b, GVC_Z3.Dom.v ref) Code.abstract ]
-           as 'a)
-          list ->
-          ('a list -> ('c, unit) Code.abstract -> ('b, 'd) Code.abstract) ->
-          ('b, 'd) Code.abstract
+          (< answer : ('a, 'b) Code.abstract;
+             state : [> `TDet of
+                          ('a, int ref) Code.abstract *
+                          ('a, GVC_Z3.Dom.v ref) Code.abstract ]
+                     list;
+             .. >,
+           ('c, unit) Code.abstract)
+          StateCPSMonad.monad
         val upd_sign :
           unit ->
-          ([> `TDet of ('b, int ref) Code.abstract * 'c ] as 'a) list ->
-          ('a list -> ('b, unit) Code.abstract option -> 'd) -> 'd
+          (< answer : 'a;
+             state : [> `TDet of ('b, int ref) Code.abstract * 'c ] list;
+             .. >,
+           ('b, unit) Code.abstract option)
+          StateCPSMonad.monad
         val zero_sign :
           unit ->
-          ([> `TDet of ('b, int ref) Code.abstract * 'c ] as 'a) list ->
-          ('a list -> ('b, unit) Code.abstract -> 'd) -> 'd
+          (< answer : 'a;
+             state : [> `TDet of ('b, int ref) Code.abstract * 'c ] list;
+             .. >,
+           ('b, unit) Code.abstract)
+          StateCPSMonad.monad
         val get :
           unit ->
-          ([> `TDet of 'b * 'c ] as 'a) list -> ('a list -> 'c -> 'd) -> 'd
+          (< answer : 'a; state : [> `TDet of 'b * 'c ] list; .. >, 'c)
+          StateCPSMonad.monad
         val set :
           ('a, 'b) Code.abstract ->
-          ([> `TDet of 'd * ('a, 'b ref) Code.abstract ] as 'c) list ->
-          ('c list -> ('a, unit) Code.abstract -> 'e) -> 'e
+          (< answer : 'c;
+             state : [> `TDet of 'd * ('a, 'b ref) Code.abstract ] list; .. >,
+           ('a, unit) Code.abstract)
+          StateCPSMonad.monad
         val acc :
           'a GVC_Z3.Dom.vc ->
-          ([> `TDet of 'c * ('a, GVC_Z3.Dom.v ref) Code.abstract ] as 'b)
-          list -> ('b list -> ('a, unit) Code.abstract -> 'd) -> 'd
+          (< answer : 'b;
+             state : [> `TDet of 'c * ('a, GVC_Z3.Dom.v ref) Code.abstract ]
+                     list;
+             .. >,
+           ('a, unit) Code.abstract)
+          StateCPSMonad.monad
         val fin :
           unit ->
-          ([> `TDet of
-                ('b, int ref) Code.abstract *
-                ('b, GVC_Z3.Dom.v ref) Code.abstract ]
-           as 'a)
-          list -> ('a list -> ('b, GVC_Z3.Dom.v) Code.abstract -> 'c) -> 'c
+          (< answer : 'a;
+             state : [> `TDet of
+                          ('b, int ref) Code.abstract *
+                          ('b, GVC_Z3.Dom.v ref) Code.abstract ]
+                     list;
+             .. >,
+           ('b, GVC_Z3.Dom.v) Code.abstract)
+          StateCPSMonad.monad
       end
     module type UPDATE =
       functor (D : DETERMINANT) ->
@@ -11490,7 +11998,8 @@ module G_GVC_Z3 :
                 'a GVC_Z3.Dom.vc ->
                 'a GVC_Z3.Dom.vc ->
                 ('a GVC_Z3.Dom.vc -> 'b) ->
-                'c -> 'd -> ('d -> 'b -> 'e) -> 'e
+                'c ->
+                (< answer : 'd; state : 'e; .. >, 'b) StateCPSMonad.monad
               val update_det :
                 ('a, GVC_Z3.Dom.v) Code.abstract ->
                 (< answer : 'b; classif : 'a;
@@ -11510,7 +12019,7 @@ module G_GVC_Z3 :
                 'a GVC_Z3.Dom.vc ->
                 ('a GVC_Z3.Dom.vc -> 'b) ->
                 ('a, GVC_Z3.Dom.v ref) Code.abstract ->
-                'c -> ('c -> 'b -> 'd) -> 'd
+                (< answer : 'c; state : 'd; .. >, 'b) StateCPSMonad.monad
               val update_det :
                 ('a, GVC_Z3.Dom.v) Code.abstract ->
                 (< answer : 'b; classif : 'a;
@@ -11573,21 +12082,23 @@ module G_GVC_Z3 :
               ([> `TLower of 'b ] -> 'b option) * string
             val decl :
               ('a, 'b) Code.abstract ->
-              ([> `TLower of ('a, 'b) Code.abstract ] as 'c) list ->
-              ('c list -> ('a, 'b) Code.abstract -> ('a, 'd) Code.abstract) ->
-              ('a, 'd) Code.abstract
+              (< answer : ('a, 'c) Code.abstract;
+                 state : [> `TLower of ('a, 'b) Code.abstract ] list; .. >,
+               ('a, 'b) Code.abstract)
+              StateCPSMonad.monad
             val updt :
               'a GVC_Z3.vc ->
               ('a, int) Code.abstract ->
               ('a, int) Code.abstract ->
               'a GVC_Z3.vo ->
               'a GVC_Z3.vo ->
-              (([> `TLower of 'a GVC_Z3.vc ] as 'b) list ->
-               ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c)
-              option
+              (< answer : 'b; state : [> `TLower of 'a GVC_Z3.vc ] list; .. >,
+               ('a, unit) Code.abstract)
+              StateCPSMonad.monad option
             val fin :
               unit ->
-              ([> `TLower of 'b ] as 'a) list -> ('a list -> 'b -> 'c) -> 'c
+              (< answer : 'a; state : [> `TLower of 'b ] list; .. >, 'b)
+              StateCPSMonad.monad
             val wants_pack : bool
           end
         module PackedLower :
@@ -11602,11 +12113,13 @@ module G_GVC_Z3 :
               ([> `TLower of 'b ] -> 'b option) * string
             val decl :
               'a ->
-              ([> `TLower of 'a ] as 'b) list -> ('b list -> 'a -> 'c) -> 'c
+              (< answer : 'b; state : [> `TLower of 'a ] list; .. >, 'a)
+              StateCPSMonad.monad
             val updt : 'a -> 'b -> 'c -> 'd -> 'e -> 'f option
             val fin :
               unit ->
-              ([> `TLower of 'b ] as 'a) list -> ('a list -> 'b -> 'c) -> 'c
+              (< answer : 'a; state : [> `TLower of 'b ] list; .. >, 'b)
+              StateCPSMonad.monad
             val wants_pack : bool
           end
         module NoLower :
@@ -11656,10 +12169,9 @@ module G_GVC_Z3 :
             type inp = GVC_Z3.contr * int
             val get_input :
               ('a, 'b * 'c) Code.abstract ->
-              'd ->
-              ('d ->
-               ('a, 'b) Code.abstract * ('a, 'c) Code.abstract * bool -> 'e) ->
-              'e
+              (< answer : 'd; state : 'e; .. >,
+               ('a, 'b) Code.abstract * ('a, 'c) Code.abstract * bool)
+              StateCPSMonad.monad
           end
         module RowPivot :
           functor (Det : DETERMINANT) ->
@@ -11668,12 +12180,13 @@ module G_GVC_Z3 :
                 val findpivot :
                   'a wmatrix ->
                   'a curpos ->
-                  ([> `TDet of 'a Det.lstate | `TPivot of 'a P.lstate ] as 'b)
-                  list ->
-                  ('b list ->
-                   ('a, GVC_Z3.Dom.v option) Code.abstract ->
-                   ('a, 'c) Code.abstract) ->
-                  ('a, 'c) Code.abstract
+                  (< answer : ('a, 'b) Code.abstract;
+                     state : [> `TDet of 'a Det.lstate
+                              | `TPivot of 'a P.lstate ]
+                             list;
+                     .. >,
+                   ('a, GVC_Z3.Dom.v option) Code.abstract)
+                  StateCPSMonad.monad
               end
         module FullPivot :
           functor (Det : DETERMINANT) ->
@@ -11682,12 +12195,13 @@ module G_GVC_Z3 :
                 val findpivot :
                   'a wmatrix ->
                   'a curpos ->
-                  ([> `TDet of 'a Det.lstate | `TPivot of 'a P.lstate ] as 'b)
-                  list ->
-                  ('b list ->
-                   ('a, GVC_Z3.Dom.v option) Code.abstract ->
-                   ('a, 'c) Code.abstract) ->
-                  ('a, 'c) Code.abstract
+                  (< answer : ('a, 'b) Code.abstract;
+                     state : [> `TDet of 'a Det.lstate
+                              | `TPivot of 'a P.lstate ]
+                             list;
+                     .. >,
+                   ('a, GVC_Z3.Dom.v option) Code.abstract)
+                  StateCPSMonad.monad
               end
         module NoPivot :
           functor (Det : DETERMINANT) ->
@@ -11721,17 +12235,20 @@ module G_GVC_Z3 :
                         ([> `TRan of 'b ] -> 'b option) * string
                       val decl :
                         unit ->
-                        ([> `TRan of ('b, int ref) Code.abstract ] as 'a)
-                        list ->
-                        ('a list ->
-                         ('b, int ref) Code.abstract ->
-                         ('b, 'c) Code.abstract) ->
-                        ('b, 'c) Code.abstract
+                        (< answer : ('a, 'b) Code.abstract;
+                           state : [> `TRan of ('a, int ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('a, int ref) Code.abstract)
+                        StateCPSMonad.monad
                       val succ :
                         unit ->
-                        ([> `TRan of ('b, int ref) Code.abstract ] as 'a)
-                        list ->
-                        ('a list -> ('b, unit) Code.abstract -> 'c) -> 'c
+                        (< answer : 'a;
+                           state : [> `TRan of ('b, int ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('b, unit) Code.abstract)
+                        StateCPSMonad.monad
                       module type RANK =
                         sig
                           type 'a tag_lstate = 'a tag_lstate_
@@ -11838,17 +12355,20 @@ module G_GVC_Z3 :
                         ([> `TRan of 'b ] -> 'b option) * string
                       val decl :
                         unit ->
-                        ([> `TRan of ('b, int ref) Code.abstract ] as 'a)
-                        list ->
-                        ('a list ->
-                         ('b, int ref) Code.abstract ->
-                         ('b, 'c) Code.abstract) ->
-                        ('b, 'c) Code.abstract
+                        (< answer : ('a, 'b) Code.abstract;
+                           state : [> `TRan of ('a, int ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('a, int ref) Code.abstract)
+                        StateCPSMonad.monad
                       val succ :
                         unit ->
-                        ([> `TRan of ('b, int ref) Code.abstract ] as 'a)
-                        list ->
-                        ('a list -> ('b, unit) Code.abstract -> 'c) -> 'c
+                        (< answer : 'a;
+                           state : [> `TRan of ('b, int ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('b, unit) Code.abstract)
+                        StateCPSMonad.monad
                       module type RANK =
                         sig
                           type 'a tag_lstate = 'a tag_lstate_
@@ -11933,11 +12453,10 @@ module G_GVC_Z3 :
               type res = GVC_Z3.contr * GVC_Z3.Dom.v
               val make_result :
                 'a wmatrix ->
-                ([> `TDet of 'a OD.Det.lstate ] as 'b) list ->
-                ('b list ->
-                 ('a, GVC_Z3.contr * GVC_Z3.Dom.v) Code.abstract ->
-                 ('a, 'c) Code.abstract) ->
-                ('a, 'c) Code.abstract
+                (< answer : ('a, 'b) Code.abstract;
+                   state : [> `TDet of 'a OD.Det.lstate ] list; .. >,
+                 ('a, GVC_Z3.contr * GVC_Z3.Dom.v) Code.abstract)
+                StateCPSMonad.monad
             end
         module OutRank :
           functor (OD : OUTPUTDEP) ->
@@ -11958,17 +12477,20 @@ module G_GVC_Z3 :
                         ([> `TRan of 'b ] -> 'b option) * string
                       val decl :
                         unit ->
-                        ([> `TRan of ('b, int ref) Code.abstract ] as 'a)
-                        list ->
-                        ('a list ->
-                         ('b, int ref) Code.abstract ->
-                         ('b, 'c) Code.abstract) ->
-                        ('b, 'c) Code.abstract
+                        (< answer : ('a, 'b) Code.abstract;
+                           state : [> `TRan of ('a, int ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('a, int ref) Code.abstract)
+                        StateCPSMonad.monad
                       val succ :
                         unit ->
-                        ([> `TRan of ('b, int ref) Code.abstract ] as 'a)
-                        list ->
-                        ('a list -> ('b, unit) Code.abstract -> 'c) -> 'c
+                        (< answer : 'a;
+                           state : [> `TRan of ('b, int ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('b, unit) Code.abstract)
+                        StateCPSMonad.monad
                       module type RANK =
                         sig
                           type 'a tag_lstate = 'a tag_lstate_
@@ -11993,8 +12515,12 @@ module G_GVC_Z3 :
                         end
                       val fin :
                         unit ->
-                        ([> `TRan of ('b, 'c ref) Code.abstract ] as 'a) list ->
-                        ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd
+                        (< answer : 'a;
+                           state : [> `TRan of ('b, 'c ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('b, 'c) Code.abstract)
+                        StateCPSMonad.monad
                     end
                   module P :
                     sig
@@ -12056,9 +12582,11 @@ module G_GVC_Z3 :
               type res = GVC_Z3.contr * int
               val make_result :
                 'a wmatrix ->
-                ([> `TRan of ('a, 'c ref) Code.abstract ] as 'b) list ->
-                ('b list -> ('a, GVC_Z3.contr * 'c) Code.abstract -> 'd) ->
-                'd
+                (< answer : 'b;
+                   state : [> `TRan of ('a, 'c ref) Code.abstract ] list;
+                   .. >,
+                 ('a, GVC_Z3.contr * 'c) Code.abstract)
+                StateCPSMonad.monad
             end
         module OutDetRank :
           functor (OD : OUTPUTDEP) ->
@@ -12079,17 +12607,20 @@ module G_GVC_Z3 :
                         ([> `TRan of 'b ] -> 'b option) * string
                       val decl :
                         unit ->
-                        ([> `TRan of ('b, int ref) Code.abstract ] as 'a)
-                        list ->
-                        ('a list ->
-                         ('b, int ref) Code.abstract ->
-                         ('b, 'c) Code.abstract) ->
-                        ('b, 'c) Code.abstract
+                        (< answer : ('a, 'b) Code.abstract;
+                           state : [> `TRan of ('a, int ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('a, int ref) Code.abstract)
+                        StateCPSMonad.monad
                       val succ :
                         unit ->
-                        ([> `TRan of ('b, int ref) Code.abstract ] as 'a)
-                        list ->
-                        ('a list -> ('b, unit) Code.abstract -> 'c) -> 'c
+                        (< answer : 'a;
+                           state : [> `TRan of ('b, int ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('b, unit) Code.abstract)
+                        StateCPSMonad.monad
                       module type RANK =
                         sig
                           type 'a tag_lstate = 'a tag_lstate_
@@ -12114,8 +12645,12 @@ module G_GVC_Z3 :
                         end
                       val fin :
                         unit ->
-                        ([> `TRan of ('b, 'c ref) Code.abstract ] as 'a) list ->
-                        ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd
+                        (< answer : 'a;
+                           state : [> `TRan of ('b, 'c ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('b, 'c) Code.abstract)
+                        StateCPSMonad.monad
                     end
                   module P :
                     sig
@@ -12177,14 +12712,13 @@ module G_GVC_Z3 :
               type res = GVC_Z3.contr * GVC_Z3.Dom.v * int
               val make_result :
                 'a wmatrix ->
-                ([> `TDet of 'a OD.Det.lstate
-                  | `TRan of ('a, 'c ref) Code.abstract ]
-                 as 'b)
-                list ->
-                ('b list ->
-                 ('a, GVC_Z3.contr * GVC_Z3.Dom.v * 'c) Code.abstract ->
-                 ('a, 'd) Code.abstract) ->
-                ('a, 'd) Code.abstract
+                (< answer : ('a, 'b) Code.abstract;
+                   state : [> `TDet of 'a OD.Det.lstate
+                            | `TRan of ('a, 'c ref) Code.abstract ]
+                           list;
+                   .. >,
+                 ('a, GVC_Z3.contr * GVC_Z3.Dom.v * 'c) Code.abstract)
+                StateCPSMonad.monad
             end
         module OutDetRankPivot :
           functor (OD : OUTPUTDEP) ->
@@ -12205,17 +12739,20 @@ module G_GVC_Z3 :
                         ([> `TRan of 'b ] -> 'b option) * string
                       val decl :
                         unit ->
-                        ([> `TRan of ('b, int ref) Code.abstract ] as 'a)
-                        list ->
-                        ('a list ->
-                         ('b, int ref) Code.abstract ->
-                         ('b, 'c) Code.abstract) ->
-                        ('b, 'c) Code.abstract
+                        (< answer : ('a, 'b) Code.abstract;
+                           state : [> `TRan of ('a, int ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('a, int ref) Code.abstract)
+                        StateCPSMonad.monad
                       val succ :
                         unit ->
-                        ([> `TRan of ('b, int ref) Code.abstract ] as 'a)
-                        list ->
-                        ('a list -> ('b, unit) Code.abstract -> 'c) -> 'c
+                        (< answer : 'a;
+                           state : [> `TRan of ('b, int ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('b, unit) Code.abstract)
+                        StateCPSMonad.monad
                       module type RANK =
                         sig
                           type 'a tag_lstate = 'a tag_lstate_
@@ -12240,8 +12777,12 @@ module G_GVC_Z3 :
                         end
                       val fin :
                         unit ->
-                        ([> `TRan of ('b, 'c ref) Code.abstract ] as 'a) list ->
-                        ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd
+                        (< answer : 'a;
+                           state : [> `TRan of ('b, 'c ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('b, 'c) Code.abstract)
+                        StateCPSMonad.monad
                     end
                   module P :
                     sig
@@ -12266,26 +12807,32 @@ module G_GVC_Z3 :
                         ([> `TPivot of 'b ] -> 'b option) * string
                       val decl :
                         'a OD.PivotRep.ira ->
-                        ([> `TPivot of
-                              ('a, OD.PivotRep.perm_rep ref) Code.abstract ]
-                         as 'b)
-                        list ->
-                        ('b list ->
-                         ('c, unit) Code.abstract -> ('a, 'd) Code.abstract) ->
-                        ('a, 'd) Code.abstract
+                        (< answer : ('a, 'b) Code.abstract;
+                           state : [> `TPivot of
+                                        ('a, OD.PivotRep.perm_rep ref)
+                                        Code.abstract ]
+                                   list;
+                           .. >,
+                         ('c, unit) Code.abstract)
+                        StateCPSMonad.monad
                       val add :
                         'a OD.PivotRep.fra ->
-                        ([> `TPivot of
-                              ('a, OD.PivotRep.perm_rep ref) Code.abstract ]
-                         as 'b)
-                        list ->
-                        ('b list -> ('a, unit) Code.abstract option -> 'c) ->
-                        'c
+                        (< answer : 'b;
+                           state : [> `TPivot of
+                                        ('a, OD.PivotRep.perm_rep ref)
+                                        Code.abstract ]
+                                   list;
+                           .. >,
+                         ('a, unit) Code.abstract option)
+                        StateCPSMonad.monad
                       val fin :
                         unit ->
-                        ([> `TPivot of ('b, 'c ref) Code.abstract ] as 'a)
-                        list ->
-                        ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd
+                        (< answer : 'a;
+                           state : [> `TPivot of ('b, 'c ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('b, 'c) Code.abstract)
+                        StateCPSMonad.monad
                     end
                   module L :
                     sig
@@ -12317,15 +12864,14 @@ module G_GVC_Z3 :
               type res = GVC_Z3.contr * GVC_Z3.Dom.v * int * IF.P.perm_rep
               val make_result :
                 'a wmatrix ->
-                ([> `TDet of 'a OD.Det.lstate
-                  | `TPivot of ('a, 'c ref) Code.abstract
-                  | `TRan of ('a, 'd ref) Code.abstract ]
-                 as 'b)
-                list ->
-                ('b list ->
-                 ('a, GVC_Z3.contr * GVC_Z3.Dom.v * 'd * 'c) Code.abstract ->
-                 ('a, 'e) Code.abstract) ->
-                ('a, 'e) Code.abstract
+                (< answer : ('a, 'b) Code.abstract;
+                   state : [> `TDet of 'a OD.Det.lstate
+                            | `TPivot of ('a, 'c ref) Code.abstract
+                            | `TRan of ('a, 'd ref) Code.abstract ]
+                           list;
+                   .. >,
+                 ('a, GVC_Z3.contr * GVC_Z3.Dom.v * 'd * 'c) Code.abstract)
+                StateCPSMonad.monad
             end
         module Out_L_U :
           functor (OD : OUTPUTDEP) ->
@@ -12346,17 +12892,20 @@ module G_GVC_Z3 :
                         ([> `TRan of 'b ] -> 'b option) * string
                       val decl :
                         unit ->
-                        ([> `TRan of ('b, int ref) Code.abstract ] as 'a)
-                        list ->
-                        ('a list ->
-                         ('b, int ref) Code.abstract ->
-                         ('b, 'c) Code.abstract) ->
-                        ('b, 'c) Code.abstract
+                        (< answer : ('a, 'b) Code.abstract;
+                           state : [> `TRan of ('a, int ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('a, int ref) Code.abstract)
+                        StateCPSMonad.monad
                       val succ :
                         unit ->
-                        ([> `TRan of ('b, int ref) Code.abstract ] as 'a)
-                        list ->
-                        ('a list -> ('b, unit) Code.abstract -> 'c) -> 'c
+                        (< answer : 'a;
+                           state : [> `TRan of ('b, int ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('b, unit) Code.abstract)
+                        StateCPSMonad.monad
                       module type RANK =
                         sig
                           type 'a tag_lstate = 'a tag_lstate_
@@ -12404,26 +12953,32 @@ module G_GVC_Z3 :
                         ([> `TPivot of 'b ] -> 'b option) * string
                       val decl :
                         'a OD.PivotRep.ira ->
-                        ([> `TPivot of
-                              ('a, OD.PivotRep.perm_rep ref) Code.abstract ]
-                         as 'b)
-                        list ->
-                        ('b list ->
-                         ('c, unit) Code.abstract -> ('a, 'd) Code.abstract) ->
-                        ('a, 'd) Code.abstract
+                        (< answer : ('a, 'b) Code.abstract;
+                           state : [> `TPivot of
+                                        ('a, OD.PivotRep.perm_rep ref)
+                                        Code.abstract ]
+                                   list;
+                           .. >,
+                         ('c, unit) Code.abstract)
+                        StateCPSMonad.monad
                       val add :
                         'a OD.PivotRep.fra ->
-                        ([> `TPivot of
-                              ('a, OD.PivotRep.perm_rep ref) Code.abstract ]
-                         as 'b)
-                        list ->
-                        ('b list -> ('a, unit) Code.abstract option -> 'c) ->
-                        'c
+                        (< answer : 'b;
+                           state : [> `TPivot of
+                                        ('a, OD.PivotRep.perm_rep ref)
+                                        Code.abstract ]
+                                   list;
+                           .. >,
+                         ('a, unit) Code.abstract option)
+                        StateCPSMonad.monad
                       val fin :
                         unit ->
-                        ([> `TPivot of ('b, 'c ref) Code.abstract ] as 'a)
-                        list ->
-                        ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd
+                        (< answer : 'a;
+                           state : [> `TPivot of ('b, 'c ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('b, 'c) Code.abstract)
+                        StateCPSMonad.monad
                     end
                   module L :
                     sig
@@ -12437,35 +12992,40 @@ module G_GVC_Z3 :
                         ([> `TLower of 'b ] -> 'b option) * string
                       val decl :
                         ('a, 'b) Code.abstract ->
-                        ([> `TLower of ('a, 'b) Code.abstract ] as 'c) list ->
-                        ('c list ->
-                         ('a, 'b) Code.abstract -> ('a, 'd) Code.abstract) ->
-                        ('a, 'd) Code.abstract
+                        (< answer : ('a, 'c) Code.abstract;
+                           state : [> `TLower of ('a, 'b) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('a, 'b) Code.abstract)
+                        StateCPSMonad.monad
                       val updt :
                         'a GVC_Z3.vc ->
                         ('a, int) Code.abstract ->
                         ('a, int) Code.abstract ->
                         'a GVC_Z3.vo ->
                         'a GVC_Z3.vo ->
-                        (([> `TLower of 'a GVC_Z3.vc ] as 'b) list ->
-                         ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c)
-                        option
+                        (< answer : 'b;
+                           state : [> `TLower of 'a GVC_Z3.vc ] list; .. >,
+                         ('a, unit) Code.abstract)
+                        StateCPSMonad.monad option
                       val fin :
                         unit ->
-                        ([> `TLower of 'b ] as 'a) list ->
-                        ('a list -> 'b -> 'c) -> 'c
+                        (< answer : 'a; state : [> `TLower of 'b ] list; .. >,
+                         'b)
+                        StateCPSMonad.monad
                       val wants_pack : bool
                     end
                 end
               type res = GVC_Z3.contr * GVC_Z3.contr * IF.P.perm_rep
               val make_result :
                 'a wmatrix ->
-                ([> `TLower of ('a, 'c) Code.abstract
-                  | `TPivot of ('a, 'd ref) Code.abstract ]
-                 as 'b)
-                list ->
-                ('b list -> ('a, GVC_Z3.contr * 'c * 'd) Code.abstract -> 'e) ->
-                'e
+                (< answer : 'b;
+                   state : [> `TLower of ('a, 'c) Code.abstract
+                            | `TPivot of ('a, 'd ref) Code.abstract ]
+                           list;
+                   .. >,
+                 ('a, GVC_Z3.contr * 'c * 'd) Code.abstract)
+                StateCPSMonad.monad
             end
         module Out_LU_Packed :
           functor (OD : OUTPUTDEP) ->
@@ -12486,17 +13046,20 @@ module G_GVC_Z3 :
                         ([> `TRan of 'b ] -> 'b option) * string
                       val decl :
                         unit ->
-                        ([> `TRan of ('b, int ref) Code.abstract ] as 'a)
-                        list ->
-                        ('a list ->
-                         ('b, int ref) Code.abstract ->
-                         ('b, 'c) Code.abstract) ->
-                        ('b, 'c) Code.abstract
+                        (< answer : ('a, 'b) Code.abstract;
+                           state : [> `TRan of ('a, int ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('a, int ref) Code.abstract)
+                        StateCPSMonad.monad
                       val succ :
                         unit ->
-                        ([> `TRan of ('b, int ref) Code.abstract ] as 'a)
-                        list ->
-                        ('a list -> ('b, unit) Code.abstract -> 'c) -> 'c
+                        (< answer : 'a;
+                           state : [> `TRan of ('b, int ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('b, unit) Code.abstract)
+                        StateCPSMonad.monad
                       module type RANK =
                         sig
                           type 'a tag_lstate = 'a tag_lstate_
@@ -12544,26 +13107,32 @@ module G_GVC_Z3 :
                         ([> `TPivot of 'b ] -> 'b option) * string
                       val decl :
                         'a OD.PivotRep.ira ->
-                        ([> `TPivot of
-                              ('a, OD.PivotRep.perm_rep ref) Code.abstract ]
-                         as 'b)
-                        list ->
-                        ('b list ->
-                         ('c, unit) Code.abstract -> ('a, 'd) Code.abstract) ->
-                        ('a, 'd) Code.abstract
+                        (< answer : ('a, 'b) Code.abstract;
+                           state : [> `TPivot of
+                                        ('a, OD.PivotRep.perm_rep ref)
+                                        Code.abstract ]
+                                   list;
+                           .. >,
+                         ('c, unit) Code.abstract)
+                        StateCPSMonad.monad
                       val add :
                         'a OD.PivotRep.fra ->
-                        ([> `TPivot of
-                              ('a, OD.PivotRep.perm_rep ref) Code.abstract ]
-                         as 'b)
-                        list ->
-                        ('b list -> ('a, unit) Code.abstract option -> 'c) ->
-                        'c
+                        (< answer : 'b;
+                           state : [> `TPivot of
+                                        ('a, OD.PivotRep.perm_rep ref)
+                                        Code.abstract ]
+                                   list;
+                           .. >,
+                         ('a, unit) Code.abstract option)
+                        StateCPSMonad.monad
                       val fin :
                         unit ->
-                        ([> `TPivot of ('b, 'c ref) Code.abstract ] as 'a)
-                        list ->
-                        ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd
+                        (< answer : 'a;
+                           state : [> `TPivot of ('b, 'c ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('b, 'c) Code.abstract)
+                        StateCPSMonad.monad
                     end
                   module L :
                     sig
@@ -12577,23 +13146,28 @@ module G_GVC_Z3 :
                         ([> `TLower of 'b ] -> 'b option) * string
                       val decl :
                         'a ->
-                        ([> `TLower of 'a ] as 'b) list ->
-                        ('b list -> 'a -> 'c) -> 'c
+                        (< answer : 'b; state : [> `TLower of 'a ] list; .. >,
+                         'a)
+                        StateCPSMonad.monad
                       val updt : 'a -> 'b -> 'c -> 'd -> 'e -> 'f option
                       val fin :
                         unit ->
-                        ([> `TLower of 'b ] as 'a) list ->
-                        ('a list -> 'b -> 'c) -> 'c
+                        (< answer : 'a; state : [> `TLower of 'b ] list; .. >,
+                         'b)
+                        StateCPSMonad.monad
                       val wants_pack : bool
                     end
                 end
               type res = GVC_Z3.contr * IF.P.perm_rep
               val make_result :
                 'a ->
-                ([> `TLower of ('c, 'd) Code.abstract
-                  | `TPivot of ('c, 'e ref) Code.abstract ]
-                 as 'b)
-                list -> ('b list -> ('c, 'd * 'e) Code.abstract -> 'f) -> 'f
+                (< answer : 'b;
+                   state : [> `TLower of ('c, 'd) Code.abstract
+                            | `TPivot of ('c, 'e ref) Code.abstract ]
+                           list;
+                   .. >,
+                 ('c, 'd * 'e) Code.abstract)
+                StateCPSMonad.monad
             end
         module type INTERNAL_FEATURES =
           sig
@@ -12742,17 +13316,16 @@ module G_GVC_Z3 :
                 list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
               val init :
                 ('a, F.Input.inp) Code.abstract ->
-                ([> `TDet of 'a F.Det.lstate
-                  | `TLower of ('a, GVC_Z3.contr) Code.abstract
-                  | `TPivot of 'a F.Output(F).IF.P.lstate
-                  | `TRan of 'a GEF.TrackRank.lstate ]
-                 as 'b)
-                list ->
-                ('b list ->
+                (< answer : ('a, 'b) Code.abstract;
+                   state : [> `TDet of 'a F.Det.lstate
+                            | `TLower of ('a, GVC_Z3.contr) Code.abstract
+                            | `TPivot of 'a F.Output(F).IF.P.lstate
+                            | `TRan of 'a GEF.TrackRank.lstate ]
+                           list;
+                   .. >,
                  'a wmatrix * ('a, int ref) Code.abstract *
-                 ('a, int ref) Code.abstract * ('a, int) Code.abstract ->
-                 ('a, 'c) Code.abstract) ->
-                ('a, 'c) Code.abstract
+                 ('a, int ref) Code.abstract * ('a, int) Code.abstract)
+                StateCPSMonad.monad
               val forward_elim :
                 'a wmatrix * ('a, int ref) Code.abstract *
                 ('a, int ref) Code.abstract * ('a, int) Code.abstract ->
@@ -12764,15 +13337,15 @@ module G_GVC_Z3 :
                 list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
               val gen :
                 ('a, F.Input.inp) Code.abstract ->
-                ([> `TDet of 'a F.Det.lstate
-                  | `TLower of 'a O.IF.L.lstate
-                  | `TPivot of 'a O.IF.P.lstate
-                  | `TRan of 'a GEF.TrackRank.lstate ]
-                 as 'b)
-                list ->
-                ('b list ->
-                 ('a, O.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-                ('a, 'c) Code.abstract
+                (< answer : ('a, 'b) Code.abstract;
+                   state : [> `TDet of 'a F.Det.lstate
+                            | `TLower of 'a O.IF.L.lstate
+                            | `TPivot of 'a O.IF.P.lstate
+                            | `TRan of 'a GEF.TrackRank.lstate ]
+                           list;
+                   .. >,
+                 ('a, O.res) Code.abstract)
+                StateCPSMonad.monad
             end
       end
     module Solve :
@@ -12793,11 +13366,9 @@ module G_GVC_Z3 :
             type rhs = GVC_Z3.contr
             val get_input :
               ('a, 'b * 'c) Code.abstract ->
-              'd ->
-              ('d ->
-               ('a, 'b) Code.abstract * ('a, 'c) Code.abstract ->
-               ('a, 'e) Code.abstract) ->
-              ('a, 'e) Code.abstract
+              (< answer : ('a, 'd) Code.abstract; state : 'e; .. >,
+               ('a, 'b) Code.abstract * ('a, 'c) Code.abstract)
+              StateCPSMonad.monad
           end
         module type OUTPUT =
           sig
@@ -12953,18 +13524,18 @@ module G_GVC_Z3 :
                     list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
                   val init :
                     ('a, GVC_Z3.contr * int) Code.abstract ->
-                    ([> `TDet of 'a F.Det.lstate
-                      | `TLower of ('a, GVC_Z3.contr) Code.abstract
-                      | `TPivot of
-                          ('a, GEF.PermList.perm_rep ref) Code.abstract
-                      | `TRan of 'a GEF.TrackRank.lstate ]
-                     as 'b)
-                    list ->
-                    ('b list ->
+                    (< answer : ('a, 'b) Code.abstract;
+                       state : [> `TDet of 'a F.Det.lstate
+                                | `TLower of ('a, GVC_Z3.contr) Code.abstract
+                                | `TPivot of
+                                    ('a, GEF.PermList.perm_rep ref)
+                                    Code.abstract
+                                | `TRan of 'a GEF.TrackRank.lstate ]
+                               list;
+                       .. >,
                      'a wmatrix * ('a, int ref) Code.abstract *
-                     ('a, int ref) Code.abstract * ('a, int) Code.abstract ->
-                     ('a, 'c) Code.abstract) ->
-                    ('a, 'c) Code.abstract
+                     ('a, int ref) Code.abstract * ('a, int) Code.abstract)
+                    StateCPSMonad.monad
                   val forward_elim :
                     'a wmatrix * ('a, int ref) Code.abstract *
                     ('a, int ref) Code.abstract * ('a, int) Code.abstract ->
@@ -12977,23 +13548,22 @@ module G_GVC_Z3 :
                     list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
                   val gen :
                     ('a, GVC_Z3.contr * int) Code.abstract ->
-                    ([> `TDet of 'a F.Det.lstate
-                      | `TLower of 'a O.IF.L.lstate
-                      | `TPivot of 'a O.IF.P.lstate
-                      | `TRan of 'a GEF.TrackRank.lstate ]
-                     as 'b)
-                    list ->
-                    ('b list ->
-                     ('a, O.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-                    ('a, 'c) Code.abstract
+                    (< answer : ('a, 'b) Code.abstract;
+                       state : [> `TDet of 'a F.Det.lstate
+                                | `TLower of 'a O.IF.L.lstate
+                                | `TPivot of 'a O.IF.P.lstate
+                                | `TRan of 'a GEF.TrackRank.lstate ]
+                               list;
+                       .. >,
+                     ('a, O.res) Code.abstract)
+                    StateCPSMonad.monad
                 end
               val init :
                 ('a, F.Input.inp) Code.abstract ->
-                'b ->
-                ('b ->
+                (< answer : 'b; state : 'c; .. >,
                  ('a, GVC_Z3.contr) Code.abstract *
-                 ('a, F.Input.rhs) Code.abstract -> 'c) ->
-                'c
+                 ('a, F.Input.rhs) Code.abstract)
+                StateCPSMonad.monad
               val back_elim :
                 'a GVC_Z3.vc ->
                 ('a, int) Code.abstract ->
@@ -13001,15 +13571,15 @@ module G_GVC_Z3 :
                 'b -> ('b -> ('a, GVC_Z3.contr) Code.abstract -> 'c) -> 'c
               val gen :
                 ('a, F.Input.inp) Code.abstract ->
-                ([> `TDet of 'a F.Det.lstate
-                  | `TLower of 'a GE'.O.IF.L.lstate
-                  | `TPivot of 'a GE'.O.IF.P.lstate
-                  | `TRan of 'a GEF.TrackRank.lstate ]
-                 as 'b)
-                list ->
-                ('b list ->
-                 ('a, F.Output.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-                ('a, 'c) Code.abstract
+                (< answer : ('a, 'b) Code.abstract;
+                   state : [> `TDet of 'a F.Det.lstate
+                            | `TLower of 'a GE'.O.IF.L.lstate
+                            | `TPivot of 'a GE'.O.IF.P.lstate
+                            | `TRan of 'a GEF.TrackRank.lstate ]
+                           list;
+                   .. >,
+                 ('a, F.Output.res) Code.abstract)
+                StateCPSMonad.monad
             end
       end
   end
@@ -13136,39 +13706,56 @@ module G_GVC_Z19 :
           ('a -> [> `TDet of 'a ]) * ([> `TDet of 'b ] -> 'b option) * string
         val decl :
           unit ->
-          ([> `TDet of
-                ('b, int ref) Code.abstract *
-                ('b, GVC_Z19.Dom.v ref) Code.abstract ]
-           as 'a)
-          list ->
-          ('a list -> ('c, unit) Code.abstract -> ('b, 'd) Code.abstract) ->
-          ('b, 'd) Code.abstract
+          (< answer : ('a, 'b) Code.abstract;
+             state : [> `TDet of
+                          ('a, int ref) Code.abstract *
+                          ('a, GVC_Z19.Dom.v ref) Code.abstract ]
+                     list;
+             .. >,
+           ('c, unit) Code.abstract)
+          StateCPSMonad.monad
         val upd_sign :
           unit ->
-          ([> `TDet of ('b, int ref) Code.abstract * 'c ] as 'a) list ->
-          ('a list -> ('b, unit) Code.abstract option -> 'd) -> 'd
+          (< answer : 'a;
+             state : [> `TDet of ('b, int ref) Code.abstract * 'c ] list;
+             .. >,
+           ('b, unit) Code.abstract option)
+          StateCPSMonad.monad
         val zero_sign :
           unit ->
-          ([> `TDet of ('b, int ref) Code.abstract * 'c ] as 'a) list ->
-          ('a list -> ('b, unit) Code.abstract -> 'd) -> 'd
+          (< answer : 'a;
+             state : [> `TDet of ('b, int ref) Code.abstract * 'c ] list;
+             .. >,
+           ('b, unit) Code.abstract)
+          StateCPSMonad.monad
         val get :
           unit ->
-          ([> `TDet of 'b * 'c ] as 'a) list -> ('a list -> 'c -> 'd) -> 'd
+          (< answer : 'a; state : [> `TDet of 'b * 'c ] list; .. >, 'c)
+          StateCPSMonad.monad
         val set :
           ('a, 'b) Code.abstract ->
-          ([> `TDet of 'd * ('a, 'b ref) Code.abstract ] as 'c) list ->
-          ('c list -> ('a, unit) Code.abstract -> 'e) -> 'e
+          (< answer : 'c;
+             state : [> `TDet of 'd * ('a, 'b ref) Code.abstract ] list; .. >,
+           ('a, unit) Code.abstract)
+          StateCPSMonad.monad
         val acc :
           'a GVC_Z19.Dom.vc ->
-          ([> `TDet of 'c * ('a, GVC_Z19.Dom.v ref) Code.abstract ] as 'b)
-          list -> ('b list -> ('a, unit) Code.abstract -> 'd) -> 'd
+          (< answer : 'b;
+             state : [> `TDet of 'c * ('a, GVC_Z19.Dom.v ref) Code.abstract ]
+                     list;
+             .. >,
+           ('a, unit) Code.abstract)
+          StateCPSMonad.monad
         val fin :
           unit ->
-          ([> `TDet of
-                ('b, int ref) Code.abstract *
-                ('b, GVC_Z19.Dom.v ref) Code.abstract ]
-           as 'a)
-          list -> ('a list -> ('b, GVC_Z19.Dom.v) Code.abstract -> 'c) -> 'c
+          (< answer : 'a;
+             state : [> `TDet of
+                          ('b, int ref) Code.abstract *
+                          ('b, GVC_Z19.Dom.v ref) Code.abstract ]
+                     list;
+             .. >,
+           ('b, GVC_Z19.Dom.v) Code.abstract)
+          StateCPSMonad.monad
       end
     module type UPDATE =
       functor (D : DETERMINANT) ->
@@ -13202,7 +13789,8 @@ module G_GVC_Z19 :
                 'a GVC_Z19.Dom.vc ->
                 'a GVC_Z19.Dom.vc ->
                 ('a GVC_Z19.Dom.vc -> 'b) ->
-                'c -> 'd -> ('d -> 'b -> 'e) -> 'e
+                'c ->
+                (< answer : 'd; state : 'e; .. >, 'b) StateCPSMonad.monad
               val update_det :
                 ('a, GVC_Z19.Dom.v) Code.abstract ->
                 (< answer : 'b; classif : 'a;
@@ -13222,7 +13810,7 @@ module G_GVC_Z19 :
                 'a GVC_Z19.Dom.vc ->
                 ('a GVC_Z19.Dom.vc -> 'b) ->
                 ('a, GVC_Z19.Dom.v ref) Code.abstract ->
-                'c -> ('c -> 'b -> 'd) -> 'd
+                (< answer : 'c; state : 'd; .. >, 'b) StateCPSMonad.monad
               val update_det :
                 ('a, GVC_Z19.Dom.v) Code.abstract ->
                 (< answer : 'b; classif : 'a;
@@ -13285,21 +13873,24 @@ module G_GVC_Z19 :
               ([> `TLower of 'b ] -> 'b option) * string
             val decl :
               ('a, 'b) Code.abstract ->
-              ([> `TLower of ('a, 'b) Code.abstract ] as 'c) list ->
-              ('c list -> ('a, 'b) Code.abstract -> ('a, 'd) Code.abstract) ->
-              ('a, 'd) Code.abstract
+              (< answer : ('a, 'c) Code.abstract;
+                 state : [> `TLower of ('a, 'b) Code.abstract ] list; .. >,
+               ('a, 'b) Code.abstract)
+              StateCPSMonad.monad
             val updt :
               'a GVC_Z19.vc ->
               ('a, int) Code.abstract ->
               ('a, int) Code.abstract ->
               'a GVC_Z19.vo ->
               'a GVC_Z19.vo ->
-              (([> `TLower of 'a GVC_Z19.vc ] as 'b) list ->
-               ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c)
-              option
+              (< answer : 'b; state : [> `TLower of 'a GVC_Z19.vc ] list;
+                 .. >,
+               ('a, unit) Code.abstract)
+              StateCPSMonad.monad option
             val fin :
               unit ->
-              ([> `TLower of 'b ] as 'a) list -> ('a list -> 'b -> 'c) -> 'c
+              (< answer : 'a; state : [> `TLower of 'b ] list; .. >, 'b)
+              StateCPSMonad.monad
             val wants_pack : bool
           end
         module PackedLower :
@@ -13314,11 +13905,13 @@ module G_GVC_Z19 :
               ([> `TLower of 'b ] -> 'b option) * string
             val decl :
               'a ->
-              ([> `TLower of 'a ] as 'b) list -> ('b list -> 'a -> 'c) -> 'c
+              (< answer : 'b; state : [> `TLower of 'a ] list; .. >, 'a)
+              StateCPSMonad.monad
             val updt : 'a -> 'b -> 'c -> 'd -> 'e -> 'f option
             val fin :
               unit ->
-              ([> `TLower of 'b ] as 'a) list -> ('a list -> 'b -> 'c) -> 'c
+              (< answer : 'a; state : [> `TLower of 'b ] list; .. >, 'b)
+              StateCPSMonad.monad
             val wants_pack : bool
           end
         module NoLower :
@@ -13368,10 +13961,9 @@ module G_GVC_Z19 :
             type inp = GVC_Z19.contr * int
             val get_input :
               ('a, 'b * 'c) Code.abstract ->
-              'd ->
-              ('d ->
-               ('a, 'b) Code.abstract * ('a, 'c) Code.abstract * bool -> 'e) ->
-              'e
+              (< answer : 'd; state : 'e; .. >,
+               ('a, 'b) Code.abstract * ('a, 'c) Code.abstract * bool)
+              StateCPSMonad.monad
           end
         module RowPivot :
           functor (Det : DETERMINANT) ->
@@ -13380,12 +13972,13 @@ module G_GVC_Z19 :
                 val findpivot :
                   'a wmatrix ->
                   'a curpos ->
-                  ([> `TDet of 'a Det.lstate | `TPivot of 'a P.lstate ] as 'b)
-                  list ->
-                  ('b list ->
-                   ('a, GVC_Z19.Dom.v option) Code.abstract ->
-                   ('a, 'c) Code.abstract) ->
-                  ('a, 'c) Code.abstract
+                  (< answer : ('a, 'b) Code.abstract;
+                     state : [> `TDet of 'a Det.lstate
+                              | `TPivot of 'a P.lstate ]
+                             list;
+                     .. >,
+                   ('a, GVC_Z19.Dom.v option) Code.abstract)
+                  StateCPSMonad.monad
               end
         module FullPivot :
           functor (Det : DETERMINANT) ->
@@ -13394,12 +13987,13 @@ module G_GVC_Z19 :
                 val findpivot :
                   'a wmatrix ->
                   'a curpos ->
-                  ([> `TDet of 'a Det.lstate | `TPivot of 'a P.lstate ] as 'b)
-                  list ->
-                  ('b list ->
-                   ('a, GVC_Z19.Dom.v option) Code.abstract ->
-                   ('a, 'c) Code.abstract) ->
-                  ('a, 'c) Code.abstract
+                  (< answer : ('a, 'b) Code.abstract;
+                     state : [> `TDet of 'a Det.lstate
+                              | `TPivot of 'a P.lstate ]
+                             list;
+                     .. >,
+                   ('a, GVC_Z19.Dom.v option) Code.abstract)
+                  StateCPSMonad.monad
               end
         module NoPivot :
           functor (Det : DETERMINANT) ->
@@ -13433,17 +14027,20 @@ module G_GVC_Z19 :
                         ([> `TRan of 'b ] -> 'b option) * string
                       val decl :
                         unit ->
-                        ([> `TRan of ('b, int ref) Code.abstract ] as 'a)
-                        list ->
-                        ('a list ->
-                         ('b, int ref) Code.abstract ->
-                         ('b, 'c) Code.abstract) ->
-                        ('b, 'c) Code.abstract
+                        (< answer : ('a, 'b) Code.abstract;
+                           state : [> `TRan of ('a, int ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('a, int ref) Code.abstract)
+                        StateCPSMonad.monad
                       val succ :
                         unit ->
-                        ([> `TRan of ('b, int ref) Code.abstract ] as 'a)
-                        list ->
-                        ('a list -> ('b, unit) Code.abstract -> 'c) -> 'c
+                        (< answer : 'a;
+                           state : [> `TRan of ('b, int ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('b, unit) Code.abstract)
+                        StateCPSMonad.monad
                       module type RANK =
                         sig
                           type 'a tag_lstate = 'a tag_lstate_
@@ -13550,17 +14147,20 @@ module G_GVC_Z19 :
                         ([> `TRan of 'b ] -> 'b option) * string
                       val decl :
                         unit ->
-                        ([> `TRan of ('b, int ref) Code.abstract ] as 'a)
-                        list ->
-                        ('a list ->
-                         ('b, int ref) Code.abstract ->
-                         ('b, 'c) Code.abstract) ->
-                        ('b, 'c) Code.abstract
+                        (< answer : ('a, 'b) Code.abstract;
+                           state : [> `TRan of ('a, int ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('a, int ref) Code.abstract)
+                        StateCPSMonad.monad
                       val succ :
                         unit ->
-                        ([> `TRan of ('b, int ref) Code.abstract ] as 'a)
-                        list ->
-                        ('a list -> ('b, unit) Code.abstract -> 'c) -> 'c
+                        (< answer : 'a;
+                           state : [> `TRan of ('b, int ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('b, unit) Code.abstract)
+                        StateCPSMonad.monad
                       module type RANK =
                         sig
                           type 'a tag_lstate = 'a tag_lstate_
@@ -13645,11 +14245,10 @@ module G_GVC_Z19 :
               type res = GVC_Z19.contr * GVC_Z19.Dom.v
               val make_result :
                 'a wmatrix ->
-                ([> `TDet of 'a OD.Det.lstate ] as 'b) list ->
-                ('b list ->
-                 ('a, GVC_Z19.contr * GVC_Z19.Dom.v) Code.abstract ->
-                 ('a, 'c) Code.abstract) ->
-                ('a, 'c) Code.abstract
+                (< answer : ('a, 'b) Code.abstract;
+                   state : [> `TDet of 'a OD.Det.lstate ] list; .. >,
+                 ('a, GVC_Z19.contr * GVC_Z19.Dom.v) Code.abstract)
+                StateCPSMonad.monad
             end
         module OutRank :
           functor (OD : OUTPUTDEP) ->
@@ -13670,17 +14269,20 @@ module G_GVC_Z19 :
                         ([> `TRan of 'b ] -> 'b option) * string
                       val decl :
                         unit ->
-                        ([> `TRan of ('b, int ref) Code.abstract ] as 'a)
-                        list ->
-                        ('a list ->
-                         ('b, int ref) Code.abstract ->
-                         ('b, 'c) Code.abstract) ->
-                        ('b, 'c) Code.abstract
+                        (< answer : ('a, 'b) Code.abstract;
+                           state : [> `TRan of ('a, int ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('a, int ref) Code.abstract)
+                        StateCPSMonad.monad
                       val succ :
                         unit ->
-                        ([> `TRan of ('b, int ref) Code.abstract ] as 'a)
-                        list ->
-                        ('a list -> ('b, unit) Code.abstract -> 'c) -> 'c
+                        (< answer : 'a;
+                           state : [> `TRan of ('b, int ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('b, unit) Code.abstract)
+                        StateCPSMonad.monad
                       module type RANK =
                         sig
                           type 'a tag_lstate = 'a tag_lstate_
@@ -13705,8 +14307,12 @@ module G_GVC_Z19 :
                         end
                       val fin :
                         unit ->
-                        ([> `TRan of ('b, 'c ref) Code.abstract ] as 'a) list ->
-                        ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd
+                        (< answer : 'a;
+                           state : [> `TRan of ('b, 'c ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('b, 'c) Code.abstract)
+                        StateCPSMonad.monad
                     end
                   module P :
                     sig
@@ -13768,9 +14374,11 @@ module G_GVC_Z19 :
               type res = GVC_Z19.contr * int
               val make_result :
                 'a wmatrix ->
-                ([> `TRan of ('a, 'c ref) Code.abstract ] as 'b) list ->
-                ('b list -> ('a, GVC_Z19.contr * 'c) Code.abstract -> 'd) ->
-                'd
+                (< answer : 'b;
+                   state : [> `TRan of ('a, 'c ref) Code.abstract ] list;
+                   .. >,
+                 ('a, GVC_Z19.contr * 'c) Code.abstract)
+                StateCPSMonad.monad
             end
         module OutDetRank :
           functor (OD : OUTPUTDEP) ->
@@ -13791,17 +14399,20 @@ module G_GVC_Z19 :
                         ([> `TRan of 'b ] -> 'b option) * string
                       val decl :
                         unit ->
-                        ([> `TRan of ('b, int ref) Code.abstract ] as 'a)
-                        list ->
-                        ('a list ->
-                         ('b, int ref) Code.abstract ->
-                         ('b, 'c) Code.abstract) ->
-                        ('b, 'c) Code.abstract
+                        (< answer : ('a, 'b) Code.abstract;
+                           state : [> `TRan of ('a, int ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('a, int ref) Code.abstract)
+                        StateCPSMonad.monad
                       val succ :
                         unit ->
-                        ([> `TRan of ('b, int ref) Code.abstract ] as 'a)
-                        list ->
-                        ('a list -> ('b, unit) Code.abstract -> 'c) -> 'c
+                        (< answer : 'a;
+                           state : [> `TRan of ('b, int ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('b, unit) Code.abstract)
+                        StateCPSMonad.monad
                       module type RANK =
                         sig
                           type 'a tag_lstate = 'a tag_lstate_
@@ -13826,8 +14437,12 @@ module G_GVC_Z19 :
                         end
                       val fin :
                         unit ->
-                        ([> `TRan of ('b, 'c ref) Code.abstract ] as 'a) list ->
-                        ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd
+                        (< answer : 'a;
+                           state : [> `TRan of ('b, 'c ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('b, 'c) Code.abstract)
+                        StateCPSMonad.monad
                     end
                   module P :
                     sig
@@ -13889,14 +14504,13 @@ module G_GVC_Z19 :
               type res = GVC_Z19.contr * GVC_Z19.Dom.v * int
               val make_result :
                 'a wmatrix ->
-                ([> `TDet of 'a OD.Det.lstate
-                  | `TRan of ('a, 'c ref) Code.abstract ]
-                 as 'b)
-                list ->
-                ('b list ->
-                 ('a, GVC_Z19.contr * GVC_Z19.Dom.v * 'c) Code.abstract ->
-                 ('a, 'd) Code.abstract) ->
-                ('a, 'd) Code.abstract
+                (< answer : ('a, 'b) Code.abstract;
+                   state : [> `TDet of 'a OD.Det.lstate
+                            | `TRan of ('a, 'c ref) Code.abstract ]
+                           list;
+                   .. >,
+                 ('a, GVC_Z19.contr * GVC_Z19.Dom.v * 'c) Code.abstract)
+                StateCPSMonad.monad
             end
         module OutDetRankPivot :
           functor (OD : OUTPUTDEP) ->
@@ -13917,17 +14531,20 @@ module G_GVC_Z19 :
                         ([> `TRan of 'b ] -> 'b option) * string
                       val decl :
                         unit ->
-                        ([> `TRan of ('b, int ref) Code.abstract ] as 'a)
-                        list ->
-                        ('a list ->
-                         ('b, int ref) Code.abstract ->
-                         ('b, 'c) Code.abstract) ->
-                        ('b, 'c) Code.abstract
+                        (< answer : ('a, 'b) Code.abstract;
+                           state : [> `TRan of ('a, int ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('a, int ref) Code.abstract)
+                        StateCPSMonad.monad
                       val succ :
                         unit ->
-                        ([> `TRan of ('b, int ref) Code.abstract ] as 'a)
-                        list ->
-                        ('a list -> ('b, unit) Code.abstract -> 'c) -> 'c
+                        (< answer : 'a;
+                           state : [> `TRan of ('b, int ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('b, unit) Code.abstract)
+                        StateCPSMonad.monad
                       module type RANK =
                         sig
                           type 'a tag_lstate = 'a tag_lstate_
@@ -13952,8 +14569,12 @@ module G_GVC_Z19 :
                         end
                       val fin :
                         unit ->
-                        ([> `TRan of ('b, 'c ref) Code.abstract ] as 'a) list ->
-                        ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd
+                        (< answer : 'a;
+                           state : [> `TRan of ('b, 'c ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('b, 'c) Code.abstract)
+                        StateCPSMonad.monad
                     end
                   module P :
                     sig
@@ -13978,26 +14599,32 @@ module G_GVC_Z19 :
                         ([> `TPivot of 'b ] -> 'b option) * string
                       val decl :
                         'a OD.PivotRep.ira ->
-                        ([> `TPivot of
-                              ('a, OD.PivotRep.perm_rep ref) Code.abstract ]
-                         as 'b)
-                        list ->
-                        ('b list ->
-                         ('c, unit) Code.abstract -> ('a, 'd) Code.abstract) ->
-                        ('a, 'd) Code.abstract
+                        (< answer : ('a, 'b) Code.abstract;
+                           state : [> `TPivot of
+                                        ('a, OD.PivotRep.perm_rep ref)
+                                        Code.abstract ]
+                                   list;
+                           .. >,
+                         ('c, unit) Code.abstract)
+                        StateCPSMonad.monad
                       val add :
                         'a OD.PivotRep.fra ->
-                        ([> `TPivot of
-                              ('a, OD.PivotRep.perm_rep ref) Code.abstract ]
-                         as 'b)
-                        list ->
-                        ('b list -> ('a, unit) Code.abstract option -> 'c) ->
-                        'c
+                        (< answer : 'b;
+                           state : [> `TPivot of
+                                        ('a, OD.PivotRep.perm_rep ref)
+                                        Code.abstract ]
+                                   list;
+                           .. >,
+                         ('a, unit) Code.abstract option)
+                        StateCPSMonad.monad
                       val fin :
                         unit ->
-                        ([> `TPivot of ('b, 'c ref) Code.abstract ] as 'a)
-                        list ->
-                        ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd
+                        (< answer : 'a;
+                           state : [> `TPivot of ('b, 'c ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('b, 'c) Code.abstract)
+                        StateCPSMonad.monad
                     end
                   module L :
                     sig
@@ -14029,15 +14656,14 @@ module G_GVC_Z19 :
               type res = GVC_Z19.contr * GVC_Z19.Dom.v * int * IF.P.perm_rep
               val make_result :
                 'a wmatrix ->
-                ([> `TDet of 'a OD.Det.lstate
-                  | `TPivot of ('a, 'c ref) Code.abstract
-                  | `TRan of ('a, 'd ref) Code.abstract ]
-                 as 'b)
-                list ->
-                ('b list ->
-                 ('a, GVC_Z19.contr * GVC_Z19.Dom.v * 'd * 'c) Code.abstract ->
-                 ('a, 'e) Code.abstract) ->
-                ('a, 'e) Code.abstract
+                (< answer : ('a, 'b) Code.abstract;
+                   state : [> `TDet of 'a OD.Det.lstate
+                            | `TPivot of ('a, 'c ref) Code.abstract
+                            | `TRan of ('a, 'd ref) Code.abstract ]
+                           list;
+                   .. >,
+                 ('a, GVC_Z19.contr * GVC_Z19.Dom.v * 'd * 'c) Code.abstract)
+                StateCPSMonad.monad
             end
         module Out_L_U :
           functor (OD : OUTPUTDEP) ->
@@ -14058,17 +14684,20 @@ module G_GVC_Z19 :
                         ([> `TRan of 'b ] -> 'b option) * string
                       val decl :
                         unit ->
-                        ([> `TRan of ('b, int ref) Code.abstract ] as 'a)
-                        list ->
-                        ('a list ->
-                         ('b, int ref) Code.abstract ->
-                         ('b, 'c) Code.abstract) ->
-                        ('b, 'c) Code.abstract
+                        (< answer : ('a, 'b) Code.abstract;
+                           state : [> `TRan of ('a, int ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('a, int ref) Code.abstract)
+                        StateCPSMonad.monad
                       val succ :
                         unit ->
-                        ([> `TRan of ('b, int ref) Code.abstract ] as 'a)
-                        list ->
-                        ('a list -> ('b, unit) Code.abstract -> 'c) -> 'c
+                        (< answer : 'a;
+                           state : [> `TRan of ('b, int ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('b, unit) Code.abstract)
+                        StateCPSMonad.monad
                       module type RANK =
                         sig
                           type 'a tag_lstate = 'a tag_lstate_
@@ -14116,26 +14745,32 @@ module G_GVC_Z19 :
                         ([> `TPivot of 'b ] -> 'b option) * string
                       val decl :
                         'a OD.PivotRep.ira ->
-                        ([> `TPivot of
-                              ('a, OD.PivotRep.perm_rep ref) Code.abstract ]
-                         as 'b)
-                        list ->
-                        ('b list ->
-                         ('c, unit) Code.abstract -> ('a, 'd) Code.abstract) ->
-                        ('a, 'd) Code.abstract
+                        (< answer : ('a, 'b) Code.abstract;
+                           state : [> `TPivot of
+                                        ('a, OD.PivotRep.perm_rep ref)
+                                        Code.abstract ]
+                                   list;
+                           .. >,
+                         ('c, unit) Code.abstract)
+                        StateCPSMonad.monad
                       val add :
                         'a OD.PivotRep.fra ->
-                        ([> `TPivot of
-                              ('a, OD.PivotRep.perm_rep ref) Code.abstract ]
-                         as 'b)
-                        list ->
-                        ('b list -> ('a, unit) Code.abstract option -> 'c) ->
-                        'c
+                        (< answer : 'b;
+                           state : [> `TPivot of
+                                        ('a, OD.PivotRep.perm_rep ref)
+                                        Code.abstract ]
+                                   list;
+                           .. >,
+                         ('a, unit) Code.abstract option)
+                        StateCPSMonad.monad
                       val fin :
                         unit ->
-                        ([> `TPivot of ('b, 'c ref) Code.abstract ] as 'a)
-                        list ->
-                        ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd
+                        (< answer : 'a;
+                           state : [> `TPivot of ('b, 'c ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('b, 'c) Code.abstract)
+                        StateCPSMonad.monad
                     end
                   module L :
                     sig
@@ -14149,35 +14784,40 @@ module G_GVC_Z19 :
                         ([> `TLower of 'b ] -> 'b option) * string
                       val decl :
                         ('a, 'b) Code.abstract ->
-                        ([> `TLower of ('a, 'b) Code.abstract ] as 'c) list ->
-                        ('c list ->
-                         ('a, 'b) Code.abstract -> ('a, 'd) Code.abstract) ->
-                        ('a, 'd) Code.abstract
+                        (< answer : ('a, 'c) Code.abstract;
+                           state : [> `TLower of ('a, 'b) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('a, 'b) Code.abstract)
+                        StateCPSMonad.monad
                       val updt :
                         'a GVC_Z19.vc ->
                         ('a, int) Code.abstract ->
                         ('a, int) Code.abstract ->
                         'a GVC_Z19.vo ->
                         'a GVC_Z19.vo ->
-                        (([> `TLower of 'a GVC_Z19.vc ] as 'b) list ->
-                         ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c)
-                        option
+                        (< answer : 'b;
+                           state : [> `TLower of 'a GVC_Z19.vc ] list; .. >,
+                         ('a, unit) Code.abstract)
+                        StateCPSMonad.monad option
                       val fin :
                         unit ->
-                        ([> `TLower of 'b ] as 'a) list ->
-                        ('a list -> 'b -> 'c) -> 'c
+                        (< answer : 'a; state : [> `TLower of 'b ] list; .. >,
+                         'b)
+                        StateCPSMonad.monad
                       val wants_pack : bool
                     end
                 end
               type res = GVC_Z19.contr * GVC_Z19.contr * IF.P.perm_rep
               val make_result :
                 'a wmatrix ->
-                ([> `TLower of ('a, 'c) Code.abstract
-                  | `TPivot of ('a, 'd ref) Code.abstract ]
-                 as 'b)
-                list ->
-                ('b list -> ('a, GVC_Z19.contr * 'c * 'd) Code.abstract -> 'e) ->
-                'e
+                (< answer : 'b;
+                   state : [> `TLower of ('a, 'c) Code.abstract
+                            | `TPivot of ('a, 'd ref) Code.abstract ]
+                           list;
+                   .. >,
+                 ('a, GVC_Z19.contr * 'c * 'd) Code.abstract)
+                StateCPSMonad.monad
             end
         module Out_LU_Packed :
           functor (OD : OUTPUTDEP) ->
@@ -14198,17 +14838,20 @@ module G_GVC_Z19 :
                         ([> `TRan of 'b ] -> 'b option) * string
                       val decl :
                         unit ->
-                        ([> `TRan of ('b, int ref) Code.abstract ] as 'a)
-                        list ->
-                        ('a list ->
-                         ('b, int ref) Code.abstract ->
-                         ('b, 'c) Code.abstract) ->
-                        ('b, 'c) Code.abstract
+                        (< answer : ('a, 'b) Code.abstract;
+                           state : [> `TRan of ('a, int ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('a, int ref) Code.abstract)
+                        StateCPSMonad.monad
                       val succ :
                         unit ->
-                        ([> `TRan of ('b, int ref) Code.abstract ] as 'a)
-                        list ->
-                        ('a list -> ('b, unit) Code.abstract -> 'c) -> 'c
+                        (< answer : 'a;
+                           state : [> `TRan of ('b, int ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('b, unit) Code.abstract)
+                        StateCPSMonad.monad
                       module type RANK =
                         sig
                           type 'a tag_lstate = 'a tag_lstate_
@@ -14256,26 +14899,32 @@ module G_GVC_Z19 :
                         ([> `TPivot of 'b ] -> 'b option) * string
                       val decl :
                         'a OD.PivotRep.ira ->
-                        ([> `TPivot of
-                              ('a, OD.PivotRep.perm_rep ref) Code.abstract ]
-                         as 'b)
-                        list ->
-                        ('b list ->
-                         ('c, unit) Code.abstract -> ('a, 'd) Code.abstract) ->
-                        ('a, 'd) Code.abstract
+                        (< answer : ('a, 'b) Code.abstract;
+                           state : [> `TPivot of
+                                        ('a, OD.PivotRep.perm_rep ref)
+                                        Code.abstract ]
+                                   list;
+                           .. >,
+                         ('c, unit) Code.abstract)
+                        StateCPSMonad.monad
                       val add :
                         'a OD.PivotRep.fra ->
-                        ([> `TPivot of
-                              ('a, OD.PivotRep.perm_rep ref) Code.abstract ]
-                         as 'b)
-                        list ->
-                        ('b list -> ('a, unit) Code.abstract option -> 'c) ->
-                        'c
+                        (< answer : 'b;
+                           state : [> `TPivot of
+                                        ('a, OD.PivotRep.perm_rep ref)
+                                        Code.abstract ]
+                                   list;
+                           .. >,
+                         ('a, unit) Code.abstract option)
+                        StateCPSMonad.monad
                       val fin :
                         unit ->
-                        ([> `TPivot of ('b, 'c ref) Code.abstract ] as 'a)
-                        list ->
-                        ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd
+                        (< answer : 'a;
+                           state : [> `TPivot of ('b, 'c ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('b, 'c) Code.abstract)
+                        StateCPSMonad.monad
                     end
                   module L :
                     sig
@@ -14289,23 +14938,28 @@ module G_GVC_Z19 :
                         ([> `TLower of 'b ] -> 'b option) * string
                       val decl :
                         'a ->
-                        ([> `TLower of 'a ] as 'b) list ->
-                        ('b list -> 'a -> 'c) -> 'c
+                        (< answer : 'b; state : [> `TLower of 'a ] list; .. >,
+                         'a)
+                        StateCPSMonad.monad
                       val updt : 'a -> 'b -> 'c -> 'd -> 'e -> 'f option
                       val fin :
                         unit ->
-                        ([> `TLower of 'b ] as 'a) list ->
-                        ('a list -> 'b -> 'c) -> 'c
+                        (< answer : 'a; state : [> `TLower of 'b ] list; .. >,
+                         'b)
+                        StateCPSMonad.monad
                       val wants_pack : bool
                     end
                 end
               type res = GVC_Z19.contr * IF.P.perm_rep
               val make_result :
                 'a ->
-                ([> `TLower of ('c, 'd) Code.abstract
-                  | `TPivot of ('c, 'e ref) Code.abstract ]
-                 as 'b)
-                list -> ('b list -> ('c, 'd * 'e) Code.abstract -> 'f) -> 'f
+                (< answer : 'b;
+                   state : [> `TLower of ('c, 'd) Code.abstract
+                            | `TPivot of ('c, 'e ref) Code.abstract ]
+                           list;
+                   .. >,
+                 ('c, 'd * 'e) Code.abstract)
+                StateCPSMonad.monad
             end
         module type INTERNAL_FEATURES =
           sig
@@ -14454,17 +15108,16 @@ module G_GVC_Z19 :
                 list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
               val init :
                 ('a, F.Input.inp) Code.abstract ->
-                ([> `TDet of 'a F.Det.lstate
-                  | `TLower of ('a, GVC_Z19.contr) Code.abstract
-                  | `TPivot of 'a F.Output(F).IF.P.lstate
-                  | `TRan of 'a GEF.TrackRank.lstate ]
-                 as 'b)
-                list ->
-                ('b list ->
+                (< answer : ('a, 'b) Code.abstract;
+                   state : [> `TDet of 'a F.Det.lstate
+                            | `TLower of ('a, GVC_Z19.contr) Code.abstract
+                            | `TPivot of 'a F.Output(F).IF.P.lstate
+                            | `TRan of 'a GEF.TrackRank.lstate ]
+                           list;
+                   .. >,
                  'a wmatrix * ('a, int ref) Code.abstract *
-                 ('a, int ref) Code.abstract * ('a, int) Code.abstract ->
-                 ('a, 'c) Code.abstract) ->
-                ('a, 'c) Code.abstract
+                 ('a, int ref) Code.abstract * ('a, int) Code.abstract)
+                StateCPSMonad.monad
               val forward_elim :
                 'a wmatrix * ('a, int ref) Code.abstract *
                 ('a, int ref) Code.abstract * ('a, int) Code.abstract ->
@@ -14476,15 +15129,15 @@ module G_GVC_Z19 :
                 list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
               val gen :
                 ('a, F.Input.inp) Code.abstract ->
-                ([> `TDet of 'a F.Det.lstate
-                  | `TLower of 'a O.IF.L.lstate
-                  | `TPivot of 'a O.IF.P.lstate
-                  | `TRan of 'a GEF.TrackRank.lstate ]
-                 as 'b)
-                list ->
-                ('b list ->
-                 ('a, O.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-                ('a, 'c) Code.abstract
+                (< answer : ('a, 'b) Code.abstract;
+                   state : [> `TDet of 'a F.Det.lstate
+                            | `TLower of 'a O.IF.L.lstate
+                            | `TPivot of 'a O.IF.P.lstate
+                            | `TRan of 'a GEF.TrackRank.lstate ]
+                           list;
+                   .. >,
+                 ('a, O.res) Code.abstract)
+                StateCPSMonad.monad
             end
       end
     module Solve :
@@ -14505,11 +15158,9 @@ module G_GVC_Z19 :
             type rhs = GVC_Z19.contr
             val get_input :
               ('a, 'b * 'c) Code.abstract ->
-              'd ->
-              ('d ->
-               ('a, 'b) Code.abstract * ('a, 'c) Code.abstract ->
-               ('a, 'e) Code.abstract) ->
-              ('a, 'e) Code.abstract
+              (< answer : ('a, 'd) Code.abstract; state : 'e; .. >,
+               ('a, 'b) Code.abstract * ('a, 'c) Code.abstract)
+              StateCPSMonad.monad
           end
         module type OUTPUT =
           sig
@@ -14665,18 +15316,19 @@ module G_GVC_Z19 :
                     list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
                   val init :
                     ('a, GVC_Z19.contr * int) Code.abstract ->
-                    ([> `TDet of 'a F.Det.lstate
-                      | `TLower of ('a, GVC_Z19.contr) Code.abstract
-                      | `TPivot of
-                          ('a, GEF.PermList.perm_rep ref) Code.abstract
-                      | `TRan of 'a GEF.TrackRank.lstate ]
-                     as 'b)
-                    list ->
-                    ('b list ->
+                    (< answer : ('a, 'b) Code.abstract;
+                       state : [> `TDet of 'a F.Det.lstate
+                                | `TLower of
+                                    ('a, GVC_Z19.contr) Code.abstract
+                                | `TPivot of
+                                    ('a, GEF.PermList.perm_rep ref)
+                                    Code.abstract
+                                | `TRan of 'a GEF.TrackRank.lstate ]
+                               list;
+                       .. >,
                      'a wmatrix * ('a, int ref) Code.abstract *
-                     ('a, int ref) Code.abstract * ('a, int) Code.abstract ->
-                     ('a, 'c) Code.abstract) ->
-                    ('a, 'c) Code.abstract
+                     ('a, int ref) Code.abstract * ('a, int) Code.abstract)
+                    StateCPSMonad.monad
                   val forward_elim :
                     'a wmatrix * ('a, int ref) Code.abstract *
                     ('a, int ref) Code.abstract * ('a, int) Code.abstract ->
@@ -14689,23 +15341,22 @@ module G_GVC_Z19 :
                     list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
                   val gen :
                     ('a, GVC_Z19.contr * int) Code.abstract ->
-                    ([> `TDet of 'a F.Det.lstate
-                      | `TLower of 'a O.IF.L.lstate
-                      | `TPivot of 'a O.IF.P.lstate
-                      | `TRan of 'a GEF.TrackRank.lstate ]
-                     as 'b)
-                    list ->
-                    ('b list ->
-                     ('a, O.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-                    ('a, 'c) Code.abstract
+                    (< answer : ('a, 'b) Code.abstract;
+                       state : [> `TDet of 'a F.Det.lstate
+                                | `TLower of 'a O.IF.L.lstate
+                                | `TPivot of 'a O.IF.P.lstate
+                                | `TRan of 'a GEF.TrackRank.lstate ]
+                               list;
+                       .. >,
+                     ('a, O.res) Code.abstract)
+                    StateCPSMonad.monad
                 end
               val init :
                 ('a, F.Input.inp) Code.abstract ->
-                'b ->
-                ('b ->
+                (< answer : 'b; state : 'c; .. >,
                  ('a, GVC_Z19.contr) Code.abstract *
-                 ('a, F.Input.rhs) Code.abstract -> 'c) ->
-                'c
+                 ('a, F.Input.rhs) Code.abstract)
+                StateCPSMonad.monad
               val back_elim :
                 'a GVC_Z19.vc ->
                 ('a, int) Code.abstract ->
@@ -14713,15 +15364,15 @@ module G_GVC_Z19 :
                 'b -> ('b -> ('a, GVC_Z19.contr) Code.abstract -> 'c) -> 'c
               val gen :
                 ('a, F.Input.inp) Code.abstract ->
-                ([> `TDet of 'a F.Det.lstate
-                  | `TLower of 'a GE'.O.IF.L.lstate
-                  | `TPivot of 'a GE'.O.IF.P.lstate
-                  | `TRan of 'a GEF.TrackRank.lstate ]
-                 as 'b)
-                list ->
-                ('b list ->
-                 ('a, F.Output.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-                ('a, 'c) Code.abstract
+                (< answer : ('a, 'b) Code.abstract;
+                   state : [> `TDet of 'a F.Det.lstate
+                            | `TLower of 'a GE'.O.IF.L.lstate
+                            | `TPivot of 'a GE'.O.IF.P.lstate
+                            | `TRan of 'a GEF.TrackRank.lstate ]
+                           list;
+                   .. >,
+                 ('a, F.Output.res) Code.abstract)
+                StateCPSMonad.monad
             end
       end
   end
@@ -14848,39 +15499,56 @@ module G_GFC_F :
           ('a -> [> `TDet of 'a ]) * ([> `TDet of 'b ] -> 'b option) * string
         val decl :
           unit ->
-          ([> `TDet of
-                ('b, int ref) Code.abstract *
-                ('b, GFC_F.Dom.v ref) Code.abstract ]
-           as 'a)
-          list ->
-          ('a list -> ('c, unit) Code.abstract -> ('b, 'd) Code.abstract) ->
-          ('b, 'd) Code.abstract
+          (< answer : ('a, 'b) Code.abstract;
+             state : [> `TDet of
+                          ('a, int ref) Code.abstract *
+                          ('a, GFC_F.Dom.v ref) Code.abstract ]
+                     list;
+             .. >,
+           ('c, unit) Code.abstract)
+          StateCPSMonad.monad
         val upd_sign :
           unit ->
-          ([> `TDet of ('b, int ref) Code.abstract * 'c ] as 'a) list ->
-          ('a list -> ('b, unit) Code.abstract option -> 'd) -> 'd
+          (< answer : 'a;
+             state : [> `TDet of ('b, int ref) Code.abstract * 'c ] list;
+             .. >,
+           ('b, unit) Code.abstract option)
+          StateCPSMonad.monad
         val zero_sign :
           unit ->
-          ([> `TDet of ('b, int ref) Code.abstract * 'c ] as 'a) list ->
-          ('a list -> ('b, unit) Code.abstract -> 'd) -> 'd
+          (< answer : 'a;
+             state : [> `TDet of ('b, int ref) Code.abstract * 'c ] list;
+             .. >,
+           ('b, unit) Code.abstract)
+          StateCPSMonad.monad
         val get :
           unit ->
-          ([> `TDet of 'b * 'c ] as 'a) list -> ('a list -> 'c -> 'd) -> 'd
+          (< answer : 'a; state : [> `TDet of 'b * 'c ] list; .. >, 'c)
+          StateCPSMonad.monad
         val set :
           ('a, 'b) Code.abstract ->
-          ([> `TDet of 'd * ('a, 'b ref) Code.abstract ] as 'c) list ->
-          ('c list -> ('a, unit) Code.abstract -> 'e) -> 'e
+          (< answer : 'c;
+             state : [> `TDet of 'd * ('a, 'b ref) Code.abstract ] list; .. >,
+           ('a, unit) Code.abstract)
+          StateCPSMonad.monad
         val acc :
           'a GFC_F.Dom.vc ->
-          ([> `TDet of 'c * ('a, GFC_F.Dom.v ref) Code.abstract ] as 'b) list ->
-          ('b list -> ('a, unit) Code.abstract -> 'd) -> 'd
+          (< answer : 'b;
+             state : [> `TDet of 'c * ('a, GFC_F.Dom.v ref) Code.abstract ]
+                     list;
+             .. >,
+           ('a, unit) Code.abstract)
+          StateCPSMonad.monad
         val fin :
           unit ->
-          ([> `TDet of
-                ('b, int ref) Code.abstract *
-                ('b, GFC_F.Dom.v ref) Code.abstract ]
-           as 'a)
-          list -> ('a list -> ('b, GFC_F.Dom.v) Code.abstract -> 'c) -> 'c
+          (< answer : 'a;
+             state : [> `TDet of
+                          ('b, int ref) Code.abstract *
+                          ('b, GFC_F.Dom.v ref) Code.abstract ]
+                     list;
+             .. >,
+           ('b, GFC_F.Dom.v) Code.abstract)
+          StateCPSMonad.monad
       end
     module type UPDATE =
       functor (D : DETERMINANT) ->
@@ -14913,7 +15581,9 @@ module G_GFC_F :
                 'a GFC_F.Dom.vc ->
                 'a GFC_F.Dom.vc ->
                 'a GFC_F.Dom.vc ->
-                ('a GFC_F.Dom.vc -> 'b) -> 'c -> 'd -> ('d -> 'b -> 'e) -> 'e
+                ('a GFC_F.Dom.vc -> 'b) ->
+                'c ->
+                (< answer : 'd; state : 'e; .. >, 'b) StateCPSMonad.monad
               val update_det :
                 ('a, GFC_F.Dom.v) Code.abstract ->
                 (< answer : 'b; classif : 'a;
@@ -14933,7 +15603,7 @@ module G_GFC_F :
                 'a GFC_F.Dom.vc ->
                 ('a GFC_F.Dom.vc -> 'b) ->
                 ('a, GFC_F.Dom.v ref) Code.abstract ->
-                'c -> ('c -> 'b -> 'd) -> 'd
+                (< answer : 'c; state : 'd; .. >, 'b) StateCPSMonad.monad
               val update_det :
                 ('a, GFC_F.Dom.v) Code.abstract ->
                 (< answer : 'b; classif : 'a;
@@ -14996,21 +15666,23 @@ module G_GFC_F :
               ([> `TLower of 'b ] -> 'b option) * string
             val decl :
               ('a, 'b) Code.abstract ->
-              ([> `TLower of ('a, 'b) Code.abstract ] as 'c) list ->
-              ('c list -> ('a, 'b) Code.abstract -> ('a, 'd) Code.abstract) ->
-              ('a, 'd) Code.abstract
+              (< answer : ('a, 'c) Code.abstract;
+                 state : [> `TLower of ('a, 'b) Code.abstract ] list; .. >,
+               ('a, 'b) Code.abstract)
+              StateCPSMonad.monad
             val updt :
               'a GFC_F.vc ->
               ('a, int) Code.abstract ->
               ('a, int) Code.abstract ->
               'a GFC_F.vo ->
               'a GFC_F.vo ->
-              (([> `TLower of 'a GFC_F.vc ] as 'b) list ->
-               ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c)
-              option
+              (< answer : 'b; state : [> `TLower of 'a GFC_F.vc ] list; .. >,
+               ('a, unit) Code.abstract)
+              StateCPSMonad.monad option
             val fin :
               unit ->
-              ([> `TLower of 'b ] as 'a) list -> ('a list -> 'b -> 'c) -> 'c
+              (< answer : 'a; state : [> `TLower of 'b ] list; .. >, 'b)
+              StateCPSMonad.monad
             val wants_pack : bool
           end
         module PackedLower :
@@ -15025,11 +15697,13 @@ module G_GFC_F :
               ([> `TLower of 'b ] -> 'b option) * string
             val decl :
               'a ->
-              ([> `TLower of 'a ] as 'b) list -> ('b list -> 'a -> 'c) -> 'c
+              (< answer : 'b; state : [> `TLower of 'a ] list; .. >, 'a)
+              StateCPSMonad.monad
             val updt : 'a -> 'b -> 'c -> 'd -> 'e -> 'f option
             val fin :
               unit ->
-              ([> `TLower of 'b ] as 'a) list -> ('a list -> 'b -> 'c) -> 'c
+              (< answer : 'a; state : [> `TLower of 'b ] list; .. >, 'b)
+              StateCPSMonad.monad
             val wants_pack : bool
           end
         module NoLower :
@@ -15079,10 +15753,9 @@ module G_GFC_F :
             type inp = GFC_F.contr * int
             val get_input :
               ('a, 'b * 'c) Code.abstract ->
-              'd ->
-              ('d ->
-               ('a, 'b) Code.abstract * ('a, 'c) Code.abstract * bool -> 'e) ->
-              'e
+              (< answer : 'd; state : 'e; .. >,
+               ('a, 'b) Code.abstract * ('a, 'c) Code.abstract * bool)
+              StateCPSMonad.monad
           end
         module RowPivot :
           functor (Det : DETERMINANT) ->
@@ -15091,12 +15764,13 @@ module G_GFC_F :
                 val findpivot :
                   'a wmatrix ->
                   'a curpos ->
-                  ([> `TDet of 'a Det.lstate | `TPivot of 'a P.lstate ] as 'b)
-                  list ->
-                  ('b list ->
-                   ('a, GFC_F.Dom.v option) Code.abstract ->
-                   ('a, 'c) Code.abstract) ->
-                  ('a, 'c) Code.abstract
+                  (< answer : ('a, 'b) Code.abstract;
+                     state : [> `TDet of 'a Det.lstate
+                              | `TPivot of 'a P.lstate ]
+                             list;
+                     .. >,
+                   ('a, GFC_F.Dom.v option) Code.abstract)
+                  StateCPSMonad.monad
               end
         module FullPivot :
           functor (Det : DETERMINANT) ->
@@ -15105,12 +15779,13 @@ module G_GFC_F :
                 val findpivot :
                   'a wmatrix ->
                   'a curpos ->
-                  ([> `TDet of 'a Det.lstate | `TPivot of 'a P.lstate ] as 'b)
-                  list ->
-                  ('b list ->
-                   ('a, GFC_F.Dom.v option) Code.abstract ->
-                   ('a, 'c) Code.abstract) ->
-                  ('a, 'c) Code.abstract
+                  (< answer : ('a, 'b) Code.abstract;
+                     state : [> `TDet of 'a Det.lstate
+                              | `TPivot of 'a P.lstate ]
+                             list;
+                     .. >,
+                   ('a, GFC_F.Dom.v option) Code.abstract)
+                  StateCPSMonad.monad
               end
         module NoPivot :
           functor (Det : DETERMINANT) ->
@@ -15144,17 +15819,20 @@ module G_GFC_F :
                         ([> `TRan of 'b ] -> 'b option) * string
                       val decl :
                         unit ->
-                        ([> `TRan of ('b, int ref) Code.abstract ] as 'a)
-                        list ->
-                        ('a list ->
-                         ('b, int ref) Code.abstract ->
-                         ('b, 'c) Code.abstract) ->
-                        ('b, 'c) Code.abstract
+                        (< answer : ('a, 'b) Code.abstract;
+                           state : [> `TRan of ('a, int ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('a, int ref) Code.abstract)
+                        StateCPSMonad.monad
                       val succ :
                         unit ->
-                        ([> `TRan of ('b, int ref) Code.abstract ] as 'a)
-                        list ->
-                        ('a list -> ('b, unit) Code.abstract -> 'c) -> 'c
+                        (< answer : 'a;
+                           state : [> `TRan of ('b, int ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('b, unit) Code.abstract)
+                        StateCPSMonad.monad
                       module type RANK =
                         sig
                           type 'a tag_lstate = 'a tag_lstate_
@@ -15261,17 +15939,20 @@ module G_GFC_F :
                         ([> `TRan of 'b ] -> 'b option) * string
                       val decl :
                         unit ->
-                        ([> `TRan of ('b, int ref) Code.abstract ] as 'a)
-                        list ->
-                        ('a list ->
-                         ('b, int ref) Code.abstract ->
-                         ('b, 'c) Code.abstract) ->
-                        ('b, 'c) Code.abstract
+                        (< answer : ('a, 'b) Code.abstract;
+                           state : [> `TRan of ('a, int ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('a, int ref) Code.abstract)
+                        StateCPSMonad.monad
                       val succ :
                         unit ->
-                        ([> `TRan of ('b, int ref) Code.abstract ] as 'a)
-                        list ->
-                        ('a list -> ('b, unit) Code.abstract -> 'c) -> 'c
+                        (< answer : 'a;
+                           state : [> `TRan of ('b, int ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('b, unit) Code.abstract)
+                        StateCPSMonad.monad
                       module type RANK =
                         sig
                           type 'a tag_lstate = 'a tag_lstate_
@@ -15356,11 +16037,10 @@ module G_GFC_F :
               type res = GFC_F.contr * GFC_F.Dom.v
               val make_result :
                 'a wmatrix ->
-                ([> `TDet of 'a OD.Det.lstate ] as 'b) list ->
-                ('b list ->
-                 ('a, GFC_F.contr * GFC_F.Dom.v) Code.abstract ->
-                 ('a, 'c) Code.abstract) ->
-                ('a, 'c) Code.abstract
+                (< answer : ('a, 'b) Code.abstract;
+                   state : [> `TDet of 'a OD.Det.lstate ] list; .. >,
+                 ('a, GFC_F.contr * GFC_F.Dom.v) Code.abstract)
+                StateCPSMonad.monad
             end
         module OutRank :
           functor (OD : OUTPUTDEP) ->
@@ -15381,17 +16061,20 @@ module G_GFC_F :
                         ([> `TRan of 'b ] -> 'b option) * string
                       val decl :
                         unit ->
-                        ([> `TRan of ('b, int ref) Code.abstract ] as 'a)
-                        list ->
-                        ('a list ->
-                         ('b, int ref) Code.abstract ->
-                         ('b, 'c) Code.abstract) ->
-                        ('b, 'c) Code.abstract
+                        (< answer : ('a, 'b) Code.abstract;
+                           state : [> `TRan of ('a, int ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('a, int ref) Code.abstract)
+                        StateCPSMonad.monad
                       val succ :
                         unit ->
-                        ([> `TRan of ('b, int ref) Code.abstract ] as 'a)
-                        list ->
-                        ('a list -> ('b, unit) Code.abstract -> 'c) -> 'c
+                        (< answer : 'a;
+                           state : [> `TRan of ('b, int ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('b, unit) Code.abstract)
+                        StateCPSMonad.monad
                       module type RANK =
                         sig
                           type 'a tag_lstate = 'a tag_lstate_
@@ -15416,8 +16099,12 @@ module G_GFC_F :
                         end
                       val fin :
                         unit ->
-                        ([> `TRan of ('b, 'c ref) Code.abstract ] as 'a) list ->
-                        ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd
+                        (< answer : 'a;
+                           state : [> `TRan of ('b, 'c ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('b, 'c) Code.abstract)
+                        StateCPSMonad.monad
                     end
                   module P :
                     sig
@@ -15479,8 +16166,11 @@ module G_GFC_F :
               type res = GFC_F.contr * int
               val make_result :
                 'a wmatrix ->
-                ([> `TRan of ('a, 'c ref) Code.abstract ] as 'b) list ->
-                ('b list -> ('a, GFC_F.contr * 'c) Code.abstract -> 'd) -> 'd
+                (< answer : 'b;
+                   state : [> `TRan of ('a, 'c ref) Code.abstract ] list;
+                   .. >,
+                 ('a, GFC_F.contr * 'c) Code.abstract)
+                StateCPSMonad.monad
             end
         module OutDetRank :
           functor (OD : OUTPUTDEP) ->
@@ -15501,17 +16191,20 @@ module G_GFC_F :
                         ([> `TRan of 'b ] -> 'b option) * string
                       val decl :
                         unit ->
-                        ([> `TRan of ('b, int ref) Code.abstract ] as 'a)
-                        list ->
-                        ('a list ->
-                         ('b, int ref) Code.abstract ->
-                         ('b, 'c) Code.abstract) ->
-                        ('b, 'c) Code.abstract
+                        (< answer : ('a, 'b) Code.abstract;
+                           state : [> `TRan of ('a, int ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('a, int ref) Code.abstract)
+                        StateCPSMonad.monad
                       val succ :
                         unit ->
-                        ([> `TRan of ('b, int ref) Code.abstract ] as 'a)
-                        list ->
-                        ('a list -> ('b, unit) Code.abstract -> 'c) -> 'c
+                        (< answer : 'a;
+                           state : [> `TRan of ('b, int ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('b, unit) Code.abstract)
+                        StateCPSMonad.monad
                       module type RANK =
                         sig
                           type 'a tag_lstate = 'a tag_lstate_
@@ -15536,8 +16229,12 @@ module G_GFC_F :
                         end
                       val fin :
                         unit ->
-                        ([> `TRan of ('b, 'c ref) Code.abstract ] as 'a) list ->
-                        ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd
+                        (< answer : 'a;
+                           state : [> `TRan of ('b, 'c ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('b, 'c) Code.abstract)
+                        StateCPSMonad.monad
                     end
                   module P :
                     sig
@@ -15599,14 +16296,13 @@ module G_GFC_F :
               type res = GFC_F.contr * GFC_F.Dom.v * int
               val make_result :
                 'a wmatrix ->
-                ([> `TDet of 'a OD.Det.lstate
-                  | `TRan of ('a, 'c ref) Code.abstract ]
-                 as 'b)
-                list ->
-                ('b list ->
-                 ('a, GFC_F.contr * GFC_F.Dom.v * 'c) Code.abstract ->
-                 ('a, 'd) Code.abstract) ->
-                ('a, 'd) Code.abstract
+                (< answer : ('a, 'b) Code.abstract;
+                   state : [> `TDet of 'a OD.Det.lstate
+                            | `TRan of ('a, 'c ref) Code.abstract ]
+                           list;
+                   .. >,
+                 ('a, GFC_F.contr * GFC_F.Dom.v * 'c) Code.abstract)
+                StateCPSMonad.monad
             end
         module OutDetRankPivot :
           functor (OD : OUTPUTDEP) ->
@@ -15627,17 +16323,20 @@ module G_GFC_F :
                         ([> `TRan of 'b ] -> 'b option) * string
                       val decl :
                         unit ->
-                        ([> `TRan of ('b, int ref) Code.abstract ] as 'a)
-                        list ->
-                        ('a list ->
-                         ('b, int ref) Code.abstract ->
-                         ('b, 'c) Code.abstract) ->
-                        ('b, 'c) Code.abstract
+                        (< answer : ('a, 'b) Code.abstract;
+                           state : [> `TRan of ('a, int ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('a, int ref) Code.abstract)
+                        StateCPSMonad.monad
                       val succ :
                         unit ->
-                        ([> `TRan of ('b, int ref) Code.abstract ] as 'a)
-                        list ->
-                        ('a list -> ('b, unit) Code.abstract -> 'c) -> 'c
+                        (< answer : 'a;
+                           state : [> `TRan of ('b, int ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('b, unit) Code.abstract)
+                        StateCPSMonad.monad
                       module type RANK =
                         sig
                           type 'a tag_lstate = 'a tag_lstate_
@@ -15662,8 +16361,12 @@ module G_GFC_F :
                         end
                       val fin :
                         unit ->
-                        ([> `TRan of ('b, 'c ref) Code.abstract ] as 'a) list ->
-                        ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd
+                        (< answer : 'a;
+                           state : [> `TRan of ('b, 'c ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('b, 'c) Code.abstract)
+                        StateCPSMonad.monad
                     end
                   module P :
                     sig
@@ -15688,26 +16391,32 @@ module G_GFC_F :
                         ([> `TPivot of 'b ] -> 'b option) * string
                       val decl :
                         'a OD.PivotRep.ira ->
-                        ([> `TPivot of
-                              ('a, OD.PivotRep.perm_rep ref) Code.abstract ]
-                         as 'b)
-                        list ->
-                        ('b list ->
-                         ('c, unit) Code.abstract -> ('a, 'd) Code.abstract) ->
-                        ('a, 'd) Code.abstract
+                        (< answer : ('a, 'b) Code.abstract;
+                           state : [> `TPivot of
+                                        ('a, OD.PivotRep.perm_rep ref)
+                                        Code.abstract ]
+                                   list;
+                           .. >,
+                         ('c, unit) Code.abstract)
+                        StateCPSMonad.monad
                       val add :
                         'a OD.PivotRep.fra ->
-                        ([> `TPivot of
-                              ('a, OD.PivotRep.perm_rep ref) Code.abstract ]
-                         as 'b)
-                        list ->
-                        ('b list -> ('a, unit) Code.abstract option -> 'c) ->
-                        'c
+                        (< answer : 'b;
+                           state : [> `TPivot of
+                                        ('a, OD.PivotRep.perm_rep ref)
+                                        Code.abstract ]
+                                   list;
+                           .. >,
+                         ('a, unit) Code.abstract option)
+                        StateCPSMonad.monad
                       val fin :
                         unit ->
-                        ([> `TPivot of ('b, 'c ref) Code.abstract ] as 'a)
-                        list ->
-                        ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd
+                        (< answer : 'a;
+                           state : [> `TPivot of ('b, 'c ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('b, 'c) Code.abstract)
+                        StateCPSMonad.monad
                     end
                   module L :
                     sig
@@ -15739,15 +16448,14 @@ module G_GFC_F :
               type res = GFC_F.contr * GFC_F.Dom.v * int * IF.P.perm_rep
               val make_result :
                 'a wmatrix ->
-                ([> `TDet of 'a OD.Det.lstate
-                  | `TPivot of ('a, 'c ref) Code.abstract
-                  | `TRan of ('a, 'd ref) Code.abstract ]
-                 as 'b)
-                list ->
-                ('b list ->
-                 ('a, GFC_F.contr * GFC_F.Dom.v * 'd * 'c) Code.abstract ->
-                 ('a, 'e) Code.abstract) ->
-                ('a, 'e) Code.abstract
+                (< answer : ('a, 'b) Code.abstract;
+                   state : [> `TDet of 'a OD.Det.lstate
+                            | `TPivot of ('a, 'c ref) Code.abstract
+                            | `TRan of ('a, 'd ref) Code.abstract ]
+                           list;
+                   .. >,
+                 ('a, GFC_F.contr * GFC_F.Dom.v * 'd * 'c) Code.abstract)
+                StateCPSMonad.monad
             end
         module Out_L_U :
           functor (OD : OUTPUTDEP) ->
@@ -15768,17 +16476,20 @@ module G_GFC_F :
                         ([> `TRan of 'b ] -> 'b option) * string
                       val decl :
                         unit ->
-                        ([> `TRan of ('b, int ref) Code.abstract ] as 'a)
-                        list ->
-                        ('a list ->
-                         ('b, int ref) Code.abstract ->
-                         ('b, 'c) Code.abstract) ->
-                        ('b, 'c) Code.abstract
+                        (< answer : ('a, 'b) Code.abstract;
+                           state : [> `TRan of ('a, int ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('a, int ref) Code.abstract)
+                        StateCPSMonad.monad
                       val succ :
                         unit ->
-                        ([> `TRan of ('b, int ref) Code.abstract ] as 'a)
-                        list ->
-                        ('a list -> ('b, unit) Code.abstract -> 'c) -> 'c
+                        (< answer : 'a;
+                           state : [> `TRan of ('b, int ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('b, unit) Code.abstract)
+                        StateCPSMonad.monad
                       module type RANK =
                         sig
                           type 'a tag_lstate = 'a tag_lstate_
@@ -15826,26 +16537,32 @@ module G_GFC_F :
                         ([> `TPivot of 'b ] -> 'b option) * string
                       val decl :
                         'a OD.PivotRep.ira ->
-                        ([> `TPivot of
-                              ('a, OD.PivotRep.perm_rep ref) Code.abstract ]
-                         as 'b)
-                        list ->
-                        ('b list ->
-                         ('c, unit) Code.abstract -> ('a, 'd) Code.abstract) ->
-                        ('a, 'd) Code.abstract
+                        (< answer : ('a, 'b) Code.abstract;
+                           state : [> `TPivot of
+                                        ('a, OD.PivotRep.perm_rep ref)
+                                        Code.abstract ]
+                                   list;
+                           .. >,
+                         ('c, unit) Code.abstract)
+                        StateCPSMonad.monad
                       val add :
                         'a OD.PivotRep.fra ->
-                        ([> `TPivot of
-                              ('a, OD.PivotRep.perm_rep ref) Code.abstract ]
-                         as 'b)
-                        list ->
-                        ('b list -> ('a, unit) Code.abstract option -> 'c) ->
-                        'c
+                        (< answer : 'b;
+                           state : [> `TPivot of
+                                        ('a, OD.PivotRep.perm_rep ref)
+                                        Code.abstract ]
+                                   list;
+                           .. >,
+                         ('a, unit) Code.abstract option)
+                        StateCPSMonad.monad
                       val fin :
                         unit ->
-                        ([> `TPivot of ('b, 'c ref) Code.abstract ] as 'a)
-                        list ->
-                        ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd
+                        (< answer : 'a;
+                           state : [> `TPivot of ('b, 'c ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('b, 'c) Code.abstract)
+                        StateCPSMonad.monad
                     end
                   module L :
                     sig
@@ -15859,35 +16576,40 @@ module G_GFC_F :
                         ([> `TLower of 'b ] -> 'b option) * string
                       val decl :
                         ('a, 'b) Code.abstract ->
-                        ([> `TLower of ('a, 'b) Code.abstract ] as 'c) list ->
-                        ('c list ->
-                         ('a, 'b) Code.abstract -> ('a, 'd) Code.abstract) ->
-                        ('a, 'd) Code.abstract
+                        (< answer : ('a, 'c) Code.abstract;
+                           state : [> `TLower of ('a, 'b) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('a, 'b) Code.abstract)
+                        StateCPSMonad.monad
                       val updt :
                         'a GFC_F.vc ->
                         ('a, int) Code.abstract ->
                         ('a, int) Code.abstract ->
                         'a GFC_F.vo ->
                         'a GFC_F.vo ->
-                        (([> `TLower of 'a GFC_F.vc ] as 'b) list ->
-                         ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c)
-                        option
+                        (< answer : 'b;
+                           state : [> `TLower of 'a GFC_F.vc ] list; .. >,
+                         ('a, unit) Code.abstract)
+                        StateCPSMonad.monad option
                       val fin :
                         unit ->
-                        ([> `TLower of 'b ] as 'a) list ->
-                        ('a list -> 'b -> 'c) -> 'c
+                        (< answer : 'a; state : [> `TLower of 'b ] list; .. >,
+                         'b)
+                        StateCPSMonad.monad
                       val wants_pack : bool
                     end
                 end
               type res = GFC_F.contr * GFC_F.contr * IF.P.perm_rep
               val make_result :
                 'a wmatrix ->
-                ([> `TLower of ('a, 'c) Code.abstract
-                  | `TPivot of ('a, 'd ref) Code.abstract ]
-                 as 'b)
-                list ->
-                ('b list -> ('a, GFC_F.contr * 'c * 'd) Code.abstract -> 'e) ->
-                'e
+                (< answer : 'b;
+                   state : [> `TLower of ('a, 'c) Code.abstract
+                            | `TPivot of ('a, 'd ref) Code.abstract ]
+                           list;
+                   .. >,
+                 ('a, GFC_F.contr * 'c * 'd) Code.abstract)
+                StateCPSMonad.monad
             end
         module Out_LU_Packed :
           functor (OD : OUTPUTDEP) ->
@@ -15908,17 +16630,20 @@ module G_GFC_F :
                         ([> `TRan of 'b ] -> 'b option) * string
                       val decl :
                         unit ->
-                        ([> `TRan of ('b, int ref) Code.abstract ] as 'a)
-                        list ->
-                        ('a list ->
-                         ('b, int ref) Code.abstract ->
-                         ('b, 'c) Code.abstract) ->
-                        ('b, 'c) Code.abstract
+                        (< answer : ('a, 'b) Code.abstract;
+                           state : [> `TRan of ('a, int ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('a, int ref) Code.abstract)
+                        StateCPSMonad.monad
                       val succ :
                         unit ->
-                        ([> `TRan of ('b, int ref) Code.abstract ] as 'a)
-                        list ->
-                        ('a list -> ('b, unit) Code.abstract -> 'c) -> 'c
+                        (< answer : 'a;
+                           state : [> `TRan of ('b, int ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('b, unit) Code.abstract)
+                        StateCPSMonad.monad
                       module type RANK =
                         sig
                           type 'a tag_lstate = 'a tag_lstate_
@@ -15966,26 +16691,32 @@ module G_GFC_F :
                         ([> `TPivot of 'b ] -> 'b option) * string
                       val decl :
                         'a OD.PivotRep.ira ->
-                        ([> `TPivot of
-                              ('a, OD.PivotRep.perm_rep ref) Code.abstract ]
-                         as 'b)
-                        list ->
-                        ('b list ->
-                         ('c, unit) Code.abstract -> ('a, 'd) Code.abstract) ->
-                        ('a, 'd) Code.abstract
+                        (< answer : ('a, 'b) Code.abstract;
+                           state : [> `TPivot of
+                                        ('a, OD.PivotRep.perm_rep ref)
+                                        Code.abstract ]
+                                   list;
+                           .. >,
+                         ('c, unit) Code.abstract)
+                        StateCPSMonad.monad
                       val add :
                         'a OD.PivotRep.fra ->
-                        ([> `TPivot of
-                              ('a, OD.PivotRep.perm_rep ref) Code.abstract ]
-                         as 'b)
-                        list ->
-                        ('b list -> ('a, unit) Code.abstract option -> 'c) ->
-                        'c
+                        (< answer : 'b;
+                           state : [> `TPivot of
+                                        ('a, OD.PivotRep.perm_rep ref)
+                                        Code.abstract ]
+                                   list;
+                           .. >,
+                         ('a, unit) Code.abstract option)
+                        StateCPSMonad.monad
                       val fin :
                         unit ->
-                        ([> `TPivot of ('b, 'c ref) Code.abstract ] as 'a)
-                        list ->
-                        ('a list -> ('b, 'c) Code.abstract -> 'd) -> 'd
+                        (< answer : 'a;
+                           state : [> `TPivot of ('b, 'c ref) Code.abstract ]
+                                   list;
+                           .. >,
+                         ('b, 'c) Code.abstract)
+                        StateCPSMonad.monad
                     end
                   module L :
                     sig
@@ -15999,23 +16730,28 @@ module G_GFC_F :
                         ([> `TLower of 'b ] -> 'b option) * string
                       val decl :
                         'a ->
-                        ([> `TLower of 'a ] as 'b) list ->
-                        ('b list -> 'a -> 'c) -> 'c
+                        (< answer : 'b; state : [> `TLower of 'a ] list; .. >,
+                         'a)
+                        StateCPSMonad.monad
                       val updt : 'a -> 'b -> 'c -> 'd -> 'e -> 'f option
                       val fin :
                         unit ->
-                        ([> `TLower of 'b ] as 'a) list ->
-                        ('a list -> 'b -> 'c) -> 'c
+                        (< answer : 'a; state : [> `TLower of 'b ] list; .. >,
+                         'b)
+                        StateCPSMonad.monad
                       val wants_pack : bool
                     end
                 end
               type res = GFC_F.contr * IF.P.perm_rep
               val make_result :
                 'a ->
-                ([> `TLower of ('c, 'd) Code.abstract
-                  | `TPivot of ('c, 'e ref) Code.abstract ]
-                 as 'b)
-                list -> ('b list -> ('c, 'd * 'e) Code.abstract -> 'f) -> 'f
+                (< answer : 'b;
+                   state : [> `TLower of ('c, 'd) Code.abstract
+                            | `TPivot of ('c, 'e ref) Code.abstract ]
+                           list;
+                   .. >,
+                 ('c, 'd * 'e) Code.abstract)
+                StateCPSMonad.monad
             end
         module type INTERNAL_FEATURES =
           sig
@@ -16164,17 +16900,16 @@ module G_GFC_F :
                 list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
               val init :
                 ('a, F.Input.inp) Code.abstract ->
-                ([> `TDet of 'a F.Det.lstate
-                  | `TLower of ('a, GFC_F.contr) Code.abstract
-                  | `TPivot of 'a F.Output(F).IF.P.lstate
-                  | `TRan of 'a GEF.TrackRank.lstate ]
-                 as 'b)
-                list ->
-                ('b list ->
+                (< answer : ('a, 'b) Code.abstract;
+                   state : [> `TDet of 'a F.Det.lstate
+                            | `TLower of ('a, GFC_F.contr) Code.abstract
+                            | `TPivot of 'a F.Output(F).IF.P.lstate
+                            | `TRan of 'a GEF.TrackRank.lstate ]
+                           list;
+                   .. >,
                  'a wmatrix * ('a, int ref) Code.abstract *
-                 ('a, int ref) Code.abstract * ('a, int) Code.abstract ->
-                 ('a, 'c) Code.abstract) ->
-                ('a, 'c) Code.abstract
+                 ('a, int ref) Code.abstract * ('a, int) Code.abstract)
+                StateCPSMonad.monad
               val forward_elim :
                 'a wmatrix * ('a, int ref) Code.abstract *
                 ('a, int ref) Code.abstract * ('a, int) Code.abstract ->
@@ -16186,15 +16921,15 @@ module G_GFC_F :
                 list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
               val gen :
                 ('a, F.Input.inp) Code.abstract ->
-                ([> `TDet of 'a F.Det.lstate
-                  | `TLower of 'a O.IF.L.lstate
-                  | `TPivot of 'a O.IF.P.lstate
-                  | `TRan of 'a GEF.TrackRank.lstate ]
-                 as 'b)
-                list ->
-                ('b list ->
-                 ('a, O.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-                ('a, 'c) Code.abstract
+                (< answer : ('a, 'b) Code.abstract;
+                   state : [> `TDet of 'a F.Det.lstate
+                            | `TLower of 'a O.IF.L.lstate
+                            | `TPivot of 'a O.IF.P.lstate
+                            | `TRan of 'a GEF.TrackRank.lstate ]
+                           list;
+                   .. >,
+                 ('a, O.res) Code.abstract)
+                StateCPSMonad.monad
             end
       end
     module Solve :
@@ -16215,11 +16950,9 @@ module G_GFC_F :
             type rhs = GFC_F.contr
             val get_input :
               ('a, 'b * 'c) Code.abstract ->
-              'd ->
-              ('d ->
-               ('a, 'b) Code.abstract * ('a, 'c) Code.abstract ->
-               ('a, 'e) Code.abstract) ->
-              ('a, 'e) Code.abstract
+              (< answer : ('a, 'd) Code.abstract; state : 'e; .. >,
+               ('a, 'b) Code.abstract * ('a, 'c) Code.abstract)
+              StateCPSMonad.monad
           end
         module type OUTPUT =
           sig
@@ -16375,18 +17108,18 @@ module G_GFC_F :
                     list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
                   val init :
                     ('a, GFC_F.contr * int) Code.abstract ->
-                    ([> `TDet of 'a F.Det.lstate
-                      | `TLower of ('a, GFC_F.contr) Code.abstract
-                      | `TPivot of
-                          ('a, GEF.PermList.perm_rep ref) Code.abstract
-                      | `TRan of 'a GEF.TrackRank.lstate ]
-                     as 'b)
-                    list ->
-                    ('b list ->
+                    (< answer : ('a, 'b) Code.abstract;
+                       state : [> `TDet of 'a F.Det.lstate
+                                | `TLower of ('a, GFC_F.contr) Code.abstract
+                                | `TPivot of
+                                    ('a, GEF.PermList.perm_rep ref)
+                                    Code.abstract
+                                | `TRan of 'a GEF.TrackRank.lstate ]
+                               list;
+                       .. >,
                      'a wmatrix * ('a, int ref) Code.abstract *
-                     ('a, int ref) Code.abstract * ('a, int) Code.abstract ->
-                     ('a, 'c) Code.abstract) ->
-                    ('a, 'c) Code.abstract
+                     ('a, int ref) Code.abstract * ('a, int) Code.abstract)
+                    StateCPSMonad.monad
                   val forward_elim :
                     'a wmatrix * ('a, int ref) Code.abstract *
                     ('a, int ref) Code.abstract * ('a, int) Code.abstract ->
@@ -16399,23 +17132,22 @@ module G_GFC_F :
                     list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
                   val gen :
                     ('a, GFC_F.contr * int) Code.abstract ->
-                    ([> `TDet of 'a F.Det.lstate
-                      | `TLower of 'a O.IF.L.lstate
-                      | `TPivot of 'a O.IF.P.lstate
-                      | `TRan of 'a GEF.TrackRank.lstate ]
-                     as 'b)
-                    list ->
-                    ('b list ->
-                     ('a, O.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-                    ('a, 'c) Code.abstract
+                    (< answer : ('a, 'b) Code.abstract;
+                       state : [> `TDet of 'a F.Det.lstate
+                                | `TLower of 'a O.IF.L.lstate
+                                | `TPivot of 'a O.IF.P.lstate
+                                | `TRan of 'a GEF.TrackRank.lstate ]
+                               list;
+                       .. >,
+                     ('a, O.res) Code.abstract)
+                    StateCPSMonad.monad
                 end
               val init :
                 ('a, F.Input.inp) Code.abstract ->
-                'b ->
-                ('b ->
+                (< answer : 'b; state : 'c; .. >,
                  ('a, GFC_F.contr) Code.abstract *
-                 ('a, F.Input.rhs) Code.abstract -> 'c) ->
-                'c
+                 ('a, F.Input.rhs) Code.abstract)
+                StateCPSMonad.monad
               val back_elim :
                 'a GFC_F.vc ->
                 ('a, int) Code.abstract ->
@@ -16423,15 +17155,15 @@ module G_GFC_F :
                 'b -> ('b -> ('a, GFC_F.contr) Code.abstract -> 'c) -> 'c
               val gen :
                 ('a, F.Input.inp) Code.abstract ->
-                ([> `TDet of 'a F.Det.lstate
-                  | `TLower of 'a GE'.O.IF.L.lstate
-                  | `TPivot of 'a GE'.O.IF.P.lstate
-                  | `TRan of 'a GEF.TrackRank.lstate ]
-                 as 'b)
-                list ->
-                ('b list ->
-                 ('a, F.Output.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-                ('a, 'c) Code.abstract
+                (< answer : ('a, 'b) Code.abstract;
+                   state : [> `TDet of 'a F.Det.lstate
+                            | `TLower of 'a GE'.O.IF.L.lstate
+                            | `TPivot of 'a GE'.O.IF.P.lstate
+                            | `TRan of 'a GEF.TrackRank.lstate ]
+                           list;
+                   .. >,
+                 ('a, F.Output.res) Code.abstract)
+                StateCPSMonad.monad
             end
       end
   end
@@ -16549,17 +17281,16 @@ module GenFA1 :
       list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
     val init :
       ('a, GAC_F.contr) Code.abstract ->
-      ([> `TDet of unit
-        | `TLower of ('a, GAC_F.contr) Code.abstract
-        | `TPivot of ('a, GEF.PermList.perm_rep ref) Code.abstract
-        | `TRan of 'a GEF.TrackRank.lstate ]
-       as 'b)
-      list ->
-      ('b list ->
+      (< answer : ('a, 'b) Code.abstract;
+         state : [> `TDet of unit
+                  | `TLower of ('a, GAC_F.contr) Code.abstract
+                  | `TPivot of ('a, GEF.PermList.perm_rep ref) Code.abstract
+                  | `TRan of 'a GEF.TrackRank.lstate ]
+                 list;
+         .. >,
        'a G_GAC_F.wmatrix * ('a, int ref) Code.abstract *
-       ('a, int ref) Code.abstract * ('a, int) Code.abstract ->
-       ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
+       ('a, int ref) Code.abstract * ('a, int) Code.abstract)
+      StateCPSMonad.monad
     val forward_elim :
       'a G_GAC_F.wmatrix * ('a, int ref) Code.abstract *
       ('a, int ref) Code.abstract * ('a, int) Code.abstract ->
@@ -16571,14 +17302,15 @@ module GenFA1 :
       list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
     val gen :
       ('a, GAC_F.contr) Code.abstract ->
-      ([> `TDet of unit
-        | `TLower of 'a O.IF.L.lstate
-        | `TPivot of 'a O.IF.P.lstate
-        | `TRan of 'a GEF.TrackRank.lstate ]
-       as 'b)
-      list ->
-      ('b list -> ('a, O.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
+      (< answer : ('a, 'b) Code.abstract;
+         state : [> `TDet of unit
+                  | `TLower of 'a O.IF.L.lstate
+                  | `TPivot of 'a O.IF.P.lstate
+                  | `TRan of 'a GEF.TrackRank.lstate ]
+                 list;
+         .. >,
+       ('a, O.res) Code.abstract)
+      StateCPSMonad.monad
   end
 module GenFA2 :
   sig
@@ -16699,18 +17431,18 @@ module GenFA2 :
       list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
     val init :
       ('a, GAC_F.contr) Code.abstract ->
-      ([> `TDet of
-            ('a, int ref) Code.abstract * ('a, GAC_F.Dom.v ref) Code.abstract
-        | `TLower of ('a, GAC_F.contr) Code.abstract
-        | `TPivot of ('a, GEF.PermList.perm_rep ref) Code.abstract
-        | `TRan of 'a GEF.TrackRank.lstate ]
-       as 'b)
-      list ->
-      ('b list ->
+      (< answer : ('a, 'b) Code.abstract;
+         state : [> `TDet of
+                      ('a, int ref) Code.abstract *
+                      ('a, GAC_F.Dom.v ref) Code.abstract
+                  | `TLower of ('a, GAC_F.contr) Code.abstract
+                  | `TPivot of ('a, GEF.PermList.perm_rep ref) Code.abstract
+                  | `TRan of 'a GEF.TrackRank.lstate ]
+                 list;
+         .. >,
        'a G_GAC_F.wmatrix * ('a, int ref) Code.abstract *
-       ('a, int ref) Code.abstract * ('a, int) Code.abstract ->
-       ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
+       ('a, int ref) Code.abstract * ('a, int) Code.abstract)
+      StateCPSMonad.monad
     val forward_elim :
       'a G_GAC_F.wmatrix * ('a, int ref) Code.abstract *
       ('a, int ref) Code.abstract * ('a, int) Code.abstract ->
@@ -16723,15 +17455,17 @@ module GenFA2 :
       list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
     val gen :
       ('a, GAC_F.contr) Code.abstract ->
-      ([> `TDet of
-            ('a, int ref) Code.abstract * ('a, GAC_F.Dom.v ref) Code.abstract
-        | `TLower of 'a O.IF.L.lstate
-        | `TPivot of 'a O.IF.P.lstate
-        | `TRan of 'a GEF.TrackRank.lstate ]
-       as 'b)
-      list ->
-      ('b list -> ('a, O.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
+      (< answer : ('a, 'b) Code.abstract;
+         state : [> `TDet of
+                      ('a, int ref) Code.abstract *
+                      ('a, GAC_F.Dom.v ref) Code.abstract
+                  | `TLower of 'a O.IF.L.lstate
+                  | `TPivot of 'a O.IF.P.lstate
+                  | `TRan of 'a GEF.TrackRank.lstate ]
+                 list;
+         .. >,
+       ('a, O.res) Code.abstract)
+      StateCPSMonad.monad
   end
 module GenFA3 :
   sig
@@ -16847,17 +17581,16 @@ module GenFA3 :
       list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
     val init :
       ('a, GAC_F.contr) Code.abstract ->
-      ([> `TDet of unit
-        | `TLower of ('a, GAC_F.contr) Code.abstract
-        | `TPivot of ('a, GEF.PermList.perm_rep ref) Code.abstract
-        | `TRan of 'a GEF.TrackRank.lstate ]
-       as 'b)
-      list ->
-      ('b list ->
+      (< answer : ('a, 'b) Code.abstract;
+         state : [> `TDet of unit
+                  | `TLower of ('a, GAC_F.contr) Code.abstract
+                  | `TPivot of ('a, GEF.PermList.perm_rep ref) Code.abstract
+                  | `TRan of 'a GEF.TrackRank.lstate ]
+                 list;
+         .. >,
        'a G_GAC_F.wmatrix * ('a, int ref) Code.abstract *
-       ('a, int ref) Code.abstract * ('a, int) Code.abstract ->
-       ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
+       ('a, int ref) Code.abstract * ('a, int) Code.abstract)
+      StateCPSMonad.monad
     val forward_elim :
       'a G_GAC_F.wmatrix * ('a, int ref) Code.abstract *
       ('a, int ref) Code.abstract * ('a, int) Code.abstract ->
@@ -16869,14 +17602,15 @@ module GenFA3 :
       list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
     val gen :
       ('a, GAC_F.contr) Code.abstract ->
-      ([> `TDet of unit
-        | `TLower of 'a O.IF.L.lstate
-        | `TPivot of 'a O.IF.P.lstate
-        | `TRan of 'a GEF.TrackRank.lstate ]
-       as 'b)
-      list ->
-      ('b list -> ('a, O.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
+      (< answer : ('a, 'b) Code.abstract;
+         state : [> `TDet of unit
+                  | `TLower of 'a O.IF.L.lstate
+                  | `TPivot of 'a O.IF.P.lstate
+                  | `TRan of 'a GEF.TrackRank.lstate ]
+                 list;
+         .. >,
+       ('a, O.res) Code.abstract)
+      StateCPSMonad.monad
   end
 module GenFA4 :
   sig
@@ -16997,18 +17731,18 @@ module GenFA4 :
       list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
     val init :
       ('a, GAC_F.contr) Code.abstract ->
-      ([> `TDet of
-            ('a, int ref) Code.abstract * ('a, GAC_F.Dom.v ref) Code.abstract
-        | `TLower of ('a, GAC_F.contr) Code.abstract
-        | `TPivot of ('a, GEF.PermList.perm_rep ref) Code.abstract
-        | `TRan of 'a GEF.TrackRank.lstate ]
-       as 'b)
-      list ->
-      ('b list ->
+      (< answer : ('a, 'b) Code.abstract;
+         state : [> `TDet of
+                      ('a, int ref) Code.abstract *
+                      ('a, GAC_F.Dom.v ref) Code.abstract
+                  | `TLower of ('a, GAC_F.contr) Code.abstract
+                  | `TPivot of ('a, GEF.PermList.perm_rep ref) Code.abstract
+                  | `TRan of 'a GEF.TrackRank.lstate ]
+                 list;
+         .. >,
        'a G_GAC_F.wmatrix * ('a, int ref) Code.abstract *
-       ('a, int ref) Code.abstract * ('a, int) Code.abstract ->
-       ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
+       ('a, int ref) Code.abstract * ('a, int) Code.abstract)
+      StateCPSMonad.monad
     val forward_elim :
       'a G_GAC_F.wmatrix * ('a, int ref) Code.abstract *
       ('a, int ref) Code.abstract * ('a, int) Code.abstract ->
@@ -17021,15 +17755,17 @@ module GenFA4 :
       list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
     val gen :
       ('a, GAC_F.contr) Code.abstract ->
-      ([> `TDet of
-            ('a, int ref) Code.abstract * ('a, GAC_F.Dom.v ref) Code.abstract
-        | `TLower of 'a O.IF.L.lstate
-        | `TPivot of 'a O.IF.P.lstate
-        | `TRan of 'a GEF.TrackRank.lstate ]
-       as 'b)
-      list ->
-      ('b list -> ('a, O.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
+      (< answer : ('a, 'b) Code.abstract;
+         state : [> `TDet of
+                      ('a, int ref) Code.abstract *
+                      ('a, GAC_F.Dom.v ref) Code.abstract
+                  | `TLower of 'a O.IF.L.lstate
+                  | `TPivot of 'a O.IF.P.lstate
+                  | `TRan of 'a GEF.TrackRank.lstate ]
+                 list;
+         .. >,
+       ('a, O.res) Code.abstract)
+      StateCPSMonad.monad
   end
 module GenFA11 :
   sig
@@ -17145,17 +17881,16 @@ module GenFA11 :
       list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
     val init :
       ('a, GAC_F.contr) Code.abstract ->
-      ([> `TDet of unit
-        | `TLower of ('a, GAC_F.contr) Code.abstract
-        | `TPivot of ('a, GEF.PermList.perm_rep ref) Code.abstract
-        | `TRan of 'a GEF.TrackRank.lstate ]
-       as 'b)
-      list ->
-      ('b list ->
+      (< answer : ('a, 'b) Code.abstract;
+         state : [> `TDet of unit
+                  | `TLower of ('a, GAC_F.contr) Code.abstract
+                  | `TPivot of ('a, GEF.PermList.perm_rep ref) Code.abstract
+                  | `TRan of 'a GEF.TrackRank.lstate ]
+                 list;
+         .. >,
        'a G_GAC_F.wmatrix * ('a, int ref) Code.abstract *
-       ('a, int ref) Code.abstract * ('a, int) Code.abstract ->
-       ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
+       ('a, int ref) Code.abstract * ('a, int) Code.abstract)
+      StateCPSMonad.monad
     val forward_elim :
       'a G_GAC_F.wmatrix * ('a, int ref) Code.abstract *
       ('a, int ref) Code.abstract * ('a, int) Code.abstract ->
@@ -17167,14 +17902,15 @@ module GenFA11 :
       list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
     val gen :
       ('a, GAC_F.contr) Code.abstract ->
-      ([> `TDet of unit
-        | `TLower of 'a O.IF.L.lstate
-        | `TPivot of 'a O.IF.P.lstate
-        | `TRan of 'a GEF.TrackRank.lstate ]
-       as 'b)
-      list ->
-      ('b list -> ('a, O.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
+      (< answer : ('a, 'b) Code.abstract;
+         state : [> `TDet of unit
+                  | `TLower of 'a O.IF.L.lstate
+                  | `TPivot of 'a O.IF.P.lstate
+                  | `TRan of 'a GEF.TrackRank.lstate ]
+                 list;
+         .. >,
+       ('a, O.res) Code.abstract)
+      StateCPSMonad.monad
   end
 module GenFA12 :
   sig
@@ -17295,18 +18031,18 @@ module GenFA12 :
       list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
     val init :
       ('a, GAC_F.contr) Code.abstract ->
-      ([> `TDet of
-            ('a, int ref) Code.abstract * ('a, GAC_F.Dom.v ref) Code.abstract
-        | `TLower of ('a, GAC_F.contr) Code.abstract
-        | `TPivot of ('a, GEF.PermList.perm_rep ref) Code.abstract
-        | `TRan of 'a GEF.TrackRank.lstate ]
-       as 'b)
-      list ->
-      ('b list ->
+      (< answer : ('a, 'b) Code.abstract;
+         state : [> `TDet of
+                      ('a, int ref) Code.abstract *
+                      ('a, GAC_F.Dom.v ref) Code.abstract
+                  | `TLower of ('a, GAC_F.contr) Code.abstract
+                  | `TPivot of ('a, GEF.PermList.perm_rep ref) Code.abstract
+                  | `TRan of 'a GEF.TrackRank.lstate ]
+                 list;
+         .. >,
        'a G_GAC_F.wmatrix * ('a, int ref) Code.abstract *
-       ('a, int ref) Code.abstract * ('a, int) Code.abstract ->
-       ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
+       ('a, int ref) Code.abstract * ('a, int) Code.abstract)
+      StateCPSMonad.monad
     val forward_elim :
       'a G_GAC_F.wmatrix * ('a, int ref) Code.abstract *
       ('a, int ref) Code.abstract * ('a, int) Code.abstract ->
@@ -17319,15 +18055,17 @@ module GenFA12 :
       list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
     val gen :
       ('a, GAC_F.contr) Code.abstract ->
-      ([> `TDet of
-            ('a, int ref) Code.abstract * ('a, GAC_F.Dom.v ref) Code.abstract
-        | `TLower of 'a O.IF.L.lstate
-        | `TPivot of 'a O.IF.P.lstate
-        | `TRan of 'a GEF.TrackRank.lstate ]
-       as 'b)
-      list ->
-      ('b list -> ('a, O.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
+      (< answer : ('a, 'b) Code.abstract;
+         state : [> `TDet of
+                      ('a, int ref) Code.abstract *
+                      ('a, GAC_F.Dom.v ref) Code.abstract
+                  | `TLower of 'a O.IF.L.lstate
+                  | `TPivot of 'a O.IF.P.lstate
+                  | `TRan of 'a GEF.TrackRank.lstate ]
+                 list;
+         .. >,
+       ('a, O.res) Code.abstract)
+      StateCPSMonad.monad
   end
 module GenFA13 :
   sig
@@ -17443,17 +18181,16 @@ module GenFA13 :
       list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
     val init :
       ('a, GAC_F.contr) Code.abstract ->
-      ([> `TDet of unit
-        | `TLower of ('a, GAC_F.contr) Code.abstract
-        | `TPivot of ('a, GEF.PermList.perm_rep ref) Code.abstract
-        | `TRan of 'a GEF.TrackRank.lstate ]
-       as 'b)
-      list ->
-      ('b list ->
+      (< answer : ('a, 'b) Code.abstract;
+         state : [> `TDet of unit
+                  | `TLower of ('a, GAC_F.contr) Code.abstract
+                  | `TPivot of ('a, GEF.PermList.perm_rep ref) Code.abstract
+                  | `TRan of 'a GEF.TrackRank.lstate ]
+                 list;
+         .. >,
        'a G_GAC_F.wmatrix * ('a, int ref) Code.abstract *
-       ('a, int ref) Code.abstract * ('a, int) Code.abstract ->
-       ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
+       ('a, int ref) Code.abstract * ('a, int) Code.abstract)
+      StateCPSMonad.monad
     val forward_elim :
       'a G_GAC_F.wmatrix * ('a, int ref) Code.abstract *
       ('a, int ref) Code.abstract * ('a, int) Code.abstract ->
@@ -17465,14 +18202,15 @@ module GenFA13 :
       list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
     val gen :
       ('a, GAC_F.contr) Code.abstract ->
-      ([> `TDet of unit
-        | `TLower of 'a O.IF.L.lstate
-        | `TPivot of 'a O.IF.P.lstate
-        | `TRan of 'a GEF.TrackRank.lstate ]
-       as 'b)
-      list ->
-      ('b list -> ('a, O.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
+      (< answer : ('a, 'b) Code.abstract;
+         state : [> `TDet of unit
+                  | `TLower of 'a O.IF.L.lstate
+                  | `TPivot of 'a O.IF.P.lstate
+                  | `TRan of 'a GEF.TrackRank.lstate ]
+                 list;
+         .. >,
+       ('a, O.res) Code.abstract)
+      StateCPSMonad.monad
   end
 module GenFA14 :
   sig
@@ -17593,18 +18331,18 @@ module GenFA14 :
       list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
     val init :
       ('a, GAC_F.contr) Code.abstract ->
-      ([> `TDet of
-            ('a, int ref) Code.abstract * ('a, GAC_F.Dom.v ref) Code.abstract
-        | `TLower of ('a, GAC_F.contr) Code.abstract
-        | `TPivot of ('a, GEF.PermList.perm_rep ref) Code.abstract
-        | `TRan of 'a GEF.TrackRank.lstate ]
-       as 'b)
-      list ->
-      ('b list ->
+      (< answer : ('a, 'b) Code.abstract;
+         state : [> `TDet of
+                      ('a, int ref) Code.abstract *
+                      ('a, GAC_F.Dom.v ref) Code.abstract
+                  | `TLower of ('a, GAC_F.contr) Code.abstract
+                  | `TPivot of ('a, GEF.PermList.perm_rep ref) Code.abstract
+                  | `TRan of 'a GEF.TrackRank.lstate ]
+                 list;
+         .. >,
        'a G_GAC_F.wmatrix * ('a, int ref) Code.abstract *
-       ('a, int ref) Code.abstract * ('a, int) Code.abstract ->
-       ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
+       ('a, int ref) Code.abstract * ('a, int) Code.abstract)
+      StateCPSMonad.monad
     val forward_elim :
       'a G_GAC_F.wmatrix * ('a, int ref) Code.abstract *
       ('a, int ref) Code.abstract * ('a, int) Code.abstract ->
@@ -17617,15 +18355,17 @@ module GenFA14 :
       list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
     val gen :
       ('a, GAC_F.contr) Code.abstract ->
-      ([> `TDet of
-            ('a, int ref) Code.abstract * ('a, GAC_F.Dom.v ref) Code.abstract
-        | `TLower of 'a O.IF.L.lstate
-        | `TPivot of 'a O.IF.P.lstate
-        | `TRan of 'a GEF.TrackRank.lstate ]
-       as 'b)
-      list ->
-      ('b list -> ('a, O.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
+      (< answer : ('a, 'b) Code.abstract;
+         state : [> `TDet of
+                      ('a, int ref) Code.abstract *
+                      ('a, GAC_F.Dom.v ref) Code.abstract
+                  | `TLower of 'a O.IF.L.lstate
+                  | `TPivot of 'a O.IF.P.lstate
+                  | `TRan of 'a GEF.TrackRank.lstate ]
+                 list;
+         .. >,
+       ('a, O.res) Code.abstract)
+      StateCPSMonad.monad
   end
 module GenFA24 :
   sig
@@ -17745,18 +18485,18 @@ module GenFA24 :
       list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
     val init :
       ('a, GAC_F.contr) Code.abstract ->
-      ([> `TDet of
-            ('a, int ref) Code.abstract * ('a, GAC_F.Dom.v ref) Code.abstract
-        | `TLower of ('a, GAC_F.contr) Code.abstract
-        | `TPivot of ('a, Code.perm list ref) Code.abstract
-        | `TRan of 'a GEF.TrackRank.lstate ]
-       as 'b)
-      list ->
-      ('b list ->
+      (< answer : ('a, 'b) Code.abstract;
+         state : [> `TDet of
+                      ('a, int ref) Code.abstract *
+                      ('a, GAC_F.Dom.v ref) Code.abstract
+                  | `TLower of ('a, GAC_F.contr) Code.abstract
+                  | `TPivot of ('a, Code.perm list ref) Code.abstract
+                  | `TRan of 'a GEF.TrackRank.lstate ]
+                 list;
+         .. >,
        'a G_GAC_F.wmatrix * ('a, int ref) Code.abstract *
-       ('a, int ref) Code.abstract * ('a, int) Code.abstract ->
-       ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
+       ('a, int ref) Code.abstract * ('a, int) Code.abstract)
+      StateCPSMonad.monad
     val forward_elim :
       'a G_GAC_F.wmatrix * ('a, int ref) Code.abstract *
       ('a, int ref) Code.abstract * ('a, int) Code.abstract ->
@@ -17769,15 +18509,17 @@ module GenFA24 :
       list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
     val gen :
       ('a, GAC_F.contr) Code.abstract ->
-      ([> `TDet of
-            ('a, int ref) Code.abstract * ('a, GAC_F.Dom.v ref) Code.abstract
-        | `TLower of 'a O.IF.L.lstate
-        | `TPivot of 'a O.IF.P.lstate
-        | `TRan of 'a GEF.TrackRank.lstate ]
-       as 'b)
-      list ->
-      ('b list -> ('a, O.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
+      (< answer : ('a, 'b) Code.abstract;
+         state : [> `TDet of
+                      ('a, int ref) Code.abstract *
+                      ('a, GAC_F.Dom.v ref) Code.abstract
+                  | `TLower of 'a O.IF.L.lstate
+                  | `TPivot of 'a O.IF.P.lstate
+                  | `TRan of 'a GEF.TrackRank.lstate ]
+                 list;
+         .. >,
+       ('a, O.res) Code.abstract)
+      StateCPSMonad.monad
   end
 module GenFA25 :
   sig
@@ -17897,18 +18639,18 @@ module GenFA25 :
       list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
     val init :
       ('a, GAC_F.contr) Code.abstract ->
-      ([> `TDet of
-            ('a, int ref) Code.abstract * ('a, GAC_F.Dom.v ref) Code.abstract
-        | `TLower of ('a, GAC_F.contr) Code.abstract
-        | `TPivot of ('a, int array ref) Code.abstract
-        | `TRan of 'a GEF.TrackRank.lstate ]
-       as 'b)
-      list ->
-      ('b list ->
+      (< answer : ('a, 'b) Code.abstract;
+         state : [> `TDet of
+                      ('a, int ref) Code.abstract *
+                      ('a, GAC_F.Dom.v ref) Code.abstract
+                  | `TLower of ('a, GAC_F.contr) Code.abstract
+                  | `TPivot of ('a, int array ref) Code.abstract
+                  | `TRan of 'a GEF.TrackRank.lstate ]
+                 list;
+         .. >,
        'a G_GAC_F.wmatrix * ('a, int ref) Code.abstract *
-       ('a, int ref) Code.abstract * ('a, int) Code.abstract ->
-       ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
+       ('a, int ref) Code.abstract * ('a, int) Code.abstract)
+      StateCPSMonad.monad
     val forward_elim :
       'a G_GAC_F.wmatrix * ('a, int ref) Code.abstract *
       ('a, int ref) Code.abstract * ('a, int) Code.abstract ->
@@ -17921,15 +18663,17 @@ module GenFA25 :
       list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
     val gen :
       ('a, GAC_F.contr) Code.abstract ->
-      ([> `TDet of
-            ('a, int ref) Code.abstract * ('a, GAC_F.Dom.v ref) Code.abstract
-        | `TLower of 'a O.IF.L.lstate
-        | `TPivot of 'a O.IF.P.lstate
-        | `TRan of 'a GEF.TrackRank.lstate ]
-       as 'b)
-      list ->
-      ('b list -> ('a, O.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
+      (< answer : ('a, 'b) Code.abstract;
+         state : [> `TDet of
+                      ('a, int ref) Code.abstract *
+                      ('a, GAC_F.Dom.v ref) Code.abstract
+                  | `TLower of 'a O.IF.L.lstate
+                  | `TPivot of 'a O.IF.P.lstate
+                  | `TRan of 'a GEF.TrackRank.lstate ]
+                 list;
+         .. >,
+       ('a, O.res) Code.abstract)
+      StateCPSMonad.monad
   end
 module GenFA26 :
   sig
@@ -18045,17 +18789,16 @@ module GenFA26 :
       list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
     val init :
       ('a, GAC_F.contr) Code.abstract ->
-      ([> `TDet of unit
-        | `TLower of ('a, GAC_F.contr) Code.abstract
-        | `TPivot of ('a, GEF.PermList.perm_rep ref) Code.abstract
-        | `TRan of 'a GEF.TrackRank.lstate ]
-       as 'b)
-      list ->
-      ('b list ->
+      (< answer : ('a, 'b) Code.abstract;
+         state : [> `TDet of unit
+                  | `TLower of ('a, GAC_F.contr) Code.abstract
+                  | `TPivot of ('a, GEF.PermList.perm_rep ref) Code.abstract
+                  | `TRan of 'a GEF.TrackRank.lstate ]
+                 list;
+         .. >,
        'a G_GAC_F.wmatrix * ('a, int ref) Code.abstract *
-       ('a, int ref) Code.abstract * ('a, int) Code.abstract ->
-       ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
+       ('a, int ref) Code.abstract * ('a, int) Code.abstract)
+      StateCPSMonad.monad
     val forward_elim :
       'a G_GAC_F.wmatrix * ('a, int ref) Code.abstract *
       ('a, int ref) Code.abstract * ('a, int) Code.abstract ->
@@ -18067,14 +18810,15 @@ module GenFA26 :
       list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
     val gen :
       ('a, GAC_F.contr) Code.abstract ->
-      ([> `TDet of unit
-        | `TLower of 'a O.IF.L.lstate
-        | `TPivot of 'a O.IF.P.lstate
-        | `TRan of 'a GEF.TrackRank.lstate ]
-       as 'b)
-      list ->
-      ('b list -> ('a, O.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
+      (< answer : ('a, 'b) Code.abstract;
+         state : [> `TDet of unit
+                  | `TLower of 'a O.IF.L.lstate
+                  | `TPivot of 'a O.IF.P.lstate
+                  | `TRan of 'a GEF.TrackRank.lstate ]
+                 list;
+         .. >,
+       ('a, O.res) Code.abstract)
+      StateCPSMonad.monad
   end
 module GenFA5 :
   sig
@@ -18190,17 +18934,16 @@ module GenFA5 :
       list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
     val init :
       ('a, GAC_F.contr * int) Code.abstract ->
-      ([> `TDet of unit
-        | `TLower of ('a, GAC_F.contr) Code.abstract
-        | `TPivot of ('a, GEF.PermList.perm_rep ref) Code.abstract
-        | `TRan of 'a GEF.TrackRank.lstate ]
-       as 'b)
-      list ->
-      ('b list ->
+      (< answer : ('a, 'b) Code.abstract;
+         state : [> `TDet of unit
+                  | `TLower of ('a, GAC_F.contr) Code.abstract
+                  | `TPivot of ('a, GEF.PermList.perm_rep ref) Code.abstract
+                  | `TRan of 'a GEF.TrackRank.lstate ]
+                 list;
+         .. >,
        'a G_GAC_F.wmatrix * ('a, int ref) Code.abstract *
-       ('a, int ref) Code.abstract * ('a, int) Code.abstract ->
-       ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
+       ('a, int ref) Code.abstract * ('a, int) Code.abstract)
+      StateCPSMonad.monad
     val forward_elim :
       'a G_GAC_F.wmatrix * ('a, int ref) Code.abstract *
       ('a, int ref) Code.abstract * ('a, int) Code.abstract ->
@@ -18212,14 +18955,15 @@ module GenFA5 :
       list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
     val gen :
       ('a, GAC_F.contr * int) Code.abstract ->
-      ([> `TDet of unit
-        | `TLower of 'a O.IF.L.lstate
-        | `TPivot of 'a O.IF.P.lstate
-        | `TRan of 'a GEF.TrackRank.lstate ]
-       as 'b)
-      list ->
-      ('b list -> ('a, O.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
+      (< answer : ('a, 'b) Code.abstract;
+         state : [> `TDet of unit
+                  | `TLower of 'a O.IF.L.lstate
+                  | `TPivot of 'a O.IF.P.lstate
+                  | `TRan of 'a GEF.TrackRank.lstate ]
+                 list;
+         .. >,
+       ('a, O.res) Code.abstract)
+      StateCPSMonad.monad
   end
 module GenFA6 :
   sig
@@ -18340,18 +19084,18 @@ module GenFA6 :
       list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
     val init :
       ('a, GAC_F.contr * int) Code.abstract ->
-      ([> `TDet of
-            ('a, int ref) Code.abstract * ('a, GAC_F.Dom.v ref) Code.abstract
-        | `TLower of ('a, GAC_F.contr) Code.abstract
-        | `TPivot of ('a, GEF.PermList.perm_rep ref) Code.abstract
-        | `TRan of 'a GEF.TrackRank.lstate ]
-       as 'b)
-      list ->
-      ('b list ->
+      (< answer : ('a, 'b) Code.abstract;
+         state : [> `TDet of
+                      ('a, int ref) Code.abstract *
+                      ('a, GAC_F.Dom.v ref) Code.abstract
+                  | `TLower of ('a, GAC_F.contr) Code.abstract
+                  | `TPivot of ('a, GEF.PermList.perm_rep ref) Code.abstract
+                  | `TRan of 'a GEF.TrackRank.lstate ]
+                 list;
+         .. >,
        'a G_GAC_F.wmatrix * ('a, int ref) Code.abstract *
-       ('a, int ref) Code.abstract * ('a, int) Code.abstract ->
-       ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
+       ('a, int ref) Code.abstract * ('a, int) Code.abstract)
+      StateCPSMonad.monad
     val forward_elim :
       'a G_GAC_F.wmatrix * ('a, int ref) Code.abstract *
       ('a, int ref) Code.abstract * ('a, int) Code.abstract ->
@@ -18364,15 +19108,17 @@ module GenFA6 :
       list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
     val gen :
       ('a, GAC_F.contr * int) Code.abstract ->
-      ([> `TDet of
-            ('a, int ref) Code.abstract * ('a, GAC_F.Dom.v ref) Code.abstract
-        | `TLower of 'a O.IF.L.lstate
-        | `TPivot of 'a O.IF.P.lstate
-        | `TRan of 'a GEF.TrackRank.lstate ]
-       as 'b)
-      list ->
-      ('b list -> ('a, O.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
+      (< answer : ('a, 'b) Code.abstract;
+         state : [> `TDet of
+                      ('a, int ref) Code.abstract *
+                      ('a, GAC_F.Dom.v ref) Code.abstract
+                  | `TLower of 'a O.IF.L.lstate
+                  | `TPivot of 'a O.IF.P.lstate
+                  | `TRan of 'a GEF.TrackRank.lstate ]
+                 list;
+         .. >,
+       ('a, O.res) Code.abstract)
+      StateCPSMonad.monad
   end
 module GenFA7 :
   sig
@@ -18488,17 +19234,16 @@ module GenFA7 :
       list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
     val init :
       ('a, GAC_F.contr * int) Code.abstract ->
-      ([> `TDet of unit
-        | `TLower of ('a, GAC_F.contr) Code.abstract
-        | `TPivot of ('a, GEF.PermList.perm_rep ref) Code.abstract
-        | `TRan of 'a GEF.TrackRank.lstate ]
-       as 'b)
-      list ->
-      ('b list ->
+      (< answer : ('a, 'b) Code.abstract;
+         state : [> `TDet of unit
+                  | `TLower of ('a, GAC_F.contr) Code.abstract
+                  | `TPivot of ('a, GEF.PermList.perm_rep ref) Code.abstract
+                  | `TRan of 'a GEF.TrackRank.lstate ]
+                 list;
+         .. >,
        'a G_GAC_F.wmatrix * ('a, int ref) Code.abstract *
-       ('a, int ref) Code.abstract * ('a, int) Code.abstract ->
-       ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
+       ('a, int ref) Code.abstract * ('a, int) Code.abstract)
+      StateCPSMonad.monad
     val forward_elim :
       'a G_GAC_F.wmatrix * ('a, int ref) Code.abstract *
       ('a, int ref) Code.abstract * ('a, int) Code.abstract ->
@@ -18510,14 +19255,15 @@ module GenFA7 :
       list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
     val gen :
       ('a, GAC_F.contr * int) Code.abstract ->
-      ([> `TDet of unit
-        | `TLower of 'a O.IF.L.lstate
-        | `TPivot of 'a O.IF.P.lstate
-        | `TRan of 'a GEF.TrackRank.lstate ]
-       as 'b)
-      list ->
-      ('b list -> ('a, O.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
+      (< answer : ('a, 'b) Code.abstract;
+         state : [> `TDet of unit
+                  | `TLower of 'a O.IF.L.lstate
+                  | `TPivot of 'a O.IF.P.lstate
+                  | `TRan of 'a GEF.TrackRank.lstate ]
+                 list;
+         .. >,
+       ('a, O.res) Code.abstract)
+      StateCPSMonad.monad
   end
 module GenFA8 :
   sig
@@ -18638,18 +19384,18 @@ module GenFA8 :
       list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
     val init :
       ('a, GAC_F.contr * int) Code.abstract ->
-      ([> `TDet of
-            ('a, int ref) Code.abstract * ('a, GAC_F.Dom.v ref) Code.abstract
-        | `TLower of ('a, GAC_F.contr) Code.abstract
-        | `TPivot of ('a, GEF.PermList.perm_rep ref) Code.abstract
-        | `TRan of 'a GEF.TrackRank.lstate ]
-       as 'b)
-      list ->
-      ('b list ->
+      (< answer : ('a, 'b) Code.abstract;
+         state : [> `TDet of
+                      ('a, int ref) Code.abstract *
+                      ('a, GAC_F.Dom.v ref) Code.abstract
+                  | `TLower of ('a, GAC_F.contr) Code.abstract
+                  | `TPivot of ('a, GEF.PermList.perm_rep ref) Code.abstract
+                  | `TRan of 'a GEF.TrackRank.lstate ]
+                 list;
+         .. >,
        'a G_GAC_F.wmatrix * ('a, int ref) Code.abstract *
-       ('a, int ref) Code.abstract * ('a, int) Code.abstract ->
-       ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
+       ('a, int ref) Code.abstract * ('a, int) Code.abstract)
+      StateCPSMonad.monad
     val forward_elim :
       'a G_GAC_F.wmatrix * ('a, int ref) Code.abstract *
       ('a, int ref) Code.abstract * ('a, int) Code.abstract ->
@@ -18662,15 +19408,17 @@ module GenFA8 :
       list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
     val gen :
       ('a, GAC_F.contr * int) Code.abstract ->
-      ([> `TDet of
-            ('a, int ref) Code.abstract * ('a, GAC_F.Dom.v ref) Code.abstract
-        | `TLower of 'a O.IF.L.lstate
-        | `TPivot of 'a O.IF.P.lstate
-        | `TRan of 'a GEF.TrackRank.lstate ]
-       as 'b)
-      list ->
-      ('b list -> ('a, O.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
+      (< answer : ('a, 'b) Code.abstract;
+         state : [> `TDet of
+                      ('a, int ref) Code.abstract *
+                      ('a, GAC_F.Dom.v ref) Code.abstract
+                  | `TLower of 'a O.IF.L.lstate
+                  | `TPivot of 'a O.IF.P.lstate
+                  | `TRan of 'a GEF.TrackRank.lstate ]
+                 list;
+         .. >,
+       ('a, O.res) Code.abstract)
+      StateCPSMonad.monad
   end
 module GenFA9 :
   sig
@@ -18785,17 +19533,16 @@ module GenFA9 :
       list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
     val init :
       ('a, GAC_F.contr) Code.abstract ->
-      ([> `TDet of unit
-        | `TLower of ('a, GAC_F.contr) Code.abstract
-        | `TPivot of ('a, Code.perm list ref) Code.abstract
-        | `TRan of 'a GEF.TrackRank.lstate ]
-       as 'b)
-      list ->
-      ('b list ->
+      (< answer : ('a, 'b) Code.abstract;
+         state : [> `TDet of unit
+                  | `TLower of ('a, GAC_F.contr) Code.abstract
+                  | `TPivot of ('a, Code.perm list ref) Code.abstract
+                  | `TRan of 'a GEF.TrackRank.lstate ]
+                 list;
+         .. >,
        'a G_GAC_F.wmatrix * ('a, int ref) Code.abstract *
-       ('a, int ref) Code.abstract * ('a, int) Code.abstract ->
-       ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
+       ('a, int ref) Code.abstract * ('a, int) Code.abstract)
+      StateCPSMonad.monad
     val forward_elim :
       'a G_GAC_F.wmatrix * ('a, int ref) Code.abstract *
       ('a, int ref) Code.abstract * ('a, int) Code.abstract ->
@@ -18807,14 +19554,15 @@ module GenFA9 :
       list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
     val gen :
       ('a, GAC_F.contr) Code.abstract ->
-      ([> `TDet of unit
-        | `TLower of 'a O.IF.L.lstate
-        | `TPivot of 'a O.IF.P.lstate
-        | `TRan of 'a GEF.TrackRank.lstate ]
-       as 'b)
-      list ->
-      ('b list -> ('a, O.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
+      (< answer : ('a, 'b) Code.abstract;
+         state : [> `TDet of unit
+                  | `TLower of 'a O.IF.L.lstate
+                  | `TPivot of 'a O.IF.P.lstate
+                  | `TRan of 'a GEF.TrackRank.lstate ]
+                 list;
+         .. >,
+       ('a, O.res) Code.abstract)
+      StateCPSMonad.monad
   end
 module GenFA31 :
   sig
@@ -18929,17 +19677,16 @@ module GenFA31 :
       list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
     val init :
       ('a, GAC_F.contr) Code.abstract ->
-      ([> `TDet of unit
-        | `TLower of ('a, GAC_F.contr) Code.abstract
-        | `TPivot of ('a, Code.perm list ref) Code.abstract
-        | `TRan of 'a GEF.TrackRank.lstate ]
-       as 'b)
-      list ->
-      ('b list ->
+      (< answer : ('a, 'b) Code.abstract;
+         state : [> `TDet of unit
+                  | `TLower of ('a, GAC_F.contr) Code.abstract
+                  | `TPivot of ('a, Code.perm list ref) Code.abstract
+                  | `TRan of 'a GEF.TrackRank.lstate ]
+                 list;
+         .. >,
        'a G_GAC_F.wmatrix * ('a, int ref) Code.abstract *
-       ('a, int ref) Code.abstract * ('a, int) Code.abstract ->
-       ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
+       ('a, int ref) Code.abstract * ('a, int) Code.abstract)
+      StateCPSMonad.monad
     val forward_elim :
       'a G_GAC_F.wmatrix * ('a, int ref) Code.abstract *
       ('a, int ref) Code.abstract * ('a, int) Code.abstract ->
@@ -18951,14 +19698,15 @@ module GenFA31 :
       list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
     val gen :
       ('a, GAC_F.contr) Code.abstract ->
-      ([> `TDet of unit
-        | `TLower of 'a O.IF.L.lstate
-        | `TPivot of 'a O.IF.P.lstate
-        | `TRan of 'a GEF.TrackRank.lstate ]
-       as 'b)
-      list ->
-      ('b list -> ('a, O.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
+      (< answer : ('a, 'b) Code.abstract;
+         state : [> `TDet of unit
+                  | `TLower of 'a O.IF.L.lstate
+                  | `TPivot of 'a O.IF.P.lstate
+                  | `TRan of 'a GEF.TrackRank.lstate ]
+                 list;
+         .. >,
+       ('a, O.res) Code.abstract)
+      StateCPSMonad.monad
   end
 module GenFA32 :
   sig
@@ -19073,17 +19821,16 @@ module GenFA32 :
       list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
     val init :
       ('a, GAC_F.contr) Code.abstract ->
-      ([> `TDet of unit
-        | `TLower of ('a, GAC_F.contr) Code.abstract
-        | `TPivot of ('a, Code.perm list ref) Code.abstract
-        | `TRan of 'a GEF.TrackRank.lstate ]
-       as 'b)
-      list ->
-      ('b list ->
+      (< answer : ('a, 'b) Code.abstract;
+         state : [> `TDet of unit
+                  | `TLower of ('a, GAC_F.contr) Code.abstract
+                  | `TPivot of ('a, Code.perm list ref) Code.abstract
+                  | `TRan of 'a GEF.TrackRank.lstate ]
+                 list;
+         .. >,
        'a G_GAC_F.wmatrix * ('a, int ref) Code.abstract *
-       ('a, int ref) Code.abstract * ('a, int) Code.abstract ->
-       ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
+       ('a, int ref) Code.abstract * ('a, int) Code.abstract)
+      StateCPSMonad.monad
     val forward_elim :
       'a G_GAC_F.wmatrix * ('a, int ref) Code.abstract *
       ('a, int ref) Code.abstract * ('a, int) Code.abstract ->
@@ -19095,14 +19842,15 @@ module GenFA32 :
       list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
     val gen :
       ('a, GAC_F.contr) Code.abstract ->
-      ([> `TDet of unit
-        | `TLower of 'a O.IF.L.lstate
-        | `TPivot of 'a O.IF.P.lstate
-        | `TRan of 'a GEF.TrackRank.lstate ]
-       as 'b)
-      list ->
-      ('b list -> ('a, O.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
+      (< answer : ('a, 'b) Code.abstract;
+         state : [> `TDet of unit
+                  | `TLower of 'a O.IF.L.lstate
+                  | `TPivot of 'a O.IF.P.lstate
+                  | `TRan of 'a GEF.TrackRank.lstate ]
+                 list;
+         .. >,
+       ('a, O.res) Code.abstract)
+      StateCPSMonad.monad
   end
 module GenFV1 :
   sig
@@ -19218,17 +19966,16 @@ module GenFV1 :
       list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
     val init :
       ('a, GVC_F.contr) Code.abstract ->
-      ([> `TDet of unit
-        | `TLower of ('a, GVC_F.contr) Code.abstract
-        | `TPivot of ('a, GEF.PermList.perm_rep ref) Code.abstract
-        | `TRan of 'a GEF.TrackRank.lstate ]
-       as 'b)
-      list ->
-      ('b list ->
+      (< answer : ('a, 'b) Code.abstract;
+         state : [> `TDet of unit
+                  | `TLower of ('a, GVC_F.contr) Code.abstract
+                  | `TPivot of ('a, GEF.PermList.perm_rep ref) Code.abstract
+                  | `TRan of 'a GEF.TrackRank.lstate ]
+                 list;
+         .. >,
        'a G_GVC_F.wmatrix * ('a, int ref) Code.abstract *
-       ('a, int ref) Code.abstract * ('a, int) Code.abstract ->
-       ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
+       ('a, int ref) Code.abstract * ('a, int) Code.abstract)
+      StateCPSMonad.monad
     val forward_elim :
       'a G_GVC_F.wmatrix * ('a, int ref) Code.abstract *
       ('a, int ref) Code.abstract * ('a, int) Code.abstract ->
@@ -19240,14 +19987,15 @@ module GenFV1 :
       list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
     val gen :
       ('a, GVC_F.contr) Code.abstract ->
-      ([> `TDet of unit
-        | `TLower of 'a O.IF.L.lstate
-        | `TPivot of 'a O.IF.P.lstate
-        | `TRan of 'a GEF.TrackRank.lstate ]
-       as 'b)
-      list ->
-      ('b list -> ('a, O.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
+      (< answer : ('a, 'b) Code.abstract;
+         state : [> `TDet of unit
+                  | `TLower of 'a O.IF.L.lstate
+                  | `TPivot of 'a O.IF.P.lstate
+                  | `TRan of 'a GEF.TrackRank.lstate ]
+                 list;
+         .. >,
+       ('a, O.res) Code.abstract)
+      StateCPSMonad.monad
   end
 module GenFV2 :
   sig
@@ -19368,18 +20116,18 @@ module GenFV2 :
       list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
     val init :
       ('a, GVC_F.contr) Code.abstract ->
-      ([> `TDet of
-            ('a, int ref) Code.abstract * ('a, GVC_F.Dom.v ref) Code.abstract
-        | `TLower of ('a, GVC_F.contr) Code.abstract
-        | `TPivot of ('a, GEF.PermList.perm_rep ref) Code.abstract
-        | `TRan of 'a GEF.TrackRank.lstate ]
-       as 'b)
-      list ->
-      ('b list ->
+      (< answer : ('a, 'b) Code.abstract;
+         state : [> `TDet of
+                      ('a, int ref) Code.abstract *
+                      ('a, GVC_F.Dom.v ref) Code.abstract
+                  | `TLower of ('a, GVC_F.contr) Code.abstract
+                  | `TPivot of ('a, GEF.PermList.perm_rep ref) Code.abstract
+                  | `TRan of 'a GEF.TrackRank.lstate ]
+                 list;
+         .. >,
        'a G_GVC_F.wmatrix * ('a, int ref) Code.abstract *
-       ('a, int ref) Code.abstract * ('a, int) Code.abstract ->
-       ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
+       ('a, int ref) Code.abstract * ('a, int) Code.abstract)
+      StateCPSMonad.monad
     val forward_elim :
       'a G_GVC_F.wmatrix * ('a, int ref) Code.abstract *
       ('a, int ref) Code.abstract * ('a, int) Code.abstract ->
@@ -19392,15 +20140,17 @@ module GenFV2 :
       list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
     val gen :
       ('a, GVC_F.contr) Code.abstract ->
-      ([> `TDet of
-            ('a, int ref) Code.abstract * ('a, GVC_F.Dom.v ref) Code.abstract
-        | `TLower of 'a O.IF.L.lstate
-        | `TPivot of 'a O.IF.P.lstate
-        | `TRan of 'a GEF.TrackRank.lstate ]
-       as 'b)
-      list ->
-      ('b list -> ('a, O.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
+      (< answer : ('a, 'b) Code.abstract;
+         state : [> `TDet of
+                      ('a, int ref) Code.abstract *
+                      ('a, GVC_F.Dom.v ref) Code.abstract
+                  | `TLower of 'a O.IF.L.lstate
+                  | `TPivot of 'a O.IF.P.lstate
+                  | `TRan of 'a GEF.TrackRank.lstate ]
+                 list;
+         .. >,
+       ('a, O.res) Code.abstract)
+      StateCPSMonad.monad
   end
 module GenFV3 :
   sig
@@ -19516,17 +20266,16 @@ module GenFV3 :
       list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
     val init :
       ('a, GVC_F.contr) Code.abstract ->
-      ([> `TDet of unit
-        | `TLower of ('a, GVC_F.contr) Code.abstract
-        | `TPivot of ('a, GEF.PermList.perm_rep ref) Code.abstract
-        | `TRan of 'a GEF.TrackRank.lstate ]
-       as 'b)
-      list ->
-      ('b list ->
+      (< answer : ('a, 'b) Code.abstract;
+         state : [> `TDet of unit
+                  | `TLower of ('a, GVC_F.contr) Code.abstract
+                  | `TPivot of ('a, GEF.PermList.perm_rep ref) Code.abstract
+                  | `TRan of 'a GEF.TrackRank.lstate ]
+                 list;
+         .. >,
        'a G_GVC_F.wmatrix * ('a, int ref) Code.abstract *
-       ('a, int ref) Code.abstract * ('a, int) Code.abstract ->
-       ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
+       ('a, int ref) Code.abstract * ('a, int) Code.abstract)
+      StateCPSMonad.monad
     val forward_elim :
       'a G_GVC_F.wmatrix * ('a, int ref) Code.abstract *
       ('a, int ref) Code.abstract * ('a, int) Code.abstract ->
@@ -19538,14 +20287,15 @@ module GenFV3 :
       list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
     val gen :
       ('a, GVC_F.contr) Code.abstract ->
-      ([> `TDet of unit
-        | `TLower of 'a O.IF.L.lstate
-        | `TPivot of 'a O.IF.P.lstate
-        | `TRan of 'a GEF.TrackRank.lstate ]
-       as 'b)
-      list ->
-      ('b list -> ('a, O.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
+      (< answer : ('a, 'b) Code.abstract;
+         state : [> `TDet of unit
+                  | `TLower of 'a O.IF.L.lstate
+                  | `TPivot of 'a O.IF.P.lstate
+                  | `TRan of 'a GEF.TrackRank.lstate ]
+                 list;
+         .. >,
+       ('a, O.res) Code.abstract)
+      StateCPSMonad.monad
   end
 module GenFV4 :
   sig
@@ -19666,18 +20416,18 @@ module GenFV4 :
       list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
     val init :
       ('a, GVC_F.contr) Code.abstract ->
-      ([> `TDet of
-            ('a, int ref) Code.abstract * ('a, GVC_F.Dom.v ref) Code.abstract
-        | `TLower of ('a, GVC_F.contr) Code.abstract
-        | `TPivot of ('a, GEF.PermList.perm_rep ref) Code.abstract
-        | `TRan of 'a GEF.TrackRank.lstate ]
-       as 'b)
-      list ->
-      ('b list ->
+      (< answer : ('a, 'b) Code.abstract;
+         state : [> `TDet of
+                      ('a, int ref) Code.abstract *
+                      ('a, GVC_F.Dom.v ref) Code.abstract
+                  | `TLower of ('a, GVC_F.contr) Code.abstract
+                  | `TPivot of ('a, GEF.PermList.perm_rep ref) Code.abstract
+                  | `TRan of 'a GEF.TrackRank.lstate ]
+                 list;
+         .. >,
        'a G_GVC_F.wmatrix * ('a, int ref) Code.abstract *
-       ('a, int ref) Code.abstract * ('a, int) Code.abstract ->
-       ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
+       ('a, int ref) Code.abstract * ('a, int) Code.abstract)
+      StateCPSMonad.monad
     val forward_elim :
       'a G_GVC_F.wmatrix * ('a, int ref) Code.abstract *
       ('a, int ref) Code.abstract * ('a, int) Code.abstract ->
@@ -19690,15 +20440,17 @@ module GenFV4 :
       list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
     val gen :
       ('a, GVC_F.contr) Code.abstract ->
-      ([> `TDet of
-            ('a, int ref) Code.abstract * ('a, GVC_F.Dom.v ref) Code.abstract
-        | `TLower of 'a O.IF.L.lstate
-        | `TPivot of 'a O.IF.P.lstate
-        | `TRan of 'a GEF.TrackRank.lstate ]
-       as 'b)
-      list ->
-      ('b list -> ('a, O.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
+      (< answer : ('a, 'b) Code.abstract;
+         state : [> `TDet of
+                      ('a, int ref) Code.abstract *
+                      ('a, GVC_F.Dom.v ref) Code.abstract
+                  | `TLower of 'a O.IF.L.lstate
+                  | `TPivot of 'a O.IF.P.lstate
+                  | `TRan of 'a GEF.TrackRank.lstate ]
+                 list;
+         .. >,
+       ('a, O.res) Code.abstract)
+      StateCPSMonad.monad
   end
 module GenFV5 :
   sig
@@ -19819,18 +20571,18 @@ module GenFV5 :
       list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
     val init :
       ('a, GVC_F.contr) Code.abstract ->
-      ([> `TDet of
-            ('a, int ref) Code.abstract * ('a, GVC_F.Dom.v ref) Code.abstract
-        | `TLower of ('a, GVC_F.contr) Code.abstract
-        | `TPivot of ('a, GEF.PermList.perm_rep ref) Code.abstract
-        | `TRan of 'a GEF.TrackRank.lstate ]
-       as 'b)
-      list ->
-      ('b list ->
+      (< answer : ('a, 'b) Code.abstract;
+         state : [> `TDet of
+                      ('a, int ref) Code.abstract *
+                      ('a, GVC_F.Dom.v ref) Code.abstract
+                  | `TLower of ('a, GVC_F.contr) Code.abstract
+                  | `TPivot of ('a, GEF.PermList.perm_rep ref) Code.abstract
+                  | `TRan of 'a GEF.TrackRank.lstate ]
+                 list;
+         .. >,
        'a G_GVC_F.wmatrix * ('a, int ref) Code.abstract *
-       ('a, int ref) Code.abstract * ('a, int) Code.abstract ->
-       ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
+       ('a, int ref) Code.abstract * ('a, int) Code.abstract)
+      StateCPSMonad.monad
     val forward_elim :
       'a G_GVC_F.wmatrix * ('a, int ref) Code.abstract *
       ('a, int ref) Code.abstract * ('a, int) Code.abstract ->
@@ -19843,15 +20595,17 @@ module GenFV5 :
       list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
     val gen :
       ('a, GVC_F.contr) Code.abstract ->
-      ([> `TDet of
-            ('a, int ref) Code.abstract * ('a, GVC_F.Dom.v ref) Code.abstract
-        | `TLower of 'a O.IF.L.lstate
-        | `TPivot of 'a O.IF.P.lstate
-        | `TRan of 'a GEF.TrackRank.lstate ]
-       as 'b)
-      list ->
-      ('b list -> ('a, O.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
+      (< answer : ('a, 'b) Code.abstract;
+         state : [> `TDet of
+                      ('a, int ref) Code.abstract *
+                      ('a, GVC_F.Dom.v ref) Code.abstract
+                  | `TLower of 'a O.IF.L.lstate
+                  | `TPivot of 'a O.IF.P.lstate
+                  | `TRan of 'a GEF.TrackRank.lstate ]
+                 list;
+         .. >,
+       ('a, O.res) Code.abstract)
+      StateCPSMonad.monad
   end
 module GenFV6 :
   sig
@@ -19966,17 +20720,16 @@ module GenFV6 :
       list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
     val init :
       ('a, GVC_F.contr) Code.abstract ->
-      ([> `TDet of unit
-        | `TLower of ('a, GVC_F.contr) Code.abstract
-        | `TPivot of ('a, Code.perm list ref) Code.abstract
-        | `TRan of 'a GEF.TrackRank.lstate ]
-       as 'b)
-      list ->
-      ('b list ->
+      (< answer : ('a, 'b) Code.abstract;
+         state : [> `TDet of unit
+                  | `TLower of ('a, GVC_F.contr) Code.abstract
+                  | `TPivot of ('a, Code.perm list ref) Code.abstract
+                  | `TRan of 'a GEF.TrackRank.lstate ]
+                 list;
+         .. >,
        'a G_GVC_F.wmatrix * ('a, int ref) Code.abstract *
-       ('a, int ref) Code.abstract * ('a, int) Code.abstract ->
-       ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
+       ('a, int ref) Code.abstract * ('a, int) Code.abstract)
+      StateCPSMonad.monad
     val forward_elim :
       'a G_GVC_F.wmatrix * ('a, int ref) Code.abstract *
       ('a, int ref) Code.abstract * ('a, int) Code.abstract ->
@@ -19988,14 +20741,15 @@ module GenFV6 :
       list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
     val gen :
       ('a, GVC_F.contr) Code.abstract ->
-      ([> `TDet of unit
-        | `TLower of 'a O.IF.L.lstate
-        | `TPivot of 'a O.IF.P.lstate
-        | `TRan of 'a GEF.TrackRank.lstate ]
-       as 'b)
-      list ->
-      ('b list -> ('a, O.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
+      (< answer : ('a, 'b) Code.abstract;
+         state : [> `TDet of unit
+                  | `TLower of 'a O.IF.L.lstate
+                  | `TPivot of 'a O.IF.P.lstate
+                  | `TRan of 'a GEF.TrackRank.lstate ]
+                 list;
+         .. >,
+       ('a, O.res) Code.abstract)
+      StateCPSMonad.monad
   end
 module GenFV7 :
   sig
@@ -20110,17 +20864,16 @@ module GenFV7 :
       list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
     val init :
       ('a, GVC_F.contr) Code.abstract ->
-      ([> `TDet of unit
-        | `TLower of ('a, GVC_F.contr) Code.abstract
-        | `TPivot of ('a, Code.perm list ref) Code.abstract
-        | `TRan of 'a GEF.TrackRank.lstate ]
-       as 'b)
-      list ->
-      ('b list ->
+      (< answer : ('a, 'b) Code.abstract;
+         state : [> `TDet of unit
+                  | `TLower of ('a, GVC_F.contr) Code.abstract
+                  | `TPivot of ('a, Code.perm list ref) Code.abstract
+                  | `TRan of 'a GEF.TrackRank.lstate ]
+                 list;
+         .. >,
        'a G_GVC_F.wmatrix * ('a, int ref) Code.abstract *
-       ('a, int ref) Code.abstract * ('a, int) Code.abstract ->
-       ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
+       ('a, int ref) Code.abstract * ('a, int) Code.abstract)
+      StateCPSMonad.monad
     val forward_elim :
       'a G_GVC_F.wmatrix * ('a, int ref) Code.abstract *
       ('a, int ref) Code.abstract * ('a, int) Code.abstract ->
@@ -20132,14 +20885,15 @@ module GenFV7 :
       list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
     val gen :
       ('a, GVC_F.contr) Code.abstract ->
-      ([> `TDet of unit
-        | `TLower of 'a O.IF.L.lstate
-        | `TPivot of 'a O.IF.P.lstate
-        | `TRan of 'a GEF.TrackRank.lstate ]
-       as 'b)
-      list ->
-      ('b list -> ('a, O.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
+      (< answer : ('a, 'b) Code.abstract;
+         state : [> `TDet of unit
+                  | `TLower of 'a O.IF.L.lstate
+                  | `TPivot of 'a O.IF.P.lstate
+                  | `TRan of 'a GEF.TrackRank.lstate ]
+                 list;
+         .. >,
+       ('a, O.res) Code.abstract)
+      StateCPSMonad.monad
   end
 module GenIA1 :
   sig
@@ -20260,18 +21014,18 @@ module GenIA1 :
       list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
     val init :
       ('a, GAC_I.contr) Code.abstract ->
-      ([> `TDet of
-            ('a, int ref) Code.abstract * ('a, GAC_I.Dom.v ref) Code.abstract
-        | `TLower of ('a, GAC_I.contr) Code.abstract
-        | `TPivot of ('a, GEF.PermList.perm_rep ref) Code.abstract
-        | `TRan of 'a GEF.TrackRank.lstate ]
-       as 'b)
-      list ->
-      ('b list ->
+      (< answer : ('a, 'b) Code.abstract;
+         state : [> `TDet of
+                      ('a, int ref) Code.abstract *
+                      ('a, GAC_I.Dom.v ref) Code.abstract
+                  | `TLower of ('a, GAC_I.contr) Code.abstract
+                  | `TPivot of ('a, GEF.PermList.perm_rep ref) Code.abstract
+                  | `TRan of 'a GEF.TrackRank.lstate ]
+                 list;
+         .. >,
        'a G_GAC_I.wmatrix * ('a, int ref) Code.abstract *
-       ('a, int ref) Code.abstract * ('a, int) Code.abstract ->
-       ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
+       ('a, int ref) Code.abstract * ('a, int) Code.abstract)
+      StateCPSMonad.monad
     val forward_elim :
       'a G_GAC_I.wmatrix * ('a, int ref) Code.abstract *
       ('a, int ref) Code.abstract * ('a, int) Code.abstract ->
@@ -20284,15 +21038,17 @@ module GenIA1 :
       list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
     val gen :
       ('a, GAC_I.contr) Code.abstract ->
-      ([> `TDet of
-            ('a, int ref) Code.abstract * ('a, GAC_I.Dom.v ref) Code.abstract
-        | `TLower of 'a O.IF.L.lstate
-        | `TPivot of 'a O.IF.P.lstate
-        | `TRan of 'a GEF.TrackRank.lstate ]
-       as 'b)
-      list ->
-      ('b list -> ('a, O.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
+      (< answer : ('a, 'b) Code.abstract;
+         state : [> `TDet of
+                      ('a, int ref) Code.abstract *
+                      ('a, GAC_I.Dom.v ref) Code.abstract
+                  | `TLower of 'a O.IF.L.lstate
+                  | `TPivot of 'a O.IF.P.lstate
+                  | `TRan of 'a GEF.TrackRank.lstate ]
+                 list;
+         .. >,
+       ('a, O.res) Code.abstract)
+      StateCPSMonad.monad
   end
 - : unit = ()
 module GenIA2 :
@@ -20414,18 +21170,18 @@ module GenIA2 :
       list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
     val init :
       ('a, GAC_I.contr) Code.abstract ->
-      ([> `TDet of
-            ('a, int ref) Code.abstract * ('a, GAC_I.Dom.v ref) Code.abstract
-        | `TLower of ('a, GAC_I.contr) Code.abstract
-        | `TPivot of ('a, GEF.PermList.perm_rep ref) Code.abstract
-        | `TRan of 'a GEF.TrackRank.lstate ]
-       as 'b)
-      list ->
-      ('b list ->
+      (< answer : ('a, 'b) Code.abstract;
+         state : [> `TDet of
+                      ('a, int ref) Code.abstract *
+                      ('a, GAC_I.Dom.v ref) Code.abstract
+                  | `TLower of ('a, GAC_I.contr) Code.abstract
+                  | `TPivot of ('a, GEF.PermList.perm_rep ref) Code.abstract
+                  | `TRan of 'a GEF.TrackRank.lstate ]
+                 list;
+         .. >,
        'a G_GAC_I.wmatrix * ('a, int ref) Code.abstract *
-       ('a, int ref) Code.abstract * ('a, int) Code.abstract ->
-       ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
+       ('a, int ref) Code.abstract * ('a, int) Code.abstract)
+      StateCPSMonad.monad
     val forward_elim :
       'a G_GAC_I.wmatrix * ('a, int ref) Code.abstract *
       ('a, int ref) Code.abstract * ('a, int) Code.abstract ->
@@ -20438,15 +21194,17 @@ module GenIA2 :
       list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
     val gen :
       ('a, GAC_I.contr) Code.abstract ->
-      ([> `TDet of
-            ('a, int ref) Code.abstract * ('a, GAC_I.Dom.v ref) Code.abstract
-        | `TLower of 'a O.IF.L.lstate
-        | `TPivot of 'a O.IF.P.lstate
-        | `TRan of 'a GEF.TrackRank.lstate ]
-       as 'b)
-      list ->
-      ('b list -> ('a, O.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
+      (< answer : ('a, 'b) Code.abstract;
+         state : [> `TDet of
+                      ('a, int ref) Code.abstract *
+                      ('a, GAC_I.Dom.v ref) Code.abstract
+                  | `TLower of 'a O.IF.L.lstate
+                  | `TPivot of 'a O.IF.P.lstate
+                  | `TRan of 'a GEF.TrackRank.lstate ]
+                 list;
+         .. >,
+       ('a, O.res) Code.abstract)
+      StateCPSMonad.monad
   end
 module GenIA3 :
   sig
@@ -20567,18 +21325,18 @@ module GenIA3 :
       list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
     val init :
       ('a, GAC_I.contr) Code.abstract ->
-      ([> `TDet of
-            ('a, int ref) Code.abstract * ('a, GAC_I.Dom.v ref) Code.abstract
-        | `TLower of ('a, GAC_I.contr) Code.abstract
-        | `TPivot of ('a, GEF.PermList.perm_rep ref) Code.abstract
-        | `TRan of 'a GEF.TrackRank.lstate ]
-       as 'b)
-      list ->
-      ('b list ->
+      (< answer : ('a, 'b) Code.abstract;
+         state : [> `TDet of
+                      ('a, int ref) Code.abstract *
+                      ('a, GAC_I.Dom.v ref) Code.abstract
+                  | `TLower of ('a, GAC_I.contr) Code.abstract
+                  | `TPivot of ('a, GEF.PermList.perm_rep ref) Code.abstract
+                  | `TRan of 'a GEF.TrackRank.lstate ]
+                 list;
+         .. >,
        'a G_GAC_I.wmatrix * ('a, int ref) Code.abstract *
-       ('a, int ref) Code.abstract * ('a, int) Code.abstract ->
-       ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
+       ('a, int ref) Code.abstract * ('a, int) Code.abstract)
+      StateCPSMonad.monad
     val forward_elim :
       'a G_GAC_I.wmatrix * ('a, int ref) Code.abstract *
       ('a, int ref) Code.abstract * ('a, int) Code.abstract ->
@@ -20591,15 +21349,17 @@ module GenIA3 :
       list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
     val gen :
       ('a, GAC_I.contr) Code.abstract ->
-      ([> `TDet of
-            ('a, int ref) Code.abstract * ('a, GAC_I.Dom.v ref) Code.abstract
-        | `TLower of 'a O.IF.L.lstate
-        | `TPivot of 'a O.IF.P.lstate
-        | `TRan of 'a GEF.TrackRank.lstate ]
-       as 'b)
-      list ->
-      ('b list -> ('a, O.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
+      (< answer : ('a, 'b) Code.abstract;
+         state : [> `TDet of
+                      ('a, int ref) Code.abstract *
+                      ('a, GAC_I.Dom.v ref) Code.abstract
+                  | `TLower of 'a O.IF.L.lstate
+                  | `TPivot of 'a O.IF.P.lstate
+                  | `TRan of 'a GEF.TrackRank.lstate ]
+                 list;
+         .. >,
+       ('a, O.res) Code.abstract)
+      StateCPSMonad.monad
   end
 module GenIA4 :
   sig
@@ -20720,18 +21480,18 @@ module GenIA4 :
       list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
     val init :
       ('a, GAC_I.contr) Code.abstract ->
-      ([> `TDet of
-            ('a, int ref) Code.abstract * ('a, GAC_I.Dom.v ref) Code.abstract
-        | `TLower of ('a, GAC_I.contr) Code.abstract
-        | `TPivot of ('a, GEF.PermList.perm_rep ref) Code.abstract
-        | `TRan of 'a GEF.TrackRank.lstate ]
-       as 'b)
-      list ->
-      ('b list ->
+      (< answer : ('a, 'b) Code.abstract;
+         state : [> `TDet of
+                      ('a, int ref) Code.abstract *
+                      ('a, GAC_I.Dom.v ref) Code.abstract
+                  | `TLower of ('a, GAC_I.contr) Code.abstract
+                  | `TPivot of ('a, GEF.PermList.perm_rep ref) Code.abstract
+                  | `TRan of 'a GEF.TrackRank.lstate ]
+                 list;
+         .. >,
        'a G_GAC_I.wmatrix * ('a, int ref) Code.abstract *
-       ('a, int ref) Code.abstract * ('a, int) Code.abstract ->
-       ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
+       ('a, int ref) Code.abstract * ('a, int) Code.abstract)
+      StateCPSMonad.monad
     val forward_elim :
       'a G_GAC_I.wmatrix * ('a, int ref) Code.abstract *
       ('a, int ref) Code.abstract * ('a, int) Code.abstract ->
@@ -20744,15 +21504,17 @@ module GenIA4 :
       list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
     val gen :
       ('a, GAC_I.contr) Code.abstract ->
-      ([> `TDet of
-            ('a, int ref) Code.abstract * ('a, GAC_I.Dom.v ref) Code.abstract
-        | `TLower of 'a O.IF.L.lstate
-        | `TPivot of 'a O.IF.P.lstate
-        | `TRan of 'a GEF.TrackRank.lstate ]
-       as 'b)
-      list ->
-      ('b list -> ('a, O.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
+      (< answer : ('a, 'b) Code.abstract;
+         state : [> `TDet of
+                      ('a, int ref) Code.abstract *
+                      ('a, GAC_I.Dom.v ref) Code.abstract
+                  | `TLower of 'a O.IF.L.lstate
+                  | `TPivot of 'a O.IF.P.lstate
+                  | `TRan of 'a GEF.TrackRank.lstate ]
+                 list;
+         .. >,
+       ('a, O.res) Code.abstract)
+      StateCPSMonad.monad
   end
 - : unit = ()
 - : unit = ()
@@ -20875,18 +21637,18 @@ module GenIV1 :
       list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
     val init :
       ('a, GVC_I.contr) Code.abstract ->
-      ([> `TDet of
-            ('a, int ref) Code.abstract * ('a, GVC_I.Dom.v ref) Code.abstract
-        | `TLower of ('a, GVC_I.contr) Code.abstract
-        | `TPivot of ('a, GEF.PermList.perm_rep ref) Code.abstract
-        | `TRan of 'a GEF.TrackRank.lstate ]
-       as 'b)
-      list ->
-      ('b list ->
+      (< answer : ('a, 'b) Code.abstract;
+         state : [> `TDet of
+                      ('a, int ref) Code.abstract *
+                      ('a, GVC_I.Dom.v ref) Code.abstract
+                  | `TLower of ('a, GVC_I.contr) Code.abstract
+                  | `TPivot of ('a, GEF.PermList.perm_rep ref) Code.abstract
+                  | `TRan of 'a GEF.TrackRank.lstate ]
+                 list;
+         .. >,
        'a G_GVC_I.wmatrix * ('a, int ref) Code.abstract *
-       ('a, int ref) Code.abstract * ('a, int) Code.abstract ->
-       ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
+       ('a, int ref) Code.abstract * ('a, int) Code.abstract)
+      StateCPSMonad.monad
     val forward_elim :
       'a G_GVC_I.wmatrix * ('a, int ref) Code.abstract *
       ('a, int ref) Code.abstract * ('a, int) Code.abstract ->
@@ -20899,15 +21661,17 @@ module GenIV1 :
       list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
     val gen :
       ('a, GVC_I.contr) Code.abstract ->
-      ([> `TDet of
-            ('a, int ref) Code.abstract * ('a, GVC_I.Dom.v ref) Code.abstract
-        | `TLower of 'a O.IF.L.lstate
-        | `TPivot of 'a O.IF.P.lstate
-        | `TRan of 'a GEF.TrackRank.lstate ]
-       as 'b)
-      list ->
-      ('b list -> ('a, O.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
+      (< answer : ('a, 'b) Code.abstract;
+         state : [> `TDet of
+                      ('a, int ref) Code.abstract *
+                      ('a, GVC_I.Dom.v ref) Code.abstract
+                  | `TLower of 'a O.IF.L.lstate
+                  | `TPivot of 'a O.IF.P.lstate
+                  | `TRan of 'a GEF.TrackRank.lstate ]
+                 list;
+         .. >,
+       ('a, O.res) Code.abstract)
+      StateCPSMonad.monad
   end
 module GenIV2 :
   sig
@@ -21028,18 +21792,18 @@ module GenIV2 :
       list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
     val init :
       ('a, GVC_I.contr) Code.abstract ->
-      ([> `TDet of
-            ('a, int ref) Code.abstract * ('a, GVC_I.Dom.v ref) Code.abstract
-        | `TLower of ('a, GVC_I.contr) Code.abstract
-        | `TPivot of ('a, GEF.PermList.perm_rep ref) Code.abstract
-        | `TRan of 'a GEF.TrackRank.lstate ]
-       as 'b)
-      list ->
-      ('b list ->
+      (< answer : ('a, 'b) Code.abstract;
+         state : [> `TDet of
+                      ('a, int ref) Code.abstract *
+                      ('a, GVC_I.Dom.v ref) Code.abstract
+                  | `TLower of ('a, GVC_I.contr) Code.abstract
+                  | `TPivot of ('a, GEF.PermList.perm_rep ref) Code.abstract
+                  | `TRan of 'a GEF.TrackRank.lstate ]
+                 list;
+         .. >,
        'a G_GVC_I.wmatrix * ('a, int ref) Code.abstract *
-       ('a, int ref) Code.abstract * ('a, int) Code.abstract ->
-       ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
+       ('a, int ref) Code.abstract * ('a, int) Code.abstract)
+      StateCPSMonad.monad
     val forward_elim :
       'a G_GVC_I.wmatrix * ('a, int ref) Code.abstract *
       ('a, int ref) Code.abstract * ('a, int) Code.abstract ->
@@ -21052,15 +21816,17 @@ module GenIV2 :
       list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
     val gen :
       ('a, GVC_I.contr) Code.abstract ->
-      ([> `TDet of
-            ('a, int ref) Code.abstract * ('a, GVC_I.Dom.v ref) Code.abstract
-        | `TLower of 'a O.IF.L.lstate
-        | `TPivot of 'a O.IF.P.lstate
-        | `TRan of 'a GEF.TrackRank.lstate ]
-       as 'b)
-      list ->
-      ('b list -> ('a, O.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
+      (< answer : ('a, 'b) Code.abstract;
+         state : [> `TDet of
+                      ('a, int ref) Code.abstract *
+                      ('a, GVC_I.Dom.v ref) Code.abstract
+                  | `TLower of 'a O.IF.L.lstate
+                  | `TPivot of 'a O.IF.P.lstate
+                  | `TRan of 'a GEF.TrackRank.lstate ]
+                 list;
+         .. >,
+       ('a, O.res) Code.abstract)
+      StateCPSMonad.monad
   end
 module GenIV3 :
   sig
@@ -21181,18 +21947,18 @@ module GenIV3 :
       list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
     val init :
       ('a, GVC_I.contr) Code.abstract ->
-      ([> `TDet of
-            ('a, int ref) Code.abstract * ('a, GVC_I.Dom.v ref) Code.abstract
-        | `TLower of ('a, GVC_I.contr) Code.abstract
-        | `TPivot of ('a, GEF.PermList.perm_rep ref) Code.abstract
-        | `TRan of 'a GEF.TrackRank.lstate ]
-       as 'b)
-      list ->
-      ('b list ->
+      (< answer : ('a, 'b) Code.abstract;
+         state : [> `TDet of
+                      ('a, int ref) Code.abstract *
+                      ('a, GVC_I.Dom.v ref) Code.abstract
+                  | `TLower of ('a, GVC_I.contr) Code.abstract
+                  | `TPivot of ('a, GEF.PermList.perm_rep ref) Code.abstract
+                  | `TRan of 'a GEF.TrackRank.lstate ]
+                 list;
+         .. >,
        'a G_GVC_I.wmatrix * ('a, int ref) Code.abstract *
-       ('a, int ref) Code.abstract * ('a, int) Code.abstract ->
-       ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
+       ('a, int ref) Code.abstract * ('a, int) Code.abstract)
+      StateCPSMonad.monad
     val forward_elim :
       'a G_GVC_I.wmatrix * ('a, int ref) Code.abstract *
       ('a, int ref) Code.abstract * ('a, int) Code.abstract ->
@@ -21205,15 +21971,17 @@ module GenIV3 :
       list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
     val gen :
       ('a, GVC_I.contr) Code.abstract ->
-      ([> `TDet of
-            ('a, int ref) Code.abstract * ('a, GVC_I.Dom.v ref) Code.abstract
-        | `TLower of 'a O.IF.L.lstate
-        | `TPivot of 'a O.IF.P.lstate
-        | `TRan of 'a GEF.TrackRank.lstate ]
-       as 'b)
-      list ->
-      ('b list -> ('a, O.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
+      (< answer : ('a, 'b) Code.abstract;
+         state : [> `TDet of
+                      ('a, int ref) Code.abstract *
+                      ('a, GVC_I.Dom.v ref) Code.abstract
+                  | `TLower of 'a O.IF.L.lstate
+                  | `TPivot of 'a O.IF.P.lstate
+                  | `TRan of 'a GEF.TrackRank.lstate ]
+                 list;
+         .. >,
+       ('a, O.res) Code.abstract)
+      StateCPSMonad.monad
   end
 module GenIV4 :
   sig
@@ -21334,18 +22102,18 @@ module GenIV4 :
       list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
     val init :
       ('a, GVC_I.contr) Code.abstract ->
-      ([> `TDet of
-            ('a, int ref) Code.abstract * ('a, GVC_I.Dom.v ref) Code.abstract
-        | `TLower of ('a, GVC_I.contr) Code.abstract
-        | `TPivot of ('a, GEF.PermList.perm_rep ref) Code.abstract
-        | `TRan of 'a GEF.TrackRank.lstate ]
-       as 'b)
-      list ->
-      ('b list ->
+      (< answer : ('a, 'b) Code.abstract;
+         state : [> `TDet of
+                      ('a, int ref) Code.abstract *
+                      ('a, GVC_I.Dom.v ref) Code.abstract
+                  | `TLower of ('a, GVC_I.contr) Code.abstract
+                  | `TPivot of ('a, GEF.PermList.perm_rep ref) Code.abstract
+                  | `TRan of 'a GEF.TrackRank.lstate ]
+                 list;
+         .. >,
        'a G_GVC_I.wmatrix * ('a, int ref) Code.abstract *
-       ('a, int ref) Code.abstract * ('a, int) Code.abstract ->
-       ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
+       ('a, int ref) Code.abstract * ('a, int) Code.abstract)
+      StateCPSMonad.monad
     val forward_elim :
       'a G_GVC_I.wmatrix * ('a, int ref) Code.abstract *
       ('a, int ref) Code.abstract * ('a, int) Code.abstract ->
@@ -21358,15 +22126,17 @@ module GenIV4 :
       list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
     val gen :
       ('a, GVC_I.contr) Code.abstract ->
-      ([> `TDet of
-            ('a, int ref) Code.abstract * ('a, GVC_I.Dom.v ref) Code.abstract
-        | `TLower of 'a O.IF.L.lstate
-        | `TPivot of 'a O.IF.P.lstate
-        | `TRan of 'a GEF.TrackRank.lstate ]
-       as 'b)
-      list ->
-      ('b list -> ('a, O.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
+      (< answer : ('a, 'b) Code.abstract;
+         state : [> `TDet of
+                      ('a, int ref) Code.abstract *
+                      ('a, GVC_I.Dom.v ref) Code.abstract
+                  | `TLower of 'a O.IF.L.lstate
+                  | `TPivot of 'a O.IF.P.lstate
+                  | `TRan of 'a GEF.TrackRank.lstate ]
+                 list;
+         .. >,
+       ('a, O.res) Code.abstract)
+      StateCPSMonad.monad
   end
 module GenIV5 :
   sig
@@ -21487,18 +22257,18 @@ module GenIV5 :
       list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
     val init :
       ('a, GVC_I.contr) Code.abstract ->
-      ([> `TDet of
-            ('a, int ref) Code.abstract * ('a, GVC_I.Dom.v ref) Code.abstract
-        | `TLower of ('a, GVC_I.contr) Code.abstract
-        | `TPivot of ('a, GEF.PermList.perm_rep ref) Code.abstract
-        | `TRan of 'a GEF.TrackRank.lstate ]
-       as 'b)
-      list ->
-      ('b list ->
+      (< answer : ('a, 'b) Code.abstract;
+         state : [> `TDet of
+                      ('a, int ref) Code.abstract *
+                      ('a, GVC_I.Dom.v ref) Code.abstract
+                  | `TLower of ('a, GVC_I.contr) Code.abstract
+                  | `TPivot of ('a, GEF.PermList.perm_rep ref) Code.abstract
+                  | `TRan of 'a GEF.TrackRank.lstate ]
+                 list;
+         .. >,
        'a G_GVC_I.wmatrix * ('a, int ref) Code.abstract *
-       ('a, int ref) Code.abstract * ('a, int) Code.abstract ->
-       ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
+       ('a, int ref) Code.abstract * ('a, int) Code.abstract)
+      StateCPSMonad.monad
     val forward_elim :
       'a G_GVC_I.wmatrix * ('a, int ref) Code.abstract *
       ('a, int ref) Code.abstract * ('a, int) Code.abstract ->
@@ -21511,15 +22281,17 @@ module GenIV5 :
       list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
     val gen :
       ('a, GVC_I.contr) Code.abstract ->
-      ([> `TDet of
-            ('a, int ref) Code.abstract * ('a, GVC_I.Dom.v ref) Code.abstract
-        | `TLower of 'a O.IF.L.lstate
-        | `TPivot of 'a O.IF.P.lstate
-        | `TRan of 'a GEF.TrackRank.lstate ]
-       as 'b)
-      list ->
-      ('b list -> ('a, O.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
+      (< answer : ('a, 'b) Code.abstract;
+         state : [> `TDet of
+                      ('a, int ref) Code.abstract *
+                      ('a, GVC_I.Dom.v ref) Code.abstract
+                  | `TLower of 'a O.IF.L.lstate
+                  | `TPivot of 'a O.IF.P.lstate
+                  | `TRan of 'a GEF.TrackRank.lstate ]
+                 list;
+         .. >,
+       ('a, O.res) Code.abstract)
+      StateCPSMonad.monad
   end
 module GenIV6 :
   sig
@@ -21639,18 +22411,18 @@ module GenIV6 :
       list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
     val init :
       ('a, GVC_I.contr) Code.abstract ->
-      ([> `TDet of
-            ('a, int ref) Code.abstract * ('a, GVC_I.Dom.v ref) Code.abstract
-        | `TLower of ('a, GVC_I.contr) Code.abstract
-        | `TPivot of ('a, Code.perm list ref) Code.abstract
-        | `TRan of 'a GEF.TrackRank.lstate ]
-       as 'b)
-      list ->
-      ('b list ->
+      (< answer : ('a, 'b) Code.abstract;
+         state : [> `TDet of
+                      ('a, int ref) Code.abstract *
+                      ('a, GVC_I.Dom.v ref) Code.abstract
+                  | `TLower of ('a, GVC_I.contr) Code.abstract
+                  | `TPivot of ('a, Code.perm list ref) Code.abstract
+                  | `TRan of 'a GEF.TrackRank.lstate ]
+                 list;
+         .. >,
        'a G_GVC_I.wmatrix * ('a, int ref) Code.abstract *
-       ('a, int ref) Code.abstract * ('a, int) Code.abstract ->
-       ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
+       ('a, int ref) Code.abstract * ('a, int) Code.abstract)
+      StateCPSMonad.monad
     val forward_elim :
       'a G_GVC_I.wmatrix * ('a, int ref) Code.abstract *
       ('a, int ref) Code.abstract * ('a, int) Code.abstract ->
@@ -21663,15 +22435,17 @@ module GenIV6 :
       list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
     val gen :
       ('a, GVC_I.contr) Code.abstract ->
-      ([> `TDet of
-            ('a, int ref) Code.abstract * ('a, GVC_I.Dom.v ref) Code.abstract
-        | `TLower of 'a O.IF.L.lstate
-        | `TPivot of 'a O.IF.P.lstate
-        | `TRan of 'a GEF.TrackRank.lstate ]
-       as 'b)
-      list ->
-      ('b list -> ('a, O.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
+      (< answer : ('a, 'b) Code.abstract;
+         state : [> `TDet of
+                      ('a, int ref) Code.abstract *
+                      ('a, GVC_I.Dom.v ref) Code.abstract
+                  | `TLower of 'a O.IF.L.lstate
+                  | `TPivot of 'a O.IF.P.lstate
+                  | `TRan of 'a GEF.TrackRank.lstate ]
+                 list;
+         .. >,
+       ('a, O.res) Code.abstract)
+      StateCPSMonad.monad
   end
 module GenRA1 :
   sig
@@ -21787,17 +22561,16 @@ module GenRA1 :
       list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
     val init :
       ('a, GAC_R.contr) Code.abstract ->
-      ([> `TDet of unit
-        | `TLower of ('a, GAC_R.contr) Code.abstract
-        | `TPivot of ('a, GEF.PermList.perm_rep ref) Code.abstract
-        | `TRan of 'a GEF.TrackRank.lstate ]
-       as 'b)
-      list ->
-      ('b list ->
+      (< answer : ('a, 'b) Code.abstract;
+         state : [> `TDet of unit
+                  | `TLower of ('a, GAC_R.contr) Code.abstract
+                  | `TPivot of ('a, GEF.PermList.perm_rep ref) Code.abstract
+                  | `TRan of 'a GEF.TrackRank.lstate ]
+                 list;
+         .. >,
        'a G_GAC_R.wmatrix * ('a, int ref) Code.abstract *
-       ('a, int ref) Code.abstract * ('a, int) Code.abstract ->
-       ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
+       ('a, int ref) Code.abstract * ('a, int) Code.abstract)
+      StateCPSMonad.monad
     val forward_elim :
       'a G_GAC_R.wmatrix * ('a, int ref) Code.abstract *
       ('a, int ref) Code.abstract * ('a, int) Code.abstract ->
@@ -21809,14 +22582,15 @@ module GenRA1 :
       list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
     val gen :
       ('a, GAC_R.contr) Code.abstract ->
-      ([> `TDet of unit
-        | `TLower of 'a O.IF.L.lstate
-        | `TPivot of 'a O.IF.P.lstate
-        | `TRan of 'a GEF.TrackRank.lstate ]
-       as 'b)
-      list ->
-      ('b list -> ('a, O.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
+      (< answer : ('a, 'b) Code.abstract;
+         state : [> `TDet of unit
+                  | `TLower of 'a O.IF.L.lstate
+                  | `TPivot of 'a O.IF.P.lstate
+                  | `TRan of 'a GEF.TrackRank.lstate ]
+                 list;
+         .. >,
+       ('a, O.res) Code.abstract)
+      StateCPSMonad.monad
   end
 module GenRA2 :
   sig
@@ -21937,18 +22711,18 @@ module GenRA2 :
       list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
     val init :
       ('a, GAC_R.contr) Code.abstract ->
-      ([> `TDet of
-            ('a, int ref) Code.abstract * ('a, GAC_R.Dom.v ref) Code.abstract
-        | `TLower of ('a, GAC_R.contr) Code.abstract
-        | `TPivot of ('a, GEF.PermList.perm_rep ref) Code.abstract
-        | `TRan of 'a GEF.TrackRank.lstate ]
-       as 'b)
-      list ->
-      ('b list ->
+      (< answer : ('a, 'b) Code.abstract;
+         state : [> `TDet of
+                      ('a, int ref) Code.abstract *
+                      ('a, GAC_R.Dom.v ref) Code.abstract
+                  | `TLower of ('a, GAC_R.contr) Code.abstract
+                  | `TPivot of ('a, GEF.PermList.perm_rep ref) Code.abstract
+                  | `TRan of 'a GEF.TrackRank.lstate ]
+                 list;
+         .. >,
        'a G_GAC_R.wmatrix * ('a, int ref) Code.abstract *
-       ('a, int ref) Code.abstract * ('a, int) Code.abstract ->
-       ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
+       ('a, int ref) Code.abstract * ('a, int) Code.abstract)
+      StateCPSMonad.monad
     val forward_elim :
       'a G_GAC_R.wmatrix * ('a, int ref) Code.abstract *
       ('a, int ref) Code.abstract * ('a, int) Code.abstract ->
@@ -21961,15 +22735,17 @@ module GenRA2 :
       list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
     val gen :
       ('a, GAC_R.contr) Code.abstract ->
-      ([> `TDet of
-            ('a, int ref) Code.abstract * ('a, GAC_R.Dom.v ref) Code.abstract
-        | `TLower of 'a O.IF.L.lstate
-        | `TPivot of 'a O.IF.P.lstate
-        | `TRan of 'a GEF.TrackRank.lstate ]
-       as 'b)
-      list ->
-      ('b list -> ('a, O.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
+      (< answer : ('a, 'b) Code.abstract;
+         state : [> `TDet of
+                      ('a, int ref) Code.abstract *
+                      ('a, GAC_R.Dom.v ref) Code.abstract
+                  | `TLower of 'a O.IF.L.lstate
+                  | `TPivot of 'a O.IF.P.lstate
+                  | `TRan of 'a GEF.TrackRank.lstate ]
+                 list;
+         .. >,
+       ('a, O.res) Code.abstract)
+      StateCPSMonad.monad
   end
 module GenRA3 :
   sig
@@ -22085,17 +22861,16 @@ module GenRA3 :
       list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
     val init :
       ('a, GAC_R.contr) Code.abstract ->
-      ([> `TDet of unit
-        | `TLower of ('a, GAC_R.contr) Code.abstract
-        | `TPivot of ('a, GEF.PermList.perm_rep ref) Code.abstract
-        | `TRan of 'a GEF.TrackRank.lstate ]
-       as 'b)
-      list ->
-      ('b list ->
+      (< answer : ('a, 'b) Code.abstract;
+         state : [> `TDet of unit
+                  | `TLower of ('a, GAC_R.contr) Code.abstract
+                  | `TPivot of ('a, GEF.PermList.perm_rep ref) Code.abstract
+                  | `TRan of 'a GEF.TrackRank.lstate ]
+                 list;
+         .. >,
        'a G_GAC_R.wmatrix * ('a, int ref) Code.abstract *
-       ('a, int ref) Code.abstract * ('a, int) Code.abstract ->
-       ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
+       ('a, int ref) Code.abstract * ('a, int) Code.abstract)
+      StateCPSMonad.monad
     val forward_elim :
       'a G_GAC_R.wmatrix * ('a, int ref) Code.abstract *
       ('a, int ref) Code.abstract * ('a, int) Code.abstract ->
@@ -22107,14 +22882,15 @@ module GenRA3 :
       list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
     val gen :
       ('a, GAC_R.contr) Code.abstract ->
-      ([> `TDet of unit
-        | `TLower of 'a O.IF.L.lstate
-        | `TPivot of 'a O.IF.P.lstate
-        | `TRan of 'a GEF.TrackRank.lstate ]
-       as 'b)
-      list ->
-      ('b list -> ('a, O.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
+      (< answer : ('a, 'b) Code.abstract;
+         state : [> `TDet of unit
+                  | `TLower of 'a O.IF.L.lstate
+                  | `TPivot of 'a O.IF.P.lstate
+                  | `TRan of 'a GEF.TrackRank.lstate ]
+                 list;
+         .. >,
+       ('a, O.res) Code.abstract)
+      StateCPSMonad.monad
   end
 module GenRA4 :
   sig
@@ -22235,18 +23011,18 @@ module GenRA4 :
       list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
     val init :
       ('a, GAC_R.contr) Code.abstract ->
-      ([> `TDet of
-            ('a, int ref) Code.abstract * ('a, GAC_R.Dom.v ref) Code.abstract
-        | `TLower of ('a, GAC_R.contr) Code.abstract
-        | `TPivot of ('a, GEF.PermList.perm_rep ref) Code.abstract
-        | `TRan of 'a GEF.TrackRank.lstate ]
-       as 'b)
-      list ->
-      ('b list ->
+      (< answer : ('a, 'b) Code.abstract;
+         state : [> `TDet of
+                      ('a, int ref) Code.abstract *
+                      ('a, GAC_R.Dom.v ref) Code.abstract
+                  | `TLower of ('a, GAC_R.contr) Code.abstract
+                  | `TPivot of ('a, GEF.PermList.perm_rep ref) Code.abstract
+                  | `TRan of 'a GEF.TrackRank.lstate ]
+                 list;
+         .. >,
        'a G_GAC_R.wmatrix * ('a, int ref) Code.abstract *
-       ('a, int ref) Code.abstract * ('a, int) Code.abstract ->
-       ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
+       ('a, int ref) Code.abstract * ('a, int) Code.abstract)
+      StateCPSMonad.monad
     val forward_elim :
       'a G_GAC_R.wmatrix * ('a, int ref) Code.abstract *
       ('a, int ref) Code.abstract * ('a, int) Code.abstract ->
@@ -22259,15 +23035,17 @@ module GenRA4 :
       list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
     val gen :
       ('a, GAC_R.contr) Code.abstract ->
-      ([> `TDet of
-            ('a, int ref) Code.abstract * ('a, GAC_R.Dom.v ref) Code.abstract
-        | `TLower of 'a O.IF.L.lstate
-        | `TPivot of 'a O.IF.P.lstate
-        | `TRan of 'a GEF.TrackRank.lstate ]
-       as 'b)
-      list ->
-      ('b list -> ('a, O.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
+      (< answer : ('a, 'b) Code.abstract;
+         state : [> `TDet of
+                      ('a, int ref) Code.abstract *
+                      ('a, GAC_R.Dom.v ref) Code.abstract
+                  | `TLower of 'a O.IF.L.lstate
+                  | `TPivot of 'a O.IF.P.lstate
+                  | `TRan of 'a GEF.TrackRank.lstate ]
+                 list;
+         .. >,
+       ('a, O.res) Code.abstract)
+      StateCPSMonad.monad
   end
 module GenZp3 :
   sig
@@ -22388,19 +23166,18 @@ module GenZp3 :
       list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
     val init :
       ('a, GVC_Z3.contr) Code.abstract ->
-      ([> `TDet of
-            ('a, int ref) Code.abstract *
-            ('a, GVC_Z3.Dom.v ref) Code.abstract
-        | `TLower of ('a, GVC_Z3.contr) Code.abstract
-        | `TPivot of ('a, Code.perm list ref) Code.abstract
-        | `TRan of 'a GEF.TrackRank.lstate ]
-       as 'b)
-      list ->
-      ('b list ->
+      (< answer : ('a, 'b) Code.abstract;
+         state : [> `TDet of
+                      ('a, int ref) Code.abstract *
+                      ('a, GVC_Z3.Dom.v ref) Code.abstract
+                  | `TLower of ('a, GVC_Z3.contr) Code.abstract
+                  | `TPivot of ('a, Code.perm list ref) Code.abstract
+                  | `TRan of 'a GEF.TrackRank.lstate ]
+                 list;
+         .. >,
        'a G_GVC_Z3.wmatrix * ('a, int ref) Code.abstract *
-       ('a, int ref) Code.abstract * ('a, int) Code.abstract ->
-       ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
+       ('a, int ref) Code.abstract * ('a, int) Code.abstract)
+      StateCPSMonad.monad
     val forward_elim :
       'a G_GVC_Z3.wmatrix * ('a, int ref) Code.abstract *
       ('a, int ref) Code.abstract * ('a, int) Code.abstract ->
@@ -22414,16 +23191,17 @@ module GenZp3 :
       list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
     val gen :
       ('a, GVC_Z3.contr) Code.abstract ->
-      ([> `TDet of
-            ('a, int ref) Code.abstract *
-            ('a, GVC_Z3.Dom.v ref) Code.abstract
-        | `TLower of 'a O.IF.L.lstate
-        | `TPivot of 'a O.IF.P.lstate
-        | `TRan of 'a GEF.TrackRank.lstate ]
-       as 'b)
-      list ->
-      ('b list -> ('a, O.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
+      (< answer : ('a, 'b) Code.abstract;
+         state : [> `TDet of
+                      ('a, int ref) Code.abstract *
+                      ('a, GVC_Z3.Dom.v ref) Code.abstract
+                  | `TLower of 'a O.IF.L.lstate
+                  | `TPivot of 'a O.IF.P.lstate
+                  | `TRan of 'a GEF.TrackRank.lstate ]
+                 list;
+         .. >,
+       ('a, O.res) Code.abstract)
+      StateCPSMonad.monad
   end
 module GenZp19 :
   sig
@@ -22544,19 +23322,18 @@ module GenZp19 :
       list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
     val init :
       ('a, GVC_Z19.contr) Code.abstract ->
-      ([> `TDet of
-            ('a, int ref) Code.abstract *
-            ('a, GVC_Z19.Dom.v ref) Code.abstract
-        | `TLower of ('a, GVC_Z19.contr) Code.abstract
-        | `TPivot of ('a, Code.perm list ref) Code.abstract
-        | `TRan of 'a GEF.TrackRank.lstate ]
-       as 'b)
-      list ->
-      ('b list ->
+      (< answer : ('a, 'b) Code.abstract;
+         state : [> `TDet of
+                      ('a, int ref) Code.abstract *
+                      ('a, GVC_Z19.Dom.v ref) Code.abstract
+                  | `TLower of ('a, GVC_Z19.contr) Code.abstract
+                  | `TPivot of ('a, Code.perm list ref) Code.abstract
+                  | `TRan of 'a GEF.TrackRank.lstate ]
+                 list;
+         .. >,
        'a G_GVC_Z19.wmatrix * ('a, int ref) Code.abstract *
-       ('a, int ref) Code.abstract * ('a, int) Code.abstract ->
-       ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
+       ('a, int ref) Code.abstract * ('a, int) Code.abstract)
+      StateCPSMonad.monad
     val forward_elim :
       'a G_GVC_Z19.wmatrix * ('a, int ref) Code.abstract *
       ('a, int ref) Code.abstract * ('a, int) Code.abstract ->
@@ -22570,16 +23347,17 @@ module GenZp19 :
       list -> ('b list -> ('a, unit) Code.abstract -> 'c) -> 'c
     val gen :
       ('a, GVC_Z19.contr) Code.abstract ->
-      ([> `TDet of
-            ('a, int ref) Code.abstract *
-            ('a, GVC_Z19.Dom.v ref) Code.abstract
-        | `TLower of 'a O.IF.L.lstate
-        | `TPivot of 'a O.IF.P.lstate
-        | `TRan of 'a GEF.TrackRank.lstate ]
-       as 'b)
-      list ->
-      ('b list -> ('a, O.res) Code.abstract -> ('a, 'c) Code.abstract) ->
-      ('a, 'c) Code.abstract
+      (< answer : ('a, 'b) Code.abstract;
+         state : [> `TDet of
+                      ('a, int ref) Code.abstract *
+                      ('a, GVC_Z19.Dom.v ref) Code.abstract
+                  | `TLower of 'a O.IF.L.lstate
+                  | `TPivot of 'a O.IF.P.lstate
+                  | `TRan of 'a GEF.TrackRank.lstate ]
+                 list;
+         .. >,
+       ('a, O.res) Code.abstract)
+      StateCPSMonad.monad
   end
 val resFA1 : ('a, GAC_F.contr -> GenFA1.O.res) code =
   .<fun a_1 ->

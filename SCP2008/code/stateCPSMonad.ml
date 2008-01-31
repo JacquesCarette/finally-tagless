@@ -5,7 +5,8 @@ type ('p,'v) monad = 's -> ('s -> 'v -> 'w) -> 'w
     constraint 'p = <state : 's; answer : 'w; ..>
 
 let ret (a :'v) : ('p,'v) monad = fun s k -> k s a
-let bind a f = fun s k -> a s (fun s' b -> f b s' k)
+let bind (m : ('p,'v) monad) (f : 'v -> ('p,'u) monad) : ('p,'u) monad
+  = fun s k -> m s (fun s' b -> f b s' k)
 
 let k0 _ v = v  (* Initial continuation -- for `reset' and `run' *)
 
