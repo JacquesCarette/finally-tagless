@@ -40,16 +40,7 @@ be borrowed for the introduction/abstract of the paper itself!}
 Reviewer #2: Summary of the submission:
 Analysis of the submission:
 
-p10, the type variable 'p and its constraint: could you explain the problem
-with classifiers in more detail? if the type was "type ('s, 'w, 'v) monad"
-what's wrong with having types like "('a state, 'w, ('a, 'v) code) monad"?
-\jacques{There is an explanation on page 11; perhaps the problem that this
-solves needs to be explained further?}
 
-p10, Figure 1, showing the type of "retN" and maybe some other values would be
-helpful\oleg{done for retN}
-\jacques{the type for bind might be useful too, but I am not sure if it 
-really 'helpful'}
 
 p15, shouldn't the code here appear as the "code type" implementation of an
 "abstract code" module?
@@ -112,10 +103,6 @@ p20, line 23, what is "Det"?
 
 p20, what are "cmonad" and "omonad"?
 
-p20, what is "classif" used for? initially I thought it meant "class if", but I
-just worked out it means "classifier", so this relates to an earlier comment,
-so I think it is important you explain in detail why you need to put the
-classifier in this object.
 
 p20, shouldn't there be an "answer" method in the state objects?
 
@@ -278,9 +265,27 @@ consistency with Swadi et al papers, weher it was first introduced}
 p10,-9, "generation, we" -> "generation we", "variable, environment" ->
 "variable for environment", "classifier" -> "classifiers"
 
+p10, Figure 1, showing the type of "retN" and maybe some other values would be
+helpful\oleg{done for retN}
+\jacques{the type for bind might be useful too, but I am not sure if it 
+really 'helpful'}
+\oleg{done for bind, too}
+
+p10, the type variable 'p and its constraint: could you explain the problem
+with classifiers in more detail? if the type was "type ('s, 'w, 'v) monad"
+what's wrong with having types like "('a state, 'w, ('a, 'v) code) monad"?
+\jacques{There is an explanation on page 11; perhaps the problem that this
+solves needs to be explained further?}
+\oleg{explained further}
+
 p14, line 4, don't you want to assert that "ZpMake" is a "DOMAIN" as was done
 for "IntegerDomain"?
 \oleg{no; explained in text}
 
 p15, line 9, "We" -> "we"
 
+p20, what is "classif" used for? initially I thought it meant "class if", but I
+just worked out it means "classifier", so this relates to an earlier comment,
+so I think it is important you explain in detail why you need to put the
+classifier in this object.
+\oleg{explained on p11}

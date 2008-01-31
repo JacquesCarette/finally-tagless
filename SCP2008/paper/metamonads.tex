@@ -152,7 +152,7 @@ function call -- have a significant cost, especially for
 high-performance numerical computing \cite{Carette06}. Eliminating
 this abstraction overhead involves either complex analyses or
 domain-specific knowledge (or both!)
-\cite{Kennedy01Telescoping,Veldhuisen:2004,scp-CohenDGHKP06?},
+\cite{Kennedy01Telescoping,Veldhuizen:2004,scp-CohenDGHKP06},
 and so we can not rely on a general
 purpose compiler to assuredly perform such optimizations 
 
@@ -641,7 +641,8 @@ type ('p,'v) monad = 's -> ('s -> 'v -> 'w) -> 'w
     constraint 'p = <state : 's; answer : 'w; ..>
 
 let ret (a :'v) : ('p,'v) monad = fun s k -> k s a
-let bind a f = fun s k -> a s (fun s' b -> f b s' k)
+let bind (m : ('p,'v) monad) (f : 'v -> ('p,'u) monad) : ('p,'u) monad
+  = fun s k -> m s (fun s' b -> f b s' k)
 let fetch s k = k s s  and  store v _ k = k v ()
 
 let k0 _ v = v
@@ -673,7 +674,9 @@ yields an answer of type |w|.  The monad is polymorphic over the
 three type parameters, which would require |monad| to be a type
 constructor with three arguments. When we use this monad for code
 generation, we will need yet another type variable for the environment
-classifiers \cite{taha-environment}. With type constructors taking more
+classifiers \cite{taha-environment} (such as the type variable |'c| 
+in the type of |retN| in Figure~\ref{ourmonad}).
+With type constructors taking more
 and more arguments, it becomes increasingly difficult to read and write
 types -- which we will be doing extensively when writing module
 signatures in Section~\ref{functors}. The fact that OCaml renames all type
@@ -702,13 +705,28 @@ have specific effects.  Operations |fetch| and |store v| construct
 computations that read and write the state.
 
 The operation |retN a| is the let-insertion operation, whose simpler
-version we called |letgen| earlier. It is the first computation with
-a control effect: indeed, the result of |retN a| is \emph{not} the
+version we called |letgen| earlier. It is the first computation with a
+control effect: indeed, the result of |retN a| is \emph{not} the
 result of invoking its continuation |k|. Rather, its result is a |let|
-code expression. Such behavior is symptomatic of control operators
-(in particular, |abort|).  The name can be taken to mean \emph{return
-a Named computation}; the name allows for proper sharing, but otherwise 
-|retN| is used in writing generators in the same way as |ret|.
+code expression. Such behavior is symptomatic of control operators (in
+particular, |abort|).  The name can be taken to mean \emph{return a
+  Named computation}; the name allows for proper sharing, but
+otherwise |retN| is used in writing generators in the same way as
+|ret|. The type of |retN| is a specialization of the type of |ret|:
+the computation |retN| deals specifically with code values. The types
+of code values must include the environment classifier 
+(such as |'c|), which denotes
+the scope of free variables that may occur in the code value. The
+argument type of |retN| and the answer type of |retN| computation must
+have the same classifier -- which, informally, means that all free
+variables in the argument of |retN| are preserved in the answer of
+|retN|'s computation. When writing, for clarity, the type annotations
+of |retN| we see the benefits of type-level records: we introduce a
+new component of the record to specify the environment classifier
+|'c|, and we update the |answer| component of the record to specialize
+the answer type to be the type of code. The |state| component of the
+record is not affected, and so remains hidden in the ellipsis |..|. The
+number of parameters to the type constructor |monad| remains the same.
 
 Finally, |runM| runs our monad, that is, given the initial state,
 it performs the computation of
