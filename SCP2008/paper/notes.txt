@@ -40,13 +40,8 @@ be borrowed for the introduction/abstract of the paper itself!}
 Reviewer #2: Summary of the submission:
 Analysis of the submission:
 
-
-
 p15, shouldn't the code here appear as the "code type" implementation of an
 "abstract code" module?
-
-p15, line -2, "twice" -> "in two ways", "twice" suggests they are lifted twice
-in series
 
 p15, what are "Logic" and "Idx" used for?
 
@@ -66,10 +61,6 @@ complexity of code snippets. Mentioning that you do abstract code
 representation in the real implementation but elide it for the paper might make
 the paper more succinct and clearer.
 
-p16, line -5, first state what a "container" is used for
-
-p17, line 4, where does the identifier "rep" come from in this code?
-
 p17, line 4, what is the design decision for making "Dom" a definition inside
 "CONTAINER2D" instead of a parameter of "CONTAINER2D"? For readers not familiar
 with the OCaml module system it might be helpful to provide a brief
@@ -78,16 +69,14 @@ introduction somewhere.
 p17, line -12, now in the module implementation "Dom" is made functor
 parameter, why? and why can you just replace "rep" with "code"?
 
-p17, line -2, what accompanying code?
-
-p18, line 4, what is the "decl" function?
-
 p18, although most readers are probably familiar with simple LU decomposition,
 a brief overview that shows how determinant and rank are computed in the
 algorithm with an unstaged code example showing the state needed for tracking
 would be helpful to demonstrate the problems stated here
 
 p18, line -8, this paragraph is unclear
+\jacques{well, I rewrote bits, but I am not sure if I have clarified anything.
+But maybe it is not worth it either?}
 
 p19, showing the types of these functions would be helpful
 
@@ -283,6 +272,18 @@ for "IntegerDomain"?
 \oleg{no; explained in text}
 
 p15, line 9, "We" -> "we"
+
+p15, line -2, "twice" -> "in two ways", "twice" suggests they are lifted twice
+in series
+
+p16, line -5, first state what a "container" is used for
+\jacques{this required adding a full paragraph, but it was well worth it}
+
+p17, line 4, where does the identifier "rep" come from in this code?
+
+p17, line -2, what accompanying code?
+
+p18, line 4, what is the "decl" function?
 
 p20, what is "classif" used for? initially I thought it meant "class if", but I
 just worked out it means "classifier", so this relates to an earlier comment,

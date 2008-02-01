@@ -987,7 +987,7 @@ let applyM  f x = ret (apply f x)
 
 
 \noindent  The types above are
-generally lifted twice: once from the value domain |v| to the code
+generally lifted in two ways: once from the value domain |v| to the code
 domain |('a,'v) code|, and once more from values to monadic computations
 |('p,'v) monad|. 
 
@@ -1038,6 +1038,14 @@ only be automated (currently) by further use of camlp4.
 
 \subsection{Containers}
 
+For our purposes, a container is an abstraction of an $n$-dimensional
+vector space, which we here specialize for $n=1,2$.  The $2$ dimensional
+case is our main interest, and its signature contains many functions particular
+to $n=2$.  For examples, we have rows and columns and operations specialized
+for them.  A container explicitly abstracts the underlying representation 
+of the data-structure, while offering an interface which is better-suited
+to linear algebra.
+
 The signature |CONTAINER2D| below specifies that a container must provide
 functions |dim1| and |dim2| to extract the dimensions, functions |getL|
 to generate container getters, the cloning
@@ -1045,7 +1053,9 @@ generator |copy| and functions that generate code for row and column
 swapping. The inclusion of these functions in the signature of all
 containers makes it simpler to optimize the relevant functions
 depending on the actual representation of the container while not
-burdening the users of containers with efficiency details.
+burdening the users of containers with efficiency details.  Note that
+this module type is also abstract over the actual representation 
+|rep| of the generator data-structure.
 
 \begin{code}
 module type CONTAINER2D = sig
@@ -1093,7 +1103,7 @@ module GenericArrayContainer(Dom:DOMAINL) =
   \dots
 \end{code}
 %
-The accompanying code includes containers whose
+The accompanying code\cite{metamonadsURL} includes containers whose
 elements are stored in a 1D array, in a
 row-wise (C-like) or column-wise (Fortran-like) modes.
 
@@ -1102,7 +1112,9 @@ row-wise (C-like) or column-wise (Fortran-like) modes.
 Various aspects of our LU generator such as determinant, rank, 
 and permutation tracking may need to keep a state during
 code generation. For example, the initializing section of the LU
-generator will invoke the function |decl| of the determinant aspect so that the
+generator will invoke a function (|decl|) of the determinant aspect 
+which ``declares'' whether tracking the determinant is needed, 
+so that the
 latter may generate let-binding for reference cells that track the
 magnitude and the sign of the determinant. The generator of the
 row-swapping code will notify the determinant aspect so that the
@@ -1143,15 +1155,17 @@ method. We would be required to know the names of all fields and should know
 the proper initial value for these fields, which breaks modularity.
 
 The MLton team suggests a better approach: property 
-lists~\cite{mlton-proplist}.  A property list, too, represents an
-extensible object -- by its dual, a list of polymorphic variants.  The
-initial object is just the empty list. MLton's approach does not
-literally apply to us however. MetaOCaml's environment classifiers
+lists~\cite{mlton-proplist}.  A property list also represents an
+extensible object but by its dual, namely a list of polymorphic variants.  The
+initial object is just the empty list.  Unfortunately, we cannot apply
+MLton's approach litterally to our case.  MetaOCaml's environment classifiers
 require type universes parameterized by classifiers. The MLton
 approach uses generativity of exceptions or reference cells to
-generate property names, i.e., fields of an extensible record. That
-would make our aspects stateful modules, which we try to
-avoid. Fortunately, OCaml offers a way to build open unions with
+generate property names, i.e., fields of an extensible record. Using this
+technique would make our aspects stateful modules, something we do not
+want, as we wish our generator to be purely functional [even though it is
+generating imperative code].
+Fortunately, OCaml offers a way to build open unions with
 polymorphic variants. Each variant is identified by a manifest tag,
 e.g., |`Tdet|, and may include a value. The tags are not generative and
 provide a form of manifest naming, similar to symbols of
