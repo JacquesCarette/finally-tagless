@@ -19,25 +19,29 @@ let ensure cond str = if not cond then failwith str else ()
 (* Each `field' is characterized by a triple: injection, projection functions
    and the name. The latter is used for printing error messages.
 *)
-let rec lookup ((_,prj,_) as ip) = 
+type ('a,'b) open_rec = ('a -> 'b) * ('b -> 'a option)  * string
+
+let rec lookup ((_,prj,_) as ip:(('a,'b) open_rec) )
+   : 'b list -> 'a = 
    function [] -> raise Not_found
    | (h::t) -> (match prj h with Some x -> x | _ -> lookup ip t)
 
-let orec_store ((inj,_,name) as ip) v s =
+let orec_store ((inj,_,name) as ip:(('a,'b) open_rec)) (v:'a) (s:'b list) 
+   : 'b list =
   let () = 
     try let _ = lookup ip s in 
         failwith ("The field of an open record is already present: " ^ name)
     with Not_found -> () in
   (inj v)::s
 
-let orec_find ((_,_,name) as ip) s =
+let orec_find ((_,_,name) as ip:(('a,'b) open_rec)) (s:'b list) : 'a =
   try lookup ip s 
   with Not_found -> failwith ("Failed to locate orec field: " ^ name)
 
-let mo_extend ip v = 
+let mo_extend (ip:('a,'b) open_rec) (v:'a) : ('c, 'd) monad = 
   perform s <-- fetch; store (orec_store ip v s)
 
-let mo_lookup ip =
+let mo_lookup (ip:('a,'b) open_rec) : ('c, 'd) monad =
   perform s <-- fetch; ret (orec_find ip s)
 
 
