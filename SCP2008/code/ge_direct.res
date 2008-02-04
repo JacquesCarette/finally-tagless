@@ -463,19 +463,19 @@
                    state : [> `TDet of 'b lstate ]; .. >,
                  unit)
                 lm
-              val acc :
+              val acc_magn :
                 ('a, C.Dom.v) Direct.abstract ->
                 (< answer : 'b; classif : 'a;
                    state : [> `TDet of 'a lstate ]; .. >,
                  unit)
                 lm
-              val get :
+              val get_magn :
                 unit ->
                 (< answer : 'a; classif : 'b;
                    state : [> `TDet of 'b lstate ]; .. >,
                  tdet)
                 lm
-              val set :
+              val set_magn :
                 ('a, C.Dom.v) Direct.abstract ->
                 (< answer : 'b; classif : 'a;
                    state : [> `TDet of 'a lstate ]; .. >,
@@ -514,14 +514,14 @@
                 StateCPSMonad.monad
               val zero_sign :
                 unit -> 'a -> ('a -> ('b, unit) Direct.abstract -> 'c) -> 'c
-              val acc :
+              val acc_magn :
                 'a -> 'b -> ('b -> ('c, unit) Direct.abstract -> 'd) -> 'd
-              val get :
+              val get_magn :
                 unit ->
                 (< answer : 'a; state : 'b; .. >,
                  ('c, C.Dom.v ref) Direct.abstract)
                 StateCPSMonad.monad
-              val set :
+              val set_magn :
                 'a -> 'b -> ('b -> ('c, unit) Direct.abstract -> 'd) -> 'd
               val fin : unit -> 'a
               type ('a, 'b) lm = ('a, 'b) cmonad
@@ -575,11 +575,11 @@
                    .. >,
                  ('b, unit) Direct.abstract)
                 StateCPSMonad.monad
-              val get :
+              val get_magn :
                 unit ->
                 (< answer : 'a; state : [> `TDet of 'b * 'c ] list; .. >, 'c)
                 StateCPSMonad.monad
-              val set :
+              val set_magn :
                 ('a, 'b) Direct.abstract ->
                 (< answer : 'c;
                    state : [> `TDet of 'd * ('a, 'b ref) Direct.abstract ]
@@ -587,7 +587,7 @@
                    .. >,
                  ('a, unit) Direct.abstract)
                 StateCPSMonad.monad
-              val acc :
+              val acc_magn :
                 'a C.Dom.vc ->
                 (< answer : 'b;
                    state : [> `TDet of 'c * ('a, C.Dom.v ref) Direct.abstract ]
@@ -2915,17 +2915,17 @@ module G_GAC_F :
           (< answer : 'a; classif : 'b; state : [> `TDet of 'b lstate ]; .. >,
            unit)
           lm
-        val acc :
+        val acc_magn :
           ('a, GAC_F.Dom.v) Direct.abstract ->
           (< answer : 'b; classif : 'a; state : [> `TDet of 'a lstate ]; .. >,
            unit)
           lm
-        val get :
+        val get_magn :
           unit ->
           (< answer : 'a; classif : 'b; state : [> `TDet of 'b lstate ]; .. >,
            tdet)
           lm
-        val set :
+        val set_magn :
           ('a, GAC_F.Dom.v) Direct.abstract ->
           (< answer : 'b; classif : 'a; state : [> `TDet of 'a lstate ]; .. >,
            unit)
@@ -2960,13 +2960,15 @@ module G_GAC_F :
           (< answer : 'a; state : 'b; .. >, 'c option) StateCPSMonad.monad
         val zero_sign :
           unit -> 'a -> ('a -> ('b, unit) Direct.abstract -> 'c) -> 'c
-        val acc : 'a -> 'b -> ('b -> ('c, unit) Direct.abstract -> 'd) -> 'd
-        val get :
+        val acc_magn :
+          'a -> 'b -> ('b -> ('c, unit) Direct.abstract -> 'd) -> 'd
+        val get_magn :
           unit ->
           (< answer : 'a; state : 'b; .. >,
            ('c, GAC_F.Dom.v ref) Direct.abstract)
           StateCPSMonad.monad
-        val set : 'a -> 'b -> ('b -> ('c, unit) Direct.abstract -> 'd) -> 'd
+        val set_magn :
+          'a -> 'b -> ('b -> ('c, unit) Direct.abstract -> 'd) -> 'd
         val fin : unit -> 'a
         type ('a, 'b) lm = ('a, 'b) GEF.cmonad
           constraint 'a =
@@ -3016,18 +3018,18 @@ module G_GAC_F :
              .. >,
            ('b, unit) Direct.abstract)
           StateCPSMonad.monad
-        val get :
+        val get_magn :
           unit ->
           (< answer : 'a; state : [> `TDet of 'b * 'c ] list; .. >, 'c)
           StateCPSMonad.monad
-        val set :
+        val set_magn :
           ('a, 'b) Direct.abstract ->
           (< answer : 'c;
              state : [> `TDet of 'd * ('a, 'b ref) Direct.abstract ] list;
              .. >,
            ('a, unit) Direct.abstract)
           StateCPSMonad.monad
-        val acc :
+        val acc_magn :
           'a GAC_F.Dom.vc ->
           (< answer : 'b;
              state : [> `TDet of 'c * ('a, GAC_F.Dom.v ref) Direct.abstract ]
@@ -4712,17 +4714,17 @@ module G_GVC_F :
           (< answer : 'a; classif : 'b; state : [> `TDet of 'b lstate ]; .. >,
            unit)
           lm
-        val acc :
+        val acc_magn :
           ('a, GVC_F.Dom.v) Direct.abstract ->
           (< answer : 'b; classif : 'a; state : [> `TDet of 'a lstate ]; .. >,
            unit)
           lm
-        val get :
+        val get_magn :
           unit ->
           (< answer : 'a; classif : 'b; state : [> `TDet of 'b lstate ]; .. >,
            tdet)
           lm
-        val set :
+        val set_magn :
           ('a, GVC_F.Dom.v) Direct.abstract ->
           (< answer : 'b; classif : 'a; state : [> `TDet of 'a lstate ]; .. >,
            unit)
@@ -4757,13 +4759,15 @@ module G_GVC_F :
           (< answer : 'a; state : 'b; .. >, 'c option) StateCPSMonad.monad
         val zero_sign :
           unit -> 'a -> ('a -> ('b, unit) Direct.abstract -> 'c) -> 'c
-        val acc : 'a -> 'b -> ('b -> ('c, unit) Direct.abstract -> 'd) -> 'd
-        val get :
+        val acc_magn :
+          'a -> 'b -> ('b -> ('c, unit) Direct.abstract -> 'd) -> 'd
+        val get_magn :
           unit ->
           (< answer : 'a; state : 'b; .. >,
            ('c, GVC_F.Dom.v ref) Direct.abstract)
           StateCPSMonad.monad
-        val set : 'a -> 'b -> ('b -> ('c, unit) Direct.abstract -> 'd) -> 'd
+        val set_magn :
+          'a -> 'b -> ('b -> ('c, unit) Direct.abstract -> 'd) -> 'd
         val fin : unit -> 'a
         type ('a, 'b) lm = ('a, 'b) GEF.cmonad
           constraint 'a =
@@ -4813,18 +4817,18 @@ module G_GVC_F :
              .. >,
            ('b, unit) Direct.abstract)
           StateCPSMonad.monad
-        val get :
+        val get_magn :
           unit ->
           (< answer : 'a; state : [> `TDet of 'b * 'c ] list; .. >, 'c)
           StateCPSMonad.monad
-        val set :
+        val set_magn :
           ('a, 'b) Direct.abstract ->
           (< answer : 'c;
              state : [> `TDet of 'd * ('a, 'b ref) Direct.abstract ] list;
              .. >,
            ('a, unit) Direct.abstract)
           StateCPSMonad.monad
-        val acc :
+        val acc_magn :
           'a GVC_F.Dom.vc ->
           (< answer : 'b;
              state : [> `TDet of 'c * ('a, GVC_F.Dom.v ref) Direct.abstract ]
@@ -6509,17 +6513,17 @@ module G_GAC_I :
           (< answer : 'a; classif : 'b; state : [> `TDet of 'b lstate ]; .. >,
            unit)
           lm
-        val acc :
+        val acc_magn :
           ('a, GAC_I.Dom.v) Direct.abstract ->
           (< answer : 'b; classif : 'a; state : [> `TDet of 'a lstate ]; .. >,
            unit)
           lm
-        val get :
+        val get_magn :
           unit ->
           (< answer : 'a; classif : 'b; state : [> `TDet of 'b lstate ]; .. >,
            tdet)
           lm
-        val set :
+        val set_magn :
           ('a, GAC_I.Dom.v) Direct.abstract ->
           (< answer : 'b; classif : 'a; state : [> `TDet of 'a lstate ]; .. >,
            unit)
@@ -6554,13 +6558,15 @@ module G_GAC_I :
           (< answer : 'a; state : 'b; .. >, 'c option) StateCPSMonad.monad
         val zero_sign :
           unit -> 'a -> ('a -> ('b, unit) Direct.abstract -> 'c) -> 'c
-        val acc : 'a -> 'b -> ('b -> ('c, unit) Direct.abstract -> 'd) -> 'd
-        val get :
+        val acc_magn :
+          'a -> 'b -> ('b -> ('c, unit) Direct.abstract -> 'd) -> 'd
+        val get_magn :
           unit ->
           (< answer : 'a; state : 'b; .. >,
            ('c, GAC_I.Dom.v ref) Direct.abstract)
           StateCPSMonad.monad
-        val set : 'a -> 'b -> ('b -> ('c, unit) Direct.abstract -> 'd) -> 'd
+        val set_magn :
+          'a -> 'b -> ('b -> ('c, unit) Direct.abstract -> 'd) -> 'd
         val fin : unit -> 'a
         type ('a, 'b) lm = ('a, 'b) GEF.cmonad
           constraint 'a =
@@ -6610,18 +6616,18 @@ module G_GAC_I :
              .. >,
            ('b, unit) Direct.abstract)
           StateCPSMonad.monad
-        val get :
+        val get_magn :
           unit ->
           (< answer : 'a; state : [> `TDet of 'b * 'c ] list; .. >, 'c)
           StateCPSMonad.monad
-        val set :
+        val set_magn :
           ('a, 'b) Direct.abstract ->
           (< answer : 'c;
              state : [> `TDet of 'd * ('a, 'b ref) Direct.abstract ] list;
              .. >,
            ('a, unit) Direct.abstract)
           StateCPSMonad.monad
-        val acc :
+        val acc_magn :
           'a GAC_I.Dom.vc ->
           (< answer : 'b;
              state : [> `TDet of 'c * ('a, GAC_I.Dom.v ref) Direct.abstract ]
@@ -8306,17 +8312,17 @@ module G_GVC_I :
           (< answer : 'a; classif : 'b; state : [> `TDet of 'b lstate ]; .. >,
            unit)
           lm
-        val acc :
+        val acc_magn :
           ('a, GVC_I.Dom.v) Direct.abstract ->
           (< answer : 'b; classif : 'a; state : [> `TDet of 'a lstate ]; .. >,
            unit)
           lm
-        val get :
+        val get_magn :
           unit ->
           (< answer : 'a; classif : 'b; state : [> `TDet of 'b lstate ]; .. >,
            tdet)
           lm
-        val set :
+        val set_magn :
           ('a, GVC_I.Dom.v) Direct.abstract ->
           (< answer : 'b; classif : 'a; state : [> `TDet of 'a lstate ]; .. >,
            unit)
@@ -8351,13 +8357,15 @@ module G_GVC_I :
           (< answer : 'a; state : 'b; .. >, 'c option) StateCPSMonad.monad
         val zero_sign :
           unit -> 'a -> ('a -> ('b, unit) Direct.abstract -> 'c) -> 'c
-        val acc : 'a -> 'b -> ('b -> ('c, unit) Direct.abstract -> 'd) -> 'd
-        val get :
+        val acc_magn :
+          'a -> 'b -> ('b -> ('c, unit) Direct.abstract -> 'd) -> 'd
+        val get_magn :
           unit ->
           (< answer : 'a; state : 'b; .. >,
            ('c, GVC_I.Dom.v ref) Direct.abstract)
           StateCPSMonad.monad
-        val set : 'a -> 'b -> ('b -> ('c, unit) Direct.abstract -> 'd) -> 'd
+        val set_magn :
+          'a -> 'b -> ('b -> ('c, unit) Direct.abstract -> 'd) -> 'd
         val fin : unit -> 'a
         type ('a, 'b) lm = ('a, 'b) GEF.cmonad
           constraint 'a =
@@ -8407,18 +8415,18 @@ module G_GVC_I :
              .. >,
            ('b, unit) Direct.abstract)
           StateCPSMonad.monad
-        val get :
+        val get_magn :
           unit ->
           (< answer : 'a; state : [> `TDet of 'b * 'c ] list; .. >, 'c)
           StateCPSMonad.monad
-        val set :
+        val set_magn :
           ('a, 'b) Direct.abstract ->
           (< answer : 'c;
              state : [> `TDet of 'd * ('a, 'b ref) Direct.abstract ] list;
              .. >,
            ('a, unit) Direct.abstract)
           StateCPSMonad.monad
-        val acc :
+        val acc_magn :
           'a GVC_I.Dom.vc ->
           (< answer : 'b;
              state : [> `TDet of 'c * ('a, GVC_I.Dom.v ref) Direct.abstract ]
@@ -10103,17 +10111,17 @@ module G_GAC_R :
           (< answer : 'a; classif : 'b; state : [> `TDet of 'b lstate ]; .. >,
            unit)
           lm
-        val acc :
+        val acc_magn :
           ('a, GAC_R.Dom.v) Direct.abstract ->
           (< answer : 'b; classif : 'a; state : [> `TDet of 'a lstate ]; .. >,
            unit)
           lm
-        val get :
+        val get_magn :
           unit ->
           (< answer : 'a; classif : 'b; state : [> `TDet of 'b lstate ]; .. >,
            tdet)
           lm
-        val set :
+        val set_magn :
           ('a, GAC_R.Dom.v) Direct.abstract ->
           (< answer : 'b; classif : 'a; state : [> `TDet of 'a lstate ]; .. >,
            unit)
@@ -10148,13 +10156,15 @@ module G_GAC_R :
           (< answer : 'a; state : 'b; .. >, 'c option) StateCPSMonad.monad
         val zero_sign :
           unit -> 'a -> ('a -> ('b, unit) Direct.abstract -> 'c) -> 'c
-        val acc : 'a -> 'b -> ('b -> ('c, unit) Direct.abstract -> 'd) -> 'd
-        val get :
+        val acc_magn :
+          'a -> 'b -> ('b -> ('c, unit) Direct.abstract -> 'd) -> 'd
+        val get_magn :
           unit ->
           (< answer : 'a; state : 'b; .. >,
            ('c, GAC_R.Dom.v ref) Direct.abstract)
           StateCPSMonad.monad
-        val set : 'a -> 'b -> ('b -> ('c, unit) Direct.abstract -> 'd) -> 'd
+        val set_magn :
+          'a -> 'b -> ('b -> ('c, unit) Direct.abstract -> 'd) -> 'd
         val fin : unit -> 'a
         type ('a, 'b) lm = ('a, 'b) GEF.cmonad
           constraint 'a =
@@ -10204,18 +10214,18 @@ module G_GAC_R :
              .. >,
            ('b, unit) Direct.abstract)
           StateCPSMonad.monad
-        val get :
+        val get_magn :
           unit ->
           (< answer : 'a; state : [> `TDet of 'b * 'c ] list; .. >, 'c)
           StateCPSMonad.monad
-        val set :
+        val set_magn :
           ('a, 'b) Direct.abstract ->
           (< answer : 'c;
              state : [> `TDet of 'd * ('a, 'b ref) Direct.abstract ] list;
              .. >,
            ('a, unit) Direct.abstract)
           StateCPSMonad.monad
-        val acc :
+        val acc_magn :
           'a GAC_R.Dom.vc ->
           (< answer : 'b;
              state : [> `TDet of 'c * ('a, GAC_R.Dom.v ref) Direct.abstract ]
@@ -11900,17 +11910,17 @@ module G_GVC_Z3 :
           (< answer : 'a; classif : 'b; state : [> `TDet of 'b lstate ]; .. >,
            unit)
           lm
-        val acc :
+        val acc_magn :
           ('a, GVC_Z3.Dom.v) Direct.abstract ->
           (< answer : 'b; classif : 'a; state : [> `TDet of 'a lstate ]; .. >,
            unit)
           lm
-        val get :
+        val get_magn :
           unit ->
           (< answer : 'a; classif : 'b; state : [> `TDet of 'b lstate ]; .. >,
            tdet)
           lm
-        val set :
+        val set_magn :
           ('a, GVC_Z3.Dom.v) Direct.abstract ->
           (< answer : 'b; classif : 'a; state : [> `TDet of 'a lstate ]; .. >,
            unit)
@@ -11945,13 +11955,15 @@ module G_GVC_Z3 :
           (< answer : 'a; state : 'b; .. >, 'c option) StateCPSMonad.monad
         val zero_sign :
           unit -> 'a -> ('a -> ('b, unit) Direct.abstract -> 'c) -> 'c
-        val acc : 'a -> 'b -> ('b -> ('c, unit) Direct.abstract -> 'd) -> 'd
-        val get :
+        val acc_magn :
+          'a -> 'b -> ('b -> ('c, unit) Direct.abstract -> 'd) -> 'd
+        val get_magn :
           unit ->
           (< answer : 'a; state : 'b; .. >,
            ('c, GVC_Z3.Dom.v ref) Direct.abstract)
           StateCPSMonad.monad
-        val set : 'a -> 'b -> ('b -> ('c, unit) Direct.abstract -> 'd) -> 'd
+        val set_magn :
+          'a -> 'b -> ('b -> ('c, unit) Direct.abstract -> 'd) -> 'd
         val fin : unit -> 'a
         type ('a, 'b) lm = ('a, 'b) GEF.cmonad
           constraint 'a =
@@ -12001,18 +12013,18 @@ module G_GVC_Z3 :
              .. >,
            ('b, unit) Direct.abstract)
           StateCPSMonad.monad
-        val get :
+        val get_magn :
           unit ->
           (< answer : 'a; state : [> `TDet of 'b * 'c ] list; .. >, 'c)
           StateCPSMonad.monad
-        val set :
+        val set_magn :
           ('a, 'b) Direct.abstract ->
           (< answer : 'c;
              state : [> `TDet of 'd * ('a, 'b ref) Direct.abstract ] list;
              .. >,
            ('a, unit) Direct.abstract)
           StateCPSMonad.monad
-        val acc :
+        val acc_magn :
           'a GVC_Z3.Dom.vc ->
           (< answer : 'b;
              state : [> `TDet of 'c * ('a, GVC_Z3.Dom.v ref) Direct.abstract ]
@@ -13697,17 +13709,17 @@ module G_GVC_Z19 :
           (< answer : 'a; classif : 'b; state : [> `TDet of 'b lstate ]; .. >,
            unit)
           lm
-        val acc :
+        val acc_magn :
           ('a, GVC_Z19.Dom.v) Direct.abstract ->
           (< answer : 'b; classif : 'a; state : [> `TDet of 'a lstate ]; .. >,
            unit)
           lm
-        val get :
+        val get_magn :
           unit ->
           (< answer : 'a; classif : 'b; state : [> `TDet of 'b lstate ]; .. >,
            tdet)
           lm
-        val set :
+        val set_magn :
           ('a, GVC_Z19.Dom.v) Direct.abstract ->
           (< answer : 'b; classif : 'a; state : [> `TDet of 'a lstate ]; .. >,
            unit)
@@ -13742,13 +13754,15 @@ module G_GVC_Z19 :
           (< answer : 'a; state : 'b; .. >, 'c option) StateCPSMonad.monad
         val zero_sign :
           unit -> 'a -> ('a -> ('b, unit) Direct.abstract -> 'c) -> 'c
-        val acc : 'a -> 'b -> ('b -> ('c, unit) Direct.abstract -> 'd) -> 'd
-        val get :
+        val acc_magn :
+          'a -> 'b -> ('b -> ('c, unit) Direct.abstract -> 'd) -> 'd
+        val get_magn :
           unit ->
           (< answer : 'a; state : 'b; .. >,
            ('c, GVC_Z19.Dom.v ref) Direct.abstract)
           StateCPSMonad.monad
-        val set : 'a -> 'b -> ('b -> ('c, unit) Direct.abstract -> 'd) -> 'd
+        val set_magn :
+          'a -> 'b -> ('b -> ('c, unit) Direct.abstract -> 'd) -> 'd
         val fin : unit -> 'a
         type ('a, 'b) lm = ('a, 'b) GEF.cmonad
           constraint 'a =
@@ -13798,18 +13812,18 @@ module G_GVC_Z19 :
              .. >,
            ('b, unit) Direct.abstract)
           StateCPSMonad.monad
-        val get :
+        val get_magn :
           unit ->
           (< answer : 'a; state : [> `TDet of 'b * 'c ] list; .. >, 'c)
           StateCPSMonad.monad
-        val set :
+        val set_magn :
           ('a, 'b) Direct.abstract ->
           (< answer : 'c;
              state : [> `TDet of 'd * ('a, 'b ref) Direct.abstract ] list;
              .. >,
            ('a, unit) Direct.abstract)
           StateCPSMonad.monad
-        val acc :
+        val acc_magn :
           'a GVC_Z19.Dom.vc ->
           (< answer : 'b;
              state : [> `TDet of 'c * ('a, GVC_Z19.Dom.v ref) Direct.abstract ]
@@ -15498,17 +15512,17 @@ module G_GFC_F :
           (< answer : 'a; classif : 'b; state : [> `TDet of 'b lstate ]; .. >,
            unit)
           lm
-        val acc :
+        val acc_magn :
           ('a, GFC_F.Dom.v) Direct.abstract ->
           (< answer : 'b; classif : 'a; state : [> `TDet of 'a lstate ]; .. >,
            unit)
           lm
-        val get :
+        val get_magn :
           unit ->
           (< answer : 'a; classif : 'b; state : [> `TDet of 'b lstate ]; .. >,
            tdet)
           lm
-        val set :
+        val set_magn :
           ('a, GFC_F.Dom.v) Direct.abstract ->
           (< answer : 'b; classif : 'a; state : [> `TDet of 'a lstate ]; .. >,
            unit)
@@ -15543,13 +15557,15 @@ module G_GFC_F :
           (< answer : 'a; state : 'b; .. >, 'c option) StateCPSMonad.monad
         val zero_sign :
           unit -> 'a -> ('a -> ('b, unit) Direct.abstract -> 'c) -> 'c
-        val acc : 'a -> 'b -> ('b -> ('c, unit) Direct.abstract -> 'd) -> 'd
-        val get :
+        val acc_magn :
+          'a -> 'b -> ('b -> ('c, unit) Direct.abstract -> 'd) -> 'd
+        val get_magn :
           unit ->
           (< answer : 'a; state : 'b; .. >,
            ('c, GFC_F.Dom.v ref) Direct.abstract)
           StateCPSMonad.monad
-        val set : 'a -> 'b -> ('b -> ('c, unit) Direct.abstract -> 'd) -> 'd
+        val set_magn :
+          'a -> 'b -> ('b -> ('c, unit) Direct.abstract -> 'd) -> 'd
         val fin : unit -> 'a
         type ('a, 'b) lm = ('a, 'b) GEF.cmonad
           constraint 'a =
@@ -15599,18 +15615,18 @@ module G_GFC_F :
              .. >,
            ('b, unit) Direct.abstract)
           StateCPSMonad.monad
-        val get :
+        val get_magn :
           unit ->
           (< answer : 'a; state : [> `TDet of 'b * 'c ] list; .. >, 'c)
           StateCPSMonad.monad
-        val set :
+        val set_magn :
           ('a, 'b) Direct.abstract ->
           (< answer : 'c;
              state : [> `TDet of 'd * ('a, 'b ref) Direct.abstract ] list;
              .. >,
            ('a, unit) Direct.abstract)
           StateCPSMonad.monad
-        val acc :
+        val acc_magn :
           'a GFC_F.Dom.vc ->
           (< answer : 'b;
              state : [> `TDet of 'c * ('a, GFC_F.Dom.v ref) Direct.abstract ]

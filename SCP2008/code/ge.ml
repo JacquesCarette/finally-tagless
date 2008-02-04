@@ -38,7 +38,7 @@ let orec_find ((_,_,name) as ip:(('a,'b) open_rec)) (s:'b list) : 'a =
   try lookup ip s 
   with Not_found -> failwith ("Failed to locate orec field: " ^ name)
 
-let mo_extend (ip:('a,'b) open_rec) (v:'a) : ('c, 'd) monad = 
+let mo_extend (ip:('a,'b) open_rec) (v:'a) : ('c, 'd) monad =
   perform s <-- fetch; store (orec_store ip v s)
 
 let mo_lookup (ip:('a,'b) open_rec) : ('c, 'd) monad =
@@ -82,7 +82,6 @@ type ('pc,'v) omonad =
                 answer : ('a,'w) abstract>
       constraint
           'pc = <classif : 'a; answer : 'w; state : 's; ..>
-
 
 (* moved from Infra (now Domains) so that the former uses no monads.
   The following code is generic over the containers anyway.
@@ -199,9 +198,6 @@ module type TRACKPIVOT = sig
   val decl : ('a, int) abstract -> (<classif : 'a; ..>, unit) lm
   val add : 'a fra -> 
     (<classif : 'a; state : [> `TPivot of 'a lstate ]; ..>, unit) omonad
-    (*
-    (('a,unit) abstract option,[> 'a tag_lstate] list,('a,'w) abstract) monad
-    *)
   val fin : unit -> ('b,perm_rep) lm
 end
 
@@ -270,9 +266,9 @@ module type DETERMINANT = sig
   val decl : unit -> ('b,unit) lm (* could be unit rather than unit code...*)
   val upd_sign  : unit -> ('b,unit) om
   val zero_sign : unit -> ('b,unit) lm
-  val acc       : ('a,C.Dom.v) abstract -> (<classif : 'a; ..>,unit) lm
-  val get       : unit -> ('b,tdet) lm
-  val set       : ('a,C.Dom.v) abstract -> (<classif : 'a; ..>,unit) lm
+  val acc_magn  : ('a,C.Dom.v) abstract -> (<classif : 'a; ..>,unit) lm
+  val get_magn  : unit -> ('b,tdet) lm
+  val set_magn  : ('a,C.Dom.v) abstract -> (<classif : 'a; ..>,unit) lm
   val fin       : unit -> ('b,C.Dom.v) lm
 end
 
@@ -305,9 +301,9 @@ module NoDet =
   let decl () = unitL
   let upd_sign () = ret None
   let zero_sign () = unitL
-  let acc _ = unitL
-  let get () = ret (liftRef C.Dom.zeroL) (* hack alert! *)
-  let set _ = unitL
+  let acc_magn _ = unitL
+  let get_magn () = ret (liftRef C.Dom.zeroL) (* hack alert! *)
+  let set_magn _ = unitL
   let fin () = failwith "Determinant is needed but not computed"
   type ('pc,'v) lm = ('pc,'v) cmonad
     constraint 'pc = <state : [> `TDet of 'a lstate ]; classif : 'a; ..>
@@ -331,33 +327,31 @@ module AbstractDet =
   include Foo(struct type 'a tags = private [> `TDet of 'a lstate ] end)
 *)
   let decl () = perform
-      ddecl <-- retN (liftRef oneL);
-      dsdecl <-- retN (liftRef Idx.one);
-      mo_extend ip (dsdecl,ddecl);
+      magn <-- retN (liftRef oneL);    (* track magnitude *)
+      sign <-- retN (liftRef Idx.one); (* track the sign: +1, 0, -1 *)
+      mo_extend ip (sign,magn);
       unitL
   let upd_sign () = perform
-      det <-- mo_lookup ip;
-      det1 <-- ret (fst det);
-      ret (Some (assign det1 (Idx.uminus (liftGet det1))))
+      (sign,_) <-- mo_lookup ip;
+      ret (Some (assign sign (Idx.uminus (liftGet sign))))
   let zero_sign () = perform
-      det <-- mo_lookup ip;
-      det1 <-- ret (fst det);
-      assignM det1 Idx.zero
-  let get () = perform
-      det <-- mo_lookup ip;
-      ret (snd det)
-  let set v = perform
-      det2 <-- get ();
-      assignM det2 v
-  let acc v = perform
-      det2 <-- get ();
-      r <-- ret ((liftGet det2) *^ v);
-      assignM det2 r
+      (sign,_) <-- mo_lookup ip;
+      assignM sign Idx.zero
+  let get_magn () = perform
+      (_,magn) <-- mo_lookup ip;
+      ret magn
+  let set_magn v = perform
+      magn <-- get_magn ();
+      assignM magn v
+  let acc_magn v = perform
+      magn <-- get_magn ();
+      r <-- ret ((liftGet magn) *^ v);
+      assignM magn r
   let fin = fun () -> perform
-      (det_sign,det) <-- mo_lookup ip;
-      ifM (Logic.equalL (liftGet det_sign) Idx.zero) (ret zeroL)
-      (ifM (Logic.equalL (liftGet det_sign) Idx.one) (ret (liftGet det))
-          (ret (uminusL (liftGet det))))
+      (sign,magn) <-- mo_lookup ip;
+      ifM (Logic.equalL (liftGet sign) Idx.zero) (ret zeroL)
+      (ifM (Logic.equalL (liftGet sign) Idx.one) (ret (liftGet magn))
+          (ret (uminusL (liftGet magn))))
 end
 
 module type UPDATE =
@@ -390,7 +384,7 @@ module DivisionUpdate(Det:DETERMINANT) =
   let update bic brc brk bik setter _ = perform
       y <-- ret (bik -^ ((divL bic brc) *^ brk));
       ret (setter (applyMaybe normalizerL y))
-  let update_det v = Det.acc v
+  let update_det v = Det.acc_magn v
 (*let update_lower bic brc _ _ _ = perform
       y <-- ret (divL bic brc);
       ret (applyMaybe normalizerL y) *)
@@ -408,7 +402,7 @@ module FractionFreeUpdate(Det:DETERMINANT) = struct
       t <-- ret (applyMaybe normalizerL z);
       ov <-- ret (divL t (liftGet d));
       ret (setter ov)
-  let update_det v = Det.set v
+  let update_det v = Det.set_magn v
 (*let update_lower bic brc lrk lik d = perform
       rat <-- ret (liftGet d);
       z <-- ret (divL ((rat *^ lik) +^ (bic *^ lrk)) brc);
@@ -782,7 +776,7 @@ module GenGE(F : FEATURES) = struct
         let module U = F.Update(F.Det) in
         let innerbody j bjc = perform
             whenM (Logic.notequalL bjc C.Dom.zeroL ) (perform
-                det <-- F.Det.get ();
+                det <-- F.Det.get_magn ();
                 optSeqM (Iters.col_iter mat.matrix j (Idx.succ pos.p.colpos) 
                (Idx.pred mat.numcol) C.getL
                       (fun k bjk -> perform
