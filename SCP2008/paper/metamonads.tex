@@ -1036,6 +1036,40 @@ Such lifting is completely straightforward.  However, it is a
 program-text to program-text transformation over modules, and as such could
 only be automated (currently) by further use of camlp4.
 
+In fact, our implementation requires another level of indirection, and
+in fact reads
+\begin{code}
+module Make(CODE: Coderep.T) = struct
+  module D = Domains_sig.S(
+      struct type ('a, 'v) rep = ('a,'v) CODE.abstract 
+    end)
+open D
+open CODE
+...
+\end{code}
+where |CODE| is a module which implements a type |abstract| and various
+facilities over it, like the modules |Logic| and |Idx| mentioned above.
+For simplicity, we open |CODE| to allow access to the actual type |abstract|.
+
+To further trim down on the size of the signatures for various modules,
+we introduce two variants of |monad|, specialized for our purpuses.  The
+first is used when we are always generating (abstract) code, while the second
+helps when we might generate (abstract) code.
+\begin{code}
+type ('pc,'v) cmonad = 
+  ('p,('a,'v) abstract) monad
+    constraint
+      'p = <state : 's list; answer : ('a,'w) abstract>
+    constraint
+      'pc = <classif : 'a; answer : 'w; state : 's; ..>
+       
+type ('pc,'v) omonad = 
+  ('p,('a,'v) abstract option) monad
+    constraint
+      'p = <state : 's list; answer : ('a,'w) abstract>
+    constraint
+      'pc = <classif : 'a; answer : 'w; state : 's; ..>
+\end{code}
 \subsection{Containers}
 
 For our purposes, a container is an abstraction of an $n$-dimensional
@@ -1187,25 +1221,30 @@ actions to access monadic state and so obtain
 |mo_extend| and |mo_lookup| to store and retrieve one component 
 of the monadic state.
 \begin{code}
-let rec lookup ((_,prj,_) as ip) = 
+type ('a,'b) open_rec = ('a -> 'b) * ('b -> 'a option)  * string
+
+let rec lookup ((_,prj,_) as ip:(('a,'b) open_rec) )
+   : 'b list -> 'a = 
    function [] -> raise Not_found
    | (h::t) -> (match prj h with Some x -> x | _ -> lookup ip t)
 
-let orec_store ((inj,_,name) as ip) v s =
+let orec_store ((inj,_,name) as ip:(('a,'b) open_rec)) (v:'a) (s:'b list) 
+   : 'b list =
   let () = 
     try let _ = lookup ip s in 
         failwith ("The field of an open record is already present: " ^ name)
     with Not_found -> () in
   (inj v)::s
 
-let orec_find ((_,_,name) as ip) s =
+let orec_find ((_,_,name) as ip:(('a,'b) open_rec)) (s:'b list) : 'a =
   try lookup ip s 
   with Not_found -> failwith ("Failed to locate orec field: " ^ name)
 
-let mo_extend ip v = 
+let mo_extend (ip:('a,'b) open_rec) (v:'a) : ('c, 'd) monad = 
   perform s <-- fetch; store (orec_store ip v s)
 
-let mo_lookup ip = perform s <-- fetch; ret (orec_find ip s)
+let mo_lookup (ip:('a,'b) open_rec) : ('c, 'd) monad =
+  perform s <-- fetch; ret (orec_find ip s)
 \end{code}
 %
 Currently, we check at generation-time that one should not add an
@@ -1221,11 +1260,14 @@ updating the sign (|upd_sign|) or the absolute
 value of the determinant, and converting the tracking state
 to the final determinant value of type |outdet|. LU of a
 floating-point matrix with no determinant tracking uses the
-instantiation of |DETERMINANT| where |outdet| is |unit| and all the
-functions of that module generate no code. For integer matrices, we
+instantiation of |DETERMINANT| (see definition below) where |outdet| is |unit|
+and all the
+functions of that module generate no code. For integer matrices, and
+in general whenever the matrix elements do not form a field, we
 have to track some aspects of the determinant, even if we do not output
-it. The determinant tracking aspect is complex because tracking
-variables, if any, are to be declared at the beginning of LU; the sign
+it, as the fraction-free update needs those aspects. The determinant tracking
+aspect is complex because tracking variables, if any, are to be declared at the
+beginning of LU; the sign
 of the determinant has to be updated on each row or column
 permutation; the value of the determinant should be updated per each
 pivoting. We use |lstate| to pass the tracking state, e.g., a piece of
@@ -1242,17 +1284,17 @@ module type DETERMINANT = sig
     constraint 'pc = <state : [> `TDet of 'a lstate ]; classif : 'a; ..>
   type ('pc,'v) om = ('pc,'v) omonad
     constraint 'pc = <state : [> `TDet of 'a lstate ]; classif : 'a; ..>
-  val decl : unit -> ('b,unit) lm
+  val decl      : unit -> ('b,unit) lm
   val upd_sign  : unit -> ('b,unit) om
   val zero_sign : unit -> ('b,unit) lm
-  val acc       : ('a,C.Dom.v) abstract -> (<classif : 'a; ..>,unit) lm
-  val get       : unit -> ('b,tdet) lm
-  val set       : ('a,C.Dom.v) abstract -> (<classif : 'a; ..>,unit) lm
+  val acc_magn  : ('a,C.Dom.v) abstract -> (<classif : 'a; ..>,unit) lm
+  val get_magn  : unit -> ('b,tdet) lm
+  val set_magn  : ('a,C.Dom.v) abstract -> (<classif : 'a; ..>,unit) lm
   val fin       : unit -> ('b,C.Dom.v) lm
 end
 \end{code}
 
-We have two instances of |Det|. The first one is used to specify
+We have two instances of the above. The first one is used to specify
 no determinant tracking, and so no code is
 generated. The methods just return without executing any
 code-generation actions.
@@ -1264,14 +1306,14 @@ module NoDet =
   let decl () = unitL
   let upd_sign () = ret None
   let zero_sign () = unitL
-  let acc _ = unitL
-  let get () = ret (liftRef C.Dom.zeroL)
-  let set _ = unitL
+  let acc_magn _ = unitL
+  let get_magn () = ret (liftRef C.Dom.zeroL)
+  let set_magn _ = unitL
   let fin () = failwith "Determinant is needed but not computed"
 end
 \end{code}
 
-The following instance does track the determinant. The |decl| method
+The second instance does track the determinant. The |decl| method
 generates two let-bindings for mutable variables tracking the
 magnitude and the sign of the determinant, and places the names of
 these variables in the monadic state. The |upd_sign| method, invoked
@@ -1286,19 +1328,18 @@ module AbstractDet =
   type tdet = v ref
   type 'a lstate = ('a,int ref) abstract * ('a,tdet) abstract
   let decl () = perform
-      ddecl <-- retN (liftRef oneL); (* track the sign: +1, 0, -1 *)
-      dsdecl <-- retN (liftRef Idx.one);
-      mo_extend ip (dsdecl,ddecl);
+      magn <-- retN (liftRef oneL);    (* track magnitude *)
+      sign <-- retN (liftRef Idx.one); (* track the sign: +1, 0, -1 *)
+      mo_extend ip (sign,magn);
       unitL
   let upd_sign () = perform
-      det <-- mo_lookup ip;
-      det1 <-- ret (fst det);
-      ret (Some (assign det1 (Idx.uminus (liftGet det1))))
+      (sign,_) <-- mo_lookup ip;
+      ret (Some (assign sign (Idx.uminus (liftGet sign))))
   let fin = fun () -> perform
-      (det_sign,det) <-- mo_lookup ip;
-      ifM (Logic.equalL (liftGet det_sign) Idx.zero) (ret zeroL)
-      (ifM (Logic.equalL (liftGet det_sign) Idx.one) (ret (liftGet det))
-          (ret (uminusL (liftGet det))))
+      (sign,magn) <-- mo_lookup ip;
+      ifM (Logic.equalL (liftGet sign) Idx.zero) (ret zeroL)
+      (ifM (Logic.equalL (liftGet sign) Idx.one) (ret (liftGet magn))
+          (ret (uminusL (liftGet magn))))
   \dots
 end
 \end{code}
@@ -1332,7 +1373,7 @@ end
 module type OUTPUT = functor(OD : OUTPUTDEP) -> sig
   module IF : INTERNAL_FEATURES
   type res
-  val make_result : 'a wmatrix -> (\dots,res) monad
+  val make_result : 'a wmatrix -> (<classif: 'a;\dots>,res) cmonad
 end
 module OutDetRank(OD : OUTPUTDEP) = struct
   module IF = struct
@@ -1351,7 +1392,7 @@ end
 
 The initialization expressions |OD.Det.fin ()| and |IF.R.fin ()| are
 the preflight checks. As we saw in the previous section, 
-both instances of |Det| contain |fin ()| function to generate
+both instances of |DETERMINANT| contain a |fin ()| function to generate
 code representing the computed determinant. Only the |NoDet| does not
 track any determinant, and so |fin ()| raises an error. The code 
 |let _ = OD.Det.fin ()| in |OutDetRank| invokes this |fin| function, which will
@@ -1361,6 +1402,14 @@ action to run. This is another preflight check, to rule out the
 semantic error where a user specifies that the determinant should be computed
 and returned, and yet specifies the |NoDet| aspect which tracks no
 determinant at all.
+
+The type |wmatrix| is for convenience, a bundling of several pieces
+of data which are needed by both the |OUTPUT| aspect and the |PIVOT| 
+aspect.  It is defined as
+\begin{code}
+type 'a wmatrix = {matrix: 'a C.vc; numrow: ('a,int) abstract; 
+                   numcol: ('a,int) abstract}
+\end{code}
 
 The module of signature |INTERNAL_FEATURES| bundles information
 tracking aspects. The latter are not directly selectable by the
@@ -1411,12 +1460,14 @@ let resIV5 = instantiate GenIV5.gen ;;
 \end{code}
 %
 We first instantiate the container |GVC_I| for a vector over an
-integer domain. We pass the container to the main functor |GenLA|,
-since all linear algebra codes are parameterized by the
-container and the domain included in it. We open the |G_GVC_I| module
+integer domain.  |GenGE| is then one functor of many algorithm
+generators from a linear algebra library; since all our linear algebra codes
+are parameterized by the container and the domain included in it,
+We pass the container to the main functor |GenLA|.
+We open the resulting |G_GVC_I| module
 to make all its components easily available. One of those components
 is the GE generator, |GE| (which we open as well). Besides |GE|, the
-module |G_GVC_I| includes the generator for GE solvers.  The main
+module |G_GVC_I| includes the generator for GE-based solvers.  The main
 generator functor is |GenGE|, shown later.  We instantiate the
 generator by passing to the functor the ``record'' of various aspects; the
 order is irrelevant, but all aspects such as |Det| must be
@@ -1461,7 +1512,10 @@ parameterized by the domain, container, pivoting policy (full, row,
 nonzero, no pivoting), update policy (with either `fraction-less'
 or full division), and the output specification. Some of the
 argument modules such as |PIVOT| are functors themselves (parameterized
-by the domain, the container, and the determinant functor). 
+by the domain, the container, and the determinant functor). It is 
+worthwhile noting that we make sure of module subtyping -- |F| is of
+type |FEATURES| while |F.Output| is expecting an |OUTPUTDEP|, but
+|OUTPUTDEP| is a subtype of |FEATURES|.
 
 \begin{code2}
 module GenGE(F : FEATURES) = struct
@@ -1480,7 +1534,7 @@ module GenGE(F : FEATURES) = struct
     let module U = F.Update(F.Det) in
     let innerbody j bjc = perform
       whenM (Logic.notequalL bjc C.Dom.zeroL ) (perform
-        det <-- F.Det.get ();
+        det <-- F.Det.get_magn ();
         optSeqM (Iters.col_iter mat.matrix j (Idx.succ pos.p.colpos) 
          (Idx.pred mat.numcol) C.getL
               (fun k bjk -> perform
@@ -1631,7 +1685,7 @@ versatile.
 Unlike traditional approaches
 \cite{journals/cacm/parnas72a}, the interfaces of our generated
 routines vary depending on the choices of input and output
-aspects. Dynamic approaches in Object-Oriented language (late binding
+aspects. Dynamic approaches in Object-oriented languages (late binding
 and dynamic dispatch) or functional languages (Haskell's
 dictionary-based \emph{type classes}) also offer flexibility of
 interfaces. In our approach, however, it is the generator that

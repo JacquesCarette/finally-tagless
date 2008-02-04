@@ -78,54 +78,13 @@ p18, line -8, this paragraph is unclear
 \jacques{well, I rewrote bits, but I am not sure if I have clarified anything.
 But maybe it is not worth it either?}
 
-p19, showing the types of these functions would be helpful
-
-p19, line -3, what is the "DETERMINANT" module? it hasn't been introduced yet
-
-p19, line -2, why do you need to track the determinant for integer matrices
-
-p20, line 5, "e.g., a piece of code...": the type of "lstate" depends on the
-implementation and neither of the implementations shown set "lstate" to "v
-ref".
-
-p20, line 23, what is "Det"?
-
-p20, what are "cmonad" and "omonad"?
-
-
-p20, shouldn't there be an "answer" method in the state objects?
-
-p21, line 3, what is "abstract" and where does it come from?
-
 p21, the "unitL" in "decl" is superfluous, right? "mo_extend" will already
 return a monadic unit result
-
-p21, provide a comment for "dsdecl"
-
-p21, keep the names of the sign and magnitude(?) state consistent across
-"decl", "upd_sign" and "fin"; also keep the code to retrieve the sign and
-magnitude state consistent across "upd_sign" and "fin"
-
-p20, what do "acc", "get", "set" do?
-
-p21, what is "wmatrix"? shouldn't this be an instance of "CONTAINER2D"?
-
-p21, "(...,res) monad" what does "..." mean?
-
-p22, line 15, "Det" -> "DETERMINANT"
-
-p23, what does "GenLA" do?
-
+\jacques{In theory, it is superfluous.  In practice, the type checker
+really doesn't like it.  It might be worth looking some more though.}
 
 p23, it would be nice to see the module signatures for the other features not
 discussed thus far
-
-p24, "module O = F.Output(F)" the functor "Output" takes a "OUTPUTDEP" not a
-"FEATURES", right?
-
-p24, missing "perform" in "init"
-
-p26, line -4, "Object-Oriented language" -> "object-oriented languages"
 
 Two larger changes I suggest are restructuring section 4 and performing
 stronger evaluation of the work.
@@ -285,8 +244,64 @@ p17, line -2, what accompanying code?
 
 p18, line 4, what is the "decl" function?
 
+p19, showing the types of these functions would be helpful
+
+p19, line -3, what is the "DETERMINANT" module? it hasn't been introduced yet
+
+p19, line -2, why do you need to track the determinant for integer matrices
+
 p20, what is "classif" used for? initially I thought it meant "class if", but I
 just worked out it means "classifier", so this relates to an earlier comment,
 so I think it is important you explain in detail why you need to put the
 classifier in this object.
 \oleg{explained on p11}
+
+p20, line 5, "e.g., a piece of code...": the type of "lstate" depends on the
+implementation and neither of the implementations shown set "lstate" to "v
+ref".
+\jacques{false -- AbstractDet contains a tdet, which is defined to be v ref
+one line above which, by the open statement right above it, it Dom.v ref.
+So I don't think anything needs fixed here.}
+
+p20, line 23, what is "Det"?
+
+p20, what are "cmonad" and "omonad"?
+\jacques{inserted into a previous subsection}
+
+p20, shouldn't there be an "answer" method in the state objects?
+\jacques{this is now covered by proper definition of cmonad/omonad}
+
+p21, line 3, what is "abstract" and where does it come from?
+\jacques{good question.  I had to add yet another chunk to a previous
+subsection to describe this.}
+
+p21, provide a comment for "dsdecl"
+
+p21, keep the names of the sign and magnitude(?) state consistent across
+"decl", "upd_sign" and "fin"; also keep the code to retrieve the sign and
+magnitude state consistent across "upd_sign" and "fin"
+\jacques{done - this was indeed sorely needed!}
+
+p20, what do "acc", "get", "set" do?
+\jacques{changed names so that they are clearer; add no text}
+
+p21, what is "wmatrix"? shouldn't this be an instance of "CONTAINER2D"?
+\jacques{Now defined}
+
+p21, "(...,res) monad" what does "..." mean?
+\jacques{made more precise}
+
+p22, line 15, "Det" -> "DETERMINANT"
+
+p23, what does "GenLA" do?
+
+p24, missing "perform" in "init"
+\jacques{actually, no, it is on the first line}
+
+p24, "module O = F.Output(F)" the functor "Output" takes a "OUTPUTDEP" not a
+"FEATURES", right?
+\jacques{Right, it takes an OUTPUTDEP, but that's a subtype of FEATURES!
+I have added some words to that effect.}
+
+p26, line -4, "Object-Oriented language" -> "object-oriented languages"
+
