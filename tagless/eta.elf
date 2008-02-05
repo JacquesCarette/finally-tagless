@@ -1,0 +1,62 @@
+% Eta-reduction with HOAS.
+% The main problem is how to do eta-reductions without the notion
+% of variable equality, or even without the notion of variables.
+% The mere definition of eta-reduction seems to rely on the notion
+% of a `variable being free in E'. How can we determine the freeness
+% of a variable in HOAS?
+% This file shows how, although this is not a clear-cut eveidence,
+% unfortunately. We rely on a higher-order pattern-matching.
+% That is, if E is used outside of the expression pattern ([x] E), 
+% the pattern-match succeeds only if E does not depend on x.
+% So, we do get the notion of `not free in E' via the higher-order
+% pattern-matching.
+
+% basic lambda-calculus.
+exp: type.			%name exp E.
+l  : (exp -> exp) -> exp.
+@  : exp -> exp -> exp.		%infix left 100 @.
+
+
+eta: exp -> exp -> type.
+%mode eta +E1 -E2.
+%block eta-bl: block {x:exp} {d:eta x x}.
+
+-: eta (E1 @ E2) (E1' @ E2')
+    <- eta E2 E2'
+    <- eta E1 E1'.
+
+% processing the body of lambda...
+etac: (exp -> exp) -> exp -> type.
+%mode etac +F -E.
+-: etac ([x] (E @ x)) E.		% E does not depend on x: reduction
+
+% the rest is homomorphism
+-: etac ([x] x) (l ([x] x)).
+-: etac ([x] E) (l ([x] E)).		% Here E does not depend on x
+
+-: etac ([x] ((E1 x) @ E2)) (l ([x] ((E1 x) @ E2))).
+-: etac ([x] ((E1 x) @ (E2 x))) (l ([x] ((E1 x) @ (E2 x)))).
+-: etac ([x] (l [y] E x y)) (l ([x] (l [y] E x y))).
+%worlds (eta-bl) (etac _ _).
+%total {F} (etac F _).
+
+-: eta (l [x] E x) R
+   <- ({x} eta x x -> eta (E x) (E' x))
+   <- etac E' R.
+%worlds (eta-bl) (eta _ _).
+%total {E} (eta E _).
+
+id = l [z] z.
+k  = l [u] l [v] u.
+z  = l [u] l [v] v.
+%query 1 1 eta ((l [x] (l [y] id)) @ id) R.
+
+%query 1 1 eta (k @ id) R.
+%query 1 1 eta (z @ id) R.
+
+%query 1 1 eta (l [x] (l [y] id) @ x) R.
+%query 1 1 eta (l [x] (l [y] x) @ x) R.
+
+%query 1 1 eta (l [x] (l [y] k @ x @ y)) k.
+%query 1 1 eta (l [x] (l [y] k @ y @ x)) R.
+
