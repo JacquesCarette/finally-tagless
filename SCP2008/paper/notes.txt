@@ -105,8 +105,8 @@ together.
 
 From my understanding of your work here is an idea to make your paper more
 precise and concise.
-- Move Section 4.4 into Section 3 because that section seems to deal with
-  low-level programming issues.
+% - Move Section 4.4 into Section 3 because that section seems to deal with
+%   low-level programming issues.
 - In the intro of Section 4 make a link to the list in Section 2 and say your
   going to pick some of those aspects and explain how they are implemented -
   one per subsection.
@@ -305,3 +305,6 @@ I have added some words to that effect.}
 
 p26, line -4, "Object-Oriented language" -> "object-oriented languages"
 
+Restructuring:
+- Move Section 4.4 into Section 3 because that section seems to deal with
+  low-level programming issues.

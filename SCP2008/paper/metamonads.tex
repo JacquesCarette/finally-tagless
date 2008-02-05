@@ -812,13 +812,119 @@ let genrecloop gen rtarg = fun s k ->
   k s .<let rec loop j = .~(gen .<loop>. .<j>. s k0) in loop .~rtarg>.
 \end{code}
 
+\subsection{Maintaining an extensible state}
+
+Various aspects of our generator will need to keep a state during
+code generation (see section~\ref{sec:det} for an example).
+
+The simplest method of keeping the state of the generator is by using
+mutable variables, private to each module (aspect). That would however make our
+aspects stateful. Although we are generating imperative code, we would like to
+keep our generators stateless and purely functional, for ease of comprehension
+and reasoning.  Our main
+program may include several generators referring to one particular
+aspect -- which may be present in one shared instance or in
+several. That is of no concern if the module is
+stateless, but with stateful modules, the issues of aliasing or separate
+instantiation are a source of very subtle problems.
+
+We therefore chose a different way of maintaining generator state,
+using a monad. We already need a monad for let-insertion; we now add state as
+an additional monad parameter (Fig.~\ref{ourmonad}) and monadic
+actions |fetch| and |store| to access that monadic state. The state is
+threaded throughout the entire code-generation computation. 
+
+This monadic state has to accommodate several distinct pieces of state, for
+various aspects. We should be able to add a new aspect -- which may need
+to keep its own state as part of the overall monadic state -- without
+modifying or even recompiling the rest of the code. Thus our monadic
+state should be extensible. We could use an extensible
+record: an OCaml object. Each aspect would have its own field; record
+subtyping would insure modularity. Alas, this approach makes it
+difficult to create an initial state, to pass to the monad's |runM|
+method. We would be required to know the names of all fields and should know
+the proper initial value for these fields, which breaks modularity.
+
+The MLton team suggests a better approach: property 
+lists~\cite{mlton-proplist}.  A property list also represents an
+extensible object but by its dual, namely a list of polymorphic variants.  The
+initial object is just the empty list.  Unfortunately, we cannot apply
+MLton's approach litterally to our case.  MetaOCaml's environment classifiers
+require type universes parameterized by classifiers. The MLton
+approach uses generativity of exceptions or reference cells to
+generate property names, i.e., fields of an extensible record. Using this
+technique would make our aspects stateful modules, something we do not
+want, as we wish our generator to be purely functional [even though it is
+generating imperative code].
+Fortunately, OCaml offers a way to build open unions with
+polymorphic variants. Each variant is identified by a manifest tag,
+e.g., |`Tdet|, and may include a value. The tags are not generative and
+provide a form of manifest naming, similar to symbols of
+Lisp and Scheme.
+
+Below is the implementation of our open records with manifest
+naming: functions |orec_store| to add a new field to the open record
+and |orec_find| to obtain the value associated with a particular field
+name. Each ``field'' is characterized by a triple: an injection function, 
+a projection function and the string name. The latter is used for 
+printing error messages. For example, for the
+determinant tracking aspect, this triple has the form
+\begin{code}
+let ip = 
+  (fun x -> `TDet x), (function `TDet x -> Some x | _ -> None), "Det"
+\end{code}
+We combine these functions with monadic
+actions to access monadic state and so obtain 
+|mo_extend| and |mo_lookup| to store and retrieve one component 
+of the monadic state.
+\begin{code}
+type ('a,'b) open_rec = ('a -> 'b) * ('b -> 'a option)  * string
+
+let rec lookup ((_,prj,_) as ip:(('a,'b) open_rec) )
+   : 'b list -> 'a = 
+   function [] -> raise Not_found
+   | (h::t) -> (match prj h with Some x -> x | _ -> lookup ip t)
+
+let orec_store ((inj,_,name) as ip:(('a,'b) open_rec)) (v:'a) (s:'b list) 
+   : 'b list =
+  let () = 
+    try let _ = lookup ip s in 
+        failwith ("The field of an open record is already present: " ^ name)
+    with Not_found -> () in
+  (inj v)::s
+
+let orec_find ((_,_,name) as ip:(('a,'b) open_rec)) (s:'b list) : 'a =
+  try lookup ip s 
+  with Not_found -> failwith ("Failed to locate orec field: " ^ name)
+
+let mo_extend (ip:('a,'b) open_rec) (v:'a) : ('c, 'd) monad = 
+  perform s <-- fetch; store (orec_store ip v s)
+
+let mo_lookup (ip:('a,'b) open_rec) : ('c, 'd) monad =
+  perform s <-- fetch; ret (orec_find ip s)
+\end{code}
+%
+Currently, we check at generation-time that one should not add an
+already existing field to an open record, nor should one attempt to
+look up a field that does not exist. It is possible to make these
+checks static.  Our approach has the advantage of generating much
+clearer error messages.
+
 \section{Aspects and Functors}\label{functors}
 
 The monad represents fine-scale code generation. We need tools for
-larger-scale modularization; we can use any abstraction
-mechanisms we want to structure our code generators, as long as none
-of those abstractions infiltrate the generated code. The ML module system
-turns out to be most convenient.
+larger-scale modularization; conveniently, we can use whatever abstraction
+mechanisms we want to structure our code generators, as long as these
+abstractions do not infiltrate the generated code. For our purposes, the
+ML module system turns out to be most convenient.
+
+\jacques{next paragraph will need rewritten when this section has
+finally taken shape}
+In this section, we will go through various aspects of one algorithm
+and explain how they are implemented.  In particular, and generally in
+order of increasing complexity, we will deal with abstracting the
+domain, the matrix representation, the code itself, determinant, etc.
+Then we put it all together (or in a new section?).
 
 \subsection{Domains}\label{sec:domains}
 
@@ -935,6 +1041,10 @@ of a module, these concerns do not apply in our case: our preflight
 checks are all idempotent and maintain no state.
 
 \subsection{Abstract code and lifted domains}\label{sec:lifteddomains}
+\jacques{I don't think I really want to delete the first half of this
+subsection.  I guess we can move that into section 3?  We need to be
+careful that section 3 does not become 1/2 the paper!  We might even
+consider splitting section 3 into 2 sections?}
 We will be using MetaOCaml operations to build code expressions, values
 of type |('a,'v) code|. However, we wish to make our generators
 abstract over particular code representations. Therefore, when writing
@@ -1141,119 +1251,25 @@ The accompanying code\cite{metamonadsURL} includes containers whose
 elements are stored in a 1D array, in a
 row-wise (C-like) or column-wise (Fortran-like) modes.
 
-\subsection{Maintaining an extensible state}
-
-Various aspects of our LU generator such as determinant, rank, 
-and permutation tracking may need to keep a state during
-code generation. For example, the initializing section of the LU
-generator will invoke a function (|decl|) of the determinant aspect 
-which ``declares'' whether tracking the determinant is needed, 
-so that the
-latter may generate let-binding for reference cells that track the
-magnitude and the sign of the determinant. The generator of the
-row-swapping code will notify the determinant aspect so that the
-latter may insert code that flips the sign of the tracked
-determinant. The final section of the LU generator will ask the
-determinant aspect to generate code producing the final, signed value
-of the determinant. Clearly the determinant aspect needs to maintain
-state from one invocation of its functions to another; this state should
-include the ``names'' of mutable variables accumulating the sign and the
-magnitude of the determinant.
-
-The simplest method of keeping the state of the generator is by using
-mutable variables, private to the Determinant module (aspect). That,
-however, makes our aspects stateful. Although we are generating
-imperative code, we would like to keep our generators stateless and
-purely functional, for ease of comprehension and reasoning.  Our main
-program may include several LU generators referring to one Determinant
-aspect -- which may be present in one shared instance or in
-several. That is of no concern if the Determinant module is
-stateless. With stateful modules, the issues of aliasing or separate
-instantiation are the source of very subtle problems.
-
-We therefore chose a different way of maintaining the generator state,
-using a monad. We already need a monad for let-insertion; we add state as
-an additional monad parameter (Fig.~\ref{ourmonad}) and monadic
-actions |fetch| and |store| to access that monadic state. The state is
-threaded throughout the entire code-generation computation. 
-
-This monadic state has to accommodate several distinct pieces of state, for
-various aspects. We should be able to add a new aspect -- which may need
-to keep its own state as part of the overall monadic state -- without
-modifying or even recompiling the rest of the code. Thus our monadic
-state should be extensible. We could use an extensible
-record: an OCaml object. Each aspect would have its own field; record
-subtyping would assure modularity. Alas, this approach makes it
-difficult to create an initial state, to pass to the monad's |runM|
-method. We would be required to know the names of all fields and should know
-the proper initial value for these fields, which breaks modularity.
-
-The MLton team suggests a better approach: property 
-lists~\cite{mlton-proplist}.  A property list also represents an
-extensible object but by its dual, namely a list of polymorphic variants.  The
-initial object is just the empty list.  Unfortunately, we cannot apply
-MLton's approach litterally to our case.  MetaOCaml's environment classifiers
-require type universes parameterized by classifiers. The MLton
-approach uses generativity of exceptions or reference cells to
-generate property names, i.e., fields of an extensible record. Using this
-technique would make our aspects stateful modules, something we do not
-want, as we wish our generator to be purely functional [even though it is
-generating imperative code].
-Fortunately, OCaml offers a way to build open unions with
-polymorphic variants. Each variant is identified by a manifest tag,
-e.g., |`Tdet|, and may include a value. The tags are not generative and
-provide a form of manifest naming, similar to symbols of
-Lisp and Scheme.
-
-Below is the implementation of our open records with manifest
-naming: functions |orec_store| to add a new field to the open record
-and |orec_find| to obtain the value associated with a particular field
-name. Each ``field'' is characterized by a triple: an injection function, 
-a projection function and the string name. The latter is used for 
-printing error messages. For example, for the
-determinant tracking aspect, this triple has the form
-\begin{code}
-let ip = 
-  (fun x -> `TDet x), (function `TDet x -> Some x | _ -> None), "Det"
-\end{code}
-We combine these functions with monadic
-actions to access monadic state and so obtain 
-|mo_extend| and |mo_lookup| to store and retrieve one component 
-of the monadic state.
-\begin{code}
-type ('a,'b) open_rec = ('a -> 'b) * ('b -> 'a option)  * string
-
-let rec lookup ((_,prj,_) as ip:(('a,'b) open_rec) )
-   : 'b list -> 'a = 
-   function [] -> raise Not_found
-   | (h::t) -> (match prj h with Some x -> x | _ -> lookup ip t)
-
-let orec_store ((inj,_,name) as ip:(('a,'b) open_rec)) (v:'a) (s:'b list) 
-   : 'b list =
-  let () = 
-    try let _ = lookup ip s in 
-        failwith ("The field of an open record is already present: " ^ name)
-    with Not_found -> () in
-  (inj v)::s
-
-let orec_find ((_,_,name) as ip:(('a,'b) open_rec)) (s:'b list) : 'a =
-  try lookup ip s 
-  with Not_found -> failwith ("Failed to locate orec field: " ^ name)
-
-let mo_extend (ip:('a,'b) open_rec) (v:'a) : ('c, 'd) monad = 
-  perform s <-- fetch; store (orec_store ip v s)
-
-let mo_lookup (ip:('a,'b) open_rec) : ('c, 'd) monad =
-  perform s <-- fetch; ret (orec_find ip s)
-\end{code}
-%
-Currently, we check at generation-time that one should not add an
-already existing field to an open record, nor should one attempt to
-look up a field that does not exist. It is possible to make these
-checks static.
-
 \subsection{Determinant aspect}
 \label{sec:det}
+% Various aspects of our LU generator such as determinant, rank, 
+% and permutation tracking may need to keep a state during
+% code generation. For example, the initializing section of the LU
+% generator will invoke a function (|decl|) of the determinant aspect 
+% which ``declares'' whether tracking the determinant is needed, 
+% so that the
+% latter may generate let-binding for reference cells that track the
+% magnitude and the sign of the determinant. The generator of the
+% row-swapping code will notify the determinant aspect so that the
+% latter may insert code that flips the sign of the tracked
+% determinant. The final section of the LU generator will ask the
+% determinant aspect to generate code producing the final, signed value
+% of the determinant. Clearly the determinant aspect needs to maintain
+% state from one invocation of its functions to another; this state should
+% include the ``names'' of mutable variables accumulating the sign and the
+% magnitude of the determinant.
+
 To track the determinant, we should be able to generate code
 for: defining variables used for tracking (|decl|),
 updating the sign (|upd_sign|) or the absolute
