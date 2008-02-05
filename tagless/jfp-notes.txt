@@ -487,6 +487,18 @@ p25, section 6.3
      statements need to be properly formulated and require proof. It
      is not enough to just throw in a few provocative statements:
      proof is needed!
+\oleg{I'm inclined to say that this paragraph does not describe
+technical results. Rather, it states intuitions that arose during our
+attempts to write a self-interpreter. Intuitions (points of view) are
+necessarily informal. One may say that they are more important than
+the technical results because they show a way to derive technical
+results. Because of the informality, they cannot be applied
+mechanically and so cannot, alas, benefit every reader. It still seems
+that their value outweighs the drawback: intuition is what
+distinguishes an informal mathematical proof from the formalized one.
+The reason mathematicians prefer informal proofs is that they are
+interested not only in what has been proven but why (refer to Thurston).}
+
 
      "tag elimination"
      This term has been invented and first implemented by Henning Makholm:
