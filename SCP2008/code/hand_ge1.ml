@@ -55,12 +55,32 @@ let swap_cols a (n,m) c j =
   let rec loop col_c col_j =
     if col_j < end_vector then
       begin
-	swap a col_c col_j;
-	loop (col_c + m) (col_j + m)
+        swap a col_c col_j;
+        loop (col_c + m) (col_j + m)
       end
   in loop c j
 ;;
 
+
+(* Full pivoting *)
+(* Search the non-yet examined portion of the matrix, rectangular *)
+(* block (r,c)-(n,m), for the element with the max abs value. *)
+(* Remember the value of that element and its location. *)
+let find_pivot a m n r c =
+  let pivot = ref None in		(* ((i,j), pivot_val) option *)
+  begin
+  for i = r to n-1 do
+    for j = c to m-1 do
+      let cur = a.(i*m+j) in
+      if not (cur == 0) then
+          match !pivot with
+          | Some (_,oldpivot) ->
+              if abs oldpivot > abs cur then
+                 pivot := Some ((i,j), cur)
+          | None -> pivot := Some ((i,j),cur)
+  done; done;
+  !pivot
+  end;;
 
 let ge = fun a_orig ->
     let r = ref 0 in			(* current row index, 0-based *)
@@ -71,39 +91,25 @@ let ge = fun a_orig ->
     let det_sign = ref 1 in		(* Accumulate sign and magnitude *)
     let det_magn = ref 1 in		(*   of the determinant *)
     while !c < m && !r < n do
-        (* Full pivoting *)
-        (* Search the non-yet examined portion of the matrix, rectangular *)
-        (* block (r,c)-(n,m), for the element with the max abs value. *)
-        (* Remember the value of that element and its location. *)
-        let pivot = ref None in		(* ((i,j), pivot_val) option *)
-        for i = !r to n-1 do
-          for j = !c to m-1 do
-            let cur = a.(i*m+j) in
-            if not (cur == 0) then
-                match !pivot with
-                | Some (_,oldpivot) ->
-                    if abs oldpivot > abs cur then
-                       pivot := Some ((i,j), cur)
-                | None -> pivot := Some ((i,j),cur)
-        done; done;
+        (* Look for a pivot *)
+        let pivot = find_pivot a m n !r !c in
         (* if we found a pivot, swap the current column with the pivot column,
            and swap the current row with the pivot row. After the swap,
-	   a[r,c] element of the matrix is the pivot.
-	   Swapping two rows or two columns changes the sign of the det
+           a[r,c] element of the matrix is the pivot.
+           Swapping two rows or two columns changes the sign of the det
         *)
-        let piv_val = 
-        (match !pivot with
+        let piv_val = (match  pivot with
         | Some ((piv_r, piv_c),piv_val) ->
             if piv_c <> !c then
-	       begin
-		 swap_cols a (n,m) !c piv_c;
+               begin
+                 swap_cols a (n,m) !c piv_c;
                  det_sign := - !det_sign (* flip the sign of the det *)
-	       end;
+               end;
             if piv_r <> !r then
-	       begin
-		 swap_rows a (n,m) !r piv_r;
+               begin
+                 swap_rows a (n,m) !r piv_r;
                  det_sign := - !det_sign (* flip the sign of the det *)
-	       end;
+               end;
             Some piv_val
         | None -> None) in
         (* now do the row-reduction over the (r,c)-(n,m) block *)
@@ -114,9 +120,9 @@ let ge = fun a_orig ->
                 if not (cur == 0)  then
                   begin
                     for j = !c+1 to m-1 do
-		      (* fraction-free elimination *)
+                      (* fraction-free elimination *)
                       a.(ii*m+j) <- (a.(ii*m+j) * a_rc - a.(!r*m+j) * cur) 
-			            / ! det_magn
+                                    / ! det_magn
                     done;
                     a.(ii*m+ !c) <- 0
                   end;
@@ -139,15 +145,15 @@ let ge = fun a_orig ->
 let iv0 = {arr=Array.make 1 1; n=1; m=1}
 let iv1 = {arr=Array.of_list [ 1; 2; 3; 4; 13; 5; (-1); 3; 0]; n=3; m=3}
 let iv2 = {arr=Array.of_list [ 1; 2; 3; 0; 4; 13; 5; 0; (-1); 3; 0; 0]; 
-	   n=3; m=4}
+           n=3; m=4}
 let iv3 = {arr=Array.of_list [ 1; 2; 3; 4; 13; 5; (-1); 3; 0; 0; 0; 0]; 
-	   n=4; m=3}
+           n=4; m=3}
 let iv4 = {arr=Array.of_list [ 0; 2; 3; 0; 13; 5; 0; 3; 0]; n=3; m=3}
 let iv5 = [iv0; iv1; iv2; iv3; iv4]
 ;;
 
 assert (ge iv0 =
-	({arr = [|1|]; n = 1; m = 1}, 1, 1)
+        ({arr = [|1|]; n = 1; m = 1}, 1, 1)
        );;
 
 assert (ge iv1 =
