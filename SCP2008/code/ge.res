@@ -67,6 +67,7 @@
               ('a, int) Code.abstract -> ('a, int) Code.abstract -> 'a vc
             val swap_rows_stmt :
               'a vc ->
+              ('a, int) Code.abstract option ->
               ('a, int) Code.abstract ->
               ('a, int) Code.abstract -> ('a, unit) Code.abstract
             val swap_cols_stmt :
@@ -485,20 +486,52 @@
                  C.Dom.v)
                 lm
             end
+          module type LOWER =
+            sig
+              type 'a lstate = ('a, C.contr) Code.abstract
+              type ('a, 'b) lm = ('a, 'b) cmonad
+                constraint 'a =
+                  < answer : 'c; classif : 'd;
+                    state : [> `TLower of 'd lstate ]; .. >
+              val decl :
+                ('a, C.contr) Code.abstract ->
+                (< answer : 'b; classif : 'a;
+                   state : [> `TLower of 'a lstate ]; .. >,
+                 C.contr)
+                lm
+              val updt :
+                'a C.vc ->
+                ('a, int) Code.abstract ->
+                ('a, int) Code.abstract ->
+                'a C.vo ->
+                'a C.Dom.vc ->
+                (< answer : 'b; classif : 'a;
+                   state : [> `TLower of 'a lstate ]; .. >,
+                 unit)
+                lm option
+              val fin :
+                unit ->
+                (< answer : 'a; classif : 'b;
+                   state : [> `TLower of 'b lstate ]; .. >,
+                 C.contr)
+                lm
+              val wants_pack : bool
+            end
           module type PIVOT =
             functor (D : DETERMINANT) ->
               functor (P : TRACKPIVOT) ->
-                sig
-                  val findpivot :
-                    'a wmatrix ->
-                    'a curpos ->
-                    (< answer : 'b; classif : 'a;
-                       state : [> `TDet of 'a D.lstate
-                                | `TPivot of 'a P.lstate ];
-                       .. >,
-                     C.Dom.v option)
-                    cmonad
-                end
+                functor (L : LOWER) ->
+                  sig
+                    val findpivot :
+                      'a wmatrix ->
+                      'a curpos ->
+                      (< answer : 'b; classif : 'a;
+                         state : [> `TDet of 'a D.lstate
+                                  | `TPivot of 'a P.lstate ];
+                         .. >,
+                       C.Dom.v option)
+                      cmonad
+                  end
           module NoDet :
             sig
               type tdet = C.Dom.v ref
@@ -667,37 +700,6 @@
                       Det.lm
                     val upd_kind : Ge.update_kind
                   end
-              module type LOWER =
-                sig
-                  type 'a lstate = ('a, C.contr) Code.abstract
-                  type ('a, 'b) lm = ('a, 'b) cmonad
-                    constraint 'a =
-                      < answer : 'c; classif : 'd;
-                        state : [> `TLower of 'd lstate ]; .. >
-                  val decl :
-                    ('a, C.contr) Code.abstract ->
-                    (< answer : 'b; classif : 'a;
-                       state : [> `TLower of 'a lstate ]; .. >,
-                     C.contr)
-                    lm
-                  val updt :
-                    'a C.vc ->
-                    ('a, int) Code.abstract ->
-                    ('a, int) Code.abstract ->
-                    'a C.vo ->
-                    'a C.Dom.vc ->
-                    (< answer : 'b; classif : 'a;
-                       state : [> `TLower of 'a lstate ]; .. >,
-                     unit)
-                    lm option
-                  val fin :
-                    unit ->
-                    (< answer : 'a; classif : 'b;
-                       state : [> `TLower of 'b lstate ]; .. >,
-                     C.contr)
-                    lm
-                  val wants_pack : bool
-                end
               module TrackLower :
                 sig
                   type 'a lstate = ('a, C.contr) Code.abstract
@@ -822,44 +824,49 @@
               module RowPivot :
                 functor (Det : DETERMINANT) ->
                   functor (P : TRACKPIVOT) ->
-                    sig
-                      val findpivot :
-                        'a wmatrix ->
-                        'a curpos ->
-                        (< answer : ('a, 'b) Code.abstract;
-                           state : [> `TDet of 'a Det.lstate
-                                    | `TPivot of 'a P.lstate ]
-                                   list;
-                           .. >,
-                         ('a, C.Dom.v option) Code.abstract)
-                        StateCPSMonad.monad
-                    end
+                    functor (L : LOWER) ->
+                      sig
+                        val optim : 'a -> 'a option
+                        val findpivot :
+                          'a wmatrix ->
+                          'a curpos ->
+                          (< answer : ('a, 'b) Code.abstract;
+                             state : [> `TDet of 'a Det.lstate
+                                      | `TPivot of 'a P.lstate ]
+                                     list;
+                             .. >,
+                           ('a, C.Dom.v option) Code.abstract)
+                          StateCPSMonad.monad
+                      end
               module FullPivot :
                 functor (Det : DETERMINANT) ->
                   functor (P : TRACKPIVOT) ->
-                    sig
-                      val findpivot :
-                        'a wmatrix ->
-                        'a curpos ->
-                        (< answer : ('a, 'b) Code.abstract;
-                           state : [> `TDet of 'a Det.lstate
-                                    | `TPivot of 'a P.lstate ]
-                                   list;
-                           .. >,
-                         ('a, C.Dom.v option) Code.abstract)
-                        StateCPSMonad.monad
-                    end
+                    functor (L : LOWER) ->
+                      sig
+                        val optim : 'a -> 'a option
+                        val findpivot :
+                          'a wmatrix ->
+                          'a curpos ->
+                          (< answer : ('a, 'b) Code.abstract;
+                             state : [> `TDet of 'a Det.lstate
+                                      | `TPivot of 'a P.lstate ]
+                                     list;
+                             .. >,
+                           ('a, C.Dom.v option) Code.abstract)
+                          StateCPSMonad.monad
+                      end
               module NoPivot :
                 functor (Det : DETERMINANT) ->
                   functor (P : TRACKPIVOT) ->
-                    sig
-                      val findpivot :
-                        'a wmatrix ->
-                        'a curpos ->
-                        (< answer : 'b; state : 'c; .. >,
-                         ('a, C.Dom.v option) Code.abstract)
-                        StateCPSMonad.monad
-                    end
+                    functor (L : LOWER) ->
+                      sig
+                        val findpivot :
+                          'a wmatrix ->
+                          'a curpos ->
+                          (< answer : 'b; state : 'c; .. >,
+                           ('a, C.Dom.v option) Code.abstract)
+                          StateCPSMonad.monad
+                      end
               module type OUTPUTDEP =
                 sig module PivotRep : PIVOTKIND module Det : DETERMINANT end
               module OutJustMatrix :
@@ -2383,7 +2390,7 @@ module GAC_F :
       ('a, int) code -> ('a, int) code -> ('a, Dom.v array array) code
     val swap_rows_stmt :
       ('a, 'b array) code ->
-      ('a, int) code -> ('a, int) code -> ('a, unit) code
+      'c -> ('a, int) code -> ('a, int) code -> ('a, unit) code
     val swap_cols_stmt :
       ('a, 'b array array) code ->
       ('a, int) code -> ('a, int) code -> ('a, unit) code
@@ -2449,8 +2456,10 @@ module GVC_F :
     val identity :
       ('a, int) code ->
       ('a, int) code -> ('a, Dom.v Domains_code.container2dfromvector) code
+    val index_default : ('a, int) code option -> ('a, int) code
     val swap_rows_stmt :
       ('a, 'b Domains_code.container2dfromvector) code ->
+      ('a, int) code option ->
       ('a, int) code -> ('a, int) code -> ('a, unit) code
     val swap_cols_stmt :
       ('a, 'b Domains_code.container2dfromvector) code ->
@@ -2512,7 +2521,7 @@ module GAC_I :
       ('a, int) code -> ('a, int) code -> ('a, Dom.v array array) code
     val swap_rows_stmt :
       ('a, 'b array) code ->
-      ('a, int) code -> ('a, int) code -> ('a, unit) code
+      'c -> ('a, int) code -> ('a, int) code -> ('a, unit) code
     val swap_cols_stmt :
       ('a, 'b array array) code ->
       ('a, int) code -> ('a, int) code -> ('a, unit) code
@@ -2578,8 +2587,10 @@ module GVC_I :
     val identity :
       ('a, int) code ->
       ('a, int) code -> ('a, Dom.v Domains_code.container2dfromvector) code
+    val index_default : ('a, int) code option -> ('a, int) code
     val swap_rows_stmt :
       ('a, 'b Domains_code.container2dfromvector) code ->
+      ('a, int) code option ->
       ('a, int) code -> ('a, int) code -> ('a, unit) code
     val swap_cols_stmt :
       ('a, 'b Domains_code.container2dfromvector) code ->
@@ -2641,7 +2652,7 @@ module GAC_R :
       ('a, int) code -> ('a, int) code -> ('a, Dom.v array array) code
     val swap_rows_stmt :
       ('a, 'b array) code ->
-      ('a, int) code -> ('a, int) code -> ('a, unit) code
+      'c -> ('a, int) code -> ('a, int) code -> ('a, unit) code
     val swap_cols_stmt :
       ('a, 'b array array) code ->
       ('a, int) code -> ('a, int) code -> ('a, unit) code
@@ -2707,8 +2718,10 @@ module GVC_Z3 :
     val identity :
       ('a, int) code ->
       ('a, int) code -> ('a, Dom.v Domains_code.container2dfromvector) code
+    val index_default : ('a, int) code option -> ('a, int) code
     val swap_rows_stmt :
       ('a, 'b Domains_code.container2dfromvector) code ->
+      ('a, int) code option ->
       ('a, int) code -> ('a, int) code -> ('a, unit) code
     val swap_cols_stmt :
       ('a, 'b Domains_code.container2dfromvector) code ->
@@ -2775,8 +2788,10 @@ module GVC_Z19 :
     val identity :
       ('a, int) code ->
       ('a, int) code -> ('a, Dom.v Domains_code.container2dfromvector) code
+    val index_default : ('a, int) code option -> ('a, int) code
     val swap_rows_stmt :
       ('a, 'b Domains_code.container2dfromvector) code ->
+      ('a, int) code option ->
       ('a, int) code -> ('a, int) code -> ('a, unit) code
     val swap_cols_stmt :
       ('a, 'b Domains_code.container2dfromvector) code ->
@@ -2830,7 +2845,9 @@ module GFC_F :
       ('a, int) code -> ('a, int) code -> 'a vc -> ('a, int) code -> 'a vc
     val identity : ('a, int) code -> ('a, int) code -> 'a vc
     val swap_rows_stmt :
-      'a vc -> ('a, int) code -> ('a, int) code -> ('a, unit) code
+      'a vc ->
+      ('a, int) code option ->
+      ('a, int) code -> ('a, int) code -> ('a, unit) code
     val swap_cols_stmt :
       'a vc -> ('a, int) code -> ('a, int) code -> ('a, unit) code
     val row_head : 'a vc -> ('a, int) code -> ('a, int) code -> 'a vo
@@ -2903,19 +2920,51 @@ module G_GAC_F :
            GAC_F.Dom.v)
           lm
       end
+    module type LOWER =
+      sig
+        type 'a lstate = ('a, GAC_F.contr) Code.abstract
+        type ('a, 'b) lm = ('a, 'b) GEF.cmonad
+          constraint 'a =
+            < answer : 'c; classif : 'd; state : [> `TLower of 'd lstate ];
+              .. >
+        val decl :
+          ('a, GAC_F.contr) Code.abstract ->
+          (< answer : 'b; classif : 'a; state : [> `TLower of 'a lstate ];
+             .. >,
+           GAC_F.contr)
+          lm
+        val updt :
+          'a GAC_F.vc ->
+          ('a, int) Code.abstract ->
+          ('a, int) Code.abstract ->
+          'a GAC_F.vo ->
+          'a GAC_F.Dom.vc ->
+          (< answer : 'b; classif : 'a; state : [> `TLower of 'a lstate ];
+             .. >,
+           unit)
+          lm option
+        val fin :
+          unit ->
+          (< answer : 'a; classif : 'b; state : [> `TLower of 'b lstate ];
+             .. >,
+           GAC_F.contr)
+          lm
+        val wants_pack : bool
+      end
     module type PIVOT =
       functor (D : DETERMINANT) ->
         functor (P : GEF.TRACKPIVOT) ->
-          sig
-            val findpivot :
-              'a wmatrix ->
-              'a curpos ->
-              (< answer : 'b; classif : 'a;
-                 state : [> `TDet of 'a D.lstate | `TPivot of 'a P.lstate ];
-                 .. >,
-               GAC_F.Dom.v option)
-              GEF.cmonad
-          end
+          functor (L : LOWER) ->
+            sig
+              val findpivot :
+                'a wmatrix ->
+                'a curpos ->
+                (< answer : 'b; classif : 'a;
+                   state : [> `TDet of 'a D.lstate | `TPivot of 'a P.lstate ];
+                   .. >,
+                 GAC_F.Dom.v option)
+                GEF.cmonad
+            end
     module NoDet :
       sig
         type tdet = GAC_F.Dom.v ref
@@ -3075,37 +3124,6 @@ module G_GAC_F :
                 Det.lm
               val upd_kind : Ge.update_kind
             end
-        module type LOWER =
-          sig
-            type 'a lstate = ('a, GAC_F.contr) Code.abstract
-            type ('a, 'b) lm = ('a, 'b) GEF.cmonad
-              constraint 'a =
-                < answer : 'c; classif : 'd;
-                  state : [> `TLower of 'd lstate ]; .. >
-            val decl :
-              ('a, GAC_F.contr) Code.abstract ->
-              (< answer : 'b; classif : 'a;
-                 state : [> `TLower of 'a lstate ]; .. >,
-               GAC_F.contr)
-              lm
-            val updt :
-              'a GAC_F.vc ->
-              ('a, int) Code.abstract ->
-              ('a, int) Code.abstract ->
-              'a GAC_F.vo ->
-              'a GAC_F.Dom.vc ->
-              (< answer : 'b; classif : 'a;
-                 state : [> `TLower of 'a lstate ]; .. >,
-               unit)
-              lm option
-            val fin :
-              unit ->
-              (< answer : 'a; classif : 'b;
-                 state : [> `TLower of 'b lstate ]; .. >,
-               GAC_F.contr)
-              lm
-            val wants_pack : bool
-          end
         module TrackLower :
           sig
             type 'a lstate = ('a, GAC_F.contr) Code.abstract
@@ -3223,44 +3241,49 @@ module G_GAC_F :
         module RowPivot :
           functor (Det : DETERMINANT) ->
             functor (P : GEF.TRACKPIVOT) ->
-              sig
-                val findpivot :
-                  'a wmatrix ->
-                  'a curpos ->
-                  (< answer : ('a, 'b) Code.abstract;
-                     state : [> `TDet of 'a Det.lstate
-                              | `TPivot of 'a P.lstate ]
-                             list;
-                     .. >,
-                   ('a, GAC_F.Dom.v option) Code.abstract)
-                  StateCPSMonad.monad
-              end
+              functor (L : LOWER) ->
+                sig
+                  val optim : 'a -> 'a option
+                  val findpivot :
+                    'a wmatrix ->
+                    'a curpos ->
+                    (< answer : ('a, 'b) Code.abstract;
+                       state : [> `TDet of 'a Det.lstate
+                                | `TPivot of 'a P.lstate ]
+                               list;
+                       .. >,
+                     ('a, GAC_F.Dom.v option) Code.abstract)
+                    StateCPSMonad.monad
+                end
         module FullPivot :
           functor (Det : DETERMINANT) ->
             functor (P : GEF.TRACKPIVOT) ->
-              sig
-                val findpivot :
-                  'a wmatrix ->
-                  'a curpos ->
-                  (< answer : ('a, 'b) Code.abstract;
-                     state : [> `TDet of 'a Det.lstate
-                              | `TPivot of 'a P.lstate ]
-                             list;
-                     .. >,
-                   ('a, GAC_F.Dom.v option) Code.abstract)
-                  StateCPSMonad.monad
-              end
+              functor (L : LOWER) ->
+                sig
+                  val optim : 'a -> 'a option
+                  val findpivot :
+                    'a wmatrix ->
+                    'a curpos ->
+                    (< answer : ('a, 'b) Code.abstract;
+                       state : [> `TDet of 'a Det.lstate
+                                | `TPivot of 'a P.lstate ]
+                               list;
+                       .. >,
+                     ('a, GAC_F.Dom.v option) Code.abstract)
+                    StateCPSMonad.monad
+                end
         module NoPivot :
           functor (Det : DETERMINANT) ->
             functor (P : GEF.TRACKPIVOT) ->
-              sig
-                val findpivot :
-                  'a wmatrix ->
-                  'a curpos ->
-                  (< answer : 'b; state : 'c; .. >,
-                   ('a, GAC_F.Dom.v option) Code.abstract)
-                  StateCPSMonad.monad
-              end
+              functor (L : LOWER) ->
+                sig
+                  val findpivot :
+                    'a wmatrix ->
+                    'a curpos ->
+                    (< answer : 'b; state : 'c; .. >,
+                     ('a, GAC_F.Dom.v option) Code.abstract)
+                    StateCPSMonad.monad
+                end
         module type OUTPUTDEP =
           sig module PivotRep : GEF.PIVOTKIND module Det : DETERMINANT end
         module OutJustMatrix :
@@ -4696,19 +4719,51 @@ module G_GVC_F :
            GVC_F.Dom.v)
           lm
       end
+    module type LOWER =
+      sig
+        type 'a lstate = ('a, GVC_F.contr) Code.abstract
+        type ('a, 'b) lm = ('a, 'b) GEF.cmonad
+          constraint 'a =
+            < answer : 'c; classif : 'd; state : [> `TLower of 'd lstate ];
+              .. >
+        val decl :
+          ('a, GVC_F.contr) Code.abstract ->
+          (< answer : 'b; classif : 'a; state : [> `TLower of 'a lstate ];
+             .. >,
+           GVC_F.contr)
+          lm
+        val updt :
+          'a GVC_F.vc ->
+          ('a, int) Code.abstract ->
+          ('a, int) Code.abstract ->
+          'a GVC_F.vo ->
+          'a GVC_F.Dom.vc ->
+          (< answer : 'b; classif : 'a; state : [> `TLower of 'a lstate ];
+             .. >,
+           unit)
+          lm option
+        val fin :
+          unit ->
+          (< answer : 'a; classif : 'b; state : [> `TLower of 'b lstate ];
+             .. >,
+           GVC_F.contr)
+          lm
+        val wants_pack : bool
+      end
     module type PIVOT =
       functor (D : DETERMINANT) ->
         functor (P : GEF.TRACKPIVOT) ->
-          sig
-            val findpivot :
-              'a wmatrix ->
-              'a curpos ->
-              (< answer : 'b; classif : 'a;
-                 state : [> `TDet of 'a D.lstate | `TPivot of 'a P.lstate ];
-                 .. >,
-               GVC_F.Dom.v option)
-              GEF.cmonad
-          end
+          functor (L : LOWER) ->
+            sig
+              val findpivot :
+                'a wmatrix ->
+                'a curpos ->
+                (< answer : 'b; classif : 'a;
+                   state : [> `TDet of 'a D.lstate | `TPivot of 'a P.lstate ];
+                   .. >,
+                 GVC_F.Dom.v option)
+                GEF.cmonad
+            end
     module NoDet :
       sig
         type tdet = GVC_F.Dom.v ref
@@ -4868,37 +4923,6 @@ module G_GVC_F :
                 Det.lm
               val upd_kind : Ge.update_kind
             end
-        module type LOWER =
-          sig
-            type 'a lstate = ('a, GVC_F.contr) Code.abstract
-            type ('a, 'b) lm = ('a, 'b) GEF.cmonad
-              constraint 'a =
-                < answer : 'c; classif : 'd;
-                  state : [> `TLower of 'd lstate ]; .. >
-            val decl :
-              ('a, GVC_F.contr) Code.abstract ->
-              (< answer : 'b; classif : 'a;
-                 state : [> `TLower of 'a lstate ]; .. >,
-               GVC_F.contr)
-              lm
-            val updt :
-              'a GVC_F.vc ->
-              ('a, int) Code.abstract ->
-              ('a, int) Code.abstract ->
-              'a GVC_F.vo ->
-              'a GVC_F.Dom.vc ->
-              (< answer : 'b; classif : 'a;
-                 state : [> `TLower of 'a lstate ]; .. >,
-               unit)
-              lm option
-            val fin :
-              unit ->
-              (< answer : 'a; classif : 'b;
-                 state : [> `TLower of 'b lstate ]; .. >,
-               GVC_F.contr)
-              lm
-            val wants_pack : bool
-          end
         module TrackLower :
           sig
             type 'a lstate = ('a, GVC_F.contr) Code.abstract
@@ -5016,44 +5040,49 @@ module G_GVC_F :
         module RowPivot :
           functor (Det : DETERMINANT) ->
             functor (P : GEF.TRACKPIVOT) ->
-              sig
-                val findpivot :
-                  'a wmatrix ->
-                  'a curpos ->
-                  (< answer : ('a, 'b) Code.abstract;
-                     state : [> `TDet of 'a Det.lstate
-                              | `TPivot of 'a P.lstate ]
-                             list;
-                     .. >,
-                   ('a, GVC_F.Dom.v option) Code.abstract)
-                  StateCPSMonad.monad
-              end
+              functor (L : LOWER) ->
+                sig
+                  val optim : 'a -> 'a option
+                  val findpivot :
+                    'a wmatrix ->
+                    'a curpos ->
+                    (< answer : ('a, 'b) Code.abstract;
+                       state : [> `TDet of 'a Det.lstate
+                                | `TPivot of 'a P.lstate ]
+                               list;
+                       .. >,
+                     ('a, GVC_F.Dom.v option) Code.abstract)
+                    StateCPSMonad.monad
+                end
         module FullPivot :
           functor (Det : DETERMINANT) ->
             functor (P : GEF.TRACKPIVOT) ->
-              sig
-                val findpivot :
-                  'a wmatrix ->
-                  'a curpos ->
-                  (< answer : ('a, 'b) Code.abstract;
-                     state : [> `TDet of 'a Det.lstate
-                              | `TPivot of 'a P.lstate ]
-                             list;
-                     .. >,
-                   ('a, GVC_F.Dom.v option) Code.abstract)
-                  StateCPSMonad.monad
-              end
+              functor (L : LOWER) ->
+                sig
+                  val optim : 'a -> 'a option
+                  val findpivot :
+                    'a wmatrix ->
+                    'a curpos ->
+                    (< answer : ('a, 'b) Code.abstract;
+                       state : [> `TDet of 'a Det.lstate
+                                | `TPivot of 'a P.lstate ]
+                               list;
+                       .. >,
+                     ('a, GVC_F.Dom.v option) Code.abstract)
+                    StateCPSMonad.monad
+                end
         module NoPivot :
           functor (Det : DETERMINANT) ->
             functor (P : GEF.TRACKPIVOT) ->
-              sig
-                val findpivot :
-                  'a wmatrix ->
-                  'a curpos ->
-                  (< answer : 'b; state : 'c; .. >,
-                   ('a, GVC_F.Dom.v option) Code.abstract)
-                  StateCPSMonad.monad
-              end
+              functor (L : LOWER) ->
+                sig
+                  val findpivot :
+                    'a wmatrix ->
+                    'a curpos ->
+                    (< answer : 'b; state : 'c; .. >,
+                     ('a, GVC_F.Dom.v option) Code.abstract)
+                    StateCPSMonad.monad
+                end
         module type OUTPUTDEP =
           sig module PivotRep : GEF.PIVOTKIND module Det : DETERMINANT end
         module OutJustMatrix :
@@ -6489,19 +6518,51 @@ module G_GAC_I :
            GAC_I.Dom.v)
           lm
       end
+    module type LOWER =
+      sig
+        type 'a lstate = ('a, GAC_I.contr) Code.abstract
+        type ('a, 'b) lm = ('a, 'b) GEF.cmonad
+          constraint 'a =
+            < answer : 'c; classif : 'd; state : [> `TLower of 'd lstate ];
+              .. >
+        val decl :
+          ('a, GAC_I.contr) Code.abstract ->
+          (< answer : 'b; classif : 'a; state : [> `TLower of 'a lstate ];
+             .. >,
+           GAC_I.contr)
+          lm
+        val updt :
+          'a GAC_I.vc ->
+          ('a, int) Code.abstract ->
+          ('a, int) Code.abstract ->
+          'a GAC_I.vo ->
+          'a GAC_I.Dom.vc ->
+          (< answer : 'b; classif : 'a; state : [> `TLower of 'a lstate ];
+             .. >,
+           unit)
+          lm option
+        val fin :
+          unit ->
+          (< answer : 'a; classif : 'b; state : [> `TLower of 'b lstate ];
+             .. >,
+           GAC_I.contr)
+          lm
+        val wants_pack : bool
+      end
     module type PIVOT =
       functor (D : DETERMINANT) ->
         functor (P : GEF.TRACKPIVOT) ->
-          sig
-            val findpivot :
-              'a wmatrix ->
-              'a curpos ->
-              (< answer : 'b; classif : 'a;
-                 state : [> `TDet of 'a D.lstate | `TPivot of 'a P.lstate ];
-                 .. >,
-               GAC_I.Dom.v option)
-              GEF.cmonad
-          end
+          functor (L : LOWER) ->
+            sig
+              val findpivot :
+                'a wmatrix ->
+                'a curpos ->
+                (< answer : 'b; classif : 'a;
+                   state : [> `TDet of 'a D.lstate | `TPivot of 'a P.lstate ];
+                   .. >,
+                 GAC_I.Dom.v option)
+                GEF.cmonad
+            end
     module NoDet :
       sig
         type tdet = GAC_I.Dom.v ref
@@ -6661,37 +6722,6 @@ module G_GAC_I :
                 Det.lm
               val upd_kind : Ge.update_kind
             end
-        module type LOWER =
-          sig
-            type 'a lstate = ('a, GAC_I.contr) Code.abstract
-            type ('a, 'b) lm = ('a, 'b) GEF.cmonad
-              constraint 'a =
-                < answer : 'c; classif : 'd;
-                  state : [> `TLower of 'd lstate ]; .. >
-            val decl :
-              ('a, GAC_I.contr) Code.abstract ->
-              (< answer : 'b; classif : 'a;
-                 state : [> `TLower of 'a lstate ]; .. >,
-               GAC_I.contr)
-              lm
-            val updt :
-              'a GAC_I.vc ->
-              ('a, int) Code.abstract ->
-              ('a, int) Code.abstract ->
-              'a GAC_I.vo ->
-              'a GAC_I.Dom.vc ->
-              (< answer : 'b; classif : 'a;
-                 state : [> `TLower of 'a lstate ]; .. >,
-               unit)
-              lm option
-            val fin :
-              unit ->
-              (< answer : 'a; classif : 'b;
-                 state : [> `TLower of 'b lstate ]; .. >,
-               GAC_I.contr)
-              lm
-            val wants_pack : bool
-          end
         module TrackLower :
           sig
             type 'a lstate = ('a, GAC_I.contr) Code.abstract
@@ -6809,44 +6839,49 @@ module G_GAC_I :
         module RowPivot :
           functor (Det : DETERMINANT) ->
             functor (P : GEF.TRACKPIVOT) ->
-              sig
-                val findpivot :
-                  'a wmatrix ->
-                  'a curpos ->
-                  (< answer : ('a, 'b) Code.abstract;
-                     state : [> `TDet of 'a Det.lstate
-                              | `TPivot of 'a P.lstate ]
-                             list;
-                     .. >,
-                   ('a, GAC_I.Dom.v option) Code.abstract)
-                  StateCPSMonad.monad
-              end
+              functor (L : LOWER) ->
+                sig
+                  val optim : 'a -> 'a option
+                  val findpivot :
+                    'a wmatrix ->
+                    'a curpos ->
+                    (< answer : ('a, 'b) Code.abstract;
+                       state : [> `TDet of 'a Det.lstate
+                                | `TPivot of 'a P.lstate ]
+                               list;
+                       .. >,
+                     ('a, GAC_I.Dom.v option) Code.abstract)
+                    StateCPSMonad.monad
+                end
         module FullPivot :
           functor (Det : DETERMINANT) ->
             functor (P : GEF.TRACKPIVOT) ->
-              sig
-                val findpivot :
-                  'a wmatrix ->
-                  'a curpos ->
-                  (< answer : ('a, 'b) Code.abstract;
-                     state : [> `TDet of 'a Det.lstate
-                              | `TPivot of 'a P.lstate ]
-                             list;
-                     .. >,
-                   ('a, GAC_I.Dom.v option) Code.abstract)
-                  StateCPSMonad.monad
-              end
+              functor (L : LOWER) ->
+                sig
+                  val optim : 'a -> 'a option
+                  val findpivot :
+                    'a wmatrix ->
+                    'a curpos ->
+                    (< answer : ('a, 'b) Code.abstract;
+                       state : [> `TDet of 'a Det.lstate
+                                | `TPivot of 'a P.lstate ]
+                               list;
+                       .. >,
+                     ('a, GAC_I.Dom.v option) Code.abstract)
+                    StateCPSMonad.monad
+                end
         module NoPivot :
           functor (Det : DETERMINANT) ->
             functor (P : GEF.TRACKPIVOT) ->
-              sig
-                val findpivot :
-                  'a wmatrix ->
-                  'a curpos ->
-                  (< answer : 'b; state : 'c; .. >,
-                   ('a, GAC_I.Dom.v option) Code.abstract)
-                  StateCPSMonad.monad
-              end
+              functor (L : LOWER) ->
+                sig
+                  val findpivot :
+                    'a wmatrix ->
+                    'a curpos ->
+                    (< answer : 'b; state : 'c; .. >,
+                     ('a, GAC_I.Dom.v option) Code.abstract)
+                    StateCPSMonad.monad
+                end
         module type OUTPUTDEP =
           sig module PivotRep : GEF.PIVOTKIND module Det : DETERMINANT end
         module OutJustMatrix :
@@ -8282,19 +8317,51 @@ module G_GVC_I :
            GVC_I.Dom.v)
           lm
       end
+    module type LOWER =
+      sig
+        type 'a lstate = ('a, GVC_I.contr) Code.abstract
+        type ('a, 'b) lm = ('a, 'b) GEF.cmonad
+          constraint 'a =
+            < answer : 'c; classif : 'd; state : [> `TLower of 'd lstate ];
+              .. >
+        val decl :
+          ('a, GVC_I.contr) Code.abstract ->
+          (< answer : 'b; classif : 'a; state : [> `TLower of 'a lstate ];
+             .. >,
+           GVC_I.contr)
+          lm
+        val updt :
+          'a GVC_I.vc ->
+          ('a, int) Code.abstract ->
+          ('a, int) Code.abstract ->
+          'a GVC_I.vo ->
+          'a GVC_I.Dom.vc ->
+          (< answer : 'b; classif : 'a; state : [> `TLower of 'a lstate ];
+             .. >,
+           unit)
+          lm option
+        val fin :
+          unit ->
+          (< answer : 'a; classif : 'b; state : [> `TLower of 'b lstate ];
+             .. >,
+           GVC_I.contr)
+          lm
+        val wants_pack : bool
+      end
     module type PIVOT =
       functor (D : DETERMINANT) ->
         functor (P : GEF.TRACKPIVOT) ->
-          sig
-            val findpivot :
-              'a wmatrix ->
-              'a curpos ->
-              (< answer : 'b; classif : 'a;
-                 state : [> `TDet of 'a D.lstate | `TPivot of 'a P.lstate ];
-                 .. >,
-               GVC_I.Dom.v option)
-              GEF.cmonad
-          end
+          functor (L : LOWER) ->
+            sig
+              val findpivot :
+                'a wmatrix ->
+                'a curpos ->
+                (< answer : 'b; classif : 'a;
+                   state : [> `TDet of 'a D.lstate | `TPivot of 'a P.lstate ];
+                   .. >,
+                 GVC_I.Dom.v option)
+                GEF.cmonad
+            end
     module NoDet :
       sig
         type tdet = GVC_I.Dom.v ref
@@ -8454,37 +8521,6 @@ module G_GVC_I :
                 Det.lm
               val upd_kind : Ge.update_kind
             end
-        module type LOWER =
-          sig
-            type 'a lstate = ('a, GVC_I.contr) Code.abstract
-            type ('a, 'b) lm = ('a, 'b) GEF.cmonad
-              constraint 'a =
-                < answer : 'c; classif : 'd;
-                  state : [> `TLower of 'd lstate ]; .. >
-            val decl :
-              ('a, GVC_I.contr) Code.abstract ->
-              (< answer : 'b; classif : 'a;
-                 state : [> `TLower of 'a lstate ]; .. >,
-               GVC_I.contr)
-              lm
-            val updt :
-              'a GVC_I.vc ->
-              ('a, int) Code.abstract ->
-              ('a, int) Code.abstract ->
-              'a GVC_I.vo ->
-              'a GVC_I.Dom.vc ->
-              (< answer : 'b; classif : 'a;
-                 state : [> `TLower of 'a lstate ]; .. >,
-               unit)
-              lm option
-            val fin :
-              unit ->
-              (< answer : 'a; classif : 'b;
-                 state : [> `TLower of 'b lstate ]; .. >,
-               GVC_I.contr)
-              lm
-            val wants_pack : bool
-          end
         module TrackLower :
           sig
             type 'a lstate = ('a, GVC_I.contr) Code.abstract
@@ -8602,44 +8638,49 @@ module G_GVC_I :
         module RowPivot :
           functor (Det : DETERMINANT) ->
             functor (P : GEF.TRACKPIVOT) ->
-              sig
-                val findpivot :
-                  'a wmatrix ->
-                  'a curpos ->
-                  (< answer : ('a, 'b) Code.abstract;
-                     state : [> `TDet of 'a Det.lstate
-                              | `TPivot of 'a P.lstate ]
-                             list;
-                     .. >,
-                   ('a, GVC_I.Dom.v option) Code.abstract)
-                  StateCPSMonad.monad
-              end
+              functor (L : LOWER) ->
+                sig
+                  val optim : 'a -> 'a option
+                  val findpivot :
+                    'a wmatrix ->
+                    'a curpos ->
+                    (< answer : ('a, 'b) Code.abstract;
+                       state : [> `TDet of 'a Det.lstate
+                                | `TPivot of 'a P.lstate ]
+                               list;
+                       .. >,
+                     ('a, GVC_I.Dom.v option) Code.abstract)
+                    StateCPSMonad.monad
+                end
         module FullPivot :
           functor (Det : DETERMINANT) ->
             functor (P : GEF.TRACKPIVOT) ->
-              sig
-                val findpivot :
-                  'a wmatrix ->
-                  'a curpos ->
-                  (< answer : ('a, 'b) Code.abstract;
-                     state : [> `TDet of 'a Det.lstate
-                              | `TPivot of 'a P.lstate ]
-                             list;
-                     .. >,
-                   ('a, GVC_I.Dom.v option) Code.abstract)
-                  StateCPSMonad.monad
-              end
+              functor (L : LOWER) ->
+                sig
+                  val optim : 'a -> 'a option
+                  val findpivot :
+                    'a wmatrix ->
+                    'a curpos ->
+                    (< answer : ('a, 'b) Code.abstract;
+                       state : [> `TDet of 'a Det.lstate
+                                | `TPivot of 'a P.lstate ]
+                               list;
+                       .. >,
+                     ('a, GVC_I.Dom.v option) Code.abstract)
+                    StateCPSMonad.monad
+                end
         module NoPivot :
           functor (Det : DETERMINANT) ->
             functor (P : GEF.TRACKPIVOT) ->
-              sig
-                val findpivot :
-                  'a wmatrix ->
-                  'a curpos ->
-                  (< answer : 'b; state : 'c; .. >,
-                   ('a, GVC_I.Dom.v option) Code.abstract)
-                  StateCPSMonad.monad
-              end
+              functor (L : LOWER) ->
+                sig
+                  val findpivot :
+                    'a wmatrix ->
+                    'a curpos ->
+                    (< answer : 'b; state : 'c; .. >,
+                     ('a, GVC_I.Dom.v option) Code.abstract)
+                    StateCPSMonad.monad
+                end
         module type OUTPUTDEP =
           sig module PivotRep : GEF.PIVOTKIND module Det : DETERMINANT end
         module OutJustMatrix :
@@ -10075,19 +10116,51 @@ module G_GAC_R :
            GAC_R.Dom.v)
           lm
       end
+    module type LOWER =
+      sig
+        type 'a lstate = ('a, GAC_R.contr) Code.abstract
+        type ('a, 'b) lm = ('a, 'b) GEF.cmonad
+          constraint 'a =
+            < answer : 'c; classif : 'd; state : [> `TLower of 'd lstate ];
+              .. >
+        val decl :
+          ('a, GAC_R.contr) Code.abstract ->
+          (< answer : 'b; classif : 'a; state : [> `TLower of 'a lstate ];
+             .. >,
+           GAC_R.contr)
+          lm
+        val updt :
+          'a GAC_R.vc ->
+          ('a, int) Code.abstract ->
+          ('a, int) Code.abstract ->
+          'a GAC_R.vo ->
+          'a GAC_R.Dom.vc ->
+          (< answer : 'b; classif : 'a; state : [> `TLower of 'a lstate ];
+             .. >,
+           unit)
+          lm option
+        val fin :
+          unit ->
+          (< answer : 'a; classif : 'b; state : [> `TLower of 'b lstate ];
+             .. >,
+           GAC_R.contr)
+          lm
+        val wants_pack : bool
+      end
     module type PIVOT =
       functor (D : DETERMINANT) ->
         functor (P : GEF.TRACKPIVOT) ->
-          sig
-            val findpivot :
-              'a wmatrix ->
-              'a curpos ->
-              (< answer : 'b; classif : 'a;
-                 state : [> `TDet of 'a D.lstate | `TPivot of 'a P.lstate ];
-                 .. >,
-               GAC_R.Dom.v option)
-              GEF.cmonad
-          end
+          functor (L : LOWER) ->
+            sig
+              val findpivot :
+                'a wmatrix ->
+                'a curpos ->
+                (< answer : 'b; classif : 'a;
+                   state : [> `TDet of 'a D.lstate | `TPivot of 'a P.lstate ];
+                   .. >,
+                 GAC_R.Dom.v option)
+                GEF.cmonad
+            end
     module NoDet :
       sig
         type tdet = GAC_R.Dom.v ref
@@ -10247,37 +10320,6 @@ module G_GAC_R :
                 Det.lm
               val upd_kind : Ge.update_kind
             end
-        module type LOWER =
-          sig
-            type 'a lstate = ('a, GAC_R.contr) Code.abstract
-            type ('a, 'b) lm = ('a, 'b) GEF.cmonad
-              constraint 'a =
-                < answer : 'c; classif : 'd;
-                  state : [> `TLower of 'd lstate ]; .. >
-            val decl :
-              ('a, GAC_R.contr) Code.abstract ->
-              (< answer : 'b; classif : 'a;
-                 state : [> `TLower of 'a lstate ]; .. >,
-               GAC_R.contr)
-              lm
-            val updt :
-              'a GAC_R.vc ->
-              ('a, int) Code.abstract ->
-              ('a, int) Code.abstract ->
-              'a GAC_R.vo ->
-              'a GAC_R.Dom.vc ->
-              (< answer : 'b; classif : 'a;
-                 state : [> `TLower of 'a lstate ]; .. >,
-               unit)
-              lm option
-            val fin :
-              unit ->
-              (< answer : 'a; classif : 'b;
-                 state : [> `TLower of 'b lstate ]; .. >,
-               GAC_R.contr)
-              lm
-            val wants_pack : bool
-          end
         module TrackLower :
           sig
             type 'a lstate = ('a, GAC_R.contr) Code.abstract
@@ -10395,44 +10437,49 @@ module G_GAC_R :
         module RowPivot :
           functor (Det : DETERMINANT) ->
             functor (P : GEF.TRACKPIVOT) ->
-              sig
-                val findpivot :
-                  'a wmatrix ->
-                  'a curpos ->
-                  (< answer : ('a, 'b) Code.abstract;
-                     state : [> `TDet of 'a Det.lstate
-                              | `TPivot of 'a P.lstate ]
-                             list;
-                     .. >,
-                   ('a, GAC_R.Dom.v option) Code.abstract)
-                  StateCPSMonad.monad
-              end
+              functor (L : LOWER) ->
+                sig
+                  val optim : 'a -> 'a option
+                  val findpivot :
+                    'a wmatrix ->
+                    'a curpos ->
+                    (< answer : ('a, 'b) Code.abstract;
+                       state : [> `TDet of 'a Det.lstate
+                                | `TPivot of 'a P.lstate ]
+                               list;
+                       .. >,
+                     ('a, GAC_R.Dom.v option) Code.abstract)
+                    StateCPSMonad.monad
+                end
         module FullPivot :
           functor (Det : DETERMINANT) ->
             functor (P : GEF.TRACKPIVOT) ->
-              sig
-                val findpivot :
-                  'a wmatrix ->
-                  'a curpos ->
-                  (< answer : ('a, 'b) Code.abstract;
-                     state : [> `TDet of 'a Det.lstate
-                              | `TPivot of 'a P.lstate ]
-                             list;
-                     .. >,
-                   ('a, GAC_R.Dom.v option) Code.abstract)
-                  StateCPSMonad.monad
-              end
+              functor (L : LOWER) ->
+                sig
+                  val optim : 'a -> 'a option
+                  val findpivot :
+                    'a wmatrix ->
+                    'a curpos ->
+                    (< answer : ('a, 'b) Code.abstract;
+                       state : [> `TDet of 'a Det.lstate
+                                | `TPivot of 'a P.lstate ]
+                               list;
+                       .. >,
+                     ('a, GAC_R.Dom.v option) Code.abstract)
+                    StateCPSMonad.monad
+                end
         module NoPivot :
           functor (Det : DETERMINANT) ->
             functor (P : GEF.TRACKPIVOT) ->
-              sig
-                val findpivot :
-                  'a wmatrix ->
-                  'a curpos ->
-                  (< answer : 'b; state : 'c; .. >,
-                   ('a, GAC_R.Dom.v option) Code.abstract)
-                  StateCPSMonad.monad
-              end
+              functor (L : LOWER) ->
+                sig
+                  val findpivot :
+                    'a wmatrix ->
+                    'a curpos ->
+                    (< answer : 'b; state : 'c; .. >,
+                     ('a, GAC_R.Dom.v option) Code.abstract)
+                    StateCPSMonad.monad
+                end
         module type OUTPUTDEP =
           sig module PivotRep : GEF.PIVOTKIND module Det : DETERMINANT end
         module OutJustMatrix :
@@ -11868,19 +11915,51 @@ module G_GVC_Z3 :
            GVC_Z3.Dom.v)
           lm
       end
+    module type LOWER =
+      sig
+        type 'a lstate = ('a, GVC_Z3.contr) Code.abstract
+        type ('a, 'b) lm = ('a, 'b) GEF.cmonad
+          constraint 'a =
+            < answer : 'c; classif : 'd; state : [> `TLower of 'd lstate ];
+              .. >
+        val decl :
+          ('a, GVC_Z3.contr) Code.abstract ->
+          (< answer : 'b; classif : 'a; state : [> `TLower of 'a lstate ];
+             .. >,
+           GVC_Z3.contr)
+          lm
+        val updt :
+          'a GVC_Z3.vc ->
+          ('a, int) Code.abstract ->
+          ('a, int) Code.abstract ->
+          'a GVC_Z3.vo ->
+          'a GVC_Z3.Dom.vc ->
+          (< answer : 'b; classif : 'a; state : [> `TLower of 'a lstate ];
+             .. >,
+           unit)
+          lm option
+        val fin :
+          unit ->
+          (< answer : 'a; classif : 'b; state : [> `TLower of 'b lstate ];
+             .. >,
+           GVC_Z3.contr)
+          lm
+        val wants_pack : bool
+      end
     module type PIVOT =
       functor (D : DETERMINANT) ->
         functor (P : GEF.TRACKPIVOT) ->
-          sig
-            val findpivot :
-              'a wmatrix ->
-              'a curpos ->
-              (< answer : 'b; classif : 'a;
-                 state : [> `TDet of 'a D.lstate | `TPivot of 'a P.lstate ];
-                 .. >,
-               GVC_Z3.Dom.v option)
-              GEF.cmonad
-          end
+          functor (L : LOWER) ->
+            sig
+              val findpivot :
+                'a wmatrix ->
+                'a curpos ->
+                (< answer : 'b; classif : 'a;
+                   state : [> `TDet of 'a D.lstate | `TPivot of 'a P.lstate ];
+                   .. >,
+                 GVC_Z3.Dom.v option)
+                GEF.cmonad
+            end
     module NoDet :
       sig
         type tdet = GVC_Z3.Dom.v ref
@@ -12040,37 +12119,6 @@ module G_GVC_Z3 :
                 Det.lm
               val upd_kind : Ge.update_kind
             end
-        module type LOWER =
-          sig
-            type 'a lstate = ('a, GVC_Z3.contr) Code.abstract
-            type ('a, 'b) lm = ('a, 'b) GEF.cmonad
-              constraint 'a =
-                < answer : 'c; classif : 'd;
-                  state : [> `TLower of 'd lstate ]; .. >
-            val decl :
-              ('a, GVC_Z3.contr) Code.abstract ->
-              (< answer : 'b; classif : 'a;
-                 state : [> `TLower of 'a lstate ]; .. >,
-               GVC_Z3.contr)
-              lm
-            val updt :
-              'a GVC_Z3.vc ->
-              ('a, int) Code.abstract ->
-              ('a, int) Code.abstract ->
-              'a GVC_Z3.vo ->
-              'a GVC_Z3.Dom.vc ->
-              (< answer : 'b; classif : 'a;
-                 state : [> `TLower of 'a lstate ]; .. >,
-               unit)
-              lm option
-            val fin :
-              unit ->
-              (< answer : 'a; classif : 'b;
-                 state : [> `TLower of 'b lstate ]; .. >,
-               GVC_Z3.contr)
-              lm
-            val wants_pack : bool
-          end
         module TrackLower :
           sig
             type 'a lstate = ('a, GVC_Z3.contr) Code.abstract
@@ -12188,44 +12236,49 @@ module G_GVC_Z3 :
         module RowPivot :
           functor (Det : DETERMINANT) ->
             functor (P : GEF.TRACKPIVOT) ->
-              sig
-                val findpivot :
-                  'a wmatrix ->
-                  'a curpos ->
-                  (< answer : ('a, 'b) Code.abstract;
-                     state : [> `TDet of 'a Det.lstate
-                              | `TPivot of 'a P.lstate ]
-                             list;
-                     .. >,
-                   ('a, GVC_Z3.Dom.v option) Code.abstract)
-                  StateCPSMonad.monad
-              end
+              functor (L : LOWER) ->
+                sig
+                  val optim : 'a -> 'a option
+                  val findpivot :
+                    'a wmatrix ->
+                    'a curpos ->
+                    (< answer : ('a, 'b) Code.abstract;
+                       state : [> `TDet of 'a Det.lstate
+                                | `TPivot of 'a P.lstate ]
+                               list;
+                       .. >,
+                     ('a, GVC_Z3.Dom.v option) Code.abstract)
+                    StateCPSMonad.monad
+                end
         module FullPivot :
           functor (Det : DETERMINANT) ->
             functor (P : GEF.TRACKPIVOT) ->
-              sig
-                val findpivot :
-                  'a wmatrix ->
-                  'a curpos ->
-                  (< answer : ('a, 'b) Code.abstract;
-                     state : [> `TDet of 'a Det.lstate
-                              | `TPivot of 'a P.lstate ]
-                             list;
-                     .. >,
-                   ('a, GVC_Z3.Dom.v option) Code.abstract)
-                  StateCPSMonad.monad
-              end
+              functor (L : LOWER) ->
+                sig
+                  val optim : 'a -> 'a option
+                  val findpivot :
+                    'a wmatrix ->
+                    'a curpos ->
+                    (< answer : ('a, 'b) Code.abstract;
+                       state : [> `TDet of 'a Det.lstate
+                                | `TPivot of 'a P.lstate ]
+                               list;
+                       .. >,
+                     ('a, GVC_Z3.Dom.v option) Code.abstract)
+                    StateCPSMonad.monad
+                end
         module NoPivot :
           functor (Det : DETERMINANT) ->
             functor (P : GEF.TRACKPIVOT) ->
-              sig
-                val findpivot :
-                  'a wmatrix ->
-                  'a curpos ->
-                  (< answer : 'b; state : 'c; .. >,
-                   ('a, GVC_Z3.Dom.v option) Code.abstract)
-                  StateCPSMonad.monad
-              end
+              functor (L : LOWER) ->
+                sig
+                  val findpivot :
+                    'a wmatrix ->
+                    'a curpos ->
+                    (< answer : 'b; state : 'c; .. >,
+                     ('a, GVC_Z3.Dom.v option) Code.abstract)
+                    StateCPSMonad.monad
+                end
         module type OUTPUTDEP =
           sig module PivotRep : GEF.PIVOTKIND module Det : DETERMINANT end
         module OutJustMatrix :
@@ -13661,19 +13714,51 @@ module G_GVC_Z19 :
            GVC_Z19.Dom.v)
           lm
       end
+    module type LOWER =
+      sig
+        type 'a lstate = ('a, GVC_Z19.contr) Code.abstract
+        type ('a, 'b) lm = ('a, 'b) GEF.cmonad
+          constraint 'a =
+            < answer : 'c; classif : 'd; state : [> `TLower of 'd lstate ];
+              .. >
+        val decl :
+          ('a, GVC_Z19.contr) Code.abstract ->
+          (< answer : 'b; classif : 'a; state : [> `TLower of 'a lstate ];
+             .. >,
+           GVC_Z19.contr)
+          lm
+        val updt :
+          'a GVC_Z19.vc ->
+          ('a, int) Code.abstract ->
+          ('a, int) Code.abstract ->
+          'a GVC_Z19.vo ->
+          'a GVC_Z19.Dom.vc ->
+          (< answer : 'b; classif : 'a; state : [> `TLower of 'a lstate ];
+             .. >,
+           unit)
+          lm option
+        val fin :
+          unit ->
+          (< answer : 'a; classif : 'b; state : [> `TLower of 'b lstate ];
+             .. >,
+           GVC_Z19.contr)
+          lm
+        val wants_pack : bool
+      end
     module type PIVOT =
       functor (D : DETERMINANT) ->
         functor (P : GEF.TRACKPIVOT) ->
-          sig
-            val findpivot :
-              'a wmatrix ->
-              'a curpos ->
-              (< answer : 'b; classif : 'a;
-                 state : [> `TDet of 'a D.lstate | `TPivot of 'a P.lstate ];
-                 .. >,
-               GVC_Z19.Dom.v option)
-              GEF.cmonad
-          end
+          functor (L : LOWER) ->
+            sig
+              val findpivot :
+                'a wmatrix ->
+                'a curpos ->
+                (< answer : 'b; classif : 'a;
+                   state : [> `TDet of 'a D.lstate | `TPivot of 'a P.lstate ];
+                   .. >,
+                 GVC_Z19.Dom.v option)
+                GEF.cmonad
+            end
     module NoDet :
       sig
         type tdet = GVC_Z19.Dom.v ref
@@ -13833,37 +13918,6 @@ module G_GVC_Z19 :
                 Det.lm
               val upd_kind : Ge.update_kind
             end
-        module type LOWER =
-          sig
-            type 'a lstate = ('a, GVC_Z19.contr) Code.abstract
-            type ('a, 'b) lm = ('a, 'b) GEF.cmonad
-              constraint 'a =
-                < answer : 'c; classif : 'd;
-                  state : [> `TLower of 'd lstate ]; .. >
-            val decl :
-              ('a, GVC_Z19.contr) Code.abstract ->
-              (< answer : 'b; classif : 'a;
-                 state : [> `TLower of 'a lstate ]; .. >,
-               GVC_Z19.contr)
-              lm
-            val updt :
-              'a GVC_Z19.vc ->
-              ('a, int) Code.abstract ->
-              ('a, int) Code.abstract ->
-              'a GVC_Z19.vo ->
-              'a GVC_Z19.Dom.vc ->
-              (< answer : 'b; classif : 'a;
-                 state : [> `TLower of 'a lstate ]; .. >,
-               unit)
-              lm option
-            val fin :
-              unit ->
-              (< answer : 'a; classif : 'b;
-                 state : [> `TLower of 'b lstate ]; .. >,
-               GVC_Z19.contr)
-              lm
-            val wants_pack : bool
-          end
         module TrackLower :
           sig
             type 'a lstate = ('a, GVC_Z19.contr) Code.abstract
@@ -13982,44 +14036,49 @@ module G_GVC_Z19 :
         module RowPivot :
           functor (Det : DETERMINANT) ->
             functor (P : GEF.TRACKPIVOT) ->
-              sig
-                val findpivot :
-                  'a wmatrix ->
-                  'a curpos ->
-                  (< answer : ('a, 'b) Code.abstract;
-                     state : [> `TDet of 'a Det.lstate
-                              | `TPivot of 'a P.lstate ]
-                             list;
-                     .. >,
-                   ('a, GVC_Z19.Dom.v option) Code.abstract)
-                  StateCPSMonad.monad
-              end
+              functor (L : LOWER) ->
+                sig
+                  val optim : 'a -> 'a option
+                  val findpivot :
+                    'a wmatrix ->
+                    'a curpos ->
+                    (< answer : ('a, 'b) Code.abstract;
+                       state : [> `TDet of 'a Det.lstate
+                                | `TPivot of 'a P.lstate ]
+                               list;
+                       .. >,
+                     ('a, GVC_Z19.Dom.v option) Code.abstract)
+                    StateCPSMonad.monad
+                end
         module FullPivot :
           functor (Det : DETERMINANT) ->
             functor (P : GEF.TRACKPIVOT) ->
-              sig
-                val findpivot :
-                  'a wmatrix ->
-                  'a curpos ->
-                  (< answer : ('a, 'b) Code.abstract;
-                     state : [> `TDet of 'a Det.lstate
-                              | `TPivot of 'a P.lstate ]
-                             list;
-                     .. >,
-                   ('a, GVC_Z19.Dom.v option) Code.abstract)
-                  StateCPSMonad.monad
-              end
+              functor (L : LOWER) ->
+                sig
+                  val optim : 'a -> 'a option
+                  val findpivot :
+                    'a wmatrix ->
+                    'a curpos ->
+                    (< answer : ('a, 'b) Code.abstract;
+                       state : [> `TDet of 'a Det.lstate
+                                | `TPivot of 'a P.lstate ]
+                               list;
+                       .. >,
+                     ('a, GVC_Z19.Dom.v option) Code.abstract)
+                    StateCPSMonad.monad
+                end
         module NoPivot :
           functor (Det : DETERMINANT) ->
             functor (P : GEF.TRACKPIVOT) ->
-              sig
-                val findpivot :
-                  'a wmatrix ->
-                  'a curpos ->
-                  (< answer : 'b; state : 'c; .. >,
-                   ('a, GVC_Z19.Dom.v option) Code.abstract)
-                  StateCPSMonad.monad
-              end
+              functor (L : LOWER) ->
+                sig
+                  val findpivot :
+                    'a wmatrix ->
+                    'a curpos ->
+                    (< answer : 'b; state : 'c; .. >,
+                     ('a, GVC_Z19.Dom.v option) Code.abstract)
+                    StateCPSMonad.monad
+                end
         module type OUTPUTDEP =
           sig module PivotRep : GEF.PIVOTKIND module Det : DETERMINANT end
         module OutJustMatrix :
@@ -15456,19 +15515,51 @@ module G_GFC_F :
            GFC_F.Dom.v)
           lm
       end
+    module type LOWER =
+      sig
+        type 'a lstate = ('a, GFC_F.contr) Code.abstract
+        type ('a, 'b) lm = ('a, 'b) GEF.cmonad
+          constraint 'a =
+            < answer : 'c; classif : 'd; state : [> `TLower of 'd lstate ];
+              .. >
+        val decl :
+          ('a, GFC_F.contr) Code.abstract ->
+          (< answer : 'b; classif : 'a; state : [> `TLower of 'a lstate ];
+             .. >,
+           GFC_F.contr)
+          lm
+        val updt :
+          'a GFC_F.vc ->
+          ('a, int) Code.abstract ->
+          ('a, int) Code.abstract ->
+          'a GFC_F.vo ->
+          'a GFC_F.Dom.vc ->
+          (< answer : 'b; classif : 'a; state : [> `TLower of 'a lstate ];
+             .. >,
+           unit)
+          lm option
+        val fin :
+          unit ->
+          (< answer : 'a; classif : 'b; state : [> `TLower of 'b lstate ];
+             .. >,
+           GFC_F.contr)
+          lm
+        val wants_pack : bool
+      end
     module type PIVOT =
       functor (D : DETERMINANT) ->
         functor (P : GEF.TRACKPIVOT) ->
-          sig
-            val findpivot :
-              'a wmatrix ->
-              'a curpos ->
-              (< answer : 'b; classif : 'a;
-                 state : [> `TDet of 'a D.lstate | `TPivot of 'a P.lstate ];
-                 .. >,
-               GFC_F.Dom.v option)
-              GEF.cmonad
-          end
+          functor (L : LOWER) ->
+            sig
+              val findpivot :
+                'a wmatrix ->
+                'a curpos ->
+                (< answer : 'b; classif : 'a;
+                   state : [> `TDet of 'a D.lstate | `TPivot of 'a P.lstate ];
+                   .. >,
+                 GFC_F.Dom.v option)
+                GEF.cmonad
+            end
     module NoDet :
       sig
         type tdet = GFC_F.Dom.v ref
@@ -15628,37 +15719,6 @@ module G_GFC_F :
                 Det.lm
               val upd_kind : Ge.update_kind
             end
-        module type LOWER =
-          sig
-            type 'a lstate = ('a, GFC_F.contr) Code.abstract
-            type ('a, 'b) lm = ('a, 'b) GEF.cmonad
-              constraint 'a =
-                < answer : 'c; classif : 'd;
-                  state : [> `TLower of 'd lstate ]; .. >
-            val decl :
-              ('a, GFC_F.contr) Code.abstract ->
-              (< answer : 'b; classif : 'a;
-                 state : [> `TLower of 'a lstate ]; .. >,
-               GFC_F.contr)
-              lm
-            val updt :
-              'a GFC_F.vc ->
-              ('a, int) Code.abstract ->
-              ('a, int) Code.abstract ->
-              'a GFC_F.vo ->
-              'a GFC_F.Dom.vc ->
-              (< answer : 'b; classif : 'a;
-                 state : [> `TLower of 'a lstate ]; .. >,
-               unit)
-              lm option
-            val fin :
-              unit ->
-              (< answer : 'a; classif : 'b;
-                 state : [> `TLower of 'b lstate ]; .. >,
-               GFC_F.contr)
-              lm
-            val wants_pack : bool
-          end
         module TrackLower :
           sig
             type 'a lstate = ('a, GFC_F.contr) Code.abstract
@@ -15776,44 +15836,49 @@ module G_GFC_F :
         module RowPivot :
           functor (Det : DETERMINANT) ->
             functor (P : GEF.TRACKPIVOT) ->
-              sig
-                val findpivot :
-                  'a wmatrix ->
-                  'a curpos ->
-                  (< answer : ('a, 'b) Code.abstract;
-                     state : [> `TDet of 'a Det.lstate
-                              | `TPivot of 'a P.lstate ]
-                             list;
-                     .. >,
-                   ('a, GFC_F.Dom.v option) Code.abstract)
-                  StateCPSMonad.monad
-              end
+              functor (L : LOWER) ->
+                sig
+                  val optim : 'a -> 'a option
+                  val findpivot :
+                    'a wmatrix ->
+                    'a curpos ->
+                    (< answer : ('a, 'b) Code.abstract;
+                       state : [> `TDet of 'a Det.lstate
+                                | `TPivot of 'a P.lstate ]
+                               list;
+                       .. >,
+                     ('a, GFC_F.Dom.v option) Code.abstract)
+                    StateCPSMonad.monad
+                end
         module FullPivot :
           functor (Det : DETERMINANT) ->
             functor (P : GEF.TRACKPIVOT) ->
-              sig
-                val findpivot :
-                  'a wmatrix ->
-                  'a curpos ->
-                  (< answer : ('a, 'b) Code.abstract;
-                     state : [> `TDet of 'a Det.lstate
-                              | `TPivot of 'a P.lstate ]
-                             list;
-                     .. >,
-                   ('a, GFC_F.Dom.v option) Code.abstract)
-                  StateCPSMonad.monad
-              end
+              functor (L : LOWER) ->
+                sig
+                  val optim : 'a -> 'a option
+                  val findpivot :
+                    'a wmatrix ->
+                    'a curpos ->
+                    (< answer : ('a, 'b) Code.abstract;
+                       state : [> `TDet of 'a Det.lstate
+                                | `TPivot of 'a P.lstate ]
+                               list;
+                       .. >,
+                     ('a, GFC_F.Dom.v option) Code.abstract)
+                    StateCPSMonad.monad
+                end
         module NoPivot :
           functor (Det : DETERMINANT) ->
             functor (P : GEF.TRACKPIVOT) ->
-              sig
-                val findpivot :
-                  'a wmatrix ->
-                  'a curpos ->
-                  (< answer : 'b; state : 'c; .. >,
-                   ('a, GFC_F.Dom.v option) Code.abstract)
-                  StateCPSMonad.monad
-              end
+              functor (L : LOWER) ->
+                sig
+                  val findpivot :
+                    'a wmatrix ->
+                    'a curpos ->
+                    (< answer : 'b; state : 'c; .. >,
+                     ('a, GFC_F.Dom.v option) Code.abstract)
+                    StateCPSMonad.monad
+                end
         module type OUTPUTDEP =
           sig module PivotRep : GEF.PIVOTKIND module Det : DETERMINANT end
         module OutJustMatrix :
@@ -23634,7 +23699,7 @@ val resFV1 : ('a, GVC_F.contr -> GenFV1.O.res) code =
            and m_16 = t_4.m in
            let i1_17 = (t_11 * m_16)
            and i2_18 = ((fst i_14) * m_16) in
-           for i_19 = 0 to (m_16 - 1) do
+           for i_19 = t_12 to (m_16 - 1) do
             let t_20 = a_15.(i1_17 + i_19) in
             a_15.(i1_17 + i_19) <- a_15.(i2_18 + i_19);
             a_15.(i2_18 + i_19) <- t_20
@@ -23697,7 +23762,7 @@ val resFV2 : ('a, GVC_F.contr -> GenFV2.O.res) code =
            and m_18 = t_4.m in
            let i1_19 = (t_13 * m_18)
            and i2_20 = ((fst i_16) * m_18) in
-           for i_21 = 0 to (m_18 - 1) do
+           for i_21 = t_14 to (m_18 - 1) do
             let t_22 = a_17.(i1_19 + i_21) in
             a_17.(i1_19 + i_21) <- a_17.(i2_20 + i_21);
             a_17.(i2_20 + i_21) <- t_22
@@ -23762,7 +23827,7 @@ val resFV3 : ('a, GVC_F.contr -> GenFV3.O.res) code =
            and m_16 = t_4.m in
            let i1_17 = (t_11 * m_16)
            and i2_18 = ((fst i_14) * m_16) in
-           for i_19 = 0 to (m_16 - 1) do
+           for i_19 = t_12 to (m_16 - 1) do
             let t_20 = a_15.(i1_17 + i_19) in
             a_15.(i1_17 + i_19) <- a_15.(i2_18 + i_19);
             a_15.(i2_18 + i_19) <- t_20
@@ -23825,7 +23890,7 @@ val resFV4 : ('a, GVC_F.contr -> GenFV4.O.res) code =
            and m_18 = t_4.m in
            let i1_19 = (t_13 * m_18)
            and i2_20 = ((fst i_16) * m_18) in
-           for i_21 = 0 to (m_18 - 1) do
+           for i_21 = t_14 to (m_18 - 1) do
             let t_22 = a_17.(i1_19 + i_21) in
             a_17.(i1_19 + i_21) <- a_17.(i2_20 + i_21);
             a_17.(i2_20 + i_21) <- t_22
@@ -23910,7 +23975,7 @@ val resFV5 : ('a, GVC_F.contr -> GenFV5.O.res) code =
            and m_18 = t_4.m in
            let i1_19 = (t_13 * m_18)
            and i2_20 = ((snd (fst i_16)) * m_18) in
-           for i_21 = 0 to (m_18 - 1) do
+           for i_21 = t_14 to (m_18 - 1) do
             let t_22 = a_17.(i1_19 + i_21) in
             a_17.(i1_19 + i_21) <- a_17.(i2_20 + i_21);
             a_17.(i2_20 + i_21) <- t_22
@@ -24215,7 +24280,7 @@ val resIV1 : ('a, GVC_I.contr -> GenIV1.O.res) code =
            and m_18 = t_4.m in
            let i1_19 = (t_13 * m_18)
            and i2_20 = ((fst i_16) * m_18) in
-           for i_21 = 0 to (m_18 - 1) do
+           for i_21 = t_14 to (m_18 - 1) do
             let t_22 = a_17.(i1_19 + i_21) in
             a_17.(i1_19 + i_21) <- a_17.(i2_20 + i_21);
             a_17.(i2_20 + i_21) <- t_22
@@ -24279,7 +24344,7 @@ val resIV2 : ('a, GVC_I.contr -> GenIV2.O.res) code =
            and m_18 = t_4.m in
            let i1_19 = (t_13 * m_18)
            and i2_20 = ((fst i_16) * m_18) in
-           for i_21 = 0 to (m_18 - 1) do
+           for i_21 = t_14 to (m_18 - 1) do
             let t_22 = a_17.(i1_19 + i_21) in
             a_17.(i1_19 + i_21) <- a_17.(i2_20 + i_21);
             a_17.(i2_20 + i_21) <- t_22
@@ -24346,7 +24411,7 @@ val resIV3 : ('a, GVC_I.contr -> GenIV3.O.res) code =
            and m_18 = t_4.m in
            let i1_19 = (t_13 * m_18)
            and i2_20 = ((fst i_16) * m_18) in
-           for i_21 = 0 to (m_18 - 1) do
+           for i_21 = t_14 to (m_18 - 1) do
             let t_22 = a_17.(i1_19 + i_21) in
             a_17.(i1_19 + i_21) <- a_17.(i2_20 + i_21);
             a_17.(i2_20 + i_21) <- t_22
@@ -24410,7 +24475,7 @@ val resIV4 : ('a, GVC_I.contr -> GenIV4.O.res) code =
            and m_18 = t_4.m in
            let i1_19 = (t_13 * m_18)
            and i2_20 = ((fst i_16) * m_18) in
-           for i_21 = 0 to (m_18 - 1) do
+           for i_21 = t_14 to (m_18 - 1) do
             let t_22 = a_17.(i1_19 + i_21) in
             a_17.(i1_19 + i_21) <- a_17.(i2_20 + i_21);
             a_17.(i2_20 + i_21) <- t_22
@@ -24495,7 +24560,7 @@ val resIV5 : ('a, GVC_I.contr -> GenIV5.O.res) code =
            and m_18 = t_4.m in
            let i1_19 = (t_13 * m_18)
            and i2_20 = ((snd (fst i_16)) * m_18) in
-           for i_21 = 0 to (m_18 - 1) do
+           for i_21 = t_14 to (m_18 - 1) do
             let t_22 = a_17.(i1_19 + i_21) in
             a_17.(i1_19 + i_21) <- a_17.(i2_20 + i_21);
             a_17.(i2_20 + i_21) <- t_22
@@ -24585,7 +24650,7 @@ val resIV6 : ('a, GVC_I.contr -> GenIV6.O.res) code =
             and m_19 = t_4.m in
             let i1_20 = (t_14 * m_19)
             and i2_21 = ((snd (fst i_17)) * m_19) in
-            for i_22 = 0 to (m_19 - 1) do
+            for i_22 = t_15 to (m_19 - 1) do
              let t_23 = a_18.(i1_20 + i_22) in
              a_18.(i1_20 + i_22) <- a_18.(i2_21 + i_22);
              a_18.(i2_21 + i_22) <- t_23
@@ -25776,7 +25841,7 @@ val resZp3 : ('a, GVC_Z3.contr -> GenZp3.O.res) code =
             and m_19 = t_4.m in
             let i1_20 = (t_14 * m_19)
             and i2_21 = ((fst i_17) * m_19) in
-            for i_22 = 0 to (m_19 - 1) do
+            for i_22 = t_15 to (m_19 - 1) do
              let t_23 = a_18.(i1_20 + i_22) in
              a_18.(i1_20 + i_22) <- a_18.(i2_21 + i_22);
              a_18.(i2_21 + i_22) <- t_23
@@ -25852,7 +25917,7 @@ val resZp19 : ('a, GVC_Z19.contr -> GenZp19.O.res) code =
             and m_19 = t_4.m in
             let i1_20 = (t_14 * m_19)
             and i2_21 = ((fst i_17) * m_19) in
-            for i_22 = 0 to (m_19 - 1) do
+            for i_22 = t_15 to (m_19 - 1) do
              let t_23 = a_18.(i1_20 + i_22) in
              a_18.(i1_20 + i_22) <- a_18.(i2_21 + i_22);
              a_18.(i2_21 + i_22) <- t_23
@@ -25925,7 +25990,9 @@ val rIV2 :
 val rIV3 :
   int Domains_code.container2dfromvector ->
   int Domains_code.container2dfromvector * int = <fun>
-val rIV4 : GVC_I.contr -> GVC_I.contr * GVC_I.Dom.v * int = <fun>
+val rIV4 :
+  int Domains_code.container2dfromvector ->
+  int Domains_code.container2dfromvector * int * int = <fun>
 val rIV5 : GVC_I.contr -> GVC_I.contr * GVC_I.Dom.v * int = <fun>
 val rIV6 : GVC_I.contr -> GVC_I.contr * GVC_I.Dom.v * int * Code.perm list =
   <fun>
@@ -26014,7 +26081,7 @@ val resI23 : (int Domains_code.container2dfromvector * int) list =
    ({arr = [|1; 2; 3; 0; 5; -7; 0; 0; 50|]; n = 3; m = 3}, 3);
    ({arr = [|1; 2; 3; 0; 0; 5; -7; 0; 0; 0; 50; 0|]; n = 3; m = 4}, 3);
    ({arr = [|0; 2; 3; 0; 0; -9; 0; 0; 0|]; n = 3; m = 3}, 2)]
-val resI24 : (GVC_I.contr * GVC_I.Dom.v * int) list =
+val resI24 : (int Domains_code.container2dfromvector * int * int) list =
   [({arr = [|1|]; n = 1; m = 1}, 1, 1);
    ({arr = [|1; 2; 3; 0; 5; -7; 0; 0; 50|]; n = 3; m = 3}, 50, 3);
    ({arr = [|1; 2; 3; 0; 0; 5; -7; 0; 0; 0; 50; 0|]; n = 3; m = 4}, 50, 3);

@@ -54,8 +54,8 @@ module type CONTAINER2D = sig
   val augment : 'a vc -> ('a,int) rep -> ('a, int) rep -> 'a vc ->
                 ('a, int) rep -> 'a vc
   val identity : ('a,int) rep -> ('a, int) rep -> 'a vc
-  val swap_rows_stmt : 'a vc -> ('a, int) rep -> ('a, int) rep -> 
-                       ('a,unit) rep
+  val swap_rows_stmt : 'a vc -> ('a, int) rep option -> 
+                       ('a, int) rep -> ('a, int) rep -> ('a,unit) rep
   val swap_cols_stmt : 'a vc -> ('a, int) rep -> ('a, int) rep -> 
                        ('a,unit) rep
   val row_head : 'a vc -> ('a, int) rep -> ('a, int) rep -> 'a vo

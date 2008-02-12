@@ -272,9 +272,25 @@ module type DETERMINANT = sig
   val fin       : unit -> ('b,C.Dom.v) lm
 end
 
+(* This is for tracking L, as in LU decomposition.
+   Naturally, when doing only GE, this is not needed at all, and should
+   not generate any code *)
+module type LOWER = sig
+  type 'a lstate = ('a, C.contr) abstract
+  type ('pc,'v) lm = ('pc,'v) cmonad
+    constraint 'pc = <state : [> `TLower of 'a lstate ]; classif : 'a; ..>
+  val decl   : ('a, C.contr) abstract -> (<classif : 'a; ..>, C.contr) lm
+  val updt   : 'a C.vc -> ('a,int) abstract -> ('a,int) abstract -> 'a C.vo -> 
+            'a C.Dom.vc -> (<classif : 'a;..>, unit) lm option
+  val fin    : unit -> ('a,  C.contr) lm
+  val wants_pack : bool
+end
+
+
 module type PIVOT = 
       functor (D: DETERMINANT) -> 
-        functor (P: TRACKPIVOT) -> sig
+        functor (P: TRACKPIVOT) -> 
+          functor (L: LOWER) -> sig
  (* Find the pivot within [r,m-1] rows and [c,(n-1)] columns
     of containrer b.
     If pivot is found, permute the matrix rows and columns so that the pivot
@@ -282,7 +298,7 @@ module type PIVOT =
     Return the value of the pivot option. Or zero?
     When we permute the rows of columns, we update the sign of the det.
  *)
- val findpivot : 'a wmatrix -> 'a curpos ->
+ val findpivot : 'a wmatrix -> 'a curpos -> 
    (<classif : 'a; 
      state : [> `TDet of 'a D.lstate | `TPivot of 'a P.lstate ]; ..>, 
     C.Dom.v option) cmonad
@@ -412,21 +428,6 @@ module FractionFreeUpdate(Det:DETERMINANT) = struct
 end
 
 
-(* This is for tracking L, as in LU decomposition.
-   Naturally, when doing only GE, this is not needed at all, and should
-   not generate any code *)
-module type LOWER = sig
-  type 'a lstate = ('a, C.contr) abstract
-  type ('pc,'v) lm = ('pc,'v) cmonad
-    constraint 'pc = <state : [> `TLower of 'a lstate ]; classif : 'a; ..>
-  val decl   : ('a, C.contr) abstract -> (<classif : 'a; ..>, C.contr) lm
-  val updt   : 'a C.vc -> ('a,int) abstract -> ('a,int) abstract -> 'a C.vo -> 
-            'a C.Dom.vc -> (<classif : 'a;..>, unit) lm option
-  val fin    : unit -> ('a,  C.contr) lm
-  val wants_pack : bool
-end
-
-
 (* Do we keep the lower part? *)
 module TrackLower = 
   struct
@@ -500,8 +501,10 @@ module InpMatrixMargin = struct
 end
 
 
-module RowPivot(Det: DETERMINANT)(P: TRACKPIVOT) =
+module RowPivot(Det: DETERMINANT)(P: TRACKPIVOT)(L: LOWER) =
 struct
+   (* If wants_pack, then we cannot optimize *)
+   let optim x = if L.wants_pack then None else Some x
    let findpivot mat pos = perform
        pivot <-- retN (liftRef Maybe.none );
        (* If no better_than procedure defined, we just search for
@@ -543,7 +546,7 @@ struct
                 (fun pv -> perform
                      (i,bic) <-- ret (liftPair pv);
                      seqM (whenM (Logic.notequalL i pos.rowpos) (perform
-                            s1 <-- ret (C.swap_rows_stmt mat.matrix pos.rowpos i);
+                            s1 <-- ret (C.swap_rows_stmt mat.matrix (optim pos.colpos) pos.rowpos i);
                             s2 <--  Det.upd_sign ();
                             s3 <-- ret (optSeq s1 s2);
                             s4 <-- P.add (P.rowrep i pos.rowpos );
@@ -553,8 +556,10 @@ struct
                 (ret Maybe.none))
 end
 
-module FullPivot(Det: DETERMINANT)(P: TRACKPIVOT) = 
+module FullPivot(Det: DETERMINANT)(P: TRACKPIVOT)(L: LOWER) = 
 struct
+   (* If wants_pack, then we cannot optimize *)
+   let optim x = if L.wants_pack then None else Some x
    let findpivot mat pos = perform
        pivot <-- retN (liftRef Maybe.none );
        (* this is not really a row/column iteration, this is a
@@ -592,7 +597,7 @@ struct
                            ret (optSeq s3 s4)))
                        (seqM
                          (whenM (Logic.notequalL pr pos.rowpos) (perform
-                           s1 <-- ret (C.swap_rows_stmt mat.matrix pos.rowpos pc);
+                           s1 <-- ret (C.swap_rows_stmt mat.matrix (optim pos.colpos) pos.rowpos pc);
                            s2 <-- Det.upd_sign ();
                            s3 <-- ret (optSeq s1 s2);
                            s4 <-- P.add (P.rowrep pr pos.rowpos );
@@ -601,7 +606,7 @@ struct
                   (ret Maybe.none))
 end
 
-module NoPivot(Det: DETERMINANT)(P: TRACKPIVOT) = 
+module NoPivot(Det: DETERMINANT)(P: TRACKPIVOT)(L: LOWER) = 
 struct
    (* In this case, we assume diagonal dominance, and so
       just take the diagonal as ``pivot'' *)
@@ -815,7 +820,7 @@ module GenGE(F : FEATURES) = struct
              rr <-- retN (liftGet r);
              cc <-- retN (liftGet c);
              let cp  = {rowpos=rr; colpos=cc} in
-             let module Pivot = F.PivotF(F.Det)(IF.P) in
+             let module Pivot = F.PivotF(F.Det)(IF.P)(IF.L) in
              pivot <-- bind (Pivot.findpivot mat cp) retN;
              seqM (matchM pivot (fun pv -> 
                       seqM (zerobelow mat {p=cp; curval=pv} )
