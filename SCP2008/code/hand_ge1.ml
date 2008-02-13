@@ -35,14 +35,18 @@ let swap a i j =			(* Swap two elements of a vector *)
         a.(j) <- t;
       end;;
 
-(* In a (n,m) matrix, swap the row r with the row i.
+
+(* Swap the row r with the row i in the non-yet examined portion of 
+   the matrix, rectangular block (r,c)-(n,m).
+   We do not touch the elements to the left of the column c because
+   they are all zeros. 
    Because we know the layout of the matrix, we can avoid 2D index
    computations.
 *)
-let swap_rows a (n,m) r i =
+let swap_rows a (n,m) (r,c) i =
   let row_r = r*m in			(* Beginning of row r *)
   let row_i = i*m in 			(* Beginning of row i *)
-  for k = 0 to m-1 do
+  for k = c to m-1 do
       swap a (row_r + k) (row_i + k)
   done;;
 
@@ -66,7 +70,7 @@ let swap_cols a (n,m) c j =
 (* Search the non-yet examined portion of the matrix, rectangular *)
 (* block (r,c)-(n,m), for the element with the max abs value. *)
 (* Remember the value of that element and its location. *)
-let find_pivot a m n r c =
+let find_pivot a (n,m) r c =
   let pivot = ref None in		(* ((i,j), pivot_val) option *)
   begin
   for i = r to n-1 do
@@ -92,7 +96,7 @@ let ge = fun a_orig ->
     let det_magn = ref 1 in		(*   of the determinant *)
     while !c < m && !r < n do
         (* Look for a pivot *)
-        let pivot = find_pivot a m n !r !c in
+        let pivot = find_pivot a (n,m) !r !c in
         (* if we found a pivot, swap the current column with the pivot column,
            and swap the current row with the pivot row. After the swap,
            a[r,c] element of the matrix is the pivot.
@@ -107,7 +111,7 @@ let ge = fun a_orig ->
                end;
             if piv_r <> !r then
                begin
-                 swap_rows a (n,m) !r piv_r;
+                 swap_rows a (n,m) (!r,!c) piv_r;
                  det_sign := - !det_sign (* flip the sign of the det *)
                end;
             Some piv_val
