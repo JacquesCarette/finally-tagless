@@ -8,6 +8,12 @@ the original reviewer's text in jfp-reviews.txt.
 
 Jacques
 
+\oleg{I took care of simple comments such as references, bibtex
+entries, grammatical corrections. I have removed those from this
+file. In the reply to referees, we can summarily state that we have
+fixed all the grammatical and other such suggestions and inserted
+recommended references to show the historical development.}
+
 ==========================================================================
 
 
@@ -78,9 +84,6 @@ Page 4 line -5: Is there some underlining or other part of the OCaml
 error message missing?  One has to read further to see that "this
 expression" refers to the argument "()".
 
-Page 5 line -8: The "d" in "typed-preserving interpretation" looks
-like a misprint.
-
 Page 8 fig 2: The "as" in types is a pure abbreviatory device I
 suppose, but not one I'm familiar with.  Maybe mention it in the text.
 
@@ -96,40 +99,23 @@ Torben Mogensen was the first to use a dual representation of terms
 and values (in his HOAS-based self-interpreter for the untyped lambda
 calculus, JFP ca 1994) \oleg{this one?} \cite{JFP-Mogensen}
 
-Page 12 line -1: "is always present" --> "is always available".  Avoid
-"present" in a context that's full of temporal references.
-
 Page 14: In the definition of "abstr" maybe use C.int, C.bool and so
 on to indicate where these terms come from.
 
-Page 16 bottom and page 17 top: Rephrase to "that is, whenever the
-argument is static, it unfolds fix rather than residualize it".
-
 Page 17: Introduce the abbreviation CPS somewhere.
+\oleg{it has been done already, in the last contribution, in Sec 1.4}
 
 Some people would say that Haskell has call-by-need rather than
 call-by-name.
 
-Page 18: "Happily" --> "Luckily"
-
+Page 18: 
 Here the OCaml higher-rank record types seem to play an essential
 role.  This raises the question whether the same encoding could be
 made in Standard ML (as defined by the Milner et al book 1997)?  This
 question must be answered in the paper.
 
-Page 19: "whether it is an evaluator" --> "whether or not it is an
-evaluator"
-
-Page 20: "To save space" -- this must refer to the paper, not the
-computer, so better say "For brevity".  
-
-Also, say whether the additional phantom type parameter to repr causes
+Page 20: Say whether the additional phantom type parameter to repr causes
 any real problems (other than verbosity).
-
-Page 21: Put a pair of parentheses in "case !state of ... + !state" to
-make its parsing unambiguous.
-
-Page 23 line 1: "object terms e" --> "object term e"
 
 Page 25: The discussion of context, holes and plugging should be made
 clearer and more concrete, using a tiny example if possible.  For
@@ -230,6 +216,10 @@ p1, abstract
     "no dependant types, ..."
     I believe you want to say "no language extensions beyond the
     published standards"
+    \oleg{see his remark about p9. I think modules are NOT instances
+    of dependent types in the conventional sense, and so our current
+    phrase in the abstract stands. Should be say a few words about it,
+    that is, what we mean by dependent types exactly?}
 
 p1, citation
     The other Reynolds citation that emphasizes the duality between
@@ -264,6 +254,19 @@ p5, section 1.4
 
 p6, "inference-preserving module system"
     What's that?
+    \oleg{I guess I meant this: in ML, we can write structures without
+    explicit signature annotations. The signature will be
+    inferred. Mainly, for any structure (whether it has been annotated
+    with a signature or not) we can just say "open M" and use the terms of
+    M in any ML expression without any need to write any type
+    annotation. By contrast, consider an object system of OCaml (or of
+    any other typed OOP). An object system can be thought of as a module
+    system (and often plays this role, e.g. in Java and C++). Here, in
+    class declarations, we must write full annotations. Mainly, when
+    we use objects, we have to, occasionally, write type
+    annotations (e.g., when writing coercions). So, in OCaml, objects
+    is an example of a non-inference preserving module system.}
+
 
 p7, proposition 1
     This statement sounds fine on the surface, but how would you prove
@@ -312,15 +315,15 @@ p13, section 4.3
      * It runs counter the advertizing in the abstract that no GADTS
        are needed for the purposes of this paper.
      Hence, I suggest that this subsection be removed.
+    \oleg{We have removed that in the APLAS version. Perhaps we can
+    remove it here, too. There is no need to use Haskell then in the
+    paper. I think we should still keep the Symantics type class in
+    Sec 2.1, for a good comparison. After that, we can say that we
+    have Haskell code. I think we already say that in the APLAS
+    version.}
+
 
 p15, section 4.4
-     "[that] is not portable"
-     -> [this section]
-
-     "R, L, and C [above]"
-     use exact references to numbered entities instead of vague
-     phrases like "above"
-
      btw, I do not find these names R, L, and C very intuitive or
      readable. 
 
@@ -333,12 +336,6 @@ p16, "the type equation for repr_pe above"
 
      Also, online pe is intrinsically tagged so offline pe would
      provide a better demonstration.
-
-p17, "how much to unfold"
-     The original source for this result is \cite{Jones-Mix}
-
-      "let insertion"
-      The original source for this result is \cite{BondorfDanvy}
 
 
 p17, "partial evaluation ... gives the desired result:"
@@ -389,11 +386,6 @@ p22, section 6
      "optimal with respect to si"
      Why the change in typeface? Is this another SI?
 
-p23, line 1
-     "each object term[s] ..."
-     "definitions [above]" more precision
-     "evaluator [above]"   more precision
-
 p24, "pre-encoding of a let-"
      Why not encode a let as a function like any other syntax
      constructor? It is a bit counter-intuitive that you don't encode
@@ -433,15 +425,7 @@ The reason mathematicians prefer informal proofs is that they are
 interested not only in what has been proven but why (refer to Thurston).}
 
 
-     "tag elimination"
-     This term has been invented and first implemented by Henning Makholm:
-     \cite{Makholm-TagElim}
-
-p26, "Put another way, we manual[ly] apply ..."
-
-p28, line 3, "include[s]"
-
-     "This shift also underlies ..."
+p28, "This shift also underlies ..."
      I don't see the connection to the present work.
 
      "higher-kind polymorphism"
