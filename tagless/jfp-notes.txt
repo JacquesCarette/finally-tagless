@@ -94,7 +94,7 @@ Page 12: Please give mnemonic help to the constructor names "S0" and
 
 Torben Mogensen was the first to use a dual representation of terms
 and values (in his HOAS-based self-interpreter for the untyped lambda
-calculus, JFP ca 1994).
+calculus, JFP ca 1994) \oleg{this one?} \cite{JFP-Mogensen}
 
 Page 12 line -1: "is always present" --> "is always available".  Avoid
 "present" in a context that's full of temporal references.
@@ -198,84 +198,33 @@ tightened up.
 DETAILS
 
 The main ideas in the paper date back a long time. I believe they can
-be found in more or less diluted form in
-
-  author =       "Carsten Kehler Holst",
-  title =        "Language Triplets: The {AMIX} Approach",
-  YEAR = 1988,
-  pages =        "167-186",
-  BOOKTITLE = {Partial Evaluation and Mixed Computation},
-  EDITOR = {Dines Bj{\o}rner and Andrei P. Ershov and Neil D. Jones},
-  PUBLISHER = {North-Holland},
-  ADDRESS = {Amsterdam},
+be found in more or less diluted form in \cite{Holst-AMIX}
 
 The idea that terms can either be encoded by data types or by
 higher-order functions (in an executable way) is also due to Reynolds
 (might also be in his other 1974 paper):
-
-  author =       "John C. Reynolds",
-  title =        "On the Relation between Direct and Continuation Semantics",
-  editor =       "Jacques Loeckx",
-  volume =       14,
-  series =       LNCS,
-  pages =        "141-156",
-  booktitle =    "2nd Coloquium on Automata, Languages and Programming",
-  year =         1974,
+\oleg{we already have this reference: \cite{reynolds-relation} and
+cite him, although in a different context}
 
 Then there is the typed version of the (Thiemann 1996) paper that you
 are citing. It presents a typed partial evaluator encoded exactly like
 your interpreters and pe functions, but for offline partial
 evaluation. It does not make use of the module system and hence does
 not parametrize over different semantics.
+\cite{Thiemann-combinators}
 
-  author = 	 {Peter Thiemann},
-  title = 	 {Combinators for Program Generation},
-  journal = 	 jfp,
-  year = 	 1999,
-  volume =	 {9},
-  number =	 {5},
-  pages =	 {483-525},
-  month =	 sep
 
 There is also a Haskell version using type classes which appeared in
-some obscure place.
+some obscure place. \cite{Thiemann-GenClass}
 
-  author =       "Peter Thiemann and Michael Sperber",
-  title =        "Program Generation With Class",
-  crossref =     "ATP1997",
-  pages =        "582--592"
-  booktitle =    "Proceedings Informatik'97",
-  editor =       "M. Jarke and K. Pasedach and K. Pohl",
-  year =         1997,
-  series =       "Reihe Informatik aktuell",
-  publisher =    "Springer-Verlag",
-  address =      "Aachen",
-  month =        sep,
 
 The idea to parametrize (abstract) semantics and express them in
-combinator style is due to Flemming Nielson:
-
-AUTHOR = "Flemming Nielson",
-TITLE  = "Strictness Analysis and Denotational Abstract Interpretation",
-journal = iandc,
-VOLUME = 76,
-YEAR = 1988, 
-PAGES  = "29--92"
+combinator style is due to Flemming Nielson \cite{Nielson88}
+\oleg{63-page paper!}
 
 The idea of dual representation which is attributed to Asai also
-appears in 
+appears in \cite{Sperber-SelfApplicable}
 
-   author =       "Michael Sperber",
-   title =        "Self-Applicable Online Partial Evaluation",
-   pages =        "465-480"
-   BookTitle  = {Partial Evaluation},
-   Editor     = {Danvy, Olivier and Gl{\"u}ck, Robert and Thiemann, Peter},
-   Series     = lncs,
-   Publisher  = SP,
-   Number     = 1110,
-   month      = feb,
-   address    = {Schlo{\ss} Dagstuhl, Germany},
-   Year       = 1996
 
 p1, abstract
     "no dependant types, ..."
@@ -386,27 +335,11 @@ p16, "the type equation for repr_pe above"
      provide a better demonstration.
 
 p17, "how much to unfold"
-     The original source for this result is 
-
-  author =       {Neil D. Jones and Peter Sestoft and Harald S?ndergaard},
-  title =        "Mix: A Self-applicable Partial Evaluator for
-  Experiments in Compiler Generation",
-  journal =      lasc,
-  year =         1989,
-  volume =       2,
-  number =       1,
-  pages =        "9-50",
+     The original source for this result is \cite{Jones-Mix}
 
       "let insertion"
-      The original source for this result is
+      The original source for this result is \cite{BondorfDanvy}
 
-        AUTHOR = {Anders Bondorf and Olivier Danvy},
-        TITLE = {Automatic Autoprojection of Recursive Equations with Global Variables and Abstract Data Types},
-        JOURNAL = scp,
-        YEAR = 1991,
-        VOLUME = 16,
-        NUMBER = 2,
-        PAGES = {151-195}
 
 p17, "partial evaluation ... gives the desired result:"
      But the good result is due to the extra cleverness put into the
@@ -415,7 +348,7 @@ p17, "partial evaluation ... gives the desired result:"
 
 p18, CPS interpretation
      The cbv version is almost literally in the above-cited paper
-     (Thiemann 1999).
+     (Thiemann 1999) \cite{Thiemann-combinators}
 
      A few details of the representation should be discussed in the
      paper. In particular, you should discuss why you cannot pull this
@@ -502,20 +435,7 @@ interested not only in what has been proven but why (refer to Thurston).}
 
      "tag elimination"
      This term has been invented and first implemented by Henning Makholm:
-
-  author =       "Henning Makholm",
-  year =         "2000",
-  title =        "On {Jones}-Optimal Specialization for Strongly Typed
-                 Languages",
-  booktitle =    "Semantics, Applications and Implementation of Program
-                 Generation",
-  editor =       "Walid Taha",
-  publisher =    "Springer-Verlag",
-  address =      "Montreal, Canada",
-  series =       "Lecture Notes In Computer Science",
-  volume =       "1924",
-  pages =        "129--148",
-  month =        "20 " # sep,
+     \cite{Makholm-TagElim}
 
 p26, "Put another way, we manual[ly] apply ..."
 

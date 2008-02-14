@@ -8,6 +8,8 @@
 @STRING{j_sigplan		= "{ACM} {SIG{\-}PLAN} Notices" }
 @STRING{j_tcs			= "Theoretical Computer Science" }
 @STRING{j_toplas		= "{ACM} Transactions on Programming Languages and Systems" }
+@STRING{j_lasc			= "{Lisp} and {S}ymbolic {C}omputation" }
+@STRING{j_infcomp		= "Information and {C}omputation" }
 @STRING{proc_icfp_1		= "{ICFP} '" }
 @STRING{proc_icfp_2		= ": Proceedings of the {ACM} International Conference on Functional Programming" }
 @STRING{proc_pldi_1		= "{PLDI} '" }
@@ -398,6 +400,7 @@
   url		= "http://research.microsoft.com/~nick/benton03.pdf http://research.microsoft.com/~nick/benton03.ps"
 }
 
+
 @InProceedings{	Thiemann:cogeninsixlines,
   author	= {Peter Thiemann},
   title		= {Cogen in Six Lines},
@@ -620,6 +623,128 @@ generator, we generate ML code, C code, and OCaml byte code.
 		  certified programs that involve effects while still maintaining decidable typechecking. We show how to integrate an entire proof system (the calculus of inductive constructions) into a compiler intermediate language and
 		  how the intermediate language can undergo complex transformations (CPS and closure conversion) while preserving proofs represented in the type system. Our work provides a foundation for the process of automatically
 		  generating certified binaries in a type-theoretic framework."
+}
+
+@Book{Holst-AMIX,
+  author =    "Carsten Kehler Holst",
+  title =     "Language Triplets: The {AMIX} Approach",
+  year  =     1988,
+  pages =     "167-186",
+  booktitle = {Partial Evaluation and Mixed Computation},
+  editor = {Dines Bj{\o}rner and Andrei P. Ershov and Neil D. Jones},
+  publisher = {North-Holland},
+  address = {Amsterdam},
+}
+
+@article{Thiemann-combinators,
+  author = 	 {Peter Thiemann},
+  title = 	 {Combinators for Program Generation},
+  journal = 	 j_jfp,
+  year = 	 1999,
+  volume =	 {9},
+  number =	 {5},
+  pages =	 {483-525},
+  month =	 sep,
+}
+
+@inProceedings{Thiemann-GenClass,
+  author =       "Peter Thiemann and Michael Sperber",
+  title =        "Program Generation With Class",
+  pages =        "582--592",
+  booktitle =    "Proceedings Informatik'97",
+  editor =       "M. Jarke and K. Pasedach and K. Pohl",
+  year =         1997,
+  series =       "Reihe Informatik aktuell",
+  publisher =    "Springer-Verlag",
+  address =      "Aachen",
+  month =        sep,
+}
+
+@Article{Nielson88,
+  author =      "Nielson",
+  title =       "Strictness Analysis and Denotational Abstract
+                 Interpretation",
+  journal =     j_infcomp,
+  volume =      "76",
+  year =        "1988",
+  pages  = "29--92",
+  number =      "1",
+  month = jan,
+}
+
+@InProceedings{Sperber-SelfApplicable,
+   author =       "Michael Sperber",
+   title =        "Self-Applicable Online Partial Evaluation",
+   pages =        "465-480",
+   BookTitle  = {Partial Evaluation},
+   Editor     = {Danvy, Olivier and Gl{\"u}ck, Robert and Thiemann, Peter},
+   Series     = s_lncs,
+   Publisher  = pub_sv,
+   Number     = 1110,
+   month      = feb,
+   address    = {Schlo{\ss} Dagstuhl, Germany},
+   Year       = 1996,
+}
+
+@Article{Jones-Mix,
+  title =        "Mix: A Self-applicable Partial Evaluator for
+  Experiments in Compiler Generation",
+  journal =      j_lasc,
+  year =         1989,
+  volume =       2,
+  number =       1,
+  pages =        "9-50",
+  annote =      "A comprehensive discussion of partial evaluation, its
+                 applications to generation of compilers and compiler
+                 generators, and of engineering problems is given. A
+                 fully automatic version of the partial evaluator
+                 discussed in \cite{Jones:1985:EPE} is described and
+                 results from its use are reported.",
+  keywords =    "partial evaluation, program specialization, compilers,
+                 interpreters, compiler generation, self-applications
+                 mix",
+  semno =       "D-28",
+  summary =     "This paper gives an introduction to partial evaluation
+                 and its applications to compiling and compiler
+                 generation, and describes a self- applicable partial
+                 evaluator called Mix.",
+}
+
+@Article{BondorfDanvy,
+  author = {Anders Bondorf and Olivier Danvy},
+  title = {Automatic Autoprojection of Recursive Equations with Global Variables and Abstract Data Types},
+  journal = j_scp,
+  year    = 1991,
+  volume  = 16,
+  number  = 2,
+  pages   = "151-195",
+}
+
+@InProceedings{Makholm-TagElim,
+  author =       "Henning Makholm",
+  year =         "2000",
+  title =        "On {Jones}-Optimal Specialization for Strongly Typed
+                 Languages",
+  booktitle =    "Semantics, Applications and Implementation of Program
+                 Generation",
+  editor =       "Walid Taha",
+  publisher =    pub_sv,
+  address =      "Montreal, Canada",
+  series =       j_lncs,
+  volume =       "1924",
+  pages =        "129--148",
+  month =        "20 " # sep,
+}
+
+@Article{JFP-Mogensen,
+  title =       "Efficient self-interpretations in lambda calculus",
+  author =      "Torben {\AE} Mogensen",
+  pages =       "345--363",
+  journal =     j_jfp,
+  month =       jul,
+  year =        "1992",
+  volume =      "2",
+  number =      "3",
 }
 
 %------------------------------------------------------------------------
