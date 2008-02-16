@@ -117,8 +117,13 @@ No matter how we represent the object language in the
 metalanguage, the representation can be created either by hand (for example, by
 entering object terms at a metalanguage interpreter's prompt) or
 by a parser\slash type\hyp checker reading from a text string.
-We leave aside the solved problem of writing such a parser\slash type\hyp checker,
+We leave aside the solved problem of writing such a 
+parser\slash type\hyp checker,
 whether using dependent types \citep{WalidICFP02} or not \citep{baars-typing}.
+\oleg{Should we really leave it aside, given that we do have the code:
+  IncopeTypecheck, and given Sumii-san's advice to emphasize the fact
+  that we do have the code. Please see my comment in the related work
+  section in the paragraph that deals with typing dynamic typing.}
 \fi
 
 \subsection{The tag problem}\label{tagproblem}
@@ -336,9 +341,9 @@ open term such as
 \fi
 gives a type error rather than a run-time error.
 \ifshort\else
-\begin{code}
+\begin{code}[commandchars=\\\{\}]
 let testf3 = app (lam (varS varZ)) (b true)
-let testf3r = testf3 ()
+let testf3r = testf3 \underline{()}
 This expression has type unit but is here used with type 'a * 'b
 \end{code}
 \fi
@@ -491,6 +496,10 @@ $\lambda$-calculus with fixpoint, integers, booleans, and comparison.
 The language is close to \citets{xi-guarded}, without their polymorphic
 lift but with more constants so as to more conveniently express Fibonacci,
 factorial, and power.
+\oleg{There is now IncopeDB.hs that defines at least R, L and C
+ interpreters (no PE at present though) using DeBruijn indices. So we
+ can say that (some of) our development is available in DeBruijn
+ style. We won't talk about it in the paper though.}
 In contrast to \S\ref{intro}, we encode binding using higher-order
 abstract syntax (HOAS) \citep{miller-manipulating,pfenning-higher-order}
 rather than de Bruijn indices. This makes the encoding convenient and
@@ -2440,6 +2449,23 @@ using the host language's type system to varying extents.
 Our object terms are statically typed, so we would
 need one of these techniques to interpret dynamically\hyp typed
 terms such as those read from a file.
+\oleg{First, I suggest we remove the subjunctive mood: `we would
+  need...' We have the code already, IncopeTypecheck.hs. We know we
+  can typecheck untyped terms so that we do the typechekcing only
+  once, and interpret many times. All these interpretation is guranteed to
+  be free from any type errors. And this holds even for higher-order
+  terms encoded in HOAS. I also suggest we drop
+  \cite{haskell-list}. We included the citation solely to show how 
+  we could go on. Both links in haskell-list are not actually
+  appropriate: first, the object language is \emph{first-order}
+  and second they use GADTs. Our IncopeTypecheck uses only
+  Typeable and existentials, and no GADTs.
+  Finally, we need to find a way to talk about IncopeTypecheck more
+  directly, probably in the Introduction -- Sumii-san has directly
+  suggested we emphasize that result. For some reason, people (Walid
+  and Sumii-san, for ones) consider it important. Incidentally, I
+  have the comparison of IncopeTypecheck with `Typing Dynamic
+  Typing', which we can use if needed.}
 \fi
 
 Our partial evaluator establishes a bijection |repr_pe| between static

@@ -83,6 +83,8 @@ DETAILED COMMENTS
 Page 4 line -5: Is there some underlining or other part of the OCaml
 error message missing?  One has to read further to see that "this
 expression" refers to the argument "()".
+\oleg{I underlined the term that the error message complained about.
+please search for \underline.}
 
 Page 8 fig 2: The "as" in types is a pure abbreviatory device I
 suppose, but not one I'm familiar with.  Maybe mention it in the text.
@@ -107,6 +109,15 @@ Page 17: Introduce the abbreviation CPS somewhere.
 
 Some people would say that Haskell has call-by-need rather than
 call-by-name.
+\oleg{The sentence in question reads: ``The object language generally 
+inherits the evaluation strategy from the metalanguage--
+call-by-value (CBV) in OCaml, call-by-name (CBN) in Haskell.''
+Well, call-by-need (aka lazy) is observationally equivalent to CBN
+(proven by Wadler et al), that is, sharing is not observable. So, we
+are right to call Haskell CBN. Or, perhaps, we should say call-by-name
+or closely related and observationally equivalent call-by-need, and
+use CBN for both.}
+
 
 Page 18: 
 Here the OCaml higher-rank record types seem to play an essential
