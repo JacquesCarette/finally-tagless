@@ -14,22 +14,12 @@ file. In the reply to referees, we can summarily state that we have
 fixed all the grammatical and other such suggestions and inserted
 recommended references to show the historical development.}
 
+\oleg{After the second ====... line, please see the reviewers'
+comments that are already taken care of. We include them in the
+reply.}
+
 ==========================================================================
-
-
-I am the JFP editor dealing with your paper.  Three referees all agree that
-your paper merits publication, and includes some excellent material, but it
-does need revision.  Due to an unusual combination of circumstances, one
-referee has only been able to send a brief indication of their view, but they
-endorse the comments of the other referees. Rather than wait any longer, I
-attach comments from the two full reports.  Please revise your paper as soon as
-you can, and re-submit it directly to me, indicating how you have addressed the
-referees' comments.
-
-Regards,
-Colin Runciman
-
-
+		Comments yet to address
 
 REPORT FROM REFEREE #1
 
@@ -45,14 +35,6 @@ impossible, but this paper shows that by using (Haskell) constructor
 classes, or OCaml functors and record types, in addition to the core
 Hindley-Milner polymorphic types of these languages, such a
 representation is indeed possible.
-
-SCOPE AND INTEREST
-
-The paper is within the scope of JFP and should be interesting to many
-readers.  It is clearly written, of reasonable length, and highly
-constructive with the full source code for the paper's constructions
-available online.  Moreover, the submission is nearly free of
-misprints and other problems.
 
 OVERALL COMMENTS
 
@@ -80,11 +62,6 @@ terms be oblivious to pure extensions?
 
 DETAILED COMMENTS
 
-Page 4 line -5: Is there some underlining or other part of the OCaml
-error message missing?  One has to read further to see that "this
-expression" refers to the argument "()".
-\oleg{I underlined the term that the error message complained about.
-please search for \underline.}
 
 Page 8 fig 2: The "as" in types is a pure abbreviatory device I
 suppose, but not one I'm familiar with.  Maybe mention it in the text.
@@ -94,19 +71,14 @@ too glib.  You should say what assumptions it must be "appropriate"
 for, such as the term structure being static but the values of
 arguments and variables being dynamic.
 
-Page 12: Please give mnemonic help to the constructor names "S0" and
-"E0".
 
+Page 12:
 Torben Mogensen was the first to use a dual representation of terms
 and values (in his HOAS-based self-interpreter for the untyped lambda
 calculus, JFP ca 1994) \oleg{this one?} \cite{JFP-Mogensen}
 
-Page 14: In the definition of "abstr" maybe use C.int, C.bool and so
-on to indicate where these terms come from.
 
-Page 17: Introduce the abbreviation CPS somewhere.
-\oleg{it has been done already, in the last contribution, in Sec 1.4}
-
+Page 17:
 Some people would say that Haskell has call-by-need rather than
 call-by-name.
 \oleg{The sentence in question reads: ``The object language generally 
@@ -318,20 +290,6 @@ p11, section 4
      online partial evaluation in this section and to briefly explain
      what that means.
 
-p13, section 4.3
-     I do not understand the purpose of this section. 
-     * It leads to a dead end and clarifies nothing (for me).
-     * It rephrases known results.
-     * Its interpreter still involves tagging.
-     * It runs counter the advertizing in the abstract that no GADTS
-       are needed for the purposes of this paper.
-     Hence, I suggest that this subsection be removed.
-    \oleg{We have removed that in the APLAS version. Perhaps we can
-    remove it here, too. There is no need to use Haskell then in the
-    paper. I think we should still keep the Symantics type class in
-    Sec 2.1, for a good comparison. After that, we can say that we
-    have Haskell code. I think we already say that in the APLAS
-    version.}
 
 
 p15, section 4.4
@@ -442,4 +400,45 @@ p28, "This shift also underlies ..."
      "higher-kind polymorphism"
      Where is that needed in the present work?
 
+
+==========================================================================
+	Comments that are already taken care of
+
+We have fixed all the grammatical and other such suggestions and
+inserted recommended references to show the historical development.
+
+Rev1:
+Page 4 line -5: Is there some underlining or other part of the OCaml
+error message missing?  One has to read further to see that "this
+expression" refers to the argument "()".
+\oleg{I underlined the term that the error message complained about.
+please search for \underline.}
+
+Rev1, Page 17: Introduce the abbreviation CPS somewhere.
+\oleg{it has been done already, in the last contribution, in Sec 1.4}
+
+Rev1, Page 12: Please give mnemonic help to the constructor names "S0" and
+"E0".
+\oleg{E0 is now renamed to D0 for better mnemonic; added a comment
+that 0 is a version suffix}.
+
+Rev2: p13, section 4.3
+     I do not understand the purpose of this section. 
+     * It leads to a dead end and clarifies nothing (for me).
+     * It rephrases known results.
+     * Its interpreter still involves tagging.
+     * It runs counter the advertizing in the abstract that no GADTS
+       are needed for the purposes of this paper.
+     Hence, I suggest that this subsection be removed.
+    \oleg{We have removed that in the APLAS version. Perhaps we can
+    remove it here, too. There is no need to use Haskell then in the
+    paper. I think we should still keep the Symantics type class in
+    Sec 2.1, for a good comparison. After that, we can say that we
+    have Haskell code. I think we already say that in the APLAS
+    version.}
+\oleg{this section is removed}
+
+Rev1, Page 14: In the definition of "abstr" maybe use C.int, C.bool and so
+on to indicate where these terms come from.
+\oleg{We removed that section and that code}
 

@@ -269,12 +269,14 @@ module P0 = struct
 	= S0 of ('c,'sv,'dv) R.repr | D0 of ('c,'sv,'dv) C.repr
   let int (x:int) = S0 (R.int x)
   let bool (x:bool) = S0 (R.bool x)
+  let abstrI0 (e:('c,int,int) repr) : ('c,int,int) C.repr =
+    match e with
+    | S0 e -> C.int e
+    | D0 e -> e
   let add e1 e2 = 
     match (e1,e2) with
     | (S0 e1, S0 e2) -> S0 (R.add e1 e2)
-    | (S0 e1, D0 e2) -> D0 (C.add (C.int e1) e2)
-    | (D0 e1, S0 e2) -> D0 (C.add e1 (C.int e2))
-    | (D0 e1, D0 e2) -> D0 (C.add e1 e2)
+    | (e1, e2)       -> D0 (C.add (abstrI0 e1) (abstrI0 e2))
 end;;
 
 (* Second attempt: works for the first-order fragment of our language,
