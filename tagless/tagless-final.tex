@@ -2061,7 +2061,7 @@ less efficient than~$e$).
 Intuitively, self\hyp interpretation is straightforward in our
 framework: the functions comprising the interpreters
 in~\S\ref{S:interpreter-RL} may just as well be written in our object
-language:~\Fig.\ref{fig:self-eval}.
+language:~Fig.~\ref{fig:self-eval}.
 \begin{figure}
 \begin{align*}
     \ident{int} &= \fun{x} x \\
@@ -2503,6 +2503,35 @@ term to be partially evaluated.  We shift this work to the type checker
 of the metalanguage.  By avoiding term-level type representations, our
 approach makes it easier to perform algebraic simplifications (as
 in~\S\ref{S:PE-solution}).
+
+\oleg{The following are almost unedited excerpts from our
+  correspondence with Sumii about Birkedal's thesis. We definitely
+  should include this discussion and the reference to his thesis.}
+\Citet{Birkedal-PE-ML} have hand-written a compiler generator (cogen)
+for the Core Standard ML, which transforms a program into its tagless
+generating extension (and therefore serves as a tagless partial
+evaluator, intepreter, and compiler in our sense). They still have to
+use the "universal type" at the cogen level, which is removed from
+compile-time, so that the end result is tagless indeed.  The main
+difference between the work of \Citet{Birkedal-PE-ML} and ours is how
+\emph{early} it becomes \emph{manifest} to the metalanguage
+implementation that our code is safe.  The fact that
+\Citet{Birkedal-PE-ML} 's generating extension never generates a
+specialized program that is ill-typed is not manifest to the SML
+compiler until the SML compiler sees each particular specialized
+program.  Moreover and analogously, the fact that
+\Citet{Birkedal-PE-ML} 's cogen never generates a generating extension
+that is ill-typed (or that may generate a specialized program that is
+ill-typed) is not manifest to the SML compiler until the SML compiler
+sees each particular generating extension (or each particular
+specialized program).  This early and manifest type safety is the
+payoff of our treating an object program not as a data structure but
+as calls to abstract-syntax constructor functions.  The tradeoff, as
+we currently see it, is that we have to swear off intensional analysis
+of code. \oleg{Unless we convert to our representation to GADT, which
+  is always possible, if GADTs are available.}
+
+
 
 % The following paragraph was not in the version submitted to APLAS,
 % yet was not commented out.  Of course, if we had space, we should add
