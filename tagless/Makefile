@@ -3,7 +3,7 @@
 
 export BIBTEX := bibtex -min-crossrefs=9999
 
-all: jfp.dvi jfp.pdf aplas.dvi aplas.pdf talk.pdf talk.ps
+all: jfp.dvi jfp.pdf # aplas.dvi aplas.pdf talk.pdf talk.ps
 
 jfp.dvi jfp.pdf aplas.dvi aplas.pdf: tagless-final.tex preamble.tex fancyvrb1.sty natbib1.sty
 
