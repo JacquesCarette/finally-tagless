@@ -1,94 +1,48 @@
-    Thank you very much for your emails, and the slides in
-particular.  We do appreciate your message's provocative thoughts.
-Having a dialogue on the relation between partial evaluation
-(meta-programming) and typed programming languages is our main goal
-and dream.
+	Thank you very much for your emails, especially the provocative
+thoughts and the slides.  We are thrilled to start a dialogue about the
+relation between partial evaluation and types.
 
-	We do apologize that our earlier message was a bit unfocused,
-letting secondary issues get in the way of our main question: is the
-notion of self-interpretation necessary to define the optimality of
-interpretation, or whether a more approachable meta-circular interpreter
-would suffice. While this question does not include types, they are
-never too far on our minds.
+	We apologize that our earlier message obscured our main
+question, which can be stated without types: is there a notion of
+optimal interpretation that depends not on any self-interpreter but only
+on a metacircular interpreter?  This is the question that we hope Feigin
+and Mycroft's PEPM 2008 work can help with.
 
-	Your Oxford talk slides have been extremely helpful in
-clarifying our main issue, certainly with respect to types. We are preparing
-a more detailed comment on them. 
+	Still, types are never far from our minds.  On this issue,
+your Oxford slides have been extremely helpful.  We will respond
+in more detail after we study your work with Henning Makholm.  We
+certainly agree that types make meta-programming challenging and perhaps
+self-interpretation impossible, as suggested by the diagonalization
+argument and symptomized by the need for polymorphism.  We further
+agree that strengthening the metalanguage type system only displaces
+the problem and does not solve them.  Nevertheless, meta-programming is
+useful in typed languages, and we have an approach that deals with some
+of the challenges.
 
-    At present, we would like to point out that we have managed, 
-however surprisingly, to define meta-circular interpreters and
-even partial evaluators for a typed language in a typed language without
-any universal type or advanced type system features such as GADTs. Our
-slides (attached) make no mention of Univ at all [should we send him our
-tagless-final slides, from APLAS? J: yes, we should] Also, our language is
-*higher* order, and we can use either de Bruijn indices or *higher-order*
-abstract syntax. The latter is again quite challenging.
+	For now, we just want to point out that we have managed to
+define a metacircular interpreter and partial evaluators for a typed
+language in a typed language without using a universal type.  The
+object language is higher-order and includes fix (so it is not strongly
+normalizing); the metalanguage is just ML or Haskell.  We attach our
+slides; you can find them with our paper at
+	http://www.cs.rutgers.edu/~ccshan/tagless/
+To avoid the universal type, we treat an interpreter or partial
+evaluator as an _argument_ to the object program rather than a
+_function_ that applies to the object program.  In our evaluators, types
+in the object language have no computational content, as you said.
 
-	In this message, we'd like to comment on some of those
-secondary issues regarding types and self-interpretation. 
+	If we remove fix from the object language (which we don't
+have to, and should not for practical programming, as you noted),
+then our (partial) evaluators are manifestly total in that they avoid
+non-exhaustive pattern-matching.  In contrast, evaluators built using
+the universal type are not optimal because they incur tagging overhead,
+and not total because they contain non-exhaustive pattern-matching.
+This contrast in totality lets us argue intensionally that our
+evaluators are optimal, even though they are not a self-interpreter.
 
-	You are absolutely right that the fact that our interpreter for a
-simply-typed lambda-calculus with constants (omitting fix) is total
-precludes our interpreter from being self-interpreter. Indeed, the diagonal
-argument can be used to show that. The fact that the simply-typed
-lambda-calculus cannot express a self-interpreter in principle (because
-it won't type, for instance) is not surprising, given that the simply
-typed lambda-calculus cannot express even the predecessor and lists
-(specifically, the tail function).  One can also see that from the point of
-view of types: a tagless interpreter (as a function on the encoding of source
-terms) should be able to take variously-typed source terms and produce
-variously typed results; which means that the interpreter must be
-polymorphic. The simply-typed lambda-calculus cannot express polymorphic
-functions. In our approach, we used as a metalanguage lambda-calculus with
-constants, 'let' and HM typing (which is still strongly normalizing) to
-interpret terms in the simply-typed lambda-calculus.
-
-	Totality does imply optimality here, regardless of having a
-self-interpreter. The naive interpreter for a simply-typed
-lambda-calculus in a typed language uses the universal type and
-corresponding pattern-matching. The latter may fail: granted, if the
-interpreter is correctly written, no pattern-match may fail. But the
-meta-language cannot see that. It is possible to write the interpreter
-incorrectly, and the mistake can only be seen at run-time, manifest as a
-pattern-match failure. Thus, when we compile the naive interpreter,
-the compiler must add code that checks for patter-match failures and
-reports them. These extra-checks are one aspect of the non-optimality 
-of that approach (Walid quotes some measurements). In our approach, there is
-no universal type in any guise and no *possibility* for pattern-matching 
-failures.  One can of course write an interpreter incorrectly, but the 
-`type' mistakes will be caught by the typechecker of the meta-language. Any
-coding mistake that causes the interpreter to loop or generate any run-time
-error will be caught statically rather than dynamically; the meta-language
-compiler no longer needs to care about the possibility of run-time failures
-(and so, no need to compile-in extra checks and error reporting). Here, types
-are indeed a static discipline and have no run-time presence.
-
-	As you can see, in the case of simply-typed lambda-calculus,
-we can make quite a strong _intensional_ argument that our interpreter
-is optimal. 
-
-	Most object languages we are interested in are not strongly
-normalizing: for example, they include a fixpoint operator. Thus our
-interpreters are not total either, so the intensional argument
-becomes more difficult to make. That is why we are interested in
-extensional arguments.
-
-> > My perception (admittedly biased) is that when problems with writing  
-> > interpreters etc. are overcome by stregthening the type system, then  
-> > this just displaces the problems until they pop up another place.
-> >
-> > Repeating the process (using a still more elaborated type system  
-> > etc.) keeps moving the hard problems until they eventually become too  
-> > hard for mere humans to understand - but the root problems due to the  
-> > Goedel / Turing diagonalisation phenomena still exist.
-
-Actually, we couldn't agree more! Our thrust is writing interpreters
-using existing type systems, without `strengthening' them. The title
-of our paper specifically uses the phrase `in _simpler_ typed
-languages'. Our code runs in existing OCaml and Haskell98 compilers
-(it could just as well run in SML).
-
-We certainly agree that types do make meta-programming quite a bit more 
-challenging; we do believe we have an approach to deal with some of these
-challenges.
+	We don't have to remove fix from the object language (and should
+not for practical programming, as you noted).  Of course, our evaluators
+with fix are necessarily not total, so we cannot argue intensionally
+that they are optimal.  That is why we are interested in extensional
+arguments.
 
