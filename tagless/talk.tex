@@ -7,7 +7,6 @@
 \usepackage[override]{cmtt}
 \usepackage{mdwtab}
 \usepackage{prooftree1} \proofrulebaseline=1.5ex \proofdotseparation=.75ex
-\usepackage{microtype}
 \usepackage{calc}
 
 \usepackage{tikz}
@@ -47,7 +46,7 @@
   \end{frame}
 }
 
-% To get the page numbers to stay constant on a frame [dpt]
+% Record frame numbers as PDF page labels
 \mode<presentation>
 {
   \setbeamertemplate{sidebar left}{\thispdfpagelabel{\insertframenumber}}
@@ -86,6 +85,13 @@
 
 \tikzstyle{lang}=[ellipse,draw,anchor=west,text depth=3pt,text height=9pt]
 \tikzstyle{every picture}=[>=angle 60,semithick]
+
+\begin{frame}{The goal of this talk}
+    \begin{center}
+        Write your interpreter by deforesting the object language,
+        to~exhibit more static safety in a simpler type system.
+    \end{center}
+\end{frame}
 
 \setbeamertemplate{background}{%
     \raisebox{0pt}[\paperheight][0pt]
@@ -240,8 +246,8 @@ end
 \onslide<1->
 \begin{tabular}{@{}Mll@{}}
 \only<5-8,11-14>{\text{\textcolor{structure.fg}{Object term}}}%
-\only<16>{\rlap{\textcolor{structure.fg}{ML higher-order functor}}}
-& \only<5-8,11-15>{\textcolor{structure.fg}{\only<-14>{\llap{\tikz\draw[->](0,0)--(1.5,0)node[anchor=mid,inner sep=0pt]{\vphantom{O}};\:}}\only<3-8>{Haskell term}\only<9-15>{ML higher-order functor}}} \\
+\only<16>{\rlap{\textcolor{structure.fg}{ML functor}}}
+& \only<5-8,11-15>{\textcolor{structure.fg}{\only<-14>{\llap{\tikz\draw[->](0,0)--(1.5,0)node[anchor=mid,inner sep=0pt]{\vphantom{O}};\:}}\only<3-8>{Haskell term}\only<9-15>{ML functor}}} \\
 \multicolumn{2}{@{}l@{}}{\only<16>{\alert{\texttt{module POWER (S:Symantics) = struct open S}}}} \\
 \only<16>{\rlap{\alert{\texttt{ let term () =}}}}%
 \visible<1-14>{\uncover<1-2,5-8,11-14>{\alert<6,12>{\fun{x} \fix{f} \fun{n}}}}
@@ -382,7 +388,7 @@ type ('c,\alert<6>{int->int}) repr
 \onslide+<15>\rlap{\hspace*{-1pc}\ \ (‹fun x -> x\,*\,x\,*\,x\,*\,x\,*\,x\,*\,x\,*\,x›, Some <fun>)}%
 \\
 \onslide+<9-10>
-type ('c,'a) \\
+type ('c,'a) repr \\
 \ \ \ = ('c,'a) code \\
 \ \ \ * \alert<9-10>{\alt<9>{???}{('c,'a) static}} option
 \end{tabular}
@@ -403,16 +409,65 @@ type ('c,'a) \\
 \end{tikzpicture}
 \end{frame}
 
+\begin{frame}{CPS transformations}
+\begin{center}
+\begin{tikzpicture}[auto]
+    \node at (0,2) [lang] (lang1) {Simply typed $\lambda$-calculus};
+    \node at (0,0) [lang] (lang2) {Simply typed $\lambda$-calculus};
+    \draw [->] (lang1) to [bend right=30] node [swap] {CBV} (lang2);
+    \draw [->] (lang1) to [bend left=30]  node        {CBN} (lang2);
+    \draw [->] (lang2) -- +(-135:2cm) node [inner sep=0pt, anchor=north east] {evaluate};
+    \draw [->] (lang2) -- +(-105:2cm) node [inner xsep=0pt, anchor=north east] {compile\hspace*{-.75em}};
+    \draw [->] (lang2) -- +(-75:2cm)  node [inner xsep=0pt, anchor=north west] {\hspace*{-.75em}specialize};
+    \draw      (lang2)    +(-45:2cm)  node {\dots};
+\end{tikzpicture}
+\end{center}
+
+    Payoffs: evaluation order independence, mutable state
+\end{frame}
+
+\begin{frame}[fragile]{Other benefits}
+\setbeamercovered{transparent=20}
+\begin{block}{Supports initial type-checking}
+    Type-check once, even under~$\lambda$, then interpret many times.
+
+\begin{semiverbatim}
+  FilePath -> \alert{Maybe} (exists a. Typeable a =>
+                     forall repr. Symantics repr =>
+                     repr a)
+\end{semiverbatim}
+
+    ``Typing dynamic typing'' (ICFP 2002) works.  We have the code.
+\end{block}
+
+\pause
+\begin{block}{Preserves sharing in the metalanguage}
+    Compute the interpretation of a repeated object term once, then use it many
+    times.
+
+    \smallskip
+    $2\times3 + 2\times3$\hfill\texttt{let n = mul (int 2) (int 3) in add n n}
+\end{block}
+
+\pause
+\begin{block}{Embed one object language in another}
+\texttt{(Symantics repr, Symantics' repr') => repr (repr' Int)}\hspace*{-1em}
+\end{block}
+\end{frame}
+
 \begin{frame}{Conclusion}
-    Early obvious safety
-
-    Initial type-checking can be done
-
-    Accommodates interpretations with type-indexed types
-
-    Preserves sharing
-
-    Acknowledge prior-work authors in slides
+    Write your interpreter by deforesting the object language
+    \begin{itemize}
+    \item An abstract data type family
+    \item Type-indexed types
+    \end{itemize}
+    Exhibit more static safety in a simpler type system
+    \begin{itemize}
+    \item Early, obvious guarantees
+    \item Supports initial type-checking
+    \item Preserves sharing in the metalanguage
+    \item Embed one object language in another
+    \end{itemize}
 \end{frame}
 
 \end{document}
