@@ -39,10 +39,6 @@ the universal type are not optimal because they incur tagging overhead,
 and not total because they contain non-exhaustive pattern-matching.
 This contrast in totality lets us argue intensionally that our
 evaluators are optimal, even though they are not a self-interpreter.
-
-	We don't have to remove fix from the object language (and should
-not for practical programming, as you noted).  Of course, our evaluators
-with fix are necessarily not total, so we cannot argue intensionally
-that they are optimal.  That is why we are interested in extensional
-arguments.
-
+Of course, our evaluators with fix are necessarily partial, so we cannot
+argue intensionally that they are optimal.  That is why we are interested in
+extensional arguments.
