@@ -1,0 +1,23 @@
+A couple of remarks regarding the response:
+
+Defining meta-circular interpreter:
+
+let L be the language, L0 be its subset. Let [L0] be an encoding of L0
+in L that permits arbitrary catamorphisms. Let int is a term in L
+which performs one such catamorphism: for any term x0 of L0, it takes
+[x0] and returns the value to which x0 reduces according to L's
+operational semantics (or, (int [x0]) diverges just in case x0 does
+too). We would then call int to be an optimal interpreter if the
+reduction trace of int [x0] is the same as the reduction trace of x0,
+for any x0. 
+The requirement that [x0] permits any other catamorphism (folding over
+the syntactic structure of a term) is to rule out the trivial encoding
+of [x0] being just x0.
+
+Types and computability:
+Ken wrote: it may suffice to note that the notion of
+computability at higher types is tricky to define because it is not
+clear what input functions to admit and how to encode them.  In this
+regard, the blog post you enjoyed recently
+    http://math.andrej.com/2006/03/27/sometimes-all-functions-are-continuous
+seems a good summary.
