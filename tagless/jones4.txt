@@ -1,23 +1,178 @@
-A couple of remarks regarding the response:
+[The current draft of the reply to Neil Jones. It still uses "I"]
 
-Defining meta-circular interpreter:
+	Regarding computability and types, I don't think the question
+is entirely about Church vs Curry. I have recently become aware that
+logicians have been investigating this very question for a long time:
+I mean Goedel's Dialectica Interpretation (his System T) and the work
+by Georg Kreisel, among others, on computability at higher
+types. System T (from the point of view of terms and reductions) is
+what we (in CS) call simply typed lambda-calculus with constants. I
+should also point out a good article relating types and computability:
 
-let L be the language, L0 be its subset. Let [L0] be an encoding of L0
-in L that permits arbitrary catamorphisms. Let int is a term in L
-which performs one such catamorphism: for any term x0 of L0, it takes
-[x0] and returns the value to which x0 reduces according to L's
-operational semantics (or, (int [x0]) diverges just in case x0 does
-too). We would then call int to be an optimal interpreter if the
-reduction trace of int [x0] is the same as the reduction trace of x0,
-for any x0. 
-The requirement that [x0] permits any other catamorphism (folding over
-the syntactic structure of a term) is to rule out the trivial encoding
-of [x0] being just x0.
-
-Types and computability:
-Ken wrote: it may suffice to note that the notion of
-computability at higher types is tricky to define because it is not
-clear what input functions to admit and how to encode them.  In this
-regard, the blog post you enjoyed recently
     http://math.andrej.com/2006/03/27/sometimes-all-functions-are-continuous
-seems a good summary.
+
+I think though the author should have, perhaps, spent more time on the
+issue of representation. Once we move from Mathematics to programs, we
+no longer deal with functions -- rather, we deal with
+_representations_ of functions. The choice of representation matters a
+great deal; for example, there is a representation for total
+continuous functions that makes modulus expressible in a programming
+language. We have recently done that, most likely rediscovering an old
+result.
+
+	Coming back to Church vs. Curry, I prefer taking a position
+that a type is a static approximation of program's behavior: a type of
+the program describes the set that surely contains the result of a
+program (if there is one) as well as the set of all possible reduction
+traces of the program. Frequently the most useful knowledge is not of
+what is in this set -- rather, what is not in these sets of result
+values and possible traces. For example, it could be comforting to
+know that in every environment (given any inputs) the reductions of a
+program do not include the transition that reformats the hard disk.
+
+> ML versus SCHEME ?
+> Somewhere at the heart of things lies some essential difference  
+> between, for instance, the languages ML and SCHEME.
+> Somehow SCHEME manages true self-interpretation, and a true self- 
+> application of specialisers,
+
+I'm puzzled at that contra-position. Surely ML can embed Scheme,
+entirely. And in fact, I have done so, some eight years ago:
+	http://okmij.org/ftp/Scheme/misc.html#ML-as-Scheme
+
+> - You can read an arbitrary S-expression in at run time in SCHEME/ 
+> LISP, even _without knowing_ which program it is that you are executing.
+>
+> - However in interaction with an ML program, the provider of input either
+> ...
+>    o  the program has to go through (expensive and cumbersome)  
+> conversions between
+>               --  a datatype of character strings and
+>               -- whatever datatypes the main part of the program  
+> really works with (balanced binary trees or whatever).
+
+Here again I'm puzzled: the `read' procedure of Scheme has to do all
+these cumbersome conversions between strings and internal
+representation of values: symbols are interned, lists are represented
+as linked structures (perhaps even cdr-coded) with no parentheses,
+etc. I have seen the code for 'read' procedure in some Scheme systems,
+and can testify it is quite involved.
+
+Regarding self-interpretation: any typed language with fixpoint that
+permits either recursive or higher-rank types permits
+self-interpretation. I can say that because such a language permits
+Church-encoding of algebraic data-types; the latter can represent AST
+of any language that can be defined with AST, including itself. Thus
+the language permits encoding of its own terms and the manipulation on
+such encoded terms -- reductions. The problem of course is that most
+often such an encoding of terms is `too wide': the encoding permits
+more terms than there are _well-typed_ terms, and so the interpreter
+must, at least potentially, deal with the `junk'.
+
+Let me take another example: let's consider a language like
+lambda-calculus in which each expression is its own type. That is not
+too outlandish a suggestion: there are languages whose type system is
+Turing Complete (Haskell with popular extensions, for example) and
+there are systems whose language of types and the language of terms
+are the same (e.g., Epigram). We can write a self-interpreter of this
+language, right? So, we can't say that types per se preclude
+self-interpretation. The type system of this language gives the
+perfect approximation of programs' behavior -- and thus it is useless.
+
+
+> Walid Taha's work has also confused me somewhat in this regard,  
+> perhaps because his level-shifting all seems to occur _within_ the  
+> context of one, single, surrounding programming language.
+
+If you prefer, here's the rendition of MetaOCaml in Scheme:
+	http://okmij.org/ftp/Computation/staging/meta-scheme.scm
+It can represent any MetaOCaml code -- in Scheme, disregarding all
+types. Operationally it is quite close to MetaOCaml (e.g., in
+regards to cross-staged persistence).
+
+
+> Ahh, here may be a significant issue. How do you define the  
+> difference between
+>
+> - a self-interpreter
+>
+> - a metacircular interpreter ??
+
+
+Let me precisely define an interpreter and its notion of optimality.
+Let L be a language, L0 be its subset. For any term x0 of L0 let [x0]
+be a term of L that is the encoding of x0, permitting arbitrary
+catamorphism (folds) over the syntactic structure of x0. Let INT be a
+term in L performing one such catamorphism: for any term x0 of L0, INT
+takes [x0] and returns the value to which x0 reduces according to L's
+operational semantics -- or diverges just in case x0 does too. We
+would then call INT to be an optimal interpreter if the reduction
+trace of executing catamorphism INT on [x0] is the same as the
+reduction trace of x0, for any x0.  The requirement that [x0] permits
+any other catamorphism (folding over the syntactic structure of a
+term) is to rule out the trivial encoding of [x0] being just x0.
+
+Here is an example, answering your objection
+
+> > To avoid the universal type, we treat an interpreter or partial
+> > evaluator as an _argument_ to the object program rather than a
+> > _function_ that applies to the object program.  In our evaluators,  
+> > types in the object language have no computational content, as you said.
+>
+> This I don't follow. How can the interpreter be an argument to the  
+> object program?
+>
+> - Can't an object program be run by itself, without an interpreter?  
+> This is the purpose of hardware.
+
+Incidentally, why interpreter being an argument to the (encoded)
+object program is so surprising? In lambda-calculus, an encoding of a
+term is necessarily an abstraction. To evaluate such an encoded term,
+we apply _it_ to the interpreter (the interpreter is in the argument
+position rather than the operator position), right?
+
+Anyway, as a more realistic example, let's consider L to be ML, and L0
+is to be its subset containing abstraction, application, integer
+literals, addition, and fixpoint. Let us define
+
+module type Symantics = sig
+  type 'a repr
+  val int  : int  -> int repr
+  val add  : int repr -> int repr -> int repr
+  val leq  : int repr -> int repr -> bool repr
+  val if_  :  bool repr -> (unit -> 'a repr) -> (unit -> 'a repr) -> 'a repr
+  val lam  : ('a repr -> 'b repr) -> ('a->'b) repr
+  val app  : ('a->'b) repr -> 'a repr -> 'b repr
+  val fix  : (('a->'b) repr -> ('a->'b) repr) -> ('a->'b) repr
+end
+
+	Given an arbitrary term in L0, for example
+
+	term1 === (fun x -> x + 1) 2
+
+we encode it as follows
+
+	module Term1 = functor (S:Symantics) -> struct
+	  let res = S.app (S.lam (fun x -> S.add x (S.int 1))) (S.int 2)
+	end
+
+That is, the encoding of a term is a functor. To interpret the term,
+we define
+	module INT = struct
+	  type 'a repr = 'a
+	  let int x = x
+	  let add e1 e2 = e1 + e2
+	  let app e1 e2 = e1 e2
+	  let lam e = e
+	  ...
+        end
+
+and we apply the encoding, functor Term1, to the interpreter INT. If
+we use an optimizing ML compiler (similar to MLton) to compile term1
+and to compile Term1(INT), the results will run at exactly the same
+speed because term1 and Term1(INT) are compiled to exactly the same
+code.
+
+	The example shows that [x0], the encoding of a term of L0, is
+certainly not in L0 itself. For one, L0 has no notion of functor, or,
+more importantly, polymorphism (present in Symantics).
