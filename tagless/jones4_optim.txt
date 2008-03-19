@@ -1,0 +1,156 @@
+> Ahh, here may be a significant issue. How do you define the  
+> difference between
+>
+> - a self-interpreter
+>
+> - a metacircular interpreter ??
+
+Perhaps the terminology here is too unsettled to necessarily be useful, 
+especially as Wikipedia (for example) defines a metacircular interpreter
+to be a special case of a self-interpreter!
+
+Instead, let's start from scratch and eschew the above terms altogether.
+
+Let me precisely define an interpreter and its notion of optimality.
+Let L be a language, L0 be a subset of L. For any term x0 of L0 let [x0]
+be a term of L that is the encoding of x0, permitting arbitrary
+catamorphism (folds) over the syntactic structure of x0. Let INT be a
+term in L performing one such catamorphism: for any term x0 of L0, INT
+takes [x0] and returns the value to which x0 reduces according to L's
+operational semantics -- or diverges just in case x0 does too. We
+would then call INT to be an optimal interpreter if the reduction
+trace of executing catamorphism INT on [x0] is the same as the
+reduction trace of x0, for any x0.  The requirement that [x0] permits
+any other catamorphism (folding over the syntactic structure of a
+term) is to rule out the trivial encoding of [x0] being just x0 itself.
+In other words, [x0] really is an encoding of the program x0.
+
+The case we are interested in is when L0 is the simply-typed lambda-calculus
+with just enough additional features to allow us to write interesting
+programs.  We will take L to be a slightly more powerful language: (part
+of) the intersection of Haskell98 and Objective Caml.
+
+> > To avoid the universal type, we treat an interpreter or partial
+> > evaluator as an _argument_ to the object program rather than a
+> > _function_ that applies to the object program.  In our evaluators,  
+> > types in the object language have no computational content, as you said.
+>
+> This I don't follow. How can the interpreter be an argument to the  
+> object program?
+
+Because our encoding 'contains' a step which is inspired by a Church 
+encoding.  To be more precise, if we have a language described by an ADT
+
+data Term = INT Int | Lam (Term -> Term) | App Term Term
+
+then the Church-encoding would be
+
+type Term = Term (forall w. 
+  (Int->w) -> ((Term->Term) -> w) -> (Term -> Term -> w) -> w)
+
+If we uncurry and then use a record instead of a 3-tuple, we get
+
+data Term =
+  Term (forall w. {int :: Int -> w,
+	lam :: (Term->Term) -> w,
+	app :: (Term -> Term -> w) } -> w )
+
+If we were to follow that path, we would naturally end up at GADTs.
+Instead, we really want to be more precise about what Term really is,
+but we also want to leverage the underlying L some more.  Intead of
+using an abstract w as the representation, we use a parametric
+representation r of kind * -> *.  This allows us to
+1) avoid GADTs,
+2) still record the fine-grained dependence of the results on the input
+3) capture more of the richness of the structure of terms.
+What we end up with is
+
+data Term r =
+  Term {int :: Int -> r Int,
+	lam :: forall a b. (r a -> r b) -> r (a->b),
+	app :: forall a b. r (a -> b) -> r a -> r b}
+
+So now a term will look like
+t1 t = app t (lam t (\x -> int t 1)) (int t 2)
+and if we ask Haskell its  type:
+  *C> :t t1
+  t1 :: Term r -> r Int
+
+What are the "free variables" app, lam, int in t1?  Exactly the components of
+an interpreter!
+
+As our encoding is in some ways dual to the usual initial algebra approach,
+and has some in common with a Church encoding, it should be less surprising
+that the object program is encoded as a function "taking an interpreter
+as argument".  The various steps above of our encoding are all crucial to
+our success.
+
+This is how to explain that, in our approach, the interpreter is in the
+argument position of the *encoded* object program. 
+
+
+Anyway, as a more realistic example, let's consider L to be ML, and L0
+is to be its subset containing abstraction, application, integer
+literals, addition, and fixpoint. (Sorry to switch between Haskell and ML
+like this, but the 3 of us are conversant in both, and we tend to use 
+the language which, to us, illustrates our point best; if that leads to
+further confusion, please let us know which one you prefer).
+
+Let us define
+
+module type Symantics = sig
+  type 'a repr
+  val int  : int  -> int repr
+  val add  : int repr -> int repr -> int repr
+  val leq  : int repr -> int repr -> bool repr
+  val if_  :  bool repr -> (unit -> 'a repr) -> (unit -> 'a repr) -> 'a repr
+  val lam  : ('a repr -> 'b repr) -> ('a->'b) repr
+  val app  : ('a->'b) repr -> 'a repr -> 'b repr
+  val fix  : (('a->'b) repr -> ('a->'b) repr) -> ('a->'b) repr
+end
+
+	Given an arbitrary term in L0, for example
+
+	term1 === (fun x -> x + 1) 2
+
+we encode it as follows
+
+	module Term1 = functor (S:Symantics) -> struct
+	  let res = S.app (S.lam (fun x -> S.add x (S.int 1))) (S.int 2)
+	end
+
+That is, the encoding of a term is a functor (as a convenient proxy for
+a record with just enough polymorphism and nicer syntax). To interpret the
+term, we define
+	module INT = struct
+	  type 'a repr = 'a
+	  let int x = x
+	  let add e1 e2 = e1 + e2
+	  let app e1 e2 = e1 e2
+	  let lam e = e
+	  ...
+        end
+
+and we apply the encoding, functor Term1, to the interpreter INT. If
+we use an optimizing ML compiler (similar to MLton) to compile term1
+and to compile Term1(INT), the results will run at exactly the same
+speed because term1 and Term1(INT) are compiled to exactly the same
+code.
+
+	The example shows that [x0], the encoding of a term of L0, is
+certainly not in L0 itself. For one, L0 has no notion of functor, or,
+more importantly, polymorphism (present in Symantics).
+
+> - Can't an object program be run by itself, without an interpreter?  
+> This is the purpose of hardware.
+
+As seen above, an object program (term1) can; its encoding Term1 needs
+the interpreter.
+
+As far as we are concerned, the module INT above is an optimal interpreter.
+It performs exactly the same as term1, and a good compiler would indeed
+compile it down to something identical.
+
+Furthermore, we believe that our partial evaluator, built using exactly
+the same ideas, but appropriately lifted, is also optimal.
+
