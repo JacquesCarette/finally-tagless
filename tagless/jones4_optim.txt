@@ -10,8 +10,10 @@ especially as Wikipedia (for example) defines a metacircular interpreter
 to be a special case of a self-interpreter!
 
 Instead, let's start from scratch and eschew the above terms altogether.
+In the next message, about your 2004 talk at Oxford, we consider a
+slightly different view using your terminology.
 
-Let me precisely define an interpreter and its notion of optimality.
+Let us precisely define an interpreter and its notion of optimality.
 Let L be a language, L0 be a subset of L. For any term x0 of L0 let [x0]
 be a term of L that is the encoding of x0, permitting arbitrary
 catamorphism (folds) over the syntactic structure of x0. Let INT be a
@@ -152,5 +154,7 @@ It performs exactly the same as term1, and a good compiler would indeed
 compile it down to something identical.
 
 Furthermore, we believe that our partial evaluator, built using exactly
-the same ideas, but appropriately lifted, is also optimal.
+the same ideas, but appropriately lifted, is also optimal. We will
+continue in the next message, using the terminology of your Oxford
+2004 lecture.
 
