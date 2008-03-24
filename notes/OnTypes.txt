@@ -1,0 +1,245 @@
+    What follows are my current (March 2008) thoughts on types.  These thoughts
+are derived from many different sources, I could not possibly come up with
+a reasonable bibliography!
+
+Practical considerations I.
+===========================
+
+    I am a complete convert to typed programming.  I was a professional
+programmer for many years, many of which were spent programming in a powerful
+but dynamically-typed language (Maple).  I now write code almost exclusively
+in strongly statically typed languages (like Haskell and MetaOCaml).
+
+    I currently teach a graduate level course in the semantics of programming
+languages.  This course covers all the paradigms, and is supposed to give an
+overview of the various styles of the varied languages.  When it comes to
+the discussion on types, my experience leads me to explain things as follows:
+
+    In a dynamically typed language, you write code and then you spend a
+fantastic amount of time debugging it.  You have to work your way through
+giant program traces, even in the case of shallow bugs, to figure out what 
+is going wrong.  The up-side is that you can write code to do marvelous
+things that have never been done before.  As well, if you don't really know
+what you're doing, you can still write code and discover what you really 
+want through experimentation.  This is extremely time-consuming, but if you
+are really doing something new, very rewarding.  In a statically typed
+language with a decent enough type system, you first spend a lot of time
+being rather frustrated because the compiler keeps telling you that you're
+an idiot and the code you have just written is meaningless.  And unless you
+are writing something completely novel, the compiler is right.  But this
+phase passes quickly, and you then start to think before you code, and
+appreciate that the compiler catches all your shallow bugs for you.
+
+    This I now firmly believe.  In reality though, things are not that simple.
+Too many languages have idiotic type systems which are broken in a variety
+of ways.  In my experience, only the ML family (including F#), Haskell and
+Scala have type systems which are bearable.
+
+    The simplest way to think about it is that "types prevent stupid bugs".
+If you are writing software which is well-suited to the language which you
+have chosen, then its type system should help you root out all your shallow
+bugs.  And, for me, the previously mentioned languages achieve just that.
+
+Current theory of types I.
+==========================
+
+    But what is a type, really?  Naively, and still in too many bad textbooks,
+it is explained as a set of values.  Of course, even since the mid-70s
+Reynolds (and independently Girard) showed how, in the presence of 
+polymorphism and function types, this cannot possibly work.  The set
+explanation is not completely wrong though: for concrete first-order
+values, it is essentially correct.  And we know of a good way to deal with
+denotational semantics in this case: CPOs.
+
+    But CPOs are a rotten explanation for what a type is or what it means.  
+Many explanations of how all types are inhabited in Haskell are complex and
+convoluted, and really are a side-effect of taking CPOs are *the* explanation
+for types instead of taking it as one mathematical solution to the issue of
+types.
+
+    So what is a type?  [Remember: this is an essay, do not expect formality
+here!].  Distilling through many papers on types, one gets that a type is
+a description of a property that some values (may) have.  From there, we
+get the relation t:T between a term t and a type T that says "if t evaluates
+to a value, then that value will have property T".  More specifically still,
+in most current languages the property of the value has to be a *static*
+property, ie one which can be ascertained at compile-time.
+
+    It is in fact relatively easy to recast most of current type theory into
+the guise of a system for understanding current static properties.  In fact,
+the most elegant way to do this is via Abstract Interpretation, which allows
+one to derive many more properties about programs than just the shape of 
+values (which is roughly what most current type systems aim for).
+
+Computability I.
+================
+
+    An important topic to consider when looking at types is the issue of
+computability.  The issue is that, in current formalisms, because typeable
+terms must have proof trees, and the set of conclusion of proof trees is
+RE (recursively enumerable), this means that the set of typeable terms do not
+include all computable functions [thanks to Neil Jones for this formulation].
+
+    Another major insight in computability is that computable functions must
+include partial functions.  Some people mis-understand this statement because
+they read too much in the isomorphism between the set of partial functions
+and the total functions between pointed sets.  The problem is that this 
+isomorphism is not itself computable!  [If it were, we could indeed reduce
+everything to total functions.  This is why I dislike theorem provers that
+insist that all functions be total, and much prefer a logic with undefinedness
+built-in; see the work of William M. Farmer for some examples].  The insight
+is thus that there are important functions that can only be computed by
+programs that will *not halt* for certain inputs, and that those inputs are
+impossible to a priori filter out.
+
+Practical considerations II.
+============================
+
+    One obvious question is: do we care?  In other words, how many truly
+interesting computable functions are fundamentally partial?  
+
+    My answer: we do care, to a point.  In fact, I am much more interested
+in *uncomputable* functions!  For a concrete example, a 'halts' function.
+Any approximation to this function is extremely useful.  To have a 3-valued
+function that would answer "provably halts", "probably does not halt" or
+"I can't tell" is tremendously useful.  There are many other problems of this
+sort for example in Computer Algebra, where the vast majority of 'interesting'
+questions lead to uncomputable functions (or fundamentally partial functions,
+depending on the formulation).
+
+    But it is still true that the vast majority of functions which I have 
+written in my life are total, and provably so.  I would like to be able to
+say and prove so - as a type, in a decent programming language.  And yet,
+right now, I can't, at least not "by design".  Because I know that most of
+my programs are built out of total functions with the partial ones being
+quite isolated, I am quite sad that I cannot *say* so.  More to the point,
+I would like my type system to tell me when my expectations about my code
+do not match ``reality''.
+
+    A more minor point is that some computable functions really are quite
+un-interesting, at least for the point of view of most programmers.  For
+example, the C expression
+    (float)((long)( (float)(&x) * 1.1 ) << 2)
+which interprets an address as a float, multiplies it by 1.1, interprets
+the result as an integer (of fixed size), shifts it, then interprets the 
+resulting bit pattern again as a float, *is* a computable function.  But it
+truly is a computable function most people really do not care about.  That
+it is so easy to write it in C is a very serious defect of the language.  To
+write such a function, I should have to suffer a lot more pain than that!
+
+    As a programmer, I want to have control over which of my functions are
+total and which are partial, through the type system.  I also want to have
+control over representation issues.
+
+Computability II.
+=================
+
+    When writing a program, what are we really trying to do?  Sometimes we
+have a very specific task to perform, hopefully encoded in some specification.
+In most circumstances, these tasks are quite well-understood.  One can indeed
+talk of "software engineering", and a lot of software can be built without
+using any truly novel ideas.  This is important to remember, and so-called
+mainstream languages should indeed cater to this set of tasks.  Of course,
+as our understanding grows, so must the "mainstream" technology; sometimes
+this will entail revolutions.  Hopefully mainstream technology will grow
+out of its object-oriented straightjacket sooner rather than later.  Nicely,
+current forces do seem to be pushing in that direction.
+
+    But some programs are different.  They aim to do something quite new.
+Some truly contain some novel "operational semantics" that can not be 
+captured by current type systems.  In other words, there are times where
+one wants a language whose only definition is operational, and no other
+constraints exist.  Only then can one freely experiment with raw
+operational semantics.
+
+Type theory, revisited.
+=======================
+
+
+    Returning to "what is a type", what if we take more seriously the 
+simplistic notion that types prevent simple errors?
+
+    Current type theory is all built around the idea of "safety", as contained
+in the slogan: "Well-typed programs don't go wrong".  This leads to the idea
+of building a type system which goes hand-in-hand with a programs' operational
+semantics, to capture as many cases of "will not get stuck" as possible.
+["Progress" insures, this "Preservation" mostly allows progress to properly
+propagate].
+
+    But if constructive logic and Curry-Howard teach us anything, it is that
+looking at the opposite property is also really useful.  So what if one were
+to turn that around into "Non-well-typed programs will go wrong" ?  [Note
+the clear relation with model-checking.]
+
+    In other words, if we define "go wrong" as getting stuck before one
+attains a value, then a "lax" type system would reject only programs which
+will provably get stuck.  To me, this would be very useful!  As much as there
+is not point trying to run a program with a syntax error, there is also no
+point to run a program which will "compute for a while" and then do something
+predictably illegal.
+
+    It is not so hard to take the negation of 
+             Safety = Progress and Preservation
+and design a type system around that.  It is, in some sense, rather surprising
+that this has not been done.  Perhaps it has, and the results were too weak?
+In other words, so many programs were accepted because in some cases it 
+might deliver an interesting answer.  My guess is that now that we have solid
+constraint-based formulations of type systems, such an ultra-conservative
+type system would still be useful to detect shallow bugs.
+
+Computability II.
+=================
+
+    In the context of type systems, there is in my opinion a strong place for
+total functions: I would like my kind-level programs to be (obviously) total!
+Yes, that would rule out some programs, but I don't think many people really
+are brave enough (yet) to truly study those programs.  In fact, for the next
+few years, one could even limit type-level programs to be total without that
+being a severe issue.  Instead of the hacks I currently have to perform (in
+the ML family of languages), a nice language of total functions at the 
+type level would be quite welcome.  Realistically though, what one would
+want is something like Omega's levels where one is forced to have a "top level"
+where functions are total.  Level-polymorphic functions can likewise be
+forced to be total.
+
+    At this point you might say: kind-level programs???  Yes, kind-level
+programs.  Once you have written enough meta-programs, you'll want those too.
+If you think I'm nuts, go write more meta-programs.  Try to write programs
+that manipulate Functors and their types, especially those that include
+type-level functions.  You'll want kind-level polymorphic programs too, 
+trust me!  [Of course, today those programs are all untyped, but if they
+were typed, that is what they would need].
+
+Practical considerations III.
+=============================
+
+    Finally, a word on dependent types and related issues.  Once one becomes
+used to decent type systems, it is easy to get greedy.  Since my main personal
+interest is in ``teaching computers how to do symbolic mathematics'', 
+dependent types are an absolute must.  Matrix multiplication is fundamentally
+about a pair of (N*M, M*L) Matrices over a common domain, and I want to be
+forced to prove that every call to this routine will be correct.  In the
+vast majority of applications, this is trivial because the process that
+created those matrices allows one to prove that the "middle dimensions" are
+equal.
+
+    But there are many more ``invariants'' of my programs which are true,
+and I would like to (at least) record them as an integral part of the program
+(comments are a start, but a poor substitute).  As technology improves, I
+want to have the compiler use these as much as possible -- either to discharge
+them automatically, force me to give more information so that they can be
+discharged, or else force me to explicitly test these at run-time.  The 
+property view of types makes this easier, as does constraint-based systems.
+
+In Conclusion.
+==============
+
+Hopefully the above properly explain the following conclusions:
+1) There are good reasons for both typed and dynamically typed languages 
+    to exist.
+2) In some cases, one should be able to talk about total functions, and in 
+    other contexts it is even preferable to only have total functions.
+3) The slogan "Non-well-typed programs will go wrong" could lead to very
+    interesting type systems which could be quite useful in their own right.
+4) Type systems should allow one to record many more (static) properties of
+    values than they currently do.
