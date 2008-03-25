@@ -122,6 +122,11 @@ module EX(S: Symantics) = struct
  let testpowfix7 e = e.lam (fun x -> e.app (e.app (testpowfix e) x) (e.int 7))
  let testpowfix0 e = e.lam (fun x -> e.app (e.app (testpowfix e) (e.int 0)) x)
 
+ let testfact    e = e.fix (fun self -> e.lam (fun n ->
+                       e.if_ (e.eql n (e.int 0)) (fun () -> (e.int 1))
+                             (fun () -> (e.mul n (e.app self (e.add n (e.int (-1))))))))
+ let testfact1   e = e.app (testfact e) (e.int 5)
+                               
  (* This is not really needed anymore 
  let interp prog =
      p.app (p.app (p.app (p.app (p.app (p.app (p.app (p.app (p.app (p.app prog
@@ -178,6 +183,8 @@ module EX(S: Symantics) = struct
  let testpowfixr () = runit testpowfix
  let testpowfix7r () = runit testpowfix7
  let testpowfix0r () = runit testpowfix0
+
+ let testfactr () = runit testfact1
 end;;
 
 
@@ -456,6 +463,11 @@ let itestp0 = EXR.testpowfix0r ();;
 let ctestp0 = EXC.testpowfix0r ();;
 let ptestp0 = EXP.testpowfix0r ();;
 let ltestp0 = EXL.testpowfix0r ();;
+
+let itestf0 = EXR.testfactr ();;
+let ctestf0 = EXC.testfactr ();;
+let ptestf0 = EXP.testfactr ();;
+let ltestf0 = EXL.testfactr ();;
 
 (* these are no longer relevant, for now
 let itesti1 = EXR.testi1r ();;
