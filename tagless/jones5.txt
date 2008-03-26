@@ -40,10 +40,11 @@ No.
 > easy, by a concrete interpretation of Eval.
 
 Unfortunately this (parsing) is very hard to achieve in most member of the ML
-family.  Only MoscowML seems to have enough power (ie proper first-class
-modules) to be able to handle this, but at this point even that is but 
-a conjecture on our part.  You are correct that unparsing is easier,
-although here and there HOAS still makes this non-trivial.
+family.  MoscowML seems to have enough power (ie proper first-class
+structures) to be able to handle this, but at this point even that is but 
+a conjecture on our part.  Ocaml does not allow one to do this.  You are
+correct that unparsing is easier, although here and there HOAS still makes this
+non-trivial.
 
 In the context of Haskell, we can give you a much more satisfactory answer:
 yes, this can be done.  More precisely, one can write an system that takes
