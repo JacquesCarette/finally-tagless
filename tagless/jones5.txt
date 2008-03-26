@@ -1,0 +1,47 @@
+> About Optimality
+> This is by nature a very slippery concept. It's easy enough to show  
+> that some constructioon is NOT optimal: just show how it could be  
+> improved, how it does unnecessary work, etc.
+
+We fully agree; my argument was indeed intensional. It works in some
+circumstances; but it has hard to make it general.
+
+
+> 1. Compared to the first solution, you now use signatures, structures  
+> and modules. Are there runtime costs associated with these, eg some  
+> form of runtime dispatch; or does everything happen at compile time?  
+For OCaml: there is a run-time cost associated with structures and
+modules. For MLton: no. For SML/NJ: it depends. OCaml in general does
+very little optimization (so it is amazing how fast it is given
+how straightforward it is). One of the best advertised points of MLton
+is that the users pay no cost for abstraction: they can use modules to
+modularize the code and enforce various abstractions -- and not mind
+the cost.
+
+> 3. Question: do the optimisations of inlining Eval and eliminating  
+> identities depend in any way on the interpreted program's input?
+
+No.
+
+> 2. Your "Test "module contains the program to be interpreted in its  
+> entirety. Here the ML compiler is being given both the text of the  
+> interpreter and, as well, the representation of the program to be  
+> interpreted. Given so much information, a compiler could in fact  
+> execute the program completely.
+>
+> Isn't this essentially different from usual practice, where the  
+> interpreter is a stand-alone program, that can be used to interpret  
+> any source program?
+>
+> 4. A related question on parsing: is there a straightforward  
+> algorithm to translate a source program from, say, text string form,  
+> into your higher-order representation? Unparsing would, I expect, be  
+> easy, by a concrete interpretation of Eval.
+
+I thing for that it's better to move to Haskell. We can get an
+affirmative answer: one can write an system that takes input as a
+string (or an parse tree), typechecks it only once, and interprets in
+the way that that takes into account input being typed) and so avoid
+the redundancies discussed in the previous message.
+        http://okmij.org/ftp/Computation/tagless-typed.html#tc-final
+And the other entries on that page about the typed compilation.
