@@ -122,20 +122,35 @@ module EX(S: Symantics) = struct
  let testpowfix7 e = e.lam (fun x -> e.app (e.app (testpowfix e) x) (e.int 7))
  let testpowfix0 e = e.lam (fun x -> e.app (e.app (testpowfix e) (e.int 0)) x)
 
- let testfact    e = e.fix (fun self -> e.lam (fun n ->
-                       e.if_ (e.eql n (e.int 0)) (fun () -> (e.int 1))
-                             (fun () -> (e.mul n (e.app self (e.add n (e.int (-1))))))))
- let testfact1   e = e.app (testfact e) (e.int 5)
+ let fact    e = 
+   e.fix (fun self -> e.lam (fun n ->
+     e.if_ (e.eql n (e.int 0))
+	   (fun () -> (e.int 1))
+           (fun () -> (e.mul n (e.app self (e.add n (e.int (-1))))))))
+ let testfact1   e = e.app (fact e) (e.int 5)
                                
  (* Is this the best formulation? *)
- let testack e = e.fix (fun self -> 
-    e.lam (fun m -> e.lam (fun n ->
-        e.if_ (e.eql m (e.int 0)) (fun () -> e.add n (e.int 1))
+ let ack e = e.fix (fun self -> e.lam (fun m -> e.lam (fun n ->
+   e.if_ (e.eql m (e.int 0)) (fun () -> e.add n (e.int 1))
          (fun () -> e.if_ (e.eql n (e.int 0))
             (fun () -> e.app (e.app self (e.add m (e.int (-1)))) (e.int 1))
             (fun () -> e.app (e.app self (e.add m (e.int (-1))))
-                           (e.app (e.app self m) (e.add n (e.int (-1)))))))))
- let testack1 e = e.app (testack e) (e.int 2)
+                             (e.app (e.app self m) (e.add n (e.int (-1)))))))))
+ let testack1 e  = e.app (ack e) (e.int 2)
+ let testack13 e = e.app (testack1 e) (e.int 3)
+
+ (* Ackermann's Higher-order (using Church numerals) *)
+ let ackho e = e.lam (fun m -> e.lam (fun n -> 
+   let succ = e.lam (fun n -> e.add n (e.int 1)) in
+   e.app
+     (e.app
+	(e.app m (e.lam (fun g -> e.lam (fun n ->
+	  e.app (e.app n g) (e.app g (e.int 1))))))
+	succ) n))
+
+ (* Alas, to use it we actually need System F or a similar language
+    with first-class polymorphism
+  *)
 
  (* This is not really needed anymore 
  let interp prog =
@@ -194,8 +209,9 @@ module EX(S: Symantics) = struct
  let testpowfix7r () = runit testpowfix7
  let testpowfix0r () = runit testpowfix0
 
- let testfactr () = runit testfact1
- let testackr () = runit testack1
+ let testfactr ()  = runit testfact1
+ let testackr1 ()  = runit testack1
+ let testackr13 () = runit testack13
 end;;
 
 
@@ -483,9 +499,10 @@ let ltestf0 = EXL.testfactr ();;
 (* here EXP loops, so use this instead *)
 module EXP2 = EX(P);;
 
-let itesta0 = EXR.testackr ();;
-let ctesta0 = EXC.testackr ();;
-let ptesta0 = EXP2.testackr ();;
+let itesta0 = EXR.testackr1 ();;
+let itesta3 = EXR.testackr13 ();;
+let ctesta0 = EXC.testackr1 ();;
+let ptesta0 = EXP2.testackr1 ();;
 
 (* these are no longer relevant, for now
 let itesti1 = EXR.testi1r ();;
