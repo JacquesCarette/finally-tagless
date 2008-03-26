@@ -127,6 +127,16 @@ module EX(S: Symantics) = struct
                              (fun () -> (e.mul n (e.app self (e.add n (e.int (-1))))))))
  let testfact1   e = e.app (testfact e) (e.int 5)
                                
+ (* Is this the best formulation? *)
+ let testack e = e.fix (fun self -> 
+    e.lam (fun m -> e.lam (fun n ->
+        e.if_ (e.eql m (e.int 0)) (fun () -> e.add n (e.int 1))
+         (fun () -> e.if_ (e.eql n (e.int 0))
+            (fun () -> e.app (e.app self (e.add m (e.int (-1)))) (e.int 1))
+            (fun () -> e.app (e.app self (e.add m (e.int (-1))))
+                           (e.app (e.app self m) (e.add n (e.int (-1)))))))))
+ let testack1 e = e.app (testack e) (e.int 2)
+
  (* This is not really needed anymore 
  let interp prog =
      p.app (p.app (p.app (p.app (p.app (p.app (p.app (p.app (p.app (p.app prog
@@ -185,6 +195,7 @@ module EX(S: Symantics) = struct
  let testpowfix0r () = runit testpowfix0
 
  let testfactr () = runit testfact1
+ let testackr () = runit testack1
 end;;
 
 
@@ -468,6 +479,13 @@ let itestf0 = EXR.testfactr ();;
 let ctestf0 = EXC.testfactr ();;
 let ptestf0 = EXP.testfactr ();;
 let ltestf0 = EXL.testfactr ();;
+
+(* here EXP loops, so use this instead *)
+module EXP2 = EX(P);;
+
+let itesta0 = EXR.testackr ();;
+let ctesta0 = EXC.testackr ();;
+let ptesta0 = EXP2.testackr ();;
 
 (* these are no longer relevant, for now
 let itesti1 = EXR.testi1r ();;
