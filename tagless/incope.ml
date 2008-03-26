@@ -125,7 +125,7 @@ module EX(S: Symantics) = struct
  let fact    e = 
    e.fix (fun self -> e.lam (fun n ->
      e.if_ (e.eql n (e.int 0))
-	   (fun () -> (e.int 1))
+           (fun () -> (e.int 1))
            (fun () -> (e.mul n (e.app self (e.add n (e.int (-1))))))))
  let testfact1   e = e.app (fact e) (e.int 5)
                                
@@ -144,13 +144,18 @@ module EX(S: Symantics) = struct
    let succ = e.lam (fun n -> e.add n (e.int 1)) in
    e.app
      (e.app
-	(e.app m (e.lam (fun g -> e.lam (fun n ->
-	  e.app (e.app n g) (e.app g (e.int 1))))))
-	succ) n))
+        (e.app m (e.lam (fun g -> e.lam (fun n ->
+          e.app (e.app n g) (e.app g (e.int 1))))))
+        succ) n))
 
  (* Alas, to use it we actually need System F or a similar language
     with first-class polymorphism
-  *)
+
+    For example, the following ``should'' (?) work, but does not
+ let two   e = e.lam (fun s -> e.lam (fun z -> e.app s (e.app s z)))
+
+ let testackho22 e = e.app (e.app (ackho e) (two e)) (two e)
+ *)
 
  (* This is not really needed anymore 
  let interp prog =
@@ -300,7 +305,7 @@ module EXC = EX(C);;
 
 module P0 = struct
   type ('c,'sv,'dv) repr 
-	= S0 of ('c,'sv,'dv) R.repr | D0 of ('c,'sv,'dv) C.repr
+        = S0 of ('c,'sv,'dv) R.repr | D0 of ('c,'sv,'dv) C.repr
   let int (x:int) = S0 (R.int x)
   let bool (x:bool) = S0 (R.bool x)
   let abstrI0 (e:('c,int,int) repr) : ('c,int,int) C.repr =
@@ -823,7 +828,7 @@ let ctestfix = T.testpowfix72;;
 module type SymSI = sig
   include Symantics
   type state
-  type 'c states			(* static version of the state *)
+  type 'c states                        (* static version of the state *)
   val lapp : ('c,'sa,'da) repr -> (('c,'sa,'da) repr -> ('c,'sb,'db) repr)
     ->  ('c,'sb,'db) repr
   val deref : unit -> ('c,'c states,state) repr
@@ -841,7 +846,7 @@ struct
        v0 + !state; *)
   let test1 () = lapp (deref ()) (fun v0 -> 
                   lapp (set (int 2)) (fun _ ->
-		   add v0 (deref ())))
+                   add v0 (deref ())))
       (* Here we know the evaluation is left-to-right *)
   (* (state := 2) + !state *)
   let test2 () = add (set (int 2)) (deref ())
@@ -851,12 +856,12 @@ struct
                if n<=0 then !state
                else let _ = state := !state * x in self(n-1)) *)
   let pow () = lam (fun x -> lapp (set (int 1)) (fun _ -> 
-		  fix (fun self ->
-		  lam (fun n ->
-		    if_ (leq n (int 0)) (fun () -> deref ())
-			(fun () -> 
-			  lapp (set (mul (deref ()) x)) (fun _ ->
-			    (app self (add n (int (-1))))))))))
+                  fix (fun self ->
+                  lam (fun n ->
+                    if_ (leq n (int 0)) (fun () -> deref ())
+                        (fun () -> 
+                          lapp (set (mul (deref ()) x)) (fun _ ->
+                            (app self (add n (int (-1))))))))))
   let pow7 () = lam (fun x -> app (app (pow ()) x) (int 7))
   let pow27 () = app (pow7 ()) (int 2)
 end;;
@@ -881,7 +886,7 @@ struct
        v0 10 + !state 10; *)
   let test1 () = lapp (deref ()) (fun v0 -> 
                   lapp (set (lam (fun x -> mul x (int 2)))) (fun _ ->
-		   add (app v0 (int 10)) (app (deref ()) (int 10))))
+                   add (app v0 (int 10)) (app (deref ()) (int 10))))
 end;;
 
 
@@ -991,7 +996,7 @@ module EXPSII = EX(RCPSII);;
 module EXPSI_INT_INT = EXSI_INT_INT(RCPSII)(RCPSII);;
 let cpsitestii1 = RCPSII.get_res (EXPSI_INT_INT.test1 ()) 
                   (fun x -> RCPSII.add (RCPSII.int 2) 
-		                        (RCPSII.mul x (RCPSII.int 2)));;
+                                        (RCPSII.mul x (RCPSII.int 2)));;
 (* 42 *)
 
 
@@ -1058,21 +1063,21 @@ module EXSP(S: SymSP) = struct
   let testi1 () = lapp (newref (int 1)) (fun r ->
                   lapp (deref r) (fun v0 -> 
                   lapp (setref r (int 2)) (fun _ ->
-		   add v0 (deref r))))
+                   add v0 (deref r))))
   (* the same but with the higher order *)
   let testi2 () = lapp (newref (lam (fun x -> (add x (int 1))))) (fun r ->
                   lapp (deref r) (fun v0 ->
-		  lapp (setref r (lam (fun x -> (mul x x)))) (fun _ ->
-		    add (app v0 (int 2)) (app (deref r) (int 4)))))
+                  lapp (setref r (lam (fun x -> (mul x x)))) (fun _ ->
+                    add (app v0 (int 2)) (app (deref r) (int 4)))))
       (* imperative power *)
   let pow () = lam (fun x -> 
                lapp (newref (int 1)) (fun r ->
-		  fix (fun self ->
-		  lam (fun n ->
-		    if_ (leq n (int 0)) (fun () -> deref r)
-			(fun () -> 
-			  lapp (setref r (mul (deref r) x)) (fun _ ->
-			    (app self (add n (int (-1))))))))))
+                  fix (fun self ->
+                  lam (fun n ->
+                    if_ (leq n (int 0)) (fun () -> deref r)
+                        (fun () -> 
+                          lapp (setref r (mul (deref r) x)) (fun _ ->
+                            (app self (add n (int (-1))))))))))
   let pow7 () = lam (fun x -> app (app (pow ()) x) (int 7))
   let pow27 () = app (pow7 ()) (int 2)
 end;;
