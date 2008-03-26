@@ -1,6 +1,6 @@
 > About Optimality
 > This is by nature a very slippery concept. It's easy enough to show  
-> that some constructioon is NOT optimal: just show how it could be  
+> that some construction is NOT optimal: just show how it could be  
 > improved, how it does unnecessary work, etc.
 
 We fully agree; my argument was indeed intensional. It works in some
@@ -10,6 +10,7 @@ circumstances; but it has hard to make it general.
 > 1. Compared to the first solution, you now use signatures, structures  
 > and modules. Are there runtime costs associated with these, eg some  
 > form of runtime dispatch; or does everything happen at compile time?  
+
 For OCaml: there is a run-time cost associated with structures and
 modules. For MLton: no. For SML/NJ: it depends. OCaml in general does
 very little optimization (so it is amazing how fast it is given
@@ -38,10 +39,18 @@ No.
 > into your higher-order representation? Unparsing would, I expect, be  
 > easy, by a concrete interpretation of Eval.
 
-I thing for that it's better to move to Haskell. We can get an
-affirmative answer: one can write an system that takes input as a
-string (or an parse tree), typechecks it only once, and interprets in
-the way that that takes into account input being typed) and so avoid
-the redundancies discussed in the previous message.
+Unfortunately this (parsing) is very hard to achieve in most member of the ML
+family.  Only MoscowML seems to have enough power (ie proper first-class
+modules) to be able to handle this, but at this point even that is but 
+a conjecture on our part.  You are correct that unparsing is easier,
+although here and there HOAS still makes this non-trivial.
+
+In the context of Haskell, we can give you a much more satisfactory answer:
+yes, this can be done.  More precisely, one can write an system that takes
+input as a string (or an parse tree), typechecks it only once, and interprets
+in the way that that takes into account that the input is a typed term) and so
+avoid the redundancies discussed in the previous message.  You can find an
+implementation of this at
         http://okmij.org/ftp/Computation/tagless-typed.html#tc-final
-And the other entries on that page about the typed compilation.
+Other entries on that page are about typed compilation, which may also be of
+interest.
