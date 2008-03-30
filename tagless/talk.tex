@@ -61,12 +61,12 @@
 \newcommand{\authorstack}[3]{\begin{footnotesize}\begin{tabular}[t]{@{}c@{}}\begin{normalsize}#1\end{normalsize}\\[\jot]#2\\\texttt{#3}\end{tabular}\end{footnotesize}\ignorespaces}
 \newsavebox\carette \sbox\carette{\authorstack{Jacques Carette}{McMaster University}{carette@mcmaster.ca}}
 \newsavebox\oleg    \sbox\oleg   {\authorstack{Oleg Kiselyov}{FNMOC}{oleg@pobox.com}}
-\newsavebox\ccshan  \sbox\ccshan {\authorstack{Chung-chieh Shan}{Rutgers University}{ccshan@rutgers.edu}}
+\newsavebox\ccshan  \sbox\ccshan {\color{red}\authorstack{Chung-chieh Shan}{Rutgers University}{ccshan@rutgers.edu}}
 
 \setbeamertemplate{sidebar right}{}
 
 \author[Jacques Carette and Oleg Kiselyov and Chung-chieh Shan]{\usebox\carette \and \usebox\oleg \and \usebox\ccshan}
-\date{APLAS\\30 November 2007}
+\date{NJPLS\\7 March 2008}
 
 \begin{frame}
     \titlepage
@@ -153,7 +153,7 @@
                \only<2-3>{evaluate}%
                \only<9>{\begin{tabular}{@{}r@{\qquad}}
                         Haskell constructor instances\\
-                        or ML functors
+                        or ML modules
                         \end{tabular}}}
             node [above,midway,anchor=east,text width=2.5in,inner xsep=0pt]
                 {\only<-3,9>{\color{bg}}\ttfamily
@@ -201,9 +201,9 @@
 
 \section{The object language}
 \subsection{As a constructor class in Haskell}
-\subsection{As a functor signature in ML}
+\subsection{As a module signature in ML}
 
-\begin{frame}[t,fragile]{The object language\only<3-8>{ as a constructor class}\only<9-16>{ as a functor signature}}
+\begin{frame}[t,fragile]{The object language\only<3-8>{ as a constructor class}\only<9-16>{ as a module signature}}
 \setbeamercovered{transparent=20}
 \begin{overprint}
 \onslide<1-2>
