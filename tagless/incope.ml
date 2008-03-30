@@ -66,14 +66,14 @@ end
 
 module type T = sig type ('a, 'b, 'c) repr end;;
 module Q(T:T) = struct
-  type ('c, 'sv, 'dv) pack = {
+  type ('c) pack = {
    int  : int  -> ('c,int,int) T.repr;
    bool : bool -> ('c,bool,bool) T.repr;
    add  : ('c,int,int) T.repr -> ('c,int,int) T.repr -> ('c,int,int) T.repr;
    mul  : ('c,int,int) T.repr -> ('c,int,int) T.repr -> ('c,int,int) T.repr;
    leq  : ('c,int,int) T.repr -> ('c,int,int) T.repr -> ('c,bool,bool) T.repr;
-   eql  : ('c,'sv,'dv) T.repr -> ('c,'sv,'dv) T.repr -> ('c,bool,bool) T.repr;
-   if_ : ('c,bool,bool) T.repr ->
+   eql  : 'sv 'dv . ('c,'sv,'dv) T.repr -> ('c,'sv,'dv) T.repr -> ('c,bool,bool) T.repr;
+   if_ : 'sv 'dv . ('c,bool,bool) T.repr ->
              (unit -> ('c,'sv,'dv) T.repr) ->
              (unit -> ('c,'sv,'dv) T.repr) -> ('c,'sv,'dv) T.repr;
    lam : 'sa 'sb 'da 'db . (('c,'sa,'da) T.repr -> ('c,'sb,'db) T.repr)
@@ -128,14 +128,13 @@ module EX(S: Symantics) = struct
            (fun () -> (e.int 1))
            (fun () -> (e.mul n (e.app self (e.add n (e.int (-1))))))))
  let testfact1   e = e.app (fact e) (e.int 5)
-                               
- (* Is this the best formulation? *)
- let ack e = e.fix (fun self -> e.lam (fun m -> e.lam (fun n ->
-   e.if_ (e.eql m (e.int 0)) (fun () -> e.add n (e.int 1))
-         (fun () -> e.if_ (e.eql n (e.int 0))
-            (fun () -> e.app (e.app self (e.add m (e.int (-1)))) (e.int 1))
-            (fun () -> e.app (e.app self (e.add m (e.int (-1))))
-                             (e.app (e.app self m) (e.add n (e.int (-1)))))))))
+
+ let fold e zero succ = e.fix (fun self -> e.lam (fun i ->
+     e.if_ (e.eql i (e.int 0))
+         (fun () -> zero)
+         (fun () -> e.app succ (e.app self (e.add i (e.int (-1)))))))
+ let ack e = fold e (e.lam (fun n -> e.add n (e.int 1)))
+                    (e.lam (fun g -> fold e (e.app g (e.int 1)) g))
  let testack1 e  = e.app (ack e) (e.int 2)
  let testack13 e = e.app (testack1 e) (e.int 3)
 
@@ -501,13 +500,10 @@ let ctestf0 = EXC.testfactr ();;
 let ptestf0 = EXP.testfactr ();;
 let ltestf0 = EXL.testfactr ();;
 
-(* here EXP loops, so use this instead *)
-module EXP2 = EX(P);;
-
 let itesta0 = EXR.testackr1 ();;
 let itesta3 = EXR.testackr13 ();;
 let ctesta0 = EXC.testackr1 ();;
-let ptesta0 = EXP2.testackr1 ();;
+let ptesta0 = EXP.testackr1 ();;
 
 (* these are no longer relevant, for now
 let itesti1 = EXR.testi1r ();;
