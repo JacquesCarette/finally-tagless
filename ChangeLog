@@ -1,3 +1,10 @@
+2008-04-03  Lydia van Dijk  <lvandijk@freenet.de>
+
+	* README: Mention that the new pa_monad also works with
+	OCaml-3.11.  (Tested with 3.11+dev12.)
+	Add R. Bird's book to literature section.
+	* cc.ml: Fix link to Haskell wiki.  Reformat code.
+
 2007-08-11  Lydia van Dijk  <lvandijk@freenet.de>
 
 	Adapt to OCaml's new preprocessor in version 3.10.  (Big thanks go
