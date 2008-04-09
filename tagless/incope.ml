@@ -504,6 +504,7 @@ let itesta0 = EXR.testackr1 ();;
 let itesta3 = EXR.testackr13 ();;
 let ctesta0 = EXC.testackr1 ();;
 let ptesta0 = EXP.testackr1 ();;
+let ptesta3 = EXP.testackr13 ();;
 
 (* these are no longer relevant, for now
 let itesti1 = EXR.testi1r ();;
