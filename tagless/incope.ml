@@ -61,145 +61,61 @@ module type Symantics = sig
 end
 ;;
 
-(* A more explicit version of the above, with explicit polymorphic records.
-*)
-
-module type T = sig type ('a, 'b, 'c) repr end;;
-module Q(T:T) = struct
-  type ('c) pack = {
-   int  : int  -> ('c,int,int) T.repr;
-   bool : bool -> ('c,bool,bool) T.repr;
-   add  : ('c,int,int) T.repr -> ('c,int,int) T.repr -> ('c,int,int) T.repr;
-   mul  : ('c,int,int) T.repr -> ('c,int,int) T.repr -> ('c,int,int) T.repr;
-   leq  : ('c,int,int) T.repr -> ('c,int,int) T.repr -> ('c,bool,bool) T.repr;
-   eql  : 'sv 'dv . ('c,'sv,'dv) T.repr -> ('c,'sv,'dv) T.repr -> ('c,bool,bool) T.repr;
-   if_ : 'sv 'dv . ('c,bool,bool) T.repr ->
-             (unit -> ('c,'sv,'dv) T.repr) ->
-             (unit -> ('c,'sv,'dv) T.repr) -> ('c,'sv,'dv) T.repr;
-   lam : 'sa 'sb 'da 'db . (('c,'sa,'da) T.repr -> ('c,'sb,'db) T.repr)
-    -> ('c,(('c,'sa,'da) T.repr -> ('c,'sb,'db) T.repr),'da->'db) T.repr;
-   app : 'da 'db 'sa 'sb . 
-    ('c,(('c,'sa,'da) T.repr -> ('c,'sb,'db) T.repr),'da->'db) T.repr
-    -> ('c,'sa,'da) T.repr -> ('c,'sb,'db) T.repr;
-   fix : 'sa 'sb 'da 'db . 
-      (('c,(('c,'sa,'da) T.repr -> ('c,'sb,'db) T.repr) as 's,'da->'db) T.repr 
-             -> ('c,'s,'da->'db) T.repr)  -> ('c,'s,'da->'db) T.repr
-  }
-end ;;
-
 (* Running example *)
-
 module EX(S: Symantics) = struct
  open S
- module QQ = Q(S)
- open QQ
- let p = {
-     int = S.int; bool = S.bool; add = S.add; mul = S.mul; leq = S.leq; 
-     eql = S.eql; if_ = S.if_; lam = S.lam; app = S.app; fix = S.fix}
 
- let test1 e = e.add (e.int 1) (e.int 2)
- let test2 e = e.lam (fun x -> e.add x x)
- let test3 e = e.lam (fun x -> e.add (e.app x (e.int 1)) (e.int 2))
+ let test1 () = add (int 1) (int 2)
+ let test2 () = lam (fun x -> add x x)
+ let test3 () = lam (fun x -> add (app x (int 1)) (int 2))
 
- let testgib e = e.lam (fun x -> e.lam (fun y ->
-                  e.fix (fun self -> e.lam (fun n ->
-                      e.if_ (e.leq n (e.int 0)) (fun () -> x)
+ let testgib () = lam (fun x -> lam (fun y ->
+                  fix (fun self -> lam (fun n ->
+                      if_ (leq n (int 0)) (fun () -> x)
                         (fun () ->
-                          (e.if_ (e.leq n (e.int 1)) (fun () -> y)
+                          (if_ (leq n (int 1)) (fun () -> y)
                            (fun () ->
-                             (e.add (e.app self (e.add n (e.int (-1))))
-                                    (e.app self (e.add n (e.int (-2))))))))))))
+                             (add (app self (add n (int (-1))))
+                                    (app self (add n (int (-2))))))))))))
 
- let testgib1 e = e.app (e.app (e.app (testgib e) (e.int 1)) (e.int 1)) (e.int 5)
- let testgib2 e = e.lam (fun x -> (e.lam (fun y ->
-   e.app (e.app (e.app (testgib e) x) y) (e.int 5))))
+ let testgib1 () = app (app (app (testgib ()) (int 1)) (int 1)) (int 5)
+ let testgib2 () = lam (fun x -> (lam (fun y ->
+   app (app (app (testgib ()) x) y) (int 5))))
 
- let testpowfix e = e.lam (fun x ->
-                      e.fix (fun self -> e.lam (fun n ->
-                        e.if_ (e.leq n (e.int 0)) (fun () -> e.int 1)
-                            (fun () -> e.mul x (e.app self (e.add n (e.int (-1))))))))
+ let testpowfix () = lam (fun x ->
+                      fix (fun self -> lam (fun n ->
+                        if_ (leq n (int 0)) (fun () -> int 1)
+                            (fun () -> mul x (app self (add n (int (-1))))))))
 
- let testpowfix7 e = e.lam (fun x -> e.app (e.app (testpowfix e) x) (e.int 7))
- let testpowfix0 e = e.lam (fun x -> e.app (e.app (testpowfix e) (e.int 0)) x)
+ let testpowfix7 () = lam (fun x -> app (app (testpowfix ()) x) (int 7))
+ let testpowfix0 () = lam (fun x -> app (app (testpowfix ()) (int 0)) x)
 
- let fact    e = 
-   e.fix (fun self -> e.lam (fun n ->
-     e.if_ (e.eql n (e.int 0))
-           (fun () -> (e.int 1))
-           (fun () -> (e.mul n (e.app self (e.add n (e.int (-1))))))))
- let testfact1   e = e.app (fact e) (e.int 5)
+ let fact    () = 
+   fix (fun self -> lam (fun n ->
+     if_ (eql n (int 0))
+           (fun () -> (int 1))
+           (fun () -> (mul n (app self (add n (int (-1))))))))
+ let testfact1   () = app (fact ()) (int 5)
 
- let fold e zero succ = e.fix (fun self -> e.lam (fun i ->
-     e.if_ (e.eql i (e.int 0))
+ let fold zero succ = fix (fun self -> lam (fun i ->
+     if_ (eql i (int 0))
          (fun () -> zero)
-         (fun () -> e.app succ (e.app self (e.add i (e.int (-1)))))))
- let ack e = fold e (e.lam (fun n -> e.add n (e.int 1)))
-                    (e.lam (fun g -> fold e (e.app g (e.int 1)) g))
- let testack1 e  = e.app (ack e) (e.int 2)
- let testack13 e = e.app (testack1 e) (e.int 3)
+         (fun () -> app succ (app self (add i (int (-1)))))))
+ let ack () = fold (lam (fun n -> add n (int 1)))
+                    (lam (fun g -> fold (app g (int 1)) g))
+ let testack1 () = app (ack ()) (int 2)
+ let testack13 () = app (testack1 ()) (int 3)
 
  (* Ackermann's Higher-order (using Church numerals) *)
- let ackho e = e.lam (fun m -> e.lam (fun n -> 
-   let succ = e.lam (fun n -> e.add n (e.int 1)) in
-   e.app
-     (e.app
-        (e.app m (e.lam (fun g -> e.lam (fun n ->
-          e.app (e.app n g) (e.app g (e.int 1))))))
+ let ackho () = lam (fun m -> lam (fun n -> 
+   let succ = lam (fun n -> add n (int 1)) in
+   app
+     (app
+        (app m (lam (fun g -> lam (fun n ->
+          app (app n g) (app g (int 1))))))
         succ) n))
 
- (* Alas, to use it we actually need System F or a similar language
-    with first-class polymorphism
-
-    For example, the following ``should'' (?) work, but does not
- let two   e = e.lam (fun s -> e.lam (fun z -> e.app s (e.app s z)))
-
- let testackho22 e = e.app (e.app (ackho e) (two e)) (two e)
- *)
-
- (* This is not really needed anymore 
- let interp prog =
-     p.app (p.app (p.app (p.app (p.app (p.app (p.app (p.app (p.app (p.app prog
-       (p.lam (fun (x:('a,int,int) S.repr) -> x)))
-       (p.lam (fun (b:('a,bool,bool) S.repr) -> b)))
-       (p.lam (fun e1 -> p.lam (fun e2 -> p.add e1 e2))))
-       (p.lam (fun e1 -> p.lam (fun e2 -> p.mul e1 e2))))
-       (p.lam (fun e1 -> p.lam (fun e2 -> p.leq e1 e2))))
-       (p.lam (fun e1 -> p.lam (fun e2 -> p.eql e1 e2))))
-       (p.lam (fun eb -> p.lam (fun et -> p.lam (fun ee -> p.if_ eb (fun () ->
-           et) (fun () -> ee))))))
-       (p.lam (fun f  -> f)))
-       (p.lam (fun e1 -> p.lam (fun e2 -> p.app e1 e2))))
-       (p.lam (fun f  -> p.lam (fun n -> p.app (p.app (
-           p.fix (fun fx -> p.lam (fun f -> p.lam (fun n -> 
-              p.app (p.app f (p.app fx f)) n)))) f) n)))
-
- let test1' e = 
-     e.lam (fun int ->
-     e.lam (fun bool ->
-     e.lam (fun add ->
-     e.lam (fun mul ->
-     e.lam (fun leq ->
-     e.lam (fun eql ->
-     e.lam (fun if_ ->
-     e.lam (fun lam ->
-     e.lam (fun app ->
-     e.lam (fun fix ->
-         e.app (e.app add (e.app int (e.int 1))) (e.app int (e.int 2))
-     ))))))))))
- 
- let i1 e = interp (test1' e)
-
- let test_interp () = p.lam interp
- 
- (* self-interpreter application ! *)
- let i2 prog = interp (p.app (test_interp ()) prog)
-
- (* but it is not quite an interpreter, as
- let i3 e = i2 (test1' e)
-    does not work.  Seems like the failure of rank-2 polymorphism again? *)
- *)
-
- let runit t = t p
+ let runit t = t () 
 
  let test1r () = runit test1
  let test2r () = runit test2
@@ -511,74 +427,6 @@ let itesti1 = EXR.testi1r ();;
 let ctesti1 = EXC.testi1r ();;
 let ptesti1 = EXP.testi1r ();;
 let ltesti1 = EXL.testi1r ();; *)
-
-(* start encoding some of Ken's ideas on a self-interpreter *)
-(* Jacques: this is really all junk now because we know that 
-   we need let-polymorphism for all of this to work properly, so
-   this should likely all be deleted 
-let apply_to_si_R encoded_e =
-    encoded_e R.int R.bool R.add R.app 
-        R.mul R.leq R.eql (R.if_) (R.lam) (R.lam) (R.fix)
-    ;;
-
-let apply_to_si_C encoded_e =
-    encoded_e C.int C.bool C.add C.app
-        C.mul C.leq C.eql C.if_ C.lam C.lam C.fix
-    ;;
-
-let apply_to_si_P encoded_e =
-    encoded_e P1.int P1.bool P1.add P1.app
-        P1.mul P1.leq P1.eql P1.if_ P1.lam P1.lam P1.fix
-    ;;
-
-let itesti2 = EXR.testi2r;;
-let ctesti2 = EXC.testi2r;;
-let ptesti2 = EXP.testi2r;;
-let ltesti2 = EXL.testi2r;;
-
-(* actually run some of the above tests *)
-let ctest2' = let res =  (.< .~(EXC.test2r ()) 5 >.) in .! res;;
-let ctest3' = let f = (fun x -> x+17) in
-    let res = (.< .~(EXC.test3r ()) f >.) in .! res;;
-let ctestg1' = let res = .< .~(EXC.testgib1r ())>. in .! res;;
-
-let an_e1 = (fun _int -> (fun _bool -> (fun _add -> (fun _app ->
-            (fun _mul -> (fun _leq -> (fun _eql -> (fun _if_ ->
-            (fun _lam1 -> (fun _lam2 -> (fun _fix -> 
-            (_add (_int 1) (_int 2))
-            ))))))))))) ;;
-
-let an_e2 = (fun _int -> (fun _bool -> (fun _add -> (fun _app ->
-            (fun _mul -> (fun _leq -> (fun _eql -> (fun _if_ ->
-            (fun _lam1 -> (fun _lam2 -> (fun _fix ->
-            _lam1 (fun x -> _add x x)
-            ))))))))))) ;;
-
-let an_ep = (fun _int -> (fun _bool -> (fun _add -> (fun _app ->
-            (fun _mul -> (fun _leq -> (fun _eql -> (fun _if_ ->
-            (fun _lam1 -> (fun _lam2 -> (fun _fix -> 
-            _lam1 (fun x ->
-                  _fix (fun self -> _lam2 (fun n ->
-                    _if_ (_leq n (_int 0)) (fun () -> _int 1)
-                        (fun () -> _mul x (_app self (_add n (_int (-1))))))))
-            ))))))))))) ;;
-
-(* an_e1 - compute 3 three ways *)
-let testR1 = apply_to_si_R an_e1 ;;
-let testC1 = apply_to_si_C an_e1 ;;
-let testP1 = apply_to_si_P an_e1 ;;
-
-(* an_e2 - compute x+x three ways *)
-let testR2 = apply_to_si_R an_e2 ;;
-let testC2 = apply_to_si_C an_e2 ;;
-let testP2 = apply_to_si_P an_e2 ;;
-
-(* an_ep - compute power three ways *)
-let testRp = apply_to_si_R an_ep ;;
-let testCp = apply_to_si_C an_ep ;;
-let testPp = apply_to_si_P an_ep ;;
-
-*)
 
 (* Remnants of an earlier idea: compile the PE: make a code, which,
 when run, will make a PE...
