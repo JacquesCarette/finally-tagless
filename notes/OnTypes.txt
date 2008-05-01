@@ -44,12 +44,14 @@ Current theory of types I.
 ==========================
 
     But what is a type, really?  Naively, and still in too many bad textbooks,
-it is explained as a set of values.  Of course, even since the mid-70s
-Reynolds (and independently Girard) showed how, in the presence of 
-polymorphism and function types, this cannot possibly work.  The set
-explanation is not completely wrong though: for concrete first-order
-values, it is essentially correct.  And we know of a good way to deal with
-denotational semantics in this case: CPOs.
+it is explained as a set of values.  Another (bad) explanation is that it 
+tells the machine how to interpret bit patterns (is it "A" in ASCII or
+uchar 65?).  This does not even work in C because of pointers to functions!
+Of course, even since the mid-70s Reynolds (and independently
+Girard) showed how, in the presence of polymorphism and function types, the
+set explanation cannot work either.  The set explanation is not completely
+wrong though: for concrete first-order values, it is essentially correct.  And
+we know of a good way to deal with denotational semantics in this case: CPOs.
 
     But CPOs are a rotten explanation for what a type is or what it means.  
 Many explanations of how all types are inhabited in Haskell are complex and
@@ -74,13 +76,7 @@ values (which is roughly what most current type systems aim for).
 Computability I.
 ================
 
-    An important topic to consider when looking at types is the issue of
-computability.  The issue is that, in current formalisms, because typeable
-terms must have proof trees, and the set of conclusion of proof trees is
-RE (recursively enumerable), this means that the set of typeable terms do not
-include all computable functions [thanks to Neil Jones for this formulation].
-
-    Another major insight in computability is that computable functions must
+    A major insight in computability is that computable functions must
 include partial functions.  Some people mis-understand this statement because
 they read too much in the isomorphism between the set of partial functions
 and the total functions between pointed sets.  The problem is that this 
