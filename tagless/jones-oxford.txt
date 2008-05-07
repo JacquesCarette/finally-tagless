@@ -1,0 +1,155 @@
+	I have read Neil Jones' slides, and I have got a better
+impression where we stand. I'm more convinced that we should not be so
+desperate about self-interpreter. The latter is still an interesting
+problem, but optimality _we_ seek is quite different from the one Neil
+Jones and Walid were talking about, and is not predicated on the
+self-interpreter. And besides, Neil Jones' self-interpreter does NOT
+have to interpret the whole language! Also, 'mix' (PE) does not have
+to be written in the same language. Finally, our paper solves the open
+question posed in the conclusion of his slides. I include the details
+below.
+
+	Now, about Neil Jones slides. The gist is the slide 21, which
+shows that our approaches are very different! What he is interested is
+optimality of PE, the optimality of mix. He defines the optimal mix as
+the one that takes a `natural' self-interpreter (which is presumed
+unoptimal due to the interpretation overhead) and optimizes all of
+that overhead away. Or, to be more-precise: a `natural'
+self-interpreter can't be optimal because it is general: it should be
+able to deal with any program p. If we specialize sint to a particular
+p and our specializer is good, all this generic overhead should be
+optimized away.
+
+	First, Neil Jones definitions do not imply at all that mix
+must be written in the same language L and that we really need
+self-interpreter! Let's go back to slide 15 with the definitions, and
+put the indices describing which is evaluated in which language.
+
+Interpreter (for S written in L)
+	[[s]]_S = [[int]]_L s
+mix (for L)
+	[[p]]_L s = [[ [[mix]]_L' p s]]_L
+
+Nothing says that L' must be the same as L. Now, let's substitute int
+for p:
+
+	[[int]]_L s = [[ [[mix]]_L' int s]]_L
+or
+	[[s]]_S = [[ [[mix]]_L' int s]]_L
+
+Now, suppose that S is a subset of L, and so [[.]]_S is [[.]]_L. We
+get
+	[[s]]_L = [[ [[mix]]_L' int s]]_L
+meaning that s' == [[mix]]_L' int s must have the same meaning as s
+according to eval_L, so s and s' are comparable and we can talk about
+optimality. 
+
+
+	But we are interested not in optimality of mix but in
+optimality of int itself! We do not presume int to be unoptimal,
+requiring mix to get rid of the interpretation overhead. To be more
+precise, let us consider a compiler
+	comp:: (a->b) code_L -> (a->b) code_T
+from language L to a language T (machine code). Let again S be a
+subset of L, and s \in S (which is also \in L). We can compile
+s and evaluate on some dynamic data d:
+	[[comp s]]_T d
+Suppose that we have an interpreter for s written in full L:
+	int :: ((a->b)code_S -> (a->b)) code_L
+We symbolically compose it with ((a->b) code_S) code_L and compile the
+result:
+	[[comp (int. s_in_L)]]_T d
+the two expressions have the same denotation; if they have the same
+running time, we call int to be optimal for all s with respect to the
+compiler comp. The difference is that before we relied on
+a super-smart mix (and it must indeed be quite smart, see slide
+30). Now we say that our int is optimal if an off-the-shelf
+optimizing compiler (GHC or MLton) are sufficient to remove all
+interpretation overhead.
+
+
+Regarding Makholm's solution, several remarks.
+
+	- the slides deal with first-order language. The language in
+our paper is higher-order (with no limit on order).
+
+	- writing (slide 28)
+	sint:: (a->b) code_PGM -> a_Univ -> b_Univ
+is already too revealing. Univ is the universal type; what is the meaning
+a_Univ? How do we know that a particular value of Univ really encodes the
+value of type a (rather than the whole Univ)? That assumption already
+brings in GADT! So, that very equation betrays GADT. I guess that
+relates to the last bullet on slide 31.
+
+	- here is the essence of the technique, as I understand
+it. Let 
+	data Univ = I Int | B Bool
+	data Term = GT Int | Not | ...
+
+	decode_int :: Univ -> Int
+	decode_int x = case x of 
+			I x -> x
+			_   -> error "Not Int"
+	decode_bool :: Univ -> Bool
+	decode_bool x = case x of 
+			B x -> x
+			_   -> error "Not Bool"
+
+	eval_0:: Pgm -> Univ -> Univ
+	eval_0 (GT y) x = B (decode_int x > y)
+	eval_0 (Not) x  = B (not (decode_bool x))
+
+Suppose we have some way of annotating a program with types, so that
+we annotate GT Int with the type Int->Bool.
+
+	eval_1:: Int -> Bool
+	eval_1 x = decode_bool ((eval_0 (GT 5)) (I x))
+
+after inlining:
+
+	eval_2:: Int -> Bool
+	eval_2 x = decode_bool (B (decode_int (I x) > 5))
+
+and now a simple PE can note that decode_bool (B x) = x,
+decode_int (I x) = x. PE thus eliminated the tagging along with the
+error branch of decode functions.
+
+It is all nice, but Taha and Makholm noted that one cannot claim that
+all tags will be eliminated this way even for a simpler higher-order
+language. In fact, Taha et al (ICFP2002) showed that some tags will
+remain. So, the optimality is NOT generally achievable this way.
+In our approach, all tags are assuredly eliminated, and we use the
+standard type inference (cf a bullet in slide 30). And our language is
+higher-order.
+
+	Finally, the best part: the last bullet on slide 31 says: how
+to prove that the interpreter or the compiler has the desired type?
+Well, in our Haskell code, the interpreter has the type
+	runR :: forall repr. repr t -> t
+and that type is verified by the Haskell typechecker itself. Ditto for
+the compiler C. So, not only we have proven that the interpreter or the
+compiler have the desired type, we have done so in the way that the
+typecheker of the language verifies it. No need for an external
+prover.
+
+Miscellaneous remarks about slides:
+
+slide 6: why would one expect any type error? Where is
+self-application? [[mix]] and mix are different things and they don't
+have to have the same type, so [[mix]] mix is not the same as mix mix.
+
+slide 9: the definition of the denotation (t code) (I write (t code) for
+what is \underbar{t} in the slides) 
+	[[ t code ]] = { p \in D | [[p]] \in [[t]] }
+requires more finesse: the function [[p]] (the meaning of a program p)
+is a _partial_ function. If we say, well, if [[p]] is undefined, we
+just not consider that p to be the meaning of the denotation of [[t
+code]], then the type inference rules may become unsound. For example,
+slide 13 shows the term pgm-spec, that takes a pair 
+(a*b -> g) code * a and gives (b->g) code. Well, the program a*b->g
+may be terminating, but b->g might not. So, pgm-spec may take
+something with non-empty denotation and return the result with the
+empty denotation.
+
+slide 12 has a typo in the code for sum(l): 
+	if l = [] then 0 (rather than [])...
