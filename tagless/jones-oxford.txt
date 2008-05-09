@@ -153,3 +153,51 @@ empty denotation.
 
 slide 12 has a typo in the code for sum(l): 
 	if l = [] then 0 (rather than [])...
+
+
+===============================================================
+
+Let's start with slide 2:  What is D, really?  Normally, in denotational
+semantics, this is a mathematical domain.  This means that inhabitants are
+abstract.  For example the 3 (represented on a computer by say 00000011) is
+really of type 'integer representation', not integer, ie not D.  Let's examine
+the last 2 equations: [[(quote ALPHA)]] = ALPHA
+[[(lambda (x) (+ x x)]] 3 = 6
+See the type problem here?  3 is in D, so an *actual* integer, so is 6.  But
+ALPHA is of a representation type (necessarily since it appears in a program).
+So it doesn't make much sense to have it in D too, unless D as a domain
+contains both syntax (ALPHA) and semantics (3,6).
+
+Let's assume that we can manage to deal with these type errors [as we know we
+can; basically, all we really need to do is to lift everything up one level,
+and instead of = being 'mathematical equality' it is 'representational
+equality'].  In other words, we need to wrap most equalities by [[ ]]_M where
+[[ x ]]_M : syntax -> semantics.  Then
+
+[[ [[(quote ALPHA)]]_L ]]_M = [[ ALPHA ]]_M
+[[ [[(lambda (x) (+ x x)]]_L 3 ]]_M = [[ 6 ]]_M
+is now ok.  This sort of pedantry is absolutely crucial when doing
+metaprogramming (as any time spent coding in metaocaml shows).  We are all too
+used to identifying object representations and objects themselves when the
+'denotation' function is (essentially) trivial.
+
+=======
+
+In your notes, you have definitely convinced me that self-interpretation is not
+needed.  And we do seem to have solved the (2nd) open problem on the last
+slide.  Actually, I think we can solve the first one too.  It is essentially a
+very careful use of (t code) and ((t code) code) types and [[_]]_X for the
+correct values of t and X.  This is rather finicky to get right -- as our type
+signatures for lam/app/fix for the 3-type-variable Symantics shows.  In other
+words, I claim that if we spell out what we have done carefully enough, we have
+also gone a fair ways to solving the first open problem too.
+
+I definitely like your interpretation of "optimal with respect to a compiler".
+In the case of metaocaml, can't we make an even stronger statement?  That is
+because we have an embedding/projection pair (given by run and lift), so
+'compilation' is essentially the identity.  If we can manage to make that just
+a bit more precise, I think we could justify an even stronger notion of an
+'optimal interpreter'.  Then we could show that our 'plain' PE is a pure
+constant propagator, while the one included in the paper contains additional
+optimizations which are not present in the interpreter or the compiler.
+
