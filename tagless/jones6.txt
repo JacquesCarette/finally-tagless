@@ -1,0 +1,148 @@
+Reply to the message of Neil Jones as of Mar 31, 2008
+
+> 1. Use of "Cogen functions" is said to be your main idea in the  
+> abstract. Google and Wikipedia don't give relevant hits, and in the  
+> partial evaluation literature, "cogen" has a meaning that doesn't  
+> seem to fit here:
+>
+>       [[cogen]] (p) = p-gen, a generating extension of program p, ie  
+> p-gen is a program such that for any static data
+>
+>       [[p-gen]] (s) = [[spec]] (p,s)
+>
+> Just how are your "Cogen functions" defined? Are they perhaps some  
+> sort of final algebraic dual to initial "gen functions"? Has someone  
+> else used them in the literature?
+
+Why do you think the above meaning of `cogen' does not fit our use of
+that word in the JFP paper? If we consider [[cogen]] (p) to be
+instantiation of the functor corresponding to the program p with the
+(partially evaluating) interpreter, then indeed
+	   [[p-gen]] (s) = [[spec]] (p,s)
+
+\oleg{Ken, could you comment on which meaning of the word `cogen' you
+had in mind?}
+
+
+> 2. A main point is that your approach eliminates any data type of  
+> object terms, so no dispatch on syntax is necessary. This is achieved  
+> by mapping (representing) an object program as an ML term built from
+>
+> - ML variables
+>
+> - ML "fun" and application
+>
+> - functions app, lam, bool, fix etc that are given types by a module  
+> Symantics and meanings by a module INT.
+
+We use ML variables only if we represent object programs in the
+higher-order abstract syntax. We could just as well use deBruijn
+indices. The last two points are very well taken.
+
+
+> 5. A propos, a note: your approach seems at first sight to depend  
+> strongly on a couple of principles:
+>
+> - that one interpreted program's variable is represented by exactly  
+> one ML variable, and
+>
+> - that application in the interpreted program is implemented by ML  
+> application
+>
+> 6. I'm curious how the approach would need modification if these  
+> assumptions are broken, for example
+> say an extension to lambda calculus over the rationals, where each  
+> object program value v is represented by a pair of integer values (a  
+> numerator and a denominator).
+
+I'm not sure I agree with the two principles. First of all, an object
+language variable must be represented by a metalanguage variable only
+if we use the higher-order abstract syntax. But we don't have to use
+HOAS. We may as well represent object language variables with deBruijn
+indices (built using `constructors' vz and vs). I'm not sure I
+understand the second principle either: an object language application
+is encoded using the `constructor' app. It may have nothing to do with
+an application (in the L interpreter, the object language application
+is the addition). The encoding of object terms does use the metalanguage
+application -- which is the obvious consequence of the fact we use the
+final co-algebra, `constructor functions'.
+\oleg{I wonder if we can relax it: we don't have to use meta-language
+application either. We can define (abstract) types and operations
+	   type ('a,'b) arr
+           elim : ('a,'b) arr * 'a -> 'b
+and use them in our Symantics.}
+
+
+> 3. Your approach resembles the startpoint of denotational abstract  
+> interpretation, see the 1994 overview article by me and Flemming  
+> Nielson:
+>
+>     http://www.diku.dk/forskning/topps/bibliography/1994.html#D-58
+>
+> Section 2.7 (just a few pages, extract attached) seems like basically  
+> the same idea; it derives from two papers I wrote with Alan Mycroft  
+> in 1985-1986.
+
+Thank you for sending the excerpt! It is indeed relevant to our work
+and has helpful. The particularly relevant part is this quotation from
+p3 of the excerpt:
+
+> The idea is to decompose a denotational language definition
+> into two parts:
+>     - a core semantics, containing semantic rules and their types, but using
+>       some uninterpreted domain names and function symbols, and
+>     - an interpretation, filling out the missing definitions of domain names
+>       and function symbols
+
+Yes, we too partition the meaning of the program into two parts. An
+interpretation may vary but the core stays the same. What we make
+explicit is that our `core' is syntax! Indeed, the syntax of the
+language determines how semantics composes, because, by the principle
+of compositionality, semantics is `syntax directed'. Syntax has the
+`universality property'. To see that insight more clearly, the file
+jones-ai1.ml implement the example of factorized semantics (p4 of the
+excerpt) in our approach. It is astounding how literally the OCaml
+code reproduces the example in the except. 
+
+The code likewise provides two interpretations: the standard
+interpretation and the Even-Odd representation.
+
+p1 of the excerpt:
+> It is then shown how, given a fixed core semantics, interpretations
+> may be partially ordered with respect to "degree of abstractness", and
+> it is shown that a concrete interpretation's execution results are
+> always compatible with those of more abstract interpretations. This
+> provides a basis for formally proving the safety of an analysis, for
+> example by showing that a given abstract interpretation is an
+> abstraction of the accumulating interpretation.
+\oleg{I wonder if we should aspire to the same goal in our
+approach. As illustrated above, our approach is just as capable of
+reaching these goals of providing a uniform framework for abstract
+interpretation.}
+
+An important consequence is that our approach likewise provides a
+framework for structuring abstract interpretations -- moreover, we do
+that in the typed way. I wonder if we can claim that our approach
+automatically assures at least some conditions of the Galois
+connection. So, the type system of the meta-language assures that
+	abstraction . concretization == id
+	abstraction . concretization . abstraction == abstraction
+I wonder is these are the better propositions than the ones in the
+present JFP paper.
+
+
+> 4. Analogous with your approach, this can be used to eliminate the  
+> syntax of the program to be "interpreted" by mapping it into a term  
+> later to be evaluated. However our approach does not remove the need  
+> for some sort of representation of the data domains involved. Eg, for  
+> a lambda-calculus analysis, something corresponding to the universal  
+> type would still be needed.
+The reason we get by without the universal type is because our repr is
+_higher-order_: it's a type constructor parameterized by the type
+of the expression. So, our representation is `translucent' -- the
+encoding of the object language is opaque; and yet some information,
+the type of the object language expression, is manifest. That's the
+main trick.
+\oleg{Put that in the related work of the JFP paper, with reference to
+Jones and Nielsen and the description of the trick?}
+
