@@ -38,6 +38,8 @@ module type Symantics = sig
              ('c,'h,int,int) repr
   val leq  : ('c,'h,int,int) repr -> ('c,'h,int,int) repr -> 
              ('c,'h,bool,bool) repr
+  val eql  : ('c,'h,int,int) repr -> ('c,'h,int,int) repr -> 
+             ('c,'h,bool,bool) repr
 
   val if_ : ('c,'h,bool,bool) repr ->
              (unit -> 'x) ->
@@ -108,6 +110,7 @@ module R = struct
   let add e1 e2 = fun h -> e1 h + e2 h
   let mul e1 e2 = fun h -> e1 h * e2 h
   let leq e1 e2 = fun h -> e1 h <= e2 h
+  let eql e1 e2 = fun h -> e1 h = e2 h
   let if_ eb et ee = fun h -> if eb h then (et () h) else (ee () h)
 
   let lam e = fun h -> fun x -> e (x,h)
@@ -195,6 +198,7 @@ module C = struct
   let add e1 e2 = fun h -> .<.~(e1 h) + .~(e2 h)>.
   let mul e1 e2 = fun h -> .<.~(e1 h) * .~(e2 h)>.
   let leq e1 e2 = fun h -> .<.~(e1 h) <= .~(e2 h)>.
+  let eql e1 e2 = fun h -> .<.~(e1 h) = .~(e2 h)>.
   let if_ eb et ee = fun h ->
     .<if .~(eb h) then .~(et () h) else .~(ee () h)>.
 
@@ -221,3 +225,94 @@ let ctestp  = C.runit EXC.testpowfix;;
 let ctestp7 = C.runit EXC.testpowfix7;;
 let ctestp7r = (.! (C.runit EXC.testpowfix7)) 2;; (* 128 *)
 let ctestp0 = C.runit EXC.testpowfix0;;
+
+(* ------------------------------------------------------------------------ *)
+(* Partial evaluator 
+
+module P =
+struct
+  type ('c,'sv,'dv) record = {st: 'sv option;
+                              dy: ('c,'dv) code}
+  type ('c,'h,'sv,'dv) repr = 'h -> ('c,'sv,'dv) record
+
+  type h0 = H0				(* empty environment *)
+  type ('c,'a) vr = ('c,'a,'a) record (* variable representation *)
+
+  let vz   = fun (x,_) -> x
+  let vs v = fun (_,h) -> v h
+
+
+  let abstr {dy = x} = fun h -> x
+  let pdyn x = fun h -> {st = None; dy = x}
+
+  let int  (x:int)  = fun h -> {st = Some (R.int x h);
+                                dy = C.int x h}
+  let bool (x:bool) = fun h -> {st = Some (R.bool x h);
+                                dy = C.bool x h}
+
+  (* generic build - takes a repr constructor, an interpreter function
+     and a compiler function (all binary) and builds a PE version *)
+  let build cast f1 f2 (x,y)
+      : ('c,'h,'sv,'dv) repr = fun h ->
+  match (x h,y h) with
+  | {st = Some m}, {st = Some n} -> cast (f1 (fun _ -> m) (fun _ -> n) h) h
+  | e1, e2 -> pdyn (f2 (abstr e1) (abstr e2) h) h
+  (* same as 'build' but takes care of the neutral element (e) simplification
+     allowed via a monoid structure which is implicitly present *)
+  let monoid cast one f1 f2 ((x,y) as ee): ('c,'h,'sv,'dv) repr = fun h ->
+  match (x h,y h) with
+  | {st = Some e'}, e when e' = one -> e
+  | e, {st = Some e'} when e' = one -> e
+  | _ -> build cast f1 f2 ee h
+  (* same as above but for a ring structure instead of monoid *)
+  let ring cast zero one f1 f2 ((x,y) as ee) = fun h -> match (x h, y h) with
+  | ({st = Some e'} as e), _ when e' = zero -> e
+  | _, ({st = Some e'} as e) when e' = zero -> e
+  | _ -> monoid cast one f1 f2 ee h
+
+  let add e1 e2 = monoid int 0 R.add C.add (e1,e2)
+  let mul e1 e2 = ring int 0 1 R.mul C.mul (e1,e2)
+  let leq e1 e2 = build bool R.leq C.leq (e1,e2)
+  let eql e1 e2 = build bool R.eql C.eql (e1,e2)
+  let if_ eb et ee = fun h -> match eb h with
+  | {st = Some b} -> if b then et () h else ee () h
+  | _ -> pdyn (C.if_ (abstr (eb h)) 
+                     (fun () -> abstr (et () h))
+                     (fun () -> abstr (ee () h)) h) h
+
+  (* I don't think it is possible to create a 'lam' in an eager language!
+  The problem is that the 'st' part of the record needs to be gotten
+  from f, but f expect an ('a,'b) vr * 'c.  In the dynamic case, we can
+  enclose the ('a,'b) vr in .< >. brackets and get it 'later'.  But in
+  the static case, we can't do that.  So we would have to make it
+  always dynamic, which seems wrong.
+
+  Of course, the real issue might be that it is 'repr' which is wrong,
+  and it should be a record-of-functions instead.  However, that doesn't seem
+  quite right either, as that would really much up the variable representation.
+
+  let lam f = ()
+
+  let fix = ()
+  let app = ()
+   (*
+  let app ef ea = match ef with
+  | {st = Some f} -> f ea
+  | _ -> pdyn (C.app (abstr ef) (abstr ea))
+
+  type ('a,'s,'v) result = RL of 's | RC of ('a,'v) code;;
+  let get_res t = match t with
+      | {st = (Some y) } -> RL y
+      | _                -> RC (abstr t)
+
+  (* Process fix all the way *)
+  let fix f =
+    let fdyn = C.fix (fun x -> abstr (f (pdyn x)))
+    in let rec self = function
+       | {st = Some _} as e -> app (f (lam self)) e
+       | e -> pdyn (C.app fdyn (abstr e))
+       in {st = Some self; dy = fdyn}
+       *)
+end;;
+
+module EXP = EX(P);;
