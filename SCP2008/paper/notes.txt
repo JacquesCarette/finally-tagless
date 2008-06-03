@@ -73,6 +73,7 @@ p18, although most readers are probably familiar with simple LU decomposition,
 a brief overview that shows how determinant and rank are computed in the
 algorithm with an unstaged code example showing the state needed for tracking
 would be helpful to demonstrate the problems stated here
+\oleg{Added a new section on GE}
 
 p18, line -8, this paragraph is unclear
 \jacques{well, I rewrote bits, but I am not sure if I have clarified anything.
@@ -249,6 +250,7 @@ p19, showing the types of these functions would be helpful
 p19, line -3, what is the "DETERMINANT" module? it hasn't been introduced yet
 
 p19, line -2, why do you need to track the determinant for integer matrices
+\oleg{Discussed in the new section on GE}
 
 p20, what is "classif" used for? initially I thought it meant "class if", but I
 just worked out it means "classifier", so this relates to an earlier comment,

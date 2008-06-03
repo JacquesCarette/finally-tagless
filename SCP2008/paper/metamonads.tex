@@ -86,10 +86,9 @@ eliminating abstraction overhead from generic code}
 \author{Oleg Kiselyov}
 \address{FNMOC, Monterey, CA 93943}
 \ead{oleg@pobox.com}
-\ead[url]{http://pobox.com/\textasciitilde oleg/ftp/}
+\ead[url]{http://okmij.org/ftp/}
 
-\hyphenation{ne-ces-sa-ry}
-\hyphenation{ana-lysis theo-ry}
+\hyphenation{ne-ces-sa-ry ana-lysis theo-ry}
 
 \thanks[1]{Supported in part by NSERC Discovery Grant RPG262084-03.}
 
@@ -290,6 +289,8 @@ covered in~\cite{Golub-vanLoan}.  When $A$ is singular, one can still get
 a $PLU$ decomposition with $L$ remaining unit lower-triangular. However, 
 $U$ is no longer upper triangular but rather ``staggered''
 in the upper triangle.
+\oleg{Section XXX demonstrates one particular GE algorithm in detail,
+  for further reference.}
 
 \subsection{Aspects}
 
@@ -909,6 +910,146 @@ already existing field to an open record, nor should one attempt to
 look up a field that does not exist. It is possible to make these
 checks static.  Our approach has the advantage of generating much
 clearer error messages.
+
+\section{Gaussian Elimination}\label{GA-algorithm}
+
+For detailed reference, we present one particular Gaussian Elimination
+algorithm, for an in-place LU-decomposition of an integer matrix with
+full pivoting, returning the U-factor, determinant and rank. The
+$n\times m$-matrix is represented as a flat vector, with 0-indexed
+elements laid out in row-major format (C-style). The code below is
+hand-written, implementing the typical pseudo-code given in textbooks on
+Numerical Analysis \oleg{I used wikipedia; need a better references}.
+
+In OCaml, the matrix is represented by the value of the type
+|'a container2dfromvector|:
+\begin{code}
+type 'a container2dfromvector = {arr:('a array); n:int; m:int}
+
+let swap a i j =
+    let t = a.(i) in begin a.(i) <- a.(j); a.(j) <- t; end
+
+let swap_rows a (n,m) (r,c) i =
+  let row_r = r*m in			(* Beginning of row r *)
+  let row_i = i*m in 			(* Beginning of row i *)
+  for k = c to m-1 do
+      swap a (row_r + k) (row_i + k)
+  done
+
+let swap_cols a (n,m) c j =
+  let end_vector = n * m in
+  let rec loop col_c col_j =
+    if col_j < end_vector then
+      begin
+        swap a col_c col_j;
+        loop (col_c + m) (col_j + m)
+      end
+  in loop c j
+\end{code}
+We refer to the $a_{ij}$-the element of the matrix as |a.(i*m+j)|,
+where |a| is the array component of the record |container2dfromvector|.
+The figure defines three auxiliary functions, typically used in the
+textbook pseudo-code: |swap a i j| swaps two elements; 
+|swap_cols a (n,m) c j| swaps the column |c| with the column |j| in
+the |(n,m)|-matrix |a|. The function 
+|swap_rows a (n,m) (r,c) i| swaps the row |r| with the row |i| in 
+the non-yet examined portion of the matrix, 
+rectangular block |(r,c)-(n,m)|. We do not touch the 
+elements to the left of the column |c| because they are all zeros. 
+Since we know the layout of the matrix, we avoid 2D index
+computations.
+
+\begin{figure}
+\begin{code}[numbers=left,numberblanklines=false,fontsize=\scriptsize]
+let find_pivot a (n,m) r c =
+  let pivot = ref None in               (* ((i,j), pivot_val) option *)
+  begin
+  for i = r to n-1 do
+    for j = c to m-1 do
+      let cur = a.(i*m+j) in
+      if not (cur == 0) then
+          match !pivot with
+          | Some (_,oldpivot) ->
+              if abs oldpivot > abs cur then
+                 pivot := Some ((i,j), cur)
+          | None -> pivot := Some ((i,j),cur)
+  done; done;
+  !pivot
+  end
+
+let ge = fun a_orig ->
+    let r = ref 0 in                    (* current row index, 0-based *)
+    let c = ref 0 in                    (* current column index, 0-based *)
+    let a = Array.copy (a_orig.arr) in  (* to avoid clobbering A, save it *)
+    let m = a_orig.m in                 (* the number of columns *)
+    let n = a_orig.n in                 (* the number of rows *)
+    let det_sign = ref 1 in             (* Accumulate sign and magnitude *)
+    let det_magn = ref 1 in             (*   of the determinant *)
+    while !c < m && !r < n do
+        (* Look for a pivot *)
+        let pivot = find_pivot a (n,m) !r !c in
+        let piv_val = (match  pivot with
+        | Some ((piv_r, piv_c),piv_val) ->
+            if piv_c <> !c then
+               begin
+                 swap_cols a (n,m) !c piv_c;
+                 det_sign := - !det_sign (* flip the sign of the det *)
+               end;
+            if piv_r <> !r then
+               begin
+                 swap_rows a (n,m) (!r,!c) piv_r;
+                 det_sign := - !det_sign (* flip the sign of the det *)
+               end;
+            Some piv_val
+        | None -> None) in
+        (* now do the row-reduction over the (r,c)-(n,m) block *)
+        (match piv_val with
+        | Some a_rc -> begin
+            for ii = !r+1 to n-1 do
+                let cur = a.(ii*m + !c) in
+                if not (cur == 0)  then
+                  begin
+                    for j = !c+1 to m-1 do
+                      (* fraction-free elimination *)
+                      a.(ii*m+j) <- (a.(ii*m+j) * a_rc - a.(!r*m+j) * cur) 
+                                    / ! det_magn
+                    done;
+                    a.(ii*m+ !c) <- 0
+                  end;
+            done;
+            det_magn := a_rc;
+            r := !r + 1                 (* advance the rank only if pivot > 0*)
+          end
+        | None -> det_sign := 0);
+        c := !c + 1
+    done;
+    (* Final result *)
+    ({arr=a; n=n; m=m},                 (* The matrix now has the U factor*)
+    (if      !det_sign = 0 then  0      (* Compute the signed det *)
+     else if !det_sign = 1 then  !det_magn 
+     else                        (- !det_magn)),
+    !r)                                 (* Rank *)
+\end{code}
+\caption{Fraction-free in-place Gaussian-elimination over an integer
+  matrix}\label{fig:GE-algorithm}
+\end{figure}
+As typically presented in the textbooks, the main algorithm depends on
+the separately-defined function |pivot| to find a pivot. We use
+full-pivoting, i.e., searching the non-yet examined portion of the matrix, 
+the rectangular block |(r,c)-(n,m)|, for the element with the 
+maximum absolute value. The function returns the value of the
+found pivot and its location; the return value is an option type with
+|None| indicating that all examined elements are zeros. In the main
+algorithm, after we found the pivot, we swap the current column 
+with the pivot column, and swap the current row with the pivot row. 
+After the swap, the $a_{rc}$ element of the matrix is the pivot.
+Swapping two rows or two columns changes the sign of the determinant.
+After the swapping, the algorithm does so-called row-reduction
+over the |(r,c)-(n,m)| block of the matrix containing not-yet
+processed elements. We implement the \emph{fraction-free} algorithm:
+the division operation in line XXX assuredly divides two integers
+without remainder. The fraction-free algorithm requires accumulation
+of the determinant \oleg{Citation needed!}.
 
 \section{Aspects and Functors}\label{functors}
 
