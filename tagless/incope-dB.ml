@@ -50,8 +50,10 @@ module type Symantics = sig
             ('c,'h,('c,'sa,'da) vr -> ('c,'sb,'db) vr,'da->'db) repr
   val app  : ('c,'h,('c,'sa,'da) vr -> ('c,'sb,'db) vr,'da->'db) repr ->
 	     ('c,'h,'sa,'da) repr -> ('c,'h,'sb,'db) repr
-  val fix : ('c,('c,_,'da->'db) vr * 'h, _, 'da->'db) repr -> 
-            ('c, 'h, _, 'da->'db) repr
+  val fix : ('c,
+	 ('c,(('c, 'sa, 'da) vr -> ('c, 'sb, 'db) vr as 'sx),'da->'db) vr * 'h, 
+	     'sx, 'da->'db) repr -> 
+            ('c, 'h, 'sx, 'da->'db) repr
 end;;
 
 
@@ -264,24 +266,32 @@ struct
   | ({st = Some e'} as e), _ when e' = zero -> e
   | _, ({st = Some e'} as e) when e' = zero -> e
   | _ -> monoid cast one f1 f2 ee h
-
   let add e1 e2 = monoid int 0 (+) (fun e1 e2 -> .<.~e1 + .~e2>.) (e1,e2)
-
-  let mul e1 e2 = failwith "mul"
-  let leq e1 e2 = failwith "leq"
+  let mul e1 e2 = ring int 0 1 ( * ) (fun e1 e2 -> .<.~e1 * .~e2>.) (e1,e2)
+  let leq e1 e2 = build bool (<=)  (fun e1 e2 -> .<.~e1 <= .~e2>.) (e1,e2)
   let eql e1 e2 = failwith "eql"
-  let if_ e1 e2 e3 = failwith "if_"
+  let if_ eb et ee = fun h -> match eb h with
+  | {st = Some b} -> if b then et () h else ee () h
+  | _ -> pdyn (.<if .~(abstr (eb h)) then .~(abstr (et () h)) 
+                    else .~(abstr (ee () h))>.) h
   let lam (e : ('c,('c,'sa,'da) vr * 'h,'sb,'db) repr) 
       : ('c,'h,('c,'sa,'da) vr -> ('c,'sb,'db) vr,'da->'db) repr
       = fun h -> {st = Some (fun x -> e (x,h));
 		  dy = .<fun x -> .~(abstr (e ({st=None;dy= .<x>.},h)))>.}
+  let apph e1 e2 = match e1 with
+                  | {st=Some e} -> e e2
+		  | _ -> {st = None;
+			  dy = .<.~(abstr e1) .~(abstr e2)>.}
   let app (e1:('c,'h,('c,'sa,'da) vr -> ('c,'sb,'db) vr,'da->'db) repr) 
       (e2:('c,'h,'sa,'da) repr) : ('c,'h,'sb,'db) repr 
-      = fun h -> match e1 h with
-                  | {st=Some e} -> e (e2 h)
-		  | _ -> {st = None;
-			  dy = .<.~(abstr (e1 h)) .~(abstr (e2 h))>.}
-  let fix e = failwith "fix"
+      = fun h -> apph (e1 h) (e2 h)
+  (* Process fix all the way *)
+  let fix f = fun h ->
+    let fdyn = .<let rec self n = .~(abstr (f (pdyn .<self>. h,h))) n in self>.
+    in let rec self = function
+       | {st = Some _} as e -> apph (f (lam (fun (x,h) -> self x) h,h)) e
+       | e -> pdyn (.<.~fdyn .~(abstr e)>.) h
+    in {st = Some self; dy = fdyn}
   let runit e = e () H0
 end;;
 
@@ -291,39 +301,16 @@ let ptest1 = P.runit EXP.test1;;
 let ptest2 = P.runit EXP.test2;;
 let ptest3 = P.runit EXP.test3;;
 
-(*
 let ptestg  = P.runit EXP.testgib;;
-let ptestg1  = P.runit EXP.testgib1;;
-let ptestg1r = .! (P.runit EXP.testgib1);; (* 8 *)
+let ptestg1  = P.runit EXP.testgib1;; (* {P.st = Some 8; P.dy = .<8>.} *)
 let ptestg2 = P.runit EXP.testgib2;;
 
 let ptestp  = P.runit EXP.testpowfix;;
 let ptestp7 = P.runit EXP.testpowfix7;;
-let ptestp7r = (.! (P.runit EXP.testpowfix7)) 2;; (* 128 *)
+let ptestp7r2 = (.! (P.runit EXP.testpowfix7).P.dy) 2;; (* 128 *)
 let ptestp0 = P.runit EXP.testpowfix0;;
 
-*)
 
 (*
-  let mul e1 e2 = ring int 0 1 R.mul C.mul (e1,e2)
-  let leq e1 e2 = build bool R.leq C.leq (e1,e2)
   let eql e1 e2 = build bool R.eql C.eql (e1,e2)
-  let if_ eb et ee = fun h -> match eb h with
-  | {st = Some b} -> if b then et () h else ee () h
-  | _ -> pdyn (C.if_ (abstr (eb h)) 
-                     (fun () -> abstr (et () h))
-                     (fun () -> abstr (ee () h)) h) h
-
-  type ('a,'s,'v) result = RL of 's | RC of ('a,'v) code;;
-  let get_res t = match t with
-      | {st = (Some y) } -> RL y
-      | _                -> RC (abstr t)
-
-  (* Process fix all the way *)
-  let fix f =
-    let fdyn = C.fix (fun x -> abstr (f (pdyn x)))
-    in let rec self = function
-       | {st = Some _} as e -> app (f (lam self)) e
-       | e -> pdyn (C.app fdyn (abstr e))
-       in {st = Some self; dy = fdyn}
 *)
