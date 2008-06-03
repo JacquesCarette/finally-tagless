@@ -911,7 +911,15 @@ look up a field that does not exist. It is possible to make these
 checks static.  Our approach has the advantage of generating much
 clearer error messages.
 
-\section{Gaussian Elimination}\label{GA-algorithm}
+\section{Gaussian Elimination}\label{GE-algorithm}
+
+\oleg{I wonder should we always refer to GE rather than LU-elimination
+  in our paper? GE is a particulat instance of LU; one can accomplish
+  LU in other ways than GE. Also, GE can be used for other means that
+  LU, e.g., just to compute the determinant or to solve linear equations.
+  So, it seems more properly to say we do GE. If we use GE and LU
+  almost synonymously, as it seems to be the case in Mathematica, we
+  should note that in a footnote.}
 
 For detailed reference, we present one particular Gaussian Elimination
 algorithm, for an in-place LU-decomposition of an integer matrix with
@@ -1069,8 +1077,10 @@ Then we put it all together (or in a new section?).
 
 \subsection{Domains}\label{sec:domains}
 
-We start by abstracting out domains. We have already seen the simplest
-case of domain abstraction in |param_code1|, which took
+We start by abstracting out domains. \oleg{Add: clearly the basic
+  structure of the algorithm, Fig.~\ref{fig:GE-algorithm} remains the
+  same for integer, float, etc. matrices.} We have already seen the
+simplest case of domain abstraction in |param_code1|, which took
 code-generators such as |plus| and |one| as arguments.  We need far
 more than two parameters: our domains should include $0$, $1$, $+$,
 $*$, (unary and binary) $-$, at least \emph{exact} division,
@@ -1078,8 +1088,8 @@ normalization, and potentially a relative size measure. We could group
 these parameters in tuples or records.  Instead, we use OCaml
 \emph{structures} (i.e., modules) so we can take advantage of
 extensibility, type abstraction and constraints, and especially
-parameterized structures (\emph{functors}).  We define the type,
-the signature |DOMAIN|, which different domains must satisfy:
+parameterized structures (\emph{functors}).  We define the type, the
+signature |DOMAIN|, which different domains must satisfy:
 
 \begin{code}
 type domain_kind = Domain_is_Ring | Domain_is_Field
@@ -1331,6 +1341,9 @@ for them.  A container explicitly abstracts the underlying representation
 of the data-structure, while offering an interface which is better-suited
 to linear algebra.
 
+\oleg{Say that CONTAINER2D is an abstraction of a particular
+  container, flat vector, used in the algorithm in
+  \S\ref{GE-algorithm}.}
 The signature |CONTAINER2D| below specifies that a container must provide
 functions |dim1| and |dim2| to extract the dimensions, functions |getL|
 to generate container getters, the cloning
@@ -1338,7 +1351,8 @@ generator |copy| and functions that generate code for row and column
 swapping. The inclusion of these functions in the signature of all
 containers makes it simpler to optimize the relevant functions
 depending on the actual representation of the container while not
-burdening the users of containers with efficiency details.  Note that
+burdening the users of containers with efficiency details (see
+\S\ref{GE-algorithm} for an example of such an optimiation).  Note that
 this module type is also abstract over the actual representation 
 |rep| of the generator data-structure.
 
@@ -1415,7 +1429,9 @@ To track the determinant, we should be able to generate code
 for: defining variables used for tracking (|decl|),
 updating the sign (|upd_sign|) or the absolute
 value of the determinant, and converting the tracking state
-to the final determinant value of type |outdet|. LU of a
+to the final determinant value of type |outdet| (see
+Fig.~\ref{fig:GE-algorithm} for an example).
+LU of a
 floating-point matrix with no determinant tracking uses the
 instantiation of |DETERMINANT| (see definition below) where |outdet| is |unit|
 and all the
@@ -1424,10 +1440,12 @@ in general whenever the matrix elements do not form a field, we
 have to track some aspects of the determinant, even if we do not output
 it, as the fraction-free update needs those aspects. The determinant tracking
 aspect is complex because tracking variables, if any, are to be declared at the
-beginning of LU; the sign
+beginning of the code (see lines 22-23 (XXX) of
+Fig.~\ref{fig:GE-algorithm}); the sign
 of the determinant has to be updated on each row or column
-permutation; the value of the determinant should be updated per each
-pivoting. We use |lstate| to pass the tracking state, e.g., a piece of
+permutation (lines 32 and 37 of the figure XXX);
+the value of the determinant should be updated per each
+pivoting (line 56). We use |lstate| to pass the tracking state, e.g., a piece of
 code for the value of the type |Dom.v ref|, among
 various determinant-tracking functions. The |lstate| is a part of the
 overall monadic state. 
@@ -1478,6 +1496,8 @@ from row- or column-swap generators, retrieves the name of the
 sign-accumulating variable and generates the code to update the
 sign. The |fin| method retrieves the names of both accumulators and
 generates code to compute the final, signed determinant value.
+The generated code closely corresponds to the lines dealing with 
+|det_magn| and |det_sign| in Fig.~\ref{fig:GE-algorithm}.
 \begin{code}
 module AbstractDet =
   struct
@@ -1564,8 +1584,8 @@ The type |wmatrix| is for convenience, a bundling of several pieces
 of data which are needed by both the |OUTPUT| aspect and the |PIVOT| 
 aspect.  It is defined as
 \begin{code}
-type 'a wmatrix = {matrix: 'a C.vc; numrow: ('a,int) abstract; 
-                   numcol: ('a,int) abstract}
+type 'a wmatrix = \{matrix: 'a C.vc; numrow: ('a,int) abstract; 
+                   numcol: ('a,int) abstract\}
 \end{code}
 
 The module of signature |INTERNAL_FEATURES| bundles information
@@ -1639,7 +1659,11 @@ pivoting, determinant and rank tracking. The code for all these
 aspects is fully inlined; no extra functions are invoked and no tests
 other than those needed by the LU algorithm itself are performed. The
 resulting function returns a triple |int array * int * int| of the
-U-factor, determinant and the rank.
+U-factor, determinant and the rank. It is instructive to compare the
+generated code with the corresponding code in
+Fig.~\ref{fig:GE-algorithm}, the hand-written implementation of the
+textbook pseudo-code; the only difference is the naming of
+variables and the inlining of pivoting and swapping functions.
 
 The following is another instantiation of the GE generator, with a
 different set of aspects.
@@ -1747,7 +1771,8 @@ end
 \end{code2}
 
 A careful reading of this code will reveal that the core of the 
-Gaussian Elimination algorithm is still visible in this code generator:
+Gaussian Elimination algorithm (Fig.~\ref{fig:GE-algorithm}) 
+is still visible in this code generator:
 the |forward_elim| function iterates over the columns and rows of the
 matrix, finding a pivot, and zeroing the appropriate entries.
 
