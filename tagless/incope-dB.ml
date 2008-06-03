@@ -22,14 +22,13 @@
 *)
 
 
-
 (* This class/type defines syntax (and its instances, semantics) 
    of our language
  *)
 
 module type Symantics = sig
   type ('c,'h,'sv,'dv) repr
-  type ('c,'dv) vr			(* variable representation *)
+  type ('c,'sv,'dv) vr			(* variable representation *)
   val int  : int  -> ('c,'h,int,int) repr
   val bool : bool -> ('c,'h,bool,bool) repr
   val add  : ('c,'h,int,int) repr -> ('c,'h,int,int) repr -> 
@@ -45,12 +44,13 @@ module type Symantics = sig
              (unit -> 'x) ->
              (unit -> 'x) -> (('c,'h,'sa,'da) repr as 'x)
 
-  val vz  : ('c,('c,'a) vr * 'h,'a,'a) repr
-  val vs  : ('c, 'h,'sa,'da) repr -> ('c, _ * 'h,'sa,'da) repr
-  val lam : ('c,('c,'da) vr * 'h,'sa,'db) repr -> ('c,'h,'sa,'da->'db) repr
-  val app  : ('c,'h,_,'da->'db) repr -> ('c,'h,_,'da) repr -> 
-             ('c,'h,_,'db) repr
-  val fix : ('c,('c,'da->'db) vr * 'h, _, 'da->'db) repr -> 
+  val vz  : ('c,('c,'s,'d) vr * 'h,'s,'d) repr
+  val vs  : ('c, 'h,'s,'d) repr -> ('c, _ * 'h,'s,'d) repr
+  val lam : ('c,('c,'sa,'da) vr * 'h,'sb,'db) repr -> 
+            ('c,'h,('c,'sa,'da) vr -> ('c,'sb,'db) vr,'da->'db) repr
+  val app  : ('c,'h,('c,'sa,'da) vr -> ('c,'sb,'db) vr,'da->'db) repr ->
+	     ('c,'h,'sa,'da) repr -> ('c,'h,'sb,'db) repr
+  val fix : ('c,('c,_,'da->'db) vr * 'h, _, 'da->'db) repr -> 
             ('c, 'h, _, 'da->'db) repr
 end;;
 
@@ -101,7 +101,7 @@ module R = struct
   type ('c,'h,'sv,'dv) repr = 'h -> 'dv    (* absolutely no wrappers *)
 
   type h0 = H0				(* empty environment *)
-  type ('c,'a) vr = 'a			(* variable representation *)
+  type ('c,'s,'d) vr = 'd		(* variable representation *)
   let vz   = fun (x,_) -> x
   let vs v = fun (_,h) -> v h
 
@@ -144,7 +144,7 @@ let itestp0 = R.runit EXR.testpowfix0;;
 
 module L = struct
   type ('c,'h,'sv,'dv) repr = int    (* absolutely no wrappers *)
-  type ('c,'a) vr = int			(* variable representation *)
+  type ('c,'s,'d) vr = int	     (* variable representation *)
   let vz   = 0
   let vs v = 0
 
@@ -189,7 +189,7 @@ module C = struct
   type ('c,'h,'sv,'dv) repr = 'h -> ('c,'dv) code
 
   type h0 = H0				(* empty environment *)
-  type ('c,'a) vr = ('c,'a) code	(* variable representation *)
+  type ('c,'s,'a) vr = ('c,'a) code	(* variable representation *)
   let vz   = fun (x,_) -> x
   let vs v = fun (_,h) -> v h
 
@@ -227,36 +227,31 @@ let ctestp7r = (.! (C.runit EXC.testpowfix7)) 2;; (* 128 *)
 let ctestp0 = C.runit EXC.testpowfix0;;
 
 (* ------------------------------------------------------------------------ *)
-(* Partial evaluator 
+(* Partial evaluator *)
+
 
 module P =
 struct
   type ('c,'sv,'dv) record = {st: 'sv option;
                               dy: ('c,'dv) code}
   type ('c,'h,'sv,'dv) repr = 'h -> ('c,'sv,'dv) record
-
   type h0 = H0				(* empty environment *)
-  type ('c,'a) vr = ('c,'a,'a) record (* variable representation *)
-
+  type ('c,'sv,'dv) vr = ('c,'sv,'dv) record (* variable representation *)
+  let abstr {dy = x} = x
+  let pdyn x = fun h -> {st = None; dy = x}
   let vz   = fun (x,_) -> x
   let vs v = fun (_,h) -> v h
-
-
-  let abstr {dy = x} = fun h -> x
-  let pdyn x = fun h -> {st = None; dy = x}
-
-  let int  (x:int)  = fun h -> {st = Some (R.int x h);
-                                dy = C.int x h}
-  let bool (x:bool) = fun h -> {st = Some (R.bool x h);
-                                dy = C.bool x h}
-
+  let int  (x:int)  = fun h -> {st = Some x;
+                                dy = .<x>.}
+  let bool (x:bool) = fun h -> {st = Some x;
+                                dy = .<x>.}
   (* generic build - takes a repr constructor, an interpreter function
      and a compiler function (all binary) and builds a PE version *)
   let build cast f1 f2 (x,y)
       : ('c,'h,'sv,'dv) repr = fun h ->
   match (x h,y h) with
-  | {st = Some m}, {st = Some n} -> cast (f1 (fun _ -> m) (fun _ -> n) h) h
-  | e1, e2 -> pdyn (f2 (abstr e1) (abstr e2) h) h
+  | {st = Some m}, {st = Some n} -> cast (f1 m n) h
+  | e1, e2 -> pdyn (f2 (abstr e1) (abstr e2)) h
   (* same as 'build' but takes care of the neutral element (e) simplification
      allowed via a monoid structure which is implicitly present *)
   let monoid cast one f1 f2 ((x,y) as ee): ('c,'h,'sv,'dv) repr = fun h ->
@@ -270,7 +265,46 @@ struct
   | _, ({st = Some e'} as e) when e' = zero -> e
   | _ -> monoid cast one f1 f2 ee h
 
-  let add e1 e2 = monoid int 0 R.add C.add (e1,e2)
+  let add e1 e2 = monoid int 0 (+) (fun e1 e2 -> .<.~e1 + .~e2>.) (e1,e2)
+
+  let mul e1 e2 = failwith "mul"
+  let leq e1 e2 = failwith "leq"
+  let eql e1 e2 = failwith "eql"
+  let if_ e1 e2 e3 = failwith "if_"
+  let lam (e : ('c,('c,'sa,'da) vr * 'h,'sb,'db) repr) 
+      : ('c,'h,('c,'sa,'da) vr -> ('c,'sb,'db) vr,'da->'db) repr
+      = fun h -> {st = Some (fun x -> e (x,h));
+		  dy = .<fun x -> .~(abstr (e ({st=None;dy= .<x>.},h)))>.}
+  let app (e1:('c,'h,('c,'sa,'da) vr -> ('c,'sb,'db) vr,'da->'db) repr) 
+      (e2:('c,'h,'sa,'da) repr) : ('c,'h,'sb,'db) repr 
+      = fun h -> match e1 h with
+                  | {st=Some e} -> e (e2 h)
+		  | _ -> {st = None;
+			  dy = .<.~(abstr (e1 h)) .~(abstr (e2 h))>.}
+  let fix e = failwith "fix"
+  let runit e = e () H0
+end;;
+
+module EXP = EX(P);;
+
+let ptest1 = P.runit EXP.test1;;
+let ptest2 = P.runit EXP.test2;;
+let ptest3 = P.runit EXP.test3;;
+
+(*
+let ptestg  = P.runit EXP.testgib;;
+let ptestg1  = P.runit EXP.testgib1;;
+let ptestg1r = .! (P.runit EXP.testgib1);; (* 8 *)
+let ptestg2 = P.runit EXP.testgib2;;
+
+let ptestp  = P.runit EXP.testpowfix;;
+let ptestp7 = P.runit EXP.testpowfix7;;
+let ptestp7r = (.! (P.runit EXP.testpowfix7)) 2;; (* 128 *)
+let ptestp0 = P.runit EXP.testpowfix0;;
+
+*)
+
+(*
   let mul e1 e2 = ring int 0 1 R.mul C.mul (e1,e2)
   let leq e1 e2 = build bool R.leq C.leq (e1,e2)
   let eql e1 e2 = build bool R.eql C.eql (e1,e2)
@@ -279,26 +313,6 @@ struct
   | _ -> pdyn (C.if_ (abstr (eb h)) 
                      (fun () -> abstr (et () h))
                      (fun () -> abstr (ee () h)) h) h
-
-  (* I don't think it is possible to create a 'lam' in an eager language!
-  The problem is that the 'st' part of the record needs to be gotten
-  from f, but f expect an ('a,'b) vr * 'c.  In the dynamic case, we can
-  enclose the ('a,'b) vr in .< >. brackets and get it 'later'.  But in
-  the static case, we can't do that.  So we would have to make it
-  always dynamic, which seems wrong.
-
-  Of course, the real issue might be that it is 'repr' which is wrong,
-  and it should be a record-of-functions instead.  However, that doesn't seem
-  quite right either, as that would really much up the variable representation.
-
-  let lam f = ()
-
-  let fix = ()
-  let app = ()
-   (*
-  let app ef ea = match ef with
-  | {st = Some f} -> f ea
-  | _ -> pdyn (C.app (abstr ef) (abstr ea))
 
   type ('a,'s,'v) result = RL of 's | RC of ('a,'v) code;;
   let get_res t = match t with
@@ -312,7 +326,4 @@ struct
        | {st = Some _} as e -> app (f (lam self)) e
        | e -> pdyn (C.app fdyn (abstr e))
        in {st = Some self; dy = fdyn}
-       *)
-end;;
-
-module EXP = EX(P);;
+*)
