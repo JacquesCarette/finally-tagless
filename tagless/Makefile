@@ -6,6 +6,8 @@ export BIBTEX := bibtex -min-crossrefs=9999
 all: jfp.dvi jfp.pdf # aplas.dvi aplas.pdf talk.pdf talk.ps
 
 jfp.dvi jfp.pdf aplas.dvi aplas.pdf: tagless-final.tex preamble.tex fancyvrb1.sty natbib1.sty
+jfp.dvi jfp.pdf: tagless.bib
+aplas.dvi aplas.pdf: aplas.bib
 
 talk.pdf: White_pearl_necklace.jpg FC0836213122.jpg
 

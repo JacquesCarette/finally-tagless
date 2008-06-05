@@ -23,74 +23,6 @@ reply.}
 
 REPORT FROM REFEREE #1
 
-SUMMARY
-
-The paper is a good read with
-interesting ideas and a very concrete approach.
-It  shows that the terms of a typed object language can be
-represented and manipulated (interpreted, analysed, transformed)
-without tagging overhead using modern typed meta languages such as
-Haskell and OCaml/MetaOCaml.  Until now this was believed to be
-impossible, but this paper shows that by using (Haskell) constructor
-classes, or OCaml functors and record types, in addition to the core
-Hindley-Milner polymorphic types of these languages, such a
-representation is indeed possible.
-
-OVERALL COMMENTS
-
-The main shortcoming of the paper is the lack of discussion of which
-features of the meta languages are essential for typed and tag-less
-term representation.  For instance, it seems to be important that one
-can abstract over a signature (a type and its operations), whether
-done using Haskell constructor classes or OCaml signatures and
-functors.  But is this just an accidental feature of this technique,
-or essential to solving the problem?  However, the paper is worthwhile
-as is, also without a definite answer to this question.
-
-In any case the paper should present, early on, what features of the
-meta languages (Haskell and OCaml) are used, and discuss to what
-extent similar encodings would be possible in Standard ML (using only
-signatures, functors and the core type system as defined by Milner et
-al 1997).
-
-Also, the paper should discuss up front what is lost when using this
-encoding.  For instance, could it happen that an existing well-formed
-term (written as an OCaml functor, say) will become ill-typed or may
-have to be rewritten when the object language (the functor argument)
-is extended with new syntactic constructs?  Or will such existing
-terms be oblivious to pure extensions?
-
-DETAILED COMMENTS
-
-
-Page 8 fig 2: The "as" in types is a pure abbreviatory device I
-suppose, but not one I'm familiar with.  Maybe mention it in the text.
-
-Page 10: "Inserting brackets and escapes appropriately" is a little
-too glib.  You should say what assumptions it must be "appropriate"
-for, such as the term structure being static but the values of
-arguments and variables being dynamic.
-
-
-Page 12:
-Torben Mogensen was the first to use a dual representation of terms
-and values (in his HOAS-based self-interpreter for the untyped lambda
-calculus, JFP ca 1994) \oleg{this one?} \cite{JFP-Mogensen}
-
-
-Page 17:
-Some people would say that Haskell has call-by-need rather than
-call-by-name.
-\oleg{The sentence in question reads: ``The object language generally 
-inherits the evaluation strategy from the metalanguage--
-call-by-value (CBV) in OCaml, call-by-name (CBN) in Haskell.''
-Well, call-by-need (aka lazy) is observationally equivalent to CBN
-(proven by Wadler et al), that is, sharing is not observable. So, we
-are right to call Haskell CBN. Or, perhaps, we should say call-by-name
-or closely related and observationally equivalent call-by-need, and
-use CBN for both.}
-
-
 Page 18: 
 Here the OCaml higher-rank record types seem to play an essential
 role.  This raises the question whether the same encoding could be
@@ -406,6 +338,48 @@ p28, "This shift also underlies ..."
 
 We have fixed all the grammatical and other such suggestions and
 inserted recommended references to show the historical development.
+
+Rev1:
+The main shortcoming of the paper is the lack of discussion of which
+features of the meta languages are essential for typed and tag-less
+term representation.  For instance, it seems to be important that one
+can abstract over a signature (a type and its operations), whether
+done using Haskell constructor classes or OCaml signatures and
+functors.  But is this just an accidental feature of this technique,
+or essential to solving the problem? ...
+In any case the paper should present, early on, what features of the
+meta languages (Haskell and OCaml) are used, and discuss to what
+extent similar encodings would be possible in Standard ML (using only
+signatures, functors and the core type system as defined by Milner et
+al 1997).
+\ccshan{We have clarified in Section 1.4 that indeed, our use of Haskell
+constructor classes or OCaml/SML signatures and functors is essential.}
+
+Rev1:
+Also, the paper should discuss up front what is lost when using this
+encoding.  For instance, could it happen that an existing well-formed
+term (written as an OCaml functor, say) will become ill-typed or may
+have to be rewritten when the object language (the functor argument)
+is extended with new syntactic constructs?  Or will such existing
+terms be oblivious to pure extensions?
+\ccshan{We are not sure what "lost" means, but we now state in Sections
+1.4 and 5.3 that "extending the language does not invalidate terms
+already encoded."}
+
+Rev1:
+Page 12:
+Torben Mogensen was the first to use a dual representation of terms
+and values (in his HOAS-based self-interpreter for the untyped lambda
+calculus, JFP ca 1994)
+\ccshan{We now discuss Mogensen's use of Church encoding in Section 1.3,
+and his (subtly and slightly different) dual representation of terms
+and values in Section 7.}
+
+Rev1:
+Page 17:
+Some people would say that Haskell has call-by-need rather than
+call-by-name.
+\ccshan{We note the difference.}
 
 Rev1:
 Page 4 line -5: Is there some underlining or other part of the OCaml
