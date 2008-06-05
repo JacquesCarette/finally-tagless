@@ -254,16 +254,19 @@ our versions of LU decomposition, we will not mention them further
 
 The rest of this paper is structured as follows: The next section
 gives an overview of the design space of LU decomposition algorithms.
-Section~\ref{CPS}
+\S\ref{CPS}
 introduces code generation in MetaOCaml, the problem of name
 generation, and the continuation-passing style (CPS) as a general
 solution.  We also present the key monad and the issues of generating
-control statements. Section~\ref{functors} describes the use of
+control statements. For the sake of reference, in \S\ref{GE-algorithm} 
+we present a particular Gaussian Elimination algorithm,
+a hand-written implementation of the standard textbook pseudo-code.
+\S\ref{functors} describes the use of
 parametrized modules of OCaml to encode all of the aspects of the
 LU decomposition algorithm family as separate
 modules.  We discuss related work in
-Section~\ref{related} and outline future work. In our
-conclusion (Section~\ref{conclusion}) we comment
+\S\ref{related} and outline future work. In our
+conclusion (\S\ref{conclusion}) we comment
 on programming with aspects and sum up our guiding methodology.
 Appendices give samples of the generated code, available in
 full at \cite{metamonadsURL}.
@@ -289,7 +292,7 @@ covered in~\cite{Golub-vanLoan}.  When $A$ is singular, one can still get
 a $PLU$ decomposition with $L$ remaining unit lower-triangular. However, 
 $U$ is no longer upper triangular but rather ``staggered''
 in the upper triangle.
-\oleg{Section XXX demonstrates one particular GE algorithm in detail,
+\oleg{\S\ref{GE-algorithm} demonstrates one particular GE algorithm in detail,
   for further reference.}
 
 \subsection{Aspects}
@@ -468,7 +471,7 @@ domain issues.  We hope to rectify this in the future.}
 The groupings are not entirely orthogonal (for example, in-place
 decomposition is possible only for specific domains), yet are useful
 as guidance in creating the modular LU generator discussed in 
-Section~\ref{functors}.
+\S\ref{functors}.
 
 \section{Generating binding statements, CPS, and monad}\label{CPS}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -680,7 +683,7 @@ in the type of |retN| in Figure~\ref{ourmonad}).
 With type constructors taking more
 and more arguments, it becomes increasingly difficult to read and write
 types -- which we will be doing extensively when writing module
-signatures in Section~\ref{functors}. The fact that OCaml renames all type
+signatures in \S\ref{functors}. The fact that OCaml renames all type
 variables when printing out types confuses matters further. An elegant
 solution to these sorts of problems has been suggested by 
 Jacques Garrigue on the Caml mailing list.
@@ -816,7 +819,7 @@ let genrecloop gen rtarg = fun s k ->
 \subsection{Maintaining an extensible state}
 
 Various aspects of our generator will need to keep a state during
-code generation (see section~\ref{sec:det} for an example).
+code generation (see \S\ref{sec:det} for an example).
 
 The simplest method of keeping the state of the generator is by using
 mutable variables, private to each module (aspect). That would however make our
@@ -1127,6 +1130,7 @@ compiler verify that the defined structure is indeed of a type |DOMAIN|.
 because that will make type v abstract, which will result in compilation
 errors for the "lifted" domain which needs to have this type be
 available.}
+\oleg{well, we can say IntegerDomain : DOMAIN with type v = int}
 The annotation may be omitted (see |ZpMake| below), in which
 case the compiler will verify the type when we try to use that structure as a
 |DOMAIN|. In any case, the errors such as missing ``methods'' or
@@ -1199,7 +1203,7 @@ consider splitting section 3 into 2 sections?}
 We will be using MetaOCaml operations to build code expressions, values
 of type |('a,'v) code|. However, we wish to make our generators
 abstract over particular code representations. Therefore, when writing
-the LU generator (Section~\ref{sec:det} and below), instead of
+the LU generator (\S\ref{sec:det} and below), instead of
 MetaOCaml brackets and escapes we will be using the code combinators
 described below. These combinators are functions that produce and
 combine values of the type of \emph{abstract code}. 
@@ -1387,24 +1391,25 @@ are usually accompanied by the operations on the retrieved and stored
 values. Our containers are parametric over a |DOMAINL|, i.e., functors
 from a |DOMAINL| module to the actual implementation of a
 container. For example, the following functor defines a matrix
-container represented as arrays of rows.
-
+container as a single array, with elements stored in the
+row-major order -- the container used in Fig.\ref{fig:GE-algorithm}.
 \begin{code}
-module GenericArrayContainer(Dom:DOMAINL) =
+module GenericVectorContainer(Dom:DOMAINL) =
   struct
   module Dom = Dom
-  type contr = Dom.v array array (* Array of rows *)
+  type contr = Dom.v container2dfromvector
   type 'a vc = ('a,contr) code
   type 'a vo = ('a,Dom.v) code
-  let getL x n m = .< (.~x).(.~n).(.~m) >.
-  let dim2 x = .< Array.length .~x >.       (* number of rows *)
-  let dim1 x = .< Array.length (.~x).(0) >. (* number of cols *)
+  let getL x i j = .< ((.~x).arr).(.~i* (.~x).m + .~j) >.
+  let dim2 x = .< (.~x).n >.      (* number of rows *)
+  let dim1 x = .< (.~x).m >.      (* number of cols *)
+  let mapper g a = match g with
   \dots
 \end{code}
 %
 The accompanying code\cite{metamonadsURL} includes containers whose
-elements are stored in a 1D array, in a
-row-wise (C-like) or column-wise (Fortran-like) modes.
+elements are stored in a 1D array in a column-wise (Fortran-like)
+modes, and container for a matrix represented as arrays of rows.
 
 \subsection{Determinant aspect}
 \label{sec:det}
@@ -1593,7 +1598,7 @@ tracking aspects. The latter are not directly selectable by the
 user. Rather, they are \emph{functions} of other user choices. The
 implementations of the tracking aspects such as |Rank|, |NoRank|,
 |PackedLower| are quite similar (and simpler) than the implementation
-of the |AbstractDet| and |NoDet| aspects in Section~\ref{sec:det}. The
+of the |AbstractDet| and |NoDet| aspects in \S\ref{sec:det}. The
 choice of a particular tracking aspect may depend on all other choices
 (e.g., it is not possible to extract the |L| factor if the domain is
 not a field). Currently we use preflight checks to ensure consistency
@@ -1603,7 +1608,7 @@ sharing constraints and module computations. That lead to obscure
 code, long impenetrable type error messages and made compilation very
 slow.  Furthermore, at least in OCaml, type-level computations are not
 powerful enough to help us with tasks such as verifying that an integer
-is prime, as required in section~\ref{sec:domains}.
+is prime, as required in \S\ref{sec:domains}.
 
 \subsection{Main generation}
 We combine all user-selectable aspects in a record, which serves as a ``keyword
@@ -1881,7 +1886,7 @@ multi-stage programming.
 
 It would be interesting to implement a camlp4 extension that 
 automates the lifting of (simple) modules as done in 
-section~\ref{sec:lifteddomains},
+\S\ref{sec:lifteddomains},
 first to the code level, and then to monadic values.  Even more
 interesting would be a (typed) extension to MetaOCaml that would 
 allow us to write such code with the same guarantees that the rest of
@@ -2004,6 +2009,8 @@ We wish to thank Cristiano Calgano for his help in adapting camlp4 for
 use with MetaOCaml. Many helpful discussions with Walid Taha are very
 appreciated. The implementation of the monadic notation, |perform|,
 was joint work with Lydia van Dijk.
+Many helpful suggestions by the anonymous reviewers are gratefully
+acknowledged.
 
 % Embed .bbl file directly to make document self-contained
 \bibliography{metamonads}
