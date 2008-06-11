@@ -1,203 +1,126 @@
-	I have read Neil Jones' slides, and I have got a better
-impression where we stand. I'm more convinced that we should not be so
-desperate about self-interpreter. The latter is still an interesting
-problem, but optimality _we_ seek is quite different from the one Neil
-Jones and Walid were talking about, and is not predicated on the
-self-interpreter. And besides, Neil Jones' self-interpreter does NOT
-have to interpret the whole language! Also, 'mix' (PE) does not have
-to be written in the same language. Finally, our paper solves the open
-question posed in the conclusion of his slides. I include the details
-below.
+	We have studied your Oxford lecture slides at great length.
+They helped us very much to clarify our thinking on two topics: first,
+defining optimality without self-interpretation (bottom line: it can be
+done); second, the use of types in metaprogramming (bottom line: our
+paper answers the question posed at the end of your slides).
 
-	Now, about Neil Jones slides. The gist is the slide 21, which
-shows that our approaches are very different! What he is interested is
-optimality of PE, the optimality of mix. He defines the optimal mix as
-the one that takes a `natural' self-interpreter (which is presumed
-unoptimal due to the interpretation overhead) and optimizes all of
-that overhead away. Or, to be more-precise: a `natural'
-self-interpreter can't be optimal because it is general: it should be
-able to deal with any program p. If we specialize sint to a particular
-p and our specializer is good, all this generic overhead should be
-optimized away.
+1. Optimality without self-interpretation
 
-	First, Neil Jones definitions do not imply at all that mix
-must be written in the same language L and that we really need
-self-interpreter! Let's go back to slide 15 with the definitions, and
-put the indices describing which is evaluated in which language.
+	Optimality is neither a property of a partial evaluator "mix"
+nor a property of a self-interpreter "int", but a relation between
+the two.  Like you (and Walid Taha), we seek a mix-int pair that is
+optimal, but whereas you start with a "natural" int (which incurs some
+interpretation overhead) and seek a mix optimal for that int, we in some
+sense write int in a different way (now natural to us) for which the
+trivial mix is optimal.  Your slides provide a concrete framework for us
+to show that, not only can mix be written in a different language than
+its object language, but we can generalize mix to a compiler and int to
+an interpreter, without sacrificing the notion of optimality.
+
+	To start with, your definitions do not imply at all that mix
+must be written in the same language L and that we really need a
+self-interpreter!  Let's go back to slide 15 with the definitions, and
+add indices to describe which program is evaluated in which language.
 
 Interpreter (for S written in L)
 	[[s]]_S = [[int]]_L s
 mix (for L)
 	[[p]]_L s = [[ [[mix]]_L' p s]]_L
-
-Nothing says that L' must be the same as L. Now, let's substitute int
+Nothing says that L' must be the same as L.  Now, let's substitute int
 for p:
-
 	[[int]]_L s = [[ [[mix]]_L' int s]]_L
 or
 	[[s]]_S = [[ [[mix]]_L' int s]]_L
-
 Now, suppose that S is a subset of L, and so [[.]]_S is [[.]]_L. We
 get
 	[[s]]_L = [[ [[mix]]_L' int s]]_L
 meaning that s' == [[mix]]_L' int s must have the same meaning as s
-according to eval_L, so s and s' are comparable and we can talk about
-optimality. 
+in L, so s and s' are comparable and we can talk about optimality. 
 
-
-	But we are interested not in optimality of mix but in
-optimality of int itself! We do not presume int to be unoptimal,
-requiring mix to get rid of the interpretation overhead. To be more
-precise, let us consider a compiler
-	comp:: (a->b) code_L -> (a->b) code_T
-from language L to a language T (machine code). Let again S be a
-subset of L, and s \in S (which is also \in L). We can compile
-s and evaluate on some dynamic data d:
+	We treat optimality as a problem of writing not mix but int in
+the right way.  We do not presume int to incur interpretation overhead
+for mix to remove.  To be more precise, let us consider a compiler
+	comp :: (a->b) code_L -> (a->b) code_T
+from language L to a language T (machine code).  Here we write code_L
+for an underbar subscripted by L.  (In the case where L and T are the
+same, as when generating code using MetaOCaml, comp could just be the
+identity.)  Let again S be a subset of L, and s \in S (hence s \in L).
+We can compile s and evaluate on some dynamic data d:
 	[[comp s]]_T d
 Suppose that we have an interpreter for s written in full L:
 	int :: ((a->b)code_S -> (a->b)) code_L
-We symbolically compose it with ((a->b) code_S) code_L and compile the
+We _symbolically_ compose it with ((a->b) code_S) code_L and compile the
 result:
-	[[comp (int. s_in_L)]]_T d
-the two expressions have the same denotation; if they have the same
-running time, we call int to be optimal for all s with respect to the
-compiler comp. The difference is that before we relied on
-a super-smart mix (and it must indeed be quite smart, see slide
-30). Now we say that our int is optimal if an off-the-shelf
-optimizing compiler (GHC or MLton) are sufficient to remove all
-interpretation overhead.
+	[[comp (int \circ s_in_L)]]_T d
+The two expressions have the same denotation; if they have the same
+running time (in particular, if they are alpha-equivalent), then we call
+int optimal for all s with respect to the compiler comp.  The difference
+is that before we relied on a super-smart mix (and it must indeed be
+quite smart, see slide 30).  Now we say that our int is optimal if an
+off-the-shelf optimizing compiler (GHC or MLton) is sufficient to remove
+all interpretation overhead.
 
+2. Types in metaprogramming
 
-Regarding Makholm's solution, several remarks.
+	It is crucial in metaprogramming to make seemingly pedantic
+distinctions between semantic values (including program texts) and their
+representations in various languages.  For example, it is useful above
+to track the subscripts on double brackets and underbars, and the same
+discipline helped us make sense of your slides from page 2 onward.  In
+other words, we agree with your last slide on the need for "better
+mathematical understanding of the underbar types."
 
-	- the slides deal with first-order language. The language in
-our paper is higher-order (with no limit on order).
+	In this regard, it is nice to use a typed metalanguage that
+automatically checks these subscripts along with the object-language
+types they are attached to.  For example, the last bullet on slide 31
+asks: "how to prove that an interpreter or compiler has the desired
+type?"  Well, in our Haskell code, the interpreter has the type
+	runR :: forall t. R t -> t
+and that type is verified by the Haskell type-checker itself.  Ditto for
+the compiler C.  So, not only have we proven that the interpreter and
+the compiler have the desired type, but we have done so using the type
+checker of the metalanguage.  No need for an external prover.
 
-	- writing (slide 28)
-	sint:: (a->b) code_PGM -> a_Univ -> b_Univ
-is already too revealing. Univ is the universal type; what is the meaning
-a_Univ? How do we know that a particular value of Univ really encodes the
-value of type a (rather than the whole Univ)? That assumption already
-brings in GADT! So, that very equation betrays GADT. I guess that
-relates to the last bullet on slide 31.
+	Our code uses different metalanguage types for encodings of
+different object types (for example, R Int, R Bool, etc.), but it never
+needs a single supertype for these metalanguage types.  Thus it avoids
+"Univ" in the type of [[sint]] on your slide 28.  Those occurrences of
+"Univ" suggest that the metalanguage's type system would need fancy
+features such as GADTs.
 
-	- here is the essence of the technique, as I understand
-it. Let 
-	data Univ = I Int | B Bool
-	data Term = GT Int | Not | ...
-
-	decode_int :: Univ -> Int
-	decode_int x = case x of 
-			I x -> x
-			_   -> error "Not Int"
-	decode_bool :: Univ -> Bool
-	decode_bool x = case x of 
-			B x -> x
-			_   -> error "Not Bool"
-
-	eval_0:: Pgm -> Univ -> Univ
-	eval_0 (GT y) x = B (decode_int x > y)
-	eval_0 (Not) x  = B (not (decode_bool x))
-
-Suppose we have some way of annotating a program with types, so that
-we annotate GT Int with the type Int->Bool.
-
-	eval_1:: Int -> Bool
-	eval_1 x = decode_bool ((eval_0 (GT 5)) (I x))
-
-after inlining:
-
-	eval_2:: Int -> Bool
-	eval_2 x = decode_bool (B (decode_int (I x) > 5))
-
-and now a simple PE can note that decode_bool (B x) = x,
-decode_int (I x) = x. PE thus eliminated the tagging along with the
-error branch of decode functions.
-
-It is all nice, but Taha and Makholm noted that one cannot claim that
-all tags will be eliminated this way even for a simpler higher-order
-language. In fact, Taha et al (ICFP2002) showed that some tags will
-remain. So, the optimality is NOT generally achievable this way.
-In our approach, all tags are assuredly eliminated, and we use the
-standard type inference (cf a bullet in slide 30). And our language is
-higher-order.
-
-	Finally, the best part: the last bullet on slide 31 says: how
-to prove that the interpreter or the compiler has the desired type?
-Well, in our Haskell code, the interpreter has the type
-	runR :: forall repr. repr t -> t
-and that type is verified by the Haskell typechecker itself. Ditto for
-the compiler C. So, not only we have proven that the interpreter or the
-compiler have the desired type, we have done so in the way that the
-typecheker of the language verifies it. No need for an external
-prover.
+	If we understand Makholm's solution correctly, it first
+specializes an interpreter that uses object-type tags, then eliminates
+the tags from the output program by typing it more precisely.  It is a
+natural approach to follow, but the object language is first-order, and
+Taha, Makholm, and Hughes (PADO 2001) note that one cannot claim that
+all tags will be eliminated this way even for a simple higher-order
+language.  In fact, Pašaliç, Taha, and Sheard (ICFP 2002) showed that
+some tags will remain.  So, optimality cannot be achieved this way in
+general.  Our approach deals with a higher-order language (with no limit
+on order) and assures that all tags are eliminated using _standard_ type
+inference.
 
 Miscellaneous remarks about slides:
 
-slide 6: why would one expect any type error? Where is
-self-application? [[mix]] and mix are different things and they don't
-have to have the same type, so [[mix]] mix is not the same as mix mix.
+slide 6: The way mix might apply to itself is not quite self-application
+in the sense of general functional programming, because the argument to
+mix is the program text of mix, not the function it denotes.  In any
+case, the occurs-check failure that would seem to prevent both kinds of
+self-application is defused by polymorphism: the polymorphic identity
+function does apply to itself.
 
-slide 9: the definition of the denotation (t code) (I write (t code) for
-what is \underbar{t} in the slides) 
+slide 9: It is trickier than it looks to define the denotation
 	[[ t code ]] = { p \in D | [[p]] \in [[t]] }
-requires more finesse: the function [[p]] (the meaning of a program p)
-is a _partial_ function. If we say, well, if [[p]] is undefined, we
-just not consider that p to be the meaning of the denotation of [[t
-code]], then the type inference rules may become unsound. For example,
-slide 13 shows the term pgm-spec, that takes a pair 
-(a*b -> g) code * a and gives (b->g) code. Well, the program a*b->g
-may be terminating, but b->g might not. So, pgm-spec may take
-something with non-empty denotation and return the result with the
-empty denotation.
+because the function [[p]] (the meaning of a program p) is a _partial_
+function.  If we say, well, if [[p]] is undefined, we just not consider
+that p to be the meaning of the denotation of [[t code]], then the type
+inference rules may become unsound.  For example, slide 13 shows
+pgm-spec, which takes a pair (a*b -> g) code * a and gives (b->g) code.
+Well, the program a*b->g may be terminating, but b->g might not.  So,
+pgm-spec may take something with non-empty denotation and return the
+result with the empty denotation.
 
 slide 12 has a typo in the code for sum(l): 
 	if l = [] then 0 (rather than [])...
 
-
-===============================================================
-
-Let's start with slide 2:  What is D, really?  Normally, in denotational
-semantics, this is a mathematical domain.  This means that inhabitants are
-abstract.  For example the 3 (represented on a computer by say 00000011) is
-really of type 'integer representation', not integer, ie not D.  Let's examine
-the last 2 equations: [[(quote ALPHA)]] = ALPHA
-[[(lambda (x) (+ x x)]] 3 = 6
-See the type problem here?  3 is in D, so an *actual* integer, so is 6.  But
-ALPHA is of a representation type (necessarily since it appears in a program).
-So it doesn't make much sense to have it in D too, unless D as a domain
-contains both syntax (ALPHA) and semantics (3,6).
-
-Let's assume that we can manage to deal with these type errors [as we know we
-can; basically, all we really need to do is to lift everything up one level,
-and instead of = being 'mathematical equality' it is 'representational
-equality'].  In other words, we need to wrap most equalities by [[ ]]_M where
-[[ x ]]_M : syntax -> semantics.  Then
-
-[[ [[(quote ALPHA)]]_L ]]_M = [[ ALPHA ]]_M
-[[ [[(lambda (x) (+ x x)]]_L 3 ]]_M = [[ 6 ]]_M
-is now ok.  This sort of pedantry is absolutely crucial when doing
-metaprogramming (as any time spent coding in metaocaml shows).  We are all too
-used to identifying object representations and objects themselves when the
-'denotation' function is (essentially) trivial.
-
-=======
-
-In your notes, you have definitely convinced me that self-interpretation is not
-needed.  And we do seem to have solved the (2nd) open problem on the last
-slide.  Actually, I think we can solve the first one too.  It is essentially a
-very careful use of (t code) and ((t code) code) types and [[_]]_X for the
-correct values of t and X.  This is rather finicky to get right -- as our type
-signatures for lam/app/fix for the 3-type-variable Symantics shows.  In other
-words, I claim that if we spell out what we have done carefully enough, we have
-also gone a fair ways to solving the first open problem too.
-
-I definitely like your interpretation of "optimal with respect to a compiler".
-In the case of metaocaml, can't we make an even stronger statement?  That is
-because we have an embedding/projection pair (given by run and lift), so
-'compilation' is essentially the identity.  If we can manage to make that just
-a bit more precise, I think we could justify an even stronger notion of an
-'optimal interpreter'.  Then we could show that our 'plain' PE is a pure
-constant propagator, while the one included in the paper contains additional
-optimizations which are not present in the interpreter or the compiler.
 

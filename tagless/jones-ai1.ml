@@ -110,7 +110,7 @@ let test2 = let module M = Ex2(IStandard) in
 *)
 
  
-(* The evan-odd, abstract interpretation, p5 of JN *)
+(* The even-odd, abstract interpretation, p5 of JN *)
 
 module IParity = struct
   type var = int

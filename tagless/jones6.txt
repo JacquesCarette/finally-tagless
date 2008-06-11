@@ -14,15 +14,13 @@ Reply to the message of Neil Jones as of Mar 31, 2008
 > sort of final algebraic dual to initial "gen functions"? Has someone  
 > else used them in the literature?
 
-Why do you think the above meaning of `cogen' does not fit our use of
-that word in the JFP paper? If we consider [[cogen]] (p) to be
-instantiation of the functor corresponding to the program p with the
-(partially evaluating) interpreter, then indeed
-	   [[p-gen]] (s) = [[spec]] (p,s)
-
-\oleg{Ken, could you comment on which meaning of the word `cogen' you
-had in mind?}
-
+We will rephrase our abstract to try to clarify it, but we actually did
+mean the sense of "cogen" in the PE literature: instead of representing
+an object expression as a data structure and feeding it to a compiler or
+PE, we represent an object expression _as its own generating extension_,
+which maps static input to residual code.  We suspect that the ease of
+typing that we encounter is related to the ease of writing cogen instead
+of mix that you mention in "Mix Ten Years Later", for instance.
 
 > 2. A main point is that your approach eliminates any data type of  
 > object terms, so no dispatch on syntax is necessary. This is achieved  
@@ -35,10 +33,10 @@ had in mind?}
 > - functions app, lam, bool, fix etc that are given types by a module  
 > Symantics and meanings by a module INT.
 
-We use ML variables only if we represent object programs in the
-higher-order abstract syntax. We could just as well use deBruijn
-indices. The last two points are very well taken.
-
+We use ML variables and "fun" only if we represent object programs using
+higher-order abstract syntax.  We could just as well use de Bruijn
+indices.  We do need to use ML application and the module system as you
+describe.
 
 > 5. A propos, a note: your approach seems at first sight to depend  
 > strongly on a couple of principles:
@@ -55,23 +53,24 @@ indices. The last two points are very well taken.
 > object program value v is represented by a pair of integer values (a  
 > numerator and a denominator).
 
-I'm not sure I agree with the two principles. First of all, an object
-language variable must be represented by a metalanguage variable only
-if we use the higher-order abstract syntax. But we don't have to use
-HOAS. We may as well represent object language variables with deBruijn
-indices (built using `constructors' vz and vs). I'm not sure I
-understand the second principle either: an object language application
-is encoded using the `constructor' app. It may have nothing to do with
-an application (in the L interpreter, the object language application
-is the addition). The encoding of object terms does use the metalanguage
-application -- which is the obvious consequence of the fact we use the
-final co-algebra, `constructor functions'.
-\oleg{I wonder if we can relax it: we don't have to use meta-language
-application either. We can define (abstract) types and operations
-	   type ('a,'b) arr
-           elim : ('a,'b) arr * 'a -> 'b
-and use them in our Symantics.}
+We're not sure what "extension to lambda calculus over the rationals"
+you have in mind (other than adding the rationals as a primitive data
+type, which is easy), but we certainly don't want to be tied down to
+any concrete object representation such as "a pair of integer values".
+It is of course possible for a particular implementation of Symantics
+to represent object terms by integers; please see the "size measurer"
+module L at the end of our Section 2.2.
 
+The two principles you name are not necessary.  First, an object
+variable is represented by a metalanguage variable only if we use the
+higher-order abstract syntax, but we may instead represent object
+language variables with de Bruijn indices (built using `constructors'
+varZ and varS).  Second, we encode an object-language application using
+the `constructor' app, which may have nothing to do with ML application.
+For example, the L interpreter defines "app e1 e2 = e1 + e2 + 1".  Of
+course, we do use metalanguage application to encode object terms, even
+those with no application; for example, we encode the object term "1" by
+applying "int" to "1" in the metalanguage.
 
 > 3. Your approach resembles the startpoint of denotational abstract  
 > interpretation, see the 1994 overview article by me and Flemming  
@@ -84,7 +83,7 @@ and use them in our Symantics.}
 > in 1985-1986.
 
 Thank you for sending the excerpt! It is indeed relevant to our work
-and has helpful. The particularly relevant part is this quotation from
+and helpful. The particularly relevant part is this quotation from
 p3 of the excerpt:
 
 > The idea is to decompose a denotational language definition
@@ -99,37 +98,13 @@ interpretation may vary but the core stays the same. What we make
 explicit is that our `core' is syntax! Indeed, the syntax of the
 language determines how semantics composes, because, by the principle
 of compositionality, semantics is `syntax directed'. Syntax has the
-`universality property'. To see that insight more clearly, the file
-jones-ai1.ml implement the example of factorized semantics (p4 of the
-excerpt) in our approach. It is astounding how literally the OCaml
-code reproduces the example in the except. 
-
-The code likewise provides two interpretations: the standard
-interpretation and the Even-Odd representation.
-
-p1 of the excerpt:
-> It is then shown how, given a fixed core semantics, interpretations
-> may be partially ordered with respect to "degree of abstractness", and
-> it is shown that a concrete interpretation's execution results are
-> always compatible with those of more abstract interpretations. This
-> provides a basis for formally proving the safety of an analysis, for
-> example by showing that a given abstract interpretation is an
-> abstraction of the accumulating interpretation.
-\oleg{I wonder if we should aspire to the same goal in our
-approach. As illustrated above, our approach is just as capable of
-reaching these goals of providing a uniform framework for abstract
-interpretation.}
-
-An important consequence is that our approach likewise provides a
-framework for structuring abstract interpretations -- moreover, we do
-that in the typed way. I wonder if we can claim that our approach
-automatically assures at least some conditions of the Galois
-connection. So, the type system of the meta-language assures that
-	abstraction . concretization == id
-	abstraction . concretization . abstraction == abstraction
-I wonder is these are the better propositions than the ones in the
-present JFP paper.
-
+`universality property'. To express that insight more concretely, the
+file jones-ai1.ml implements the example of factorized semantics (p4
+of the excerpt) in our typed approach. It is astounding how literally
+the OCaml code reproduces the example in the except. The code likewise
+provides two interpretations in a uniform framework: the standard
+interpretation (more concrete) and the even-odd interpretation (more
+abstract).
 
 > 4. Analogous with your approach, this can be used to eliminate the  
 > syntax of the program to be "interpreted" by mapping it into a term  
@@ -137,12 +112,12 @@ present JFP paper.
 > for some sort of representation of the data domains involved. Eg, for  
 > a lambda-calculus analysis, something corresponding to the universal  
 > type would still be needed.
-The reason we get by without the universal type is because our repr is
-_higher-order_: it's a type constructor parameterized by the type
-of the expression. So, our representation is `translucent' -- the
-encoding of the object language is opaque; and yet some information,
-the type of the object language expression, is manifest. That's the
-main trick.
-\oleg{Put that in the related work of the JFP paper, with reference to
-Jones and Nielsen and the description of the trick?}
+
+We avoid the universal type in denotations in two steps: first, we use
+a typed object language; second, we let an interpretation provide an
+infinite family of denotation domains, one for each object type.  In
+the terminology of modules, the interpretation is `translucent' in the
+sense that the family is opaque but the object type is manifest.  In
+the terminology of types, an interpretation provides an abstract type
+_constructor_.  That's the main trick.
 
