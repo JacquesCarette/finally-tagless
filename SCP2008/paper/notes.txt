@@ -49,12 +49,6 @@ introduction somewhere.
 p17, line -12, now in the module implementation "Dom" is made functor
 parameter, why? and why can you just replace "rep" with "code"?
 
-p18, although most readers are probably familiar with simple LU decomposition,
-a brief overview that shows how determinant and rank are computed in the
-algorithm with an unstaged code example showing the state needed for tracking
-would be helpful to demonstrate the problems stated here
-\oleg{Added a new section on GE}
-
 p18, line -8, this paragraph is unclear
 \jacques{well, I rewrote bits, but I am not sure if I have clarified anything.
 But maybe it is not worth it either?}
@@ -80,8 +74,12 @@ from the comment above. The "DOMAIN" module seems superfluous too: you never
 need to do real operations on values, but only generate code for operations on
 values. Hence "DOMAINL" is what you need and "DOMAIN" is not needed. Also I
 don't think "CONTAINER2D" is ever seen again after being introduced in Section
-4.2 -- this seems troubling. Section 4.4 is about programming in OCaml and how
-to maintain the algorithm's state. Section 4.7 is about putting it all
+4.2 -- this seems troubling.\oleg{Added a paragraph at the end of the
+container section clarifying that the `current' container is
+available, under the name of |C|}.
+Section 4.4 is about programming in OCaml and how
+to maintain the algorithm's state. \oleg{that has been moved out}
+Section 4.7 is about putting it all
 together.
 \oleg{This plan is being followed through. Hopefully the introduction
 to (now) Sec 5 describes the cohesive plan of the section. There is
@@ -91,12 +89,16 @@ From my understanding of your work here is an idea to make your paper more
 precise and concise.
 % - Move Section 4.4 into Section 3 because that section seems to deal with
 %   low-level programming issues.
+\oleg{done}
 - In the intro of Section 4 make a link to the list in Section 2 and say your
   going to pick some of those aspects and explain how they are implemented -
-  one per subsection.
+  one per subsection.\oleg{done}
 - Delete the first half of 4.2.
 - Combine 4.1 with the second half of 4.2, dropping the use of "DOMAIN" and
   just do everything in terms of "DOMAINL".
+  \oleg{It seems DOMAIN is a nice and simple 
+   abtraction to build upon later; it also corresponds to our example
+   in Sec 2. We added more explanation, but decided to leave DOMAIN}
 - Sections 4.3, 4.5, 4.6 then become Sections 4.2, 4.3, 4.4.
 - Section 4.7 could be the last subsection of 4 or a new whole section with more detail.
 
@@ -123,6 +125,7 @@ the generated code. Something like this would give the reader a greater
 understanding of how logic flows through your generation process and how your
 functor technique is ultimately in control of fine-grained details of code
 building. 
+\oleg{We have attempted to do exactly that}
 
 ==========================================================================
 From reviewer #1
@@ -315,3 +318,9 @@ the paper more succinct and clearer.
 completely re-written, hopefully the above questions are all answered,
 in particular about the meaning of Logic and Idx and the merits of
 abstracting over interpretations.}
+
+p18, although most readers are probably familiar with simple LU decomposition,
+a brief overview that shows how determinant and rank are computed in the
+algorithm with an unstaged code example showing the state needed for tracking
+would be helpful to demonstrate the problems stated here
+\oleg{Added a new section on GE}

@@ -1407,16 +1407,16 @@ qualification.
 \subsection{Containers}
 
 For our purposes, a container is an abstraction of an $n$-dimensional
-vector space, which we here specialize for $n=1,2$.  The $2$-dimensional
-case is our main interest, and its signature contains many functions particular
-to $n=2$.  For examples, we have rows and columns and operations specialized
-for them.  A container explicitly abstracts the underlying representation 
-of the data-structure, while offering an interface which is better-suited
-to linear algebra.
+vector space, which we here specialize for $n=1,2$.  The
+$2$-dimensional case is our main interest, and its signature contains
+many functions particular to $n=2$.  For examples, we have rows and
+columns and operations specialized for them.  A container explicitly
+abstracts the underlying representation of the data-structure, while
+offering an interface which is better-suited to linear algebra. In
+particular, a container is an abstraction of the flat vector
+|container2dfromvector| of our sample algorithm in
+\S\ref{GE-algorithm}.
 
-\oleg{Say that CONTAINER2D is an abstraction of a particular
-  container, flat vector, used in the algorithm in
-  \S\ref{GE-algorithm}.}
 The signature |CONTAINER2D| below specifies that a container must provide
 functions |dim1| and |dim2| to extract the dimensions, functions |getL|
 to generate container getters, the cloning
@@ -1480,6 +1480,18 @@ The accompanying code \cite{metamonadsURL} includes containers whose
 elements are stored in a 1D array in a column-wise (Fortran-like)
 modes, and container for a matrix represented as arrays of rows.
 
+The generic GE algorithm described later is a functor over the
+container.  Given a particular container aspect, the functor yields a
+module containing various algorithmic aspects for the user to choose,
+as well as the main GE driver. The given container instance is
+available to all these aspects under the name of |C| (so that the type
+of the container can be referred to as |C.contr| and the dimensions
+can be obtained using |C.dim1| and |C.dim2|). The numeric domain, which
+is part of the container, can be referred to as |D.Dom| and the type
+of the domain elements is |C.Dom.v|. We shall see many such references
+as we describe particular algorithmic aspects below.
+
+
 \subsection{Determinant aspect}
 \label{sec:det}
 % Various aspects of our LU generator such as determinant, rank, 
@@ -1499,32 +1511,27 @@ modes, and container for a matrix represented as arrays of rows.
 % include the ``names'' of mutable variables accumulating the sign and the
 % magnitude of the determinant.
 
-To track the determinant, we should be able to generate code
-for: defining variables used for tracking (|decl|),
-updating the sign (|upd_sign|) or the absolute
-value of the determinant, and converting the tracking state
-to the final determinant value of type |outdet| (see
-Fig.~\ref{fig:GE-algorithm} for an example).
-LU of a
-floating-point matrix with no determinant tracking uses the
-instantiation of |DETERMINANT| (see definition below) where |outdet| is |unit|
-and all the
-functions of that module generate no code. For integer matrices, and
-in general whenever the matrix elements do not form a field, we
-have to track some aspects of the determinant, even if we do not output
-it, as the fraction-free update needs those aspects. The determinant tracking
-aspect is complex because tracking variables, if any, are to be declared at the
-beginning of the code (see lines 22-23 (XXX) of
-Fig.~\ref{fig:GE-algorithm}); the sign
-of the determinant has to be updated on each row or column
-permutation (lines 32 and 37 of the figure XXX);
-the value of the determinant should be updated per each
-pivoting (line 56). We use |lstate| to pass the tracking state, e.g., a piece of
-code for the value of the type |Dom.v ref|, among
-various determinant-tracking functions. The |lstate| is a part of the
-overall monadic state. 
-Other aspects follow a similar outline.
+The determinant aspect is one of several tracking and strategic
+aspects. The main function of the algorithm invokes the functions of
+these aspects at some interesting points during the computation (e.g.,
+pivot is required, two rows have to be permuted, the final answer to the
+user has to be built). The instance of the aspect may do something (or
+nothing) at each point, for example, find pivot according to the
+pivoting strategy (such as row pivoting, any non-zero element), update
+the current value of the determinant, etc.
 
+Our sample Gaussian Elimination algorithm, Fig.\ref{fig:GE-algorithm},
+demonstrates that tracking determinant is complex: first we define the
+variables |det_sign| and |det_magn| used for tracking (lines 22 and
+23), then we have to flip the sign when swapping two rows or two
+columns or when the matrix found to be singular (lines 32, 37, 59).
+The value of the determinant should be updated per each pivoting (line
+56). Finally, we convert the tracking state to the resulting
+determinant value (lines 64-66). We observe these lines are not
+contiguous: the determinant aspect is consulted at several separate
+places in the GE algorithm, and the aspect is supposed to keep
+state. As other aspects, the determinant aspect is a module of the
+following signature:
 \begin{code}
 module type DETERMINANT = sig
   type tdet = C.Dom.v ref
@@ -1542,36 +1549,36 @@ module type DETERMINANT = sig
   val fin       : unit -> ('b,C.Dom.v) lm
 end
 \end{code}
+The type |'a lstate| denotes the state being kept as part of the
+overall monadic state (tagged as |`TDet|). The signature specifies the
+operations of the aspect, such as |decl| for defining the tracking
+state, |zero_sign| to note singularity, |set_magn| to set the
+magnitude and |fin| to convert the tracking state to the resulting
+value, of  the type |C.Dom.v|, the type of the container
+elements. Other aspects follow a similar outline.
 
-We have two instances of the above. The first one is used to specify
-no determinant tracking, and so no code is
-generated. The methods just return without executing any
-code-generation actions.
+We have two instances of |DETERMINANT|. The first corresponds to
+no determinant tracking, and so all the functions are dummy.
 \begin{code}
 module NoDet =
   struct
   type tdet = C.Dom.v ref
   type 'a lstate = unit
-  let decl () = unitL
-  let upd_sign () = ret None
+  let decl ()      = unitL
+  let upd_sign ()  = ret None
   let zero_sign () = unitL
-  let acc_magn _ = unitL
-  let get_magn () = ret (liftRef C.Dom.zeroL)
-  let set_magn _ = unitL
+  let acc_magn _   = unitL
+  let get_magn ()  = ret (liftRef C.Dom.zeroL)
+  let set_magn _   = unitL
   let fin () = failwith "Determinant is needed but not computed"
 end
 \end{code}
 
-The second instance does track the determinant. The |decl| method
-generates two let-bindings for mutable variables tracking the
-magnitude and the sign of the determinant, and places the names of
-these variables in the monadic state. The |upd_sign| method, invoked
-from row- or column-swap generators, retrieves the name of the
-sign-accumulating variable and generates the code to update the
-sign. The |fin| method retrieves the names of both accumulators and
-generates code to compute the final, signed determinant value.
-The generated code closely corresponds to the lines dealing with 
-|det_magn| and |det_sign| in Fig.~\ref{fig:GE-algorithm}.
+
+The second instance does track the determinant. For integer matrices,
+and in general whenever the matrix elements do not form a field, 
+the fraction-free update requires tracking some facets of the
+determinant, even if we do not output it.
 \begin{code}
 module AbstractDet =
   struct
@@ -1594,22 +1601,32 @@ module AbstractDet =
   ...
 end
 \end{code}
+The |decl| method generates two let-bindings for mutable variables
+tracking the magnitude and the sign of the determinant, and places the
+names of these variables in the monadic state. The |upd_sign| method,
+invoked from row- or column-swap generators, retrieves the name of the
+sign-accumulating variable and generates the code to update the
+sign. The |fin| method retrieves the names of both accumulators and
+generates code to compute the final, signed determinant value.  The
+generated code closely corresponds to the lines dealing with
+|det_magn| and |det_sign| in Fig.~\ref{fig:GE-algorithm}.
 
 \subsection{Output}
 
-More interesting is the aspect of what to return
-from the LU algorithm.  One could create an algebraic data type (as
-was done in \cite{Carette06}) to encode the various choices: the
-matrix, the matrix and the rank, the matrix and the determinant, the
-matrix, rank and determinant, and so on. This is wholly unsatisfying
-as we know that for any single use, only one of the choices is ever
-possible, yet any routine which calls the generated code must deal
-with these unreachable options.  Instead we use a module type with an
+More interesting is the aspect of what to return from the LU
+algorithm.  One could create an algebraic data type (as was done in
+\cite{Carette06}) to encode the various choices: the matrix, the
+matrix and the rank, the matrix and the determinant, the matrix, rank
+and determinant, and so on. This is wholly unsatisfying as we know
+that for any single use, only one of the choices is ever possible, yet
+any routine which calls the generated code must deal with these
+unreachable options.  Instead we use a module type with an
 \emph{abstract} type |res| for the result type; different instances of
 the signature set the result type differently. Given below is this
-module type and one instantiation, which specifies the output of a LU
-algorithm as a 3-tuple |contr * Det.outdet * int| of the U-factor, the
-determinant and the rank.
+module type and one instantiation, |OutDetRank|, which specifies the
+output of a GE algorithm as a 3-tuple |contr * Det.outdet * int| of
+the U-factor, the determinant and the rank. That choice of output
+corresponds to our sample algorithm in Fig.~\ref{fig:GE-algorithm}.
 
 \begin{code}
 module type OUTPUTDEP = sig 
@@ -1724,7 +1741,9 @@ generator by passing to the functor the ``record'' of various aspects; the
 order is irrelevant, but all aspects such as |Det| must be
 specified. In the code above, we request GE generation with full
 pivot, fraction-free update, operate on non-augmented matrix and
-return the |U| factor, determinant and the rank. We run the monad
+return the |U| factor, determinant and the rank. This choice
+corresponds to our sample algorithm of Fig.\ref{fig:GE-algorithm}.
+We run the monad
 passing the initial state |[]| and obtain the code, which we can see
 by printing |resIV5|. The code can then be ``compiled'' as |!. resIV5|
 or with offshoring\cite{offshoring}. The code for |resIV5|
@@ -1762,15 +1781,17 @@ other instantiations of |Gen| can be examined at
 \cite{metamonadsURL}. The website also contains benchmark code and
 timing comparisons.
 
-The LU generator functor (called |GenGE| below) itself is 
+The LU generator functor (called |GenGE| below) itself is
 parameterized by the domain, container, pivoting policy (full, row,
-nonzero, no pivoting), update policy (with either `fraction-less'
-or full division), and the output specification. Some of the
-argument modules such as |PIVOT| are functors themselves (parameterized
-by the domain, the container, and the determinant functor). It is 
-worthwhile noting that we make sure of module subtyping -- |F| is of
-type |FEATURES| while |F.Output| is expecting an |OUTPUTDEP|, but
-|OUTPUTDEP| is a subtype of |FEATURES|.
+nonzero, no pivoting), update policy (with either `fraction-less' or
+full division), and the output specification. Some of the argument
+modules such as |PIVOT| are functors themselves (parameterized by the
+domain, the container, and the determinant functor).  We rely on
+module subtyping: For example, |F.Output| of the type |OUTPUT| is a
+functor requiring an argument structure of the signature
+|OUTPUTDEP|. The fact that the signature |FEATURES| contains all the
+fields of |OUTPUTDEP| and then some lets us pass |F| (of the type
+|FEATURES|) as an argument to instantiate |F.Output|.
 
 \begin{code2}
 module GenGE(F : FEATURES) = struct
