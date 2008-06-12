@@ -40,26 +40,6 @@ be borrowed for the introduction/abstract of the paper itself!}
 Reviewer #2: Summary of the submission:
 Analysis of the submission:
 
-p15, shouldn't the code here appear as the "code type" implementation of an
-"abstract code" module?
-
-p15, what are "Logic" and "Idx" used for?
-
-p16, what is the point of the "S" module? why can't "DOMAINL" be parameterized
-by "T" (containing "rep") directly?
-
-p16, Section 4.2, none of the abstract code combinators were used in the second
-half of this section: was the first half necessary? what is the relationship
-between these two halves that warrants them being in the same subsection?
-
-p16, Section 4.2, I understand the purposes of abstracting code representation.
-Additionally it adds to the genericity of the code generator, which is good,
-but doesn't incur any abstraction overhead, which is also good. However for the
-purposes of this paper it is perhaps an abstraction too far: the paper never
-needs to generate anything other than MetaOCaml code and it increases the
-complexity of code snippets. Mentioning that you do abstract code
-representation in the real implementation but elide it for the paper might make
-the paper more succinct and clearer.
 
 p17, line 4, what is the design decision for making "Dom" a definition inside
 "CONTAINER2D" instead of a parameter of "CONTAINER2D"? For readers not familiar
@@ -103,6 +83,9 @@ don't think "CONTAINER2D" is ever seen again after being introduced in Section
 4.2 -- this seems troubling. Section 4.4 is about programming in OCaml and how
 to maintain the algorithm's state. Section 4.7 is about putting it all
 together.
+\oleg{This plan is being followed through. Hopefully the introduction
+to (now) Sec 5 describes the cohesive plan of the section. There is
+now a concerete example.}
 
 From my understanding of your work here is an idea to make your paper more
 precise and concise.
@@ -310,3 +293,25 @@ p26, line -4, "Object-Oriented language" -> "object-oriented languages"
 Restructuring:
 - Move Section 4.4 into Section 3 because that section seems to deal with
   low-level programming issues.
+
+
+p15, shouldn't the code here appear as the "code type" implementation of an
+"abstract code" module?
+p15, what are "Logic" and "Idx" used for?
+p16, what is the point of the "S" module? why can't "DOMAINL" be parameterized
+by "T" (containing "rep") directly?
+p16, Section 4.2, none of the abstract code combinators were used in the second
+half of this section: was the first half necessary? what is the relationship
+between these two halves that warrants them being in the same subsection?
+p16, Section 4.2, I understand the purposes of abstracting code representation.
+Additionally it adds to the genericity of the code generator, which is good,
+but doesn't incur any abstraction overhead, which is also good. However for the
+purposes of this paper it is perhaps an abstraction too far: the paper never
+needs to generate anything other than MetaOCaml code and it increases the
+complexity of code snippets. Mentioning that you do abstract code
+representation in the real implementation but elide it for the paper might make
+the paper more succinct and clearer.
+\oleg{The section on abstract code and lifted domain has been
+completely re-written, hopefully the above questions are all answered,
+in particular about the meaning of Logic and Idx and the merits of
+abstracting over interpretations.}
