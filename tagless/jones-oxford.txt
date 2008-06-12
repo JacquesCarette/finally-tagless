@@ -94,11 +94,11 @@ the tags from the output program by typing it more precisely.  It is a
 natural approach to follow, but the object language is first-order, and
 Taha, Makholm, and Hughes (PADO 2001) note that one cannot claim that
 all tags will be eliminated this way even for a simple higher-order
-language.  In fact, Pašaliç, Taha, and Sheard (ICFP 2002) showed that
-some tags will remain.  So, optimality cannot be achieved this way in
-general.  Our approach deals with a higher-order language (with no limit
-on order) and assures that all tags are eliminated using _standard_ type
-inference.
+language.  This conclusion of unattainability of full tag elimination
+has been re-iterated by Pašaliç, Taha, and Sheard (ICFP 2002).  So,
+optimality cannot be achieved this way in general.  Our approach deals with a
+higher-order language (with no limit on order) and assures that all tags are
+eliminated using _standard_ type inference.
 
 Miscellaneous remarks about slides:
 
