@@ -62,7 +62,7 @@ to represent object terms by integers; please see the "size measurer"
 module L at the end of our Section 2.2.
 
 The two principles you name are not necessary.  First, an object
-variable is represented by a metalanguage variable only if we use the
+variable is represented by a metalanguage variable only if we use
 higher-order abstract syntax, but we may instead represent object
 language variables with de Bruijn indices (built using `constructors'
 varZ and varS).  Second, we encode an object-language application using
