@@ -38,7 +38,7 @@ let orec_find ((_,_,name) as ip:(('a,'b) open_rec)) (s:'b list) : 'a =
   try lookup ip s 
   with Not_found -> failwith ("Failed to locate orec field: " ^ name)
 
-let mo_extend (ip:('a,'b) open_rec) (v:'a) : ('c, 'd) monad =
+let mo_extend (ip:('a,'b) open_rec) (v:'a) : ('c, unit) monad =
   perform s <-- fetch; store (orec_store ip v s)
 
 let mo_lookup (ip:('a,'b) open_rec) : ('c, 'd) monad =
@@ -66,6 +66,20 @@ end
 
 (* Monad used in this module: 
    (abstract) code generation monad with open union state *)
+type ('pc,'p,'a) cmonad_constraint = unit
+      constraint
+	  'p = <state : 's list; answer : ('a,'w) abstract>
+      constraint
+          'pc = <classif : 'a; answer : 'w; state : 's; ..>
+
+type ('pc,'v) cmonad = ('p,('a,'v) abstract) monad
+      constraint _ = ('pc,'p,'a) cmonad_constraint 
+
+type ('pc,'v) omonad = ('p,('a,'v) abstract option) monad
+      constraint _ = ('pc,'p,'a) cmonad_constraint 
+
+(*
+
 type ('pc,'v) cmonad = 
     ('p,('a,'v) abstract) monad
       constraint
@@ -82,6 +96,7 @@ type ('pc,'v) omonad =
                 answer : ('a,'w) abstract>
       constraint
           'pc = <classif : 'a; answer : 'w; state : 's; ..>
+*)
 
 (* moved from Infra (now Domains) so that the former uses no monads.
   The following code is generic over the containers anyway.
@@ -191,11 +206,16 @@ module type TRACKPIVOT = sig
   type 'a fra
   type 'a pra
   type 'a lstate
-  type ('pc,'v) lm = ('pc,'v) cmonad
+  type 'pc pc_constraint = unit
     constraint 'pc = <state : [> `TPivot of 'a lstate ]; classif : 'a; ..>
+  type ('pc,'v) lm = ('pc,'v) cmonad
+    constraint _  = 'pc pc_constraint
+  type ('pc,'a) nm = ('p,unit) monad
+    constraint _ = ('pc,'p,'a) cmonad_constraint
+    constraint _ = 'pc pc_constraint
   val rowrep : 'a ira -> 'a ira -> 'a fra
   val colrep : 'a ira -> 'a ira -> 'a fra
-  val decl : ('a, int) abstract -> (<classif : 'a; ..>, unit) lm
+  val decl : ('a, int) abstract -> ('pc,'a) nm
   val add : 'a fra -> 
     (<classif : 'a; state : [> `TPivot of 'a lstate ]; ..>, unit) omonad
   val fin : unit -> ('b,perm_rep) lm
@@ -209,8 +229,13 @@ module PivotCommon(PK:PIVOTKIND) =
   type 'a fra = 'a PK.fra
   type 'a pra = 'a PK.pra
   type 'a lstate = ('a, PK.perm_rep ref) abstract
-  type ('pc,'v) lm = ('pc,'v) cmonad
+  type 'pc pc_constraint = unit
     constraint 'pc = <state : [> `TPivot of 'a lstate ]; classif : 'a; ..>
+  type ('pc,'v) lm = ('pc,'v) cmonad
+    constraint _  = 'pc pc_constraint
+  type ('pc,'a) nm = ('p,unit) monad
+    constraint _ = ('pc,'p,'a) cmonad_constraint
+    constraint _ = 'pc pc_constraint
   let rowrep = PK.rowrep
   let colrep = PK.colrep
   let ip = (fun x -> `TPivot x), (function `TPivot x -> Some x | _ -> None),
@@ -221,8 +246,7 @@ module KeepPivot(PK:PIVOTKIND) = struct
   include PivotCommon(PK)
   let decl n = perform
       pdecl <-- retN (liftRef (PK.empty n));
-      mo_extend ip pdecl;
-      unitL
+      mo_extend ip pdecl
   let add v = perform
    p <-- mo_lookup ip;
    ret (Some (assign p (PK.add v (liftGet p))))
@@ -233,7 +257,7 @@ end
 
 module DiscardPivot = struct
   include PivotCommon(PermList)
-  let decl _ = unitL
+  let decl _ = ret ()
   let add _ = ret None
   let fin () = failwith "Pivot is needed but is not computed"
 end
@@ -259,11 +283,16 @@ type 'a curposval = {p: 'a curpos; curval: ('a, C.Dom.v) abstract}
 module type DETERMINANT = sig
   type tdet = C.Dom.v ref
   type 'a lstate
+  type 'pc pc_constraint = unit
+    constraint 'pc = <state : [> `TDet of 'a lstate ]; classif : 'a; ..>
   type ('pc,'v) lm = ('pc,'v) cmonad
-    constraint 'pc = <state : [> `TDet of 'a lstate ]; classif : 'a; ..>
+    constraint _  = 'pc pc_constraint
   type ('pc,'v) om = ('pc,'v) omonad
-    constraint 'pc = <state : [> `TDet of 'a lstate ]; classif : 'a; ..>
-  val decl : unit -> ('b,unit) lm (* could be unit rather than unit code...*)
+    constraint _  = 'pc pc_constraint
+  type 'pc nm = ('p,unit) monad
+    constraint _ = ('pc,'p,_) cmonad_constraint
+    constraint _ = 'pc pc_constraint
+  val decl : unit -> 'b nm (* no code is generated *)
   val upd_sign  : unit -> ('b,unit) om
   val zero_sign : unit -> ('b,unit) lm
   val acc_magn  : ('a,C.Dom.v) abstract -> (<classif : 'a; ..>,unit) lm
@@ -310,34 +339,44 @@ end
    in all other cases it is needed.
 *)
  
-module NoDet =
+module NoDet : DETERMINANT =
   struct
   type tdet = C.Dom.v ref
   type 'a lstate = unit
-  let decl () = unitL
+  let decl () = ret ()
   let upd_sign () = ret None
   let zero_sign () = unitL
   let acc_magn _ = unitL
   let get_magn () = ret (liftRef C.Dom.zeroL) (* hack alert! *)
   let set_magn _ = unitL
   let fin () = failwith "Determinant is needed but not computed"
+  type 'pc pc_constraint = unit
+    constraint 'pc = <state : [> `TDet of 'a lstate ]; classif : 'a; ..>
   type ('pc,'v) lm = ('pc,'v) cmonad
-    constraint 'pc = <state : [> `TDet of 'a lstate ]; classif : 'a; ..>
+    constraint _  = 'pc pc_constraint
   type ('pc,'v) om = ('pc,'v) omonad
-    constraint 'pc = <state : [> `TDet of 'a lstate ]; classif : 'a; ..>
+    constraint _  = 'pc pc_constraint
+  type 'pc nm = ('p,unit) monad
+    constraint _ = ('pc,'p,_) cmonad_constraint
+    constraint _ = 'pc pc_constraint
 end
 
-module AbstractDet =
+module AbstractDet : DETERMINANT =
   struct
   open C.Dom
   type tdet = v ref
   (* the first part of the state is an integer: which is +1, 0, -1:
      the sign of the determinant *)
   type 'a lstate = ('a,int ref) abstract * ('a,tdet) abstract
+  type 'pc pc_constraint = unit
+    constraint 'pc = <state : [> `TDet of 'a lstate ]; classif : 'a; ..>
   type ('pc,'v) lm = ('pc,'v) cmonad
-    constraint 'pc = <state : [> `TDet of 'a lstate ]; classif : 'a; ..>
+    constraint _  = 'pc pc_constraint
   type ('pc,'v) om = ('pc,'v) omonad
-    constraint 'pc = <state : [> `TDet of 'a lstate ]; classif : 'a; ..>
+    constraint _  = 'pc pc_constraint
+  type 'pc nm = ('p,unit) monad
+    constraint _ = ('pc,'p,_) cmonad_constraint
+    constraint _ = 'pc pc_constraint
   let ip = (fun x -> `TDet x), (function `TDet x -> Some x | _ -> None), "Det"
 (* check later: XXX
   include Foo(struct type 'a tags = private [> `TDet of 'a lstate ] end)
@@ -345,8 +384,7 @@ module AbstractDet =
   let decl () = perform
       magn <-- retN (liftRef oneL);    (* track magnitude *)
       sign <-- retN (liftRef Idx.one); (* track the sign: +1, 0, -1 *)
-      mo_extend ip (sign,magn);
-      unitL
+      mo_extend ip (sign,magn)
   let upd_sign () = perform
       (sign,_) <-- mo_lookup ip;
       ret (Some (assign sign (Idx.uminus (liftGet sign))))
