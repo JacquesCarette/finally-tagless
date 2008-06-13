@@ -41,25 +41,11 @@ Reviewer #2: Summary of the submission:
 Analysis of the submission:
 
 
-p17, line 4, what is the design decision for making "Dom" a definition inside
-"CONTAINER2D" instead of a parameter of "CONTAINER2D"? For readers not familiar
-with the OCaml module system it might be helpful to provide a brief
-introduction somewhere.
-
-p17, line -12, now in the module implementation "Dom" is made functor
-parameter, why? and why can you just replace "rep" with "code"?
 
 p18, line -8, this paragraph is unclear
 \jacques{well, I rewrote bits, but I am not sure if I have clarified anything.
 But maybe it is not worth it either?}
 
-p21, the "unitL" in "decl" is superfluous, right? "mo_extend" will already
-return a monadic unit result
-\jacques{In theory, it is superfluous.  In practice, the type checker
-really doesn't like it.  It might be worth looking some more though.}
-
-p23, it would be nice to see the module signatures for the other features not
-discussed thus far
 
 Two larger changes I suggest are restructuring section 4 and performing
 stronger evaluation of the work.
@@ -324,3 +310,33 @@ a brief overview that shows how determinant and rank are computed in the
 algorithm with an unstaged code example showing the state needed for tracking
 would be helpful to demonstrate the problems stated here
 \oleg{Added a new section on GE}
+
+p21, the "unitL" in "decl" is superfluous, right? "mo_extend" will already
+return a monadic unit result
+\oleg{No. mo_extend has the result type ('a,unit) monad whereas
+unitL has the result type ('a,unit) cmonad, which corresponds to
+('a,('c,unit) code) monad. In other words, the former describes an
+action that generates no code whereas the latter is an action that
+generates code (such as an assignment operation) that has the type
+unit. However, we did mean that decl is an action to be executed solely
+for its side effects, and it was used as such in the code (its result
+was disregarded). So, the type ('a,unit) monad is far better for it. We
+have changed the code and the paper to reflect that. There is no
+longer `superfluous' unitL. Thank you for making this point.}
+
+p17, line 4, what is the design decision for making "Dom" a definition inside
+"CONTAINER2D" instead of a parameter of "CONTAINER2D"? For readers not familiar
+with the OCaml module system it might be helpful to provide a brief
+introduction somewhere.
+p17, line -12, now in the module implementation "Dom" is made functor
+parameter, why? and why can you just replace "rep" with "code"?
+\oleg{added a phrase before the code for CONTAINER2D. Briefly: current
+design simplifies the signatures; OCaml is quite slow when dealing
+with complex signatures. If something goes wrong, the error messages
+are quite cryptic.}
+
+p23, it would be nice to see the module signatures for the other features not
+discussed thus far
+\oleg{added a new section, Sec 5.5, with the description and the code
+of the signatures. Perhaps the code can be moved to an appendix
+though?}
