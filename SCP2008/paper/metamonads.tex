@@ -1790,12 +1790,15 @@ out the semantic error where a user specifies that the determinant
 should be computed and returned, and yet specifies the |NoDet| aspect
 which tracks no determinant at all.
 
-The type |wmatrix| is for convenience, a bundling of several pieces of
-data needed by both |OUTPUT| and |PIVOT| aspects:
+The type |wmatrix| denotes the |(0,0)-(numrow-1,numcol-1)|
+rectangular block of |matrix|:
 \begin{code}
 type 'a wmatrix = {matrix: 'a C.vc; numrow: ('a,int) rep; 
                    numcol: ('a,int) rep}
 \end{code}
+The type is used in |INPUT|, |OUTPUT| and |PIVOT| aspects to refer to
+the non-augmented part of the matrix.
+
 
 The module of signature |INTERNAL_FEATURES| bundles information
 tracking aspects. The latter are not directly selectable by the
@@ -1814,9 +1817,54 @@ Furthermore, type-level computations in OCaml are not
 powerful enough for the tasks such as verifying that an
 integer is prime, see \S\ref{sec:domains}.
 
+
 \subsection{Main generation}\label{sec:main-generation}
-We combine all user-selectable aspects in a record, which serves as a ``keyword
-argument'' list to the |GenGE| functor below.
+
+This section presents the core GE algorithm |GenGE|, after all aspects
+have been factored out. We also describe how to instantiate the core
+algorithm with sample aspects, to obtain particular GE procedures such
+as our running example, Fig.~\ref{fig:GE-algorithm}. The instantiation
+process is multi-step, mainly for the sake of speed of OCaml
+compilation. Currently OCaml is quite slow compiling source code with
+many complex modules. The benefit of the multi-step process, simple
+module signatures, may help make instantiation process more
+comprehensible.
+
+The core GE algorithm and all the aspects are part of one large
+functor, |Ge.LAMake|, parameterized by the interpretation aspect,
+\S\ref{sec:lifteddomains}. If we select as an interpretation
+generating code in the form of MetaOCaml code values, we write
+\begin{code}
+module GEF = Ge.LAMake(Code)
+open GEF
+open Domains_code
+\end{code}
+Here, |Code| is the interpretation with |('a,'b) rep| being 
+|('a,b) code|; the module |Domains_code| contains various instances of |DOMAINL|
+(such as \linebreak|FloatDomainL|, |IntegerDomainL|) for that particular
+choice of |('a,'b) rep|. Opening |GEF| makes available various
+container functors and the functor |GenLA|. Combining
+the container functors with domain structures gives containers
+with particular elements and particular representation. For example, in
+\begin{code}
+module GVC_I = GenericVectorContainer(IntegerDomainL)
+module G_GVC_I = GenLA(GVC_I)
+open G_GVC_I
+open G_GVC_I.GE
+\end{code}
+we define |GVC_I| to represent a matrix with integer elements arranged
+in a flat vector in the row-major order. Instantiating the functor |GenLA|
+with this container makes available all algorithmic and
+tracking aspects of GE (such as |AbstractDet|, |NoDet|, |FullPivot|,
+etc) as well as the module |GE| with the core GE functor |GenGE|
+(besides |GE|, |GenLA| contains modules for GE-based solvers). All
+these components already incorporate the choices for the
+container, domain and interpretation aspects we have made earlier. We
+may now select particular features of the desired GE algorithm and
+instantiate and run |GenGE|.
+
+We combine all user-selectable aspects in a record, which serves as a
+``keyword argument'' list to the |GenGE| functor, shown later.
 \begin{code}
 module type FEATURES = sig
   module Det       : DETERMINANT
@@ -1828,11 +1876,13 @@ module type FEATURES = sig
 end
 \end{code}
 
+We instantiate |GenGE| by passing to the functor the ``record'' of
+various aspects; the order is irrelevant, but all aspects such as
+|Det| must be specified. In the following code, we request GE generation
+with full pivot, fraction-free update, operate on non-augmented matrix
+and return the |U| factor, determinant and the rank. This choice
+corresponds to our sample algorithm of Fig.~\ref{fig:GE-algorithm}.
 \begin{code}
-module GVC_I = GenericVectorContainer(IntegerDomainL)
-module G_GVC_I = GenLA(GVC_I)
-open G_GVC_I
-open G_GVC_I.GE
 module GenIV5 = GenGE(struct 
     module Det = AbstractDet
     module PivotF = FullPivot
@@ -1844,37 +1894,19 @@ let instantiate gen =
     .<fun a -> .~(runM (gen .<a>.) []) >.;;
 let resIV5 = instantiate GenIV5.gen ;;
 \end{code}
-%
-We first instantiate the container |GVC_I| for a vector over an
-integer domain.  |GenGE| is then one functor of many algorithm
-generators from a linear algebra library; since all our linear algebra codes
-are parameterized by the container and the domain included in it,
-We pass the container to the main functor |GenLA|.
-We open the resulting |G_GVC_I| module
-to make all its components easily available. One of those components
-is the GE generator, |GE| (which we open as well). Besides |GE|, the
-module |G_GVC_I| includes the generator for GE-based solvers.  The main
-generator functor is |GenGE|, shown later.  We instantiate the
-generator by passing to the functor the ``record'' of various aspects; the
-order is irrelevant, but all aspects such as |Det| must be
-specified. In the code above, we request GE generation with full
-pivot, fraction-free update, operate on non-augmented matrix and
-return the |U| factor, determinant and the rank. This choice
-corresponds to our sample algorithm of Fig.\ref{fig:GE-algorithm}.
-We run the monad
-passing the initial state |[]| and obtain the code, which we can see
-by printing |resIV5|. The code can then be ``compiled'' as |!. resIV5|
-or with offshoring\cite{offshoring}. The code for |resIV5|
-(App.~\ref{app:code-GenIV5}) shows full
-pivoting, determinant and rank tracking. The code for all these
-aspects is fully inlined; no extra functions are invoked and no tests
-other than those needed by the LU algorithm itself are performed. The
-resulting function returns a triple |int array * int * int| of the
-U-factor, determinant and the rank. It is instructive to compare the
-generated code with the corresponding code in
-Fig.~\ref{fig:GE-algorithm}, the hand-written implementation of the
-textbook pseudo-code; the only difference is the naming of
-variables and the inlining of pivoting and swapping functions.
+We run the monad passing the initial state |[]| and obtain the code,
+which we can see by printing |resIV5|. The code can then be
+``compiled'' as |!. resIV5| or with offshoring \cite{offshoring}. The
+code for |resIV5| (App.~\ref{app:code-GenIV5}) shows full pivoting,
+determinant and rank tracking. The code for all these aspects is fully
+inlined; no extra functions are invoked and no tests other than those
+needed by the GE algorithm itself are performed. The resulting
+function returns a triple |int array * int * int| of the U-factor,
+determinant and the rank. It is instructive to compare the generated
+code with the corresponding code in Fig.~\ref{fig:GE-algorithm}, the
+hand-written implementation of the textbook pseudo-code; the only
+difference is the naming of variables and the inlining of pivoting and
+swapping functions.
 
 The following is another instantiation of the GE generator, with a
 different set of aspects.
@@ -1899,17 +1931,19 @@ other instantiations of |Gen| can be examined at
 \cite{metamonadsURL}. The website also contains benchmark code and
 timing comparisons.
 
-The LU generator functor (called |GenGE| below) itself is
-parameterized by the domain, container, pivoting policy (full, row,
-nonzero, no pivoting), update policy (with either `fraction-less' or
-full division), and the output specification. Some of the argument
-modules such as |PIVOT| are functors themselves (parameterized by the
-domain, the container, and the determinant functor).  We rely on
-module subtyping: For example, |F.Output| of the type |OUTPUT| is a
-functor requiring an argument structure of the signature
-|OUTPUTDEP|. The fact that the signature |FEATURES| contains all the
-fields of |OUTPUTDEP| and then some lets us pass |F| (of the type
-|FEATURES|) as an argument to instantiate |F.Output|.
+The core GE algorithm |GenGE|, as part of |Ge.LAMake| and |GenLA|, is
+already parameterized by the domain, container and interpretation.
+The algorithm is further parameterized by |FEATURES|, i.e., pivoting
+policy (full, row, nonzero, no pivoting), update policy (with either
+`fraction-less' or full division), determinant, permutation matrix,
+input and output specifications. Some of the argument modules such as
+|PIVOT| are functors themselves (parameterized by the domain, the
+container, and the determinant).  We rely on module subtyping: For
+example, |F.Output| of the type |OUTPUT| is a functor requiring an
+argument of the signature |OUTPUTDEP|. The fact that the signature
+|FEATURES| contains all the fields of |OUTPUTDEP| and then some lets
+us pass |F| (of the type |FEATURES|) as an argument to instantiate
+|F.Output|.
 
 \begin{code2}
 module GenGE(F : FEATURES) = struct
@@ -1992,15 +2026,20 @@ matrix, finding a pivot, and zeroing the appropriate entries.
 There are more preflight checks for various ``semantic'' constraints, shown
 in the following structure of the |UPDATE| signature:
 \begin{code}
-module DivisionUpdate(Det:DETERMINANT) =
-  struct
-  open C.Dom = struct 
+module DivisionUpdate(Det:DETERMINANT) = struct
+  open C.Dom
+  type 'a in_val = 'a vc
+  let update bic brc brk bik setter _ = perform
+      y <-- ret (bik -^ ((divL bic brc) *^ brk));
+      ret (setter (applyMaybe normalizerL y))
+  let update_det v = Det.acc_magn v
+  let upd_kind = DivisionBased
   let _ = assert (C.Dom.kind = Domains_sig.Domain_is_Field)
 end
 \end{code}
 %
 This structure implements an update policy relying on
-unrestricted |Dom.div|. Many domains provide |Dom.div|, for example,
+unrestricted |Dom.divL|. Many domains provide |divL|, for example,
 the integer domain. The latter however assumes that division is applied
 only if the dividend is the exact multiple of the divisor. Thus if we
 specified |module Update = DivisionUpdate| when instantiating |GenIV5|
@@ -2131,7 +2170,7 @@ There is an interesting relation with aspect-oriented code
 aspects are (comparatively) lightly typed, and are post-facto extensions of
 potential program traces, specified in a particular language; these tend
 to be created to follow the operational behaviour of existing code, but
-is not restricted to such a setting.
+are not restricted to such a setting.
 In our work, aspects are weaved together ``from scratch'' to
 make up a piece of code.  One can understand previous work to be
 more akin to dynamically typed, and dynamically specified aspect weaving, while
@@ -2216,9 +2255,8 @@ encode this information by using semantic concepts.
 We wish to thank Cristiano Calgano for his help in adapting camlp4 for
 use with MetaOCaml. Many helpful discussions with Walid Taha are very
 appreciated. The implementation of the monadic notation, |perform|,
-was joint work with Lydia van Dijk.
-Many helpful suggestions by the anonymous reviewers are gratefully
-acknowledged.
+was joint work with Lydia van Dijk.  We gratefully acknowledge
+numerous, helpful suggestions by the anonymous reviewers.
 
 % Embed .bbl file directly to make document self-contained
 \bibliography{metamonads}

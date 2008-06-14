@@ -38,11 +38,6 @@ be borrowed for the introduction/abstract of the paper itself!}
 \oleg{yes, I agree}
 
 Reviewer #2: Summary of the submission:
-Analysis of the submission:
-
-
-
-
 
 Two larger changes I suggest are restructuring section 4 and performing
 stronger evaluation of the work.
@@ -97,6 +92,11 @@ and the appendix code is not readable (by itself it's not very convincing: how
 can I tell this code demonstrates something good?). In general, and this would
 strengthen the merit of the paper, code snippets need to be explained better -
 too often I see a new identifier in the code that is not explained.
+\oleg{The comparison of the generated code with the hand-written code
+hopefully tells now that the generated code does do the right
+thing. We have expanded many explanations for the code snippets,
+explicitly relating them to the hand-written sample code -- at the
+expense of the length of the paper.}
 
 Showing and explaining the code for the unstaged algorithm might help and would
 give a point of reference to compare the generated code with. Explaining the
@@ -108,7 +108,8 @@ the generated code. Something like this would give the reader a greater
 understanding of how logic flows through your generation process and how your
 functor technique is ultimately in control of fine-grained details of code
 building. 
-\oleg{We have attempted to do exactly that}
+\oleg{We have attempted to do exactly that, especially in the
+Determinant section.}
 
 ==========================================================================
 From reviewer #1
