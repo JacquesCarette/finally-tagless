@@ -1060,9 +1060,9 @@ After the swapping, the algorithm does so-called row-reduction
 over the |(r,c)-(n,m)| block of the matrix containing not-yet
 processed elements. We implement the \emph{fraction-free}
 algorithm \oleg{Citation needed!}:
-the division operation in line XXX assuredly divides two integers
+the division operation in line 51 assuredly divides two integers
 with no remainder, which requires the accumulation
-of the determinant .
+of the determinant.
 
 \section{Aspects and Functors}\label{functors}
 
@@ -1076,11 +1076,12 @@ In this section, we use the the sample code in
 Fig.~\ref{fig:GE-algorithm} to identify (some of the) aspects
 discussed in \S\ref{sec:aspects}. We abstract these aspects and
 describe their implementation as modules of the code generator.  We
-then present the generic Gaussian Elimination algorithm -- what is
-left after all the aspects are abstracted away. Finally, we show an
-instantiation of the generic generator, whose execution yields code
-for the algorithm of Fig.~\ref{fig:GE-algorithm}, this time
-automatically generated rather than manually written.
+then present in \S\ref{sec:main-generation} the generic Gaussian
+Elimination algorithm -- what is left after all the aspects are
+abstracted away. Finally, we show an instantiation of the generic
+generator, whose execution yields code for the algorithm of
+Fig.~\ref{fig:GE-algorithm}, this time automatically generated rather
+than manually written.
 
 We describe here the following aspects, in the general
 order of increasing complexity: domain (of the group `Abstract
@@ -1201,7 +1202,7 @@ as this requires careful attention to sharing and multiple instantiations
 of a module, these concerns do not apply in our case: our preflight
 checks are all idempotent and maintain no state.
 
-\subsection{Abstract code and lifted domains}\label{sec:lifteddomains}
+\subsection{Abstracting interpretations}\label{sec:lifteddomains}
 
 In our sample GE code, Fig.~\ref{fig:GE-algorithm}, the operation |not|
 |(curr == 0)|, line 46, compares two integers (or, generally, two
@@ -1224,7 +1225,7 @@ aspect is quite large -- there are many basic operations to abstract
 over -- and so the module is structured into several
 sub-modules. First we introduce an abstract type |('a,'b) rep| which
 describes what sort of objects the interpretation may produce (e.g.,
-strings with C code, AST, etc). The type has two parameters: the
+AST, strings with C code, etc). The type has two parameters: the
 second specifies the type of the object, and the first is the
 `placeholder' for all other information that may need to be tracked
 about the object in a particular interpretation. The interpretation as
@@ -1289,23 +1290,22 @@ end
 
 As we argued in \S\ref{CPS}, we will be writing our generic GE
 algorithm in the monadic style. For convenience we define the
-following type synonyms for our |('p,'v) monad| of Fig.\ref{ourmonad}:
-The first is used when we are always generating (abstract) code, while
-the second helps when we might generate (abstract) code. The helper
+following type synonyms for our |('p,'v) monad| of Fig.~\ref{ourmonad}:
+The first is used for a monadic action that always produces a useful
+value; the |omonad| synonym describes a monadic action that may
+produce an interpretation object. The helper
 type synonym |('pc,'p,'a) cmonad_constraint| is effectively the
 abbreviation for a set of constraints imposed on its arguments.
 \begin{code}
 type ('pc,'p,'a) cmonad_constraint = unit
-      constraint
-	  'p = <state : 's list; answer : ('a,'w) abstract>
-      constraint
-          'pc = <classif : 'a; answer : 'w; state : 's; ..>
+  constraint 'p = <state : 's list; answer : ('a,'w) rep>
+  constraint 'pc = <classif : 'a; answer : 'w; state : 's; ..>
 
-type ('pc,'v) cmonad = ('p,('a,'v) abstract) monad
-      constraint _ = ('pc,'p,'a) cmonad_constraint 
+type ('pc,'v) cmonad = ('p,('a,'v) rep) monad
+  constraint _ = ('pc,'p,'a) cmonad_constraint 
 
-type ('pc,'v) omonad = ('p,('a,'v) abstract option) monad
-      constraint _ = ('pc,'p,'a) cmonad_constraint 
+type ('pc,'v) omonad = ('p,('a,'v) rep option) monad
+  constraint _ = ('pc,'p,'a) cmonad_constraint 
 \end{code}
 
 Finally the interpretation aspect must specify the very basic
@@ -1399,7 +1399,7 @@ Such lifting is completely straightforward.  However, it is a
 program-text to program-text transformation over modules, and as such could
 only be automated (currently) by further use of camlp4.
 
-We will consider the interpretation aspect ``open'' and so we can
+We consider the interpretation aspect ``open'' and so we can
 refer to all operations such as |apply|, |seqM|, etc, without further
 qualification.
 
@@ -1425,13 +1425,7 @@ swapping. The inclusion of these functions in the signature of all
 containers makes it simpler to optimize the relevant functions
 depending on the actual representation of the container while not
 burdening the users of containers with efficiency details (see
-\S\ref{GE-algorithm} for an example of such an optimization).  We
-could have made the type |CONTAINER2D| a functor, parameterized over
-|DOMAINL|. The current design simplifies the signature of the generic
-GE algorithm at a cost of an extra instantiation step (The
-instantiation of the generic algorithm is described in
-\S\ref{sec:main-generation}. The expense is worthwhile: currently
-OCaml is quite slow when processing functors with complex signatures).
+\S\ref{GE-algorithm} for an example of such an optimization).
 \begin{code}
 module type CONTAINER2D = sig
   module Dom:DOMAINL
@@ -1457,14 +1451,15 @@ module type CONTAINER2D = sig
 end
 \end{code}
 
-The type of our containers include the lifted domain |Dom| as one of
-the components. This is quite convenient since operations on containers
-are usually accompanied by the operations on the retrieved and stored
-values. Our containers are parametric over a |DOMAINL|, i.e., functors
-from a |DOMAINL| module to the actual implementation of a
-container. For example, the following functor defines a matrix
-container as a single array, with elements stored in the
-row-major order -- the container used in Fig.\ref{fig:GE-algorithm}.
+The type of our containers includes the lifted domain |Dom| as one of
+the components. This is quite convenient since operations on
+containers are usually accompanied by the operations on the retrieved
+and stored values. The particular instances of the containers are
+parametric over a |DOMAINL|, i.e., functors from a |DOMAINL| module to
+the actual implementation of a container.  For example, the following
+functor defines a matrix container as a single array, with elements
+stored in the row-major order -- the container used in
+Fig.~\ref{fig:GE-algorithm}.
 \begin{code}[commandchars=\\\{\}]
 module GenericVectorContainer(Dom:DOMAINL) =
   struct
@@ -1475,24 +1470,39 @@ module GenericVectorContainer(Dom:DOMAINL) =
   let getL x i j = .< ((.~x).arr).(.~i* (.~x).m + .~j) >.
   let dim2 x = .< (.~x).n >.      (* number of rows *)
   let dim1 x = .< (.~x).m >.      (* number of cols *)
-  let mapper g a = match g with
   \dots
 \end{code}
-%
-The accompanying code \cite{metamonadsURL} includes containers whose
-elements are stored in a 1D array in a column-wise (Fortran-like)
-modes, and container for a matrix represented as arrays of rows.
+The accompanying code \cite{metamonadsURL} includes the container with
+elements stored in a 1D array in a column-wise (Fortran-like)
+mode, and the container for a matrix represented as an array of rows.
 
-The generic GE algorithm described later is a functor over the
-container.  Given a particular container aspect, the functor yields a
-module containing various algorithmic aspects for the user to choose,
-as well as the main GE driver. The given container instance is
-available to all these aspects under the name of |C| (so that the type
-of the container can be referred to as |C.contr| and the dimensions
-can be obtained using |C.dim1| and |C.dim2|). The numeric domain, which
-is part of the container, can be referred to as |D.Dom| and the type
-of the domain elements is |C.Dom.v|. We shall see many such references
-as we describe particular algorithmic aspects below.
+We could have defined the type |CONTAINER2D| to be a functor with
+|DOMAINL| as an argument. The type |CONTAINER2D| is used in the
+signatures of other functors such as |GenLA| of
+\S\ref{sec:main-generation} below. If the type |CONTAINER2D| were a
+functor, |GenLA| would have been a higher-order functor, and we would
+have to pass to |GenLA| two arguments: the container functor and a
+|DOMAINL| to apply the container functor to. In the current design,
+the user first builds a particular container instance by applying the
+functor such as |GenericVectorContainer| to the desired domain. The
+user then passes this container instance to |GenLA| as a single
+argument. The current design simplifies module signatures at
+the expense of making the instantiation of the GE algorithm
+`multi-stage'. The stepwise instantiation seems more intuitive
+however; it is certainly faster since currently OCaml is quite slow
+when instantiating functors with complex signatures.
+
+As mentioned above, the generic GE algorithm |GenLA| is paremeterized
+over |CONTAINER2D|.  Given a particular container instance, the
+functor |GenLA| yields a module containing various algorithmic aspects
+for the user to choose, as well as the main GE driver. The given
+container instance is available to all these aspects under the name of
+|C| (so that the type of the container can be referred to as |C.contr|
+and the dimensions can be obtained using |C.dim1| and |C.dim2|). The
+numeric domain, which is part of the container, can be referred to as
+|D.Dom| and the type of the domain elements is |C.Dom.v|. We shall see
+many such references as we describe particular algorithmic aspects
+below.
 
 
 \subsection{Determinant aspect}
@@ -1515,18 +1525,17 @@ as we describe particular algorithmic aspects below.
 % magnitude of the determinant.
 
 The determinant aspect is one of several tracking and strategic
-aspects. The main function of the algorithm invokes the functions of
-these aspects at some interesting points during the computation (e.g.,
-pivot is required, two rows have to be permuted, the final answer to the
-user has to be built). The instance of the aspect may do something (or
-nothing) at each point, for example, find pivot according to the
-pivoting strategy (such as row pivoting, any non-zero element), update
-the current value of the determinant, etc.
+aspects. The main GE procedure invokes various functions of these
+aspects at some interesting points, e.g., the pivot is required, two
+rows have to be permuted, the final answer to the user has to be
+built. An aspect may do something at each point, for
+example, find pivot according to a pivoting strategy, update the
+current value of the determinant, etc.
 
-Our sample Gaussian Elimination algorithm, Fig.\ref{fig:GE-algorithm},
+Our sample Gaussian Elimination algorithm, Fig.~\ref{fig:GE-algorithm},
 demonstrates that tracking determinant is complex: first we define the
 variables |det_sign| and |det_magn| used for tracking (lines 22 and
-23), then we have to flip the sign when swapping two rows or two
+23), then we have to change the sign when swapping two rows or two
 columns or when the matrix found to be singular (lines 32, 37, 59).
 The value of the determinant should be updated per each pivoting (line
 56). Finally, we convert the tracking state to the resulting
@@ -1551,9 +1560,9 @@ module type DETERMINANT = sig
   val decl : unit -> 'b nm (* no code is generated *)
   val upd_sign  : unit -> ('b,unit) om
   val zero_sign : unit -> ('b,unit) lm
-  val acc_magn  : ('a,C.Dom.v) abstract -> (<classif : 'a; ..>,unit) lm
+  val acc_magn  : ('a,C.Dom.v) rep -> (<classif : 'a; ..>,unit) lm
   val get_magn  : unit -> ('b,tdet) lm
-  val set_magn  : ('a,C.Dom.v) abstract -> (<classif : 'a; ..>,unit) lm
+  val set_magn  : ('a,C.Dom.v) rep -> (<classif : 'a; ..>,unit) lm
   val fin       : unit -> ('b,C.Dom.v) lm
 end
 \end{code}
@@ -1632,26 +1641,26 @@ generated code closely corresponds to the lines dealing with
 \subsection{Other aspects}
 
 For completeness, we briefly describe and show the signatures of the
-other aspects. The |RANK| aspect tracks rank; the aspect is a simpler
-version of the determinant tracking aspect.  |PIVOTKIND| describes the
-representation of the permutation matrix to track permutations
-executed in pivoting; |TRACKPIVOT| specifies if these permutations are
-tracked at all. |LOWER| tracks the |L| factor when GE algorithm is
+other aspects. |RANK| tracks rank; this aspect is a simpler
+version of determinant tracking. |PIVOTKIND| defines the
+representation of the permutation matrix accumulating pivoting
+permutations; |TRACKPIVOT| specifies if these permutations are
+tracked at all. |LOWER| tracks the |L| factor when the GE algorithm is
 used for the in-place LU-decomposition. |PIVOT| is a higher-order
 functor abstracting over the pivoting algorithm (full pivoting, row
 pivoting, no pivoting, etc). If pivot is found, the aspect should swap
-rows and columns appropriately. The swapping may need to be tracked if
-we wish to return the permutation matrix. If the determinant is
-tracked, the swapping must update the sign of the determinant. The
-wapiing also affects the L factor being accumulated in-place. The
+rows and columns appropriately. The swapping may need to be tracked in
+the permutation matrix. If we track the determinant,
+the swapping must update its sign. The
+swapping also affects the |L| factor being accumulated in-place. The
 |UPDATE| aspect abstracts over the algorithm for updating matrix
 elements during row-reductions: full division update or fraction-free
-update. Finally, the |INPUT| aspect is an interface aspect abstracting
-over the choice of augmented matrix.
+update. Finally, |INPUT| is an interface aspect letting us handle both
+ordinary and augmented matrices.
 
 \begin{code2}
 module type RANK = sig
-  type 'a tag_lstate = 'a tag_lstate_
+  type 'a tag_lstate
   val decl   : unit -> ('b, int ref) lm
   val succ   : unit -> ('b, unit) lm
   val fin    : unit -> ('b, int) lm
@@ -1781,9 +1790,8 @@ out the semantic error where a user specifies that the determinant
 should be computed and returned, and yet specifies the |NoDet| aspect
 which tracks no determinant at all.
 
-The type |wmatrix| is for convenience, a bundling of several pieces
-of data which are needed by both the |OUTPUT| aspect and the |PIVOT| 
-aspect.  It is defined as
+The type |wmatrix| is for convenience, a bundling of several pieces of
+data needed by both |OUTPUT| and |PIVOT| aspects:
 \begin{code}
 type 'a wmatrix = {matrix: 'a C.vc; numrow: ('a,int) rep; 
                    numcol: ('a,int) rep}
@@ -1801,10 +1809,10 @@ not a field). Currently we use preflight checks to ensure consistency
 of tracking aspects. Previously~\cite{CaretteKiselyov05} we tried to
 implement all our preflight tests at the (module) type level, using
 sharing constraints and module computations. That lead to obscure
-code, long impenetrable type error messages and made compilation very
-slow.  Furthermore, at least in OCaml, type-level computations are not
-powerful enough to help us with tasks such as verifying that an integer
-is prime, as required in \S\ref{sec:domains}.
+code, long impenetrable type error messages and very slow compilation.
+Furthermore, type-level computations in OCaml are not
+powerful enough for the tasks such as verifying that an
+integer is prime, see \S\ref{sec:domains}.
 
 \subsection{Main generation}\label{sec:main-generation}
 We combine all user-selectable aspects in a record, which serves as a ``keyword

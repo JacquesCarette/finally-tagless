@@ -42,9 +42,6 @@ Analysis of the submission:
 
 
 
-p18, line -8, this paragraph is unclear
-\jacques{well, I rewrote bits, but I am not sure if I have clarified anything.
-But maybe it is not worth it either?}
 
 
 Two larger changes I suggest are restructuring section 4 and performing
@@ -330,13 +327,18 @@ with the OCaml module system it might be helpful to provide a brief
 introduction somewhere.
 p17, line -12, now in the module implementation "Dom" is made functor
 parameter, why? and why can you just replace "rep" with "code"?
-\oleg{added a phrase before the code for CONTAINER2D. Briefly: current
-design simplifies the signatures; OCaml is quite slow when dealing
-with complex signatures. If something goes wrong, the error messages
-are quite cryptic.}
+\oleg{added a paragraph, the last but one paragraph of Sec 5.3 with
+the explanation.}
 
 p23, it would be nice to see the module signatures for the other features not
 discussed thus far
 \oleg{added a new section, Sec 5.5, with the description and the code
 of the signatures. Perhaps the code can be moved to an appendix
 though?}
+
+p18, line -8, this paragraph is unclear
+\jacques{well, I rewrote bits, but I am not sure if I have clarified anything.
+But maybe it is not worth it either?}
+\oleg{I don't have the PDF file of the submission and so I don't know
+what the remark refers to. In any case, be it about containers or
+determinants, the text has been re-written.}
