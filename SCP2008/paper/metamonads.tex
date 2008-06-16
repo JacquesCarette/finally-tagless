@@ -95,8 +95,8 @@ eliminating abstraction overhead from generic code}
 \begin{abstract}
 We use multi-stage programming, monads and Ocaml's
 advanced module system to demonstrate how to eliminate all
-abstraction overhead while avoiding any inspection of the resulting
-code.  We demonstrate this clearly with LU decomposition as a 
+abstraction overhead from generic programs while avoiding any inspection of
+the resulting code.  We demonstrate this clearly with Gaussian Elimination as a 
 representative family of symbolic and numeric algorithms. 
 We parameterize our code to a great extent --
 over domain, input and permutation matrix representations, 
@@ -134,16 +134,16 @@ operations to rows of the matrix in a particular order. The individual
 algorithms differ in their output, in application of pivoting, in
 algebraic domain and the use of full division. Modern architectures
 demand further divisions of the family for particular matrix layouts, e.g.,
-sparsed or tiled.
+sparse or tiled.
 
 A survey \cite{Carette06} of
 Gaussian elimination implementations in the industrial package Maple
 \cite{Monagan:2001:M7P}
 found 6 clearly identifiable aspects and 35 different implementations of the
 algorithm, as well as 45 implementations of directly related
-algorithms such as Cholesky decomposition, and so on.  We could
-manually write each of these implementations optimizing for particular aspects
-and using cut-and-paste to ``share'' similar pieces of code.
+algorithms such as LU decomposition, Cholesky decomposition, and so on.  We
+could manually write each of these implementations, optimizing for particular
+aspects and using cut-and-paste to ``share'' similar pieces of code.
 Or we can write a very generic procedure that accounts for
 all the aspects with appropriate abstractions \cite{Gruntz:1994:IG,Axiom}. The
 abstraction mechanisms however -- be they procedure, method or a
@@ -153,7 +153,7 @@ this abstraction overhead involves either complex analyses or
 domain-specific knowledge (or both!)
 \cite{Kennedy01Telescoping,Veldhuizen:2004,scp-CohenDGHKP06},
 and so we can not rely on a general
-purpose compiler to assuredly perform such optimizations 
+purpose compiler to assuredly perform such optimizations.
 
 A more appealing approach is generative programming
 \cite{Czarnecki,Veldhuizen:1998:ISCOPE,musser89generic,musser94algorithmoriented,BOOST,POOMA,ATLAS}.
@@ -168,7 +168,7 @@ well-typed. Lisp-style macros, Scheme hygienic macros, the camlp4
 preprocessor \cite{camlp4}, C++ template meta-programming, and Template
 Haskell \cite{conf/dagstuhl/CzarneckiOST03} solve some of the above
 problems. Of the widely available maintainable languages, only
-MetaOCaml \cite{CTHL03,metaocaml-org}  solves all the above problems
+MetaOCaml \cite{CTHL03,metaocaml-org}  solves all of the above problems,
 including the well-typing of both the generator and 
 the generated code \cite{TahaSheard97,TahaThesis}.
 
@@ -183,7 +183,7 @@ attempt to use full division when dealing with matrices of exact integers, nor
 is it worthwhile to use full pivoting on a matrix over $\mathbb Q$)?
 
 MetaOCaml is purely \emph{generative}: generated code can only be treated as
-a black box: in other words, it cannot be inspected and it cannot be
+a black box -- in other words, it cannot be inspected nor can it be
 post-processed (i.e., no intensional analysis). This approach gives a stronger
 equational theory \cite{Taha2000}, and avoids the danger of creating
 unsoundness \cite{TahaThesis}. Furthermore, intensional code analysis
@@ -197,7 +197,7 @@ of the resulting code.
 
 Therefore, in MetaOCaml, code must be generated just right (see
 \cite{TahaThesis} for many simple examples).  For more complex
-examples, new techniques are necessary, e.g., abstract interpretation
+examples, new techniques are necessary, for example abstract interpretation
 \cite{KiselyovTaha}.  But more problems remain
 \cite{scp-CohenDGHKP06}: generating binding forms (``names'')
 when generating loop bodies or conditional branches, and making
@@ -213,14 +213,15 @@ In this paper, we report on our continued progress \cite{CaretteKiselyov05}%
   dealing with the complete LU decomposition algorithm, as well as
   linear solving. We worked out previously missing aspects of in-place
   updates, representing permutation matrices, dealing with augmented 
-  input matrix, and back-propagation. We have also changed the representation
+  input matrix, and back-propagation. We have changed the representation
   of domain-specific knowledge about permissible compositions of aspects.
   Also included is a careful description of all the aspects involved, as
   well as documenting our development methodology for highly parametric
   scientific software.}
 in using code generation for scientific (both numeric and symbolic)
-software.  We will use the algorithm family of LU decomposition 
-and linear system solving as our running examples to demonstrate our
+software.  We will use the algorithm family of Gaussian elimination, 
+applied to perform LU decomposition 
+and linear system solving, as our running examples to demonstrate our
 techniques.  Specifically, our contributions are:
 \begin{itemize}
     \item Extending a let-insertion, memoizing monad of
@@ -240,8 +241,8 @@ techniques.  Specifically, our contributions are:
     \item Encode domain-specific knowledge in the generators so as to
       catch domain-specific instantiation errors at generation
       time.
-    \item Provide a thorough classification of the family of LU decomposition
-      algorithms.
+    \item Provide a thorough classification of the family of Gaussian
+    elimination algorithms.
 \end{itemize}
 
 We also used the same technology to implement a Runge-Kutta solver for
@@ -253,7 +254,8 @@ our versions of LU decomposition, we will not mention them further
 (the code is available at \cite{metamonadsURL}).
 
 The rest of this paper is structured as follows: The next section
-gives an overview of the design space of LU decomposition algorithms.
+gives an overview of the design space of Gaussian Elimination algorithms
+(and their application to LU and linear system solving).
 \S\ref{CPS}
 introduces code generation in MetaOCaml, the problem of name
 generation, and the continuation-passing style (CPS) as a general
@@ -262,9 +264,8 @@ control statements. For the sake of reference, in \S\ref{GE-algorithm}
 we present a particular Gaussian Elimination algorithm,
 a hand-written implementation of the standard textbook pseudo-code.
 \S\ref{functors} describes the use of
-parametrized modules of OCaml to encode all of the aspects of the
-LU decomposition algorithm family as separate
-modules.  We discuss related work in
+the parametrized modules of OCaml to encode all of the aspects of our
+algorithm family as separate modules.  We discuss related work in
 \S\ref{related} and outline future work. In our
 conclusion (\S\ref{conclusion}) we comment
 on programming with aspects and sum up our guiding methodology.
@@ -277,7 +278,7 @@ Before investigating implementation approaches, it is worthwhile to
 carefully study the design space involved.  A preliminary
 study~\cite{Carette06} revealed a number of aspects of the family of
 Gaussian Elimination algorithms.  In the present work, we outline a
-number of additional aspects involved in the family of LU
+number of additional aspects involved in the (related) family of LU
 decomposition algorithms.  These will first be presented in a somewhat
 ad hoc manner, roughly corresponding to the order in which they were
 ``discovered''.  We then reorganize them into groups of
@@ -292,18 +293,16 @@ covered in~\cite{Golub-vanLoan}.  When $A$ is singular, one can still get
 a $PLU$ decomposition with $L$ remaining unit lower-triangular. However, 
 $U$ is no longer upper triangular but rather ``staggered''
 in the upper triangle.
-\oleg{\S\ref{GE-algorithm} demonstrates one particular GE algorithm in detail,
-  for further reference.}
 
 \subsection{Aspects}\label{sec:aspects}
 
 We reuse the English word ``aspect'' for the various facets of the family
-of LU decomposition algorithms.  While our use shares the 
+of Gaussian Elimination algorithms.  While our use shares the 
 spirit of aspect-oriented programming (AOP)~\cite{kiczales97aspectoriented},
 our implementation methodology is radically different\footnote{However it seems
 that we are closer to the original ideas of AOP~\cite{709568,mendhekar97rg}
 which were also concerned with scientific software.}.  We firmly believe that
-our typed generative methodology is much better suited to functional
+our typed generative methodology is better suited to functional
 programming, compared to attempts to graft the program-trace-based
 methodology of object-oriented versions of AOP.  
 
@@ -312,7 +311,7 @@ design-time entities.  Here we are firmly influenced by Parnas' original
 view of modules and information hiding~\cite{journals/cacm/parnas72a} as well
 as his view of product families \cite{journals/tse/Parnas76}, and by
 Dijkstra's ideas on separation of concerns \cite{EWD:EWD447}.
-To apply these principles to the study of LU decomposition, we need
+To apply these principles, we need
 to understand what are the changes between different implementations, and 
 what concerns need to be addressed.  We also need to study the degree
 to which these concerns are independent.
@@ -331,8 +330,8 @@ implementations (in various languages and settings).
         ($\floats$) for 
         example), while others were generic for elements of a field,
         multivariate polynomials over a field, or elements of a division ring
-        with possibly undecidable zero-equivalence.  In the roughly 85 pieces
-        of code we surveyed, 20 different domains were encountered.
+        with possibly undecidable zero-equivalence.  In the roughly $85$ pieces
+        of code we surveyed, $20$ different domains were encountered.
     \item \textbf{Representation of the matrix}: Whether the matrix
         was represented as an array of arrays, a
         one-dimensional array with C or Fortran indexing styles, 
@@ -369,12 +368,12 @@ implementations (in various languages and settings).
     \item \textbf{Code representation}: the form and the language
       for the generated code (OCaml, C, Fortran, etc.). A
       degenerate case, useful for testing, is for the generator
-      to run the LU algorithm directly (albeit with great
+      to run the algorithm directly (albeit with great
       abstraction overhead).
     \item \textbf{Zero-equivalence}: Whether the 
         arithmetic operations require a specialized zero-equivalence 
         routine.  For certain classes
-        of \emph{expressions}, it turns out convenient to use 
+        of \emph{expressions}, it turns out to be convenient to use 
         a zero-equivalence
         test that is separate from the domain normalization.  This is
         usually the case when zero-equivalence is formally undecidable
@@ -426,7 +425,7 @@ tracked during the decomposition. Determinant should also be tracked
 if the fraction-free aspect is chosen. The availability of the length
 measure in the domain influences pivoting, \emph{if} pivoting
 is to be performed. One could therefore select aspects that turn out
-incompatible, and we have to prevent this. 
+to be incompatible, and we have to prevent this. 
 More precisely, our goal is to detect the selection of
 incompatible aspects long before the generated code is run.
 
@@ -470,15 +469,28 @@ domain issues.  We hope to rectify this in the future.}
 
 The groupings are not entirely orthogonal (for example, in-place
 decomposition is possible only for specific domains), yet are useful
-as guidance in creating the modular LU generator discussed in 
+as guidance in creating the modular generator discussed in 
 \S\ref{functors}.
 
-\section{Generating binding statements, CPS, and monad}\label{CPS}
+\section{Techniques for typed code generation}\label{CPS}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+This section  outlines various necessary techniques for typed code
+generation in MetaOCaml.  We start with an introduction to code generation
+with MetaOCaml, where our examples are chosen to illustrate issues of
+direct concern to generic programs.  Next we introduce monads and our
+monadic notation, as a means to make writing programs in continuation
+passing style (CPS) more palatable.  Generation of control statements can
+lead to various subtle issues, and solutions are covered in 
+\S\ref{ssec:control}.  Finally, during generation we need to keep track of
+various aspects, and we use an extensible state for this purpose, described
+in \S\ref{ssec:state}.
+
+\subsection{MetaOCaml}
 
 We build large code generators out of primitive generators using 
 combinators. MetaOCaml, as an instance of a multi-stage
-programming system \cite{TahaThesis}, provides exactly the needed
+programming system \cite{TahaThesis}, provides exactly the necessary
 features: to construct a code expression, to combine them, and to
 execute them. The following shows the simplest code generator |one|,
 and the simplest code combinator\footnote{%
@@ -499,12 +511,12 @@ another. The power of that operation, called escape |.~|, comes from
 the fact that the expression to be spliced in (inlined) can be
 computed: escape lets us perform an arbitrary immediate code-generating
 computation \emph{while} we are
-building the future-stage computation. The immediate computation in
+building a future-stage computation. The immediate computation in
 |simplest_code| is the evaluation of the function |gen|, which in turn
 applies |plus|. The function |gen| receives code expressions |.<x>.|
 and |.<y>.| as arguments. At the generating stage, we can manipulate
 code expressions as (opaque) values. The function |gen| returns a code
-expression, which is inlined in the place of the escape. MetaOCaml can
+expression, which is inlined in the location of the escape. MetaOCaml can
 print out code expressions, so we can examine the final generated code. It
 has no traces of |gen| or |plus|: they are generation stage computations.
 
@@ -761,7 +773,7 @@ The function
 former into the latter. And yet, |param_code4| looks far more
 conventional, as if it were indeed in direct style.
 
-\subsection{Generating control statements}
+\subsection{Generating control statements}\label{ssec:control}
 We can write operations that generate code other than let-statements,
 e.g., conditionals: see |ifL| in Figure~\ref{ourmonad}. The function |ifL|, 
 albeit straightforward, is not as general as we wish: its arguments are
@@ -816,7 +828,7 @@ let genrecloop gen rtarg = fun s k ->
   k s .<let rec loop j = .~(gen .<loop>. .<j>. s k0) in loop .~rtarg>.
 \end{code}
 
-\subsection{Maintaining an extensible state}
+\subsection{Maintaining an extensible state}\label{ssec:state}
 
 Various aspects of our generator need to keep a state during
 code generation (e.g., the name of the variable for the sign of
@@ -918,21 +930,17 @@ clearer error messages.
 
 \section{Gaussian Elimination}\label{GE-algorithm}
 
-\oleg{I wonder should we always refer to GE rather than LU-elimination
-  in our paper? GE is a particulat instance of LU; one can accomplish
-  LU in other ways than GE. Also, GE can be used for other means that
-  LU, e.g., just to compute the determinant or to solve linear equations.
-  So, it seems more properly to say we do GE. If we use GE and LU
-  almost synonymously, as it seems to be the case in Mathematica, we
-  should note that in a footnote.}
-
-For detailed reference, we present one particular Gaussian Elimination
+For detailed reference, we present one particular Gaussian Elimination%
+\footnote{For the purposes of this paper, we will use Gaussian Elimination (GE)
+and LU decomposition (LU) as quasi-synonyms, even though we are well-aware
+that GE can be used for other purposes, and LU can be performed by other
+means than GE.}
 algorithm, for an in-place LU-decomposition of an integer matrix with
 full pivoting, returning the U-factor, determinant and rank. The
 $n\times m$-matrix is represented as a flat vector, with 0-indexed
 elements laid out in row-major format (C-style). The code below is
 a hand-written implementation of the typical pseudo-code in
-Numerical Analysis textbooks \oleg{I used wikipedia; need a better references}.
+Numerical Analysis textbooks (see for example~\cite{BurdenFaires89}).
 
 In OCaml, the matrix is represented by the value of the following type:
 \begin{code}
@@ -1059,7 +1067,8 @@ Swapping two rows or two columns changes the sign of the determinant.
 After the swapping, the algorithm does so-called row-reduction
 over the |(r,c)-(n,m)| block of the matrix containing not-yet
 processed elements. We implement the \emph{fraction-free}
-algorithm \oleg{Citation needed!}:
+algorithm\footnote{sometimes also called the Gauss-Bareiss algorithm}
+\cite{Bareiss68}
 the division operation in line 51 assuredly divides two integers
 with no remainder, which requires the accumulation
 of the determinant.
@@ -1231,13 +1240,6 @@ second specifies the type of the object, and the first is the
 about the object in a particular interpretation. The interpretation as
 MetaOCaml code values uses the first parameter of |rep| to track the
 environment classifier.
-\oleg{I'm describing in this section coderep.mli and one of its
-  instances, code.ml. The only change is that I use ('a,'b) rep rather
-  than ('a,'b) abstract, for uniformity and clarity. Why did we even
-  need to introduce this additional distinction, `rep' vs
-  `abstract'. Also, the name `abstract' is a bit too
-  general. Anyway, the explanation does not have to follow the code to
-  the letter, as Reviewer 2 has suggested.}
 
 The first sub-module of the interpretation aspect is the numeric
 domain. The signature |DOMAIN| of \S\ref{sec:domains} defined the set
@@ -1573,18 +1575,19 @@ state, |zero_sign| to note matrix singularity, |set_magn| to set the
 magnitude and |fin| to convert the tracking state to the resulting
 value, of  the type |C.Dom.v|, the type of the container
 elements. Other aspects follow a similar outline.
-\oleg{The following is perhaps too particular to mention in the
-  paper. AT least we can keep it in comments:
-  We stress the difference in return types of \texttt{decl},
-  \texttt{upd\_sign} and \texttt{zero\_sign} functions. The former says
-  that \texttt{decl} is an action which is executed only for its
-  side-effect. It yields no interpretation object (e.g., produces no
-  code value). The function \texttt{zero\_sign} always produces a code
-  value -- an expression such as assignment that has the type unit. 
-  The function
-  \texttt{upd\_sign} is the generator that may produce code, or may
-  not. The option type lets us avoid generating code such as 
-  \texttt{a := b; ()} with useless dummies.}
+%\oleg{The following is perhaps too particular to mention in the
+%  paper. }
+% \jacques{Actually, I liked it, so after slight editing, I kept it}
+It is instructive the examine the difference in return types of \texttt{decl},
+\texttt{upd\_sign} and \texttt{zero\_sign} functions. The former says
+that \texttt{decl} is an action which is executed only for its
+side-effect. It yields no interpretation object (e.g., produces no
+code value). The function \texttt{zero\_sign} always produces a code
+value -- an expression such as assignment that has the type unit. 
+The function
+\texttt{upd\_sign} is the generator that may produce code, or may
+not. The option type lets us avoid generating pointless code such as 
+\texttt{a := b; ()}.
 
 We have two instances of |DETERMINANT|. The first corresponds to
 no determinant tracking, and so all functions are dummy.
