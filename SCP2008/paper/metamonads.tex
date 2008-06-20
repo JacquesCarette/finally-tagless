@@ -547,7 +547,7 @@ let plus x y = .<.~x || .~y>. and one = .<true>. in
 \end{code}
 Running the former expression yields a function on |float|s, whereas
 the latter expression is a code expression for a boolean function.
-This simple technique clearly shows how we can be polymorphic over
+This simple technique clearly shows how we can abstract over
 domain operations and yet still generate efficient domain-specific code,
 thus achieving a proper separation of concerns.
 
@@ -809,7 +809,7 @@ the index |i| is positive. If |i| turned out
 negative, |a.(i)| would generate an out-of-bound array access
 error. On the other hand, the code with |ifM| accesses the array only
 after we have verified that the index is non-negative. This example
-should make it clear that code generation (such as the one in |retN|) is 
+demonstrates that code generation (such as the one in |retN|) is 
 truly an effect, and that we have to be clear about the sequencing of
 effects when generating control constructions such as conditionals.
 The form |ifM| handles such effects correctly. 
@@ -854,7 +854,7 @@ problems.
 
 We therefore chose a different way of maintaining generator state,
 using a monad. We already saw that for let-insertions we could use
-a continuation monad;  we now show how to use the state component
+a continuation monad;  we now demonstrate the state component
 of our monad (Fig.~\ref{ourmonad}). The monadic actions |fetch| and
 |store| are used to access that monadic state, which is
 threaded throughout the entire code-generation computation. 
@@ -912,7 +912,7 @@ let orec_store ((inj,_,name) as ip:(('a,'b) open_rec)) (v:'a) (s:'b list)
    : 'b list =
   let () = 
     try let _ = lookup ip s in 
-        failwith ("Field "^name^" of an open record is already present."
+        failwith ("Field "^name^" of an open record is already present.")
     with Not_found -> () in
   (inj v)::s
 
@@ -1097,7 +1097,7 @@ generator, whose execution yields (exactly) the code for the algorithm of
 Fig.~\ref{fig:GE-algorithm}, this time automatically generated rather
 than manually written.
 
-We describe will the following aspects, generally in
+We will describe the following aspects, generally in
 order of increasing complexity: domain (of the group `Abstract
 domain', see \S\ref{sec:aspect-groups}), code generation combinators
 (of the group `Interpretation'), matrix representation (of the group
@@ -1469,7 +1469,7 @@ the actual implementation of a container.  For example, the following
 functor defines a matrix container as a single array, with elements
 stored in row-major order -- the container used in
 Fig.~\ref{fig:GE-algorithm}.
-\begin{code}
+\begin{code}[commandchars=\\\{\}]
 module GenericVectorContainer(Dom:DOMAINL) =
   struct
   module Dom = Dom
@@ -1584,15 +1584,15 @@ elements. Other aspects follow a similar outline.
 %\oleg{The following is perhaps too particular to mention in the
 %  paper. }
 % \jacques{Actually, I liked it, so after slight editing, I kept it}
-It is instructive the examine the difference in the return types of the
+It is instructive to examine the difference in the return types of the
 \texttt{decl}, \texttt{upd\_sign} and \texttt{zero\_sign} functions. The first
 says that \texttt{decl} is an action which is executed only for its
 side-effect. It yields no interpretation object (e.g., produces no
 code value). The function \texttt{zero\_sign} always produces a code
 value -- an expression such as assignment that has type unit. 
 The function \texttt{upd\_sign} is a generator that may produce code, or may
-not. The option type lets us avoid generating pointless code such as 
-\texttt{a := b; ()}.
+not. The option type lets us avoid generating code such as 
+\texttt{a := b; ()} with a pointless |()|.
 
 We have two instances of |DETERMINANT|. The first corresponds to
 no determinant tracking, and so all functions are dummy.
@@ -2350,10 +2350,8 @@ val resIV5 : ('a, GVC_I.contr -> GenIV5.O.res) code =
            (t_8 := (~- (! t_8))) (* adjust the sign of det *)
           end else ();
           if ((fst (fst i_16)) <> t_13) then begin (* swapping of rows *)
-           let a_17 = t_4.arr
-           and m_18 = t_4.m in
-           let i1_19 = (t_13 * m_18)
-           and i2_20 = ((snd (fst i_16)) * m_18) in
+           let a_17 = t_4.arr and m_18 = t_4.m in
+           let i1_19 = (t_13 * m_18) and i2_20 = ((snd (fst i_16)) * m_18) in
            for i_21 = 0 to (m_18 - 1) do
             let t_22 = a_17.(i1_19 + i_21) in
             a_17.(i1_19 + i_21) <- a_17.(i2_20 + i_21);
