@@ -1,0 +1,273 @@
+
+	We are very grateful to the reviewers for their comments and
+so helpful suggestions. We have implemented them all. Below is the
+detailed response (omitting suggestions about spelling and grammar,
+which we have corrected as recommended).
+
+Reviewer #1: 
+
+The summary of our work given by the reviewer is profound; we couldn't
+have said better ourselves.
+
+Reviewer #2: 
+
+> Two larger changes I suggest are restructuring section 4 and performing
+> stronger evaluation of the work.
+We have implemented them, as described below.
+
+> Restructuring section 4
+> The subsections of section 4 are rather random and disjoint. There
+> needs to be a more cohesive plan about what is going on in this
+> section. Better yet a concrete example that gets built upon in each
+> subsection and motivates the subsection's functionality. Sections 4.1,
+> 4.3, 4.5, 4.6 seem to be about defining modules for particular
+> aspects. Part of Section 4.2 seems superfluous from the comment
+> above. The "DOMAIN" module seems superfluous too: you never need to do
+> real operations on values, but only generate code for operations on
+> values. Hence "DOMAINL" is what you need and "DOMAIN" is not
+> needed. Also I don't think "CONTAINER2D" is ever seen again after
+> being introduced in Section 4.2 -- this seems troubling.
+
+We added a paragraph at the end of the container section clarifying
+that the `current' container is available to the algorithmic aspects,
+under the name of |C|. We describe in more detail the `multi-stage'
+nature of instantiating the generic algorithm, pointing out which
+module is a part of which.
+
+> Section 4.4 is about programming in OCaml and how to maintain the
+> algorithm's state.  Section 4.7 is about putting it all together.
+
+> From my understanding of your work here is an idea to make your paper more
+> precise and concise.
+>  - Move Section 4.4 into Section 3 because that section seems to deal with
+>    low-level programming issues.
+Moved.
+
+> - In the intro of Section 4 make a link to the list in Section 2 and say your
+>   going to pick some of those aspects and explain how they are implemented -
+>   one per subsection.
+Done 
+
+> - Delete the first half of 4.2.
+> - Combine 4.1 with the second half of 4.2, dropping the use of "DOMAIN" and
+>   just do everything in terms of "DOMAINL".
+
+It seems DOMAIN is a nice and simple abstraction to build upon later;
+it also corresponds to our introductory example in Sec 2. We have
+completely re-written Sec 4.2 (which is now Sec 5.2), but decided to 
+leave DOMAIN in. 
+
+> - Sections 4.3, 4.5, 4.6 then become Sections 4.2, 4.3, 4.4.
+> - Section 4.7 could be the last subsection of 4 
+> or a new whole section with more detail.
+
+This plan has being followed through. Hopefully the introduction to
+(now) Sec 5 describes the cohesive plan of the section. 
+
+> Strengthening evaluation
+> I understand that program generators are complex programs, that
+> explaining them can be difficult and that providing concise and
+> meaningful code snippets about them can also be hard. Nevertheless a
+> good paper on programming program generators needs to do these
+> things. At the end of your paper I thought you had laid down all the
+> pieces of the machinery well, but I didn't have much of a sense of how
+> the machine runs. So I kind of have to take your word that everything
+> works, especially since the code on p24-5 is not explained in detail
+> and the appendix code is not readable (by itself it's not very
+> convincing: how can I tell this code demonstrates something good?). In
+> general, and this would strengthen the merit of the paper, code
+> snippets need to be explained better - too often I see a new
+> identifier in the code that is not explained.
+
+The comparison of the generated code with the hand-written code
+hopefully tells now that the generated code does do the right
+thing. We have expanded many explanations for the code snippets,
+explicitly relating them to the hand-written sample code -- at the
+expense of the length of the paper.
+
+> Showing and explaining the code for the unstaged algorithm might help
+> and would give a point of reference to compare the generated code
+> with. Explaining the generated code could also be helpful, but maybe
+> too hard. Maybe it would be possible to focus on one or more small
+> areas of the algorithm and show: this is what the area looks like in
+> unstaged program, this is the part of the code generator responsible
+> for producing code for this area, and this is the area in the
+> generated code. Something like this would give the reader a greater
+> understanding of how logic flows through your generation process and
+> how your functor technique is ultimately in control of fine-grained
+> details of code building.
+
+We have done exactly that. We added Sec 4 with the hand-written
+unstaged code, and refer to it when discussing various aspects,
+especially the determinant aspect.
+
+> p23, "off-shoring": give relevant citation
+Done. Incidentally, Walid Taha spells offshoring without the hyphen,
+so we have adjusted the spelling.
+
+> p2, line 1, For an introduction paragraph this could be clearer and stronger.
+> What are the "aspects of linear algebra"? How are they addressed and by what?
+> (I know they are explained later on.) Why is "may" emphasized?
+We re-wrote the paragraph.
+
+> p2, line 6, LU decomposition is a particular case of Gaussian Elimination, not
+> vice-versa
+We have made that clear all throughout the text (noting that it is
+quite common, especially in the naming of library functions, to treat
+GE and LU as quasi-synonyms)
+
+> p2, line 10, this paper doesn't not discuss
+> hardware-architecture-specific optimization, in fact native code
+> generation seems beyond the scope of this paper, I think all you want
+> to say is that generative programming allows the programmer to express
+> domain-specific optimizations
+Yes, we did
+
+> p4, "The design space", this decomposition of the design space is very
+> interesting and an important result, but it would be good if this
+> section was more compact. E.g., maybe present the aspects in their
+> groups straight up instead of two lists.
+That is true. However, as this is important, it needs to
+be explained in detail, so that all the relevant information is recorded,
+in writing. We do consider this identification of aspects as one of
+the contributions.
+
+> p10, Figure 1, I don't follow the intuition behind naming the
+> operation "retN"; I don't see how the operation is similar to ordinary
+> monadic "ret", or what the "N" means; wouldn't a name like "letM" be
+> better?
+We have added the explanation of the name (on p11 now). Also we chose
+retN for consistency with Swadi et al, where RetN was first
+introduced.
+
+> p10, Figure 1, showing the type of "retN" and maybe some other values
+> would be helpful
+Done for ret, retN and bind.
+
+> p10, the type variable 'p and its constraint: could you explain the
+> problem with classifiers in more detail? if the type was "type ('s,
+> 'w, 'v) monad" what's wrong with having types like "('a state, 'w,
+> ('a, 'v) code) monad"?
+There is more explanation at the end of p11 and beginning of
+p12. There is nothing wrong, in principle, with the type 
+"('a state, 'w,  ('a, 'v) code) monad" other than the fact the types
+become bigger and bigger; furthermore, only a couple of components of
+the type are really needed when giving a type signature. 
+
+> p14, line 4, don't you want to assert that "ZpMake" is a "DOMAIN" as was done
+> for "IntegerDomain"?
+Actually no: we omitted the annotation on purpose, to demonstrate that
+we can do it. This is further explained in the text (the end of p18).
+
+> p15, shouldn't the code here appear as the "code type" implementation
+> of an "abstract code" module?
+> p15, what are "Logic" and "Idx" used for?
+> p16, what is the point of the "S" module? why can't "DOMAINL" be
+> parameterized by "T" (containing "rep") directly?
+> p16, Section 4.2, none of the abstract code combinators were used in
+> the second half of this section: was the first half necessary? what is
+> the relationship between these two halves that warrants them being in
+> the same subsection?  p16, Section 4.2, I understand the purposes of
+> abstracting code representation.  Additionally it adds to the
+> genericity of the code generator, which is good, but doesn't incur any
+> abstraction overhead, which is also good. However for the purposes of
+> this paper it is perhaps an abstraction too far: the paper never needs
+> to generate anything other than MetaOCaml code and it increases the
+> complexity of code snippets. Mentioning that you do abstract code
+> representation in the real implementation but elide it for the paper
+> might make the paper more succinct and clearer.
+
+The section on abstract code and lifted domain has been completely
+re-written, hopefully the above questions are all answered, in
+particular about the meaning of Logic and Idx and the merits of
+abstracting over interpretations.
+
+> p17, line 4, where does the identifier "rep" come from in this code?
+> p17, line -2, what accompanying code?
+> p18, line 4, what is the "decl" function?
+> p19, showing the types of these functions would be helpful
+> p19, line -3, what is the "DETERMINANT" module? it hasn't been introduced yet
+> p20, what are "cmonad" and "omonad"?
+
+Sec 5.2 has been completely re-written; hopefully it now answers all
+these questions,
+
+> p17, line 4, what is the design decision for making "Dom" a definition
+> inside "CONTAINER2D" instead of a parameter of "CONTAINER2D"? For
+> readers not familiar with the OCaml module system it might be helpful
+> to provide a brief introduction somewhere.
+> p17, line -12, now in the module implementation "Dom" is made functor
+> parameter, why? and why can you just replace "rep" with "code"?
+We added a new paragraph to explain this, the last but one paragraph 
+of Sec 5.3.
+
+> p18, although most readers are probably familiar with simple LU
+> decomposition, a brief overview that shows how determinant and rank
+> are computed in the algorithm with an unstaged code example showing
+> the state needed for tracking would be helpful to demonstrate the
+> problems stated here
+We added a new section, Sec 4.
+
+> p20, shouldn't there be an "answer" method in the state objects?
+This is now covered by proper definition of cmonad/omonad.
+
+> p19, line -2, why do you need to track the determinant for integer
+> matrices
+We explained that in the new Sec 4.
+
+> p20, what is "classif" used for? initially I thought it meant "class
+> if", but I just worked out it means "classifier", so this relates to
+> an earlier comment, so I think it is important you explain in detail
+> why you need to put the classifier in this object.
+That is now explained on p11.
+
+> p20, line 5, "e.g., a piece of code...": the type of "lstate" depends on the
+> implementation and neither of the implementations shown set "lstate" to "v
+> ref".
+AbstractDet contains a tdet, which is defined to be v ref
+one line above which, by the open statement right above it, it Dom.v ref.
+
+> p21, keep the names of the sign and magnitude(?) state consistent
+> across "decl", "upd_sign" and "fin"; also keep the code to retrieve
+> the sign and magnitude state consistent across "upd_sign" and "fin"
+We have done that.
+
+> p20, what do "acc", "get", "set" do?
+Changed.
+
+> p21, what is "wmatrix"? shouldn't this be an instance of "CONTAINER2D"?
+It is now defined. We explained its differences from the CONTAINER2D
+(the very end of p29).
+
+> p21, "(...,res) monad" what does "..." mean?
+We made it more precise.
+
+> p21, the "unitL" in "decl" is superfluous, right? "mo_extend" will
+> already return a monadic unit result
+Actually no. mo_extend has the result type ('a,unit) monad whereas
+unitL has the result type ('a,unit) cmonad, which corresponds to
+('a,('c,unit) code) monad. In other words, the former describes an
+action that generates no code whereas the latter is an action that
+generates code (such as an assignment operation) that has the type
+unit. However, we did mean that decl is an action to be executed
+solely for its side effects, and it was used as such in the code (its
+result was disregarded). So, the type ('a,unit) monad for it is far
+better. We have changed the code and the paper to reflect that. There
+is no longer `superfluous' unitL. Thank you for making this point.
+
+> p23, what does "GenLA" do?
+It is explained now, p30.
+
+> p23, it would be nice to see the module signatures for the other
+> features not discussed thus far
+We added a new section, Sec 5.5, with the description of the other
+features and their signatures.  Perhaps the code can be moved to an
+appendix though?
+
+> p24, missing "perform" in "init"
+Actually, it is on the first line.
+
+> p24, "module O = F.Output(F)" the functor "Output" takes a "OUTPUTDEP" not a
+> "FEATURES", right?
+Right, we explained that in more detail (see the paragraph before code
+on p32). 
