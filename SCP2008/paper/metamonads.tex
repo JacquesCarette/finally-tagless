@@ -137,7 +137,7 @@ demand further divisions of the family for particular matrix layouts, e.g.,
 sparse or tiled.
 
 A survey \cite{Carette06} of
-Gaussian elimination implementations in the industrial package Maple
+Gaussian Elimination implementations in the industrial package Maple
 \cite{Monagan:2001:M7P}
 found 6 clearly identifiable aspects and 35 different implementations of the
 algorithm, as well as 45 implementations of directly related
@@ -219,7 +219,7 @@ In this paper, we report on our continued progress \cite{CaretteKiselyov05}%
   well as documenting our development methodology for highly parametric
   scientific software.}
 in using code generation for scientific (both numeric and symbolic)
-software.  We will use the algorithm family of Gaussian elimination, 
+software.  We will use the algorithm family of Gaussian Elimination, 
 applied to perform LU decomposition 
 and linear system solving, as our running examples to demonstrate our
 techniques.  Specifically, our contributions are:
@@ -242,7 +242,7 @@ techniques.  Specifically, our contributions are:
       catch domain-specific instantiation errors at generation
       time.
     \item Provide a thorough classification of the family of Gaussian
-    elimination algorithms.
+    Elimination algorithms.
 \end{itemize}
 
 We also used the same technology to implement a Runge-Kutta solver for
@@ -285,7 +285,7 @@ ad hoc manner, roughly corresponding to the order in which they were
 semantically related aspects to form the basis of our design.
 
 Throughout, we assume that the reader is familiar with the basic LU
-decomposition algorithm, which factors a invertible matrix $A$ into a unit
+decomposition algorithm, which factors an invertible matrix $A$ into a unit
 lower triangular matrix $L$ and (usually) an upper triangular matrix $U$,
 such that $A = LU$.  Pivoting adds a unitary matrix $P$ such
 that the factorization is now $A = PLU$.  The case of numeric matrices is well
@@ -441,12 +441,12 @@ domain issues.  We hope to rectify this in the future.}
 \begin{enumerate}
     \item \textbf{Abstract domain}.  This group includes
       `mathematical' aspects: domain of matrix elements, length
-      measure, full division, normalization, zero testing,
+      measure, full division, zero testing,
       symmetry and other matrix structure.
     \item \textbf{Concrete representation}: choosing data
       structures for domains, containers, permutation
       matrices. This group also includes packing, in-place
-      decomposition, and the
+      decomposition, normalization, and the
       representation of sparse matrices.
     \item \textbf{Interface} of each generated function, including
       the input and output choices, logging and error reporting.
@@ -576,7 +576,7 @@ param_code1' plus one
 The result of |param_code1' plus one| still exhibits duplicate
 sub-expressions.  This is because our |let|-insertion optimization only saved
 the computation at the generating stage.  We need a combinator that
-inserts the |let| expression in the generat\emph{ed} code, in a other words a
+inserts the |let| expression in the generat\emph{ed} code, in other words a
 combinator |letgen| to be used as
 \begin{code}
 let ce = letgen (plus y one) in plus ce (plus x ce)
@@ -1054,12 +1054,12 @@ let ge = fun a_orig ->
      else                        (- !det_magn)),
     !r)                                 (* Rank *)
 \end{code}
-\caption{Fraction-free in-place Gaussian-elimination over an integer
+\caption{Fraction-free in-place Gaussian Elimination over an integer
   matrix}\label{fig:GE-algorithm}
 \end{figure}
 As is typical of textbook presentations, the main algorithm depends on
 a separately-defined function |pivot| to find a pivot. Here we use
-full-pivoting, i.e. searching the completel as yet unexamined portion of the
+full-pivoting, i.e. searching the complete as yet unexamined portion of the
 matrix, the rectangular block |(r,c)-(n,m)|, for the element with the 
 maximum absolute value. The function returns the value of the
 pivot thus found, and its location; the return value is an option type with
@@ -2301,7 +2301,8 @@ defaults. For example, to use the function named
 \label{app:code-GenIV5}
 The code generated for |GenIV5|, fraction-free LU of the integer matrix
 represented by a flat vector, full pivoting, returning the |U|-factor,
-the determinant and the rank.
+the determinant and the rank.  The comments, however, were inserted by
+hand.
 \begin{code2}
 val resIV5 : ('a, GVC_I.contr -> GenIV5.O.res) code =
   .<fun a_1 ->
