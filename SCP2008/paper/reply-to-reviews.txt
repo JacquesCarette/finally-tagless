@@ -1,6 +1,6 @@
 
 	We are very grateful to the reviewers for their comments and
-so helpful suggestions. We have implemented them all. Below is the
+their helpful suggestions. We have implemented them all. Below is the
 detailed response (omitting suggestions about spelling and grammar,
 which we have corrected as recommended).
 
@@ -13,6 +13,7 @@ Reviewer #2:
 
 > Two larger changes I suggest are restructuring section 4 and performing
 > stronger evaluation of the work.
+
 We have implemented them, as described below.
 
 > Restructuring section 4
