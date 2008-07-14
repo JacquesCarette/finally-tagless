@@ -115,7 +115,7 @@ module GenericArrayContainer(Dom:DOMAINL) =
       (fun j -> if (i=j) then (Dom.oneL ()) else (Dom.zeroL ())))
   (* this can be optimized with a swap_rows_from if it is known that
      everything before that is already = Dom.zero *)
-  let swap_rows_stmt a r1 r2 = fun () ->
+  let swap_rows_stmt a _ r1 r2 = fun () ->
       let t = (a ()).(r1 ()) in
          begin 
              (a ()).(r1 ()) <- (a ()).(r2 ());
@@ -172,10 +172,13 @@ module GenericVectorContainer(Dom:DOMAINL) =
   let identity n m = fun () -> {arr=Array.init (n ()* m ()) 
       (fun k -> if ((k mod (n ()))* (m ()) + (m ()) = k) then (Dom.oneL ()) else
           (Dom.zeroL ())); n = n (); m = m ()}
-  let swap_rows_stmt b r1 r2 = fun () ->
+  let index_default = function
+      | Some x -> x ()
+      | None   -> 0
+  let swap_rows_stmt b start r1 r2 = fun () ->
       let a = (b ()).arr and m = (b ()).m in
       let i1 = (r1 ())*m and i2 = (r2 ())*m in
-      for i = 0 to m-1 do
+      for i = (index_default start) to m-1 do
           let t = a.(i1 + i) in
           begin 
               a.(i1 + i) <- a.(i2 + i);
@@ -241,9 +244,12 @@ module FortranVectorContainer(Dom:DOMAINL):CONTAINER2D =
   let identity n m = fun () -> FortranVector(Array.init ((n ())* (m ())) 
       (fun k -> if ((k mod (n ()))* (m ()) + (m ()) = k) then Dom.oneL () else
           Dom.zeroL ()), (n ()), (m ()) )
-  let swap_rows_stmt b r1 r2 = unpack b (fun a _ m -> fun () ->
+  let index_default = function
+      | Some x -> x ()
+      | None   -> 0
+  let swap_rows_stmt b start r1 r2 = unpack b (fun a _ m -> fun () ->
       let i1 = (r1 ())* (m ()) and i2 = (r2 ())* (m ()) in
-      for i = 0 to (m ())-1 do
+      for i = (index_default start) to (m ())-1 do
           let t = (a ()).(i1 + i) in
           begin 
               (a ()).(i1 + i) <- (a ()).(i2 + i);

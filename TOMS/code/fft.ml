@@ -138,7 +138,7 @@ let (y_sm,run) =
       in gl 0 [] in
     let run_basic m = m [] (fun _ x -> array_write x nums)
     in
-    run_basic (perform l1 f (array_read nums size))
+    run_basic (bind (array_read nums size) f)
   in
   (y_sm,run)
 

@@ -1,6 +1,7 @@
-This directory contains all the material related to a (future [June 2006])
-paper intended to get sent to TOMS.  A lot of the material is taken
-from the GPCE2005 work, as well as containing a copy of pa_monad 1.0.
+This directory originally contained material for a paper planned for TOMS,
+started roughly in June 2006 (taken from the GPCE2005 work).  But that work
+instead went into an SCP2008 paper.  However, even that was really a snapshot
+in time, with various bits unfinished.
 
-Only material relevant to the TOMS work should go here - various other
-experiments can stay in the old code/ directory.
+So now this directory is being re-used for further experiments.  The code
+was re-baselined from the SCP2008 work.

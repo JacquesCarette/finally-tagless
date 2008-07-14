@@ -4,7 +4,9 @@ open StateCPSMonad
 open Prelude
 
 (* This one is very special! *)
-let retN a = fun s k -> .<let t = .~a in .~(k s .<t>.)>.
+let retN (a : ('c,'v)code) : 
+ (<classif: 'c; answer: ('c,'w)code; ..>,('c,'v)code) monad 
+   = fun s k -> .<let t = .~a in .~(k s .<t>.)>.
 
 (* Naming conventions: 
    Functions that end in M take monads as arguments and partially
