@@ -127,7 +127,7 @@ let spline_gen a b knots (yout:float array array)
     let init arr = 
         let body lo i = 
         .< (.~arr).(lo).(i) <- fun y ->
-          .~(runM (prespline knots yout y2out .<y>. lo i )) >. in
+          .~(runM (prespline knots yout y2out .<y>. lo i ) []) >. in
         let ll = Array.length (y2out.(0)) - 1 in
         let code = (Transformers.full_unroll 0 (num_knots-2) 
             (fun j -> Transformers.full_unroll 0 ll (fun lo -> body j lo))) in

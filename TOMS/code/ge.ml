@@ -2,9 +2,10 @@ open StateCPSMonad
 open Prelude
 
 type update_kind = FractionFree | DivisionBased
+
 (* It used to be that we used an option type to encode some domain
    information, like the need to compute a Determinant, Rank or Pivot.
-   Not this is done directly with an exception instead, so these routines
+   Now this is done directly with an exception instead, so these routines
    are no longer needed.
    For more detail, see the message
 http://caml.inria.fr/pub/ml-archives/caml-list/2006/11/df527bcc780e6f3106889e2d5e8b5e2a.en.html
@@ -12,6 +13,37 @@ http://caml.inria.fr/pub/ml-archives/caml-list/2006/11/df527bcc780e6f3106889e2d5
 let fromJust = function Some x -> x | None -> failwith "Can't happen"
 let notNone v str = match v with None -> failwith str | Some _ -> () *)
 let ensure cond str = if not cond then failwith str else ()
+
+
+(* A few utility functions to handle `open records', lists of variants *)
+(* Each `field' is characterized by a triple: injection, projection functions
+   and the name. The latter is used for printing error messages.
+*)
+type ('a,'b) open_rec = ('a -> 'b) * ('b -> 'a option)  * string
+
+let rec lookup ((_,prj,_) as ip:(('a,'b) open_rec) )
+   : 'b list -> 'a = 
+   function [] -> raise Not_found
+   | (h::t) -> (match prj h with Some x -> x | _ -> lookup ip t)
+
+let orec_store ((inj,_,name) as ip:(('a,'b) open_rec)) (v:'a) (s:'b list) 
+   : 'b list =
+  let () = 
+    try let _ = lookup ip s in 
+        failwith ("The field of an open record is already present: " ^ name)
+    with Not_found -> () in
+  (inj v)::s
+
+let orec_find ((_,_,name) as ip:(('a,'b) open_rec)) (s:'b list) : 'a =
+  try lookup ip s 
+  with Not_found -> failwith ("Failed to locate orec field: " ^ name)
+
+let mo_extend (ip:('a,'b) open_rec) (v:'a) : ('c, unit) monad =
+  perform s <-- fetch; store (orec_store ip v s)
+
+let mo_lookup (ip:('a,'b) open_rec) : ('c, 'd) monad =
+  perform s <-- fetch; ret (orec_find ip s)
+
 
 (* A lot of "Linear Algebra" is generic, so structure things 
    to leverage that.  Some modules are container-independent,
@@ -34,10 +66,37 @@ end
 
 (* Monad used in this module: 
    (abstract) code generation monad with open union state *)
-type ('a,'v,'s,'w) cmonad = (('a,'v) abstract, 's list, ('a,'w) abstract) monad
+type ('pc,'p,'a) cmonad_constraint = unit
+      constraint
+	  'p = <state : 's list; answer : ('a,'w) abstract>
+      constraint
+          'pc = <classif : 'a; answer : 'w; state : 's; ..>
+
+type ('pc,'v) cmonad = ('p,('a,'v) abstract) monad
+      constraint _ = ('pc,'p,'a) cmonad_constraint 
+
+type ('pc,'v) omonad = ('p,('a,'v) abstract option) monad
+      constraint _ = ('pc,'p,'a) cmonad_constraint 
+
+(*
+
+type ('pc,'v) cmonad = 
+    ('p,('a,'v) abstract) monad
+      constraint
+	  'p = <state : 's list;
+                answer : ('a,'w) abstract>
+      constraint
+          'pc = <classif : 'a; answer : 'w; state : 's; ..>
+       
 (* We also use this variant, where we _might_ generate code *)
-type ('a,'v,'s,'w) omonad = (('a,'v) abstract option, 
-                 's list, ('a,'w) abstract) monad
+type ('pc,'v) omonad = 
+    ('p,('a,'v) abstract option) monad
+      constraint
+	  'p = <state : 's list;
+                answer : ('a,'w) abstract>
+      constraint
+          'pc = <classif : 'a; answer : 'w; state : 's; ..>
+*)
 
 (* moved from Infra (now Domains) so that the former uses no monads.
   The following code is generic over the containers anyway.
@@ -57,6 +116,7 @@ module Iters = struct
     in  loopM low high newbody d
 end
 
+
 (* Here are the various design aspects of GE-type algorithms *)
 
 (* Rank is container-independent *)
@@ -71,29 +131,22 @@ module TrackRank =
     (* some magic for the proper visibility of identifiers *)
   type 'a tag_lstate_ = [`TRan of 'a lstate ]
   type 'a tag_lstate = 'a tag_lstate_
-  type ('b,'v) lm = ('a,'v,'s,'w) cmonad
-    constraint 's = [> 'a tag_lstate]
-    constraint 'b = 'a * 's * 'w
-  (* In 3.09, no need for any coercion at all, type inference works! *)
-  let rec fetch_iter s =
-    match (List.hd s) with
-      `TRan x -> x
-    |  _ -> fetch_iter (List.tl s)
-  let rfetch () = perform s <-- fetch; (* unit for monomorphism restriction *)
-                          ret (fetch_iter s)
-  let rstore v = store (`TRan v)
+  type ('pc,'v) lm = ('pc,'v) cmonad
+    constraint 'pc = <state : [> 'a tag_lstate]; classif : 'a; ..>
+
+  let ip = (fun x -> `TRan x), (function `TRan x -> Some x | _ -> None),
+           "TrackRank"
   let decl () = perform
       rdecl <-- retN (liftRef Idx.zero);
-      rstore rdecl;
+      mo_extend ip rdecl;
       ret rdecl
   let succ () = perform
-   r <-- rfetch ();
+   r <-- mo_lookup ip;
    assignM r (Idx.succ (liftGet r))
 
       (* The signature of the above *)
   module type RANK = sig
     type 'a tag_lstate = 'a tag_lstate_
-    val rfetch : unit -> ('b, int ref) lm
     val decl   : unit -> ('b, int ref) lm
     val succ   : unit -> ('b, unit) lm
     val fin    : unit -> ('b, int) lm
@@ -103,7 +156,7 @@ end
 module Rank = struct
   include TrackRank
   let fin () = perform
-      r <-- rfetch ();
+      r <-- mo_lookup ip;
       ret (liftGet r)
 end
 
@@ -153,19 +206,22 @@ module type TRACKPIVOT = sig
   type 'a fra
   type 'a pra
   type 'a lstate
-  type 'a tag_lstate = [`TPivot of 'a lstate ]
-    (* Here, parameter 'b accounts for all the extra polymorphims *)
-  type ('b,'v) lm = ('a,'v,'s,'w) cmonad
-    constraint 's = [> 'a tag_lstate]
-    constraint 'b = 'a * 's * 'w
+  type 'pc pc_constraint = unit
+    constraint 'pc = <state : [> `TPivot of 'a lstate ]; classif : 'a; ..>
+  type ('pc,'v) lm = ('pc,'v) cmonad
+    constraint _  = 'pc pc_constraint
+  type ('pc,'a) nm = ('p,unit) monad
+    constraint _ = ('pc,'p,'a) cmonad_constraint
+    constraint _ = 'pc pc_constraint
   val rowrep : 'a ira -> 'a ira -> 'a fra
   val colrep : 'a ira -> 'a ira -> 'a fra
-  val decl : ('a, int) abstract -> ('a*'s*'w, unit) lm
-  val add : 'a fra ->
-    (('a,unit) abstract option,[> 'a tag_lstate] list,('a,'w) abstract) monad
+  val decl : ('a, int) abstract -> ('pc,'a) nm
+  val add : 'a fra -> 
+    (<classif : 'a; state : [> `TPivot of 'a lstate ]; ..>, unit) omonad
   val fin : unit -> ('b,perm_rep) lm
 end
 
+   
 module PivotCommon(PK:PIVOTKIND) = 
   struct
   type perm_rep = PK.perm_rep
@@ -173,38 +229,35 @@ module PivotCommon(PK:PIVOTKIND) =
   type 'a fra = 'a PK.fra
   type 'a pra = 'a PK.pra
   type 'a lstate = ('a, PK.perm_rep ref) abstract
-  type 'a tag_lstate = [`TPivot of 'a lstate ]
-  type ('b,'v) lm = ('a,'v,'s,'w) cmonad
-    constraint 's = [> 'a tag_lstate]
-    constraint 'b = 'a * 's * 'w
+  type 'pc pc_constraint = unit
+    constraint 'pc = <state : [> `TPivot of 'a lstate ]; classif : 'a; ..>
+  type ('pc,'v) lm = ('pc,'v) cmonad
+    constraint _  = 'pc pc_constraint
+  type ('pc,'a) nm = ('p,unit) monad
+    constraint _ = ('pc,'p,'a) cmonad_constraint
+    constraint _ = 'pc pc_constraint
   let rowrep = PK.rowrep
   let colrep = PK.colrep
+  let ip = (fun x -> `TPivot x), (function `TPivot x -> Some x | _ -> None),
+           "Pivot"
 end
 
 module KeepPivot(PK:PIVOTKIND) = struct
   include PivotCommon(PK)
-  let rec fetch_iter s =
-    match (List.hd s) with
-      `TPivot x -> x
-    |  _ -> fetch_iter (List.tl s)
-  let pfetch () = perform s <-- fetch; (* unit for monomorphism restriction *)
-                        ret (fetch_iter s)
-  let pstore v = store (`TPivot v)
   let decl n = perform
       pdecl <-- retN (liftRef (PK.empty n));
-      pstore pdecl;
-      unitL
+      mo_extend ip pdecl
   let add v = perform
-   p <-- pfetch ();
+   p <-- mo_lookup ip;
    ret (Some (assign p (PK.add v (liftGet p))))
   let fin  () = perform
-      p <-- pfetch ();
+      p <-- mo_lookup ip;
       ret (liftGet p)
 end
 
 module DiscardPivot = struct
   include PivotCommon(PermList)
-  let decl _ = unitL
+  let decl _ = ret ()
   let add _ = ret None
   let fin () = failwith "Pivot is needed but is not computed"
 end
@@ -230,26 +283,43 @@ type 'a curposval = {p: 'a curpos; curval: ('a, C.Dom.v) abstract}
 module type DETERMINANT = sig
   type tdet = C.Dom.v ref
   type 'a lstate
-  type 'a tag_lstate = [`TDet of 'a lstate ]
-    (* Here, parameter 'b accounts for all the extra polymorphims *)
-  type ('b,'v) lm = ('a,'v,'s,'w) cmonad
-    constraint 's = [> 'a tag_lstate]
-    constraint 'b = 'a * 's * 'w
-  type ('b,'v) om = ('a,'v,'s,'w) omonad
-    constraint 's = [> 'a tag_lstate]
-    constraint 'b = 'a * 's * 'w
-  val decl : unit -> ('b,unit) lm (* could be unit rather than unit code...*)
+  type 'pc pc_constraint = unit
+    constraint 'pc = <state : [> `TDet of 'a lstate ]; classif : 'a; ..>
+  type ('pc,'v) lm = ('pc,'v) cmonad
+    constraint _  = 'pc pc_constraint
+  type ('pc,'v) om = ('pc,'v) omonad
+    constraint _  = 'pc pc_constraint
+  type 'pc nm = ('p,unit) monad
+    constraint _ = ('pc,'p,_) cmonad_constraint
+    constraint _ = 'pc pc_constraint
+  val decl : unit -> 'b nm (* no code is generated *)
   val upd_sign  : unit -> ('b,unit) om
   val zero_sign : unit -> ('b,unit) lm
-  val acc       : ('a,C.Dom.v) abstract -> ('a * 's * 'w,unit) lm
-  val get       : unit -> ('b,tdet) lm
-  val set       : ('a,C.Dom.v) abstract -> ('a * 's * 'w,unit) lm
+  val acc_magn  : ('a,C.Dom.v) abstract -> (<classif : 'a; ..>,unit) lm
+  val get_magn  : unit -> ('b,tdet) lm
+  val set_magn  : ('a,C.Dom.v) abstract -> (<classif : 'a; ..>,unit) lm
   val fin       : unit -> ('b,C.Dom.v) lm
 end
 
+(* This is for tracking L, as in LU decomposition.
+   Naturally, when doing only GE, this is not needed at all, and should
+   not generate any code *)
+module type LOWER = sig
+  type 'a lstate = ('a, C.contr) abstract
+  type ('pc,'v) lm = ('pc,'v) cmonad
+    constraint 'pc = <state : [> `TLower of 'a lstate ]; classif : 'a; ..>
+  val decl   : ('a, C.contr) abstract -> (<classif : 'a; ..>, C.contr) lm
+  val updt   : 'a C.vc -> ('a,int) abstract -> ('a,int) abstract -> 'a C.vo -> 
+            'a C.Dom.vc -> (<classif : 'a;..>, unit) lm option
+  val fin    : unit -> ('a,  C.contr) lm
+  val wants_pack : bool
+end
+
+
 module type PIVOT = 
       functor (D: DETERMINANT) -> 
-        functor (P: TRACKPIVOT) -> sig
+        functor (P: TRACKPIVOT) -> 
+          functor (L: LOWER) -> sig
  (* Find the pivot within [r,m-1] rows and [c,(n-1)] columns
     of containrer b.
     If pivot is found, permute the matrix rows and columns so that the pivot
@@ -257,8 +327,11 @@ module type PIVOT =
     Return the value of the pivot option. Or zero?
     When we permute the rows of columns, we update the sign of the det.
  *)
- val findpivot : 'a wmatrix -> 'a curpos ->
-   ('a,C.Dom.v option,[> 'a D.tag_lstate | 'a P.tag_lstate],'w) cmonad
+ val findpivot : 'a wmatrix -> 'a curpos -> 
+   (<classif : 'a; 
+     state : [> `TDet of 'a D.lstate | `TPivot of 'a P.lstate ]; ..>, 
+    C.Dom.v option) cmonad
+(* [> 'a D.tag_lstate | 'a P.tag_lstate] *)
 end
 
 (* In the case of a non-fraction-free algorithm with no Det
@@ -266,77 +339,73 @@ end
    in all other cases it is needed.
 *)
  
-module NoDet =
+module NoDet : DETERMINANT =
   struct
   type tdet = C.Dom.v ref
   type 'a lstate = unit
-  let decl () = unitL
+  let decl () = ret ()
   let upd_sign () = ret None
   let zero_sign () = unitL
-  let acc _ = unitL
-  let get () = ret (liftRef C.Dom.zeroL) (* hack alert! *)
-  let set _ = unitL
+  let acc_magn _ = unitL
+  let get_magn () = ret (liftRef C.Dom.zeroL) (* hack alert! *)
+  let set_magn _ = unitL
   let fin () = failwith "Determinant is needed but not computed"
-  type 'a tag_lstate = [`TDet of 'a lstate ]
-  type ('b,'v) lm = ('a,'v,'s,'w) cmonad
-    constraint 's = [> 'a tag_lstate]
-    constraint 'b = 'a * 's * 'w
-  type ('b,'v) om = ('a,'v,'s,'w) omonad
-    constraint 's = [> 'a tag_lstate]
-    constraint 'b = 'a * 's * 'w
+  type 'pc pc_constraint = unit
+    constraint 'pc = <state : [> `TDet of 'a lstate ]; classif : 'a; ..>
+  type ('pc,'v) lm = ('pc,'v) cmonad
+    constraint _  = 'pc pc_constraint
+  type ('pc,'v) om = ('pc,'v) omonad
+    constraint _  = 'pc pc_constraint
+  type 'pc nm = ('p,unit) monad
+    constraint _ = ('pc,'p,_) cmonad_constraint
+    constraint _ = 'pc pc_constraint
 end
 
-module AbstractDet =
+module AbstractDet : DETERMINANT =
   struct
   open C.Dom
   type tdet = v ref
   (* the first part of the state is an integer: which is +1, 0, -1:
      the sign of the determinant *)
   type 'a lstate = ('a,int ref) abstract * ('a,tdet) abstract
-  type 'a tag_lstate = [`TDet of 'a lstate ]
-  type ('b,'v) lm = ('a,'v,'s,'w) cmonad
-    constraint 's = [> 'a tag_lstate]
-    constraint 'b = 'a * 's * 'w
-  type ('b,'v) om = ('a,'v,'s,'w) omonad
-    constraint 's = [> 'a tag_lstate]
-    constraint 'b = 'a * 's * 'w
-  let rec fetch_iter s =
-    match (List.hd s) with
-      `TDet x -> x
-    |  _ -> fetch_iter (List.tl s)
-  let dfetch () = perform s <-- fetch; (* unit for monomorphism restriction *)
-                     ret (fetch_iter s)
-  let dstore v = store (`TDet v)
+  type 'pc pc_constraint = unit
+    constraint 'pc = <state : [> `TDet of 'a lstate ]; classif : 'a; ..>
+  type ('pc,'v) lm = ('pc,'v) cmonad
+    constraint _  = 'pc pc_constraint
+  type ('pc,'v) om = ('pc,'v) omonad
+    constraint _  = 'pc pc_constraint
+  type 'pc nm = ('p,unit) monad
+    constraint _ = ('pc,'p,_) cmonad_constraint
+    constraint _ = 'pc pc_constraint
+  let ip = (fun x -> `TDet x), (function `TDet x -> Some x | _ -> None), "Det"
+(* check later: XXX
+  include Foo(struct type 'a tags = private [> `TDet of 'a lstate ] end)
+*)
   let decl () = perform
-      ddecl <-- retN (liftRef oneL);
-      dsdecl <-- retN (liftRef Idx.one);
-      dstore (dsdecl,ddecl);
-      unitL
+      magn <-- retN (liftRef oneL);    (* track magnitude *)
+      sign <-- retN (liftRef Idx.one); (* track the sign: +1, 0, -1 *)
+      mo_extend ip (sign,magn)
   let upd_sign () = perform
-      det <-- dfetch ();
-      det1 <-- ret (fst det);
-      ret (Some (assign det1 (Idx.uminus (liftGet det1))))
+      (sign,_) <-- mo_lookup ip;
+      ret (Some (assign sign (Idx.uminus (liftGet sign))))
   let zero_sign () = perform
-      det <-- dfetch ();
-      det1 <-- ret (fst det);
-      assignM det1 Idx.zero
-  let acc v = perform
-      det <-- dfetch ();
-      det2 <-- ret (snd det);
-      r <-- ret ((liftGet det2) *^ v);
-      assignM det2 r
-  let get () = perform
-      det <-- dfetch ();
-      ret (snd det)
-  let set v = perform
-      det <-- dfetch ();
-      det2 <-- ret (snd det);
-      assignM det2 v
+      (sign,_) <-- mo_lookup ip;
+      assignM sign Idx.zero
+  let get_magn () = perform
+      (_,magn) <-- mo_lookup ip;
+      ret magn
+  let set_magn v = perform
+      magn <-- get_magn ();
+      assignM magn v
+  let acc_magn v = perform
+      magn <-- get_magn ();
+      r <-- ret ((liftGet magn) *^ v);
+      assignM magn r
   let fin = fun () -> perform
-      (det_sign,det) <-- dfetch ();
-      ifM (Logic.equalL (liftGet det_sign) Idx.zero) (ret zeroL)
-      (ifM (Logic.equalL (liftGet det_sign) Idx.one) (ret (liftGet det))
-          (ret (uminusL (liftGet det))))
+      (sign,magn) <-- mo_lookup ip;
+      ifM (Logic.equalL (liftGet sign) Idx.zero) (ret zeroL)
+      (ifM (Logic.equalL (liftGet sign) Idx.one) (ret (liftGet magn))
+          (ret (uminusL (liftGet magn))))
 end
 
 module type UPDATE =
@@ -345,8 +414,9 @@ module type UPDATE =
         val update : 
             'a in_val -> 'a in_val -> 'a in_val -> 'a in_val -> 
           ('a in_val -> ('a, unit) abstract) ->
-          ('a, C.Dom.v ref) abstract -> ('a, unit, 's, 'w) cmonad
-        val update_det : 'a in_val -> ('a * 's * 'w,unit) D.lm
+          ('a, C.Dom.v ref) abstract -> 
+          (<classif : 'a; ..>, unit) cmonad
+        val update_det : 'a in_val -> (<classif : 'a; ..>,unit) D.lm
 (* this is only needed if we try to deal with FractionFree LU,
    which is really tough, especially since the L Matrix still has
    to be over the fraction field, which we don't have available.
@@ -368,7 +438,7 @@ module DivisionUpdate(Det:DETERMINANT) =
   let update bic brc brk bik setter _ = perform
       y <-- ret (bik -^ ((divL bic brc) *^ brk));
       ret (setter (applyMaybe normalizerL y))
-  let update_det v = Det.acc v
+  let update_det v = Det.acc_magn v
 (*let update_lower bic brc _ _ _ = perform
       y <-- ret (divL bic brc);
       ret (applyMaybe normalizerL y) *)
@@ -386,7 +456,7 @@ module FractionFreeUpdate(Det:DETERMINANT) = struct
       t <-- ret (applyMaybe normalizerL z);
       ov <-- ret (divL t (liftGet d));
       ret (setter ov)
-  let update_det v = Det.set v
+  let update_det v = Det.set_magn v
 (*let update_lower bic brc lrk lik d = perform
       rat <-- ret (liftGet d);
       z <-- ret (divL ((rat *^ lik) +^ (bic *^ lrk)) brc);
@@ -396,39 +466,14 @@ module FractionFreeUpdate(Det:DETERMINANT) = struct
 end
 
 
-(* This is for tracking L, as in LU decomposition.
-   Naturally, when doing only GE, this is not needed at all, and should
-   not generate any code *)
-module type LOWER = sig
-  type 'a lstate = ('a, C.contr) abstract
-  type 'a tag_lstate = [`TLower of 'a lstate ]
-  type ('b,'v) lm = ('a,'v,'s,'w) cmonad
-    constraint 's = [> 'a tag_lstate]
-    constraint 'b = 'a * 's * 'w
-  val mfetch : unit -> ('b, C.contr) lm
-  val decl   : ('a, C.contr) abstract -> ('a*'s*'w, C.contr) lm
-  val updt   : 'a C.vc -> ('a,int) abstract -> ('a,int) abstract -> 'a C.vo -> 
-            'a C.Dom.vc -> ('a*'s*'w, unit) lm option
-  val fin    : unit -> ('a,  C.contr) lm
-  val wants_pack : bool
-end
-
 (* Do we keep the lower part? *)
 module TrackLower = 
   struct
   type 'a lstate = ('a, C.contr) abstract
-  type 'a tag_lstate = [`TLower of 'a lstate ]
-  type ('b,'v) lm = ('a,'v,'s,'w) cmonad
-    constraint 's = [> 'a tag_lstate]
-    constraint 'b = 'a * 's * 'w
-  (* In 3.09, no need for any coercion at all, type inference works! *)
-  let rec fetch_iter s =
-    match (List.hd s) with
-      `TLower x -> x
-    |  _ -> fetch_iter (List.tl s)
-  let mfetch () = perform s <-- fetch; (* unit for monomorphism restriction *)
-                          ret (fetch_iter s)
-  let mstore v = store (`TLower v)
+  type ('pc,'v) lm = ('pc,'v) cmonad
+    constraint 'pc = <state : [> `TLower of 'a lstate ]; classif : 'a; ..>
+  let ip = (fun x -> `TLower x), (function `TLower x -> Some x | _ -> None), 
+           "TrackLower"
 end
 
 (* Even this form cannot be done with FractionFree, because in
@@ -439,17 +484,15 @@ module SeparateLower = struct
   include TrackLower
   let decl c = perform
       udecl <-- retN c;
-      mstore udecl;
+      mo_extend ip udecl;
       ret udecl
   (* also need to 'set' lower! *)
   let updt mat row col defval nv = Some( perform
-      lower <-- mfetch ();
+      lower <-- mo_lookup ip;
       l1 <-- ret (C.col_head_set lower row col nv);
       l2 <-- ret (C.col_head_set mat row col defval);
       ret (seq l1 l2) )
-  let fin () = perform
-      m <-- mfetch ();
-      ret m
+  let fin () = mo_lookup ip
   let wants_pack = false
 end
 
@@ -459,12 +502,10 @@ module PackedLower = struct
   include TrackLower
   let decl c = perform
       udecl <-- ret c;
-      mstore udecl;
+      mo_extend ip udecl;
       ret udecl
   let updt  _ _ _ _ _ = None
-  let fin () = perform
-      m <-- mfetch ();
-      ret m
+  let fin () = mo_lookup ip
   let wants_pack = true
 end
 
@@ -480,8 +521,8 @@ end
 module type INPUT = sig
     type inp
     val get_input : ('a, inp) abstract ->
-        (('a, C.contr) abstract * ('a, int) abstract * bool, 's, ('a, 'w)
-        abstract) monad
+    (<classif : 'a; ..>, ('a, C.contr) abstract * ('a, int) abstract * bool)
+   monad
 end 
 
 (* What is the input *)
@@ -498,8 +539,10 @@ module InpMatrixMargin = struct
 end
 
 
-module RowPivot(Det: DETERMINANT)(P: TRACKPIVOT) =
+module RowPivot(Det: DETERMINANT)(P: TRACKPIVOT)(L: LOWER) =
 struct
+   (* If wants_pack, then we cannot optimize *)
+   let optim x = if L.wants_pack then None else Some x
    let findpivot mat pos = perform
        pivot <-- retN (liftRef Maybe.none );
        (* If no better_than procedure defined, we just search for
@@ -541,7 +584,7 @@ struct
                 (fun pv -> perform
                      (i,bic) <-- ret (liftPair pv);
                      seqM (whenM (Logic.notequalL i pos.rowpos) (perform
-                            s1 <-- ret (C.swap_rows_stmt mat.matrix pos.rowpos i);
+                            s1 <-- ret (C.swap_rows_stmt mat.matrix (optim pos.colpos) pos.rowpos i);
                             s2 <--  Det.upd_sign ();
                             s3 <-- ret (optSeq s1 s2);
                             s4 <-- P.add (P.rowrep i pos.rowpos );
@@ -551,8 +594,10 @@ struct
                 (ret Maybe.none))
 end
 
-module FullPivot(Det: DETERMINANT)(P: TRACKPIVOT) = 
+module FullPivot(Det: DETERMINANT)(P: TRACKPIVOT)(L: LOWER) = 
 struct
+   (* If wants_pack, then we cannot optimize *)
+   let optim x = if L.wants_pack then None else Some x
    let findpivot mat pos = perform
        pivot <-- retN (liftRef Maybe.none );
        (* this is not really a row/column iteration, this is a
@@ -590,7 +635,7 @@ struct
                            ret (optSeq s3 s4)))
                        (seqM
                          (whenM (Logic.notequalL pr pos.rowpos) (perform
-                           s1 <-- ret (C.swap_rows_stmt mat.matrix pos.rowpos pc);
+                           s1 <-- ret (C.swap_rows_stmt mat.matrix (optim pos.colpos) pos.rowpos pc);
                            s2 <-- Det.upd_sign ();
                            s3 <-- ret (optSeq s1 s2);
                            s4 <-- P.add (P.rowrep pr pos.rowpos );
@@ -599,7 +644,7 @@ struct
                   (ret Maybe.none))
 end
 
-module NoPivot(Det: DETERMINANT)(P: TRACKPIVOT) = 
+module NoPivot(Det: DETERMINANT)(P: TRACKPIVOT)(L: LOWER) = 
 struct
    (* In this case, we assume diagonal dominance, and so
       just take the diagonal as ``pivot'' *)
@@ -735,8 +780,15 @@ module type OUTPUT = functor(OD : OUTPUTDEP) -> sig
   module IF : INTERNAL_FEATURES
   type res
   val make_result : 'a wmatrix ->
+   (<classif : 'a; 
+     state : [> `TDet of 'a OD.Det.lstate |
+                'a IF.R.tag_lstate |
+                `TPivot of 'a IF.P.lstate |
+                `TLower of 'a IF.L.lstate]; ..>,res) cmonad
+   (*
     ('a,res,[> 'a OD.Det.tag_lstate | 'a IF.R.tag_lstate 
              | 'a IF.P.tag_lstate   | 'a IF.L.tag_lstate],'w) cmonad
+      *)
 end
 
 (* The `keyword' list of all the present external features *)
@@ -767,7 +819,7 @@ module GenGE(F : FEATURES) = struct
         let module U = F.Update(F.Det) in
         let innerbody j bjc = perform
             whenM (Logic.notequalL bjc C.Dom.zeroL ) (perform
-                det <-- F.Det.get ();
+                det <-- F.Det.get_magn ();
                 optSeqM (Iters.col_iter mat.matrix j (Idx.succ pos.p.colpos) 
                (Idx.pred mat.numcol) C.getL
                       (fun k bjk -> perform
@@ -806,8 +858,8 @@ module GenGE(F : FEATURES) = struct
              rr <-- retN (liftGet r);
              cc <-- retN (liftGet c);
              let cp  = {rowpos=rr; colpos=cc} in
-             let module Pivot = F.PivotF(F.Det)(IF.P) in
-             pivot <-- l1 retN (Pivot.findpivot mat cp);
+             let module Pivot = F.PivotF(F.Det)(IF.P)(IF.L) in
+             pivot <-- bind (Pivot.findpivot mat cp) retN;
              seqM (matchM pivot (fun pv -> 
                       seqM (zerobelow mat {p=cp; curval=pv} )
                            (IF.R.succ ()) )
@@ -834,8 +886,7 @@ module type INPUT = sig
     type inp
     type rhs = C.contr
     val get_input : ('a, inp) abstract ->
-        (('a, C.contr) abstract * ('a, rhs) abstract, 's, ('a, 'w)
-        abstract) monad
+      (<classif : 'a;..>, ('a, C.contr) abstract * ('a, rhs) abstract) monad
 end 
 
 (* What is the input *)
@@ -853,7 +904,7 @@ module type OUTPUT = sig
   type res
   val make_result : ('a, C.contr) abstract -> ('a, C.contr) abstract ->
       ('a, int) abstract -> ('a, int) abstract -> ('a, int) abstract ->
-      ('a, res, 's, 'w) cmonad
+      (<classif : 'a;..>, res) cmonad
 end
 
 module OutJustAnswer = struct

@@ -7,7 +7,7 @@ open Domains_code
 
 type 'b pr = {pf : 'a . ('a,'b) code};;
 let instantiate gen =
-    .<fun a -> .~(runM (gen .<a>.)) >.;;
+    .<fun a -> .~(runM (gen .<a>.) []) >.;;
 
 let runit f = .! f.pf;;
 
