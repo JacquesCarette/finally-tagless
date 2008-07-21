@@ -106,13 +106,13 @@ p3 of the excerpt:
 Yes, we too partition the meaning of the program into two parts. An
 interpretation may vary but the core stays the same. What we make
 explicit is that our `core' is (typed) syntax! Indeed, the syntax of the
-language determines how semantics composes, because, by the principle
-of compositionality, semantics is `syntax directed'. Syntax has the
-`universality property'. To express that insight more concretely, the
-file jones-ai1.ml implements the example of factorized semantics (p4
-of the excerpt) in our typed approach. It is astounding how literally
-the OCaml code reproduces the example in the except. The code likewise
-provides two interpretations in a uniform framework: the standard
+language, through its explicit signature, determines how semantics composes,
+because, by the principle of compositionality, semantics is `syntax directed'.
+Syntax has the `universality property'. To express that insight more
+concretely, the file jones-ai1.ml implements the example of factorized
+semantics (p4 of the excerpt) in our typed approach. It is astounding how
+literally the OCaml code reproduces the example in the except. The code
+likewise provides two interpretations in a uniform framework: the standard
 interpretation (more concrete) and the even-odd interpretation (more
 abstract).
 
@@ -130,4 +130,3 @@ the terminology of modules, the interpretation is `translucent' in the
 sense that the family is opaque but the object type is manifest.  In
 the terminology of types, an interpretation provides an abstract type
 _constructor_.  That's the main trick.
-
