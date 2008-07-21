@@ -46,6 +46,9 @@ describe.
 >
 > - that application in the interpreted program is implemented by ML  
 > application
+
+[See answer after point 6.]
+
 >
 > 6. I'm curious how the approach would need modification if these  
 > assumptions are broken, for example
@@ -57,9 +60,16 @@ We're not sure what "extension to lambda calculus over the rationals"
 you have in mind (other than adding the rationals as a primitive data
 type, which is easy), but we certainly don't want to be tied down to
 any concrete object representation such as "a pair of integer values".
+[We have implemented an extension of our interpreters with the
+rationals, just to make sure -- we can send you the source code if you
+wish; the changes were indeed completely straightforward].
 It is of course possible for a particular implementation of Symantics
 to represent object terms by integers; please see the "size measurer"
 module L at the end of our Section 2.2.
+
+What is true is that we cannot have a polymorphic 'add' function (at 
+least in ML) that works for both integers and rationals [assuming these
+are represented as different types].
 
 The two principles you name are not necessary.  First, an object
 variable is represented by a metalanguage variable only if we use
@@ -95,7 +105,7 @@ p3 of the excerpt:
 
 Yes, we too partition the meaning of the program into two parts. An
 interpretation may vary but the core stays the same. What we make
-explicit is that our `core' is syntax! Indeed, the syntax of the
+explicit is that our `core' is (typed) syntax! Indeed, the syntax of the
 language determines how semantics composes, because, by the principle
 of compositionality, semantics is `syntax directed'. Syntax has the
 `universality property'. To express that insight more concretely, the
