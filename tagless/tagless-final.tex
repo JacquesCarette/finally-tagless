@@ -369,7 +369,7 @@ the serious performance penalty \citep{WalidICFP02} of error checking.
 inevitably lead to these performance penalties.
 
 Unlike \citearound{'s HOAS-based term representation}\citet{JFP-Mogensen},
-our solution is \emph{not} Church-encoding the
+our solution does \emph{not} involve Church-encoding the
 universal type. The Church encoding of the type~|u| in \S\ref{tagproblem}
 requires two continuations; the function |app| in the interpreter above would
 have to provide both to the encoding of~|e1|. The continuation
@@ -1012,7 +1012,7 @@ let abstrI0 (e:('c,int) repr) : ('c,int) C.repr =
 \end{code}
 and the similar function |abstrB0| for dynamic boolean terms. Here, 
 |C.int| is used to convert from the static term |('c,int) R.repr|, 
-which is just |int|, to the dynamic term. We can now define the following
+which is just |int|, to a dynamic term. We can now define the following
 components of module |P0| required by the |Semantics| signature:
 \begin{code}
 let int  (x:int)  = S0 (R.int x)
@@ -1034,7 +1034,7 @@ is a dynamic term
 (of type |('c,'a) R.repr|), and the third a
 dynamic term (of type |('c,'a) C.repr|). We then need to convert
 the static term to dynamic, but there is no polymorphic ``lift''
-function, of type |'a -> ('c,'a) C.repr|, to send a value to the future stage
+function, of type |'a -> ('c,'a) C.repr|, to send a value to a future stage
 \citep{xi-guarded,WalidPOPL03}.
 \begin{comment}
 (By the way, if we
@@ -1048,11 +1048,10 @@ Our |Symantics| only includes separate lifting methods |bool| and
 |int|, not a parametrically polymorphic lifting method, for good reason:
 When compiling to a first-order target language such as machine code,
 booleans, integers, and functions may well be represented differently.
-Thus, compiling polymorphic lift requires intensional type
+Compiling a polymorphic lift function thus requires intensional type
 analysis.  To avoid needing polymorphic lift, we turn to
 Asai's technique \citep{asai-binding-time,sumii-hybrid} of
 building a dynamic term alongside every static term.
-
 
 \subsection{Delaying binding-time analysis}
 \label{S:PE-problem}
@@ -1123,16 +1122,17 @@ Thus, typed partial evaluation, like typed CPS transformation
 (see \S\ref{S:CPS}),
 inductively defines a map from source types to target types that
 performs case distinction on the source type. In Haskell, typecase
-can be equivalently implemented either with GADTs or with
+can be implemented using either GADTs or
 type-class functional dependencies
 \citep{oliveira-typecase}. The accompanying code shows both
 approaches (|Incope.hs| and |incope1.hs|), 
-neither portable to OCaml. In addition,
-the problem of nonexhaustive pattern\hyp matching reappears in
+neither of which is portable to OCaml. In addition,
+the problem of non\hyp exhaustive pattern\hyp matching reappears in
 the GADT approach because GHC 6.6.1 cannot see that a particular
 type of a GADT value precludes certain constructors.
 Thus GADTs fail to
 make it \emph{syntactically} apparent that pattern matching is exhaustive.
+\jacques{what about GHC 6.8?}
 
 
 %% \subsection{Eliminating tags from typecase}
@@ -1231,8 +1231,8 @@ Although we can use type classes to define this type function
 in Haskell, that is not portable to MetaOCaml. However,
 these three typecase alternatives are already present in existing
 methods of |Symantics|.
-A simple and portable solution thus emerges: we bake |repr_pe| 
-into the signature |Symantics|. 
+A simple and portable solution\footnote{though somewhat long-winded} thus
+emerges: we bake |repr_pe| into the signature |Symantics|. 
 We recall from Figure~\ref{fig:ocaml-simple} in~\S\ref{encoding} that 
 the |repr| type constructor took two arguments |'c| and~|'dv|.
 We add an argument |'sv| for the result of applying |repr_pe| to~|'dv|.
@@ -1315,8 +1315,8 @@ module C = struct
   type ('c,'sv,'dv) repr = ('c,'dv) code
 \end{code}
 with the rest the same.
-In contrast, the partial evaluator~|P| relies on the type argument |'sv|.
-
+Predictably, the partial evaluator~|P| crucially relies on the type argument
+|'sv|.
 
 Figure~\ref{fig:pe} shows the partial evaluator~|P|.
 Its type |repr| literally expresses the type equation for |repr_pe| above.
@@ -1534,12 +1534,8 @@ interpreter~|RCV| is useful for CBV evaluation of the object language
 whether the metalanguage is CBV or CBN\@.
 
 We turn to a more general approach to CBV CPS: a CPS transformer that
-turns any implementation of |Symantics| into a CPS interpreter, whether
-it is an evaluator.\oleg{I don't understand this whether
-  classification: any interpreter is an evaluator, no? It all depends
-  on what the domain is. Anyway, the reviewer suggests rewriting the
-  clause as ``whether or not it is an evaluator''. I suggest to drop
-  it entirely.}
+turns any implementation of |Symantics| into a CPS version of that
+evaluator.
 This functor on interpreters performs a textbook
 CPS transformation on the object language.
 \begin{code}
@@ -2217,18 +2213,18 @@ in~\S\ref{S:PE-solution}).
   correspondence with Sumii about Birkedal's thesis. We definitely
   should include this discussion and the reference to his thesis.}
 \Citet{Birkedal-PE-ML} have hand-written a compiler generator (cogen)
-for the Core Standard ML, which transforms a program into its tagless
+for Core Standard ML, which transforms a program into its tagless
 generating extension (and therefore serves as a tagless partial
 evaluator, intepreter, and compiler in our sense). They still have to
 use the "universal type" at the cogen level, which is removed from
 compile-time, so that the end result is tagless indeed.  The main
 difference between the work of \Citet{Birkedal-PE-ML} and ours is how
 \emph{early} it becomes \emph{manifest} to the metalanguage
-implementation that our code is safe.  The fact that
+that our code is safe.  The fact that
 \Citet{Birkedal-PE-ML} 's generating extension never generates a
 specialized program that is ill-typed is not manifest to the SML
 compiler until the SML compiler sees each particular specialized
-program.  Moreover and analogously, the fact that
+program.  Moreover, and in a similar vein, the fact that
 \Citet{Birkedal-PE-ML} 's cogen never generates a generating extension
 that is ill-typed (or that may generate a specialized program that is
 ill-typed) is not manifest to the SML compiler until the SML compiler

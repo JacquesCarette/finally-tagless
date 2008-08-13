@@ -18,6 +18,15 @@ recommended references to show the historical development.}
 comments that are already taken care of. We include them in the
 reply.}
 
+\jacques{Since the APLAS paper has appeared, we have been cited twice.
+The citations are interesting (and we should cite them here) as they
+draw out a different feature of our solution: the importance of
+'repr', in other words, the importance of being able to abstract over
+a type constructor.  This allows us to simultaneously 1) abstract over
+'interpretations', and 2) nevertheless only allow well-typed terms
+to be created.  Certainly we need to add something to the 'related work',
+but perhaps also to the contributions?}
+
 ==========================================================================
 		Comments yet to address
 
