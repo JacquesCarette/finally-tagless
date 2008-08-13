@@ -1497,6 +1497,14 @@ This interpreter~|RCN| is fully polymorphic over the answer type,
 using higher-rank polymorphism through OCaml record types.
 It could also be a functor parameterized over
 the answer type.
+\begin{code}
+module RCN(W : sig type w end)= struct
+  type ('c,'sv,'dv) repr = ('sv -> W.w) -> W.w
+  ...
+\end{code}
+This allows a translation of these techniques to, for example, Standard ML.
+Unfortunately, the loss of polymorphism in the answer type makes the 
+CPS evaluator less pleasant to use than the other implementations.
 
 Because |RCN| has the signature |Symantics|, we can instantiate our previous
 examples with it, and all works as expected.  More interesting
@@ -2235,7 +2243,6 @@ as calls to abstract-syntax constructor functions.  The tradeoff, as
 we currently see it, is that we have to swear off intensional analysis
 of code. \oleg{Unless we convert to our representation to GADT, which
   is always possible, if GADTs are available.}
-
 
 
 % The following paragraph was not in the version submitted to APLAS,
