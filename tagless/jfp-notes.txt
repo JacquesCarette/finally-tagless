@@ -27,16 +27,17 @@ a type constructor.  This allows us to simultaneously 1) abstract over
 to be created.  Certainly we need to add something to the 'related work',
 but perhaps also to the contributions?}
 
+Another buried TODO:
+add a ref to  Lars Birkedal's master thesis
+ http://www.itu.dk/people/birkedal/papers/paresm.ps.gz
+and thank Eijiro Sumii
+In the end, we may also have to thank others (like Neil Jones) if we 
+end up making changes that came to us because of our subsequent discussion.
+
 ==========================================================================
 		Comments yet to address
 
 REPORT FROM REFEREE #1
-
-Page 18: 
-Here the OCaml higher-rank record types seem to play an essential
-role.  This raises the question whether the same encoding could be
-made in Standard ML (as defined by the Milner et al book 1997)?  This
-question must be answered in the paper.
 
 Page 20: Say whether the additional phantom type parameter to repr causes
 any real problems (other than verbosity).
@@ -64,19 +65,10 @@ gained by a non-primitive recursive term representation.
 
 REPORT FROM REFEREE #2
 
-SUMMARY
-
-The authors propose a way to express tagless interpretation in a
-Hindley-Milner-typed metalanguage. They parametrize this
-interpretation by exploiting the OCaml module system and thus
-demonstrate to achieve different styles of interpretation:
-compilation, partial evaluation, cps transformation.
-They also show that a similar parametrization can be achieved with
-Haskell's class system. They express self-interpretation via
-context-filling and claim to achieve Jones-optimal partial evaluation
-in this way.
-
 OVERALL EVALUATION
+
+\jacques{I like what the next 2 paragraphs say.  We should somehow
+include parts of that in our paper.  But where?}
 
 The authors have picked up ideas that were lying around for a long
 time and have put them together in an original way. A very short way
@@ -94,16 +86,21 @@ formal claim. Several propositions are stated without offering any
 proof. Only a few of them have obviously trivial proofs, but for some
 of them I don't have a good idea of how to formalize these claims
 properly, let alone how to prove them. 
+\jacques{are we going to do anything about this in the present paper?}
 
 The rapid change between OCaml and Haskell is not always helpful. It
 would be better to stick to one formulation throughout the paper
 and explain the other e.g. in an appendix.
+\jacques{the only Haskell left is in 2.1 and a bit in 2.2, and neither
+are really essential.  Maybe we should indeed move any remaining Haskell
+to an appendix, if at all?}
 
 As it stands, the paper is not sufficiently focused and the main
 contribution is sometimes drowned in distracting details. Some of the
 "historical context" is also missing in the present submission and
 should be added. Furthermore, some technical sloppiness should be
 tightened up.
+\jacques{I don't think this paragraph can be acted upon in any way}
 
 DETAILS
 
@@ -424,4 +421,12 @@ Rev2: p13, section 4.3
 Rev1, Page 14: In the definition of "abstr" maybe use C.int, C.bool and so
 on to indicate where these terms come from.
 \oleg{We removed that section and that code}
+
+Rev1, Page 18: 
+Here the OCaml higher-rank record types seem to play an essential
+role.  This raises the question whether the same encoding could be
+made in Standard ML (as defined by the Milner et al book 1997)?  This
+question must be answered in the paper.
+\jacques{Be even more explicit about the functor variant, and explicitly
+mention Standard ML -- but bemoan the polymorphism and usability loss}
 
