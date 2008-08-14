@@ -37,10 +37,10 @@ end up making changes that came to us because of our subsequent discussion.
 ==========================================================================
 		Comments yet to address
 
-REPORT FROM REFEREE #1
+Mogensen (PEPM 1995) \cite{mogensen-self-applicable}
+Sperber (PE 1996) \cite{sperber-self-applicable}
 
-Page 20: Say whether the additional phantom type parameter to repr causes
-any real problems (other than verbosity).
+REPORT FROM REFEREE #1
 
 Page 25: The discussion of context, holes and plugging should be made
 clearer and more concrete, using a tiny example if possible.  For
@@ -87,6 +87,15 @@ proof. Only a few of them have obviously trivial proofs, but for some
 of them I don't have a good idea of how to formalize these claims
 properly, let alone how to prove them. 
 \jacques{are we going to do anything about this in the present paper?}
+
+    \oleg{\ccshan{In response to the message of Neil Jones as of Mar
+    31, 2008} I wonder if we can claim that our approach automatically
+    assures at least some conditions of the Galois connection. So, the
+    type system of the meta-language assures that
+	    abstraction . concretization == id
+	    abstraction . concretization . abstraction == abstraction
+    I wonder is these are the better propositions than the ones in the
+    present JFP paper.}
 
 The rapid change between OCaml and Haskell is not always helpful. It
 would be better to stick to one formulation throughout the paper
@@ -397,6 +406,10 @@ please search for \underline.}
 Rev1, Page 17: Introduce the abbreviation CPS somewhere.
 \oleg{it has been done already, in the last contribution, in Sec 1.4}
 
+Rev1, Page 20: Say whether the additional phantom type parameter
+to repr causes any real problems (other than verbosity).
+\ccshan{We say no now.}
+
 Rev1, Page 12: Please give mnemonic help to the constructor names "S0" and
 "E0".
 \oleg{E0 is now renamed to D0 for better mnemonic; added a comment
@@ -427,6 +440,9 @@ Here the OCaml higher-rank record types seem to play an essential
 role.  This raises the question whether the same encoding could be
 made in Standard ML (as defined by the Milner et al book 1997)?  This
 question must be answered in the paper.
+\ccshan{We state that RCN can also be defined as a functor parameterized
+over the answer type, to avoid the use of higher-rank polymorphism in
+the core language.}
 \jacques{Be even more explicit about the functor variant, and explicitly
 mention Standard ML -- but bemoan the polymorphism and usability loss}
 

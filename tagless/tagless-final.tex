@@ -1,7 +1,6 @@
 %% TODO: add a ref 
 %%  Lars Birkedal's master thesis
 %%   http://www.itu.dk/people/birkedal/papers/paresm.ps.gz
-%% and thank Eijiro Sumii
 
 \begin{comment}
 \authorinfo{Jacques Carette}
@@ -30,7 +29,7 @@ call-by-value CPS transformers.
 
 Our main idea is to encode
 \ifshort HOAS \else de Bruijn or higher-order abstract syntax \fi
-using compiler-generator (cogen) functions rather than data constructors.
+using combinator functions rather than data constructors.
 In other words, we represent object terms not in an initial algebra
 but using the coalgebraic structure of the $\lambda$-calculus.
 Our representation also simulates inductive maps from types to
@@ -503,14 +502,18 @@ $\lambda$-calculus with fixpoint, integers, booleans, and comparison.
 The language is close to \citets{xi-guarded}, without their polymorphic
 lift but with more constants so as to more conveniently express Fibonacci,
 factorial, and power.
+\begin{comment}
 \oleg{There is now IncopeDB.hs that defines at least R, L and C
- interpreters (no PE at present though) using DeBruijn indices. So we
- can say that (some of) our development is available in DeBruijn
+ interpreters (no PE at present though) using de Bruijn indices. So we
+ can say that (some of) our development is available in de Bruijn
  style. We won't talk about it in the paper though.}
-In contrast to \S\ref{intro}, we encode binding using higher-order
+\end{comment}
+In contrast to \S\ref{intro}, we use higher-order
 abstract syntax (HOAS) \citep{miller-manipulating,pfenning-higher-order}
-rather than de Bruijn indices. This makes the encoding convenient and
+rather than de Bruijn indices to encode binding and
 ensures that our object programs are closed.
+We find HOAS to be more convenient, though we could have continued to
+use de Bruijn indices.
 
 \subsection{How to make encoding flexible: abstract the interpreter}
 \label{encoding}
@@ -1495,14 +1498,16 @@ end
 
 This interpreter~|RCN| is fully polymorphic over the answer type,
 using higher-rank polymorphism through OCaml record types.
-It could also be a functor parameterized over
+To avoid this higher-rank polymorphism in the core language, which
+Standard ML does not support, we could also define |RCN| as
+a functor parameterized over
 the answer type.
 \begin{code}
 module RCN(W : sig type w end)= struct
   type ('c,'sv,'dv) repr = ('sv -> W.w) -> W.w
   ...
 \end{code}
-This allows a translation of these techniques to, for example, Standard ML.
+This allows a translation of these techniques to, for example, Standard ML\@.
 Unfortunately, the loss of polymorphism in the answer type makes the 
 CPS evaluator less pleasant to use than the other implementations.
 
@@ -1581,6 +1586,8 @@ identical to |repr_pe|, so we need to add another type argument to
 terms in previous implementations of |Symantics| stay unchanged, but the
 |repr| type equations in those implementations have to take a new
 (phantom) type argument.
+The verbosity of these types is the only difficulty in defining a
+new signature to replace |Symantics| that the output of |CPST| matches.
 
 For brevity, we just
 use the module returned by |CPST| as is. Because it does not
@@ -1590,10 +1597,10 @@ Nevertheless, we can write the tests.
 module T = struct
   module M = CPST(C)
   open M
-  let test1 () = (* same as before *)
-       app (lam (fun x -> x)) (bool true)
-  let testpowfix () = ... (* same as before *)
-  let testpowfix7 = (* same as before *)
+  let test1 () =
+       app (lam (fun x -> x)) (bool true)  (* same as before *)
+  let testpowfix () = ...                  (* same as before *)
+  let testpowfix7 =                        (* same as before *)
        lam (fun x -> app (app (testpowfix ()) x) (int 7))
 end
 \end{code}
@@ -1677,11 +1684,6 @@ end
 The accompanying source code shows several more tests, including
 a test for higher-order state and a power function that uses state
 as the accumulator.
-Because the |SymSI| signature extends |Symantics|, any encoding of
-a term in the pure object language (that is, any functor that takes
-a |Symantics| module as argument) can also be used as a term in the
-extended object language (for example, applied to an implementation of
-|SymSI|).
 
 The state-passing interpreter extends the CBN CPS
 interpreter |RCN| of~\S\ref{S:CPS}.
@@ -1724,6 +1726,11 @@ are no longer the same, and |'s states| is mutually
 recursive with the type |('c,'sv,'dv) repr|, as demonstrated in the
 accompanying source code.
 
+Because the |SymSI| signature extends |Symantics|, any encoding of
+a term in the pure object language (that is, any functor that takes
+a |Symantics| module as argument) can also be used as a term in the
+extended object language (for example, applied to an implementation of
+|SymSI|).  In particular,
 |RCPSI| matches the |Symantics| signature and implements the
 unextended object language: we can pass |RCPSI|
 to the functor |EX| (Fig.~\ref{fig:ocaml-simple}) and run 
@@ -1735,8 +1742,8 @@ let cpsitesti1 = RCPSI.get_res (EXPSI_INT.test1 ()) 100
 val cpsitesti1 : int = 102
 \end{code}
 
-It is worthwhile reiterating how close this implementation is to the CPS
-interpreter, and that adding state and imperative features needed no new
+We reiterate that this implementation adding state and imperative
+features is very close to the CPS interpreter and uses no new
 techniques.
 We can also add mutable references to the object language using
 mutable references of the metalanguage, as shown in the accompanying
@@ -1759,13 +1766,13 @@ equivalent to the object application $\si\Encode{e}$
 A partial evaluator~$\pe$ maps object terms~$e$ to observationally
 equivalent object terms~$\pe(e)$.  It is said to be
 \emph{optimal} with respect to~|si| \citep{jones-challenging} if $\pe(\si\Encode{e})$
-is equal to~$e$ (up to $\alpha$\hyp conversion, or in some accounts, no
+is $\alpha$\hyp equivalent to~$e$ (or in some accounts, no
 less efficient than~$e$).
 
-Intuitively, self\hyp interpretation is straightforward in our
-framework: the functions comprising the interpreters
-in~\S\ref{S:interpreter-RL} may just as well be written in our object
-language:~Fig.~\ref{fig:self-eval}.
+Self\hyp interpretation in our framework is straightforward at the
+term level: the functions comprising the interpreters
+in~\S\ref{S:interpreter-RL} may as well be written in our object
+language, as in Fig.~\ref{fig:self-eval}.
 \begin{figure}
 \begin{align*}
     \ident{int} &= \fun{x} x \\
@@ -1782,17 +1789,18 @@ evaluator.  (We use the number~$0$ in lieu of a unit value.)}
 \end{figure}
 We thus map each object term~$e$ to an object term~$\encode{e}$ as follows.
 We call this mapping \emph{pre-encoding}.
-\begin{align*}
+\begin{equation}
+\begin{split}
     \encode{x} &= x \\
     \encode{n} &= \ident{int}\, n \\
+    \encode{\fun{x}e} &= \ident{lam} (\fun{x} \encode{e}) \\
     \encode{e_1 + e_2} &= \ident{add} \encode{e_1} \encode{e_2} \\
     \encode{\cond{b}{t}{e}} &= \rlap{$\ident{if\_} \encode{b}
-        \left(\fun{\_}\encode{t}\right) \left(\fun{\_}\encode{e}\right)$}
-        \displaybreak[0] \\
-    \encode{\fun{x}e} &= \ident{lam} (\fun{x} \encode{e}) \\
+        \left(\fun{\_}\encode{t}\right) \left(\fun{\_}\encode{e}\right)$} \\
     \encode{fx} &= \ident{app} \encode{f} \encode{x} \\
     \encode{\fix{f}e} &= \ident{fix} (\fun{f} \encode{e})
-\end{align*}
+\end{split}
+\end{equation}
 The metavariables $x$ and~$n$ stand for a variable and an integer,
 respectively.
 This pre-encoding is just like how we represent object terms in the
@@ -1804,15 +1812,15 @@ instantiate the free variables in~$\encode{e}$ such as $\ident{int}$,
 $\ident{lam}$, and $\ident{add}$ by their definitions given in
 Fig.~\ref{fig:self-eval}.  For
 example, the familiar object term $(\fun{x}x)\True$ pre-encodes to
-\begin{equation*}
+\begin{equation}
     \encode{(\fun{x}x)\True} = \ident{app}
-    (\ident{lam} (\fun{x} x))\, (\ident{bool} \True),
-\end{equation*}
+    (\ident{lam} (\fun{x} x))\, (\ident{bool}\, \True),
+\end{equation}
 and to evaluate this pre-encoded term is to evaluate the object term
-\begin{equation*}
+\begin{equation}
     (\fun{f} \fun{x} fx) \,
     ((\fun{f} f) (\fun{x} x))\, ((\fun{b} b) \True).
-\end{equation*}
+\end{equation}
 Because the evaluator in Fig.~\ref{fig:self-eval} mostly consists 
 of glorified identity
 functions, our simple partial evaluator reduces the
@@ -1829,40 +1837,42 @@ want to define encoding in terms of pre-encoding, and interpretation
 using some notion of instantiation.  Unfortunately, the simple type
 structure of our object language hinders both tasks.  To continue with
 the example term above, we could try to define
-\begin{equation*}
+\begin{equation}
     \Encode{e} =
     \fun{\ident{app}} \fun{\ident{lam}} \fun{\ident{bool}} \encode{e},
-\end{equation*}
+\end{equation}
 in particular
-\begin{equation*}
+\begin{equation}
     \Encode{(\fun{x}x)\True} =
     \fun{\ident{app}} \fun{\ident{lam}} \fun{\ident{bool}}
-    \ident{app} (\ident{lam} (\fun{x} x))\, (\ident{bool} \True).
-\end{equation*}
-To type-check this encoded term, we give the variable $\ident{lam}$ the
+    \ident{app} (\ident{lam} (\fun{x} x))\, (\ident{bool}\, \True).
+\end{equation}
+To type-check this encoded term, we give the bound variable $\ident{lam}$ the
 simple type $(\BB\to\BB)\to\BB\to\BB$.
 We then define the self\hyp interpreter
-\begin{equation*}
+\begin{equation}
     \si = \fun{e} e
     (\fun{f} \fun{x} fx)
     (\fun{f} f)
     (\fun{b} b)
-\end{equation*}
+\end{equation}
 and apply it to the encoded term.  The result is the object term
-\begin{equation*}
+\begin{equation}
+\kern-\mintagsep
     \bigl(\fun{e} e (\fun{f} \fun{x} fx) (\fun{f} f) (\fun{b} b)\bigr)
     \bigl(
     \fun{\ident{app}} \fun{\ident{lam}} \fun{\ident{bool}}
-    \ident{app} (\ident{lam} (\fun{x} x))\, (\ident{bool} \True)
+    \ident{app} (\ident{lam} (\fun{x} x))\, (\ident{bool}\, \True)
     \bigr),
-\end{equation*}
+\end{equation}
 which partially evaluates to~$\True$ easily.
 However, encoding fails on a term with multiple $\lambda$\hyp
 abstractions at different types.  For example, the pre-encoding
-\begin{equation*}
+\begin{equation}
+\label{e:pre-encoding-example}
     \encode{\fun{f}\fun{x}fx}
     = \ident{lam} (\fun{f} \ident{lam} (\fun{x} \ident{app} f x))
-\end{equation*}
+\end{equation}
 does not type-check in any typing environment, because $\ident{lam}$ needs
 to take two incompatible types.  In sum, we need more polymorphism in the
 object type system to type $\ident{lam}$, $\ident{app}$, $\ident{fix}$,
@@ -1870,7 +1880,7 @@ and~$\ident{if\_}$ (and $\Encode{e}$ and~$\si$).
 (The polytypes in |Symantics| given by Haskell's type classes and OCaml's
 modules supply this polymorphism.)  Moreover, we need to encode any
 polymorphism of the object language \emph{into} the object language to achieve
-self\hyp interpretation.
+\emph{self}\hyp interpretation.
 
 \subsection{Introducing let-bound polymorphism}
 
@@ -1878,16 +1888,17 @@ Instead of adding higher-rank and higher-kind polymorphism to our object
 language (along with polymorphism over kinds!), we add let-bound polymorphism.
 As usual,
 we can add a new typing rule
-\begin{equation*}
+\begin{equation}
+\label{e:let}
     \let\vcenter\vbox
     \begin{prooftree}
         e_1:t_1 \quad \subst{e_2}{x}{e_1}:t_2
         \justifies \be{x=e_1} e_2 : t_2
     \end{prooftree}
     .
-\end{equation*}
+\end{equation}
 The pre-encoding of a let\hyp expression is trivial.
-\begin{align*}
+\begin{align}
     \encode{\be{x=e_1}e_2} \quad &= \quad \be{x=\encode{e_1}} \encode{e_2}
 \intertext{A \emph{context} is an object term with a hole~$[~]$.  The
 hole may occur under a binder, so plugging a term into the context may
@@ -1895,10 +1906,11 @@ capture free variables of the term.  By pre-encoding a hole to a hole,
 we extend pre-encoding from a translation on terms to one on
 contexts.}
     \encode{[~]} \quad &= \quad [~]
-\end{align*}
+\end{align}
 We define an interpreter in the object language to be not a term but
 a context.  For example, the evaluator is the context
-\begin{align*}
+\begin{align}
+\label{e:evaluator}
     \si[~] &=
     \begin{tabular}[t]{@{}Ml@{}>{{}}Ml@{}Ml@{}}
         \be{\ident{int} &= \fun{x} x&} \\
@@ -1909,6 +1921,7 @@ a context.  For example, the evaluator is the context
         \be{\ident{fix} &= \fun{g} \fix{f} \fun{x} gfx&} [~],
     \end{tabular}
 \intertext{and the size\hyp measurer at the end of~\S\ref{S:interpreter-RL} is the context}
+\label{e:size-measurer}
     \mathrm{SZ}[~] &=
     \begin{tabular}[t]{@{}Ml@{}>{{}}Ml@{}Ml@{}}
         \be{\ident{int} &= \fun{x} 1&} \\
@@ -1918,7 +1931,7 @@ a context.  For example, the evaluator is the context
         \be{\ident{app} &= \fun{f} \fun{x} f + x + 1&} \\
         \be{\ident{fix} &= \fun{g} g\,0 + 1&} [~].
     \end{tabular}
-\end{align*}
+\end{align}
 To interpret an object term~$e$ using an interpreter $I[~]$ is to
 evaluate the object term~$I[\encode{e}]$.  $\si$~is
 a self\hyp interpreter in the following sense.
@@ -1940,12 +1953,19 @@ the self\hyp interpreter~$\si$.
 \subsection{Contexts clarify polymorphism}
 \label{S:clarify}
 
-We always type-check a pre-encoded term~$\encode{e}$ and its interpreter~$I[~]$
-together, never separately.  This treatment has the drawback that
-we must duplicate a pre-encoded term in order to interpret it in
-multiple ways.  The meta-notions of contexts and plugging may seem ad
-hoc, but in fact they just reflect the type-class and module
-machinery that we have been using in this paper all along.
+We always type-check a pre-encoded term~$\encode{e}$ in the context of
+a particular interpreter~$I[~]$, never alone.  For example, to
+type-check the pre-encoded term~\eqref{e:pre-encoding-example}, we must
+plug it into an interpreter, such as the evaluator~\eqref{e:evaluator}.
+This treatment has the drawback that we must duplicate the pre-encoding
+of a term in order to interpret it in multiple ways, that is, to plug it
+into multiple interpreters such as the evaluator~\eqref{e:evaluator} and
+the size\hyp measurer~\eqref{e:size-measurer}.  In return, we avoid
+adding polymorphism to the object language's type system, because we can
+state the let rule~\eqref{e:let} in terms of substitution rather than by
+generalizing and instantiating types.  In other words, we use contexts
+and plugging in the object language in place of the type-class and
+module machinery in the metalanguages.
 
 In the presence of let-bound polymorphism, we can understand a term
 waiting to be plugged into a context as a higher-rank and higher-kind
@@ -2173,11 +2193,17 @@ stuck.  It would be interesting
 to try to derive a \emph{cogen} \citep{Thiemann:cogeninsixlines}
 in the same manner.
 
-It is common to implement an embedded DSL by providing multiple
-interpretations of host\hyp language pervasives such as addition and
-application.  It is also common to use phantom types to rule out
+Our separation between the |Symantics| interface and its many
+implementations codifies the common practice of implementing an embedded
+DSL by specifying an abstract syntax of object\hyp language pervasives,
+such as addition and application, then providing multiple
+interpretations of them.  \Citet{JonesNielsen-D58} prefigured this
+separation when they decomposed a denotational definition of an untyped
+object language into a core semantics (which we call abstract syntax)
+and multiple interpretations.  When implementing an embedded DSL in this
+way, it is also common practice to use phantom types to rule out
 ill-typed object terms, as done in Lava
-\citep{Lava} and by \citet{Rhiger-thesis}. However, these approaches
+\citep{Lava} and by \citet{Rhiger-thesis}. However, these two approaches
 are not tagless because they still use universal types, such as Lava's
 \texttt{Bit} and \texttt{NumSig}, and Rhiger's \texttt{Raw} (his Fig.~2.2)
 and \texttt{Term} (his Chap.~3), which incur the attendant overhead of
@@ -2226,14 +2252,14 @@ generating extension (and therefore serves as a tagless partial
 evaluator, intepreter, and compiler in our sense). They still have to
 use the "universal type" at the cogen level, which is removed from
 compile-time, so that the end result is tagless indeed.  The main
-difference between the work of \Citet{Birkedal-PE-ML} and ours is how
+difference between the work of \citet{Birkedal-PE-ML} and ours is how
 \emph{early} it becomes \emph{manifest} to the metalanguage
 that our code is safe.  The fact that
-\Citet{Birkedal-PE-ML} 's generating extension never generates a
+\citet{Birkedal-PE-ML}'s generating extension never generates a
 specialized program that is ill-typed is not manifest to the SML
 compiler until the SML compiler sees each particular specialized
 program.  Moreover, and in a similar vein, the fact that
-\Citet{Birkedal-PE-ML} 's cogen never generates a generating extension
+\citet{Birkedal-PE-ML}'s cogen never generates a generating extension
 that is ill-typed (or that may generate a specialized program that is
 ill-typed) is not manifest to the SML compiler until the SML compiler
 sees each particular generating extension (or each particular
