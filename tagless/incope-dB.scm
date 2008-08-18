@@ -85,18 +85,18 @@
   (lambda-c (vz vs int add mul ifz lam app fix)
     (lam 
       (let ((x vz))
-	(fix 
-	  (let ((x (vs x)) (self vz))
-	    (lam 
-	      (let ((x (vs x)) (self (vs self)) (n vz))
-		(@c ifz n (int 1)
-		  (@c mul x (@c app self (@c add n (int -1)))))))))))))
+        (fix 
+          (let ((x (vs x)) (self vz))
+            (lam 
+              (let ((x (vs x)) (self (vs self)) (n vz))
+                (@c ifz n (int 1)
+                  (@c mul x (@c app self (@c add n (int -1)))))))))))))
 
 (define testpowfix7
   (lambda-c (vz vs int add mul ifz lam app fix)
     (lam (@c app 
-	   (@c app 
-	     (@c testpowfix vz vs int add mul ifz lam app fix) vz) (int 7)))))
+           (@c app 
+             (@c testpowfix vz vs int add mul ifz lam app fix) vz) (int 7)))))
 
 (define testpowfix27
   (lambda-c (vz vs int add mul ifz lam app fix)
@@ -118,18 +118,18 @@
 (define intR
   (lambda (term)
     (@c term
-      (lambda (h) (h rfst))				; vz
-      (lambda (v) (lambda (h) (v (h rsnd))))		; vs
-      (lambda (x) (lambda (h) x))			; int
+      (lambda (h) (h rfst))                             ; vz
+      (lambda (v) (lambda (h) (v (h rsnd))))            ; vs
+      (lambda (x) (lambda (h) x))                       ; int
       (lambda-c (e1 e2) (lambda (h) (+ (e1 h) (e2 h)))) ; add
       (lambda-c (e1 e2) (lambda (h) (* (e1 h) (e2 h)))) ; mul
-      (lambda-c (e et ef)				; ifz
-	(lambda (h) (if (zero? (e h)) (et h) (ef h))))
-      (lambda (e) (lambda (h) (lambda (x) (e (@c rcons x h)))))	     ; lam
-      (lambda-c (e1 e2) (lambda (h) ((e1 h) (e2 h)))) ; app
-      (lambda (e) (lambda (h) 		      ; fix
-	 (letrec ((self (lambda (n) (@c e (@c rcons self h) n)))) self)))
-      (lambda (x) x)				      ; empty env
+      (lambda-c (e et ef)                               ; ifz
+        (lambda (h) (if (zero? (e h)) (et h) (ef h))))
+      (lambda (e) (lambda (h) (lambda (x) (e (@c rcons x h)))))             ; lam
+      (lambda-c (e1 e2) (lambda (h) ((e1 h) (e2 h))))   ; app
+      (lambda (e) (lambda (h)                           ; fix
+         (letrec ((self (lambda (n) (@c e (@c rcons self h) n)))) self)))
+      (lambda (x) x)                                    ; empty env
       )))
 
 (cout "intR tests" nl
@@ -137,27 +137,27 @@
  "test2: "    (intR test2) nl
  "test2 5: "  ((intR test2) 5) nl
  "testpw7: "  (intR testpowfix7) nl
- "testpw27: " (intR testpowfix27) nl	; 128
+ "testpw27: " (intR testpowfix27) nl        ; 128
 )
 
 ; The C-interpreter, the compiler
 (define intC
   (lambda (term)
     (@c term
-      (lambda (h) (h rfst))				; vz
-      (lambda (v) (lambda (h) (v (h rsnd))))		; vs
-      (lambda (x) (lambda (h) `,x))			; int
+      (lambda (h) (h rfst))                                ; vz
+      (lambda (v) (lambda (h) (v (h rsnd))))               ; vs
+      (lambda (x) (lambda (h) `,x))                        ; int
       (lambda-c (e1 e2) (lambda (h) `(+ ,(e1 h) ,(e2 h)))) ; add
       (lambda-c (e1 e2) (lambda (h) `(* ,(e1 h) ,(e2 h)))) ; mul
       (lambda-c (e et ef)
-	(lambda (h) `(if (zero? ,(e h)) ,(et h) ,(ef h)))) ; ifz
-      (lambda (e) (lambda (h) 
-	  (let ((x (gensym))) `(lambda (,x) ,(e (@c rcons x h))))))	     ; lam
-      (lambda-c (e1 e2) (lambda (h) `(,(e1 h) ,(e2 h)))) ; app
-      (lambda (e) (lambda (h) 		      ; fix
-	(let ((self (gensym)) (n (gensym)))
-	 `(letrec ((,self (lambda (,n) (,(e (@c rcons self h)) ,n)))) ,self))))
-      (lambda (x) x)				      ; empty env
+        (lambda (h) `(if (zero? ,(e h)) ,(et h) ,(ef h)))) ; ifz
+      (lambda (e) (lambda (h)                              ; lam
+          (let ((x (gensym))) `(lambda (,x) ,(e (@c rcons x h))))))
+      (lambda-c (e1 e2) (lambda (h) `(,(e1 h) ,(e2 h))))   ; app
+      (lambda (e) (lambda (h)                              ; fix
+        (let ((self (gensym)) (n (gensym)))
+         `(letrec ((,self (lambda (,n) (,(e (@c rcons self h)) ,n)))) ,self))))
+      (lambda (x) x)                                       ; empty env
       )))
 
 (cout nl nl "intC tests" nl
@@ -188,25 +188,25 @@
   (lambda-c (vz vs int add mul ifz lam app fix)
     ; Church-encoding of pairs: auxiliary functions
     (let ((rfst (lam (lam (vs vz))))
-	  (rsnd (lam (lam vz)))
- 	  (rcons (lam (lam (lam (@@c (app) vz (vs (vs vz)) (vs vz)))))))
+          (rsnd (lam (lam vz)))
+           (rcons (lam (lam (lam (@@c (app) vz (vs (vs vz)) (vs vz)))))))
    (lam
     (@@c (app) vz
-      (lam (@c app vz rfst))				; vz
-      (lam (lam (@c app (vs vz) (@c app vz rsnd))))    	; vs
-      (lam (lam (vs vz)))			        ; int
+      (lam (@c app vz rfst))                             ; vz
+      (lam (lam (@c app (vs vz) (@c app vz rsnd))))      ; vs
+      (lam (lam (vs vz)))                                ; int
       (lam (lam (lam (@c add (@c app (vs (vs vz)) vz) (@c app (vs vz) vz))))) ; add
       (lam (lam (lam (@c mul (@c app (vs (vs vz)) vz) (@c app (vs vz) vz))))) ; mul
-      (lam (lam (lam (lam		                ; ifz
-	; the following let is just an abbreviation to avoid confusing
+      (lam (lam (lam (lam                                ; ifz
+        ; the following let is just an abbreviation to avoid confusing
         ; deBruijn indices
-	(let ((h vz) (ef (vs vz)) (et (vs (vs vz))) (e (vs (vs (vs vz)))))
-	  (@c ifz (@c app e h) (@c app et h) (@c app ef h)))))))
+        (let ((h vz) (ef (vs vz)) (et (vs (vs vz))) (e (vs (vs (vs vz)))))
+          (@c ifz (@c app e h) (@c app et h) (@c app ef h)))))))
       (lam (lam (lam (@c app (vs (vs vz)) (@@c (app) rcons vz (vs vz)))))) ; lam
       (lam (lam (lam (@c app (@c app (vs (vs vz)) vz) (@c app (vs vz) vz))))) ; app
-      (lam (lam						; fix
-	 (fix (@c app (vs (vs vz)) (@@c (app) rcons vz (vs vz))))))
-      (lam vz)				      ; empty env
+      (lam (lam                                          ; fix
+         (fix (@c app (vs (vs vz)) (@@c (app) rcons vz (vs vz))))))
+      (lam vz)                                           ; empty env
       )))))
 
 ; The self-interpreter interpreted
@@ -224,7 +224,7 @@
  "t3 4 5: "   (@c (intSR t3) 4 5) nl    ; 9
  "t4 10: "    ((intSR t4) 10) nl    ; 1
  "testpw7 2: "  ((intSR testpowfix7) 2) nl ; 128
- "testpw27: " (intSR testpowfix27) nl	; 128
+ "testpw27: " (intSR testpowfix27) nl        ; 128
 )
 
 ; The self-interpreter compiled
@@ -242,7 +242,7 @@
  "t3 4 5: "   (@c (intSC t3) 4 5) nl    ; 9
  "t4 10: "    ((intSC t4) 10) nl    ; 1
  "testpw7 2: "  ((intSC testpowfix7) 2) nl ; 128
- "testpw27: " (intSC testpowfix27) nl	; 128
+ "testpw27: " (intSC testpowfix27) nl        ; 128
 )
 
 ; timing tests
@@ -303,3 +303,4 @@
 ;;     130608 bytes allocated
 )
 
+(cout nl nl "Compiling the self-interpreter" (intC intS) nl)
