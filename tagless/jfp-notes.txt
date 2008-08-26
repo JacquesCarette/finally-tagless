@@ -150,52 +150,48 @@ p1, abstract
     of dependent types in the conventional sense, and so our current
     phrase in the abstract stands. Should be say a few words about it,
     that is, what we mean by dependent types exactly?}
+    \jacques{I agree.  Dependent types, in the conventional sense, are
+    term-dependent-types, which modules do not give us.}
 
 p1, citation
     The other Reynolds citation that emphasizes the duality between
     first-order and higher-order term representations would be more
     appropriate. 
+    \jacques{"other" citation?  He certainly does not mean the other
+    Reynolds paper we cite, not from my reading of it (it is available
+    from Reynold's home page.  So what does this mean?}
 
 p2, section 1
     The translation between the object language and its encoding
     should be made explicit. I was very surprised when section 6
     returned to the object notation without any explanation.
-
-p3, line -1
-    "the universal type solution is unsatisfactory because it does not
-    preserve typing" 
-    I don't understand this remark. The encoding certainly preserves
-    typing. But that typing does not reflect the type of the encoded
-    term. 
+    \jacques{Really?  Sure, that can be done, but L = lambda, A is
+    application, all of that is really standard, no?  I guess we could
+    mention that, in different guises, we use the language of Fig.1
+    throughout the paper.}
 
 p4, section 1.3
     Clearly the encoding is monadic but you are not mentioning this
     fact at all. I miss a discussion why an abstraction over a monad
     would not be sufficient to achieve all you want to achieve.
+    \jacques{We don't mention it because we don't use it, not 
+    directly.  We do implement some kind of fold, but over what exactly
+    is not clear.  This would be distracting.  I guess we should mention
+    that our encoding is indeed monadic, but we (currently?) do not
+    make use of this fact}
 
     It should also be discussed in what way the type system of the
     metalanguage restricts the expressible type systems for the object
     language.
+    \jacques{Now, that is a much more interesting comment.  To be 
+    addressed fully could take a fair bit of space.  We should however
+    discuss this a little.  Probably not in 1.3, but perhaps at the end
+    of section 4?}
 
 p5, section 1.4
     "even call-by-name CPS"
     Why is CBN more difficult or more complicated than CBV in this
     context? 
-
-p6, "inference-preserving module system"
-    What's that?
-    \oleg{I guess I meant this: in ML, we can write structures without
-    explicit signature annotations. The signature will be
-    inferred. Mainly, for any structure (whether it has been annotated
-    with a signature or not) we can just say "open M" and use the terms of
-    M in any ML expression without any need to write any type
-    annotation. By contrast, consider an object system of OCaml (or of
-    any other typed OOP). An object system can be thought of as a module
-    system (and often plays this role, e.g. in Java and C++). Here, in
-    class declarations, we must write full annotations. Mainly, when
-    we use objects, we have to, occasionally, write type
-    annotations (e.g., when writing coercions). So, in OCaml, objects
-    is an example of a non-inference preserving module system.}
 
 
 p7, proposition 1
@@ -445,4 +441,28 @@ over the answer type, to avoid the use of higher-rank polymorphism in
 the core language.}
 \jacques{Be even more explicit about the functor variant, and explicitly
 mention Standard ML -- but bemoan the polymorphism and usability loss}
+
+Rev2, p3, line -1
+    "the universal type solution is unsatisfactory because it does not
+    preserve typing" 
+    I don't understand this remark. The encoding certainly preserves
+    typing. But that typing does not reflect the type of the encoded
+    term. 
+\jacques{Correct, I used the above phrasing instead.}
+
+Rev2, p6, "inference-preserving module system"
+    What's that?
+    \oleg{I guess I meant this: in ML, we can write structures without
+    explicit signature annotations. The signature will be
+    inferred. Mainly, for any structure (whether it has been annotated
+    with a signature or not) we can just say "open M" and use the terms of
+    M in any ML expression without any need to write any type
+    annotation. By contrast, consider an object system of OCaml (or of
+    any other typed OOP). An object system can be thought of as a module
+    system (and often plays this role, e.g. in Java and C++). Here, in
+    class declarations, we must write full annotations. Mainly, when
+    we use objects, we have to, occasionally, write type
+    annotations (e.g., when writing coercions). So, in OCaml, objects
+    is an example of a non-inference preserving module system.}
+    \jacques{"inference-preserving" has already been removed from the text}
 
