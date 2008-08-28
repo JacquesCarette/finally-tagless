@@ -60,9 +60,6 @@ primitive recursion.  This should be discussed much earlier, when the
 term representation is introduced.  Also, it is unclear what would be
 gained by a non-primitive recursive term representation.
 
-
-
-
 REPORT FROM REFEREE #2
 
 OVERALL EVALUATION
@@ -96,13 +93,6 @@ properly, let alone how to prove them.
 	    abstraction . concretization . abstraction == abstraction
     I wonder is these are the better propositions than the ones in the
     present JFP paper.}
-
-The rapid change between OCaml and Haskell is not always helpful. It
-would be better to stick to one formulation throughout the paper
-and explain the other e.g. in an appendix.
-\jacques{the only Haskell left is in 2.1 and a bit in 2.2, and neither
-are really essential.  Maybe we should indeed move any remaining Haskell
-to an appendix, if at all?}
 
 As it stands, the paper is not sufficiently focused and the main
 contribution is sometimes drowned in distracting details. Some of the
@@ -193,36 +183,12 @@ p5, section 1.4
     Why is CBN more difficult or more complicated than CBV in this
     context? 
 
-
-p7, proposition 1
-    This statement sounds fine on the surface, but how would you prove
-    it? What is the relation between object types and the types of
-    their encodings? How is the statement generalized to open terms
-    (as it would be necessary for a proof by induction)?
-
-p8, section 2.2
-    you are abstracting the interpreter over the term representation,
-    not the other way round (or I'm missing something).
-    "Each interpreter [is] ..."
-    -> [can be expressed as]
-
-p9, module R
-    You claim in the abstract that you are not using dependent
-    types. However, using the module system means that you are, in
-    fact, using dependent types, at least in a stylized way. Hence, as
-    it stands, the abstract is incorrect.
-
-    proposition 2
-    makes no distinction between meta types and object types
-
-    proposition 3
-    This is very fuzzy. I have no immediate intuition how to formalize
-    the statement of this proposition.
-
 p11, proposition 4
      This is not formalized, but really obvious (unlike the
      others). However, the mentioned properties of .~ and .< >. that
      you rely on are tricky and non-obvious.
+     \jacques{made this much more formal, and added a comment about the
+     properties.  Still missing is a reference}
 
 p11, section 4
      "Surprisingly ..."
@@ -238,36 +204,68 @@ p11, section 4
 p15, section 4.4
      btw, I do not find these names R, L, and C very intuitive or
      readable. 
+     \jacques{We could insert a 'key', where
+     evaluator (i.e. run)  : R
+     length                : L
+     compile               : C
+     partial evaluator     : P
+     example               : E
+     evaluator (by-name)   : RCN
+     evaluator (by-value)  : RCV
+     CPS transformer       : CPST
+     state-passing CBN CPS : RCPS}
 
-p16, "the type equation for repr_pe above"
-     * "above" is fuzzy
-     * it expresses the data definition, but not the type function
-
+p16
      The optimizing online pe is completely besides the point of this
      work and obscures the code in Fig 5. 
+     \jacques{Sigh.  Quite true - but then the results are quite ugly.
+     The 'optimizing' is so easy, does it really obscure things so much?
+     I would prefer to keep this minimal optimization in, we've already
+     cut out significant parts of the 'optimization' present in our
+     working code}
 
+p16
      Also, online pe is intrinsically tagged so offline pe would
      provide a better demonstration.
+     \jacques{I quite disagree that offline would provide a better
+     demonstration!  Offline introduces an extraneous BTA pass and
+     annotations which would be even more distracting.  Also, I am
+     not sure I understand how "online pe is intrinsically tagged" --
+     all PE requires binding-time annotations, which are usually done
+     with tags, whether online or offline.  So I think this comment is
+     just off the mark}
 
 
 p17, "partial evaluation ... gives the desired result:"
      But the good result is due to the extra cleverness put into the
      implementation of 'add' and 'mul': without those, the result
      would not be much different.
+     \jacques{Exactly!  And that extra cleverness is clear, localized,
+     and simple.  So why not do it?  The beauty of this approach is that
+     it makes it clear where to put these optimizations.  But that is
+     really part of a 'next' paper.  I feel like leaving this in, but
+     adding some words to the conclusion about this being an area to
+     pursue.}
 
 p18, CPS interpretation
      The cbv version is almost literally in the above-cited paper
      (Thiemann 1999) \cite{Thiemann-combinators}
+     \jacques{Of course!  It is the obvious way to do it.  We do not
+     claim originality for that, do we?  The originality is that
+     CPS interpretation 'fits' the whole scheme}
 
      A few details of the representation should be discussed in the
      paper. In particular, you should discuss why you cannot pull this
      strategy off for a Plotkin-style CBV-CPS interpreter (you need to
      use Reynolds style as shown later in the paper, but without
      explanation why it has to be this complicated). 
+     \jacques{I am sure one of you would be better suited to deal with 
+     this one.}
 
      Actually, you can write a CBV-CPS interpreter which implements
      lam f in exactly the same way as stated in the paper by extending
      the Symantics signature accordingly.
+     \jacques{Sure, but why extend if it's not needed?}
 
 p19, starting with CPST
      It's nice to see that you can unify all these transformations
@@ -276,6 +274,11 @@ p19, starting with CPST
      needs its specific type infrastructure. To me, the interesting
      question here is, where does this specialization stop? Which
      features are needed to obtain a "fixpoint"?
+     \jacques{Not 'each'.  And while this is an interesting question,
+     it is out-of-scope of this current paper.  In any case, without a nice set
+     of test cases, it would be quite hard to make the required set
+     of features precise.  In all cases though, it looks like only
+     simple (i.e. total) type-level functions are needed.}
 
 p20, section 5.3
      This feels like a hack to me. Why can't you write everything in
@@ -305,7 +308,7 @@ p24, "pre-encoding of a let-"
 
      To me, using the contexts and context plugging is changing the
      problem: The problem statement says "apply the SI".
-     The really interesting question is whcih feature set is needed to
+     The really interesting question is which feature set is needed to
      obtain an SI without changing the question.
 
 p25, proposition 5
@@ -335,13 +338,20 @@ that their value outweighs the drawback: intuition is what
 distinguishes an informal mathematical proof from the formalized one.
 The reason mathematicians prefer informal proofs is that they are
 interested not only in what has been proven but why (refer to Thurston).}
+\jacques{agreed}
 
 
 p28, "This shift also underlies ..."
      I don't see the connection to the present work.
+     \jacques{I must admit that this is indeed not obvious.  Should
+     we add some weasel words like "We believe that this shift..."?}
 
      "higher-kind polymorphism"
      Where is that needed in the present work?
+     \jacques{should we put some explicit sentence about higher-kind
+     polymorphism at the end of 6.1?  [as in, if we had xxx feature
+     in the object language, we coudl do it].  Then we could put in 
+     a backlink.}
 
 
 ==========================================================================
@@ -442,6 +452,13 @@ the core language.}
 \jacques{Be even more explicit about the functor variant, and explicitly
 mention Standard ML -- but bemoan the polymorphism and usability loss}
 
+Rev1:
+The rapid change between OCaml and Haskell is not always helpful. It
+would be better to stick to one formulation throughout the paper
+and explain the other e.g. in an appendix.
+\jacques{I have finished removing all of the Haskell that was not
+essential to the paper.}
+
 Rev2, p3, line -1
     "the universal type solution is unsatisfactory because it does not
     preserve typing" 
@@ -465,4 +482,49 @@ Rev2, p6, "inference-preserving module system"
     annotations (e.g., when writing coercions). So, in OCaml, objects
     is an example of a non-inference preserving module system.}
     \jacques{"inference-preserving" has already been removed from the text}
+
+Rev2, p7, proposition 1
+    This statement sounds fine on the surface, but how would you prove
+    it? What is the relation between object types and the types of
+    their encodings? How is the statement generalized to open terms
+    (as it would be necessary for a proof by induction)?
+    \jacques{The relation is really on the type-system rules, and that
+    relation is an easy bijection.  I have inserted a 'proof' of this
+    proposition which I think really clarifies this.}
+
+Rev2, p8, section 2.2
+    you are abstracting the interpreter over the term representation,
+    not the other way round (or I'm missing something).
+    "Each interpreter [is] ..."
+    -> [can be expressed as]
+    \jacques{The reviewer is missing something.  I have nevertheless 
+    rephased the first sentence to make it clear that our term
+    representation is independent of interpretations.  The sentence
+    "Each interpreter [is]..." stays as it is correct.
+
+Rev2, p9, module R
+    You claim in the abstract that you are not using dependent
+    types. However, using the module system means that you are, in
+    fact, using dependent types, at least in a stylized way. Hence, as
+    it stands, the abstract is incorrect.
+    \jacques{We make very heavy use of type-dependent-types, but not do
+    not use value-dependent-types, which is what is usually understood
+    when talking about 'dependent types'.}
+    \jacques{We might want to make a comment about this in the text itself,
+    but I am unsure where}
+Rev2, p9,
+    proposition 2
+    makes no distinction between meta types and object types
+    \jacques{statement clarified}
+
+Rev2,p9,
+    proposition 3
+    This is very fuzzy. I have no immediate intuition how to formalize
+    the statement of this proposition.
+    \jacques{I have tried to rectify this.  It needs to be double-checked}
+
+Rev2,p16, "the type equation for repr_pe above"
+     * "above" is fuzzy
+     * it expresses the data definition, but not the type function
+     \jacques{fixed}
 

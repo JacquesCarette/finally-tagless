@@ -408,11 +408,18 @@ available at \url{http://okmij.org/ftp/packages/tagless-final.tar.gz}
 to supplement the paper. 
 \ifshort For simplicity, main examples in the paper will be in MetaOCaml;
 all examples have also been implemented in Haskell.
-\else Our examples below switch between (Meta)OCaml
-and Haskell even though we have implemented each example equivalently in
-both metalanguages, because some of our claims are more obvious in one
-metalanguage than the other.  For example, MetaOCaml provides
-convenient, typed staging facilities.\fi
+\else Except for the fundamental definitions in \S\ref{encoding},
+our examples will be shown in (Meta)OCaml, 
+even though we have implemented each example equivalently in
+both (Meta)OCaml and Haskell%
+\footnote{an earlier version of this paper switched liberally between 
+both languages, as we believed that our claims were made more obvious
+by a judicious choice of metalanguage, but the reviewers disagreed,
+pointing out that few people are equally conversant in both.}.
+We have chosen to use mainly MetaOCaml because it provides
+convenient, typed staging facilities.  We will comment on the significant
+differences between the implementations.
+\fi
 
 We attack the problem of tagless (staged) type-preserving
 interpretation exactly as it was posed
@@ -601,23 +608,6 @@ accompanying code has the complete implementations.
 \end{figure}
 \fi
 
-Comparing |Symantics| with Fig.~\ref{fig:object}
-shows how to represent \emph{every} typed, closed object term in the
-metalanguage. Moreover, the representation preserves types.
-\begin{proposition}
-If an object term has the object type~$t$, then its
-representation in the metalanguage has the type 
-|forall repr.| |Symantics repr => repr |$t$.
-\end{proposition}
-Conversely, the type system of the metalanguage statically checks that the
-represented object term is well-typed and closed.
-If we err, say replace |int 7| with |bool True| in
-|testpowfix7|, Haskell will complain there that the expected type |Int| does not
-match the inferred |Bool|.  Similarly, the object term $\fun{x}xx$ and its
-encoding |lam (\x -> app x x)| both fail occurs-checks in type checking.
-Haskell's type checker also flags syntactically invalid object terms, 
-such as if we forget |app| somewhere above.
-
 \begin{SaveVerbatim}{ocaml-simple}
 module type Symantics = sig type ('c, 'dv) repr
   val int : int  -> ('c, int) repr
@@ -678,8 +668,9 @@ end
 \fi
 
 To embed the same object language in (Meta)OCaml, we replace the \ifshort type
-class \fi |Symantics| \ifshort\else type class \fi and its instances by a module signature |Symantics|
-and its implementations.  Figure~\ref{fig:ocaml-simple} shows a simple
+class \fi |Symantics| \ifshort\else type class \fi and its instances by a
+module signature |Symantics| and its implementations.
+Figure~\ref{fig:ocaml-simple} shows a simple
 signature that suffices until~\S\ref{PE}.  The two differences are:
 the additional type parameter |'c|, an
 \emph{environment classifier} \citep{WalidPOPL03} required by MetaOCaml for
@@ -705,11 +696,46 @@ OCaml as a functor from |Symantics| to an appropriate semantic domain. This
 is essentially the same as the constraint \texttt{Symantics repr =>} in the
 Haskell embedding.
 
+Comparing |Symantics| with Fig.~\ref{fig:object}
+shows how to represent \emph{every} typed, closed object term in the
+metalanguage. Moreover, the representation preserves types.
+\begin{proposition}\label{prop:typing}
+If an object term has object type~$t$, then its
+representation in the metalanguage has type 
+|forall repr.| |Symantics repr => repr |$t$.
+\end{proposition}
+
+\begin{proof}
+The rules for deriving a type $t$ from a term $T$ of the object language
+correspond \emph{bijectively} to the rules encoded in the signature
+|Symantics| (when the latter is read as a set of implications, \`{a} la
+Curry-Howard).  In other words, each of the rules from Figure~\ref{fig:object}
+corresponds bijectively to one line of |Symantics|.
+
+It is worth noting that, as we use HOAS, rules that normally depend on 
+context, in other words rules which are themselves an encoding of a function
+from the context to a typing relation, (like those for |lam| and |fix|)
+correspond to actual metalanguage functions.
+\end{proof}
+Conversely, the type system of the metalanguage statically checks that the
+represented object term is well-typed and closed.
+If we err, say replace |int 7| with |bool True| in
+|testpowfix7|, the type checker will complain there that the expected type
+|Int| does not match the inferred |Bool|.  Similarly, the object term
+$\fun{x}xx$ and its
+encoding |lam (\x -> app x x)| both fail occurs-checks in type checking.
+Both Haskell's and MetaOCaml's type checker also flags syntactically invalid
+object terms, such as if we forget |app| somewhere above.
+
+For simplicity, all examples in the rest of this paper will be in
+(Meta)OCaml, but the accompanying code shows a full Haskell implementation
+as well.
+
 \subsection{Two tagless interpreters}
 \label{S:interpreter-RL}
 
-Having abstracted our term representation over the interpreter, we are
-now ready to present a series of interpreters.  Each interpreter is an
+Now that our term representation is independent of any particular interpreter,
+we are now ready to present a series of interpreters.  Each interpreter is an
 instance of the |Symantics| class in Haskell and a module implementing
 the |Symantics| signature in MetaOCaml.
 
@@ -756,6 +782,9 @@ module EXR = EX(R)
 \end{code}
 \fi
 Thus, |EXR.test1 ()| evaluates to the untagged boolean value |true|.
+It
+\begin{comment}
+%% commenting out this Haskell in JFP version as well
 \ifshort It \else
 In Haskell, we define
 \begin{code}
@@ -767,7 +796,9 @@ a |newtype|.  The types |a| and |R a| are represented differently
 only at compile time, not at run time.  Pattern matching against~|R|
 cannot ever fail and is assuredly compiled away.
 In OCaml, too, it
-\fi is obvious to the compiler that
+\fi 
+\enc{comment}
+is obvious to the compiler that
 pattern matching cannot fail, because there is no
 pattern matching. Evaluation can only fail to yield a value
 due to interpreting |fix|.
@@ -781,8 +812,8 @@ these propositions follow immediately from the soundness of the
 metalanguage's type system.
 \fi
 \begin{proposition}
-If an object term~$e$ encoded in the metalanguage has type~$t$,
-then evaluating~$e$ in the interpreter~|R| either continues
+If an object term~$e$ encoded (as $e'$) in the metalanguage  has (object)
+type~$t$, then evaluating~$e'$ in the interpreter~|R| either continues
 indefinitely or terminates with a value of the same type~$t$.
 \end{proposition}
 \ifshort\else
@@ -790,10 +821,15 @@ Generalizing from~|R| to all interpreters, we have the following
 broader and more useful, if also more obvious, proposition.
 \fi
 \begin{proposition}
-  If an implementation of |Symantics| never gets stuck, then
+  If, for an implementation |I| of |Symantics|, if for all object
+  terms $e$ (encoded as $e'$), evaluating $e'$ with |I| always
+  terminates, then 
   the type system of the object
   language is sound with respect to the dynamic semantics defined by
   that implementation.
+  In other words, the (total) relation induced by |I| is a sub-relation
+  of the one expressed by the type system of the object language.
+  \jacques{Please check that I have this right}
 \end{proposition}
 \ifshort\else
 These propositions follow immediately from the soundness of the
@@ -801,6 +837,7 @@ metalanguage's type system.
 \fi
 \ifshort\else
 For variety, we show another interpreter, which measures the \emph{size}
+(or \emph{length}, thus the mnemonic |L|)
 of each object term, defined as the number of term
 constructors.
 \begin{code}
@@ -942,10 +979,13 @@ make it a type error to run an open expression.
 The accompanying code shows the Haskell implementation. 
 \else
 \begin{proposition}
-    The compiler |C| generates tagless code free of pattern matching.
+    For all object terms $e$ of object type $t$ (encoded as $e'$),
+    evaluating $e'$ via the compiler |C| always terminates and
+    generates tagless code (i.e. of type $t$ |code|) free of pattern matching.
 \end{proposition}
 This is syntactically clear from the body of |C|, and follows
-readily by structural induction and the properties of |.~| and
+readily by structural induction and the properties%
+\footnote{which are not easy to establish \citep{MetaML}} of |.~| and
 |.< >.|.
 
 We have also implemented this compiler in Haskell. 
@@ -975,7 +1015,7 @@ accompanying code gives the full details.
 \fi
 
 %------------------------------------------------------------------------
-% This is the version for the APLAS paper. No Haskell
+% This is the version for the APLAS paper.
 \ifshort
 \input{tagless-final-aplas}
 %------------------------------------------------------------------------
@@ -1322,7 +1362,8 @@ Predictably, the partial evaluator~|P| crucially relies on the type argument
 |'sv|.
 
 Figure~\ref{fig:pe} shows the partial evaluator~|P|.
-Its type |repr| literally expresses the type equation for |repr_pe| above.
+Its type |repr| expresses the type definition for |repr_pe| given
+as the start of this section, with |'sv| taking the place of |repr_pe t|.
 The function |abstr|
 extracts a future-stage code value from the result of
 partial evaluation.  Conversely, the function |pdyn| injects a
@@ -1349,9 +1390,9 @@ Such algebraic simplifications are easy
 to abstract over the specific domain (such as monoid or ring) where they
 apply.  These simplifications and abstractions help a lot
 in a large language with more base types and primitive operations.
-Incidentally, the code actually contains a more general implementation
-mechanism for such features, inspired in part by previous work in
-generative linear algebra~\citep{CaretteKiselyov05}.
+Incidentally, the accompanying code actually contains a more general
+implementation mechanism for such features, inspired in part by previous work
+in generative linear algebra~\citep{CaretteKiselyov05}.
 
 Any partial evaluator must decide how much to unfold recursion
 statically: unfolding too little can degrade the residual code, whereas
@@ -2400,4 +2441,3 @@ This encoding makes operations like interpretation trivial to implement.
 We still
 have to understand if and how non-primitively 
 recursive operations can be supported.
-
