@@ -2,7 +2,7 @@
 # synopsis:      Construction rules for monadic "do" syntax extension
 # authors:       Chris L. Spiel (nifty stuff), Lydia E. van Dijk (boring rest)
 # last revision: Sat Aug 11 06:28:36 UTC 2007
-# ocaml version: 3.10.0
+# ocaml version: 3.11.0
 
 
 ########################################################################
@@ -118,7 +118,7 @@ DISTNAME := monad-syntax-extension
 
 
 # Version number of the tarball.  (See DISTNAME.)
-VERSION := 5.0
+VERSION := 5.1
 
 
 # Name of the package for findlib

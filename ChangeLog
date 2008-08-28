@@ -1,3 +1,11 @@
+2008-08-28  Jacques Carette <carette@mcmaster.ca>
+
+    * README: Add mention of MIT license as a possible alternative
+    * MIT: Text of MIT license
+    * LGPL: Text of LGPL license
+    * COPYING: copy of license in effect for this distribution
+	* Makefile (VERSION): Bump forward.
+
 2008-04-03  Lydia van Dijk  <lvandijk@freenet.de>
 
 	* README: Mention that the new pa_monad also works with

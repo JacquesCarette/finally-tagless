@@ -4,7 +4,10 @@
 
 * Contents
 
-COPYING                  -  License
+COPYING                  -  License under which the present version is
+                            released (a copy of one of the 2 below)
+LGPL                     -  LGPL compatible of Objective Caml
+MIT                      -  Alternate license (upon request)
 ChangeLog                -  Recent changes
 META.in                  -  Configuration information for findlib
 Makefile                 -  GNU make build rules for the extension and
@@ -272,6 +275,11 @@ This program is distributed in the hope that it will be useful, but
 WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 General Public License in the file "COPYING" for more details.
+
+* MIT
+
+You may also obtain this software under the MIT license upon request
+to the authors.  In that case, see "MIT" for the details.
 
 
 local variables:
