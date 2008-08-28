@@ -50,6 +50,12 @@
   (lambda-c (vz vs int add mul ifz lam app fix)
     (lam (@c add (@c app vz (int 1)) (int 2)))))
 
+; Applying test3 to the appropriate function
+(define test3-app
+  (lambda-c (vz vs int add mul ifz lam app fix)
+    (@c app (@c test3 vz vs int add mul ifz lam app fix)
+      (lam (@c add (int 4) vz)))))
+
 ; Here we test that if the procedure is applied to 0, the else branch
 ; is not evaluated
 (define t1
@@ -136,6 +142,8 @@
  "test1: "    (intR test1) nl
  "test2: "    (intR test2) nl
  "test2 5: "  ((intR test2) 5) nl
+ "test3 (+4): "  ((intR test3) (lambda (x) (+ x 4))) nl    ; 7
+ "test3-app: "(intR test3-app) nl           ; 7
  "testpw7: "  (intR testpowfix7) nl
  "testpw27: " (intR testpowfix27) nl        ; 128
 )
@@ -164,6 +172,7 @@
  "test1: "    (intC test1) nl
  "test2: "    (intC test2) nl
  "test3: "    (intC test3) nl
+ "test3-app: "(intC test3-app) nl
  "t2: "       (intC t2) nl
  "t3: "       (intC t3) nl
  "t4: "       (intC t4) nl
@@ -219,6 +228,7 @@
  "test1: "    (intSR test1) nl
  "test2: "    (intSR test2) nl
  "test2 5: "  ((intSR test2) 5) nl ; 10
+ "test3-app: "(intSR test3-app) nl ; 7
  "t1 0: "     ((intSR t1) 0) nl    ; 1, no error is raised
  "t2 3: "     ((intSR t2) 3) nl    ; 6
  "t3 4 5: "   (@c (intSR t3) 4 5) nl    ; 9
@@ -237,6 +247,8 @@
  "test1: "    (intSC test1) nl
  "test2: "    (intSC test2) nl
  "test2 5: "  ((intSC test2) 5) nl ; 10
+ "test3 (+4): "  ((intSC test3) (lambda (x) (+ x 4))) nl    ; 7
+ "test3-app: "(intSC test3-app) nl ; 7
  "t1 0: "     ((intSC t1) 0) nl    ; 1, no error is raised
  "t2 3: "     ((intSC t2) 3) nl    ; 6
  "t3 4 5: "   (@c (intSC t3) 4 5) nl    ; 9
