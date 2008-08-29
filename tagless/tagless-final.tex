@@ -459,6 +459,9 @@ result they call desirable.  Our contributions are as follows.
 \item We describe an approach to self\hyp interpretation compatible with the
   above\ifshort\else~(\S\ref{selfinterp})\fi.  Self\hyp interpretation turned
   out to be harder than expected.\ifshort\footnotemark[\value{footnote}]\fi
+\item We show how the module system of Ocaml and Haskell's type class 
+   system can be used to parametrize the semantics of (a particular style of
+   syntax encoding of) lamda terms.
 \end{enumerate}
 Our code is surprisingly simple and obvious in hindsight, but
 it has been cited as a difficult problem (\cite{sumii-hybrid}
@@ -501,6 +504,8 @@ we may tackle in our approach. We may be able to write a
 type-preserving, assured compiler, whose properties and assured by HM.
 \end{comment}
 
+A referee aptly summarized our paper as ``proposing a way to write a 
+typed fold function over a typed term''.
 
 \section{The object language and its tagless interpreters}\label{language}
 

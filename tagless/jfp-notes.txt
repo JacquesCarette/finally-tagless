@@ -50,40 +50,46 @@ from term to term, with the context's hole being the argument.  So the
 reader wonders whether you or he has misunderstood something or
 whether you are proposing a reinterpretation of contexts (as I think
 you are).
+\jacques{Ken, you started working on this - are you still working on it?}
 
 Page 26 line -2: I don't think there is an universally agreed
 distinction between "metacircular interpreter" and "self-interpreter",
 so this statement requires some clarification.
+\jacques{Three comments:
+1) it appears from what I have now read that a consensus is building 
+that a "metacircular interpreter" is a special case of a "self-interpreter"
+where the language is homoiconic, i.e. the representation of programs
+is as a native data-structure of the language itself, ie like LISP.
+So \citet{laod93} did not build a metacircular interpreter.
+2) I am not even sure that \citet{laod93} actually have a self-interpreter!
+They rely way too much on features of the meta-language for their
+implementation (like HOAS in particular) which isn't in their object
+language).  I do not see a self-interpreter in either Figure 2 or 4 of
+that paper.
+3) it is very much tagged, Exp is defined as
+data Exp a = Exp Rep a
+and 'Rep' here is a tag.
+4) it is not type-safe!  One can easily build total junk like
+three = Exp Succ 3
+which will 'type' but not work.  They bypass GADTs by not insuring that
+the terms that can be built are well-typed.}
 
 Page 28 section 8 line -3: This is the paper's first mention of
 primitive recursion.  This should be discussed much earlier, when the
 term representation is introduced.  Also, it is unclear what would be
 gained by a non-primitive recursive term representation.
 
+
 REPORT FROM REFEREE #2
 
 OVERALL EVALUATION
-
-\jacques{I like what the next 2 paragraphs say.  We should somehow
-include parts of that in our paper.  But where?}
-
-The authors have picked up ideas that were lying around for a long
-time and have put them together in an original way. A very short way
-of summarizing the paper would be that it proposes a way to write a
-typed fold function over a typed term.
-
-The main contribution of the paper is the realization that the OCaml
-module system as well as Haskell's class system can be used to
-parametrize the semantics of a particular style of syntax encoding for
-lambda terms. The demonstration of this contribution is done
-meticulously and convincingly.
 
 The main weakness of the paper its sloppiness with respect to any
 formal claim. Several propositions are stated without offering any
 proof. Only a few of them have obviously trivial proofs, but for some
 of them I don't have a good idea of how to formalize these claims
 properly, let alone how to prove them. 
-\jacques{are we going to do anything about this in the present paper?}
+\jacques{I have implemented a number of fixes for that.}
 
     \oleg{\ccshan{In response to the message of Neil Jones as of Mar
     31, 2008} I wonder if we can claim that our approach automatically
@@ -93,24 +99,32 @@ properly, let alone how to prove them.
 	    abstraction . concretization . abstraction == abstraction
     I wonder is these are the better propositions than the ones in the
     present JFP paper.}
+    \jacques{These would most definitely be better propositions.
+    However, I don't see how to ``formalize'' that without a fair
+    bit more work.  Mention it in the conclusion?}
 
 As it stands, the paper is not sufficiently focused and the main
 contribution is sometimes drowned in distracting details. Some of the
 "historical context" is also missing in the present submission and
 should be added. Furthermore, some technical sloppiness should be
 tightened up.
-\jacques{I don't think this paragraph can be acted upon in any way}
+\jacques{Some changes have been made to clean that up -- sufficient?}
 
 DETAILS
 
 The main ideas in the paper date back a long time. I believe they can
 be found in more or less diluted form in \cite{Holst-AMIX}
+\jacques{Anyone able to get a copy of this?}
 
 The idea that terms can either be encoded by data types or by
 higher-order functions (in an executable way) is also due to Reynolds
 (might also be in his other 1974 paper):
 \oleg{we already have this reference: \cite{reynolds-relation} and
 cite him, although in a different context}
+\jacques{I don't think this paper is the 'right' one.  In fact,
+I think it is in \cite{reynolds-definitional}.  All the papers are
+available at ftp://ftp.cs.cmu.edu/user/jcr/, so others can read and
+check}
 
 Then there is the typed version of the (Thiemann 1996) paper that you
 are citing. It presents a typed partial evaluator encoded exactly like
@@ -118,7 +132,12 @@ your interpreters and pe functions, but for offline partial
 evaluation. It does not make use of the module system and hence does
 not parametrize over different semantics.
 \cite{Thiemann-combinators}
-
+\jacques{Aha, now *this* is a very important paper we missed.  I have
+just finished reading it, and really does contain a number of our
+ideas [except for Symantics!].  It does not deal with self-application
+at all, although it quickly discusses 'fold'.  We need to devote a
+full paragraph this this paper.  This paper is 43 pages, but that's 
+because there are a lot of "proofs" in it.}
 
 There is also a Haskell version using type classes which appeared in
 some obscure place. \cite{Thiemann-GenClass}
@@ -527,4 +546,18 @@ Rev2,p16, "the type equation for repr_pe above"
      * "above" is fuzzy
      * it expresses the data definition, but not the type function
      \jacques{fixed}
+
+\jacques{I have added parts of the following 2 paragraphs from Ref 2
+into the text}
+
+The authors have picked up ideas that were lying around for a long
+time and have put them together in an original way. A very short way
+of summarizing the paper would be that it proposes a way to write a
+typed fold function over a typed term.
+
+The main contribution of the paper is the realization that the OCaml
+module system as well as Haskell's class system can be used to
+parametrize the semantics of a particular style of syntax encoding for
+lambda terms. The demonstration of this contribution is done
+meticulously and convincingly.
 
