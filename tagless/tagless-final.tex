@@ -1170,11 +1170,11 @@ approaches (|Incope.hs| and |incope1.hs|),
 neither of which is portable to OCaml. In addition,
 the problem of non\hyp exhaustive pattern\hyp matching reappears in
 the GADT approach because GHC 6.8 and prior cannot see that a particular
-type of a GADT value precludes certain constructors. Although this
-is the implementation problem of GHC,
+type of GADT value precludes certain constructors. Although this
+is an implementation issue of GHC,
 it indicates that assuring exhaustive pattern match with GADTs
 requires non-trivial reasoning (beyond the abilities of GHC at the moment);
-thus GADTs fail to
+certainly GADTs fail to
 make it \emph{syntactically} apparent that pattern matching is exhaustive.
 
 %% \subsection{Eliminating tags from typecase}
@@ -1806,8 +1806,8 @@ observationally equivalent to the object application $\si\Encode{e}$
 use of self-interpreters is in defining the notion of optimality of
 partial evaluation.  A partial evaluator~$\pe$ maps object terms~$e$
 to observationally equivalent object terms~$\pe(e)$.  Recall that
-$\si\Encode{e}$ is too observationally equivalent to $e$ but less
-efficient (``observing'' $\si\Encode{e}$ takes more resources). A
+$\si\Encode{e}$ is also observationally equivalent to $e$ but less
+efficient (reducing $\si\Encode{e}$ takes more resources). A
 partial evaluator is said to be \emph{optimal} with respect to~|si|
 \citep{jones-challenging} if the partial evaluator removes all the 
 ineffiency in $\si\Encode{e}$ added by the self-interpreter: that is,
