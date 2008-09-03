@@ -438,7 +438,8 @@ apparent.
 -- that Asai's code type-checks in Hindley-Milner as soon as we
 -- deforest the static code representation.
 
-data Rep dynamic static = Rep { dynamic :: C dynamic, static :: Maybe static }
+data Rep repr dynamic static = 
+    Rep { dynamic :: repr dynamic, static :: Maybe static }
 
 zE dynamic = Rep dynamic Nothing
 
@@ -447,7 +448,6 @@ zbool b = Rep (bool b) (Just b)
 zlam f = Rep (lam (dynamic . f . zE)) (Just f)
 zapp (Rep _ (Just f)) = f
 zapp (Rep f _       ) = zE . app f . dynamic
-zfix f = f (zE (fix (dynamic . f . zE)))
 zadd (Rep _ (Just n1)) (Rep _ (Just n2)) = zint (n1 + n2)
 zadd (Rep n1 _       ) (Rep n2 _       ) = zE (add n1 n2)
 zmul (Rep _ (Just n1)) (Rep _ (Just n2)) = zint (n1 * n2)
@@ -457,19 +457,39 @@ zleq (Rep n1 _       ) (Rep n2 _       ) = zE (leq n1 n2)
 zif_ (Rep _ (Just b1)) et ee = if b1 then et else ee
 zif_ (Rep be _       ) et ee = zE (if_ be (dynamic et) (dynamic ee))
 
-ztestgib = zlam (\x -> zlam (\y ->
+zfix f = case f (zfix f)  of
+	  Rep _ (Just g) -> Rep dfix
+			        (Just (\x -> 
+				       case x of
+			                Rep cde Nothing -> zE (app dfix cde)
+			                x     -> g x))
+	  Rep _ Nothing -> zE dfix
+ where dfix = fix (dynamic . f . zE)
+
+-- unit to supress the monomorphism restriction
+
+ztestgib () = zlam (\x -> zlam (\y ->
                 zfix (\self -> zlam (\n ->
                     zif_ (zleq n (zint 0)) x
                       (zif_ (zleq n (zint 1)) y
                        (zadd (zapp self (zadd n (zint (-1))))
                              (zapp self (zadd n (zint (-2))))))))))
 
-ztestgib1 = zapp (zapp (zapp ztestgib (zint 1)) (zint 1)) (zint 5)
+ztestgib5 () = zlam (\x -> zlam (\y ->
+	zapp (zapp (zapp (ztestgib ()) x) y) (zint 5)))
 
--- "show ptest3 == show (compC (dynamic ztestgib1))" is True
+ztestgib1 () = zapp (zapp (zapp (ztestgib ()) (zint 1)) (zint 1)) (zint 5)
 
--- "show ptest3' == show (compC (dynamic ztestgib1'))" is True
+-- The result of PE can be interpreted is several ways, as usual
 
+testR_ztestgib1 = compR (dynamic (ztestgib1 ())) -- 8
+testL_ztestgib1 = compL (dynamic (ztestgib1 ())) -- 1
+testC_ztestgib1 = compC (dynamic (ztestgib1 ())) -- 8
+
+testR_ztestgib5 = compR (dynamic (ztestgib5 ())) 1 1 -- 8
+testL_ztestgib5 = compL (dynamic (ztestgib5 ())) -- 9
+testC_ztestgib5 = compC (dynamic (ztestgib5 ()))
+-- (\V0 -> (\V1 -> ((((V1 + V0) + V1) + (V1 + V0)) + ((V1 + V0) + V1))))
 
 
 -- ------------------------------------------------------------------------
@@ -796,6 +816,7 @@ t_int2 = interp int2
 t_int3 :: Symantics repr => repr ((Int -> Int) -> Int)
 t_int3 = interp int3
 
+{-
 class Self repr where
     lift :: a -> repr a
 
@@ -838,6 +859,7 @@ type SFoo c = (Symantics repr, Self repr) => repr (
 testi :: SFoo Int
 testi = lift (\ _int _bool _add _mul _app _leq _if_ _lam _fix -> 
      _add (int 1) (int 3))
+-}
 
 {-  This is so tentalizingly close!
 i1 :: (Symantics repr, Self repr) => repr Int

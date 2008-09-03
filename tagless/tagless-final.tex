@@ -514,18 +514,15 @@ $\lambda$-calculus with fixpoint, integers, booleans, and comparison.
 The language is close to \citets{xi-guarded}, without their polymorphic
 lift but with more constants so as to more conveniently express Fibonacci,
 factorial, and power.
-\begin{comment}
-\oleg{There is now IncopeDB.hs that defines at least R, L and C
- interpreters (no PE at present though) using de Bruijn indices. So we
- can say that (some of) our development is available in de Bruijn
- style. We won't talk about it in the paper though.}
-\end{comment}
-In contrast to \S\ref{intro}, we use higher-order
+In contrast to \S\ref{intro}, in the rest of the paper 
+we use higher-order
 abstract syntax (HOAS) \citep{miller-manipulating,pfenning-higher-order}
 rather than de Bruijn indices to encode binding and
 ensures that our object programs are closed.
-We find HOAS to be more convenient, though we could have continued to
-use de Bruijn indices.
+We find HOAS to be more convenient. We do present the version of our
+developement using de Bruijn indices in the accompanying source code, file
+|incope-dB.ml|.
+
 
 \subsection{How to make encoding flexible: abstract the interpreter}
 \label{encoding}
@@ -787,10 +784,8 @@ module EXR = EX(R)
 \end{code}
 \fi
 Thus, |EXR.test1 ()| evaluates to the untagged boolean value |true|.
-It
 \begin{comment}
 %% commenting out this Haskell in JFP version as well
-\ifshort It \else
 In Haskell, we define
 \begin{code}
 newtype R a = R {unR::a}
@@ -800,10 +795,8 @@ Although |R| looks like a tag, it is only
 a |newtype|.  The types |a| and |R a| are represented differently
 only at compile time, not at run time.  Pattern matching against~|R|
 cannot ever fail and is assuredly compiled away.
-In OCaml, too, it
-\fi 
-\enc{comment}
-is obvious to the compiler that
+\end{comment}
+It is obvious to the compiler that
 pattern matching cannot fail, because there is no
 pattern matching. Evaluation can only fail to yield a value
 due to interpreting |fix|.
@@ -1176,12 +1169,13 @@ type-class functional dependencies
 approaches (|Incope.hs| and |incope1.hs|), 
 neither of which is portable to OCaml. In addition,
 the problem of non\hyp exhaustive pattern\hyp matching reappears in
-the GADT approach because GHC 6.6.1 cannot see that a particular
-type of a GADT value precludes certain constructors.
-Thus GADTs fail to
+the GADT approach because GHC 6.8 and prior cannot see that a particular
+type of a GADT value precludes certain constructors. Although this
+is the implementation problem of GHC,
+it indicates that assuring exhaustive pattern match with GADTs
+requires non-trivial reasoning (beyond the abilities of GHC at the moment);
+thus GADTs fail to
 make it \emph{syntactically} apparent that pattern matching is exhaustive.
-\jacques{what about GHC 6.8?}
-
 
 %% \subsection{Eliminating tags from typecase}
 %% \label{S:PE-GADT}
@@ -1368,7 +1362,7 @@ Predictably, the partial evaluator~|P| crucially relies on the type argument
 
 Figure~\ref{fig:pe} shows the partial evaluator~|P|.
 Its type |repr| expresses the type definition for |repr_pe| given
-as the start of this section, with |'sv| taking the place of |repr_pe t|.
+at the start of this section, with |'sv| taking the place of |repr_pe t|.
 The function |abstr|
 extracts a future-stage code value from the result of
 partial evaluation.  Conversely, the function |pdyn| injects a
@@ -1804,16 +1798,21 @@ We turn to interpreting the object language in the object language, to
 clarify how expressive our typed object language can be and to argue that our
 partial evaluator is Jones\hyp optimal.
 
-Given an \emph{encoding} of each object term~$e$ as an \emph{object} term~$\Encode{e}$,
-a \emph{self\hyp interpreter} is usually defined as an object
-function~$\si$ such that any object term~$e$ is observationally
-equivalent to the object application $\si\Encode{e}$
-\citep{jones-partial,taha-tag,Danvy-tagging-encoding}.
-A partial evaluator~$\pe$ maps object terms~$e$ to observationally
-equivalent object terms~$\pe(e)$.  It is said to be
-\emph{optimal} with respect to~|si| \citep{jones-challenging} if $\pe(\si\Encode{e})$
-is $\alpha$\hyp equivalent to~$e$ (or in some accounts, no
-less efficient than~$e$).
+Given an \emph{encoding} of each object term~$e$ as an \emph{object}
+term~$\Encode{e}$, a \emph{self\hyp interpreter} is usually defined as
+an object function~$\si$ such that any object term~$e$ is
+observationally equivalent to the object application $\si\Encode{e}$
+\citep{jones-partial,taha-tag,Danvy-tagging-encoding}.  A particular
+use of self-interpreters is in defining the notion of optimality of
+partial evaluation.  A partial evaluator~$\pe$ maps object terms~$e$
+to observationally equivalent object terms~$\pe(e)$.  Recall that
+$\si\Encode{e}$ is too observationally equivalent to $e$ but less
+efficient (``observing'' $\si\Encode{e}$ takes more resources). A
+partial evaluator is said to be \emph{optimal} with respect to~|si|
+\citep{jones-challenging} if the partial evaluator removes all the 
+ineffiency in $\si\Encode{e}$ added by the self-interpreter: that is,
+for all $e$, $\pe(\si\Encode{e})$ is $\alpha$\hyp
+equivalent to~$e$ (or in some accounts, no less efficient than~$e$).
 
 Self\hyp interpretation in our framework is straightforward at the
 term level: the functions comprising the interpreters

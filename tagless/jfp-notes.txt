@@ -102,6 +102,8 @@ properly, let alone how to prove them.
     \jacques{These would most definitely be better propositions.
     However, I don't see how to ``formalize'' that without a fair
     bit more work.  Mention it in the conclusion?}
+    \oleg{see my e-mail as of Sep 2}
+
 
 As it stands, the paper is not sufficiently focused and the main
 contribution is sometimes drowned in distracting details. Some of the
@@ -151,24 +153,7 @@ The idea of dual representation which is attributed to Asai also
 appears in \cite{Sperber-SelfApplicable}
 
 
-p1, abstract
-    "no dependant types, ..."
-    I believe you want to say "no language extensions beyond the
-    published standards"
-    \oleg{see his remark about p9. I think modules are NOT instances
-    of dependent types in the conventional sense, and so our current
-    phrase in the abstract stands. Should be say a few words about it,
-    that is, what we mean by dependent types exactly?}
-    \jacques{I agree.  Dependent types, in the conventional sense, are
-    term-dependent-types, which modules do not give us.}
 
-p1, citation
-    The other Reynolds citation that emphasizes the duality between
-    first-order and higher-order term representations would be more
-    appropriate. 
-    \jacques{"other" citation?  He certainly does not mean the other
-    Reynolds paper we cite, not from my reading of it (it is available
-    from Reynold's home page.  So what does this mean?}
 
 p2, section 1
     The translation between the object language and its encoding
@@ -178,6 +163,8 @@ p2, section 1
     application, all of that is really standard, no?  I guess we could
     mention that, in different guises, we use the language of Fig.1
     throughout the paper.}
+    \oleg{I have doubts about Sec 6; Perhaps indeed the encoding
+    should be made explicit, just for clarity}
 
 p4, section 1.3
     Clearly the encoding is monadic but you are not mentioning this
@@ -188,6 +175,8 @@ p4, section 1.3
     is not clear.  This would be distracting.  I guess we should mention
     that our encoding is indeed monadic, but we (currently?) do not
     make use of this fact}
+    \oleg{What does it mean for an encoding to be monadic?
+    Where in the R or C interpreters we fix the evaluation order?}
 
     It should also be discussed in what way the type system of the
     metalanguage restricts the expressible type systems for the object
@@ -217,6 +206,7 @@ p11, section 4
      It would be appropriate for you to state that you are after
      online partial evaluation in this section and to briefly explain
      what that means.
+     \oleg{I agree; we are after online PE...}
 
 
 
@@ -233,6 +223,7 @@ p15, section 4.4
      evaluator (by-value)  : RCV
      CPS transformer       : CPST
      state-passing CBN CPS : RCPS}
+     \oleg{Not a bad idea...}
 
 p16
      The optimizing online pe is completely besides the point of this
@@ -242,6 +233,8 @@ p16
      I would prefer to keep this minimal optimization in, we've already
      cut out significant parts of the 'optimization' present in our
      working code}
+     \oleg{I agree; let's keep our optimizations and argue for them in
+     our response to the reviewer.}
 
 p16
      Also, online pe is intrinsically tagged so offline pe would
@@ -253,7 +246,9 @@ p16
      all PE requires binding-time annotations, which are usually done
      with tags, whether online or offline.  So I think this comment is
      just off the mark}
-
+     \oleg{Perhaps we should argue for that in our response and don't
+     change the paper. At least we should ask for more clarification
+     from the reviewer.}
 
 p17, "partial evaluation ... gives the desired result:"
      But the good result is due to the extra cleverness put into the
@@ -265,6 +260,7 @@ p17, "partial evaluation ... gives the desired result:"
      really part of a 'next' paper.  I feel like leaving this in, but
      adding some words to the conclusion about this being an area to
      pursue.}
+     \oleg{I agree with you, as I said before...}     
 
 p18, CPS interpretation
      The cbv version is almost literally in the above-cited paper
@@ -371,7 +367,7 @@ p28, "This shift also underlies ..."
      polymorphism at the end of 6.1?  [as in, if we had xxx feature
      in the object language, we coudl do it].  Then we could put in 
      a backlink.}
-
+     \oleg{If we remove Sec 6, that point would be moot...}
 
 ==========================================================================
 	Comments that are already taken care of
@@ -561,3 +557,24 @@ parametrize the semantics of a particular style of syntax encoding for
 lambda terms. The demonstration of this contribution is done
 meticulously and convincingly.
 
+Rev1:
+p1, abstract
+    "no dependant types, ..."
+    I believe you want to say "no language extensions beyond the
+    published standards"
+    \oleg{see his remark about p9. I think modules are NOT instances
+    of dependent types in the conventional sense, and so our current
+    phrase in the abstract stands. Should be say a few words about it,
+    that is, what we mean by dependent types exactly?}
+    \jacques{I agree.  Dependent types, in the conventional sense, are
+    term-dependent-types, which modules do not give us.}
+
+Rev1:
+p1, citation
+    The other Reynolds citation that emphasizes the duality between
+    first-order and higher-order term representations would be more
+    appropriate. 
+    \jacques{"other" citation?  He certainly does not mean the other
+    Reynolds paper we cite, not from my reading of it (it is available
+    from Reynold's home page.  So what does this mean?}
+    \oleg{we just leave this as the question to the reviewer}
