@@ -111,18 +111,6 @@ We leave aside the solved problem of writing a parser\slash type\hyp checker,
 for embedding object language objects into the metalanguage
 (whether using dependent types \citep{WalidICFP02} or not \citep{baars-typing}),
 and just enter them by hand.
-\else
-No matter how we represent the object language in the
-metalanguage, the representation can be created either by hand (for example, by
-entering object terms at a metalanguage interpreter's prompt) or
-by a parser\slash type\hyp checker reading from a text string.
-We leave aside the solved problem of writing such a 
-parser\slash type\hyp checker,
-whether using dependent types \citep{WalidICFP02} or not \citep{baars-typing}.
-\oleg{Should we really leave it aside, given that we do have the code:
-  IncopeTypecheck, and given Sumii-san's advice to emphasize the fact
-  that we do have the code. Please see my comment in the related work
-  section in the paragraph that deals with typing dynamic typing.}
 \fi
 
 \subsection{The tag problem}\label{tagproblem}
@@ -167,8 +155,8 @@ We represent each variable using a unary de Bruijn index.%
 \citearound{'s work}\citet{WalidICFP02}.}
 For example, we represent the object term $(\fun{x}x)\True$ as
 \ifshort \BUseVerbatim{test1}.\else \UseVerbatim{test1}\fi
-
 \ifshort
+
 \begin{figure}
 %
 (a) \BUseVerbatim{2a}
@@ -186,9 +174,9 @@ For example, we represent the object term $(\fun{x}x)\True$ as
 \caption{OCaml code illustrating the tag problem}
 \label{fig:tag-problem}
 \end{figure}
-\fi
 
-\noindent Following \citep{WalidICFP02},
+\fi
+Following \citet{WalidICFP02},
 we try to implement an interpreter function |eval0|\ifshort,
 Fig.~\ref{fig:tag-problem}(b)\fi. It takes
 an object term such as |test1| above and gives us its value.
@@ -254,8 +242,8 @@ Exception: Match_failure in lookup
 After all, the type |exp| represents object
 terms both well-typed and ill-typed, both open and closed.
 
-If we evaluate only closed terms that have been type-checked, then
-|eval| would never fail. Alas, this soundness is not obvious to the
+Although |eval| never fails on
+well-typed closed terms, this soundness is not obvious to the
 metalanguage, whose type system we must still appease with the
 nonexhaustive pattern matching in |lookup| and |eval| and the tags |UB|
 and |UA| \citep[\S1.4]{WalidICFP02}.  In other words, the algebraic data
@@ -264,20 +252,17 @@ is well-typed.  This failure necessitates tagging and nonexhaustive
 pattern\hyp matching operations that incur a performance penalty in
 interpretation \citep{WalidICFP02} and impair optimality in partial evaluation
 \citep{taha-tag}.  In short, the universal\hyp type solution is
-unsatisfactory because it does not reflect the type of the encoded term.
+unsatisfactory because it does not preserve the type of the encoded term.
 
 \ifshort\else\subsection{Solutions using fancier types}\fi
 
-It is commonly thought that to interpret a typed object language in
-a typed metalanguage while preserving types is difficult and requires
+It is commonly thought that the type-preserving interpretation of
+a typed object language in a typed metalanguage is difficult and requires
 GADTs or dependent types \citep{taha-tag}.  In fact, this problem
 motivated much work on GADTs \citep{xi-guarded,peyton-jones-simple} and
-on dependent types \citep{WalidICFP02,fogarty-concoqtion}.
-\ifshort\else
-For a metalanguage's type system to allow the well-typed object term
-|test1| but disallow the ill-typed object term |test2|, fancier types
-such as GADTs or dependent types seem necessary.  
-\fi
+on dependent types \citep{WalidICFP02,fogarty-concoqtion}\ifshort\else,
+in order for the metalanguage's type system to allow the well-typed object term
+|test1| but disallow the ill-typed object term |test2|\fi.
 Yet other type systems
 have been proposed to distinguish closed terms like |test1| from open
 terms 
@@ -287,14 +272,14 @@ like |test3|
 so that |lookup| never receives an empty environment.  We discuss these
 proposals further in \S\ref{related}\ifshort\else;
 here we just note that many
-advanced type systems have been devised to ensure statically that an
+fancy type systems have been devised to ensure statically that an
 object term is well-typed and closed\fi.
 
 \subsection{Our final proposal}\label{ourapproach}
 
-We represent object programs using ordinary functions rather than
-data constructors.  These functions comprise the entire interpreter, shown
-below.
+Following an old idea of \citet{reynolds-user-defined},
+we represent object programs using ordinary functions rather than
+data constructors.  These functions comprise the entire interpreter:
 \ifshort
 \begin{code3}
 let varZ env    = fst env         let b (bv:bool) env = bv
@@ -350,25 +335,37 @@ The type error correctly complains
 that the initial environment should be a tuple rather than~|()|.
 In other words, the term is open.
 
-In sum, by Church\hyp encoding terms using ordinary functions, we
-achieve a tagless evaluator for a typed object language in a
-metalanguage with a simple 
+In sum, using ordinary functions rather than data constructors
+to represent well-typed terms, we achieve a tagless evaluator
+for a typed object language in a metalanguage with a simple 
 \ifshort
 Hindley-Milner \fi
-type system\ifshort\else\ \citep{hindley-principal,milner-theory}\fi
-.  In this \emph{final} rather
-than \emph{initial} approach, both kinds of run-time errors in
-\S\ref{tagproblem} (applying a nonfunction and evaluating an open
-term) are reported at compile time. Because the new interpreter
-uses no universal type or pattern matching, it never results in a
+type system\ifshort\else\ \citep{hindley-principal,milner-theory}\fi.
+We call this approach \emph{final} (in contrast to \emph{initial}),
+because we represent each object term not by its abstract syntax
+but by its denotation in a semantic algebra.  This representation
+makes it trivial to implement a primitive recursive function over
+object terms, such as an evaluator.  Or, as a referee puts it aptly, our
+proposal is ``a way to write a typed fold function over a typed term.''
+
+We emphasize ``typed'' and ``fold'' in the previous sentence.
+Our encoding of the recursive type of terms \citep{bohm-automatic}
+makes folds over terms much easier to write than functions over
+terms that are not primitive recursive (or, compositional).
+In contrast, \citearound{'s encoding of the sum type of
+terms}\citet{JFP-Mogensen} does not privilege folds.
+In exchange, we statically express object types in the metalanguage
+and prevent both kinds of run-time errors in
+\S\ref{tagproblem}, due to evaluating ill-typed or open terms.
+Because the new interpreter
+uses no universal type or pattern matching, it never gives a
 run-time error, and is in fact total.  Because this safety is obvious
 not just to us but also to the metalanguage implementation, we avoid
-the serious performance penalty \citep{WalidICFP02} of error checking.
-\Citet{Gluck-jones-optimality} explains deeper technical reasons that
-inevitably lead to these performance penalties.
+the serious performance penalty \citep{WalidICFP02}
+that inevitably arises \citep{Gluck-jones-optimality}
+of error checking at run time.
 
-Unlike \citearound{'s HOAS-based term representation}\citet{JFP-Mogensen},
-our solution does \emph{not} involve Church-encoding the
+Our solution does \emph{not} involve Church-encoding the
 universal type. The Church encoding of the type~|u| in \S\ref{tagproblem}
 requires two continuations; the function |app| in the interpreter above would
 have to provide both to the encoding of~|e1|. The continuation
@@ -377,81 +374,65 @@ loop. For a well-typed object term, that error continuation is never
 invoked, yet it must be supplied. In contrast, our interpreter has no error
 continuation at all.
 
-The evaluator above is wired directly into the
-functions |b|, |lam|, |app|, and so on.  \ifshort We \else In the rest of this paper, we \fi
-explain how to abstract the interpreter so as
-to process the \emph{same} term in many other
-ways: compilation, partial evaluation, CPS
-conversion, and so forth.
-
-\subsection{Contributions}\label{contributions}
-
-The term ``constructor'' functions |b|, |lam|, |app|, and so on appear
-free in the encoding of an object term such as |testf1| above.  Defining
-these functions differently gives rise to different interpreters, that
-is, different folds on object programs.  Given the same term
-representation but varying the interpreter, we can
+The evaluator above is wired directly into
+functions such as |b|, |lam|, and |app|, whose names appear
+free in |testf1| above.
+\ifshort We \else In the rest of this paper, we \fi
+explain how to abstract over these functions' definitions
+and apply different folds to the same object language, so as
+to process the same term using many other
+interpreters: we can
 \begin{itemize}
     \item evaluate the term to a value in the metalanguage;
     \item measure the size or depth of the term;
     \item compile the term, with staging support such as in MetaOCaml;
     \item partially evaluate the term, online; and
     \item transform the term to continuation\hyp passing style (CPS),
-        even call-by-name (CBN) CPS, so as to isolate the evaluation
+        even call-by-name (CBN) CPS in a call-by-value (CBV) metalanguage,
+        so as to isolate the evaluation
         order of the object language from that of the metalanguage.\ifshort
 \footnote{Due to serious lack of space, 
 we refer the reader to the accompanying code for this.}\fi
 \end{itemize}
-We have programmed our interpreters in OCaml (and, for staging,
+We have programmed all our interpreters and examples in OCaml (and, for staging,
 \citet{metaocaml}) and standard Haskell. The complete code is
 available at \url{http://okmij.org/ftp/packages/tagless-final.tar.gz}
 to supplement the paper. 
 \ifshort For simplicity, main examples in the paper will be in MetaOCaml;
 all examples have also been implemented in Haskell.
-\else Except for the fundamental definitions in \S\ref{encoding},
-our examples will be shown in (Meta)OCaml, 
-even though we have implemented each example equivalently in
-both (Meta)OCaml and Haskell%
-\footnote{an earlier version of this paper switched liberally between 
-both languages, as we believed that our claims were made more obvious
-by a judicious choice of metalanguage, but the reviewers disagreed,
-pointing out that few people are equally conversant in both.}.
-We have chosen to use mainly MetaOCaml because it provides
-convenient, typed staging facilities.  We will comment on the significant
-differences between the implementations.
+\else Except for the basic definitions in \S\ref{encoding},
+we show our examples in (Meta)OCaml even though some of our
+claims are more obvious in Haskell, for consistency and because
+MetaOCaml provides convenient, typed staging facilities.
 \fi
+
+\subsection{Contributions}\label{contributions}
 
 We attack the problem of tagless (staged) type-preserving
 interpretation exactly as it was posed
 by \citet{WalidICFP02} and \citet{xi-guarded}.
 We use their running examples and achieve the
 result they call desirable.  Our contributions are as follows.
-
 \begin{enumerate}
-\item We build interpreters that evaluate (\S\ref{language}),
-   compile (or evaluate with staging) (\S\ref{S:compiler}), and 
+\item We build the first \emph{family} of interpreters, each instantiating the
+   \emph{same} signature, that evaluate (\S\ref{language}),
+   compile (\S\ref{S:compiler}), and 
    partially evaluate (\S\ref{PE}) a typed higher-order object language
    in a typed metalanguage, in direct and continuation\hyp passing
    styles\ifshort\else\ (\S\ref{variations})\fi.
-\item All these interpreters use no type tags, patently never get stuck,
+\item These interpreters use no type tags
     and need no advanced type-system features such as GADTs, dependent types,
     or intentional type analysis.
-\item The partial evaluator avoids polymorphic lift and delays binding-time
-    analysis.  It bakes a type-to-type map into the interpreter
-    interface to eliminate the need for GADTs and thus remain portable
-    across Haskell 98 and ML.
-\ifshort\else
-\item We show the first typed, tagless, and statically type-preserving CPS
-    transformation with simple types (\S\ref{variations}), which is available for mainstream
-    functional languages (ML and Haskell). Type preservation is assured by
-    the soundness of our embedding.
-\fi
-\item We use the type system of the metalanguage
-    to check statically that an object program is well-typed and closed.
-\item We show clean, comparable implementations in MetaOCaml and Haskell.
-\item We specify a functor signature that encompasses all our
-  interpreters, from evaluation and compilation (\S\ref{language}) 
-   to partial evaluation \ifshort\else and CPS transformation \fi(\S\ref{PE}).
+    Yet the type system of the metalanguage
+    assures statically that each object program is well-typed and closed,
+    and that each interpreter preserves types and never gets stuck.
+    In particular, our (online) partial evaluator and CPS transformers
+    avoid GADTs in their implementation and stay portable across
+    Haskell 98 and ML, by baking into their interface an inductive
+    map from input types to output types.
+\item Our clean, comparable implementations using OCaml modules and Haskell
+    type classes show how to parametrize our final representation of object
+    terms over multiple ways to assign them meanings.
 \item We point a clear way to extend the object language with more features
     such as state\ifshort\else~(\S\ref{state})\fi.\ifshort\footnote{Again, please see our code.}\fi
     \ Our term encoding is contravariant in the object language, so
@@ -459,9 +440,6 @@ result they call desirable.  Our contributions are as follows.
 \item We describe an approach to self\hyp interpretation compatible with the
   above\ifshort\else~(\S\ref{selfinterp})\fi.  Self\hyp interpretation turned
   out to be harder than expected.\ifshort\footnotemark[\value{footnote}]\fi
-\item We show how the module system of Ocaml and Haskell's type class 
-   system can be used to parametrize the semantics of (a particular style of
-   syntax encoding of) lamda terms.
 \end{enumerate}
 Our code is surprisingly simple and obvious in hindsight, but
 it has been cited as a difficult problem (\cite{sumii-hybrid}
@@ -484,28 +462,31 @@ solve a problem that was stated in the published record as open and
 likely unsolvable in ML or Haskell 98 without extensions, by a novel
 combination of simple types and techniques already described in the
 literature that use features present in mainstream functional languages.
-In particular, we follow \citearound{'s encoding of type-indexed
-values}\citet{yang-encoding}, \citearound{'s construction of dynamic
-terms alongside static terms}\citet{asai-binding-time}, and
-\citearound{'s deforestation of syntax
-constructors}\citet{sumii-hybrid}.  These techniques require just
-a Hindley-Milner type system with either a module system that supports
+In particular, we follow \citets{yang-encoding} encoding of type-indexed
+values, \citets{Sperber-SelfApplicable} and \citets{asai-binding-time}
+construction of dynamic terms alongside static terms, and
+\citets{sumii-hybrid} deforestation of syntax
+constructors.  These techniques require just
+a Hindley-Milner type system with either module
 functors or constructor classes, as realized in all variants of ML and
 Haskell.
 The simplicity of our solution and its
 use of only mainstream features \ifshort\else are virtues that \fi make it more practical to build typed,
 embedded DSLs.
-\begin{comment}
-We may claim some contribution about type-preserving CPS. Check
-related work section in \citep{Guillemette-Monier-PLPV}, especially
-check the work of Shao on type-preserving CPS in Flint. The PLPV paper
-in related work shows other tasks, including closure conversion, which
-we may tackle in our approach. We may be able to write a
-type-preserving, assured compiler, whose properties and assured by HM.
-\end{comment}
 
-A referee aptly summarized our paper as ``proposing a way to write a 
-typed fold function over a typed term''.
+\ifshort\else
+However we represent an object term,
+the representation can be created either by hand (for example, by
+entering object terms at a metalanguage interpreter's prompt) or
+by parsing and type-checking text.
+It is known how to write such a parser and type-checker,
+whether using fancy types \citep{Guillemette-Monier-PLPV,haskell-list,WalidICFP02} or not \citep{baars-typing}.
+We have ourselves implemented a parser and type-checker for our object
+language, which returns (either a parse or type error or) a finally
+encoded object term that can then be interpreted in multiple ways
+without repeated type-checking.  We leave this problem aside in the
+rest of this paper.
+\fi
 
 \section{The object language and its tagless interpreters}\label{language}
 
@@ -1021,10 +1002,9 @@ accompanying code gives the full details.
 \else
 
 \section{A tagless partial evaluator}\label{PE}
-Surprisingly, we can write a partial evaluator using the idea above,
-namely to build object terms using ordinary functions rather than data
-constructors.  We present this partial evaluator in a sequence of three
-attempts. It uses no universal type and no tags
+Surprisingly, the |Symantics| interface presented above extends to
+encompass an online partial evaluator.  We present this partial evaluator
+in a sequence of three attempts. It uses no universal type and no tags
 for object types.  We then discuss residualization and binding-time
 analysis.  Our partial evaluator is a modular extension of the evaluator
 in~\S\ref{S:interpreter-RL} and the compiler in~\S\ref{S:compiler}, in
@@ -1091,8 +1071,8 @@ When compiling to a first-order target language such as machine code,
 booleans, integers, and functions may well be represented differently.
 Compiling a polymorphic lift function thus requires intensional type
 analysis.  To avoid needing polymorphic lift, we turn to
-Asai's technique \citep{asai-binding-time,sumii-hybrid} of
-building a dynamic term alongside every static term.
+\citets{Sperber-SelfApplicable} and \citets{asai-binding-time} technique of
+building a dynamic term alongside every static term \citep{sumii-hybrid}.
 
 \subsection{Delaying binding-time analysis}
 \label{S:PE-problem}
@@ -1368,7 +1348,10 @@ extracts a future-stage code value from the result of
 partial evaluation.  Conversely, the function |pdyn| injects a
 code value into the |repr| type. As
 in~\S\ref{S:PE-problem}, we build dynamic terms alongside
-any static ones to avoid polymorphic lift.
+any static ones to express how the lift function is indexed
+by the dynamic type.  What is new is that we analogously
+build a static type alongside the dynamic type to express
+how the static type is indexed by the dynamic type.
 
 The static portion of the interpretation of |lam f| is |Some f|, 
 which just wraps the HOAS
@@ -2208,8 +2191,8 @@ provided total type-level functions such as |repr_pe| in
 ought to become mainstream.
 
 At the term level, we also avoid converting between static and dynamic
-terms by building them in parallel, as \citet{asai-binding-time} does
-in his partial evaluator.
+terms by building them in parallel, as \citet{Sperber-SelfApplicable}
+and \citet{asai-binding-time} do in their partial evaluators.
 This method type-checks in Hindley-Milner once we
 deforest the object term representation.  Put another way, we
 manually apply type-level partial evaluation to our type
@@ -2217,15 +2200,15 @@ functions (see \S\ref{S:PE-solution}) to obtain simpler types
 acceptable to MetaOCaml.
 
 \Citets{JFP-Mogensen} self-reducer for the untyped
-$\lambda$-calculus preceded Asai's partial evaluator in constructing
+$\lambda$-calculus preceded Sperber's and Asai's partial evaluators in constructing
 static and dynamic terms in parallel.  However, this self-reducer
 constructs a static term for every object term, even a bound variable,
 so (in terms of Fig.~\ref{fig:pe}) it moves some work from |app|
-to~|pdyn|.  In contrast, we follow Asai and construct the static term
+to~|pdyn|.  In contrast, we follow Sperber and Asai in constructing the static term
 optionally, so as to perform type-directed lifting without requiring the
 encoding of an object term to juggle explicit type indices.
 
-\Citet{sumii-hybrid} also use Asai's construction,
+\Citet{sumii-hybrid} also use Sperber and Asai's construction,
 to combine online
 and offline partial evaluation.
 They predate us in deforesting the object term representation to enable tagless
@@ -2396,13 +2379,6 @@ coinductive aspects of B\"{o}hm trees, as pointed out by
 \citet{berarducci-models} and Jacobs \citeyearpar[Example 4.3.4]{jacobs-coalgebra}.
 \fi
 
-\ifshort\else
-One way to understand our main idea is to eschew sum types and sum kinds
-for their dual, record types and record kinds.
-For the self\hyp interpreter, we then proceed to use a Church encoding for
-recursive data types \citep{bohm-automatic}.
-\fi
-
 \ifshort We observe that \else As \S\ref{S:clarify} observes, \fi
 higher-rank and higher-kind
 polymorphism lets us type-check and compile object terms separately from
@@ -2436,12 +2412,3 @@ When the metalanguage does provide higher-rank and higher-kind
 polymorphism, we can type-check and compile an object term separately
 from any interpreters it may be plugged into.
 \fi
-
-Our representation of object terms in elimination form encodes
-primitive recursive folds over the terms. 
-\ifshort\else
-This encoding makes operations like interpretation trivial to implement.
-\fi
-We still
-have to understand if and how non-primitively 
-recursive operations can be supported.

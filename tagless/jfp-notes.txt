@@ -8,16 +8,6 @@ the original reviewer's text in jfp-reviews.txt.
 
 Jacques
 
-\oleg{I took care of simple comments such as references, bibtex
-entries, grammatical corrections. I have removed those from this
-file. In the reply to referees, we can summarily state that we have
-fixed all the grammatical and other such suggestions and inserted
-recommended references to show the historical development.}
-
-\oleg{After the second ====... line, please see the reviewers'
-comments that are already taken care of. We include them in the
-reply.}
-
 \jacques{Since the APLAS paper has appeared, we have been cited twice.
 The citations are interesting (and we should cite them here) as they
 draw out a different feature of our solution: the importance of
@@ -118,16 +108,6 @@ The main ideas in the paper date back a long time. I believe they can
 be found in more or less diluted form in \cite{Holst-AMIX}
 \jacques{Anyone able to get a copy of this?}
 
-The idea that terms can either be encoded by data types or by
-higher-order functions (in an executable way) is also due to Reynolds
-(might also be in his other 1974 paper):
-\oleg{we already have this reference: \cite{reynolds-relation} and
-cite him, although in a different context}
-\jacques{I don't think this paper is the 'right' one.  In fact,
-I think it is in \cite{reynolds-definitional}.  All the papers are
-available at ftp://ftp.cs.cmu.edu/user/jcr/, so others can read and
-check}
-
 Then there is the typed version of the (Thiemann 1996) paper that you
 are citing. It presents a typed partial evaluator encoded exactly like
 your interpreters and pe functions, but for offline partial
@@ -149,8 +129,6 @@ The idea to parametrize (abstract) semantics and express them in
 combinator style is due to Flemming Nielson \cite{Nielson88}
 \oleg{63-page paper!}
 
-The idea of dual representation which is attributed to Asai also
-appears in \cite{Sperber-SelfApplicable}
 
 
 
@@ -186,11 +164,6 @@ p4, section 1.3
     discuss this a little.  Probably not in 1.3, but perhaps at the end
     of section 4?}
 
-p5, section 1.4
-    "even call-by-name CPS"
-    Why is CBN more difficult or more complicated than CBV in this
-    context? 
-
 p11, proposition 4
      This is not formalized, but really obvious (unlike the
      others). However, the mentioned properties of .~ and .< >. that
@@ -202,12 +175,13 @@ p11, section 4
      "Surprisingly ..."
      Not that surprising in the light of Filinski's work on
      normalization by evaluation.
-
      It would be appropriate for you to state that you are after
      online partial evaluation in this section and to briefly explain
      what that means.
-     \oleg{I agree; we are after online PE...}
-
+     \ccshan{Response: At the beginning of Section 4, we now clarify
+     that what's surprising is that the family of interpretations can
+     encompass partial evaluation, and state up front that our partial
+     evaluator is online.}
 
 
 p15, section 4.4
@@ -236,31 +210,23 @@ p16
      \oleg{I agree; let's keep our optimizations and argue for them in
      our response to the reviewer.}
 
-p16
-     Also, online pe is intrinsically tagged so offline pe would
-     provide a better demonstration.
-     \jacques{I quite disagree that offline would provide a better
-     demonstration!  Offline introduces an extraneous BTA pass and
-     annotations which would be even more distracting.  Also, I am
-     not sure I understand how "online pe is intrinsically tagged" --
-     all PE requires binding-time annotations, which are usually done
-     with tags, whether online or offline.  So I think this comment is
-     just off the mark}
-     \oleg{Perhaps we should argue for that in our response and don't
-     change the paper. At least we should ask for more clarification
-     from the reviewer.}
-
 p17, "partial evaluation ... gives the desired result:"
      But the good result is due to the extra cleverness put into the
      implementation of 'add' and 'mul': without those, the result
      would not be much different.
-     \jacques{Exactly!  And that extra cleverness is clear, localized,
-     and simple.  So why not do it?  The beauty of this approach is that
-     it makes it clear where to put these optimizations.  But that is
-     really part of a 'next' paper.  I feel like leaving this in, but
-     adding some words to the conclusion about this being an area to
-     pursue.}
-     \oleg{I agree with you, as I said before...}     
+     \ccshan{Response: These optimizations are indeed a side point
+     and do not affect the result of EX(P) much, but we find the
+     ease of adding these optimizations and the clarity of where to
+     put them so appealing, simple, and undistracting that we think
+     the paper is still better for them.}
+
+p16
+     Also, online pe is intrinsically tagged so offline pe would
+     provide a better demonstration.
+     \ccshan{Response: Our paper stresses a family of multiple
+     interpretations for the same object language, and offline PE
+     would force us to change the object language to one annotated
+     with binding times, so online PE distracts from our point less.}
 
 p18, CPS interpretation
      The cbv version is almost literally in the above-cited paper
@@ -372,8 +338,8 @@ p28, "This shift also underlies ..."
 ==========================================================================
 	Comments that are already taken care of
 
-We have fixed all the grammatical and other such suggestions and
-inserted recommended references to show the historical development.
+We have fixed all the grammatical problems pointed out by the reviewers
+and inserted recommended references to show the historical development.
 
 Rev1:
 The main shortcoming of the paper is the lack of discussion of which
@@ -578,3 +544,8 @@ p1, citation
     Reynolds paper we cite, not from my reading of it (it is available
     from Reynold's home page.  So what does this mean?}
     \oleg{we just leave this as the question to the reviewer}
+
+The idea of dual representation which is attributed to Asai also
+appears in [Sperber]
+    Thank you; we now cite Sperber alongside Asai (as Sumii and
+    Kobayashi do).
