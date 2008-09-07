@@ -428,7 +428,7 @@ result they call desirable.  Our contributions are as follows.
     and that each interpreter preserves types and never gets stuck.
     In particular, our (online) partial evaluator and CPS transformers
     avoid GADTs in their implementation and stay portable across
-    Haskell 98 and ML, by baking into their interface an inductive
+    Haskell 98 and ML, by expressing in their interface an inductive
     map from input types to output types.
 \item Our clean, comparable implementations using OCaml modules and Haskell
     type classes show how to parametrize our final representation of object
@@ -500,9 +500,9 @@ we use higher-order
 abstract syntax (HOAS) \citep{miller-manipulating,pfenning-higher-order}
 rather than de Bruijn indices to encode binding and
 ensures that our object programs are closed.
-We find HOAS to be more convenient. We do present the version of our
-developement using de Bruijn indices in the accompanying source code, file
-|incope-dB.ml|.
+We find HOAS to be more convenient, but we have also implemented our
+approach using de Bruijn indices (in the accompanying source file
+|incope-dB.ml|).
 
 
 \subsection{How to make encoding flexible: abstract the interpreter}
@@ -571,8 +571,8 @@ Haskell to infer the object types for us. We could also
 avoid the dummy argument by switching off the monomorphism restriction
 with a compiler flag. \fi
 The methods |add|, |mul|, and |leq| are quite similar, and so are
-|int| and |bool|. Therefore, we often show
-only one method of each group and elide the rest. The
+|int| and |bool|. Therefore, we often elide all but
+one method of each group. The
 accompanying code has the complete implementations.
 
 \ifshort
@@ -666,41 +666,110 @@ The functor |EX| in Fig.~\ref{fig:ocaml-examples} encodes
 our running examples |test1| and the $\mathit{power}$ function
 (|testpowfix|).
 The dummy argument to |test1| and |testpowfix| is an artifact of
-MetaOCaml, related to monomorphism: in order for us to run a
+MetaOCaml: in order for us to run a
 piece of generated code, it must be polymorphic in its environment
-classifier (the type variable |'c| in Figure~\ref{fig:ocaml-simple}).
-The value restriction dictates that
-the definitions of our object terms must look syntactically like
-values. (Alternatively, we could have used
-the rank-2 record types of OCaml to maintain the necessary polymorphism.)
+classifier (the type variable |'c| in Figure~\ref{fig:ocaml-simple}),
+so we must define our object terms as syntactic values to satisfy
+the value restriction.
+(Alternatively, we could have used
+OCaml's rank-2 record types to maintain the necessary polymorphism.)
 \ifshort\else\par\fi
 Thus, we represent an object expression in
-OCaml as a functor from |Symantics| to an appropriate semantic domain. This
+OCaml as a functor from |Symantics| to a semantic domain. This
 is essentially the same as the constraint \texttt{Symantics repr =>} in the
 Haskell embedding.
 
 Comparing |Symantics| with Fig.~\ref{fig:object}
-shows how to represent \emph{every} typed, closed object term in the
-metalanguage. Moreover, the representation preserves types.
+shows how to represent \emph{every} well-typed object term in the
+metalanguage.
+We formalize this representation by defining $H$ and~$M$,
+two inductive maps from terms and types in our object language
+to terms and types in Haskell and OCaml:
+\begin{align}
+    H(\ZZ) &= \texttt{Int} &
+    M(\ZZ) &= \texttt{int} \notag\\
+    H(\BB) &= \texttt{Bool} &
+    M(\BB) &= \texttt{bool} \notag\\
+    H(t_1 \to t_2) &= H(t_1) \mathbin{\texttt{->}} H(t_2) &
+    M(t_1 \to t_2) &= M(t_1) \mathbin{\texttt{->}} M(t_2) \displaybreak[0] \\
+    H(x) &= x &
+    M(x) &= x \notag\\
+    H(\fun{x}e) &= \texttt{lam (\textbackslash x -> $H(e)$)} &
+    M(\fun{x}e) &= \texttt{lam (fun x -> $M(e)$)} \notag\\
+    H(\fix{f}e) &= \texttt{fix (\textbackslash x -> $H(e)$)} &
+    M(\fix{x}e) &= \texttt{fix (fun x -> $M(e)$)} \notag\\
+    H(e_1 e_2) &= \texttt{app $H(e_1)$ $H(e_2)$} &
+    M(e_1 e_2) &= \texttt{app $M(e_1)$ $M(e_2)$} \notag\\
+    H(n) &= \texttt{int $n$} &
+    M(n) &= \texttt{int $n$} \notag\\
+    H(\True) &= \texttt{bool True} &
+    M(\True) &= \texttt{bool true} \notag\\
+    H(\False) &= \texttt{bool False} &
+    M(\False) &= \texttt{bool false} \notag\\
+    \!H(\cond{e}{e_1}{e_2}) &= \rlap{\texttt{if\_ $H(e)$ $H(e_1)$ $H(e_2)$}} \notag\\
+    \!M(\cond{e}{e_1}{e_2}) &= \rlap{\texttt{if\_ $M(e)$ (fun () -> $M(e_1)$) (fun () -> $M(e_2)$)}} \notag\\
+    H(e_1 + e_2) &= \texttt{add $H(e_1)$ $H(e_2)$} &
+    M(e_1 + e_2) &= \texttt{add $M(e_1)$ $M(e_2)$} \notag\\
+    H(e_1 \times e_2) &= \texttt{mul $H(e_1)$ $H(e_2)$} &
+    M(e_1 \times e_2) &= \texttt{mul $M(e_1)$ $M(e_2)$} \notag\\
+    H(e_1 \le e_2) &= \texttt{leq $H(e_1)$ $H(e_2)$} &
+    M(e_1 \le e_2) &= \texttt{leq $M(e_1)$ $M(e_2)$}
+\end{align}
+These definitions assume that our object language, Haskell, and OCaml
+use the same variable names~$x$ and integer literals~$n$.
+If $\Gamma$ is a typing context $x_1:t_1,\dotsc,x_n:t_n$ in the object
+language, then we define the metalanguage contexts
+\begin{align}
+    \texttt{repr\;$H(\Gamma)$}
+    &= x_1:\texttt{repr}\;H(t_1),\dotsc,x_n:\texttt{repr}\;H(t_n) \text, \notag\\
+    \texttt{('c,\:$M(\Gamma)$)\;repr}
+    &= x_1:\texttt{('c,\:$M(t_1)$)\;repr},\dotsc,x_n:\texttt{('c,\:$M(t_n)$)\;repr} \text.
+\end{align}
+
+The following proposition states the trivial but fundamental fact that
+this representation preserves types.
 \begin{proposition}\label{prop:typing}
-If an object term has object type~$t$, then its
-representation in the metalanguage has type 
-|forall repr.| |Symantics repr => repr |$t$.
+If an object term~$e$ has the type~$t$ in the context~$\Gamma$,
+then the Haskell term~$H(e)$ has the type \texttt{repr\;$H(t)$}
+in the context
+\[
+    \texttt{repr}:\star\to\star,\quad
+    \texttt{Symantics repr},\quad
+    \texttt{repr}\;H(\Gamma)
+    \text,
+\]
+and the OCaml term~$M(e)$ has the type \texttt{('c,\:$M(t)$)\;repr}
+in the context
+\[
+    \texttt{S:Symantics},\quad
+    \texttt{open S},\quad
+    \texttt{'c}:\star,\quad
+    \texttt{('c,\:$M(\Gamma)$)\;repr}
+    \text.
+\]
 \end{proposition}
-
 \begin{proof}
-The rules for deriving a type $t$ from a term $T$ of the object language
-correspond \emph{bijectively} to the rules encoded in the signature
-|Symantics| (when the latter is read as a set of implications, \`{a} la
-Curry-Howard).  In other words, each of the rules from Figure~\ref{fig:object}
-corresponds bijectively to one line of |Symantics|.
-
-It is worth noting that, as we use HOAS, rules that normally depend on 
-context, in other words rules which are themselves an encoding of a function
-from the context to a typing relation, (like those for |lam| and |fix|)
-correspond to actual metalanguage functions.
+By structural induction on the derivation in the object language
+that $e$ has type~$t$ in~$\Gamma$.
 \end{proof}
-Conversely, the type system of the metalanguage statically checks that the
+\begin{corollary}
+If a closed object term~$e$ has the type~$t$,
+then the Haskell term~$H(e)$ has the type
+\[
+    \texttt{forall repr. Symantics repr => repr $H(t)$}
+\]
+and the OCaml functor
+\[
+    \texttt{functor (S:Symantics) -> struct open S let term () = $M(e)$ end}
+\]
+has the signature
+\[
+    \texttt{functor (S:Symantics) -> sig val term: unit -> ('c,\:$M(t)$)\;S.repr end}
+    \text{.}
+\]
+\end{corollary}
+
+Conversely, the type system of the metalanguage checks that the
 represented object term is well-typed and closed.
 If we err, say replace |int 7| with |bool True| in
 |testpowfix7|, the type checker will complain there that the expected type
@@ -710,7 +779,7 @@ encoding |lam (\x -> app x x)| both fail occurs-checks in type checking.
 Both Haskell's and MetaOCaml's type checker also flags syntactically invalid
 object terms, such as if we forget |app| somewhere above.
 
-For simplicity, all examples in the rest of this paper will be in
+For simplicity, all examples in the rest of this paper are in
 (Meta)OCaml, but the accompanying code shows a full Haskell implementation
 as well.
 
@@ -718,12 +787,13 @@ as well.
 \label{S:interpreter-RL}
 
 Now that our term representation is independent of any particular interpreter,
-we are now ready to present a series of interpreters.  Each interpreter is an
+we are ready to present a series of interpreters.  Each interpreter is an
 instance of the |Symantics| class in Haskell and a module implementing
-the |Symantics| signature in MetaOCaml.
+the |Symantics| signature in OCaml.
 
 The first interpreter evaluates an object term to its value in the
-metalanguage.  The module below interprets each object\hyp language
+metalanguage.  The module below is metacircular in that it
+interprets each object\hyp language
 operation as the corresponding metalanguage operation.
 \ifshort
 \begin{code3}
@@ -2146,33 +2216,6 @@ Nevertheless, HOAS lets the partial
 evaluator remove all the tags. In contrast, our object encoding and
 interpreters do not have tags to start with and obviously cannot
 raise run-time errors.
-
-\ifshort\else
-A lot of effort has gone into ``typing dynamic typing'': to statically
-type-check dynamically\hyp typed values
-\citep{baars-typing,WalidICFP02,Guillemette-Monier-PLPV,haskell-list},
-using the host language's type system to varying extents.
-Our object terms are statically typed, so we would
-need one of these techniques to interpret dynamically\hyp typed
-terms such as those read from a file.
-\oleg{First, I suggest we remove the subjunctive mood: `we would
-  need...' We have the code already, IncopeTypecheck.hs. We know we
-  can typecheck untyped terms so that we do the typechekcing only
-  once, and interpret many times. All these interpretation is guranteed to
-  be free from any type errors. And this holds even for higher-order
-  terms encoded in HOAS. I also suggest we drop
-  \cite{haskell-list}. We included the citation solely to show how 
-  we could go on. Both links in haskell-list are not actually
-  appropriate: first, the object language is \emph{first-order}
-  and second they use GADTs. Our IncopeTypecheck uses only
-  Typeable and existentials, and no GADTs.
-  Finally, we need to find a way to talk about IncopeTypecheck more
-  directly, probably in the Introduction -- Sumii-san has directly
-  suggested we emphasize that result. For some reason, people (Walid
-  and Sumii-san, for ones) consider it important. Incidentally, I
-  have the comparison of IncopeTypecheck with `Typing Dynamic
-  Typing', which we can use if needed.}
-\fi
 
 Our partial evaluator establishes a bijection |repr_pe| between static
 and dynamic types (the valid values of |'sv| and |'dv|), and between

@@ -1,5 +1,5 @@
 \def\XMLelement#1#2#3#4{}
-\documentclass{jfp}
+\documentclass[tbtags]{jfp}
 \expandafter\let\csname    equation*\endcsname\relax
 \expandafter\let\csname endequation*\endcsname\relax
 
@@ -12,6 +12,8 @@
 \renewcommand\bibsection{\section*{\refname}}
 
 \newtheorem{proposition}{Proposition}
+\let\corollary\relax \let\endcorollary\relax
+\newtheorem{corollary}[proposition]{Corollary}
 
 \begin{document}
 
