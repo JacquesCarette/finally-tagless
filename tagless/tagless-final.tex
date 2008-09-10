@@ -479,10 +479,12 @@ However we represent an object term,
 the representation can be created either by hand (for example, by
 entering object terms at a metalanguage interpreter's prompt) or
 by parsing and type-checking text.
-It is known how to write such a parser and type-checker,
-whether using fancy types \citep{Guillemette-Monier-PLPV,haskell-list,WalidICFP02} or not \citep{baars-typing}.
-We have ourselves implemented a parser and type-checker for our object
-language, which returns (either a parse or type error or) a finally
+It is known how to write such a type checker
+for a higher-order object language such as ours,
+whether using fancy types \citep{Guillemette-Monier-PLPV,WalidICFP02} or not \citep{baars-typing}.
+We have ourselves implemented a type checker for our object
+language (in the accompanying source file |IncopeTypecheck.hs|),
+which maps an ordinary syntax tree to (either a type error or) a finally
 encoded object term that can then be interpreted in multiple ways
 without repeated type-checking.  We leave this problem aside in the
 rest of this paper.
