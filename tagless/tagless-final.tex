@@ -754,7 +754,7 @@ in the context
 By structural induction on the derivation in the object language
 that $e$ has type~$t$ in~$\Gamma$.
 \end{proof}
-\begin{corollary}
+\begin{corollary}\label{cor:typing}
 If a closed object term~$e$ has the type~$t$,
 then the Haskell term~$H(e)$ has the type
 \[
@@ -780,10 +780,6 @@ $\fun{x}xx$ and its
 encoding |lam (\x -> app x x)| both fail occurs-checks in type checking.
 Both Haskell's and MetaOCaml's type checker also flags syntactically invalid
 object terms, such as if we forget |app| somewhere above.
-
-For simplicity, all examples in the rest of this paper are in
-(Meta)OCaml, but the accompanying code shows a full Haskell implementation
-as well.
 
 \subsection{Two tagless interpreters}
 \label{S:interpreter-RL}
@@ -853,6 +849,9 @@ It is obvious to the compiler that
 pattern matching cannot fail, because there is no
 pattern matching. Evaluation can only fail to yield a value
 due to interpreting |fix|.
+The soundness of the object language's type system with respect to
+the dynamic semantics specified by a definitional interpreter
+follows from the soundness of the metalanguage's type system.
 \ifshort
 (The source code shows a total interpreter |L| that measures
 the size of each object term.)
@@ -863,29 +862,36 @@ these propositions follow immediately from the soundness of the
 metalanguage's type system.
 \fi
 \begin{proposition}
-If an object term~$e$ encoded (as $e'$) in the metalanguage  has (object)
-type~$t$, then evaluating~$e'$ in the interpreter~|R| either continues
-indefinitely or terminates with a value of the same type~$t$.
+If a closed object term~$e$ has type~$t$,
+and the OCaml module |I| implements the signature |Symantics|,
+then under the OCaml module definition
+\[
+    \texttt{\begin{tabular}{@{}l@{}}
+    module RESULT = \\
+    \quad (functor (S:Symantics) -> struct open S let term () = $M(e)$ end) \\
+    \quad (I)
+    \end{tabular}}
+\]
+evaluating the expression \texttt{RESULT.term ()} never gets stuck: it either
+does not terminate or evaluates to a value of type
+\texttt{('c,\:$M(t)$)\;I.repr} (polymorphic over~|'c|).
 \end{proposition}
-\ifshort\else
-Generalizing from~|R| to all interpreters, we have the following
-broader and more useful, if also more obvious, proposition.
-\fi
-\begin{proposition}
-  If, for an implementation |I| of |Symantics|, if for all object
-  terms $e$ (encoded as $e'$), evaluating $e'$ with |I| always
-  terminates, then 
-  the type system of the object
-  language is sound with respect to the dynamic semantics defined by
-  that implementation.
-  In other words, the (total) relation induced by |I| is a sub-relation
-  of the one expressed by the type system of the object language.
-  \jacques{Please check that I have this right}
-\end{proposition}
-\ifshort\else
-These propositions follow immediately from the soundness of the
-metalanguage's type system.
-\fi
+\begin{proof}
+By Corollary~\ref{cor:typing} and the type soundness of (this fragment of) OCaml.
+\end{proof}
+\begin{corollary}
+If a closed object term~$e$ has type~$t$,
+then under the OCaml module definition
+\[
+    \texttt{\begin{tabular}{@{}l@{}}
+    module RESULT = \\
+    \quad (functor (S:Symantics) -> struct open S let term () = $M(e)$ end) \\
+    \quad (R)
+    \end{tabular}}
+\]
+evaluating the expression \texttt{RESULT.term ()} never gets stuck: it either
+does not terminate or evaluates to a value of type~$M(t)$.
+\end{corollary}
 \ifshort\else
 For variety, we show another interpreter, which measures the \emph{size}
 (or \emph{length}, thus the mnemonic |L|)
@@ -909,7 +915,7 @@ end
 Now the OCaml expression
 |let module E = EX(L) in E.test1 ()|
 evaluates to |3|. This interpreter is not only tagless but also
-total. It ``evaluates'' even seemingly divergent terms, for instance
+total. It ``evaluates'' even seemingly divergent terms; for instance,
 |app (fix (fun self -> self)) (int 1)| evaluates to $3$.
 \fi
 
