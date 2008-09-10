@@ -696,10 +696,10 @@ to terms and types in Haskell and OCaml:
     M(t_1 \to t_2) &= M(t_1) \mathbin{\texttt{->}} M(t_2) \displaybreak[0] \\
     H(x) &= x &
     M(x) &= x \notag\\
-    H(\fun{x}e) &= \texttt{lam (\textbackslash x -> $H(e)$)} &
-    M(\fun{x}e) &= \texttt{lam (fun x -> $M(e)$)} \notag\\
-    H(\fix{f}e) &= \texttt{fix (\textbackslash x -> $H(e)$)} &
-    M(\fix{x}e) &= \texttt{fix (fun x -> $M(e)$)} \notag\\
+    H(\fun{x}e) &= \texttt{lam (\textbackslash $x$ -> $H(e)$)} &
+    M(\fun{x}e) &= \texttt{lam (fun $x$ -> $M(e)$)} \notag\\
+    H(\fix{f}e) &= \texttt{fix (\textbackslash $x$ -> $H(e)$)} &
+    M(\fix{x}e) &= \texttt{fix (fun $x$ -> $M(e)$)} \notag\\
     H(e_1 e_2) &= \texttt{app $H(e_1)$ $H(e_2)$} &
     M(e_1 e_2) &= \texttt{app $M(e_1)$ $M(e_2)$} \notag\\
     H(n) &= \texttt{int $n$} &
@@ -723,7 +723,7 @@ If $\Gamma$ is a typing context $x_1:t_1,\dotsc,x_n:t_n$ in the object
 language, then we define the metalanguage contexts
 \begin{align}
     \texttt{repr\;$H(\Gamma)$}
-    &= x_1:\texttt{repr}\;H(t_1),\dotsc,x_n:\texttt{repr}\;H(t_n) \text, \notag\\
+    &= x_1:\texttt{repr}\;H(t_1),\dotsc,x_n:\texttt{repr}\;H(t_n) \text, \\
     \texttt{('c,\:$M(\Gamma)$)\;repr}
     &= x_1:\texttt{('c,\:$M(t_1)$)\;repr},\dotsc,x_n:\texttt{('c,\:$M(t_n)$)\;repr} \text.
 \end{align}
@@ -1036,23 +1036,46 @@ make it a type error to run an open expression.
 The accompanying code shows the Haskell implementation. 
 \else
 \begin{proposition}
-    For all object terms $e$ of object type $t$ (encoded as $e'$),
-    evaluating $e'$ via the compiler |C| always terminates and
-    generates tagless code (i.e. of type $t$ |code|) free of pattern matching.
+If an object term~$e$ has the type~$t$
+in the context $x_1:t_1,\dotsc,x_n:t_n$,
+then in a MetaOCaml environment
+\[
+    \texttt{open C},\quad
+    x_1 \mapsto \texttt{.<$y_1$>.},\enspace
+    \dotsc,\enspace
+    x_n \mapsto \texttt{.<$y_n$>.}
+\]
+where each $y_i$ is a future-stage variable of type $M(t_i)$,
+the MetaOCaml term~$M(e)$ evaluates to a code value,
+of type~\texttt{('c,\:$M(t)$)\;code} (polymorphic over~|'c|),
+that contains no pattern-matching operations.
 \end{proposition}
-This is syntactically clear from the body of |C|, and follows
-readily by structural induction and the properties%
-\footnote{which are not easy to establish \citep{MetaML}} of |.~| and
-|.< >.|.
+\begin{proof}
+    By structural induction on the typing derivation of~$e$.
+\end{proof}
+\begin{corollary}
+If a closed object term~$e$ has type~$t$,
+then under the OCaml module definition
+\[
+    \texttt{\begin{tabular}{@{}l@{}}
+    module RESULT = \\
+    \quad (functor (S:Symantics) -> struct open S let term () = $M(e)$ end) \\
+    \quad (C)
+    \end{tabular}}
+\]
+the expression \texttt{RESULT.term ()} evaluates to a code value,
+of type~\texttt{('c,\:$M(t)$)\;code} (polymorphic over~|'c|),
+that contains no pattern-matching operations.
+\end{corollary}
 
 We have also implemented this compiler in Haskell. 
 Since Haskell
-has no (convenient, typed) staging facility, we had to emulate
-it: we defined a data type |ByteCode| with
+has no convenient facility for typed staging, we emulate
+it by defining a data type |ByteCode| with
 constructors such as |Var|, |Lam|, |App|, |Fix|, and |INT|.
-(Alternatively, we could use Template Haskell as our staging facility:
+(Alternatively, we could use Template Haskell \citep{sheard-template} as our staging facility:
 \texttt{ByteCode} can be mapped to the abstract syntax of Template
-Haskell. The output of our compiler will then be assuredly type-correct
+Haskell. The output of our compiler would then be assuredly type-correct
 Template Haskell.)
 Whereas our representation of object terms uses HOAS,
 our bytecode uses integer-named
@@ -1065,7 +1088,7 @@ where |Int| is the counter for creating fresh variable
 names. We define the compiler by making |C| an instance of the
 class |Symantics|.
 The implementation is quite similar (but slightly more
-verbose) than the corresponding MetaOCaml code above. (The implementation uses
+verbose) than the MetaOCaml code above. (The implementation uses
 GADTs because we also wanted to write a typed interpreter for 
 the \texttt{ByteCode} \emph{data type}.) The
 accompanying code gives the full details.
