@@ -30,83 +30,25 @@ end up making changes that came to us because of our subsequent discussion.
 Mogensen (PEPM 1995) \cite{mogensen-self-applicable}
 Sperber (PE 1996) \cite{sperber-self-applicable}
 
-REPORT FROM REFEREE #1
-
-Page 25: The discussion of context, holes and plugging should be made
-clearer and more concrete, using a tiny example if possible.  For
-instance, the statement that "context is a euphemism for a polymorphic
-argument" is puzzling, since a context can also be seen as a function
-from term to term, with the context's hole being the argument.  So the
-reader wonders whether you or he has misunderstood something or
-whether you are proposing a reinterpretation of contexts (as I think
-you are).
-\jacques{Ken, you started working on this - are you still working on it?}
-
-Page 26 line -2: I don't think there is an universally agreed
-distinction between "metacircular interpreter" and "self-interpreter",
-so this statement requires some clarification.
-\jacques{Three comments:
-1) it appears from what I have now read that a consensus is building 
-that a "metacircular interpreter" is a special case of a "self-interpreter"
-where the language is homoiconic, i.e. the representation of programs
-is as a native data-structure of the language itself, ie like LISP.
-So \citet{laod93} did not build a metacircular interpreter.
-2) I am not even sure that \citet{laod93} actually have a self-interpreter!
-They rely way too much on features of the meta-language for their
-implementation (like HOAS in particular) which isn't in their object
-language).  I do not see a self-interpreter in either Figure 2 or 4 of
-that paper.
-3) it is very much tagged, Exp is defined as
-data Exp a = Exp Rep a
-and 'Rep' here is a tag.
-4) it is not type-safe!  One can easily build total junk like
-three = Exp Succ 3
-which will 'type' but not work.  They bypass GADTs by not insuring that
-the terms that can be built are well-typed.}
-
-Page 28 section 8 line -3: This is the paper's first mention of
-primitive recursion.  This should be discussed much earlier, when the
-term representation is introduced.  Also, it is unclear what would be
-gained by a non-primitive recursive term representation.
+REPORT FROM REFEREE #1  -- all done!
 
 
 REPORT FROM REFEREE #2
 
 OVERALL EVALUATION
 
-The main weakness of the paper its sloppiness with respect to any
-formal claim. Several propositions are stated without offering any
-proof. Only a few of them have obviously trivial proofs, but for some
-of them I don't have a good idea of how to formalize these claims
-properly, let alone how to prove them. 
-\jacques{I have implemented a number of fixes for that.}
-
-    \oleg{\ccshan{In response to the message of Neil Jones as of Mar
-    31, 2008} I wonder if we can claim that our approach automatically
-    assures at least some conditions of the Galois connection. So, the
-    type system of the meta-language assures that
-	    abstraction . concretization == id
-	    abstraction . concretization . abstraction == abstraction
-    I wonder is these are the better propositions than the ones in the
-    present JFP paper.}
-    \jacques{These would most definitely be better propositions.
-    However, I don't see how to ``formalize'' that without a fair
-    bit more work.  Mention it in the conclusion?}
-    \oleg{see my e-mail as of Sep 2}
-
-
 As it stands, the paper is not sufficiently focused and the main
 contribution is sometimes drowned in distracting details. Some of the
 "historical context" is also missing in the present submission and
 should be added. Furthermore, some technical sloppiness should be
 tightened up.
-\jacques{Some changes have been made to clean that up -- sufficient?}
+\jacques{It seems to me that we have fixed this now?}
 
 DETAILS
 
 The main ideas in the paper date back a long time. I believe they can
 be found in more or less diluted form in \cite{Holst-AMIX}
-\jacques{Anyone able to get a copy of this?}
+\jacques{I have ordered a copy of this from inter-library loan}
 
 Then there is the typed version of the (Thiemann 1996) paper that you
 are citing. It presents a typed partial evaluator encoded exactly like
@@ -124,25 +66,10 @@ because there are a lot of "proofs" in it.}
 There is also a Haskell version using type classes which appeared in
 some obscure place. \cite{Thiemann-GenClass}
 
-
 The idea to parametrize (abstract) semantics and express them in
 combinator style is due to Flemming Nielson \cite{Nielson88}
 \oleg{63-page paper!}
 
-
-
-
-
-p2, section 1
-    The translation between the object language and its encoding
-    should be made explicit. I was very surprised when section 6
-    returned to the object notation without any explanation.
-    \jacques{Really?  Sure, that can be done, but L = lambda, A is
-    application, all of that is really standard, no?  I guess we could
-    mention that, in different guises, we use the language of Fig.1
-    throughout the paper.}
-    \oleg{I have doubts about Sec 6; Perhaps indeed the encoding
-    should be made explicit, just for clarity}
 
 p4, section 1.3
     Clearly the encoding is monadic but you are not mentioning this
@@ -168,21 +95,9 @@ p11, proposition 4
      This is not formalized, but really obvious (unlike the
      others). However, the mentioned properties of .~ and .< >. that
      you rely on are tricky and non-obvious.
-     \jacques{made this much more formal, and added a comment about the
-     properties.  Still missing is a reference}
-
-p11, section 4
-     "Surprisingly ..."
-     Not that surprising in the light of Filinski's work on
-     normalization by evaluation.
-     It would be appropriate for you to state that you are after
-     online partial evaluation in this section and to briefly explain
-     what that means.
-     \ccshan{Response: At the beginning of Section 4, we now clarify
-     that what's surprising is that the family of interpretations can
-     encompass partial evaluation, and state up front that our partial
-     evaluator is online.}
-
+     \jacques{This is now proposition 5.  However, the reviewer is 
+     correct that we implicitly use 'tricky and non-obvious' properties
+     of .~ and .< >.  Shouldn't we add a reference?}
 
 p15, section 4.4
      btw, I do not find these names R, L, and C very intuitive or
@@ -549,3 +464,90 @@ The idea of dual representation which is attributed to Asai also
 appears in [Sperber]
     Thank you; we now cite Sperber alongside Asai (as Sumii and
     Kobayashi do).
+
+Rev1, Page 25: The discussion of context, holes and plugging should be made
+clearer and more concrete, using a tiny example if possible.  For
+instance, the statement that "context is a euphemism for a polymorphic
+argument" is puzzling, since a context can also be seen as a function
+from term to term, with the context's hole being the argument.  So the
+reader wonders whether you or he has misunderstood something or
+whether you are proposing a reinterpretation of contexts (as I think
+you are).
+\jacques{Ken has asked the editor if we can remove that whole section from
+the paper}
+
+
+Page 26 line -2: I don't think there is an universally agreed
+distinction between "metacircular interpreter" and "self-interpreter",
+so this statement requires some clarification.
+\jacques{Four comments:
+1) it appears from what I have now read that a consensus is building 
+that a "metacircular interpreter" is a special case of a "self-interpreter"
+where the language is homoiconic, i.e. the representation of programs
+is as a native data-structure of the language itself, ie like LISP.
+So \citet{laod93} did not build a metacircular interpreter.
+2) I am not even sure that \citet{laod93} actually have a self-interpreter!
+They rely way too much on features of the meta-language for their
+implementation (like HOAS in particular) which isn't in their object
+language).  I do not see a self-interpreter in either Figure 2 or 4 of
+that paper.
+3) it is very much tagged, Exp is defined as
+data Exp a = Exp Rep a
+and 'Rep' here is a tag.
+4) it is not type-safe!  One can easily build total junk like
+three = Exp Succ 3
+which will 'type' but not work.  They bypass GADTs by not insuring that
+the terms that can be built are well-typed.}
+\jacques{The above comments might be irrelevant, as we have asked if we
+can remove this section}
+
+Rev1, Page 28 section 8 line -3: This is the paper's first mention of
+primitive recursion.  This should be discussed much earlier, when the
+term representation is introduced.  Also, it is unclear what would be
+gained by a non-primitive recursive term representation.
+\jacques{Ken took care of this in a previous edit. [Did you forget to
+update the notes?}
+
+Rev2, Overall
+The main weakness of the paper its sloppiness with respect to any
+formal claim. Several propositions are stated without offering any
+proof. Only a few of them have obviously trivial proofs, but for some
+of them I don't have a good idea of how to formalize these claims
+properly, let alone how to prove them. 
+
+    \oleg{\ccshan{In response to the message of Neil Jones as of Mar
+    31, 2008} I wonder if we can claim that our approach automatically
+    assures at least some conditions of the Galois connection. So, the
+    type system of the meta-language assures that
+	    abstraction . concretization == id
+	    abstraction . concretization . abstraction == abstraction
+    I wonder is these are the better propositions than the ones in the
+    present JFP paper.}
+    \jacques{These would most definitely be better propositions.
+    However, I don't see how to ``formalize'' that without a fair
+    bit more work.  Mention it in the conclusion?}
+    \oleg{see my e-mail as of Sep 2}
+    \jacques{We have now improved this aspect greatly.  I have left 
+    all these comments here, for future reference, although we will
+    want to send a short summary to the editors}
+
+Rev2, p2, section 1
+    The translation between the object language and its encoding
+    should be made explicit. I was very surprised when section 6
+    returned to the object notation without any explanation.
+    \oleg{I have doubts about Sec 6; Perhaps indeed the encoding
+    should be made explicit, just for clarity}
+    \jacques{Ken has added an explicit encoding in 2.1}
+
+p11, section 4
+     "Surprisingly ..."
+     Not that surprising in the light of Filinski's work on
+     normalization by evaluation.
+     It would be appropriate for you to state that you are after
+     online partial evaluation in this section and to briefly explain
+     what that means.
+     \ccshan{Response: At the beginning of Section 4, we now clarify
+     that what's surprising is that the family of interpretations can
+     encompass partial evaluation, and state up front that our partial
+     evaluator is online.}
+
