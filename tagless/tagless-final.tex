@@ -800,7 +800,7 @@ module R = struct type ('c,'dv) repr = 'dv (* no wrappers *)
   let lam  f        = f         let app  e1 e2    = e1 e2
   let fix  f        = let rec self n = f self n in self
   let add  e1 e2    = e1 + e2   let mul  e1 e2    = e1 * e2
-  let leq  x y      = x <= y
+  let leq  e1 e2    = e1 <= e2
   let if_  eb et ee = if eb then et () else ee () end
 \end{code3}
 \else
@@ -815,7 +815,7 @@ module R = struct
   let fix  f        = let rec self n = f self n in self
   let add  e1 e2    = e1 + e2
   let mul  e1 e2    = e1 * e2
-  let leq  x y      = x <= y
+  let leq  e1 e2    = e1 <= e2
   let if_  eb et ee = if eb then et () else ee ()
 end
 \end{code}
@@ -908,7 +908,7 @@ module L = struct
   let fix  f        = f 0 + 1
   let add  e1 e2    = e1 + e2 + 1
   let mul  e1 e2    = e1 + e2 + 1
-  let leq  x y      = x + y + 1
+  let leq  e1 e2    = e1 + e2 + 1
   let if_  eb et ee = eb + et () + ee () + 1
 end
 \end{code}
@@ -955,7 +955,7 @@ module C = struct type ('c,'dv) repr = ('c,'dv) code
   let app e1 e2    = .<.~e1 .~e2>.
   let fix f =  .<let rec self n = .~(f .<self>.) n in self>.
   let add e1 e2    = .<.~e1 + .~e2>.  let mul e1 e2 = .<.~e1 * .~e2>.
-  let leq x y      = .<.~x <= .~y>.
+  let leq e1 e2    = .<.~e1 <= .~e2>.
   let if_ eb et ee = .<if .~eb then .~(et ()) else .~(ee ())>. end
 \end{SaveVerbatim}
 \else
@@ -970,7 +970,7 @@ module C = struct
   let fix f         = .<let rec self n = .~(f .<self>.) n in self>.
   let add e1 e2     = .<.~e1 + .~e2>.
   let mul e1 e2     = .<.~e1 * .~e2>.
-  let leq x y       = .<.~x <= .~y>.
+  let leq e1 e2     = .<.~e1 <= .~e2>.
   let if_ eb et ee  = .<if .~eb then .~(et ()) else .~(ee ())>.
 end
 \end{SaveVerbatim}
