@@ -465,7 +465,7 @@ literature that use features present in mainstream functional languages.
 In particular, we follow \citets{yang-encoding} encoding of type-indexed
 values, \citets{Sperber-SelfApplicable} and \citets{asai-binding-time}
 construction of dynamic terms alongside static terms, and
-\citets{sumii-hybrid} deforestation of syntax
+\citets{Thiemann-combinators} deforestation of syntax
 constructors.  These techniques require just
 a Hindley-Milner type system with either module
 functors or constructor classes, as realized in all variants of ML and
@@ -1171,10 +1171,11 @@ accompanying code gives the full details.
 \else
 
 \section{A tagless partial evaluator}\label{PE}
-Surprisingly, the |Symantics| interface presented above extends to
-encompass an online partial evaluator.  We present this partial evaluator
-in a sequence of three attempts. It uses no universal type and no tags
-for object types.  We then discuss residualization and binding-time
+Surprisingly, this |Symantics| interface extends to
+encompass an online partial evaluator that uses no universal type and no tags
+for object types.  We present this partial evaluator
+in a sequence of three attempts to express the types
+of residualization and binding-time
 analysis.  Our partial evaluator is a modular extension of the evaluator
 in~\S\ref{S:interpreter-RL} and the compiler in~\S\ref{S:compiler}, in
 that it uses the former to reduce static terms and the latter to build
@@ -1187,30 +1188,27 @@ Roughly, a partial evaluator interprets each object term to yield either
 a static (present-stage) term (using the evaluator~|R|) or
 a dynamic (future-stage) term (using the compiler~|C|).  To
 distinguish between static and dynamic terms, we might try to define
-|repr| in the partial evaluator (module |P0|) as
+|repr| in the partial evaluator as follows.
+In the phase tags |S0| and~|D0|, the digit zero indicates
+our initial attempt.
 \begin{code}
 type ('c,'dv) repr = S0 of ('c,'dv) R.repr | D0 of ('c,'dv) C.repr
 \end{code}
-(the digit zero in the names of the phase tags |S0| and |D0| is the
-version suffix).
 To extract a dynamic term from this type, we create the function
 \begin{code}
-let abstrI0 (e:('c,int) repr) : ('c,int) C.repr =
-  match e with
-  | S0 e -> C.int e
-  | D0 e -> e
+let abstrI0 (e : ('c,int) repr) : ('c,int) C.repr =
+  match e with S0 e -> C.int e | D0 e -> e
 \end{code}
 and the similar function |abstrB0| for dynamic boolean terms. Here, 
-|C.int| is used to convert from the static term |('c,int) R.repr|, 
-which is just |int|, to a dynamic term. We can now define the following
-components of module |P0| required by the |Semantics| signature:
+|C.int| is used to convert a static term (of type |('c,int) R.repr|, 
+which is just |int|) to a dynamic term. We can now define the following
+components required by the |Semantics| signature:
 \begin{code}
 let int  (x:int)  = S0 (R.int x)
 let bool (x:bool) = S0 (R.bool x)
-let add e1 e2 = 
-  match (e1,e2) with
+let add e1 e2 = match (e1,e2) with
   | (S0 e1, S0 e2) -> S0 (R.add e1 e2)
-  | (e1, e2)       -> D0 (C.add (abstrI0 e1) (abstrI0 e2))
+  | _ -> D0 (C.add (abstrI0 e1) (abstrI0 e2))
 \end{code}
 Integer and boolean literals are immediate, present-stage
 values. Addition yields a static term (using~|R.add|) if and only 
@@ -1234,8 +1232,8 @@ were to add polymorphic \texttt{lift} to the type class
 f = app (lift f)~}.)
 \end{comment}
 
-Our |Symantics| only includes separate lifting methods |bool| and
-|int|, not a parametrically polymorphic lifting method, for good reason:
+Our |Symantics| signature only includes separate lifting methods |bool| and
+|int|, not a polymorphic lifting method, for good reason:
 When compiling to a first-order target language such as machine code,
 booleans, integers, and functions may well be represented differently.
 Compiling a polymorphic lift function thus requires intensional type
@@ -1246,42 +1244,42 @@ building a dynamic term alongside every static term \citep{sumii-hybrid}.
 \subsection{Delaying binding-time analysis}
 \label{S:PE-problem}
 
-We start building the partial evaluator anew (module |P1|) and
+We start building the partial evaluator anew and
 switch to the data type
 \begin{code}
 type ('c,'dv) repr = P1 of ('c,'dv) R.repr option * ('c,'dv) C.repr
 \end{code}
 so that a partially evaluated term always contains a dynamic
-component and sometimes contains a static component.  By 
-distributivity, the two
+component and sometimes contains a static component.
+The two
 alternative constructors of an |option| value, |Some| and |None|,
-tag each partially evaluated term with a phase: either present or
-future.  This tag is not an object type tag: all pattern matching below
-is exhaustive. Because the future-stage component is always available, we
-can now define the polymorphic function
-|let abstr1 (P1 (_,dyn)) = dyn| of type
-\texttt{('c,'dv) repr -> ('c,'dv) C.repr}
-to extract it without requiring polymorphic lift into~|C|.  We then try
-to define the interpreter |P1|---and get as far as the first-order
-constructs of our object language, including |if_|.
+tag each partially evaluated term to indicate whether its value is
+known statically at the present stage.
+This tag is not an object type tag: all pattern matching below
+is exhaustive. Now that the future-stage component is always available, we
+can define the polymorphic function
 \begin{code}
-module P1 : Symantics = struct
-  let int (x:int) = P1 (Some (R.int x), C.int x)
-  let add e1 e2 = match (e1,e2) with
-    | (P1 (Some n1,_),P1 (Some n2,_)) -> int (R.add n1 n2)
-    | _ -> P1 (None,(C.add (abstr1 e1) (abstr1 e2)))
-  let if_ = function
-    | P1 (Some s,_) -> fun et ee -> if s then et () else ee ()
-    | eb -> fun et ee -> P1 (None, C.if_ (abstr1 eb) 
-                                   (fun () -> abstr1 (et ()))
-                                   (fun () -> abstr1 (ee ())))
+let abstr1 (P1 (_,dyn) : ('c,'dv) repr) : ('c,'dv) C.repr = dyn
 \end{code}
-However, we stumble on functions.  According to our
-definition of~|P1|, a partially evaluated object function, such as the
-identity $\fun{x}x$ embedded in OCaml as |lam (fun x -> x)|\texttt{ :
-}|('c,'a->'a) P1.repr|, consists of a dynamic part 
-(type |('c,'a->'a) C.repr|) and
-maybe a static part (type |('c,'a->'a) R.repr|).  The dynamic part is useful
+to extract it without needing polymorphic lift into~|C|.  We then try
+to define the term combinators\nobreak\hspace{0pt}---and get as far as
+the first-order constructs of our object language, including |if_|.
+\begin{code}
+let int (x:int) = P1 (Some (R.int x), C.int x)
+let add e1 e2 = match (e1,e2) with
+  | (P1 (Some n1, _), P1 (Some n2, _)) -> int (R.add n1 n2)
+  | _ -> P1 (None, C.add (abstr1 e1) (abstr1 e2))
+let if_ eb et ee = match eb with
+  | P1 (Some s, _) -> if s then et () else ee ()
+  | _ -> P1 (None, C.if_ (abstr1 eb) (fun () -> abstr1 (et ()))
+                                     (fun () -> abstr1 (ee ())))
+\end{code}
+However, we stumble on functions.  Given how we just
+defined~|repr|, a partially evaluated object function, such as the
+identity $\fun{x}x$ (of type $\ZZ\to\ZZ$) embedded in OCaml as
+|lam (fun x -> x)| (of type |('c,int->int) repr|), consists of
+a dynamic part (of type |('c,int->int) C.repr|) and optionally
+a static part (of type |('c,int->int) R.repr|).  The dynamic part is useful
 when this function is passed to another function that is only
 dynamically known, as in $\fun{k}k(\fun{x}x)$.  The static part is
 useful when this function is applied to a static argument, as in
@@ -1298,13 +1296,12 @@ to~$x$.
 To enable these simplifications, we delay binding-time analysis
 for a static function until it is applied, that is, until |lam f|
 appears as the argument of |app|.  To do so, we have to incorporate |f|
-as it is into the |P1.repr| data structure: the representation
-for a function type |'a->'b| should be one of
+as is into |lam f|: the type |('c,'a->'b) repr| should be one of
 \begin{code}
 S1 of ('c,'a) repr -> ('c,'b) repr | E1 of ('c,'a->'b) C.repr
 P1 of (('c,'a) repr -> ('c,'b) repr) option * ('c,'a->'b) C.repr
 \end{code}
-unlike |P1.repr| of |int| or |bool|.
+unlike |('c,int) repr| or |('c,bool) repr|.
 That is, we need a nonparametric data type, something akin to
 type-indexed functions and type-indexed types, which
 \citet{oliveira-typecase} dub the \emph{typecase} design pattern.
@@ -1405,29 +1402,29 @@ make it \emph{syntactically} apparent that pattern matching is exhaustive.
 \subsection{The ``final'' solution}
 \label{S:PE-solution}
 
-Let us re-examine the problem in~\S\ref{S:PE-problem}. What we
-would ideally like is to write
+The problem in the last section is that we want to write
 \begin{code}
-type ('c,'dv) repr = P1 of (repr_pe ('c,'dv)) R.repr option * ('c,'dv) C.repr
+type ('c,'dv) repr = P1 of ('c,'dv) static option * ('c,'dv) C.repr
 \end{code}
-where |repr_pe| is the type function defined
-% inductively because P below depends on repr_pe
+where |static| is the type function defined
+% inductively because P below depends on static
 by
 \begin{code}
-repr_pe ('c,int)    = ('c,int)
-repr_pe ('c,bool)   = ('c,bool)
-repr_pe ('c,'a->'b) = ('c,'a) repr -> ('c,'b) repr
+('c,int)    static = ('c,int) R.repr
+('c,bool)   static = ('c,bool) R.repr
+('c,'a->'b) static = ('c,'a) repr -> ('c,'b) repr
 \end{code}
 Although we can use type classes to define this type function
-in Haskell, that is not portable to MetaOCaml. However,
-these three typecase alternatives are already present in existing
+in Haskell, that is not portable to OCaml. However,
+the three typecase alternatives of |static| are already present in existing
 methods of |Symantics|.
-A simple and portable solution\footnote{though somewhat long-winded} thus
-emerges: we bake |repr_pe| into the signature |Symantics|. 
-We recall from Figure~\ref{fig:ocaml-simple} in~\S\ref{encoding} that 
-the |repr| type constructor took two arguments |'c| and~|'dv|.
-We add an argument |'sv| for the result of applying |repr_pe| to~|'dv|.
-Figure~\ref{fig:ocaml} shows the new signature.
+Thus emerges
+a simple and portable solution, if a long-winded one:
+we bake |static| into the signature |Symantics|. 
+In Figure~\ref{fig:ocaml-simple},
+the |repr| type constructor took two arguments |('c,'dv)|;
+in Figure~\ref{fig:ocaml},
+we add an argument |'sv| for the type |('c,'dv) static|.
 \begin{figure}
 \begin{floatrule}
 \begin{code2}
@@ -1494,7 +1491,7 @@ end
 \label{fig:pe}
 \end{figure}
 
-The interpreters |R|, |L| and~|C| in \S\ref{S:interpreter-RL},\S\ref{S:compiler}
+The interpreters |R|, |L| and~|C| in \S\ref{S:interpreter-RL} and~\S\ref{S:compiler}
 only use the old
 type arguments |'c| and~|'dv|, which are treated by the new signature
 in the same way.  Hence, all that needs to change in these interpreters
@@ -1506,12 +1503,10 @@ module C = struct
   type ('c,'sv,'dv) repr = ('c,'dv) code
 \end{code}
 with the rest the same.
-Predictably, the partial evaluator~|P| crucially relies on the type argument
-|'sv|.
 
 Figure~\ref{fig:pe} shows the partial evaluator~|P|.
-Its type |repr| expresses the type definition for |repr_pe| given
-at the start of this section, with |'sv| taking the place of |repr_pe t|.
+Its type |repr| expresses the definition for |static| given
+at the start of this section, with |'sv| taking the crucial place of |('c,'dv) static|.
 The function |abstr|
 extracts a future-stage code value from the result of
 partial evaluation.  Conversely, the function |pdyn| injects a
@@ -1527,7 +1522,7 @@ which just wraps the HOAS
 function |f|. The interpretation of |app ef ea| 
 checks to see if |ef| is such a wrapped
 HOAS function. If it is, we apply |f| to the
-concrete argument |ea|, giving us a chance to perform static
+concrete argument |ea|, so as to perform static
 computations (see the example below). If
 |ef| has only a dynamic part, we residualize.
 
@@ -1537,8 +1532,9 @@ structure of~|int|: not only is addition performed statically
 (using~|R|) when both operands are statically known, but it is
 eliminated when one operand is statically~$0$; similarly for
 multiplication by~$0$ or~$1$.  
-Such algebraic simplifications are easy
-to abstract over the specific domain (such as monoid or ring) where they
+Although our basic machinery for partial evaluation is independent of
+such algebraic simplifications, it makes them easy to add and
+to abstract over the specific domains (such as monoid or ring) where they
 apply.  These simplifications and abstractions help a lot
 in a large language with more base types and primitive operations.
 Incidentally, the accompanying code actually contains a more general
@@ -1585,15 +1581,63 @@ gives the desired result
  P.dy = .<fun x -> x * (x * (x * (x * (x * (x * x)))))>.}
 \end{code}
 
-\noindent All pattern\hyp
+All pattern\hyp
 matching in~|P| is \emph{syntactically} exhaustive, so it is patent to the
-metalanguage implementation that |P| never gets stuck.  Further, all
-pattern\hyp matching occurs
-during partial evaluation, only to check if a value is known statically,
-never what type it has.  In other words, our partial evaluator tags
-phases (with |Some| and |None|) but not object types.
+metalanguage implementation that |P| never gets stuck.  Further,
+|P| uses pattern\hyp matching
+only to check if a value is known statically,
+never to check what type a value has dynamically.
+In other words, our partial evaluator tags
+phases (with |Some| and |None|) but not object types, so it
+is patent that the \emph{output} of~|P| never gets stuck.
 
-Our typed partial evaluator is online and polyvariant.  It reuses the
+Predating us, \citet{Thiemann-combinators} and \citet{sumii-hybrid} deforested
+the object term representation and expressed a partial evaluator as a collection
+of term combinators in a typed metalanguage.  Like us, \citeauthor{sumii-hybrid}
+follow \citet{Sperber-SelfApplicable} and \citet{asai-binding-time} in building
+static and dynamic terms in tandem, to combine offline and online partial
+evaluation.
+\citearound{'s earlier self-reducer for the untyped
+$\lambda$-calculus}\Citet{JFP-Mogensen} also
+builds static and dynamic terms in tandem.  However, it
+builds a static term for every object term, even a bound variable,
+so it moves some work from |app| to~|pdyn| (in terms of Figure~\ref{fig:pe})
+and remains untyped.  In contrast, we follow Sperber, Asai,
+and \citeauthor{sumii-hybrid} in leaving the static term
+optional, so as to perform lifting without
+juggling explicit type indices in the encoding of an object term.
+
+Our contribution to the literature on partial evaluation is to use mere
+Hindley-Milner types in the metalanguage to assure statically and patently that
+partially evaluating a well-typed object program not only never gets stuck but
+also, if it terminates, produces a well-typed output program that never gets
+stuck.  Moreover, these types form an instance of a general |Symantics|
+signature that encompasses other interpreters such as evaluation and
+compilation.  This early and manifest assurance of type safety contrasts, for
+example, with \citearound{'s compiler generator (cogen) for
+ML}\citet{Birkedal-PE-ML}, which transforms a program into its tagless
+generating extension.  Because that cogen uses a universal type, the fact that
+it never generates an ill-typed generating extension from a well-typed input
+program is only manifest when each generating extension is type-checked, and the
+fact that the generating extension never generates an ill-typed residual program
+from well-typed static input is only manifest when each residual program is
+type-checked.  Similarly, the fact that \citet{fiore:nbe-ppdp2002} and
+\citets{balat:tdpe-popl2004} partial evaluator using delimited control
+operators never turns well-typed code into ill-typed code is not assured by the
+metalanguage, whether or not as part of a typed family of interpreter modules.
+\begin{comment}
+% Removed the following comment in view of Section 4.5 of Danvy's
+% original TDPE paper (POPL 1996)
+It is
+type-directed, so the user must represent, as a term, the type of every
+term to be partially evaluated.  We shift this work to the type checker
+of the metalanguage.
+By avoiding term-level type representations, our
+approach makes it easier to perform algebraic simplifications (as
+in~\S\ref{S:PE-solution}).
+\end{comment}
+
+Our partial evaluator reuses the
 compiler~|C| and the evaluator~|R| by composing them.  This situation is
 simpler than \citets{SperberThiemann:TwoForOne} composition of a partial
 evaluator and a compiler, but the general ideas are similar.
@@ -1669,7 +1713,7 @@ an object term inductively determines the type of its interpretation:
 the interpretation of an object term of type~$t$ may not have type
 |(|$t$|->'w)->'w|, because $t$ may be a function type.  Again we
 simulate a type function with a typecase distinction, using an extra
-type argument to |repr|. Luckily, the type function |repr_pe| needed for
+type argument to |repr|. Luckily, the type function |static| needed for
 the partial evaluator 
 in~\S\ref{S:PE-solution} is precisely the same type function we
 need for CBN CPS\@.
@@ -1771,9 +1815,9 @@ the type of \texttt{lam (add (int~1))} is
 ('c, ..., ((int -> (int -> 'w1) -> 'w1) -> 'w2) -> 'w2) S.repr
 \end{code}
 Hence, to write the type equation defining |CPST.repr| we again need
-a type function with a typecase distinction, similar to |repr_pe|
+a type function with a typecase distinction, similar to |static|
 in~\S\ref{S:PE-solution}. Alas, the type function we need is not
-identical to |repr_pe|, so we need to add another type argument to
+identical to |static|, so we need to add another type argument to
 |repr| in the |Symantics| signature. As in~\S\ref{S:PE-solution}, the
 terms in previous implementations of |Symantics| stay unchanged, but the
 |repr| type equations in those implementations have to take a new
@@ -2316,7 +2360,7 @@ evaluator remove all the tags. In contrast, our object encoding and
 interpreters do not have tags to start with and obviously cannot
 raise run-time errors.
 
-Our partial evaluator establishes a bijection |repr_pe| between static
+Our partial evaluator establishes a bijection |static| between static
 and dynamic types (the valid values of |'sv| and |'dv|), and between
 static and dynamic terms.  It is customary to implement such a bijection
 using an injection\hyp projection pair, as done for interpreters
@@ -2328,40 +2372,9 @@ and type-level functions \ifshort \citep{oliveira-typecase}\else by
 avoid injection and projection at the type level by adding an argument
 to |repr|.
 Our solution could have been even more straightforward if MetaOCaml
-provided total type-level functions such as |repr_pe| in
+provided total type-level functions such as |static| in
 \S\ref{S:PE-solution}---simple type-level computations 
 ought to become mainstream.
-
-At the term level, we also avoid converting between static and dynamic
-terms by building them in parallel, as \citet{Sperber-SelfApplicable}
-and \citet{asai-binding-time} do in their partial evaluators.
-This method type-checks in Hindley-Milner once we
-deforest the object term representation.  Put another way, we
-manually apply type-level partial evaluation to our type
-functions (see \S\ref{S:PE-solution}) to obtain simpler types 
-acceptable to MetaOCaml.
-
-\Citets{JFP-Mogensen} self-reducer for the untyped
-$\lambda$-calculus preceded Sperber's and Asai's partial evaluators in constructing
-static and dynamic terms in parallel.  However, this self-reducer
-constructs a static term for every object term, even a bound variable,
-so (in terms of Fig.~\ref{fig:pe}) it moves some work from |app|
-to~|pdyn|.  In contrast, we follow Sperber and Asai in constructing the static term
-optionally, so as to perform type-directed lifting without requiring the
-encoding of an object term to juggle explicit type indices.
-
-\Citet{sumii-hybrid} also use Sperber and Asai's construction,
-to combine online
-and offline partial evaluation.
-They predate us in deforesting the object term representation to enable tagless
-partial evaluation.
-We strive for modularity by reusing interpreters for individual stages
-\citep{SperberThiemann:TwoForOne}: our partial evaluator~|P|
-reuses our tagless evaluator~|R| and tagless compiler~|C|, so it
-is patent that the \emph{output} of~|P| never gets
-stuck.  It would be interesting
-to try to derive a \emph{cogen} \citep{Thiemann:cogeninsixlines}
-in the same manner.
 
 Our separation between the |Symantics| interface and its many
 implementations codifies the common practice of implementing an embedded
@@ -2404,42 +2417,6 @@ object language.  Their interpreter
 appears to be tagless, but they could not have implemented a
 compiler or partial evaluator in the same way, since they rely
 heavily on injection\hyp projection pairs.
-
-\Citet{fiore:nbe-ppdp2002} and \citet{balat:tdpe-popl2004} also build
-a tagless partial evaluator, using delimited control operators.  It is
-type-directed, so the user must represent, as a term, the type of every
-term to be partially evaluated.  We shift this work to the type checker
-of the metalanguage.  By avoiding term-level type representations, our
-approach makes it easier to perform algebraic simplifications (as
-in~\S\ref{S:PE-solution}).
-
-\oleg{The following are almost unedited excerpts from our
-  correspondence with Sumii about Birkedal's thesis. We definitely
-  should include this discussion and the reference to his thesis.}
-\Citet{Birkedal-PE-ML} have hand-written a compiler generator (cogen)
-for Core Standard ML, which transforms a program into its tagless
-generating extension (and therefore serves as a tagless partial
-evaluator, intepreter, and compiler in our sense). They still have to
-use the "universal type" at the cogen level, which is removed from
-compile-time, so that the end result is tagless indeed.  The main
-difference between the work of \citet{Birkedal-PE-ML} and ours is how
-\emph{early} it becomes \emph{manifest} to the metalanguage
-that our code is safe.  The fact that
-\citet{Birkedal-PE-ML}'s generating extension never generates a
-specialized program that is ill-typed is not manifest to the SML
-compiler until the SML compiler sees each particular specialized
-program.  Moreover, and in a similar vein, the fact that
-\citet{Birkedal-PE-ML}'s cogen never generates a generating extension
-that is ill-typed (or that may generate a specialized program that is
-ill-typed) is not manifest to the SML compiler until the SML compiler
-sees each particular generating extension (or each particular
-specialized program).  This early and manifest type safety is the
-payoff of our treating an object program not as a data structure but
-as calls to abstract-syntax constructor functions.  The tradeoff, as
-we currently see it, is that we have to swear off intensional analysis
-of code. \oleg{Unless we convert to our representation to GADT, which
-  is always possible, if GADTs are available.}
-
 
 % The following paragraph was not in the version submitted to APLAS,
 % yet was not commented out.  Of course, if we had space, we should add
@@ -2492,7 +2469,7 @@ strongly of our attempts at self-interpretation without the notion of a
 syntactic hole.
 \end{comment}
 
-Our encoding of the type function |repr_pe| in \S\ref{S:PE-solution}
+Our encoding of the type function |static| in \S\ref{S:PE-solution}
 emulates type-indexed types and is related to intensional type analysis
 \citep{Morrisett-intensional,Generic-Haskell}. However, our object
 language and running examples in HOAS include |fix|,
