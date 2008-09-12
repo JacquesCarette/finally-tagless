@@ -145,7 +145,7 @@ let test1 = A (L (V VZ), B true)
 % If you change the code in here, please adjust the .ml file
 % accordingly. Let the paper and the accompanying code be in sync.
 It is straightforward to create an algebraic data type, say in OCaml%
-\ifshort, Fig.~\ref{fig:tag-problem}(a)\fi, to
+\ifshort, Figure~\ref{fig:tag-problem}(a)\fi, to
 represent object terms such as those in Figure~\ref{fig:object}.
 For brevity, we elide treating integers, conditionals, and fixpoint in
 this section.
@@ -178,7 +178,7 @@ For example, we represent the object term $(\fun{x}x)\True$ as
 \fi
 Following \citet{WalidICFP02},
 we try to implement an interpreter function |eval0|\ifshort,
-Fig.~\ref{fig:tag-problem}(b)\fi. It takes
+Figure~\ref{fig:tag-problem}(b)\fi. It takes
 an object term such as |test1| above and gives us its value.
 The first argument to |eval0| is the environment, initially empty,
 which is the list of values bound to free variables in the
@@ -202,10 +202,10 @@ OCaml list cannot hold both boolean and function values.
 
 The usual solution is to introduce a universal type \citep[\S1.3]
 {WalidICFP02} containing both booleans and functions\ifshort,
-Fig.~\ref{fig:tag-problem}(c)\fi.
+Figure~\ref{fig:tag-problem}(c)\fi.
 \ifshort\else\UseVerbatim{2c}\fi
 We can then write a typed interpreter\ifshort,
-Fig.~\ref{fig:tag-problem}(d), \else\UseVerbatim{2d}\fi
+Figure~\ref{fig:tag-problem}(d), \else\UseVerbatim{2d}\fi
 whose inferred type is |u list -> exp -> u|. Now we can evaluate
 \ifshort
 \texttt{eval [] test1} obtaining |UB true|.
@@ -384,7 +384,7 @@ to process the same term using many other
 interpreters: we can
 \begin{itemize}
     \item evaluate the term to a value in the metalanguage;
-    \item measure the size or depth of the term;
+    \item measure the length of the term;
     \item compile the term, with staging support such as in MetaOCaml;
     \item partially evaluate the term, online; and
     \item transform the term to continuation\hyp passing style (CPS),
@@ -504,7 +504,7 @@ rather than de Bruijn indices to encode binding and
 ensures that our object programs are closed.
 We find HOAS to be more convenient, but we have also implemented our
 approach using de Bruijn indices
-(in Section~\ref{S:de-Bruijn} and the accompanying source file
+(in \S\ref{S:de-Bruijn} and the accompanying source file
 |incope-dB.ml|).
 
 
@@ -552,7 +552,7 @@ testpowfix7 () = lam (\x -> app (app (testpowfix ()) x) (int 7))
 We embed our language in (Meta)OCaml and Haskell.  In Haskell,
 the functions that construct object terms are methods in a type class
 |Symantics| (with a parameter |repr| of kind |* -> *|)\ifshort,
-Fig.~\ref{fig:symantics-haskell}(a)\fi. The class is so named
+Figure~\ref{fig:symantics-haskell}(a)\fi. The class is so named
 because its interface gives the syntax of the object language and its
 instances give the semantics.
 \ifshort\else\UseVerbatim{3a}\fi
@@ -560,10 +560,10 @@ For example, we encode the term |test1|, or $(\fun{x}x)\True$, from
 \S\ref{tagproblem} above as \texttt{app (lam (\textbackslash x -> x)) (bool True)},
 whose inferred type is \texttt{Symantics repr => repr Bool}.
 For another example, the classical $\mathit{power}$ function is
-\ifshort in Fig.~\ref{fig:symantics-haskell}(b)
+\ifshort in Figure~\ref{fig:symantics-haskell}(b)
 \else\UseVerbatim{3b}\fi
 and the partial application $\fun{x} \mathit{power}\;x\;7$ is
-\ifshort in Fig.~\ref{fig:symantics-haskell}(c).
+\ifshort in Figure~\ref{fig:symantics-haskell}(c).
 \else\UseVerbatim{3c}\fi
 The dummy argument |()| above is to avoid the monomorphism
 restriction, to keep the type of |testpowfix| and |testpowfix7|
@@ -665,7 +665,7 @@ code generation in~\S\ref{S:compiler}; and the $\eta$-expanded type for
 language.
 We shorten some of the types using OCaml's |as| syntax.
 
-The functor |EX| in Fig.~\ref{fig:ocaml-examples} encodes 
+The functor |EX| in Figure~\ref{fig:ocaml-examples} encodes 
 our running examples |test1| and the $\mathit{power}$ function
 (|testpowfix|).
 The dummy argument to |test1| and |testpowfix| is an artifact of
@@ -682,7 +682,7 @@ OCaml as a functor from |Symantics| to a semantic domain. This
 is essentially the same as the constraint \texttt{Symantics repr =>} in the
 Haskell embedding.
 
-Comparing |Symantics| with Fig.~\ref{fig:object}
+Comparing |Symantics| with Figure~\ref{fig:object}
 shows how to represent \emph{every} well-typed object term in the
 metalanguage.
 We formalize this representation by defining $H$ and~$M$,
@@ -791,9 +791,9 @@ instance of the |Symantics| class in Haskell and a module implementing
 the |Symantics| signature in OCaml.
 
 The first interpreter evaluates an object term to its value in the
-metalanguage.  The module below is metacircular in that it
-interprets each object\hyp language
-operation as the corresponding metalanguage operation.
+metalanguage.  The module |R| below is metacircular in that it
+\emph{runs} each object\hyp language
+operation by executing the corresponding metalanguage operation.
 \ifshort
 \begin{code3}
 module R = struct type ('c,'dv) repr = 'dv (* no wrappers *)
@@ -855,7 +855,7 @@ the dynamic semantics specified by a definitional interpreter
 follows from the soundness of the metalanguage's type system.
 \ifshort
 (The source code shows a total interpreter |L| that measures
-the size of each object term.)
+the length of each object term.)
 \fi
 \ifshort
 We can also generalize from~|R| to all interpreters;
@@ -894,8 +894,8 @@ evaluating the expression \texttt{RESULT.term ()} never gets stuck: it either
 does not terminate or evaluates to a value of type~$M(t)$.
 \end{corollary}
 \ifshort\else
-For variety, we show another interpreter, which measures the \emph{size}
-(or \emph{length}, thus the mnemonic |L|)
+For variety, we show another interpreter~|L|, which measures the
+\emph{length}
 of each object term, defined as the number of term
 constructors.
 \begin{code}
@@ -996,7 +996,7 @@ Although the rest of this paper continues to represent binding
 using HOAS\@, our approach is compatible with de Bruijn indices.
 The accompanying source file |incope-dB.ml| implements this
 alternative, starting with the |Symantics| signature and the |R|
-evaluator in Fig.~\ref{fig:de-Bruijn}.
+evaluator in Figure~\ref{fig:de-Bruijn}.
 
 \section{A tagless compiler (or, a staged interpreter)}\label{S:compiler}
 
@@ -1059,7 +1059,7 @@ To turn the evaluator~|R| into a simple compiler, we bracket the
 computation on values to be performed at run time, then escape the code
 generation from terms to be performed at compile time.  Adding these
 stage annotations yields the compiler~|C|
-\ifshort in Fig.~\ref{fig:interpreter-C}(a).\else below.
+\ifshort in Figure~\ref{fig:interpreter-C}(a).\else below.
 \UseVerbatim{5a}
 \fi
 \ifshort
@@ -1084,13 +1084,13 @@ This is a straightforward staging of
 |module R|.
 This compiler produces
 unoptimized code. For example, interpreting our |test1| with
-\ifshort Fig.~\ref{fig:interpreter-C}(b) \else \UseVerbatim{5b}\fi
+\ifshort Figure~\ref{fig:interpreter-C}(b) \else \UseVerbatim{5b}\fi
 gives the code value |.<(fun|~|x_6|~|->|~|x_6)| |true>.|
 of inferred type |('c,|~|bool)| |C.repr|.  Interpreting |testpowfix7|
 with
-\ifshort Fig.~\ref{fig:interpreter-C}(c) \else \UseVerbatim{5c}\fi
+\ifshort Figure~\ref{fig:interpreter-C}(c) \else \UseVerbatim{5c}\fi
 gives a code value with many apparent $\beta$- and $\eta$-redexes\ifshort,
-Fig.~\ref{fig:interpreter-C}(d). \else: \UseVerbatim{5d}\fi
+Figure~\ref{fig:interpreter-C}(d). \else: \UseVerbatim{5d}\fi
 This compiler does not incur
 any interpretive overhead: the
 code produced for $\fun{x}x$ is simply |fun|~|x_6|~|->|~|x_6|\ifshort\else\
@@ -1969,7 +1969,7 @@ extended object language (for example, applied to an implementation of
 |SymSI|).  In particular,
 |RCPSI| matches the |Symantics| signature and implements the
 unextended object language: we can pass |RCPSI|
-to the functor |EX| (Fig.~\ref{fig:ocaml-simple}) and run 
+to the functor |EX| (Figure~\ref{fig:ocaml-simple}) and run 
 the example |test1| from there. The main use for |RCPSI| is to interpret the 
 extended object language.
 \begin{code}
@@ -2013,7 +2013,7 @@ equivalent to~$e$ (or in some accounts, no less efficient than~$e$).
 Self\hyp interpretation in our framework is straightforward at the
 term level: the functions comprising the interpreters
 in~\S\ref{S:interpreter-RL} may as well be written in our object
-language, as in Fig.~\ref{fig:self-eval}.
+language, as in Figure~\ref{fig:self-eval}.
 \begin{figure}
 \begin{align*}
     \ident{int} &= \fun{x} x \\
@@ -2051,7 +2051,7 @@ terms in the object language rather than the metalanguage.
 To evaluate~$\encode{e}$, then, we
 instantiate the free variables in~$\encode{e}$ such as $\ident{int}$,
 $\ident{lam}$, and $\ident{add}$ by their definitions given in
-Fig.~\ref{fig:self-eval}.  For
+Figure~\ref{fig:self-eval}.  For
 example, the familiar object term $(\fun{x}x)\True$ pre-encodes to
 \begin{equation}
     \encode{(\fun{x}x)\True} = \ident{app}
@@ -2062,7 +2062,7 @@ and to evaluate this pre-encoded term is to evaluate the object term
     (\fun{f} \fun{x} fx) \,
     ((\fun{f} f) (\fun{x} x))\, ((\fun{b} b) \True).
 \end{equation}
-Because the evaluator in Fig.~\ref{fig:self-eval} mostly consists 
+Because the evaluator in Figure~\ref{fig:self-eval} mostly consists 
 of glorified identity
 functions, our simple partial evaluator reduces the
 result of this instantiation to~$e$.  In general, to
@@ -2161,9 +2161,9 @@ a context.  For example, the evaluator is the context
         \be{\ident{app} &= \fun{f} \fun{x} fx&} \\
         \be{\ident{fix} &= \fun{g} \fix{f} \fun{x} gfx&} [~],
     \end{tabular}
-\intertext{and the size\hyp measurer at the end of~\S\ref{S:interpreter-RL} is the context}
-\label{e:size-measurer}
-    \mathrm{SZ}[~] &=
+\intertext{and the length\hyp measurer at the end of~\S\ref{S:interpreter-RL} is the context}
+\label{e:length-measurer}
+    \mathrm{L}[~] &=
     \begin{tabular}[t]{@{}Ml@{}>{{}}Ml@{}Ml@{}}
         \be{\ident{int} &= \fun{x} 1&} \\
         \be{\ident{add} &= \fun{x} \fun{y} x+y+1&} \\
@@ -2201,7 +2201,7 @@ plug it into an interpreter, such as the evaluator~\eqref{e:evaluator}.
 This treatment has the drawback that we must duplicate the pre-encoding
 of a term in order to interpret it in multiple ways, that is, to plug it
 into multiple interpreters such as the evaluator~\eqref{e:evaluator} and
-the size\hyp measurer~\eqref{e:size-measurer}.  In return, we avoid
+the length\hyp measurer~\eqref{e:length-measurer}.  In return, we avoid
 adding polymorphism to the object language's type system, because we can
 state the let rule~\eqref{e:let} in terms of substitution rather than by
 generalizing and instantiating types.  In other words, we use contexts
@@ -2388,7 +2388,7 @@ way, it is also common practice to use phantom types to rule out
 ill-typed object terms, as done in Lava
 \citep{Lava} and by \citet{Rhiger-thesis}. However, these two approaches
 are not tagless because they still use universal types, such as Lava's
-\texttt{Bit} and \texttt{NumSig}, and Rhiger's \texttt{Raw} (his Fig.~2.2)
+\texttt{Bit} and \texttt{NumSig}, and Rhiger's \texttt{Raw} (his Figure~2.2)
 and \texttt{Term} (his Chap.~3), which incur the attendant overhead of
 pattern matching.  The universal type also
 greatly complicates the soundness and completeness proofs of embedding
