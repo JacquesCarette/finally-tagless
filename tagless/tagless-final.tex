@@ -997,6 +997,13 @@ using HOAS\@, our approach is compatible with de Bruijn indices.
 The accompanying source file |incope-dB.ml| implements this
 alternative, starting with the |Symantics| signature and the |R|
 evaluator in Figure~\ref{fig:de-Bruijn}.
+In this encoding of the object language, |vz| represents the
+innermost variable, |vs vz| represents the second-to-innermost variable,
+and so on.  The new type argument |'h| to |repr| tracks the type of
+the environment as a nested tuple, each of whose components is a
+value of type |('c,'dv) vr| representing a variable of type~|'dv|.
+The evaluator~|R| interprets each object term as a function
+from its environment to its value.
 
 \section{A tagless compiler (or, a staged interpreter)}\label{S:compiler}
 
