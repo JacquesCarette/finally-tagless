@@ -503,7 +503,8 @@ abstract syntax (HOAS) \citep{miller-manipulating,pfenning-higher-order}
 rather than de Bruijn indices to encode binding and
 ensures that our object programs are closed.
 We find HOAS to be more convenient, but we have also implemented our
-approach using de Bruijn indices (in the accompanying source file
+approach using de Bruijn indices
+(in Section~\ref{S:de-Bruijn} and the accompanying source file
 |incope-dB.ml|).
 
 
@@ -929,6 +930,73 @@ let module E =EX1(R) in E.tfix ();;
 let module E =EX1(L) in E.tfix ();;
 \end{code}
 \end{comment}
+
+\subsection{Higher-order abstract syntax versus de Bruijn indices}
+\label{S:de-Bruijn}
+
+\begin{figure}
+\begin{floatrule}
+\begin{BVerbatim}
+module type Symantics = sig
+  type ('c,'h,'dv) repr
+  type ('c,'dv) vr			(* variable representation *)
+
+  val vz  : ('c, ('c,'d) vr * 'h, 'd) repr
+  val vs  : ('c, 'h, 'd) repr -> ('c, _ * 'h, 'd) repr
+
+  val int : int  -> ('c,'h,int) repr
+  val bool: bool -> ('c,'h,bool) repr
+
+  val lam : ('c, ('c,'da) vr * 'h, 'db) repr -> ('c,'h,'da->'db) repr
+  val app : ('c,'h,'da->'db) repr -> ('c,'h,'da) repr -> ('c,'h,'db) repr
+  val fix : ('c, ('c,'da->'db) vr * 'h, 'da->'db) repr
+            -> ('c, 'h, 'da->'db) repr
+
+  val add : ('c,'h,int) repr -> ('c,'h,int) repr -> ('c,'h,int) repr
+  val mul : ('c,'h,int) repr -> ('c,'h,int) repr -> ('c,'h,int) repr
+  val leq : ('c,'h,int) repr -> ('c,'h,int) repr -> ('c,'h,bool) repr
+  val if_ : ('c,'h,bool) repr
+            -> (unit -> 'x) -> (unit -> 'x) -> (('c,'h,'da) repr as 'x)
+end
+
+module R = struct
+  type ('c,'h,'dv) repr = 'h -> 'dv
+  type ('c,'d) vr = 'd
+
+  let vz   (x,_) = x
+  let vs v (_,h) = v h
+
+  let int  (x:int)  h = x
+  let bool (b:bool) h = b
+  let lam  f        h = fun x -> f (x,h)
+  let app  e1 e2    h = (e1 h) (e2 h)
+  let fix  f        h = let rec self n = f (self,h) n in self
+  let add  e1 e2    h = e1 h + e2 h
+  let mul  e1 e2    h = e1 h * e2 h
+  let leq  e1 e2    h = e1 h <= e2 h
+  let if_  eb et ee h = if eb h then et () h else ee () h
+end
+\end{BVerbatim}
+\end{floatrule}
+\caption{Embedding and evaluating our object language using de Bruijn indices}
+\label{fig:de-Bruijn}
+\end{figure}
+
+Because Haskell and ML allow case analysis on $\lambda$-bound variables,
+one might worry that our HOAS representation of the object language
+allows \emph{exotic terms} and is thus inadequate.  To the contrary,
+because the representation of an object term is \emph{parametrically}
+polymorphic over the type constructor |repr| of the interpreter,
+$\lambda$-bound object variables cannot be case-analyzed.
+We thus follow \citet{washburn-boxes-jfp} in ``enforcing term
+parametricity with type parametricity'' to represent and fold over
+abstract syntax.
+
+Although the rest of this paper continues to represent binding
+using HOAS\@, our approach is compatible with de Bruijn indices.
+The accompanying source file |incope-dB.ml| implements this
+alternative, starting with the |Symantics| signature and the |R|
+evaluator in Fig.~\ref{fig:de-Bruijn}.
 
 \section{A tagless compiler (or, a staged interpreter)}\label{S:compiler}
 
@@ -2429,9 +2497,7 @@ emulates type-indexed types and is related to intensional type analysis
 \citep{Morrisett-intensional,Generic-Haskell}. However, our object
 language and running examples in HOAS include |fix|,
 which intensional type analysis cannot handle
-\citep{xi-guarded}.  Our final approach
-seems related to \citearound{'s approach to HOAS using catamorphisms and
-  anamorphisms}\citet{Washburn-Weirich-boxes}.
+\citep{xi-guarded}.
 
 
 We could not find work that establishes that
