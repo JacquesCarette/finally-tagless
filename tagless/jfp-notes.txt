@@ -1,13 +1,3 @@
-I think we should keep our notes separate from the original JFP reviews.
-Probably the best thing is to start these 'notes' here from the reviews,
-but keep annotating these until we are happy with the results.  From this
-we should also be able to generate the response to the editor on what we
-did.  So right now, I will 'dump' the original reviews in here, and expect
-that this file will get edited lots -- but we'll always be able to refer to
-the original reviewer's text in jfp-reviews.txt.
-
-Jacques
-
 \jacques{Since the APLAS paper has appeared, we have been cited twice.
 The citations are interesting (and we should cite them here) as they
 draw out a different feature of our solution: the importance of
@@ -24,6 +14,114 @@ and thank Eijiro Sumii
 In the end, we may also have to thank others (like Neil Jones) if we 
 end up making changes that came to us because of our subsequent discussion.
 
+\jacques{I have grabbed some comments from our email exchanges and
+added them here, as these contain significant issues that have yet to
+be dealt with in the paper}
+\oleg{ (Sept. 3)
+BTW, is it technically correct to call our evaluator P partial
+evaluator? By our definition, an object term is encoded in OCaml as a
+functor. So, the partial evaluator should take a functor, instantiate
+it and return a functor, so that the result can be interpreted in
+various ways. Our module P produces the OCaml value "t code" rather
+than a functor. The result of P can only be run in MetaOCaml. We can't
+find the size of the result of P, for example. So, we can only call P
+`an optimizing compiler'. One may parameterize P by the signature C
+(and indeed, it is easy to do that). Still, the computations in P
+would be performed only when the module C is applied. Modules in OCaml
+are not first class and so we can't perform computations that yield
+functors. I'm not sure if MoscowML can (I think only structures can be
+packed in MoscowML, not functors).
+
+The situation is a bit better in Haskell. I have changed Ken's partial
+evaluator (zint..zfix) so it is indeed a partial evaluator. It indeed
+`takes' a polymorphic term (well, the PE is not the instance of
+Symantics, but it can be made that way) and indeed yields the
+polymorphic term. One can argue that the computations that build the
+polymorphic term _could_ be performed before the repr is
+instantiated. And even if not, due to the laziness of Haskell, the
+second interpreter (interpreting the result of PE) should do less
+work, because it is called to interpret simpler terms. Although Rep
+always has the dynamic component, that dynamic component is not always
+used and hence not computed.
+
+I wonder if there is a way to argue that our interpreter P is an
+online PE.... 
+
+\ccshan{
+Indeed.  A partial evaluator PE is a mathematical function from object
+programs to object programs that satisfies a certain equation (something
+like [[PE(p,s)]][[d]]=[[p]]([[s]],[[d]]); in our case perhaps more
+like [[PE(p)]]=[[p]]).  Our code in Section 4 does define a partial
+evaluator, but we need to spell out how this code's input and output are
+represented in order to treat the code as a mathematical function.  It
+so happens that the input and output, though both object programs, are
+represented _differently_ (especially in *ML, as Oleg points out (even
+with a PE that Jacques would call compositional, since we still can't
+feed the output of the PE to the PE again)), but that's not hard to
+clarify.  I would even say that pointing out this quirk helps us explain
+our trick in Section 4.3 and its limitations.  So, we can argue that our
+code in Section 4 implements an online PE.
+}
+}
+
+\jacques{
+Re: Section 6.  Do we remove it entirely, or do we leave in some short
+discussion of the issue?  Something in the conclusion perhaps?
+We should also make sure that we remove any 'related work' which is there
+solely regarding section 6.  In particular I had said
+"The point of section 6 was to show that the "obvious" self-interpreter
+can't be typed in HM, but with a fairly minor extension, it is then
+expressible."
+to which Ken replied
+
+\ccshan{Well, it would be very reasonable for the reader (such as Klaus
+Ostermann; see below) to take issue with (or at least be confused about)
+our notion of self interpretation, in which the interpreted program is
+plugged syntactically into the interpreter context, rather than fed to
+an interpreter function as an argument.
+
+When we wrote this paper, we wanted to argue that our PE is
+Jones-optimal, but that (in its usual definition) requires us to write
+a self-interpreter.  That is why we discussed self interpretation
+in Section 6.  We still believe our PE to be Jones-optimal in any
+reasonable sense, but both the notion of Jones optimality and the notion
+of self interpretation turn out to require and deserve more attention
+suitable for another paper (as some of the reviewer comments show), so
+would it be ok if we replace Section 6 by a brief and more conservative
+statement about the power of our PE, such as that it reduces away all
+beta-redexes in the input program?
+}
+The question is, where do we insert this "more conservative statement"?
+
+}
+
+\ccshan{ \oleg{
+    Regarding proposition 2. What about the following formulation?
+    
+    The interpreter R defines big-step semantics for the object
+    language. The type system of the object language, Fig 1, is sound
+    (exhibits subject reduction and progress properties) with respect to
+    the dynamic semantics defined by R.}
+
+The first sentence in this paragraph calls for a definition of "big-step
+semantics for the object language".  So, we need to (I haven't done
+this) write down the object language's big-step (dynamic) semantics
+in a boring figure of completely unsurprising \Downarrow inference
+rules.  Then (to make "defines" in the first sentence more precise),
+the first sentence should claim some kind of mutual simulation between
+the evaluation of an object term in an object environment and the
+evaluation of the OCaml representation of the object term in the
+environment that is the concatenation of the environment of R and the
+OCaml representation of the object environment.  The second sentence
+should then claim that well-typed object terms never go wrong, proven
+as a corollary of the first sentence and the soundness of OCaml's type
+system. }
+
+\ccshan{
+One final question, to Jacques: Why does Gluck's ASIA-PEPM paper about
+Jones optimality show that tags inevitably degrade performance?
+}
+
 ==========================================================================
 		Comments yet to address
 
@@ -31,7 +129,6 @@ Mogensen (PEPM 1995) \cite{mogensen-self-applicable}
 Sperber (PE 1996) \cite{sperber-self-applicable}
 
 REPORT FROM REFEREE #1  -- all done!
-
 
 REPORT FROM REFEREE #2
 
