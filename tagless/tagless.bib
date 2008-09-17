@@ -636,7 +636,7 @@ generator, we generate ML code, C code, and OCaml byte code.
 		  generating certified binaries in a type-theoretic framework."
 }
 
-@Book{Holst-AMIX,
+@incollection{Holst-AMIX,
   author =    "Carsten Kehler Holst",
   title =     "Language Triplets: The {AMIX} Approach",
   year  =     1988,
@@ -760,6 +760,15 @@ generator, we generate ML code, C code, and OCaml byte code.
   url = {ftp://ftp.diku.dk/diku/semantics/papers/D-128.dvi.Z ftp://ftp.diku.dk/diku/semantics/papers/D-128.ps.Z}
 }
 
+@inproceedings{Mogensen-SelfApplicable,
+  author    = {Torben {\AE}. Mogensen},
+  title     = {Self-applicable Online Partial Evaluation of the Pure Lambda
+               Calculus},
+  crossref	= "pepm1995",
+  pages     = {39-44},
+  bibsource = {DBLP, http://dblp.uni-trier.de}
+}
+
 @MastersThesis{Birkedal-PE-ML,
   author =      "Lars Birkedal and Morten Welinder",
   title =       "Partial Evaluation of {Standard} {ML}",
@@ -807,6 +816,32 @@ generator, we generate ML code, C code, and OCaml byte code.
   title		= "Template Meta-programming for {H}askell",
   pages		= "1--16",
   crossref	= "haskell2002"
+}
+
+@InCollection{JonesNielson:94:AbstractInterpretation,
+  semno =        "D-58",
+  author =       "Jones, Neil D. and Nielson, Flemming",
+  title =        "Abstract Interpretation: a Semantics-Based Tool for
+                 Program Analysis",
+  booktitle =    "Handbook of Logic in Computer Science",
+  publisher =    "Oxford University Press",
+  year =         "1994",
+  OPTeditor =    "",
+  OPTchapter =   "",
+  OPTpages =     "",
+  OPTaddress =   "",
+  OPTmonth =     "",
+  note =         "527--629",
+  summary =      "This is a broad overview of Abstract Interpretation,
+                 to be a large chapter (around 100 pages) in the
+                 above-mentioned handbook. It consists of three main
+                 parts: an Introduction with motivation and Descriptions
+                 of the main methods used in the field; a mathematical
+                 development of the logical relations approach with
+                 several applications; and short descriptions of a broad
+                 spectrum of Semantics-Based Program Analyses.",
+  keywords =     "abstract interpretation, flow analysis, static program
+                 analysis",
 }
 
 %------------------------------------------------------------------------
@@ -894,6 +929,18 @@ generator, we generate ML code, C code, and OCaml byte code.
   series	= s_lncs,
   isbn		= {3-540-42068-1},
   location	= "Aarhus, Denmark"
+}
+
+@Proceedings{	pepm1995,
+  key		= "{\relax PEPM}",
+  title		= "Proceedings of the 1995 {ACM} {SIG{\-}PLAN} Workshop on Partial Evaluation and Semantics-Based Program Manipulation",
+  booktitle	= "Proceedings of the 1995 {ACM} {SIG{\-}PLAN} Workshop on Partial Evaluation and Semantics-Based Program Manipulation",
+  address	= pub_acm_addr,
+  publisher	= pub_acm,
+  year		= 1995,
+  month		= "7~"  # jun,
+  isbn		= {0-89791-729-0},
+  location	= "La Jolla, CA"
 }
 
 @Proceedings{	pepm2003,

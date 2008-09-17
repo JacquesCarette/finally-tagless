@@ -5,14 +5,8 @@ draw out a different feature of our solution: the importance of
 a type constructor.  This allows us to simultaneously 1) abstract over
 'interpretations', and 2) nevertheless only allow well-typed terms
 to be created.  Certainly we need to add something to the 'related work',
-but perhaps also to the contributions?}
-
-Another buried TODO:
-add a ref to  Lars Birkedal's master thesis
- http://www.itu.dk/people/birkedal/papers/paresm.ps.gz
-and thank Eijiro Sumii
-In the end, we may also have to thank others (like Neil Jones) if we 
-end up making changes that came to us because of our subsequent discussion.
+but perhaps also to the contributions?  (Even added something to the 
+abstract about this)}
 
 \jacques{I have grabbed some comments from our email exchanges and
 added them here, as these contain significant issues that have yet to
@@ -117,51 +111,14 @@ should then claim that well-typed object terms never go wrong, proven
 as a corollary of the first sentence and the soundness of OCaml's type
 system. }
 
-\ccshan{
-One final question, to Jacques: Why does Gluck's ASIA-PEPM paper about
-Jones optimality show that tags inevitably degrade performance?
-}
-
 ==========================================================================
 		Comments yet to address
-
-Mogensen (PEPM 1995) \cite{mogensen-self-applicable}
-Sperber (PE 1996) \cite{sperber-self-applicable}
 
 REPORT FROM REFEREE #1  -- all done!
 
 REPORT FROM REFEREE #2
 
-OVERALL EVALUATION
-
-As it stands, the paper is not sufficiently focused and the main
-contribution is sometimes drowned in distracting details. Some of the
-"historical context" is also missing in the present submission and
-should be added. Furthermore, some technical sloppiness should be
-tightened up.
-\jacques{It seems to me that we have fixed this now?}
-
 DETAILS
-
-The main ideas in the paper date back a long time. I believe they can
-be found in more or less diluted form in \cite{Holst-AMIX}
-\jacques{I have ordered a copy of this from inter-library loan}
-
-Then there is the typed version of the (Thiemann 1996) paper that you
-are citing. It presents a typed partial evaluator encoded exactly like
-your interpreters and pe functions, but for offline partial
-evaluation. It does not make use of the module system and hence does
-not parametrize over different semantics.
-\cite{Thiemann-combinators}
-\jacques{Aha, now *this* is a very important paper we missed.  I have
-just finished reading it, and really does contain a number of our
-ideas [except for Symantics!].  It does not deal with self-application
-at all, although it quickly discusses 'fold'.  We need to devote a
-full paragraph this this paper.  This paper is 43 pages, but that's 
-because there are a lot of "proofs" in it.}
-
-There is also a Haskell version using type classes which appeared in
-some obscure place. \cite{Thiemann-GenClass}
 
 The idea to parametrize (abstract) semantics and express them in
 combinator style is due to Flemming Nielson \cite{Nielson88}
@@ -286,35 +243,6 @@ p21, lapp is monadic let!
 
      Why is the ... result type in RCPS needed?
 
-p22, section 6
-     I was confused by the switch in syntax (which makes sense once
-     you think about it). Some comments in the text as to why you
-     switch notation  would make it easier to your readers.
-     
-     "optimal with respect to si"
-     Why the change in typeface? Is this another SI?
-
-p24, "pre-encoding of a let-"
-     Why not encode a let as a function like any other syntax
-     constructor? It is a bit counter-intuitive that you don't encode
-     it as "let 'e1' (\x. 'e2')"
-
-     To me, using the contexts and context plugging is changing the
-     problem: The problem statement says "apply the SI".
-     The really interesting question is which feature set is needed to
-     obtain an SI without changing the question.
-
-p25, proposition 5
-     proof?
-
-     "Our partial evaluator ..."
-     should start on a new line.
-
-     proposition 6
-     It is immediate that PE (SI['e']) is observationally equivalent
-     to PE(e), but I do not see how you prove that they are
-     alpha-equivalent.
-
 p25, section 6.3
      The second paragraph contains rather haphazard statements. These
      statements need to be properly formulated and require proof. It
@@ -348,6 +276,31 @@ p28, "This shift also underlies ..."
      \oleg{If we remove Sec 6, that point would be moot...}
 
 ==========================================================================
+
+Below here are non-reviewer comments (i.e. self-generated comments) which
+have already been dealt with.
+
+\ccshan{
+One final question, to Jacques: Why does Gluck's ASIA-PEPM paper about
+Jones optimality show that tags inevitably degrade performance?
+}
+\jacques{I does not :-(.  I don't know why I thought it did.}
+
+Another buried TODO:
+add a ref to  Lars Birkedal's master thesis
+ http://www.itu.dk/people/birkedal/papers/paresm.ps.gz
+and thank Eijiro Sumii
+In the end, we may also have to thank others (like Neil Jones) if we 
+end up making changes that came to us because of our subsequent discussion.
+
+Mogensen (PEPM 1995) \cite{Mogensen-SelfApplicable}
+\jacques{This one really pertains to section 6, which is now removed.
+There are some interesting ideas here for future investigations, 
+They do contain some interesting and important ideas, but 
+nothing for now, I don't think}
+
+==========================================================================
+
 	Comments that are already taken care of
 
 We have fixed all the grammatical problems pointed out by the reviewers
@@ -636,7 +589,7 @@ Rev2, p2, section 1
     should be made explicit, just for clarity}
     \jacques{Ken has added an explicit encoding in 2.1}
 
-p11, section 4
+Rev2, p11, section 4
      "Surprisingly ..."
      Not that surprising in the light of Filinski's work on
      normalization by evaluation.
@@ -647,4 +600,67 @@ p11, section 4
      that what's surprising is that the family of interpretations can
      encompass partial evaluation, and state up front that our partial
      evaluator is online.}
+
+Rev2, next 3 comments re: section 6 are now moot.
+p22, section 6
+     I was confused by the switch in syntax (which makes sense once
+     you think about it). Some comments in the text as to why you
+     switch notation  would make it easier to your readers.
+     
+     "optimal with respect to si"
+     Why the change in typeface? Is this another SI?
+
+p24, "pre-encoding of a let-"
+     Why not encode a let as a function like any other syntax
+     constructor? It is a bit counter-intuitive that you don't encode
+     it as "let 'e1' (\x. 'e2')"
+
+     To me, using the contexts and context plugging is changing the
+     problem: The problem statement says "apply the SI".
+     The really interesting question is which feature set is needed to
+     obtain an SI without changing the question.
+
+p25, proposition 5
+     proof?
+
+     "Our partial evaluator ..."
+     should start on a new line.
+
+     proposition 6
+     It is immediate that PE (SI['e']) is observationally equivalent
+     to PE(e), but I do not see how you prove that they are
+     alpha-equivalent.
+
+Rev2, Overall
+As it stands, the paper is not sufficiently focused and the main
+contribution is sometimes drowned in distracting details. Some of the
+"historical context" is also missing in the present submission and
+should be added. Furthermore, some technical sloppiness should be
+tightened up.
+\jacques{We have worked hard on these aspects}
+
+Rev2, Overall
+The main ideas in the paper date back a long time. I believe they can
+be found in more or less diluted form in \cite{Holst-AMIX}
+\jacques{I would not say that the "main" ideas can be found in that
+paper since AMIX and CERES are untyped, but certainly it contains
+the seeds of several of the important techniques}
+
+Rev2, Related work
+Then there is the typed version of the (Thiemann 1996) paper that you
+are citing. It presents a typed partial evaluator encoded exactly like
+your interpreters and pe functions, but for offline partial
+evaluation. It does not make use of the module system and hence does
+not parametrize over different semantics.
+\cite{Thiemann-combinators}
+\jacques{Aha, now *this* is a very important paper we missed.  I have
+just finished reading it, and really does contain a number of our
+ideas [except for Symantics!].  It does not deal with self-application
+at all, although it quickly discusses 'fold'.  We need to devote a
+full paragraph this this paper.  This paper is 43 pages, but that's 
+because there are a lot of "proofs" in it.}
+
+There is also a Haskell version using type classes which appeared in
+some obscure place. \cite{Thiemann-GenClass}
+\jacques{also cited now}
 

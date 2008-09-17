@@ -1,7 +1,3 @@
-%% TODO: add a ref 
-%%  Lars Birkedal's master thesis
-%%   http://www.itu.dk/people/birkedal/papers/paresm.ps.gz
-
 \begin{comment}
 \authorinfo{Jacques Carette}
            {McMaster University}
@@ -16,7 +12,7 @@
 
 \begin{abstract}
 \ifdim\parindent=0pt \parindent=1em \fi
-We have built the first family of tagless interpretations for a
+We have built the first \emph{family} of tagless interpretations for a
 higher-order typed object
 language in a typed metalanguage (Haskell or ML) that
 require no dependent
@@ -27,7 +23,7 @@ an evaluator, a compiler (or staged evaluator), a partial
 evaluator, and call-by-name and
 call-by-value CPS transformers.
 
-Our main idea is to encode
+Our principal technique is to encode
 \ifshort HOAS \else de Bruijn or higher-order abstract syntax \fi
 using combinator functions rather than data constructors.
 In other words, we represent object terms not in an initial algebra
@@ -37,11 +33,15 @@ types, which are required for typed partial evaluation and CPS transformations.
 
 Our encoding of an object term abstracts over the various ways to
 interpret it, yet statically assures that the interpreters never get
-stuck.  To achieve self\hyp interpretation and show Jones\hyp
-optimality, we relate this exemplar of higher-rank and higher-kind
-polymorphism \ifshort\else (provided by ML functors and Haskell~98 constructor
-classes) \fi to plugging a term into a context of let\hyp polymorphic
-bindings.
+stuck.  
+%% To achieve self\hyp interpretation and show Jones\hyp
+%% optimality, we relate this exemplar of higher-rank and higher-kind
+%% polymorphism \ifshort\else (provided by ML functors and Haskell~98 
+%% constructor classes) \fi to plugging a term into a context of 
+%% let\hyp polymorphic bindings.
+
+As a side-effect, we provide another convincing application of the 
+usefulness of being able to abstract over higher-kinded types.
 \end{abstract}
 
 \begin{quote}
@@ -362,8 +362,7 @@ uses no universal type or pattern matching, it never gives a
 run-time error, and is in fact total.  Because this safety is obvious
 not just to us but also to the metalanguage implementation, we avoid
 the serious performance penalty \citep{WalidICFP02}
-that inevitably arises \citep{Gluck-jones-optimality}
-of error checking at run time.
+that arises from error checking at run time.
 
 Our solution does \emph{not} involve Church-encoding the
 universal type. The Church encoding of the type~|u| in \S\ref{tagproblem}
@@ -437,12 +436,15 @@ result they call desirable.  Our contributions are as follows.
     such as state\ifshort\else~(\S\ref{state})\fi.\ifshort\footnote{Again, please see our code.}\fi
     \ Our term encoding is contravariant in the object language, so
     extending the language does not invalidate terms already encoded.
-\item We describe an approach to self\hyp interpretation compatible with the
-  above\ifshort\else~(\S\ref{selfinterp})\fi.  Self\hyp interpretation turned
-  out to be harder than expected.\ifshort\footnotemark[\value{footnote}]\fi
+%% \item We describe an approach to self\hyp interpretation compatible with the
+%%   above\ifshort\else~(\S\ref{selfinterp})\fi.  Self\hyp interpretation turned
+%%   out to be harder than expected.\ifshort\footnotemark[\value{footnote}]\fi
+\item Show how higher-kinded abstraction can be useful for building
+    embedded DSLs.
 \end{enumerate}
 Our code is surprisingly simple and obvious in hindsight, but
 it has been cited as a difficult problem (\cite{sumii-hybrid}
+and \cite{Thiemann-combinators}
 notwithstanding) to interpret a typed object language in a typed metalanguage
 without tagging or type\hyp system extensions.  For example, \citet{taha-tag}
 say that ``expressing such an interpreter in a statically typed
@@ -1853,9 +1855,11 @@ then use the result |M| to
 interpret object terms. Those terms are \emph{exactly} as before.
 Having to textually copy the terms is the
 price we pay for this simplified treatment.
+\begin{comment}
 Our discussion of self\hyp interpretation in~\S\ref{selfinterp} shows
 that this copying is not frivolous but represents plugging a term into
 a context, which is one of the many faces of polymorphism.
+\end{comment}
 
 With 
 |CPST| instantiated by the compiler~|C| above,
@@ -1996,6 +2000,8 @@ code.
 \fi
 
 \ifshort\else
+\begin{comment}
+\jacques{Should we really eliminate this entirely?}
 \section{Self-interpretation}\label{selfinterp}
 
 We turn to interpreting the object language in the object language, to
@@ -2226,6 +2232,7 @@ containing a type constructor
 constructor (in Haskell).  Thus,
 ``context'' is a euphemism for a polymorphic argument, and ``plugging''
 is a euphemism for application.
+\end{comment}
 
 \begin{comment}
 \jacques{But how 
@@ -2256,6 +2263,11 @@ hole below).}
 \end{comment}
 
 \begin{comment}
+
+\jacques{From what other people have written (like those who refer to our
+work), it seems these comments of ours were prescient and not altogether
+obvious.  We should consider adding some comments about the crucial role
+of 'repr' (r below) somewhere in the paper}
 
 The crucial role of the higher-order type parameter r
 
@@ -2329,7 +2341,7 @@ We admire all this technical machinery, but
 these motivating examples do not need it.
 Although GADTs may indeed be simpler and more flexible, they are
 unavailable in mainstream ML, and their implementation in GHC
-6.6.1 fails to
+6.8 fails to
 detect exhaustive pattern matching.  We also wanted to find the minimal
 set of widespread language features needed for tagless
 type-preserving interpretation.
@@ -2368,6 +2380,12 @@ evaluator remove all the tags. In contrast, our object encoding and
 interpreters do not have tags to start with and obviously cannot
 raise run-time errors.
 
+That it is possible to regard our various evaluators as forming a 
+family is also an old idea \citep{Holst-AMIX}. \Citeauthor{Holst-AMIX}
+introduces \emph{language triplets} as an interesting mechanism to 
+relate (untyped) languages in much the same way we do.  Seeds of 
+several of the techniques we use here can also be found in this paper.
+
 Our partial evaluator establishes a bijection |static| between static
 and dynamic types (the valid values of |'sv| and |'dv|), and between
 static and dynamic terms.  It is customary to implement such a bijection
@@ -2388,9 +2406,9 @@ Our separation between the |Symantics| interface and its many
 implementations codifies the common practice of implementing an embedded
 DSL by specifying an abstract syntax of object\hyp language pervasives,
 such as addition and application, then providing multiple
-interpretations of them.  \Citet{JonesNielsen-D58} prefigured this
-separation when they decomposed a denotational definition of an untyped
-object language into a core semantics (which we call abstract syntax)
+interpretations of them.  \Citet{JonesNielson:94:AbstractInterpretation}
+prefigured this separation when they decomposed a denotational definition of an
+untyped object language into a core semantics (which we call abstract syntax)
 and multiple interpretations.  When implementing an embedded DSL in this
 way, it is also common practice to use phantom types to rule out
 ill-typed object terms, as done in Lava
@@ -2413,13 +2431,25 @@ kind: See Sec 3.1.2. See numerous "data Term" in Sec3, which is the U
 type.  In Sec 3.3.4 (p76) Rhiger specifically says that his encoding
 cannot do typed CPS transformation -- whereas our does. BTW, Rhiger
 thesis contains the definitions of the interpreter and the compiler,
-in the beginning. Use this in response to Rev1)
+in the beginning. Use this in response to Rev1
 \end{comment}
 
+In many ways, our work builds on that of \citep{Thiemann-combinators}.
+We use the same basic techniques, but our partial evaluator is online
+as this is the only way to make partial evaluation ``fit'' in our
+family.  In other words, by moving to an online partial evaluator and
+using staging instead of a $2$-level language, we are able to show that
+\citeauthor{Thiemann-combinators}'s techniques are highly parametric
+and typeable using mainstream features.  Using many different type
+classes, including constructor classes, \citep{Thiemann-GenClass}
+presents a Gofer implementation of set of \emph{binding-time polymorphic}
+combinators.  By gathering all their classes into one and dropping the
+requirement for a polymorphic |lift|, they could have invented
+|Symantics| themselves.
 
 We are not the first to implement a typed interpreter for a typed
 language.  \Citet{laod93} use type classes to implement a metacircular
-interpreter (rather than a self\hyp interpreter) of a
+interpreter (a special kind of self\hyp interpreter) of a
 typed version of the SK language, which is quite different from our
 object language.  Their interpreter
 appears to be tagless, but they could not have implemented a
@@ -2446,7 +2476,6 @@ These approaches use de Bruijn indices and fancier
 type systems with type-level functions, GADTs, or type\hyp equality
 proofs.
 \fi
-
 
 We encode terms in elimination form, as a coalgebraic structure.
 \Citet{Pfenning-Lee} first described this basic idea and applied it to
@@ -2493,10 +2522,12 @@ the \emph{typed} $\lambda$-calculus has a final coalgebra structure.
 \Citet{HonsellLenisa,honsell99coinductive}
 investigate the untyped $\lambda$-calculus
 along this line.  
+\begin{comment}
 In particular, they use
 contexts with a hole \citep[p.\,13]{honsell99coinductive} to define
 \emph{observational equivalence}
 (see our~\S\ref{selfinterp}).
+\end{comment}
 \citearound{'s bibliography}\Citet{honsell99coinductive} refers to the
 foundational work in this important area.  
 Particularly intriguing is the link to the
@@ -2504,7 +2535,7 @@ coinductive aspects of B\"{o}hm trees, as pointed out by
 \citet{berarducci-models} and Jacobs \citeyearpar[Example 4.3.4]{jacobs-coalgebra}.
 \fi
 
-\ifshort We observe that \else As \S\ref{S:clarify} observes, \fi
+We observe that
 higher-rank and higher-kind
 polymorphism lets us type-check and compile object terms separately from
 interpreters.  This \ifshort\else observation \fi is consistent with the role of
