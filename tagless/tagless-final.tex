@@ -1602,6 +1602,15 @@ gives the desired result
 {P.st = Some <fun>;
  P.dy = .<fun x -> x * (x * (x * (x * (x * (x * x)))))>.}
 \end{code}
+If the object program does not use |fix|, then the output of |P|
+is $\beta$-normal.
+Also, |P| is correct in that, if interpreting an
+object term using~|P| terminates, then the |dy| component of the output is
+equivalent to the interpretation of the same object term using~|C|, modulo
+$\alpha$-renaming, $\beta$-reduction, and algebraic simplification.  To prove
+this correctness by structural induction on the object term, we need to
+strengthen the induction hypothesis to assert that the |st| component, if not
+|None|, is consistent with the |dy| component.
 
 All pattern\hyp
 matching in~|P| is \emph{syntactically} exhaustive, so it is patent to the
