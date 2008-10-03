@@ -1519,12 +1519,25 @@ at the start of this section, with |'sv| taking the crucial place of |('c,'dv) s
 The function |abstr|
 extracts a future-stage code value from the result of
 partial evaluation.  Conversely, the function |pdyn| injects a
-code value into the |repr| type. As
+code value into the |repr| type.
+Thus, |abstr| and |pdyn| are like the \emph{reify} and
+\emph{reflect} functions defined in normalization by evaluation
+\citep{Danvy-TDPE}, but as
 in~\S\ref{S:PE-problem}, we build dynamic terms alongside
 any static ones to express how the lift function is indexed
-by the dynamic type.  What is new is that we analogously
+by the dynamic type.  Analogously, we now
 build a static type alongside the dynamic type to express
 how the static type is indexed by the dynamic type.
+Thus we establish a bijection |static| between static and dynamic types,
+without defining at the type level the injection\hyp projection pairs
+customarily used to establish such bijections for interpreters
+\citep{Ramsey-ML-module-mania,Benton-embedded-interpreters},
+partial evaluation \citep{Danvy-TDPE},
+and type-level functions \citep{oliveira-typecase}.
+This emulation of type-indexed types is related to intensional type analysis
+\citep{Morrisett-intensional,Generic-Haskell}, but
+intensional type analysis cannot handle our |fix|
+\citep{xi-guarded}.
 
 The static portion of the interpretation of |lam f| is |Some f|, 
 which just wraps the HOAS
@@ -1600,7 +1613,8 @@ In other words, our partial evaluator tags
 phases (with |Some| and |None|) but not object types, so it
 is patent that the \emph{output} of~|P| never gets stuck.
 
-Predating us, \citet{Thiemann-combinators} and \citet{sumii-hybrid} deforested
+Our partial evaluator owes much to
+\citet{Thiemann-combinators} and \citet{sumii-hybrid}, who deforested
 the object term representation and expressed a partial evaluator as a collection
 of term combinators in a typed metalanguage.  Like us, \citeauthor{sumii-hybrid}
 follow \citet{Sperber-SelfApplicable} and \citet{asai-binding-time} in building
@@ -1620,7 +1634,9 @@ Our contribution to the literature on partial evaluation is to use mere
 Hindley-Milner types in the metalanguage to assure statically and patently that
 partially evaluating a well-typed object program not only never gets stuck but
 also, if it terminates, produces a well-typed output program that never gets
-stuck.  Moreover, these types form an instance of a general |Symantics|
+stuck.  Moreover, thanks to the online binding-time analysis performed by
+our partial evaluator (in contrast to \citeauthor{Thiemann-combinators}'s),
+these types form an instance of a general |Symantics|
 signature that encompasses other interpreters such as evaluation and
 compilation.  This early and manifest assurance of type safety contrasts, for
 example, with \citearound{'s compiler generator (cogen) for
@@ -1631,7 +1647,7 @@ program is only manifest when each generating extension is type-checked, and the
 fact that the generating extension never generates an ill-typed residual program
 from well-typed static input is only manifest when each residual program is
 type-checked.  Similarly, the fact that the partial evaluator of
-\citet{fiore:nbe-ppdp2002}, nor that of
+\citet{fiore:nbe-ppdp2002} and that of
 \citet{balat:tdpe-popl2004}, both of which use delimited control
 operators, never turn well-typed code into ill-typed code is not assured by the
 metalanguage, whether or not as part of a typed family of interpreter modules.
@@ -2346,30 +2362,21 @@ detect exhaustive pattern matching.  We also wanted to find the minimal
 set of widespread language features needed for tagless
 type-preserving interpretation.
 
-Even a simply typed $\lambda$-calculus obviously supports self\hyp
-interpretation, provided we use universal types \citep{taha-tag}.  The
+The simply typed $\lambda$-calculus can be interpreted even just in
+itself, provided we use universal types \citep{taha-tag}.  The
 ensuing tagging overhead motivated \citet{Makholm-TagElim,taha-tag} 
-to propose tag
-elimination, which however does not statically guarantee that all tags
+to propose \emph{tag
+elimination}, which however does not statically guarantee that all tags
 will be removed \citep{WalidICFP02}.
 
 \Citet{WalidICFP02}, \citet{taha-tag}, \citet{xi-guarded}, and
-\citet{peyton-jones-simple} seem to argue as follows that a self\hyp
-interpreter of a typed language cannot be tagless or Jones\hyp optimal:
-\begin{shortlist}
-\item One needs to encode a typed language in a typed language based on
-a sum type (at some level of the hierarchy)\\
-\item A \emph{direct} interpreter 
-for such an encoding of a typed language
-in a typed language requires either
-advanced types or tagging overhead\\
-\item Thus, an indirect interpreter is necessary, which needs a universal
-  type and hence tagging\ifshort\else\\
-\item Thus, any self-interpreter must have tags and cannot be 
-  Jones-optimal\fi.
-\end{shortlist}
+\citet{peyton-jones-simple} seem to argue that a typed
+interpreter of a typed language cannot be tagless without
+advanced types, based on the premise that the only way to
+encode a typed language in a typed language is to use
+a sum type (at some level of the hierarchy).
 While the logic is sound, we (following \citet{yang-encoding}) showed that the
-first step's premise is not valid.
+premise is not valid.
 
 \citet{Danvy-tagging-encoding} discuss Jones optimality at length and
 apply HOAS to typed self\hyp interpretation.  However, their source
@@ -2380,33 +2387,15 @@ evaluator remove all the tags. In contrast, our object encoding and
 interpreters do not have tags to start with and obviously cannot
 raise run-time errors.
 
-That it is possible to regard our various evaluators as forming a 
-family is also an old idea \citep{Holst-AMIX}. \Citeauthor{Holst-AMIX}
-introduces \emph{language triplets} as an interesting mechanism to 
-relate (untyped) languages in much the same way we do.  Seeds of 
-several of the techniques we use here can also be found in this paper.
-
-Our partial evaluator establishes a bijection |static| between static
-and dynamic types (the valid values of |'sv| and |'dv|), and between
-static and dynamic terms.  It is customary to implement such a bijection
-using an injection\hyp projection pair, as done for interpreters
-\ifshort \citep{Ramsey-ML-module-mania,Benton-embedded-interpreters}\else
-by \citet{Ramsey-ML-module-mania} and \citet{Benton-embedded-interpreters}\fi,
-partial evaluation \ifshort \citep{Danvy-TDPE}\else by \citet{Danvy-TDPE}\fi,
-and type-level functions \ifshort \citep{oliveira-typecase}\else by
-\citet{oliveira-typecase}\fi.  As explained in~\S\ref{S:PE-solution}, we
-avoid injection and projection at the type level by adding an argument
-to |repr|.
-Our solution could have been even more straightforward if MetaOCaml
-provided total type-level functions such as |static| in
-\S\ref{S:PE-solution}---simple type-level computations 
-ought to become mainstream.
-
 Our separation between the |Symantics| interface and its many
 implementations codifies the common practice of implementing an embedded
 DSL by specifying an abstract syntax of object\hyp language pervasives,
 such as addition and application, then providing multiple
-interpretations of them.  \Citet{JonesNielson:94:AbstractInterpretation}
+interpretations of them.
+The techniques we use to form such a family of interpreters
+find their seeds in \citearound{'s \emph{language
+triplets}}\citet{Holst-AMIX}, though in an untyped setting.
+\Citet{JonesNielson:94:AbstractInterpretation} also
 prefigured this separation when they decomposed a denotational definition of an
 untyped object language into a core semantics (which we call abstract syntax)
 and multiple interpretations.  When implementing an embedded DSL in this
@@ -2434,18 +2423,12 @@ thesis contains the definitions of the interpreter and the compiler,
 in the beginning. Use this in response to Rev1
 \end{comment}
 
-In many ways, our work builds on that of \citep{Thiemann-combinators}.
-We use the same basic techniques, but our partial evaluator is online
-as this is the only way to make partial evaluation ``fit'' in our
-family.  In other words, by moving to an online partial evaluator and
-using staging instead of a $2$-level language, we are able to show that
-\citeauthor{Thiemann-combinators}'s techniques are highly parametric
-and typeable using mainstream features.  Using many different type
-classes, including constructor classes, \citep{Thiemann-GenClass}
-presents a Gofer implementation of set of \emph{binding-time polymorphic}
-combinators.  By gathering all their classes into one and dropping the
-requirement for a polymorphic |lift|, they could have invented
-|Symantics| themselves.
+\Citet{Thiemann-GenClass}
+implemented a set of \emph{binding-time polymorphic}
+combinators in Gofer, using many constructor classes.
+By merging all their classes into one and dropping
+polymorphic lift, they could have invented
+|Symantics|.
 
 We are not the first to implement a typed interpreter for a typed
 language.  \Citet{laod93} use type classes to implement a metacircular
@@ -2506,12 +2489,6 @@ strongly of our attempts at self-interpretation without the notion of a
 syntactic hole.
 \end{comment}
 
-Our encoding of the type function |static| in \S\ref{S:PE-solution}
-emulates type-indexed types and is related to intensional type analysis
-\citep{Morrisett-intensional,Generic-Haskell}. However, our object
-language and running examples in HOAS include |fix|,
-which intensional type analysis cannot handle
-\citep{xi-guarded}.
 
 
 We could not find work that establishes that
