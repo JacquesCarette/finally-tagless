@@ -17,10 +17,6 @@ REPORT FROM REFEREE #2
 
 DETAILS
 
-The idea to parametrize (abstract) semantics and express them in
-combinator style is due to Flemming Nielson \cite{Nielson88}
-\oleg{63-page paper!}
-
 
 p4, section 1.3
     Clearly the encoding is monadic but you are not mentioning this
@@ -76,24 +72,6 @@ p16
      \oleg{I agree; let's keep our optimizations and argue for them in
      our response to the reviewer.}
 
-p17, "partial evaluation ... gives the desired result:"
-     But the good result is due to the extra cleverness put into the
-     implementation of 'add' and 'mul': without those, the result
-     would not be much different.
-     \ccshan{Response: These optimizations are indeed a side point
-     and do not affect the result of EX(P) much, but we find the
-     ease of adding these optimizations and the clarity of where to
-     put them so appealing, simple, and undistracting that we think
-     the paper is still better for them.}
-
-p16
-     Also, online pe is intrinsically tagged so offline pe would
-     provide a better demonstration.
-     \ccshan{Response: Our paper stresses a family of multiple
-     interpretations for the same object language, and offline PE
-     would force us to change the object language to one annotated
-     with binding times, so online PE distracts from our point less.}
-
 p18, CPS interpretation
      The cbv version is almost literally in the above-cited paper
      (Thiemann 1999) \cite{Thiemann-combinators}
@@ -140,24 +118,6 @@ p21, lapp is monadic let!
 
      Why is the ... result type in RCPS needed?
 
-p25, section 6.3
-     The second paragraph contains rather haphazard statements. These
-     statements need to be properly formulated and require proof. It
-     is not enough to just throw in a few provocative statements:
-     proof is needed!
-\oleg{I'm inclined to say that this paragraph does not describe
-technical results. Rather, it states intuitions that arose during our
-attempts to write a self-interpreter. Intuitions (points of view) are
-necessarily informal. One may say that they are more important than
-the technical results because they show a way to derive technical
-results. Because of the informality, they cannot be applied
-mechanically and so cannot, alas, benefit every reader. It still seems
-that their value outweighs the drawback: intuition is what
-distinguishes an informal mathematical proof from the formalized one.
-The reason mathematicians prefer informal proofs is that they are
-interested not only in what has been proven but why (refer to Thurston).}
-\jacques{agreed}
-
 
 p28, "This shift also underlies ..."
      I don't see the connection to the present work.
@@ -171,6 +131,10 @@ p28, "This shift also underlies ..."
      in the object language, we coudl do it].  Then we could put in 
      a backlink.}
      \oleg{If we remove Sec 6, that point would be moot...}
+     \jacques{Except that Symantics defines repr, which is higher-kinded
+     and that is crucial.  Section 6 required even higher levels, but
+     we need some of this.  So we need to adjust our comments about
+     this in a more subtle fashion.}
 
 ==========================================================================
 
@@ -498,7 +462,7 @@ Rev2, p11, section 4
      encompass partial evaluation, and state up front that our partial
      evaluator is online.}
 
-Rev2, next 3 comments re: section 6 are now moot.
+Rev2, next 4 comments re: section 6 are now moot.
 p22, section 6
      I was confused by the switch in syntax (which makes sense once
      you think about it). Some comments in the text as to why you
@@ -527,6 +491,25 @@ p25, proposition 5
      It is immediate that PE (SI['e']) is observationally equivalent
      to PE(e), but I do not see how you prove that they are
      alpha-equivalent.
+
+p25, section 6.3
+     The second paragraph contains rather haphazard statements. These
+     statements need to be properly formulated and require proof. It
+     is not enough to just throw in a few provocative statements:
+     proof is needed!
+\oleg{I'm inclined to say that this paragraph does not describe
+technical results. Rather, it states intuitions that arose during our
+attempts to write a self-interpreter. Intuitions (points of view) are
+necessarily informal. One may say that they are more important than
+the technical results because they show a way to derive technical
+results. Because of the informality, they cannot be applied
+mechanically and so cannot, alas, benefit every reader. It still seems
+that their value outweighs the drawback: intuition is what
+distinguishes an informal mathematical proof from the formalized one.
+The reason mathematicians prefer informal proofs is that they are
+interested not only in what has been proven but why (refer to Thurston).}
+\jacques{agreed}
+
 
 Rev2, Overall
 As it stands, the paper is not sufficiently focused and the main
@@ -560,4 +543,26 @@ because there are a lot of "proofs" in it.}
 There is also a Haskell version using type classes which appeared in
 some obscure place. \cite{Thiemann-GenClass}
 \jacques{also cited now}
+
+Rev2: The idea to parametrize (abstract) semantics and express them in
+combinator style is due to Flemming Nielson \cite{Nielson88}
+\oleg{63-page paper!}
+
+Rev2, p17, "partial evaluation ... gives the desired result:"
+     But the good result is due to the extra cleverness put into the
+     implementation of 'add' and 'mul': without those, the result
+     would not be much different.
+     \ccshan{Response: These optimizations are indeed a side point
+     and do not affect the result of EX(P) much, but we find the
+     ease of adding these optimizations and the clarity of where to
+     put them so appealing, simple, and undistracting that we think
+     the paper is still better for them.}
+
+Rev2, p16
+     Also, online pe is intrinsically tagged so offline pe would
+     provide a better demonstration.
+     \ccshan{Response: Our paper stresses a family of multiple
+     interpretations for the same object language, and offline PE
+     would force us to change the object language to one annotated
+     with binding times, so online PE distracts from our point less.}
 

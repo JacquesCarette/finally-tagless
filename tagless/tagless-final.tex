@@ -2403,7 +2403,10 @@ such as addition and application, then providing multiple
 interpretations of them.
 The techniques we use to form such a family of interpreters
 find their seeds in \citearound{'s \emph{language
-triplets}}\citet{Holst-AMIX}, though in an untyped setting.
+triplets}}\citet{Holst-AMIX}, though in an untyped setting.  In the typed
+setting, \citet{Nielson88} uses a typed $\lambda$-calculus as a metalanguage
+for expressing families of program analyses; however the embedding of the
+object language into the metalanguage, unlike our |Symantics| is not typed.
 \Citet{JonesNielson:94:AbstractInterpretation} also
 prefigured this separation when they decomposed a denotational definition of an
 untyped object language into a core semantics (which we call abstract syntax)
