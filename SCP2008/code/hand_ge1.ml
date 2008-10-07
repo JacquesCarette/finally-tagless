@@ -68,7 +68,7 @@ let swap_cols a (n,m) c j =
 
 (* Full pivoting *)
 (* Search the non-yet examined portion of the matrix, rectangular *)
-(* block (r,c)-(n,m), for the element with the max abs value. *)
+(* block (r,c)-(n,m), for the element with the min abs value. *)
 (* Remember the value of that element and its location. *)
 let find_pivot a (n,m) r c =
   let pivot = ref None in		(* ((i,j), pivot_val) option *)
