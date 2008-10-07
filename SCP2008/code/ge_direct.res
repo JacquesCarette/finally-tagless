@@ -84,6 +84,9 @@
               'a vo -> ('a, unit) Direct.abstract
           end
       end
+    type ('a, 'b, 'c) cmonad_constraint = unit
+      constraint 'a = < answer : 'd; classif : 'c; state : 'e; .. >
+      constraint 'b = < answer : ('c, 'd) Direct.abstract; state : 'e list >
     type ('a, 'b) cmonad =
         (< answer : ('d, 'c) Direct.abstract; state : 'e list >,
          ('d, 'b) Direct.abstract)
@@ -309,18 +312,27 @@
         type 'a fra
         type 'a pra
         type 'a lstate
+        type 'a pc_constraint = unit
+          constraint 'a =
+            < classif : 'b; state : [> `TPivot of 'b lstate ]; .. >
         type ('a, 'b) lm = ('a, 'b) cmonad
           constraint 'a =
             < answer : 'c; classif : 'd; state : [> `TPivot of 'd lstate ];
               .. >
+        type ('a, 'b) nm =
+            (< answer : ('b, 'c) Direct.abstract; state : 'd list >, unit)
+            StateCPSMonad.monad
+          constraint 'a =
+            < answer : 'c; classif : 'b;
+              state : [> `TPivot of 'b lstate ] as 'd; .. >
         val rowrep : 'a ira -> 'a ira -> 'a fra
         val colrep : 'a ira -> 'a ira -> 'a fra
         val decl :
           ('a, int) Direct.abstract ->
           (< answer : 'b; classif : 'a; state : [> `TPivot of 'a lstate ];
              .. >,
-           unit)
-          lm
+           'a)
+          nm
         val add :
           'a fra ->
           (< answer : 'b; classif : 'a; state : [> `TPivot of 'a lstate ];
@@ -342,10 +354,19 @@
           type 'a fra = 'a PK.fra
           type 'a pra = 'a PK.pra
           type 'a lstate = ('a, PK.perm_rep ref) Direct.abstract
+          type 'a pc_constraint = unit
+            constraint 'a =
+              < classif : 'b; state : [> `TPivot of 'b lstate ]; .. >
           type ('a, 'b) lm = ('a, 'b) cmonad
             constraint 'a =
               < answer : 'c; classif : 'd; state : [> `TPivot of 'd lstate ];
                 .. >
+          type ('a, 'b) nm =
+              (< answer : ('b, 'c) Direct.abstract; state : 'd list >, unit)
+              StateCPSMonad.monad
+            constraint 'a =
+              < answer : 'c; classif : 'b;
+                state : [> `TPivot of 'b lstate ] as 'd; .. >
           val rowrep : 'a PK.ira -> 'a PK.ira -> 'a PK.fra
           val colrep : 'a PK.ira -> 'a PK.ira -> 'a PK.fra
           val ip :
@@ -360,10 +381,19 @@
           type 'a fra = 'a PK.fra
           type 'a pra = 'a PK.pra
           type 'a lstate = ('a, PK.perm_rep ref) Direct.abstract
+          type 'a pc_constraint = unit
+            constraint 'a =
+              < classif : 'b; state : [> `TPivot of 'b lstate ]; .. >
           type ('a, 'b) lm = ('a, 'b) cmonad
             constraint 'a =
               < answer : 'c; classif : 'd; state : [> `TPivot of 'd lstate ];
                 .. >
+          type ('a, 'b) nm =
+              (< answer : ('b, 'c) Direct.abstract; state : 'd list >, unit)
+              StateCPSMonad.monad
+            constraint 'a =
+              < answer : 'c; classif : 'b;
+                state : [> `TPivot of 'b lstate ] as 'd; .. >
           val rowrep : 'a PK.ira -> 'a PK.ira -> 'a PK.fra
           val colrep : 'a PK.ira -> 'a PK.ira -> 'a PK.fra
           val ip :
@@ -375,7 +405,7 @@
                state : [> `TPivot of ('a, PK.perm_rep ref) Direct.abstract ]
                        list;
                .. >,
-             ('c, unit) Direct.abstract)
+             unit)
             StateCPSMonad.monad
           val add :
             'a PK.fra ->
@@ -400,16 +430,26 @@
         type 'a fra = 'a PermList.fra
         type 'a pra = 'a PermList.pra
         type 'a lstate = ('a, PermList.perm_rep ref) Direct.abstract
+        type 'a pc_constraint = unit
+          constraint 'a =
+            < classif : 'b; state : [> `TPivot of 'b lstate ]; .. >
         type ('a, 'b) lm = ('a, 'b) cmonad
           constraint 'a =
             < answer : 'c; classif : 'd; state : [> `TPivot of 'd lstate ];
               .. >
+        type ('a, 'b) nm =
+            (< answer : ('b, 'c) Direct.abstract; state : 'd list >, unit)
+            StateCPSMonad.monad
+          constraint 'a =
+            < answer : 'c; classif : 'b;
+              state : [> `TPivot of 'b lstate ] as 'd; .. >
         val rowrep : 'a PermList.ira -> 'a PermList.ira -> 'a PermList.fra
         val colrep : 'a PermList.ira -> 'a PermList.ira -> 'a PermList.fra
         val ip :
           ('a -> [> `TPivot of 'a ]) * ([> `TPivot of 'b ] -> 'b option) *
           string
-        val decl : 'a -> 'b -> ('b -> ('c, unit) Direct.abstract -> 'd) -> 'd
+        val decl :
+          'a -> (< answer : 'b; state : 'c; .. >, unit) StateCPSMonad.monad
         val add :
           'a ->
           (< answer : 'b; state : 'c; .. >, 'd option) StateCPSMonad.monad
@@ -438,6 +478,9 @@
             sig
               type tdet = C.Dom.v ref
               type 'a lstate
+              type 'a pc_constraint = unit
+                constraint 'a =
+                  < classif : 'b; state : [> `TDet of 'b lstate ]; .. >
               type ('a, 'b) lm = ('a, 'b) cmonad
                 constraint 'a =
                   < answer : 'c; classif : 'd;
@@ -446,12 +489,18 @@
                 constraint 'a =
                   < answer : 'c; classif : 'd;
                     state : [> `TDet of 'd lstate ]; .. >
+              type 'a nm =
+                  (< answer : ('c, 'b) Direct.abstract; state : 'd list >,
+                   unit)
+                  StateCPSMonad.monad
+                constraint 'a =
+                  < answer : 'b; classif : 'c;
+                    state : [> `TDet of 'c lstate ] as 'd; .. >
               val decl :
                 unit ->
-                (< answer : 'a; classif : 'b;
-                   state : [> `TDet of 'b lstate ]; .. >,
-                 unit)
-                lm
+                < answer : 'a; classif : 'b; state : [> `TDet of 'b lstate ];
+                  .. >
+                nm
               val upd_sign :
                 unit ->
                 (< answer : 'a; classif : 'b;
@@ -538,25 +587,10 @@
           module NoDet :
             sig
               type tdet = C.Dom.v ref
-              type 'a lstate = unit
-              val decl :
-                unit -> 'a -> ('a -> ('b, unit) Direct.abstract -> 'c) -> 'c
-              val upd_sign :
-                unit ->
-                (< answer : 'a; state : 'b; .. >, 'c option)
-                StateCPSMonad.monad
-              val zero_sign :
-                unit -> 'a -> ('a -> ('b, unit) Direct.abstract -> 'c) -> 'c
-              val acc_magn :
-                'a -> 'b -> ('b -> ('c, unit) Direct.abstract -> 'd) -> 'd
-              val get_magn :
-                unit ->
-                (< answer : 'a; state : 'b; .. >,
-                 ('c, C.Dom.v ref) Direct.abstract)
-                StateCPSMonad.monad
-              val set_magn :
-                'a -> 'b -> ('b -> ('c, unit) Direct.abstract -> 'd) -> 'd
-              val fin : unit -> 'a
+              type 'a lstate = 'a Ge.LAMake(Direct).GenLA(C).NoDet.lstate
+              type 'a pc_constraint = unit
+                constraint 'a =
+                  < classif : 'b; state : [> `TDet of 'b lstate ]; .. >
               type ('a, 'b) lm = ('a, 'b) cmonad
                 constraint 'a =
                   < answer : 'c; classif : 'd;
@@ -565,12 +599,63 @@
                 constraint 'a =
                   < answer : 'c; classif : 'd;
                     state : [> `TDet of 'd lstate ]; .. >
+              type 'a nm =
+                  (< answer : ('c, 'b) Direct.abstract; state : 'd list >,
+                   unit)
+                  StateCPSMonad.monad
+                constraint 'a =
+                  < answer : 'b; classif : 'c;
+                    state : [> `TDet of 'c lstate ] as 'd; .. >
+              val decl :
+                unit ->
+                < answer : 'a; classif : 'b; state : [> `TDet of 'b lstate ];
+                  .. >
+                nm
+              val upd_sign :
+                unit ->
+                (< answer : 'a; classif : 'b;
+                   state : [> `TDet of 'b lstate ]; .. >,
+                 unit)
+                om
+              val zero_sign :
+                unit ->
+                (< answer : 'a; classif : 'b;
+                   state : [> `TDet of 'b lstate ]; .. >,
+                 unit)
+                lm
+              val acc_magn :
+                ('a, C.Dom.v) Direct.abstract ->
+                (< answer : 'b; classif : 'a;
+                   state : [> `TDet of 'a lstate ]; .. >,
+                 unit)
+                lm
+              val get_magn :
+                unit ->
+                (< answer : 'a; classif : 'b;
+                   state : [> `TDet of 'b lstate ]; .. >,
+                 tdet)
+                lm
+              val set_magn :
+                ('a, C.Dom.v) Direct.abstract ->
+                (< answer : 'b; classif : 'a;
+                   state : [> `TDet of 'a lstate ]; .. >,
+                 unit)
+                lm
+              val fin :
+                unit ->
+                (< answer : 'a; classif : 'b;
+                   state : [> `TDet of 'b lstate ]; .. >,
+                 C.Dom.v)
+                lm
             end
           module AbstractDet :
             sig
               type tdet = C.Dom.v ref
               type 'a lstate =
-                  ('a, int ref) Direct.abstract * ('a, tdet) Direct.abstract
+                  'a Ge.LAMake(Direct).GenLA(C).AbstractDet.lstate
+              type 'a pc_constraint = unit
+                constraint 'a =
+                  < classif : 'b; state : [> `TDet of 'b lstate ]; .. >
               type ('a, 'b) lm = ('a, 'b) cmonad
                 constraint 'a =
                   < answer : 'c; classif : 'd;
@@ -579,65 +664,54 @@
                 constraint 'a =
                   < answer : 'c; classif : 'd;
                     state : [> `TDet of 'd lstate ]; .. >
-              val ip :
-                ('a -> [> `TDet of 'a ]) * ([> `TDet of 'b ] -> 'b option) *
-                string
+              type 'a nm =
+                  (< answer : ('c, 'b) Direct.abstract; state : 'd list >,
+                   unit)
+                  StateCPSMonad.monad
+                constraint 'a =
+                  < answer : 'b; classif : 'c;
+                    state : [> `TDet of 'c lstate ] as 'd; .. >
               val decl :
                 unit ->
-                (< answer : ('a, 'b) Direct.abstract;
-                   state : [> `TDet of
-                                ('a, int ref) Direct.abstract *
-                                ('a, C.Dom.v ref) Direct.abstract ]
-                           list;
-                   .. >,
-                 ('c, unit) Direct.abstract)
-                StateCPSMonad.monad
+                < answer : 'a; classif : 'b; state : [> `TDet of 'b lstate ];
+                  .. >
+                nm
               val upd_sign :
                 unit ->
-                (< answer : 'a;
-                   state : [> `TDet of ('b, int ref) Direct.abstract * 'c ]
-                           list;
-                   .. >,
-                 ('b, unit) Direct.abstract option)
-                StateCPSMonad.monad
+                (< answer : 'a; classif : 'b;
+                   state : [> `TDet of 'b lstate ]; .. >,
+                 unit)
+                om
               val zero_sign :
                 unit ->
-                (< answer : 'a;
-                   state : [> `TDet of ('b, int ref) Direct.abstract * 'c ]
-                           list;
-                   .. >,
-                 ('b, unit) Direct.abstract)
-                StateCPSMonad.monad
+                (< answer : 'a; classif : 'b;
+                   state : [> `TDet of 'b lstate ]; .. >,
+                 unit)
+                lm
+              val acc_magn :
+                ('a, C.Dom.v) Direct.abstract ->
+                (< answer : 'b; classif : 'a;
+                   state : [> `TDet of 'a lstate ]; .. >,
+                 unit)
+                lm
               val get_magn :
                 unit ->
-                (< answer : 'a; state : [> `TDet of 'b * 'c ] list; .. >, 'c)
-                StateCPSMonad.monad
+                (< answer : 'a; classif : 'b;
+                   state : [> `TDet of 'b lstate ]; .. >,
+                 tdet)
+                lm
               val set_magn :
-                ('a, 'b) Direct.abstract ->
-                (< answer : 'c;
-                   state : [> `TDet of 'd * ('a, 'b ref) Direct.abstract ]
-                           list;
-                   .. >,
-                 ('a, unit) Direct.abstract)
-                StateCPSMonad.monad
-              val acc_magn :
-                'a C.Dom.vc ->
-                (< answer : 'b;
-                   state : [> `TDet of 'c * ('a, C.Dom.v ref) Direct.abstract ]
-                           list;
-                   .. >,
-                 ('a, unit) Direct.abstract)
-                StateCPSMonad.monad
+                ('a, C.Dom.v) Direct.abstract ->
+                (< answer : 'b; classif : 'a;
+                   state : [> `TDet of 'a lstate ]; .. >,
+                 unit)
+                lm
               val fin :
                 unit ->
-                (< answer : 'a;
-                   state : [> `TDet of
-                                ('b, int ref) Direct.abstract *
-                                ('b, C.Dom.v ref) Direct.abstract ]
-                           list;
-                   .. >,
-                 ('b, C.Dom.v) Direct.abstract)
-                StateCPSMonad.monad
+                (< answer : 'a; classif : 'b;
+                   state : [> `TDet of 'b lstate ]; .. >,
+                 C.Dom.v)
+                lm
             end
           module type UPDATE =
             functor (D : DETERMINANT) ->
@@ -941,10 +1015,23 @@
                             type 'a pra = 'a PermList.pra
                             type 'a lstate =
                                 ('a, PermList.perm_rep ref) Direct.abstract
+                            type 'a pc_constraint = unit
+                              constraint 'a =
+                                < classif : 'b;
+                                  state : [> `TPivot of 'b lstate ]; .. >
                             type ('a, 'b) lm = ('a, 'b) cmonad
                               constraint 'a =
                                 < answer : 'c; classif : 'd;
                                   state : [> `TPivot of 'd lstate ]; .. >
+                            type ('a, 'b) nm =
+                                (< answer : ('b, 'c) Direct.abstract;
+                                   state : 'd list >,
+                                 unit)
+                                StateCPSMonad.monad
+                              constraint 'a =
+                                < answer : 'c; classif : 'b;
+                                  state : [> `TPivot of 'b lstate ] as 'd;
+                                  .. >
                             val rowrep :
                               'a PermList.ira ->
                               'a PermList.ira -> 'a PermList.fra
@@ -956,8 +1043,8 @@
                               ([> `TPivot of 'b ] -> 'b option) * string
                             val decl :
                               'a ->
-                              'b ->
-                              ('b -> ('c, unit) Direct.abstract -> 'd) -> 'd
+                              (< answer : 'b; state : 'c; .. >, unit)
+                              StateCPSMonad.monad
                             val add :
                               'a ->
                               (< answer : 'b; state : 'c; .. >, 'd option)
@@ -1064,10 +1151,23 @@
                             type 'a pra = 'a PermList.pra
                             type 'a lstate =
                                 ('a, PermList.perm_rep ref) Direct.abstract
+                            type 'a pc_constraint = unit
+                              constraint 'a =
+                                < classif : 'b;
+                                  state : [> `TPivot of 'b lstate ]; .. >
                             type ('a, 'b) lm = ('a, 'b) cmonad
                               constraint 'a =
                                 < answer : 'c; classif : 'd;
                                   state : [> `TPivot of 'd lstate ]; .. >
+                            type ('a, 'b) nm =
+                                (< answer : ('b, 'c) Direct.abstract;
+                                   state : 'd list >,
+                                 unit)
+                                StateCPSMonad.monad
+                              constraint 'a =
+                                < answer : 'c; classif : 'b;
+                                  state : [> `TPivot of 'b lstate ] as 'd;
+                                  .. >
                             val rowrep :
                               'a PermList.ira ->
                               'a PermList.ira -> 'a PermList.fra
@@ -1079,8 +1179,8 @@
                               ([> `TPivot of 'b ] -> 'b option) * string
                             val decl :
                               'a ->
-                              'b ->
-                              ('b -> ('c, unit) Direct.abstract -> 'd) -> 'd
+                              (< answer : 'b; state : 'c; .. >, unit)
+                              StateCPSMonad.monad
                             val add :
                               'a ->
                               (< answer : 'b; state : 'c; .. >, 'd option)
@@ -1197,10 +1297,23 @@
                             type 'a pra = 'a PermList.pra
                             type 'a lstate =
                                 ('a, PermList.perm_rep ref) Direct.abstract
+                            type 'a pc_constraint = unit
+                              constraint 'a =
+                                < classif : 'b;
+                                  state : [> `TPivot of 'b lstate ]; .. >
                             type ('a, 'b) lm = ('a, 'b) cmonad
                               constraint 'a =
                                 < answer : 'c; classif : 'd;
                                   state : [> `TPivot of 'd lstate ]; .. >
+                            type ('a, 'b) nm =
+                                (< answer : ('b, 'c) Direct.abstract;
+                                   state : 'd list >,
+                                 unit)
+                                StateCPSMonad.monad
+                              constraint 'a =
+                                < answer : 'c; classif : 'b;
+                                  state : [> `TPivot of 'b lstate ] as 'd;
+                                  .. >
                             val rowrep :
                               'a PermList.ira ->
                               'a PermList.ira -> 'a PermList.fra
@@ -1212,8 +1325,8 @@
                               ([> `TPivot of 'b ] -> 'b option) * string
                             val decl :
                               'a ->
-                              'b ->
-                              ('b -> ('c, unit) Direct.abstract -> 'd) -> 'd
+                              (< answer : 'b; state : 'c; .. >, unit)
+                              StateCPSMonad.monad
                             val add :
                               'a ->
                               (< answer : 'b; state : 'c; .. >, 'd option)
@@ -1332,10 +1445,23 @@
                             type 'a pra = 'a PermList.pra
                             type 'a lstate =
                                 ('a, PermList.perm_rep ref) Direct.abstract
+                            type 'a pc_constraint = unit
+                              constraint 'a =
+                                < classif : 'b;
+                                  state : [> `TPivot of 'b lstate ]; .. >
                             type ('a, 'b) lm = ('a, 'b) cmonad
                               constraint 'a =
                                 < answer : 'c; classif : 'd;
                                   state : [> `TPivot of 'd lstate ]; .. >
+                            type ('a, 'b) nm =
+                                (< answer : ('b, 'c) Direct.abstract;
+                                   state : 'd list >,
+                                 unit)
+                                StateCPSMonad.monad
+                              constraint 'a =
+                                < answer : 'c; classif : 'b;
+                                  state : [> `TPivot of 'b lstate ] as 'd;
+                                  .. >
                             val rowrep :
                               'a PermList.ira ->
                               'a PermList.ira -> 'a PermList.fra
@@ -1347,8 +1473,8 @@
                               ([> `TPivot of 'b ] -> 'b option) * string
                             val decl :
                               'a ->
-                              'b ->
-                              ('b -> ('c, unit) Direct.abstract -> 'd) -> 'd
+                              (< answer : 'b; state : 'c; .. >, unit)
+                              StateCPSMonad.monad
                             val add :
                               'a ->
                               (< answer : 'b; state : 'c; .. >, 'd option)
@@ -1469,10 +1595,23 @@
                             type 'a lstate =
                                 ('a, OD.PivotRep.perm_rep ref)
                                 Direct.abstract
+                            type 'a pc_constraint = unit
+                              constraint 'a =
+                                < classif : 'b;
+                                  state : [> `TPivot of 'b lstate ]; .. >
                             type ('a, 'b) lm = ('a, 'b) cmonad
                               constraint 'a =
                                 < answer : 'c; classif : 'd;
                                   state : [> `TPivot of 'd lstate ]; .. >
+                            type ('a, 'b) nm =
+                                (< answer : ('b, 'c) Direct.abstract;
+                                   state : 'd list >,
+                                 unit)
+                                StateCPSMonad.monad
+                              constraint 'a =
+                                < answer : 'c; classif : 'b;
+                                  state : [> `TPivot of 'b lstate ] as 'd;
+                                  .. >
                             val rowrep :
                               'a OD.PivotRep.ira ->
                               'a OD.PivotRep.ira -> 'a OD.PivotRep.fra
@@ -1490,7 +1629,7 @@
                                               Direct.abstract ]
                                          list;
                                  .. >,
-                               ('c, unit) Direct.abstract)
+                               unit)
                               StateCPSMonad.monad
                             val add :
                               'a OD.PivotRep.fra ->
@@ -1619,10 +1758,23 @@
                             type 'a lstate =
                                 ('a, OD.PivotRep.perm_rep ref)
                                 Direct.abstract
+                            type 'a pc_constraint = unit
+                              constraint 'a =
+                                < classif : 'b;
+                                  state : [> `TPivot of 'b lstate ]; .. >
                             type ('a, 'b) lm = ('a, 'b) cmonad
                               constraint 'a =
                                 < answer : 'c; classif : 'd;
                                   state : [> `TPivot of 'd lstate ]; .. >
+                            type ('a, 'b) nm =
+                                (< answer : ('b, 'c) Direct.abstract;
+                                   state : 'd list >,
+                                 unit)
+                                StateCPSMonad.monad
+                              constraint 'a =
+                                < answer : 'c; classif : 'b;
+                                  state : [> `TPivot of 'b lstate ] as 'd;
+                                  .. >
                             val rowrep :
                               'a OD.PivotRep.ira ->
                               'a OD.PivotRep.ira -> 'a OD.PivotRep.fra
@@ -1640,7 +1792,7 @@
                                               Direct.abstract ]
                                          list;
                                  .. >,
-                               ('c, unit) Direct.abstract)
+                               unit)
                               StateCPSMonad.monad
                             val add :
                               'a OD.PivotRep.fra ->
@@ -1779,10 +1931,23 @@
                             type 'a lstate =
                                 ('a, OD.PivotRep.perm_rep ref)
                                 Direct.abstract
+                            type 'a pc_constraint = unit
+                              constraint 'a =
+                                < classif : 'b;
+                                  state : [> `TPivot of 'b lstate ]; .. >
                             type ('a, 'b) lm = ('a, 'b) cmonad
                               constraint 'a =
                                 < answer : 'c; classif : 'd;
                                   state : [> `TPivot of 'd lstate ]; .. >
+                            type ('a, 'b) nm =
+                                (< answer : ('b, 'c) Direct.abstract;
+                                   state : 'd list >,
+                                 unit)
+                                StateCPSMonad.monad
+                              constraint 'a =
+                                < answer : 'c; classif : 'b;
+                                  state : [> `TPivot of 'b lstate ] as 'd;
+                                  .. >
                             val rowrep :
                               'a OD.PivotRep.ira ->
                               'a OD.PivotRep.ira -> 'a OD.PivotRep.fra
@@ -1800,7 +1965,7 @@
                                               Direct.abstract ]
                                          list;
                                  .. >,
-                               ('c, unit) Direct.abstract)
+                               unit)
                               StateCPSMonad.monad
                             val add :
                               'a OD.PivotRep.fra ->
@@ -1930,18 +2095,31 @@
                                 type 'a fra = 'a F.Output(F).IF.P.fra
                                 type 'a pra = 'a F.Output(F).IF.P.pra
                                 type 'a lstate = 'a F.Output(F).IF.P.lstate
+                                type 'a pc_constraint = unit
+                                  constraint 'a =
+                                    < classif : 'b;
+                                      state : [> `TPivot of 'b lstate ]; .. >
                                 type ('a, 'b) lm = ('a, 'b) cmonad
                                   constraint 'a =
                                     < answer : 'c; classif : 'd;
                                       state : [> `TPivot of 'd lstate ]; .. >
+                                type ('a, 'b) nm =
+                                    (< answer : ('b, 'c) Direct.abstract;
+                                       state : 'd list >,
+                                     unit)
+                                    StateCPSMonad.monad
+                                  constraint 'a =
+                                    < answer : 'c; classif : 'b;
+                                      state : [> `TPivot of 'b lstate ] as 'd;
+                                      .. >
                                 val rowrep : 'a ira -> 'a ira -> 'a fra
                                 val colrep : 'a ira -> 'a ira -> 'a fra
                                 val decl :
                                   ('a, int) Direct.abstract ->
                                   (< answer : 'b; classif : 'a;
                                      state : [> `TPivot of 'a lstate ]; .. >,
-                                   unit)
-                                  lm
+                                   'a)
+                                  nm
                                 val add :
                                   'a fra ->
                                   (< answer : 'b; classif : 'a;
@@ -2144,10 +2322,25 @@
                                     type 'a lstate =
                                         ('a, PermList.perm_rep ref)
                                         Direct.abstract
+                                    type 'a pc_constraint = unit
+                                      constraint 'a =
+                                        < classif : 'b;
+                                          state : [> `TPivot of 'b lstate ];
+                                          .. >
                                     type ('a, 'b) lm = ('a, 'b) cmonad
                                       constraint 'a =
                                         < answer : 'c; classif : 'd;
                                           state : [> `TPivot of 'd lstate ];
+                                          .. >
+                                    type ('a, 'b) nm =
+                                        (< answer : ('b, 'c) Direct.abstract;
+                                           state : 'd list >,
+                                         unit)
+                                        StateCPSMonad.monad
+                                      constraint 'a =
+                                        < answer : 'c; classif : 'b;
+                                          state : [> `TPivot of 'b lstate ]
+                                                  as 'd;
                                           .. >
                                     val rowrep : 'a ira -> 'a ira -> 'a fra
                                     val colrep : 'a ira -> 'a ira -> 'a fra
@@ -2156,8 +2349,8 @@
                                       (< answer : 'b; classif : 'a;
                                          state : [> `TPivot of 'a lstate ];
                                          .. >,
-                                       unit)
-                                      lm
+                                       'a)
+                                      nm
                                     val add :
                                       'a fra ->
                                       (< answer : 'b; classif : 'a;
@@ -2907,6 +3100,9 @@ module G_GAC_F :
       sig
         type tdet = GAC_F.Dom.v ref
         type 'a lstate
+        type 'a pc_constraint = unit
+          constraint 'a =
+            < classif : 'b; state : [> `TDet of 'b lstate ]; .. >
         type ('a, 'b) lm = ('a, 'b) GEF.cmonad
           constraint 'a =
             < answer : 'c; classif : 'd; state : [> `TDet of 'd lstate ];
@@ -2915,11 +3111,16 @@ module G_GAC_F :
           constraint 'a =
             < answer : 'c; classif : 'd; state : [> `TDet of 'd lstate ];
               .. >
+        type 'a nm =
+            (< answer : ('c, 'b) Direct.abstract; state : 'd list >, unit)
+            StateCPSMonad.monad
+          constraint 'a =
+            < answer : 'b; classif : 'c;
+              state : [> `TDet of 'c lstate ] as 'd; .. >
         val decl :
           unit ->
-          (< answer : 'a; classif : 'b; state : [> `TDet of 'b lstate ]; .. >,
-           unit)
-          lm
+          < answer : 'a; classif : 'b; state : [> `TDet of 'b lstate ]; .. >
+          nm
         val upd_sign :
           unit ->
           (< answer : 'a; classif : 'b; state : [> `TDet of 'b lstate ]; .. >,
@@ -2999,24 +3200,10 @@ module G_GAC_F :
     module NoDet :
       sig
         type tdet = GAC_F.Dom.v ref
-        type 'a lstate = unit
-        val decl :
-          unit -> 'a -> ('a -> ('b, unit) Direct.abstract -> 'c) -> 'c
-        val upd_sign :
-          unit ->
-          (< answer : 'a; state : 'b; .. >, 'c option) StateCPSMonad.monad
-        val zero_sign :
-          unit -> 'a -> ('a -> ('b, unit) Direct.abstract -> 'c) -> 'c
-        val acc_magn :
-          'a -> 'b -> ('b -> ('c, unit) Direct.abstract -> 'd) -> 'd
-        val get_magn :
-          unit ->
-          (< answer : 'a; state : 'b; .. >,
-           ('c, GAC_F.Dom.v ref) Direct.abstract)
-          StateCPSMonad.monad
-        val set_magn :
-          'a -> 'b -> ('b -> ('c, unit) Direct.abstract -> 'd) -> 'd
-        val fin : unit -> 'a
+        type 'a lstate = 'a Ge.LAMake(Direct).GenLA(GAC_F).NoDet.lstate
+        type 'a pc_constraint = unit
+          constraint 'a =
+            < classif : 'b; state : [> `TDet of 'b lstate ]; .. >
         type ('a, 'b) lm = ('a, 'b) GEF.cmonad
           constraint 'a =
             < answer : 'c; classif : 'd; state : [> `TDet of 'd lstate ];
@@ -3025,12 +3212,54 @@ module G_GAC_F :
           constraint 'a =
             < answer : 'c; classif : 'd; state : [> `TDet of 'd lstate ];
               .. >
+        type 'a nm =
+            (< answer : ('c, 'b) Direct.abstract; state : 'd list >, unit)
+            StateCPSMonad.monad
+          constraint 'a =
+            < answer : 'b; classif : 'c;
+              state : [> `TDet of 'c lstate ] as 'd; .. >
+        val decl :
+          unit ->
+          < answer : 'a; classif : 'b; state : [> `TDet of 'b lstate ]; .. >
+          nm
+        val upd_sign :
+          unit ->
+          (< answer : 'a; classif : 'b; state : [> `TDet of 'b lstate ]; .. >,
+           unit)
+          om
+        val zero_sign :
+          unit ->
+          (< answer : 'a; classif : 'b; state : [> `TDet of 'b lstate ]; .. >,
+           unit)
+          lm
+        val acc_magn :
+          ('a, GAC_F.Dom.v) Direct.abstract ->
+          (< answer : 'b; classif : 'a; state : [> `TDet of 'a lstate ]; .. >,
+           unit)
+          lm
+        val get_magn :
+          unit ->
+          (< answer : 'a; classif : 'b; state : [> `TDet of 'b lstate ]; .. >,
+           tdet)
+          lm
+        val set_magn :
+          ('a, GAC_F.Dom.v) Direct.abstract ->
+          (< answer : 'b; classif : 'a; state : [> `TDet of 'a lstate ]; .. >,
+           unit)
+          lm
+        val fin :
+          unit ->
+          (< answer : 'a; classif : 'b; state : [> `TDet of 'b lstate ]; .. >,
+           GAC_F.Dom.v)
+          lm
       end
     module AbstractDet :
       sig
         type tdet = GAC_F.Dom.v ref
-        type 'a lstate =
-            ('a, int ref) Direct.abstract * ('a, tdet) Direct.abstract
+        type 'a lstate = 'a Ge.LAMake(Direct).GenLA(GAC_F).AbstractDet.lstate
+        type 'a pc_constraint = unit
+          constraint 'a =
+            < classif : 'b; state : [> `TDet of 'b lstate ]; .. >
         type ('a, 'b) lm = ('a, 'b) GEF.cmonad
           constraint 'a =
             < answer : 'c; classif : 'd; state : [> `TDet of 'd lstate ];
@@ -3039,61 +3268,46 @@ module G_GAC_F :
           constraint 'a =
             < answer : 'c; classif : 'd; state : [> `TDet of 'd lstate ];
               .. >
-        val ip :
-          ('a -> [> `TDet of 'a ]) * ([> `TDet of 'b ] -> 'b option) * string
+        type 'a nm =
+            (< answer : ('c, 'b) Direct.abstract; state : 'd list >, unit)
+            StateCPSMonad.monad
+          constraint 'a =
+            < answer : 'b; classif : 'c;
+              state : [> `TDet of 'c lstate ] as 'd; .. >
         val decl :
           unit ->
-          (< answer : ('a, 'b) Direct.abstract;
-             state : [> `TDet of
-                          ('a, int ref) Direct.abstract *
-                          ('a, GAC_F.Dom.v ref) Direct.abstract ]
-                     list;
-             .. >,
-           ('c, unit) Direct.abstract)
-          StateCPSMonad.monad
+          < answer : 'a; classif : 'b; state : [> `TDet of 'b lstate ]; .. >
+          nm
         val upd_sign :
           unit ->
-          (< answer : 'a;
-             state : [> `TDet of ('b, int ref) Direct.abstract * 'c ] list;
-             .. >,
-           ('b, unit) Direct.abstract option)
-          StateCPSMonad.monad
+          (< answer : 'a; classif : 'b; state : [> `TDet of 'b lstate ]; .. >,
+           unit)
+          om
         val zero_sign :
           unit ->
-          (< answer : 'a;
-             state : [> `TDet of ('b, int ref) Direct.abstract * 'c ] list;
-             .. >,
-           ('b, unit) Direct.abstract)
-          StateCPSMonad.monad
+          (< answer : 'a; classif : 'b; state : [> `TDet of 'b lstate ]; .. >,
+           unit)
+          lm
+        val acc_magn :
+          ('a, GAC_F.Dom.v) Direct.abstract ->
+          (< answer : 'b; classif : 'a; state : [> `TDet of 'a lstate ]; .. >,
+           unit)
+          lm
         val get_magn :
           unit ->
-          (< answer : 'a; state : [> `TDet of 'b * 'c ] list; .. >, 'c)
-          StateCPSMonad.monad
+          (< answer : 'a; classif : 'b; state : [> `TDet of 'b lstate ]; .. >,
+           tdet)
+          lm
         val set_magn :
-          ('a, 'b) Direct.abstract ->
-          (< answer : 'c;
-             state : [> `TDet of 'd * ('a, 'b ref) Direct.abstract ] list;
-             .. >,
-           ('a, unit) Direct.abstract)
-          StateCPSMonad.monad
-        val acc_magn :
-          'a GAC_F.Dom.vc ->
-          (< answer : 'b;
-             state : [> `TDet of 'c * ('a, GAC_F.Dom.v ref) Direct.abstract ]
-                     list;
-             .. >,
-           ('a, unit) Direct.abstract)
-          StateCPSMonad.monad
+          ('a, GAC_F.Dom.v) Direct.abstract ->
+          (< answer : 'b; classif : 'a; state : [> `TDet of 'a lstate ]; .. >,
+           unit)
+          lm
         val fin :
           unit ->
-          (< answer : 'a;
-             state : [> `TDet of
-                          ('b, int ref) Direct.abstract *
-                          ('b, GAC_F.Dom.v ref) Direct.abstract ]
-                     list;
-             .. >,
-           ('b, GAC_F.Dom.v) Direct.abstract)
-          StateCPSMonad.monad
+          (< answer : 'a; classif : 'b; state : [> `TDet of 'b lstate ]; .. >,
+           GAC_F.Dom.v)
+          lm
       end
     module type UPDATE =
       functor (D : DETERMINANT) ->
@@ -3384,10 +3598,22 @@ module G_GAC_F :
                       type 'a pra = 'a GEF.PermList.pra
                       type 'a lstate =
                           ('a, GEF.PermList.perm_rep ref) Direct.abstract
+                      type 'a pc_constraint = unit
+                        constraint 'a =
+                          < classif : 'b; state : [> `TPivot of 'b lstate ];
+                            .. >
                       type ('a, 'b) lm = ('a, 'b) GEF.cmonad
                         constraint 'a =
                           < answer : 'c; classif : 'd;
                             state : [> `TPivot of 'd lstate ]; .. >
+                      type ('a, 'b) nm =
+                          (< answer : ('b, 'c) Direct.abstract;
+                             state : 'd list >,
+                           unit)
+                          StateCPSMonad.monad
+                        constraint 'a =
+                          < answer : 'c; classif : 'b;
+                            state : [> `TPivot of 'b lstate ] as 'd; .. >
                       val rowrep :
                         'a GEF.PermList.ira ->
                         'a GEF.PermList.ira -> 'a GEF.PermList.fra
@@ -3399,7 +3625,8 @@ module G_GAC_F :
                         ([> `TPivot of 'b ] -> 'b option) * string
                       val decl :
                         'a ->
-                        'b -> ('b -> ('c, unit) Direct.abstract -> 'd) -> 'd
+                        (< answer : 'b; state : 'c; .. >, unit)
+                        StateCPSMonad.monad
                       val add :
                         'a ->
                         (< answer : 'b; state : 'c; .. >, 'd option)
@@ -3504,10 +3731,22 @@ module G_GAC_F :
                       type 'a pra = 'a GEF.PermList.pra
                       type 'a lstate =
                           ('a, GEF.PermList.perm_rep ref) Direct.abstract
+                      type 'a pc_constraint = unit
+                        constraint 'a =
+                          < classif : 'b; state : [> `TPivot of 'b lstate ];
+                            .. >
                       type ('a, 'b) lm = ('a, 'b) GEF.cmonad
                         constraint 'a =
                           < answer : 'c; classif : 'd;
                             state : [> `TPivot of 'd lstate ]; .. >
+                      type ('a, 'b) nm =
+                          (< answer : ('b, 'c) Direct.abstract;
+                             state : 'd list >,
+                           unit)
+                          StateCPSMonad.monad
+                        constraint 'a =
+                          < answer : 'c; classif : 'b;
+                            state : [> `TPivot of 'b lstate ] as 'd; .. >
                       val rowrep :
                         'a GEF.PermList.ira ->
                         'a GEF.PermList.ira -> 'a GEF.PermList.fra
@@ -3519,7 +3758,8 @@ module G_GAC_F :
                         ([> `TPivot of 'b ] -> 'b option) * string
                       val decl :
                         'a ->
-                        'b -> ('b -> ('c, unit) Direct.abstract -> 'd) -> 'd
+                        (< answer : 'b; state : 'c; .. >, unit)
+                        StateCPSMonad.monad
                       val add :
                         'a ->
                         (< answer : 'b; state : 'c; .. >, 'd option)
@@ -3633,10 +3873,22 @@ module G_GAC_F :
                       type 'a pra = 'a GEF.PermList.pra
                       type 'a lstate =
                           ('a, GEF.PermList.perm_rep ref) Direct.abstract
+                      type 'a pc_constraint = unit
+                        constraint 'a =
+                          < classif : 'b; state : [> `TPivot of 'b lstate ];
+                            .. >
                       type ('a, 'b) lm = ('a, 'b) GEF.cmonad
                         constraint 'a =
                           < answer : 'c; classif : 'd;
                             state : [> `TPivot of 'd lstate ]; .. >
+                      type ('a, 'b) nm =
+                          (< answer : ('b, 'c) Direct.abstract;
+                             state : 'd list >,
+                           unit)
+                          StateCPSMonad.monad
+                        constraint 'a =
+                          < answer : 'c; classif : 'b;
+                            state : [> `TPivot of 'b lstate ] as 'd; .. >
                       val rowrep :
                         'a GEF.PermList.ira ->
                         'a GEF.PermList.ira -> 'a GEF.PermList.fra
@@ -3648,7 +3900,8 @@ module G_GAC_F :
                         ([> `TPivot of 'b ] -> 'b option) * string
                       val decl :
                         'a ->
-                        'b -> ('b -> ('c, unit) Direct.abstract -> 'd) -> 'd
+                        (< answer : 'b; state : 'c; .. >, unit)
+                        StateCPSMonad.monad
                       val add :
                         'a ->
                         (< answer : 'b; state : 'c; .. >, 'd option)
@@ -3763,10 +4016,22 @@ module G_GAC_F :
                       type 'a pra = 'a GEF.PermList.pra
                       type 'a lstate =
                           ('a, GEF.PermList.perm_rep ref) Direct.abstract
+                      type 'a pc_constraint = unit
+                        constraint 'a =
+                          < classif : 'b; state : [> `TPivot of 'b lstate ];
+                            .. >
                       type ('a, 'b) lm = ('a, 'b) GEF.cmonad
                         constraint 'a =
                           < answer : 'c; classif : 'd;
                             state : [> `TPivot of 'd lstate ]; .. >
+                      type ('a, 'b) nm =
+                          (< answer : ('b, 'c) Direct.abstract;
+                             state : 'd list >,
+                           unit)
+                          StateCPSMonad.monad
+                        constraint 'a =
+                          < answer : 'c; classif : 'b;
+                            state : [> `TPivot of 'b lstate ] as 'd; .. >
                       val rowrep :
                         'a GEF.PermList.ira ->
                         'a GEF.PermList.ira -> 'a GEF.PermList.fra
@@ -3778,7 +4043,8 @@ module G_GAC_F :
                         ([> `TPivot of 'b ] -> 'b option) * string
                       val decl :
                         'a ->
-                        'b -> ('b -> ('c, unit) Direct.abstract -> 'd) -> 'd
+                        (< answer : 'b; state : 'c; .. >, unit)
+                        StateCPSMonad.monad
                       val add :
                         'a ->
                         (< answer : 'b; state : 'c; .. >, 'd option)
@@ -3895,10 +4161,22 @@ module G_GAC_F :
                       type 'a pra = 'a OD.PivotRep.pra
                       type 'a lstate =
                           ('a, OD.PivotRep.perm_rep ref) Direct.abstract
+                      type 'a pc_constraint = unit
+                        constraint 'a =
+                          < classif : 'b; state : [> `TPivot of 'b lstate ];
+                            .. >
                       type ('a, 'b) lm = ('a, 'b) GEF.cmonad
                         constraint 'a =
                           < answer : 'c; classif : 'd;
                             state : [> `TPivot of 'd lstate ]; .. >
+                      type ('a, 'b) nm =
+                          (< answer : ('b, 'c) Direct.abstract;
+                             state : 'd list >,
+                           unit)
+                          StateCPSMonad.monad
+                        constraint 'a =
+                          < answer : 'c; classif : 'b;
+                            state : [> `TPivot of 'b lstate ] as 'd; .. >
                       val rowrep :
                         'a OD.PivotRep.ira ->
                         'a OD.PivotRep.ira -> 'a OD.PivotRep.fra
@@ -3916,7 +4194,7 @@ module G_GAC_F :
                                         Direct.abstract ]
                                    list;
                            .. >,
-                         ('c, unit) Direct.abstract)
+                         unit)
                         StateCPSMonad.monad
                       val add :
                         'a OD.PivotRep.fra ->
@@ -4041,10 +4319,22 @@ module G_GAC_F :
                       type 'a pra = 'a OD.PivotRep.pra
                       type 'a lstate =
                           ('a, OD.PivotRep.perm_rep ref) Direct.abstract
+                      type 'a pc_constraint = unit
+                        constraint 'a =
+                          < classif : 'b; state : [> `TPivot of 'b lstate ];
+                            .. >
                       type ('a, 'b) lm = ('a, 'b) GEF.cmonad
                         constraint 'a =
                           < answer : 'c; classif : 'd;
                             state : [> `TPivot of 'd lstate ]; .. >
+                      type ('a, 'b) nm =
+                          (< answer : ('b, 'c) Direct.abstract;
+                             state : 'd list >,
+                           unit)
+                          StateCPSMonad.monad
+                        constraint 'a =
+                          < answer : 'c; classif : 'b;
+                            state : [> `TPivot of 'b lstate ] as 'd; .. >
                       val rowrep :
                         'a OD.PivotRep.ira ->
                         'a OD.PivotRep.ira -> 'a OD.PivotRep.fra
@@ -4062,7 +4352,7 @@ module G_GAC_F :
                                         Direct.abstract ]
                                    list;
                            .. >,
-                         ('c, unit) Direct.abstract)
+                         unit)
                         StateCPSMonad.monad
                       val add :
                         'a OD.PivotRep.fra ->
@@ -4195,10 +4485,22 @@ module G_GAC_F :
                       type 'a pra = 'a OD.PivotRep.pra
                       type 'a lstate =
                           ('a, OD.PivotRep.perm_rep ref) Direct.abstract
+                      type 'a pc_constraint = unit
+                        constraint 'a =
+                          < classif : 'b; state : [> `TPivot of 'b lstate ];
+                            .. >
                       type ('a, 'b) lm = ('a, 'b) GEF.cmonad
                         constraint 'a =
                           < answer : 'c; classif : 'd;
                             state : [> `TPivot of 'd lstate ]; .. >
+                      type ('a, 'b) nm =
+                          (< answer : ('b, 'c) Direct.abstract;
+                             state : 'd list >,
+                           unit)
+                          StateCPSMonad.monad
+                        constraint 'a =
+                          < answer : 'c; classif : 'b;
+                            state : [> `TPivot of 'b lstate ] as 'd; .. >
                       val rowrep :
                         'a OD.PivotRep.ira ->
                         'a OD.PivotRep.ira -> 'a OD.PivotRep.fra
@@ -4216,7 +4518,7 @@ module G_GAC_F :
                                         Direct.abstract ]
                                    list;
                            .. >,
-                         ('c, unit) Direct.abstract)
+                         unit)
                         StateCPSMonad.monad
                       val add :
                         'a OD.PivotRep.fra ->
@@ -4339,18 +4641,30 @@ module G_GAC_F :
                           type 'a fra = 'a F.Output(F).IF.P.fra
                           type 'a pra = 'a F.Output(F).IF.P.pra
                           type 'a lstate = 'a F.Output(F).IF.P.lstate
+                          type 'a pc_constraint = unit
+                            constraint 'a =
+                              < classif : 'b;
+                                state : [> `TPivot of 'b lstate ]; .. >
                           type ('a, 'b) lm = ('a, 'b) GEF.cmonad
                             constraint 'a =
                               < answer : 'c; classif : 'd;
                                 state : [> `TPivot of 'd lstate ]; .. >
+                          type ('a, 'b) nm =
+                              (< answer : ('b, 'c) Direct.abstract;
+                                 state : 'd list >,
+                               unit)
+                              StateCPSMonad.monad
+                            constraint 'a =
+                              < answer : 'c; classif : 'b;
+                                state : [> `TPivot of 'b lstate ] as 'd; .. >
                           val rowrep : 'a ira -> 'a ira -> 'a fra
                           val colrep : 'a ira -> 'a ira -> 'a fra
                           val decl :
                             ('a, int) Direct.abstract ->
                             (< answer : 'b; classif : 'a;
                                state : [> `TPivot of 'a lstate ]; .. >,
-                             unit)
-                            lm
+                             'a)
+                            nm
                           val add :
                             'a fra ->
                             (< answer : 'b; classif : 'a;
@@ -4546,18 +4860,31 @@ module G_GAC_F :
                               type 'a lstate =
                                   ('a, GEF.PermList.perm_rep ref)
                                   Direct.abstract
+                              type 'a pc_constraint = unit
+                                constraint 'a =
+                                  < classif : 'b;
+                                    state : [> `TPivot of 'b lstate ]; .. >
                               type ('a, 'b) lm = ('a, 'b) GEF.cmonad
                                 constraint 'a =
                                   < answer : 'c; classif : 'd;
                                     state : [> `TPivot of 'd lstate ]; .. >
+                              type ('a, 'b) nm =
+                                  (< answer : ('b, 'c) Direct.abstract;
+                                     state : 'd list >,
+                                   unit)
+                                  StateCPSMonad.monad
+                                constraint 'a =
+                                  < answer : 'c; classif : 'b;
+                                    state : [> `TPivot of 'b lstate ] as 'd;
+                                    .. >
                               val rowrep : 'a ira -> 'a ira -> 'a fra
                               val colrep : 'a ira -> 'a ira -> 'a fra
                               val decl :
                                 ('a, int) Direct.abstract ->
                                 (< answer : 'b; classif : 'a;
                                    state : [> `TPivot of 'a lstate ]; .. >,
-                                 unit)
-                                lm
+                                 'a)
+                                nm
                               val add :
                                 'a fra ->
                                 (< answer : 'b; classif : 'a;
@@ -4712,6 +5039,9 @@ module G_GVC_F :
       sig
         type tdet = GVC_F.Dom.v ref
         type 'a lstate
+        type 'a pc_constraint = unit
+          constraint 'a =
+            < classif : 'b; state : [> `TDet of 'b lstate ]; .. >
         type ('a, 'b) lm = ('a, 'b) GEF.cmonad
           constraint 'a =
             < answer : 'c; classif : 'd; state : [> `TDet of 'd lstate ];
@@ -4720,11 +5050,16 @@ module G_GVC_F :
           constraint 'a =
             < answer : 'c; classif : 'd; state : [> `TDet of 'd lstate ];
               .. >
+        type 'a nm =
+            (< answer : ('c, 'b) Direct.abstract; state : 'd list >, unit)
+            StateCPSMonad.monad
+          constraint 'a =
+            < answer : 'b; classif : 'c;
+              state : [> `TDet of 'c lstate ] as 'd; .. >
         val decl :
           unit ->
-          (< answer : 'a; classif : 'b; state : [> `TDet of 'b lstate ]; .. >,
-           unit)
-          lm
+          < answer : 'a; classif : 'b; state : [> `TDet of 'b lstate ]; .. >
+          nm
         val upd_sign :
           unit ->
           (< answer : 'a; classif : 'b; state : [> `TDet of 'b lstate ]; .. >,
@@ -4804,24 +5139,10 @@ module G_GVC_F :
     module NoDet :
       sig
         type tdet = GVC_F.Dom.v ref
-        type 'a lstate = unit
-        val decl :
-          unit -> 'a -> ('a -> ('b, unit) Direct.abstract -> 'c) -> 'c
-        val upd_sign :
-          unit ->
-          (< answer : 'a; state : 'b; .. >, 'c option) StateCPSMonad.monad
-        val zero_sign :
-          unit -> 'a -> ('a -> ('b, unit) Direct.abstract -> 'c) -> 'c
-        val acc_magn :
-          'a -> 'b -> ('b -> ('c, unit) Direct.abstract -> 'd) -> 'd
-        val get_magn :
-          unit ->
-          (< answer : 'a; state : 'b; .. >,
-           ('c, GVC_F.Dom.v ref) Direct.abstract)
-          StateCPSMonad.monad
-        val set_magn :
-          'a -> 'b -> ('b -> ('c, unit) Direct.abstract -> 'd) -> 'd
-        val fin : unit -> 'a
+        type 'a lstate = 'a Ge.LAMake(Direct).GenLA(GVC_F).NoDet.lstate
+        type 'a pc_constraint = unit
+          constraint 'a =
+            < classif : 'b; state : [> `TDet of 'b lstate ]; .. >
         type ('a, 'b) lm = ('a, 'b) GEF.cmonad
           constraint 'a =
             < answer : 'c; classif : 'd; state : [> `TDet of 'd lstate ];
@@ -4830,12 +5151,54 @@ module G_GVC_F :
           constraint 'a =
             < answer : 'c; classif : 'd; state : [> `TDet of 'd lstate ];
               .. >
+        type 'a nm =
+            (< answer : ('c, 'b) Direct.abstract; state : 'd list >, unit)
+            StateCPSMonad.monad
+          constraint 'a =
+            < answer : 'b; classif : 'c;
+              state : [> `TDet of 'c lstate ] as 'd; .. >
+        val decl :
+          unit ->
+          < answer : 'a; classif : 'b; state : [> `TDet of 'b lstate ]; .. >
+          nm
+        val upd_sign :
+          unit ->
+          (< answer : 'a; classif : 'b; state : [> `TDet of 'b lstate ]; .. >,
+           unit)
+          om
+        val zero_sign :
+          unit ->
+          (< answer : 'a; classif : 'b; state : [> `TDet of 'b lstate ]; .. >,
+           unit)
+          lm
+        val acc_magn :
+          ('a, GVC_F.Dom.v) Direct.abstract ->
+          (< answer : 'b; classif : 'a; state : [> `TDet of 'a lstate ]; .. >,
+           unit)
+          lm
+        val get_magn :
+          unit ->
+          (< answer : 'a; classif : 'b; state : [> `TDet of 'b lstate ]; .. >,
+           tdet)
+          lm
+        val set_magn :
+          ('a, GVC_F.Dom.v) Direct.abstract ->
+          (< answer : 'b; classif : 'a; state : [> `TDet of 'a lstate ]; .. >,
+           unit)
+          lm
+        val fin :
+          unit ->
+          (< answer : 'a; classif : 'b; state : [> `TDet of 'b lstate ]; .. >,
+           GVC_F.Dom.v)
+          lm
       end
     module AbstractDet :
       sig
         type tdet = GVC_F.Dom.v ref
-        type 'a lstate =
-            ('a, int ref) Direct.abstract * ('a, tdet) Direct.abstract
+        type 'a lstate = 'a Ge.LAMake(Direct).GenLA(GVC_F).AbstractDet.lstate
+        type 'a pc_constraint = unit
+          constraint 'a =
+            < classif : 'b; state : [> `TDet of 'b lstate ]; .. >
         type ('a, 'b) lm = ('a, 'b) GEF.cmonad
           constraint 'a =
             < answer : 'c; classif : 'd; state : [> `TDet of 'd lstate ];
@@ -4844,61 +5207,46 @@ module G_GVC_F :
           constraint 'a =
             < answer : 'c; classif : 'd; state : [> `TDet of 'd lstate ];
               .. >
-        val ip :
-          ('a -> [> `TDet of 'a ]) * ([> `TDet of 'b ] -> 'b option) * string
+        type 'a nm =
+            (< answer : ('c, 'b) Direct.abstract; state : 'd list >, unit)
+            StateCPSMonad.monad
+          constraint 'a =
+            < answer : 'b; classif : 'c;
+              state : [> `TDet of 'c lstate ] as 'd; .. >
         val decl :
           unit ->
-          (< answer : ('a, 'b) Direct.abstract;
-             state : [> `TDet of
-                          ('a, int ref) Direct.abstract *
-                          ('a, GVC_F.Dom.v ref) Direct.abstract ]
-                     list;
-             .. >,
-           ('c, unit) Direct.abstract)
-          StateCPSMonad.monad
+          < answer : 'a; classif : 'b; state : [> `TDet of 'b lstate ]; .. >
+          nm
         val upd_sign :
           unit ->
-          (< answer : 'a;
-             state : [> `TDet of ('b, int ref) Direct.abstract * 'c ] list;
-             .. >,
-           ('b, unit) Direct.abstract option)
-          StateCPSMonad.monad
+          (< answer : 'a; classif : 'b; state : [> `TDet of 'b lstate ]; .. >,
+           unit)
+          om
         val zero_sign :
           unit ->
-          (< answer : 'a;
-             state : [> `TDet of ('b, int ref) Direct.abstract * 'c ] list;
-             .. >,
-           ('b, unit) Direct.abstract)
-          StateCPSMonad.monad
+          (< answer : 'a; classif : 'b; state : [> `TDet of 'b lstate ]; .. >,
+           unit)
+          lm
+        val acc_magn :
+          ('a, GVC_F.Dom.v) Direct.abstract ->
+          (< answer : 'b; classif : 'a; state : [> `TDet of 'a lstate ]; .. >,
+           unit)
+          lm
         val get_magn :
           unit ->
-          (< answer : 'a; state : [> `TDet of 'b * 'c ] list; .. >, 'c)
-          StateCPSMonad.monad
+          (< answer : 'a; classif : 'b; state : [> `TDet of 'b lstate ]; .. >,
+           tdet)
+          lm
         val set_magn :
-          ('a, 'b) Direct.abstract ->
-          (< answer : 'c;
-             state : [> `TDet of 'd * ('a, 'b ref) Direct.abstract ] list;
-             .. >,
-           ('a, unit) Direct.abstract)
-          StateCPSMonad.monad
-        val acc_magn :
-          'a GVC_F.Dom.vc ->
-          (< answer : 'b;
-             state : [> `TDet of 'c * ('a, GVC_F.Dom.v ref) Direct.abstract ]
-                     list;
-             .. >,
-           ('a, unit) Direct.abstract)
-          StateCPSMonad.monad
+          ('a, GVC_F.Dom.v) Direct.abstract ->
+          (< answer : 'b; classif : 'a; state : [> `TDet of 'a lstate ]; .. >,
+           unit)
+          lm
         val fin :
           unit ->
-          (< answer : 'a;
-             state : [> `TDet of
-                          ('b, int ref) Direct.abstract *
-                          ('b, GVC_F.Dom.v ref) Direct.abstract ]
-                     list;
-             .. >,
-           ('b, GVC_F.Dom.v) Direct.abstract)
-          StateCPSMonad.monad
+          (< answer : 'a; classif : 'b; state : [> `TDet of 'b lstate ]; .. >,
+           GVC_F.Dom.v)
+          lm
       end
     module type UPDATE =
       functor (D : DETERMINANT) ->
@@ -5189,10 +5537,22 @@ module G_GVC_F :
                       type 'a pra = 'a GEF.PermList.pra
                       type 'a lstate =
                           ('a, GEF.PermList.perm_rep ref) Direct.abstract
+                      type 'a pc_constraint = unit
+                        constraint 'a =
+                          < classif : 'b; state : [> `TPivot of 'b lstate ];
+                            .. >
                       type ('a, 'b) lm = ('a, 'b) GEF.cmonad
                         constraint 'a =
                           < answer : 'c; classif : 'd;
                             state : [> `TPivot of 'd lstate ]; .. >
+                      type ('a, 'b) nm =
+                          (< answer : ('b, 'c) Direct.abstract;
+                             state : 'd list >,
+                           unit)
+                          StateCPSMonad.monad
+                        constraint 'a =
+                          < answer : 'c; classif : 'b;
+                            state : [> `TPivot of 'b lstate ] as 'd; .. >
                       val rowrep :
                         'a GEF.PermList.ira ->
                         'a GEF.PermList.ira -> 'a GEF.PermList.fra
@@ -5204,7 +5564,8 @@ module G_GVC_F :
                         ([> `TPivot of 'b ] -> 'b option) * string
                       val decl :
                         'a ->
-                        'b -> ('b -> ('c, unit) Direct.abstract -> 'd) -> 'd
+                        (< answer : 'b; state : 'c; .. >, unit)
+                        StateCPSMonad.monad
                       val add :
                         'a ->
                         (< answer : 'b; state : 'c; .. >, 'd option)
@@ -5309,10 +5670,22 @@ module G_GVC_F :
                       type 'a pra = 'a GEF.PermList.pra
                       type 'a lstate =
                           ('a, GEF.PermList.perm_rep ref) Direct.abstract
+                      type 'a pc_constraint = unit
+                        constraint 'a =
+                          < classif : 'b; state : [> `TPivot of 'b lstate ];
+                            .. >
                       type ('a, 'b) lm = ('a, 'b) GEF.cmonad
                         constraint 'a =
                           < answer : 'c; classif : 'd;
                             state : [> `TPivot of 'd lstate ]; .. >
+                      type ('a, 'b) nm =
+                          (< answer : ('b, 'c) Direct.abstract;
+                             state : 'd list >,
+                           unit)
+                          StateCPSMonad.monad
+                        constraint 'a =
+                          < answer : 'c; classif : 'b;
+                            state : [> `TPivot of 'b lstate ] as 'd; .. >
                       val rowrep :
                         'a GEF.PermList.ira ->
                         'a GEF.PermList.ira -> 'a GEF.PermList.fra
@@ -5324,7 +5697,8 @@ module G_GVC_F :
                         ([> `TPivot of 'b ] -> 'b option) * string
                       val decl :
                         'a ->
-                        'b -> ('b -> ('c, unit) Direct.abstract -> 'd) -> 'd
+                        (< answer : 'b; state : 'c; .. >, unit)
+                        StateCPSMonad.monad
                       val add :
                         'a ->
                         (< answer : 'b; state : 'c; .. >, 'd option)
@@ -5438,10 +5812,22 @@ module G_GVC_F :
                       type 'a pra = 'a GEF.PermList.pra
                       type 'a lstate =
                           ('a, GEF.PermList.perm_rep ref) Direct.abstract
+                      type 'a pc_constraint = unit
+                        constraint 'a =
+                          < classif : 'b; state : [> `TPivot of 'b lstate ];
+                            .. >
                       type ('a, 'b) lm = ('a, 'b) GEF.cmonad
                         constraint 'a =
                           < answer : 'c; classif : 'd;
                             state : [> `TPivot of 'd lstate ]; .. >
+                      type ('a, 'b) nm =
+                          (< answer : ('b, 'c) Direct.abstract;
+                             state : 'd list >,
+                           unit)
+                          StateCPSMonad.monad
+                        constraint 'a =
+                          < answer : 'c; classif : 'b;
+                            state : [> `TPivot of 'b lstate ] as 'd; .. >
                       val rowrep :
                         'a GEF.PermList.ira ->
                         'a GEF.PermList.ira -> 'a GEF.PermList.fra
@@ -5453,7 +5839,8 @@ module G_GVC_F :
                         ([> `TPivot of 'b ] -> 'b option) * string
                       val decl :
                         'a ->
-                        'b -> ('b -> ('c, unit) Direct.abstract -> 'd) -> 'd
+                        (< answer : 'b; state : 'c; .. >, unit)
+                        StateCPSMonad.monad
                       val add :
                         'a ->
                         (< answer : 'b; state : 'c; .. >, 'd option)
@@ -5568,10 +5955,22 @@ module G_GVC_F :
                       type 'a pra = 'a GEF.PermList.pra
                       type 'a lstate =
                           ('a, GEF.PermList.perm_rep ref) Direct.abstract
+                      type 'a pc_constraint = unit
+                        constraint 'a =
+                          < classif : 'b; state : [> `TPivot of 'b lstate ];
+                            .. >
                       type ('a, 'b) lm = ('a, 'b) GEF.cmonad
                         constraint 'a =
                           < answer : 'c; classif : 'd;
                             state : [> `TPivot of 'd lstate ]; .. >
+                      type ('a, 'b) nm =
+                          (< answer : ('b, 'c) Direct.abstract;
+                             state : 'd list >,
+                           unit)
+                          StateCPSMonad.monad
+                        constraint 'a =
+                          < answer : 'c; classif : 'b;
+                            state : [> `TPivot of 'b lstate ] as 'd; .. >
                       val rowrep :
                         'a GEF.PermList.ira ->
                         'a GEF.PermList.ira -> 'a GEF.PermList.fra
@@ -5583,7 +5982,8 @@ module G_GVC_F :
                         ([> `TPivot of 'b ] -> 'b option) * string
                       val decl :
                         'a ->
-                        'b -> ('b -> ('c, unit) Direct.abstract -> 'd) -> 'd
+                        (< answer : 'b; state : 'c; .. >, unit)
+                        StateCPSMonad.monad
                       val add :
                         'a ->
                         (< answer : 'b; state : 'c; .. >, 'd option)
@@ -5700,10 +6100,22 @@ module G_GVC_F :
                       type 'a pra = 'a OD.PivotRep.pra
                       type 'a lstate =
                           ('a, OD.PivotRep.perm_rep ref) Direct.abstract
+                      type 'a pc_constraint = unit
+                        constraint 'a =
+                          < classif : 'b; state : [> `TPivot of 'b lstate ];
+                            .. >
                       type ('a, 'b) lm = ('a, 'b) GEF.cmonad
                         constraint 'a =
                           < answer : 'c; classif : 'd;
                             state : [> `TPivot of 'd lstate ]; .. >
+                      type ('a, 'b) nm =
+                          (< answer : ('b, 'c) Direct.abstract;
+                             state : 'd list >,
+                           unit)
+                          StateCPSMonad.monad
+                        constraint 'a =
+                          < answer : 'c; classif : 'b;
+                            state : [> `TPivot of 'b lstate ] as 'd; .. >
                       val rowrep :
                         'a OD.PivotRep.ira ->
                         'a OD.PivotRep.ira -> 'a OD.PivotRep.fra
@@ -5721,7 +6133,7 @@ module G_GVC_F :
                                         Direct.abstract ]
                                    list;
                            .. >,
-                         ('c, unit) Direct.abstract)
+                         unit)
                         StateCPSMonad.monad
                       val add :
                         'a OD.PivotRep.fra ->
@@ -5846,10 +6258,22 @@ module G_GVC_F :
                       type 'a pra = 'a OD.PivotRep.pra
                       type 'a lstate =
                           ('a, OD.PivotRep.perm_rep ref) Direct.abstract
+                      type 'a pc_constraint = unit
+                        constraint 'a =
+                          < classif : 'b; state : [> `TPivot of 'b lstate ];
+                            .. >
                       type ('a, 'b) lm = ('a, 'b) GEF.cmonad
                         constraint 'a =
                           < answer : 'c; classif : 'd;
                             state : [> `TPivot of 'd lstate ]; .. >
+                      type ('a, 'b) nm =
+                          (< answer : ('b, 'c) Direct.abstract;
+                             state : 'd list >,
+                           unit)
+                          StateCPSMonad.monad
+                        constraint 'a =
+                          < answer : 'c; classif : 'b;
+                            state : [> `TPivot of 'b lstate ] as 'd; .. >
                       val rowrep :
                         'a OD.PivotRep.ira ->
                         'a OD.PivotRep.ira -> 'a OD.PivotRep.fra
@@ -5867,7 +6291,7 @@ module G_GVC_F :
                                         Direct.abstract ]
                                    list;
                            .. >,
-                         ('c, unit) Direct.abstract)
+                         unit)
                         StateCPSMonad.monad
                       val add :
                         'a OD.PivotRep.fra ->
@@ -6000,10 +6424,22 @@ module G_GVC_F :
                       type 'a pra = 'a OD.PivotRep.pra
                       type 'a lstate =
                           ('a, OD.PivotRep.perm_rep ref) Direct.abstract
+                      type 'a pc_constraint = unit
+                        constraint 'a =
+                          < classif : 'b; state : [> `TPivot of 'b lstate ];
+                            .. >
                       type ('a, 'b) lm = ('a, 'b) GEF.cmonad
                         constraint 'a =
                           < answer : 'c; classif : 'd;
                             state : [> `TPivot of 'd lstate ]; .. >
+                      type ('a, 'b) nm =
+                          (< answer : ('b, 'c) Direct.abstract;
+                             state : 'd list >,
+                           unit)
+                          StateCPSMonad.monad
+                        constraint 'a =
+                          < answer : 'c; classif : 'b;
+                            state : [> `TPivot of 'b lstate ] as 'd; .. >
                       val rowrep :
                         'a OD.PivotRep.ira ->
                         'a OD.PivotRep.ira -> 'a OD.PivotRep.fra
@@ -6021,7 +6457,7 @@ module G_GVC_F :
                                         Direct.abstract ]
                                    list;
                            .. >,
-                         ('c, unit) Direct.abstract)
+                         unit)
                         StateCPSMonad.monad
                       val add :
                         'a OD.PivotRep.fra ->
@@ -6144,18 +6580,30 @@ module G_GVC_F :
                           type 'a fra = 'a F.Output(F).IF.P.fra
                           type 'a pra = 'a F.Output(F).IF.P.pra
                           type 'a lstate = 'a F.Output(F).IF.P.lstate
+                          type 'a pc_constraint = unit
+                            constraint 'a =
+                              < classif : 'b;
+                                state : [> `TPivot of 'b lstate ]; .. >
                           type ('a, 'b) lm = ('a, 'b) GEF.cmonad
                             constraint 'a =
                               < answer : 'c; classif : 'd;
                                 state : [> `TPivot of 'd lstate ]; .. >
+                          type ('a, 'b) nm =
+                              (< answer : ('b, 'c) Direct.abstract;
+                                 state : 'd list >,
+                               unit)
+                              StateCPSMonad.monad
+                            constraint 'a =
+                              < answer : 'c; classif : 'b;
+                                state : [> `TPivot of 'b lstate ] as 'd; .. >
                           val rowrep : 'a ira -> 'a ira -> 'a fra
                           val colrep : 'a ira -> 'a ira -> 'a fra
                           val decl :
                             ('a, int) Direct.abstract ->
                             (< answer : 'b; classif : 'a;
                                state : [> `TPivot of 'a lstate ]; .. >,
-                             unit)
-                            lm
+                             'a)
+                            nm
                           val add :
                             'a fra ->
                             (< answer : 'b; classif : 'a;
@@ -6351,18 +6799,31 @@ module G_GVC_F :
                               type 'a lstate =
                                   ('a, GEF.PermList.perm_rep ref)
                                   Direct.abstract
+                              type 'a pc_constraint = unit
+                                constraint 'a =
+                                  < classif : 'b;
+                                    state : [> `TPivot of 'b lstate ]; .. >
                               type ('a, 'b) lm = ('a, 'b) GEF.cmonad
                                 constraint 'a =
                                   < answer : 'c; classif : 'd;
                                     state : [> `TPivot of 'd lstate ]; .. >
+                              type ('a, 'b) nm =
+                                  (< answer : ('b, 'c) Direct.abstract;
+                                     state : 'd list >,
+                                   unit)
+                                  StateCPSMonad.monad
+                                constraint 'a =
+                                  < answer : 'c; classif : 'b;
+                                    state : [> `TPivot of 'b lstate ] as 'd;
+                                    .. >
                               val rowrep : 'a ira -> 'a ira -> 'a fra
                               val colrep : 'a ira -> 'a ira -> 'a fra
                               val decl :
                                 ('a, int) Direct.abstract ->
                                 (< answer : 'b; classif : 'a;
                                    state : [> `TPivot of 'a lstate ]; .. >,
-                                 unit)
-                                lm
+                                 'a)
+                                nm
                               val add :
                                 'a fra ->
                                 (< answer : 'b; classif : 'a;
@@ -6517,6 +6978,9 @@ module G_GAC_I :
       sig
         type tdet = GAC_I.Dom.v ref
         type 'a lstate
+        type 'a pc_constraint = unit
+          constraint 'a =
+            < classif : 'b; state : [> `TDet of 'b lstate ]; .. >
         type ('a, 'b) lm = ('a, 'b) GEF.cmonad
           constraint 'a =
             < answer : 'c; classif : 'd; state : [> `TDet of 'd lstate ];
@@ -6525,11 +6989,16 @@ module G_GAC_I :
           constraint 'a =
             < answer : 'c; classif : 'd; state : [> `TDet of 'd lstate ];
               .. >
+        type 'a nm =
+            (< answer : ('c, 'b) Direct.abstract; state : 'd list >, unit)
+            StateCPSMonad.monad
+          constraint 'a =
+            < answer : 'b; classif : 'c;
+              state : [> `TDet of 'c lstate ] as 'd; .. >
         val decl :
           unit ->
-          (< answer : 'a; classif : 'b; state : [> `TDet of 'b lstate ]; .. >,
-           unit)
-          lm
+          < answer : 'a; classif : 'b; state : [> `TDet of 'b lstate ]; .. >
+          nm
         val upd_sign :
           unit ->
           (< answer : 'a; classif : 'b; state : [> `TDet of 'b lstate ]; .. >,
@@ -6609,24 +7078,10 @@ module G_GAC_I :
     module NoDet :
       sig
         type tdet = GAC_I.Dom.v ref
-        type 'a lstate = unit
-        val decl :
-          unit -> 'a -> ('a -> ('b, unit) Direct.abstract -> 'c) -> 'c
-        val upd_sign :
-          unit ->
-          (< answer : 'a; state : 'b; .. >, 'c option) StateCPSMonad.monad
-        val zero_sign :
-          unit -> 'a -> ('a -> ('b, unit) Direct.abstract -> 'c) -> 'c
-        val acc_magn :
-          'a -> 'b -> ('b -> ('c, unit) Direct.abstract -> 'd) -> 'd
-        val get_magn :
-          unit ->
-          (< answer : 'a; state : 'b; .. >,
-           ('c, GAC_I.Dom.v ref) Direct.abstract)
-          StateCPSMonad.monad
-        val set_magn :
-          'a -> 'b -> ('b -> ('c, unit) Direct.abstract -> 'd) -> 'd
-        val fin : unit -> 'a
+        type 'a lstate = 'a Ge.LAMake(Direct).GenLA(GAC_I).NoDet.lstate
+        type 'a pc_constraint = unit
+          constraint 'a =
+            < classif : 'b; state : [> `TDet of 'b lstate ]; .. >
         type ('a, 'b) lm = ('a, 'b) GEF.cmonad
           constraint 'a =
             < answer : 'c; classif : 'd; state : [> `TDet of 'd lstate ];
@@ -6635,12 +7090,54 @@ module G_GAC_I :
           constraint 'a =
             < answer : 'c; classif : 'd; state : [> `TDet of 'd lstate ];
               .. >
+        type 'a nm =
+            (< answer : ('c, 'b) Direct.abstract; state : 'd list >, unit)
+            StateCPSMonad.monad
+          constraint 'a =
+            < answer : 'b; classif : 'c;
+              state : [> `TDet of 'c lstate ] as 'd; .. >
+        val decl :
+          unit ->
+          < answer : 'a; classif : 'b; state : [> `TDet of 'b lstate ]; .. >
+          nm
+        val upd_sign :
+          unit ->
+          (< answer : 'a; classif : 'b; state : [> `TDet of 'b lstate ]; .. >,
+           unit)
+          om
+        val zero_sign :
+          unit ->
+          (< answer : 'a; classif : 'b; state : [> `TDet of 'b lstate ]; .. >,
+           unit)
+          lm
+        val acc_magn :
+          ('a, GAC_I.Dom.v) Direct.abstract ->
+          (< answer : 'b; classif : 'a; state : [> `TDet of 'a lstate ]; .. >,
+           unit)
+          lm
+        val get_magn :
+          unit ->
+          (< answer : 'a; classif : 'b; state : [> `TDet of 'b lstate ]; .. >,
+           tdet)
+          lm
+        val set_magn :
+          ('a, GAC_I.Dom.v) Direct.abstract ->
+          (< answer : 'b; classif : 'a; state : [> `TDet of 'a lstate ]; .. >,
+           unit)
+          lm
+        val fin :
+          unit ->
+          (< answer : 'a; classif : 'b; state : [> `TDet of 'b lstate ]; .. >,
+           GAC_I.Dom.v)
+          lm
       end
     module AbstractDet :
       sig
         type tdet = GAC_I.Dom.v ref
-        type 'a lstate =
-            ('a, int ref) Direct.abstract * ('a, tdet) Direct.abstract
+        type 'a lstate = 'a Ge.LAMake(Direct).GenLA(GAC_I).AbstractDet.lstate
+        type 'a pc_constraint = unit
+          constraint 'a =
+            < classif : 'b; state : [> `TDet of 'b lstate ]; .. >
         type ('a, 'b) lm = ('a, 'b) GEF.cmonad
           constraint 'a =
             < answer : 'c; classif : 'd; state : [> `TDet of 'd lstate ];
@@ -6649,61 +7146,46 @@ module G_GAC_I :
           constraint 'a =
             < answer : 'c; classif : 'd; state : [> `TDet of 'd lstate ];
               .. >
-        val ip :
-          ('a -> [> `TDet of 'a ]) * ([> `TDet of 'b ] -> 'b option) * string
+        type 'a nm =
+            (< answer : ('c, 'b) Direct.abstract; state : 'd list >, unit)
+            StateCPSMonad.monad
+          constraint 'a =
+            < answer : 'b; classif : 'c;
+              state : [> `TDet of 'c lstate ] as 'd; .. >
         val decl :
           unit ->
-          (< answer : ('a, 'b) Direct.abstract;
-             state : [> `TDet of
-                          ('a, int ref) Direct.abstract *
-                          ('a, GAC_I.Dom.v ref) Direct.abstract ]
-                     list;
-             .. >,
-           ('c, unit) Direct.abstract)
-          StateCPSMonad.monad
+          < answer : 'a; classif : 'b; state : [> `TDet of 'b lstate ]; .. >
+          nm
         val upd_sign :
           unit ->
-          (< answer : 'a;
-             state : [> `TDet of ('b, int ref) Direct.abstract * 'c ] list;
-             .. >,
-           ('b, unit) Direct.abstract option)
-          StateCPSMonad.monad
+          (< answer : 'a; classif : 'b; state : [> `TDet of 'b lstate ]; .. >,
+           unit)
+          om
         val zero_sign :
           unit ->
-          (< answer : 'a;
-             state : [> `TDet of ('b, int ref) Direct.abstract * 'c ] list;
-             .. >,
-           ('b, unit) Direct.abstract)
-          StateCPSMonad.monad
+          (< answer : 'a; classif : 'b; state : [> `TDet of 'b lstate ]; .. >,
+           unit)
+          lm
+        val acc_magn :
+          ('a, GAC_I.Dom.v) Direct.abstract ->
+          (< answer : 'b; classif : 'a; state : [> `TDet of 'a lstate ]; .. >,
+           unit)
+          lm
         val get_magn :
           unit ->
-          (< answer : 'a; state : [> `TDet of 'b * 'c ] list; .. >, 'c)
-          StateCPSMonad.monad
+          (< answer : 'a; classif : 'b; state : [> `TDet of 'b lstate ]; .. >,
+           tdet)
+          lm
         val set_magn :
-          ('a, 'b) Direct.abstract ->
-          (< answer : 'c;
-             state : [> `TDet of 'd * ('a, 'b ref) Direct.abstract ] list;
-             .. >,
-           ('a, unit) Direct.abstract)
-          StateCPSMonad.monad
-        val acc_magn :
-          'a GAC_I.Dom.vc ->
-          (< answer : 'b;
-             state : [> `TDet of 'c * ('a, GAC_I.Dom.v ref) Direct.abstract ]
-                     list;
-             .. >,
-           ('a, unit) Direct.abstract)
-          StateCPSMonad.monad
+          ('a, GAC_I.Dom.v) Direct.abstract ->
+          (< answer : 'b; classif : 'a; state : [> `TDet of 'a lstate ]; .. >,
+           unit)
+          lm
         val fin :
           unit ->
-          (< answer : 'a;
-             state : [> `TDet of
-                          ('b, int ref) Direct.abstract *
-                          ('b, GAC_I.Dom.v ref) Direct.abstract ]
-                     list;
-             .. >,
-           ('b, GAC_I.Dom.v) Direct.abstract)
-          StateCPSMonad.monad
+          (< answer : 'a; classif : 'b; state : [> `TDet of 'b lstate ]; .. >,
+           GAC_I.Dom.v)
+          lm
       end
     module type UPDATE =
       functor (D : DETERMINANT) ->
@@ -6994,10 +7476,22 @@ module G_GAC_I :
                       type 'a pra = 'a GEF.PermList.pra
                       type 'a lstate =
                           ('a, GEF.PermList.perm_rep ref) Direct.abstract
+                      type 'a pc_constraint = unit
+                        constraint 'a =
+                          < classif : 'b; state : [> `TPivot of 'b lstate ];
+                            .. >
                       type ('a, 'b) lm = ('a, 'b) GEF.cmonad
                         constraint 'a =
                           < answer : 'c; classif : 'd;
                             state : [> `TPivot of 'd lstate ]; .. >
+                      type ('a, 'b) nm =
+                          (< answer : ('b, 'c) Direct.abstract;
+                             state : 'd list >,
+                           unit)
+                          StateCPSMonad.monad
+                        constraint 'a =
+                          < answer : 'c; classif : 'b;
+                            state : [> `TPivot of 'b lstate ] as 'd; .. >
                       val rowrep :
                         'a GEF.PermList.ira ->
                         'a GEF.PermList.ira -> 'a GEF.PermList.fra
@@ -7009,7 +7503,8 @@ module G_GAC_I :
                         ([> `TPivot of 'b ] -> 'b option) * string
                       val decl :
                         'a ->
-                        'b -> ('b -> ('c, unit) Direct.abstract -> 'd) -> 'd
+                        (< answer : 'b; state : 'c; .. >, unit)
+                        StateCPSMonad.monad
                       val add :
                         'a ->
                         (< answer : 'b; state : 'c; .. >, 'd option)
@@ -7114,10 +7609,22 @@ module G_GAC_I :
                       type 'a pra = 'a GEF.PermList.pra
                       type 'a lstate =
                           ('a, GEF.PermList.perm_rep ref) Direct.abstract
+                      type 'a pc_constraint = unit
+                        constraint 'a =
+                          < classif : 'b; state : [> `TPivot of 'b lstate ];
+                            .. >
                       type ('a, 'b) lm = ('a, 'b) GEF.cmonad
                         constraint 'a =
                           < answer : 'c; classif : 'd;
                             state : [> `TPivot of 'd lstate ]; .. >
+                      type ('a, 'b) nm =
+                          (< answer : ('b, 'c) Direct.abstract;
+                             state : 'd list >,
+                           unit)
+                          StateCPSMonad.monad
+                        constraint 'a =
+                          < answer : 'c; classif : 'b;
+                            state : [> `TPivot of 'b lstate ] as 'd; .. >
                       val rowrep :
                         'a GEF.PermList.ira ->
                         'a GEF.PermList.ira -> 'a GEF.PermList.fra
@@ -7129,7 +7636,8 @@ module G_GAC_I :
                         ([> `TPivot of 'b ] -> 'b option) * string
                       val decl :
                         'a ->
-                        'b -> ('b -> ('c, unit) Direct.abstract -> 'd) -> 'd
+                        (< answer : 'b; state : 'c; .. >, unit)
+                        StateCPSMonad.monad
                       val add :
                         'a ->
                         (< answer : 'b; state : 'c; .. >, 'd option)
@@ -7243,10 +7751,22 @@ module G_GAC_I :
                       type 'a pra = 'a GEF.PermList.pra
                       type 'a lstate =
                           ('a, GEF.PermList.perm_rep ref) Direct.abstract
+                      type 'a pc_constraint = unit
+                        constraint 'a =
+                          < classif : 'b; state : [> `TPivot of 'b lstate ];
+                            .. >
                       type ('a, 'b) lm = ('a, 'b) GEF.cmonad
                         constraint 'a =
                           < answer : 'c; classif : 'd;
                             state : [> `TPivot of 'd lstate ]; .. >
+                      type ('a, 'b) nm =
+                          (< answer : ('b, 'c) Direct.abstract;
+                             state : 'd list >,
+                           unit)
+                          StateCPSMonad.monad
+                        constraint 'a =
+                          < answer : 'c; classif : 'b;
+                            state : [> `TPivot of 'b lstate ] as 'd; .. >
                       val rowrep :
                         'a GEF.PermList.ira ->
                         'a GEF.PermList.ira -> 'a GEF.PermList.fra
@@ -7258,7 +7778,8 @@ module G_GAC_I :
                         ([> `TPivot of 'b ] -> 'b option) * string
                       val decl :
                         'a ->
-                        'b -> ('b -> ('c, unit) Direct.abstract -> 'd) -> 'd
+                        (< answer : 'b; state : 'c; .. >, unit)
+                        StateCPSMonad.monad
                       val add :
                         'a ->
                         (< answer : 'b; state : 'c; .. >, 'd option)
@@ -7373,10 +7894,22 @@ module G_GAC_I :
                       type 'a pra = 'a GEF.PermList.pra
                       type 'a lstate =
                           ('a, GEF.PermList.perm_rep ref) Direct.abstract
+                      type 'a pc_constraint = unit
+                        constraint 'a =
+                          < classif : 'b; state : [> `TPivot of 'b lstate ];
+                            .. >
                       type ('a, 'b) lm = ('a, 'b) GEF.cmonad
                         constraint 'a =
                           < answer : 'c; classif : 'd;
                             state : [> `TPivot of 'd lstate ]; .. >
+                      type ('a, 'b) nm =
+                          (< answer : ('b, 'c) Direct.abstract;
+                             state : 'd list >,
+                           unit)
+                          StateCPSMonad.monad
+                        constraint 'a =
+                          < answer : 'c; classif : 'b;
+                            state : [> `TPivot of 'b lstate ] as 'd; .. >
                       val rowrep :
                         'a GEF.PermList.ira ->
                         'a GEF.PermList.ira -> 'a GEF.PermList.fra
@@ -7388,7 +7921,8 @@ module G_GAC_I :
                         ([> `TPivot of 'b ] -> 'b option) * string
                       val decl :
                         'a ->
-                        'b -> ('b -> ('c, unit) Direct.abstract -> 'd) -> 'd
+                        (< answer : 'b; state : 'c; .. >, unit)
+                        StateCPSMonad.monad
                       val add :
                         'a ->
                         (< answer : 'b; state : 'c; .. >, 'd option)
@@ -7505,10 +8039,22 @@ module G_GAC_I :
                       type 'a pra = 'a OD.PivotRep.pra
                       type 'a lstate =
                           ('a, OD.PivotRep.perm_rep ref) Direct.abstract
+                      type 'a pc_constraint = unit
+                        constraint 'a =
+                          < classif : 'b; state : [> `TPivot of 'b lstate ];
+                            .. >
                       type ('a, 'b) lm = ('a, 'b) GEF.cmonad
                         constraint 'a =
                           < answer : 'c; classif : 'd;
                             state : [> `TPivot of 'd lstate ]; .. >
+                      type ('a, 'b) nm =
+                          (< answer : ('b, 'c) Direct.abstract;
+                             state : 'd list >,
+                           unit)
+                          StateCPSMonad.monad
+                        constraint 'a =
+                          < answer : 'c; classif : 'b;
+                            state : [> `TPivot of 'b lstate ] as 'd; .. >
                       val rowrep :
                         'a OD.PivotRep.ira ->
                         'a OD.PivotRep.ira -> 'a OD.PivotRep.fra
@@ -7526,7 +8072,7 @@ module G_GAC_I :
                                         Direct.abstract ]
                                    list;
                            .. >,
-                         ('c, unit) Direct.abstract)
+                         unit)
                         StateCPSMonad.monad
                       val add :
                         'a OD.PivotRep.fra ->
@@ -7651,10 +8197,22 @@ module G_GAC_I :
                       type 'a pra = 'a OD.PivotRep.pra
                       type 'a lstate =
                           ('a, OD.PivotRep.perm_rep ref) Direct.abstract
+                      type 'a pc_constraint = unit
+                        constraint 'a =
+                          < classif : 'b; state : [> `TPivot of 'b lstate ];
+                            .. >
                       type ('a, 'b) lm = ('a, 'b) GEF.cmonad
                         constraint 'a =
                           < answer : 'c; classif : 'd;
                             state : [> `TPivot of 'd lstate ]; .. >
+                      type ('a, 'b) nm =
+                          (< answer : ('b, 'c) Direct.abstract;
+                             state : 'd list >,
+                           unit)
+                          StateCPSMonad.monad
+                        constraint 'a =
+                          < answer : 'c; classif : 'b;
+                            state : [> `TPivot of 'b lstate ] as 'd; .. >
                       val rowrep :
                         'a OD.PivotRep.ira ->
                         'a OD.PivotRep.ira -> 'a OD.PivotRep.fra
@@ -7672,7 +8230,7 @@ module G_GAC_I :
                                         Direct.abstract ]
                                    list;
                            .. >,
-                         ('c, unit) Direct.abstract)
+                         unit)
                         StateCPSMonad.monad
                       val add :
                         'a OD.PivotRep.fra ->
@@ -7805,10 +8363,22 @@ module G_GAC_I :
                       type 'a pra = 'a OD.PivotRep.pra
                       type 'a lstate =
                           ('a, OD.PivotRep.perm_rep ref) Direct.abstract
+                      type 'a pc_constraint = unit
+                        constraint 'a =
+                          < classif : 'b; state : [> `TPivot of 'b lstate ];
+                            .. >
                       type ('a, 'b) lm = ('a, 'b) GEF.cmonad
                         constraint 'a =
                           < answer : 'c; classif : 'd;
                             state : [> `TPivot of 'd lstate ]; .. >
+                      type ('a, 'b) nm =
+                          (< answer : ('b, 'c) Direct.abstract;
+                             state : 'd list >,
+                           unit)
+                          StateCPSMonad.monad
+                        constraint 'a =
+                          < answer : 'c; classif : 'b;
+                            state : [> `TPivot of 'b lstate ] as 'd; .. >
                       val rowrep :
                         'a OD.PivotRep.ira ->
                         'a OD.PivotRep.ira -> 'a OD.PivotRep.fra
@@ -7826,7 +8396,7 @@ module G_GAC_I :
                                         Direct.abstract ]
                                    list;
                            .. >,
-                         ('c, unit) Direct.abstract)
+                         unit)
                         StateCPSMonad.monad
                       val add :
                         'a OD.PivotRep.fra ->
@@ -7949,18 +8519,30 @@ module G_GAC_I :
                           type 'a fra = 'a F.Output(F).IF.P.fra
                           type 'a pra = 'a F.Output(F).IF.P.pra
                           type 'a lstate = 'a F.Output(F).IF.P.lstate
+                          type 'a pc_constraint = unit
+                            constraint 'a =
+                              < classif : 'b;
+                                state : [> `TPivot of 'b lstate ]; .. >
                           type ('a, 'b) lm = ('a, 'b) GEF.cmonad
                             constraint 'a =
                               < answer : 'c; classif : 'd;
                                 state : [> `TPivot of 'd lstate ]; .. >
+                          type ('a, 'b) nm =
+                              (< answer : ('b, 'c) Direct.abstract;
+                                 state : 'd list >,
+                               unit)
+                              StateCPSMonad.monad
+                            constraint 'a =
+                              < answer : 'c; classif : 'b;
+                                state : [> `TPivot of 'b lstate ] as 'd; .. >
                           val rowrep : 'a ira -> 'a ira -> 'a fra
                           val colrep : 'a ira -> 'a ira -> 'a fra
                           val decl :
                             ('a, int) Direct.abstract ->
                             (< answer : 'b; classif : 'a;
                                state : [> `TPivot of 'a lstate ]; .. >,
-                             unit)
-                            lm
+                             'a)
+                            nm
                           val add :
                             'a fra ->
                             (< answer : 'b; classif : 'a;
@@ -8156,18 +8738,31 @@ module G_GAC_I :
                               type 'a lstate =
                                   ('a, GEF.PermList.perm_rep ref)
                                   Direct.abstract
+                              type 'a pc_constraint = unit
+                                constraint 'a =
+                                  < classif : 'b;
+                                    state : [> `TPivot of 'b lstate ]; .. >
                               type ('a, 'b) lm = ('a, 'b) GEF.cmonad
                                 constraint 'a =
                                   < answer : 'c; classif : 'd;
                                     state : [> `TPivot of 'd lstate ]; .. >
+                              type ('a, 'b) nm =
+                                  (< answer : ('b, 'c) Direct.abstract;
+                                     state : 'd list >,
+                                   unit)
+                                  StateCPSMonad.monad
+                                constraint 'a =
+                                  < answer : 'c; classif : 'b;
+                                    state : [> `TPivot of 'b lstate ] as 'd;
+                                    .. >
                               val rowrep : 'a ira -> 'a ira -> 'a fra
                               val colrep : 'a ira -> 'a ira -> 'a fra
                               val decl :
                                 ('a, int) Direct.abstract ->
                                 (< answer : 'b; classif : 'a;
                                    state : [> `TPivot of 'a lstate ]; .. >,
-                                 unit)
-                                lm
+                                 'a)
+                                nm
                               val add :
                                 'a fra ->
                                 (< answer : 'b; classif : 'a;
@@ -8322,6 +8917,9 @@ module G_GVC_I :
       sig
         type tdet = GVC_I.Dom.v ref
         type 'a lstate
+        type 'a pc_constraint = unit
+          constraint 'a =
+            < classif : 'b; state : [> `TDet of 'b lstate ]; .. >
         type ('a, 'b) lm = ('a, 'b) GEF.cmonad
           constraint 'a =
             < answer : 'c; classif : 'd; state : [> `TDet of 'd lstate ];
@@ -8330,11 +8928,16 @@ module G_GVC_I :
           constraint 'a =
             < answer : 'c; classif : 'd; state : [> `TDet of 'd lstate ];
               .. >
+        type 'a nm =
+            (< answer : ('c, 'b) Direct.abstract; state : 'd list >, unit)
+            StateCPSMonad.monad
+          constraint 'a =
+            < answer : 'b; classif : 'c;
+              state : [> `TDet of 'c lstate ] as 'd; .. >
         val decl :
           unit ->
-          (< answer : 'a; classif : 'b; state : [> `TDet of 'b lstate ]; .. >,
-           unit)
-          lm
+          < answer : 'a; classif : 'b; state : [> `TDet of 'b lstate ]; .. >
+          nm
         val upd_sign :
           unit ->
           (< answer : 'a; classif : 'b; state : [> `TDet of 'b lstate ]; .. >,
@@ -8414,24 +9017,10 @@ module G_GVC_I :
     module NoDet :
       sig
         type tdet = GVC_I.Dom.v ref
-        type 'a lstate = unit
-        val decl :
-          unit -> 'a -> ('a -> ('b, unit) Direct.abstract -> 'c) -> 'c
-        val upd_sign :
-          unit ->
-          (< answer : 'a; state : 'b; .. >, 'c option) StateCPSMonad.monad
-        val zero_sign :
-          unit -> 'a -> ('a -> ('b, unit) Direct.abstract -> 'c) -> 'c
-        val acc_magn :
-          'a -> 'b -> ('b -> ('c, unit) Direct.abstract -> 'd) -> 'd
-        val get_magn :
-          unit ->
-          (< answer : 'a; state : 'b; .. >,
-           ('c, GVC_I.Dom.v ref) Direct.abstract)
-          StateCPSMonad.monad
-        val set_magn :
-          'a -> 'b -> ('b -> ('c, unit) Direct.abstract -> 'd) -> 'd
-        val fin : unit -> 'a
+        type 'a lstate = 'a Ge.LAMake(Direct).GenLA(GVC_I).NoDet.lstate
+        type 'a pc_constraint = unit
+          constraint 'a =
+            < classif : 'b; state : [> `TDet of 'b lstate ]; .. >
         type ('a, 'b) lm = ('a, 'b) GEF.cmonad
           constraint 'a =
             < answer : 'c; classif : 'd; state : [> `TDet of 'd lstate ];
@@ -8440,12 +9029,54 @@ module G_GVC_I :
           constraint 'a =
             < answer : 'c; classif : 'd; state : [> `TDet of 'd lstate ];
               .. >
+        type 'a nm =
+            (< answer : ('c, 'b) Direct.abstract; state : 'd list >, unit)
+            StateCPSMonad.monad
+          constraint 'a =
+            < answer : 'b; classif : 'c;
+              state : [> `TDet of 'c lstate ] as 'd; .. >
+        val decl :
+          unit ->
+          < answer : 'a; classif : 'b; state : [> `TDet of 'b lstate ]; .. >
+          nm
+        val upd_sign :
+          unit ->
+          (< answer : 'a; classif : 'b; state : [> `TDet of 'b lstate ]; .. >,
+           unit)
+          om
+        val zero_sign :
+          unit ->
+          (< answer : 'a; classif : 'b; state : [> `TDet of 'b lstate ]; .. >,
+           unit)
+          lm
+        val acc_magn :
+          ('a, GVC_I.Dom.v) Direct.abstract ->
+          (< answer : 'b; classif : 'a; state : [> `TDet of 'a lstate ]; .. >,
+           unit)
+          lm
+        val get_magn :
+          unit ->
+          (< answer : 'a; classif : 'b; state : [> `TDet of 'b lstate ]; .. >,
+           tdet)
+          lm
+        val set_magn :
+          ('a, GVC_I.Dom.v) Direct.abstract ->
+          (< answer : 'b; classif : 'a; state : [> `TDet of 'a lstate ]; .. >,
+           unit)
+          lm
+        val fin :
+          unit ->
+          (< answer : 'a; classif : 'b; state : [> `TDet of 'b lstate ]; .. >,
+           GVC_I.Dom.v)
+          lm
       end
     module AbstractDet :
       sig
         type tdet = GVC_I.Dom.v ref
-        type 'a lstate =
-            ('a, int ref) Direct.abstract * ('a, tdet) Direct.abstract
+        type 'a lstate = 'a Ge.LAMake(Direct).GenLA(GVC_I).AbstractDet.lstate
+        type 'a pc_constraint = unit
+          constraint 'a =
+            < classif : 'b; state : [> `TDet of 'b lstate ]; .. >
         type ('a, 'b) lm = ('a, 'b) GEF.cmonad
           constraint 'a =
             < answer : 'c; classif : 'd; state : [> `TDet of 'd lstate ];
@@ -8454,61 +9085,46 @@ module G_GVC_I :
           constraint 'a =
             < answer : 'c; classif : 'd; state : [> `TDet of 'd lstate ];
               .. >
-        val ip :
-          ('a -> [> `TDet of 'a ]) * ([> `TDet of 'b ] -> 'b option) * string
+        type 'a nm =
+            (< answer : ('c, 'b) Direct.abstract; state : 'd list >, unit)
+            StateCPSMonad.monad
+          constraint 'a =
+            < answer : 'b; classif : 'c;
+              state : [> `TDet of 'c lstate ] as 'd; .. >
         val decl :
           unit ->
-          (< answer : ('a, 'b) Direct.abstract;
-             state : [> `TDet of
-                          ('a, int ref) Direct.abstract *
-                          ('a, GVC_I.Dom.v ref) Direct.abstract ]
-                     list;
-             .. >,
-           ('c, unit) Direct.abstract)
-          StateCPSMonad.monad
+          < answer : 'a; classif : 'b; state : [> `TDet of 'b lstate ]; .. >
+          nm
         val upd_sign :
           unit ->
-          (< answer : 'a;
-             state : [> `TDet of ('b, int ref) Direct.abstract * 'c ] list;
-             .. >,
-           ('b, unit) Direct.abstract option)
-          StateCPSMonad.monad
+          (< answer : 'a; classif : 'b; state : [> `TDet of 'b lstate ]; .. >,
+           unit)
+          om
         val zero_sign :
           unit ->
-          (< answer : 'a;
-             state : [> `TDet of ('b, int ref) Direct.abstract * 'c ] list;
-             .. >,
-           ('b, unit) Direct.abstract)
-          StateCPSMonad.monad
+          (< answer : 'a; classif : 'b; state : [> `TDet of 'b lstate ]; .. >,
+           unit)
+          lm
+        val acc_magn :
+          ('a, GVC_I.Dom.v) Direct.abstract ->
+          (< answer : 'b; classif : 'a; state : [> `TDet of 'a lstate ]; .. >,
+           unit)
+          lm
         val get_magn :
           unit ->
-          (< answer : 'a; state : [> `TDet of 'b * 'c ] list; .. >, 'c)
-          StateCPSMonad.monad
+          (< answer : 'a; classif : 'b; state : [> `TDet of 'b lstate ]; .. >,
+           tdet)
+          lm
         val set_magn :
-          ('a, 'b) Direct.abstract ->
-          (< answer : 'c;
-             state : [> `TDet of 'd * ('a, 'b ref) Direct.abstract ] list;
-             .. >,
-           ('a, unit) Direct.abstract)
-          StateCPSMonad.monad
-        val acc_magn :
-          'a GVC_I.Dom.vc ->
-          (< answer : 'b;
-             state : [> `TDet of 'c * ('a, GVC_I.Dom.v ref) Direct.abstract ]
-                     list;
-             .. >,
-           ('a, unit) Direct.abstract)
-          StateCPSMonad.monad
+          ('a, GVC_I.Dom.v) Direct.abstract ->
+          (< answer : 'b; classif : 'a; state : [> `TDet of 'a lstate ]; .. >,
+           unit)
+          lm
         val fin :
           unit ->
-          (< answer : 'a;
-             state : [> `TDet of
-                          ('b, int ref) Direct.abstract *
-                          ('b, GVC_I.Dom.v ref) Direct.abstract ]
-                     list;
-             .. >,
-           ('b, GVC_I.Dom.v) Direct.abstract)
-          StateCPSMonad.monad
+          (< answer : 'a; classif : 'b; state : [> `TDet of 'b lstate ]; .. >,
+           GVC_I.Dom.v)
+          lm
       end
     module type UPDATE =
       functor (D : DETERMINANT) ->
@@ -8799,10 +9415,22 @@ module G_GVC_I :
                       type 'a pra = 'a GEF.PermList.pra
                       type 'a lstate =
                           ('a, GEF.PermList.perm_rep ref) Direct.abstract
+                      type 'a pc_constraint = unit
+                        constraint 'a =
+                          < classif : 'b; state : [> `TPivot of 'b lstate ];
+                            .. >
                       type ('a, 'b) lm = ('a, 'b) GEF.cmonad
                         constraint 'a =
                           < answer : 'c; classif : 'd;
                             state : [> `TPivot of 'd lstate ]; .. >
+                      type ('a, 'b) nm =
+                          (< answer : ('b, 'c) Direct.abstract;
+                             state : 'd list >,
+                           unit)
+                          StateCPSMonad.monad
+                        constraint 'a =
+                          < answer : 'c; classif : 'b;
+                            state : [> `TPivot of 'b lstate ] as 'd; .. >
                       val rowrep :
                         'a GEF.PermList.ira ->
                         'a GEF.PermList.ira -> 'a GEF.PermList.fra
@@ -8814,7 +9442,8 @@ module G_GVC_I :
                         ([> `TPivot of 'b ] -> 'b option) * string
                       val decl :
                         'a ->
-                        'b -> ('b -> ('c, unit) Direct.abstract -> 'd) -> 'd
+                        (< answer : 'b; state : 'c; .. >, unit)
+                        StateCPSMonad.monad
                       val add :
                         'a ->
                         (< answer : 'b; state : 'c; .. >, 'd option)
@@ -8919,10 +9548,22 @@ module G_GVC_I :
                       type 'a pra = 'a GEF.PermList.pra
                       type 'a lstate =
                           ('a, GEF.PermList.perm_rep ref) Direct.abstract
+                      type 'a pc_constraint = unit
+                        constraint 'a =
+                          < classif : 'b; state : [> `TPivot of 'b lstate ];
+                            .. >
                       type ('a, 'b) lm = ('a, 'b) GEF.cmonad
                         constraint 'a =
                           < answer : 'c; classif : 'd;
                             state : [> `TPivot of 'd lstate ]; .. >
+                      type ('a, 'b) nm =
+                          (< answer : ('b, 'c) Direct.abstract;
+                             state : 'd list >,
+                           unit)
+                          StateCPSMonad.monad
+                        constraint 'a =
+                          < answer : 'c; classif : 'b;
+                            state : [> `TPivot of 'b lstate ] as 'd; .. >
                       val rowrep :
                         'a GEF.PermList.ira ->
                         'a GEF.PermList.ira -> 'a GEF.PermList.fra
@@ -8934,7 +9575,8 @@ module G_GVC_I :
                         ([> `TPivot of 'b ] -> 'b option) * string
                       val decl :
                         'a ->
-                        'b -> ('b -> ('c, unit) Direct.abstract -> 'd) -> 'd
+                        (< answer : 'b; state : 'c; .. >, unit)
+                        StateCPSMonad.monad
                       val add :
                         'a ->
                         (< answer : 'b; state : 'c; .. >, 'd option)
@@ -9048,10 +9690,22 @@ module G_GVC_I :
                       type 'a pra = 'a GEF.PermList.pra
                       type 'a lstate =
                           ('a, GEF.PermList.perm_rep ref) Direct.abstract
+                      type 'a pc_constraint = unit
+                        constraint 'a =
+                          < classif : 'b; state : [> `TPivot of 'b lstate ];
+                            .. >
                       type ('a, 'b) lm = ('a, 'b) GEF.cmonad
                         constraint 'a =
                           < answer : 'c; classif : 'd;
                             state : [> `TPivot of 'd lstate ]; .. >
+                      type ('a, 'b) nm =
+                          (< answer : ('b, 'c) Direct.abstract;
+                             state : 'd list >,
+                           unit)
+                          StateCPSMonad.monad
+                        constraint 'a =
+                          < answer : 'c; classif : 'b;
+                            state : [> `TPivot of 'b lstate ] as 'd; .. >
                       val rowrep :
                         'a GEF.PermList.ira ->
                         'a GEF.PermList.ira -> 'a GEF.PermList.fra
@@ -9063,7 +9717,8 @@ module G_GVC_I :
                         ([> `TPivot of 'b ] -> 'b option) * string
                       val decl :
                         'a ->
-                        'b -> ('b -> ('c, unit) Direct.abstract -> 'd) -> 'd
+                        (< answer : 'b; state : 'c; .. >, unit)
+                        StateCPSMonad.monad
                       val add :
                         'a ->
                         (< answer : 'b; state : 'c; .. >, 'd option)
@@ -9178,10 +9833,22 @@ module G_GVC_I :
                       type 'a pra = 'a GEF.PermList.pra
                       type 'a lstate =
                           ('a, GEF.PermList.perm_rep ref) Direct.abstract
+                      type 'a pc_constraint = unit
+                        constraint 'a =
+                          < classif : 'b; state : [> `TPivot of 'b lstate ];
+                            .. >
                       type ('a, 'b) lm = ('a, 'b) GEF.cmonad
                         constraint 'a =
                           < answer : 'c; classif : 'd;
                             state : [> `TPivot of 'd lstate ]; .. >
+                      type ('a, 'b) nm =
+                          (< answer : ('b, 'c) Direct.abstract;
+                             state : 'd list >,
+                           unit)
+                          StateCPSMonad.monad
+                        constraint 'a =
+                          < answer : 'c; classif : 'b;
+                            state : [> `TPivot of 'b lstate ] as 'd; .. >
                       val rowrep :
                         'a GEF.PermList.ira ->
                         'a GEF.PermList.ira -> 'a GEF.PermList.fra
@@ -9193,7 +9860,8 @@ module G_GVC_I :
                         ([> `TPivot of 'b ] -> 'b option) * string
                       val decl :
                         'a ->
-                        'b -> ('b -> ('c, unit) Direct.abstract -> 'd) -> 'd
+                        (< answer : 'b; state : 'c; .. >, unit)
+                        StateCPSMonad.monad
                       val add :
                         'a ->
                         (< answer : 'b; state : 'c; .. >, 'd option)
@@ -9310,10 +9978,22 @@ module G_GVC_I :
                       type 'a pra = 'a OD.PivotRep.pra
                       type 'a lstate =
                           ('a, OD.PivotRep.perm_rep ref) Direct.abstract
+                      type 'a pc_constraint = unit
+                        constraint 'a =
+                          < classif : 'b; state : [> `TPivot of 'b lstate ];
+                            .. >
                       type ('a, 'b) lm = ('a, 'b) GEF.cmonad
                         constraint 'a =
                           < answer : 'c; classif : 'd;
                             state : [> `TPivot of 'd lstate ]; .. >
+                      type ('a, 'b) nm =
+                          (< answer : ('b, 'c) Direct.abstract;
+                             state : 'd list >,
+                           unit)
+                          StateCPSMonad.monad
+                        constraint 'a =
+                          < answer : 'c; classif : 'b;
+                            state : [> `TPivot of 'b lstate ] as 'd; .. >
                       val rowrep :
                         'a OD.PivotRep.ira ->
                         'a OD.PivotRep.ira -> 'a OD.PivotRep.fra
@@ -9331,7 +10011,7 @@ module G_GVC_I :
                                         Direct.abstract ]
                                    list;
                            .. >,
-                         ('c, unit) Direct.abstract)
+                         unit)
                         StateCPSMonad.monad
                       val add :
                         'a OD.PivotRep.fra ->
@@ -9456,10 +10136,22 @@ module G_GVC_I :
                       type 'a pra = 'a OD.PivotRep.pra
                       type 'a lstate =
                           ('a, OD.PivotRep.perm_rep ref) Direct.abstract
+                      type 'a pc_constraint = unit
+                        constraint 'a =
+                          < classif : 'b; state : [> `TPivot of 'b lstate ];
+                            .. >
                       type ('a, 'b) lm = ('a, 'b) GEF.cmonad
                         constraint 'a =
                           < answer : 'c; classif : 'd;
                             state : [> `TPivot of 'd lstate ]; .. >
+                      type ('a, 'b) nm =
+                          (< answer : ('b, 'c) Direct.abstract;
+                             state : 'd list >,
+                           unit)
+                          StateCPSMonad.monad
+                        constraint 'a =
+                          < answer : 'c; classif : 'b;
+                            state : [> `TPivot of 'b lstate ] as 'd; .. >
                       val rowrep :
                         'a OD.PivotRep.ira ->
                         'a OD.PivotRep.ira -> 'a OD.PivotRep.fra
@@ -9477,7 +10169,7 @@ module G_GVC_I :
                                         Direct.abstract ]
                                    list;
                            .. >,
-                         ('c, unit) Direct.abstract)
+                         unit)
                         StateCPSMonad.monad
                       val add :
                         'a OD.PivotRep.fra ->
@@ -9610,10 +10302,22 @@ module G_GVC_I :
                       type 'a pra = 'a OD.PivotRep.pra
                       type 'a lstate =
                           ('a, OD.PivotRep.perm_rep ref) Direct.abstract
+                      type 'a pc_constraint = unit
+                        constraint 'a =
+                          < classif : 'b; state : [> `TPivot of 'b lstate ];
+                            .. >
                       type ('a, 'b) lm = ('a, 'b) GEF.cmonad
                         constraint 'a =
                           < answer : 'c; classif : 'd;
                             state : [> `TPivot of 'd lstate ]; .. >
+                      type ('a, 'b) nm =
+                          (< answer : ('b, 'c) Direct.abstract;
+                             state : 'd list >,
+                           unit)
+                          StateCPSMonad.monad
+                        constraint 'a =
+                          < answer : 'c; classif : 'b;
+                            state : [> `TPivot of 'b lstate ] as 'd; .. >
                       val rowrep :
                         'a OD.PivotRep.ira ->
                         'a OD.PivotRep.ira -> 'a OD.PivotRep.fra
@@ -9631,7 +10335,7 @@ module G_GVC_I :
                                         Direct.abstract ]
                                    list;
                            .. >,
-                         ('c, unit) Direct.abstract)
+                         unit)
                         StateCPSMonad.monad
                       val add :
                         'a OD.PivotRep.fra ->
@@ -9754,18 +10458,30 @@ module G_GVC_I :
                           type 'a fra = 'a F.Output(F).IF.P.fra
                           type 'a pra = 'a F.Output(F).IF.P.pra
                           type 'a lstate = 'a F.Output(F).IF.P.lstate
+                          type 'a pc_constraint = unit
+                            constraint 'a =
+                              < classif : 'b;
+                                state : [> `TPivot of 'b lstate ]; .. >
                           type ('a, 'b) lm = ('a, 'b) GEF.cmonad
                             constraint 'a =
                               < answer : 'c; classif : 'd;
                                 state : [> `TPivot of 'd lstate ]; .. >
+                          type ('a, 'b) nm =
+                              (< answer : ('b, 'c) Direct.abstract;
+                                 state : 'd list >,
+                               unit)
+                              StateCPSMonad.monad
+                            constraint 'a =
+                              < answer : 'c; classif : 'b;
+                                state : [> `TPivot of 'b lstate ] as 'd; .. >
                           val rowrep : 'a ira -> 'a ira -> 'a fra
                           val colrep : 'a ira -> 'a ira -> 'a fra
                           val decl :
                             ('a, int) Direct.abstract ->
                             (< answer : 'b; classif : 'a;
                                state : [> `TPivot of 'a lstate ]; .. >,
-                             unit)
-                            lm
+                             'a)
+                            nm
                           val add :
                             'a fra ->
                             (< answer : 'b; classif : 'a;
@@ -9961,18 +10677,31 @@ module G_GVC_I :
                               type 'a lstate =
                                   ('a, GEF.PermList.perm_rep ref)
                                   Direct.abstract
+                              type 'a pc_constraint = unit
+                                constraint 'a =
+                                  < classif : 'b;
+                                    state : [> `TPivot of 'b lstate ]; .. >
                               type ('a, 'b) lm = ('a, 'b) GEF.cmonad
                                 constraint 'a =
                                   < answer : 'c; classif : 'd;
                                     state : [> `TPivot of 'd lstate ]; .. >
+                              type ('a, 'b) nm =
+                                  (< answer : ('b, 'c) Direct.abstract;
+                                     state : 'd list >,
+                                   unit)
+                                  StateCPSMonad.monad
+                                constraint 'a =
+                                  < answer : 'c; classif : 'b;
+                                    state : [> `TPivot of 'b lstate ] as 'd;
+                                    .. >
                               val rowrep : 'a ira -> 'a ira -> 'a fra
                               val colrep : 'a ira -> 'a ira -> 'a fra
                               val decl :
                                 ('a, int) Direct.abstract ->
                                 (< answer : 'b; classif : 'a;
                                    state : [> `TPivot of 'a lstate ]; .. >,
-                                 unit)
-                                lm
+                                 'a)
+                                nm
                               val add :
                                 'a fra ->
                                 (< answer : 'b; classif : 'a;
@@ -10127,6 +10856,9 @@ module G_GAC_R :
       sig
         type tdet = GAC_R.Dom.v ref
         type 'a lstate
+        type 'a pc_constraint = unit
+          constraint 'a =
+            < classif : 'b; state : [> `TDet of 'b lstate ]; .. >
         type ('a, 'b) lm = ('a, 'b) GEF.cmonad
           constraint 'a =
             < answer : 'c; classif : 'd; state : [> `TDet of 'd lstate ];
@@ -10135,11 +10867,16 @@ module G_GAC_R :
           constraint 'a =
             < answer : 'c; classif : 'd; state : [> `TDet of 'd lstate ];
               .. >
+        type 'a nm =
+            (< answer : ('c, 'b) Direct.abstract; state : 'd list >, unit)
+            StateCPSMonad.monad
+          constraint 'a =
+            < answer : 'b; classif : 'c;
+              state : [> `TDet of 'c lstate ] as 'd; .. >
         val decl :
           unit ->
-          (< answer : 'a; classif : 'b; state : [> `TDet of 'b lstate ]; .. >,
-           unit)
-          lm
+          < answer : 'a; classif : 'b; state : [> `TDet of 'b lstate ]; .. >
+          nm
         val upd_sign :
           unit ->
           (< answer : 'a; classif : 'b; state : [> `TDet of 'b lstate ]; .. >,
@@ -10219,24 +10956,10 @@ module G_GAC_R :
     module NoDet :
       sig
         type tdet = GAC_R.Dom.v ref
-        type 'a lstate = unit
-        val decl :
-          unit -> 'a -> ('a -> ('b, unit) Direct.abstract -> 'c) -> 'c
-        val upd_sign :
-          unit ->
-          (< answer : 'a; state : 'b; .. >, 'c option) StateCPSMonad.monad
-        val zero_sign :
-          unit -> 'a -> ('a -> ('b, unit) Direct.abstract -> 'c) -> 'c
-        val acc_magn :
-          'a -> 'b -> ('b -> ('c, unit) Direct.abstract -> 'd) -> 'd
-        val get_magn :
-          unit ->
-          (< answer : 'a; state : 'b; .. >,
-           ('c, GAC_R.Dom.v ref) Direct.abstract)
-          StateCPSMonad.monad
-        val set_magn :
-          'a -> 'b -> ('b -> ('c, unit) Direct.abstract -> 'd) -> 'd
-        val fin : unit -> 'a
+        type 'a lstate = 'a Ge.LAMake(Direct).GenLA(GAC_R).NoDet.lstate
+        type 'a pc_constraint = unit
+          constraint 'a =
+            < classif : 'b; state : [> `TDet of 'b lstate ]; .. >
         type ('a, 'b) lm = ('a, 'b) GEF.cmonad
           constraint 'a =
             < answer : 'c; classif : 'd; state : [> `TDet of 'd lstate ];
@@ -10245,12 +10968,54 @@ module G_GAC_R :
           constraint 'a =
             < answer : 'c; classif : 'd; state : [> `TDet of 'd lstate ];
               .. >
+        type 'a nm =
+            (< answer : ('c, 'b) Direct.abstract; state : 'd list >, unit)
+            StateCPSMonad.monad
+          constraint 'a =
+            < answer : 'b; classif : 'c;
+              state : [> `TDet of 'c lstate ] as 'd; .. >
+        val decl :
+          unit ->
+          < answer : 'a; classif : 'b; state : [> `TDet of 'b lstate ]; .. >
+          nm
+        val upd_sign :
+          unit ->
+          (< answer : 'a; classif : 'b; state : [> `TDet of 'b lstate ]; .. >,
+           unit)
+          om
+        val zero_sign :
+          unit ->
+          (< answer : 'a; classif : 'b; state : [> `TDet of 'b lstate ]; .. >,
+           unit)
+          lm
+        val acc_magn :
+          ('a, GAC_R.Dom.v) Direct.abstract ->
+          (< answer : 'b; classif : 'a; state : [> `TDet of 'a lstate ]; .. >,
+           unit)
+          lm
+        val get_magn :
+          unit ->
+          (< answer : 'a; classif : 'b; state : [> `TDet of 'b lstate ]; .. >,
+           tdet)
+          lm
+        val set_magn :
+          ('a, GAC_R.Dom.v) Direct.abstract ->
+          (< answer : 'b; classif : 'a; state : [> `TDet of 'a lstate ]; .. >,
+           unit)
+          lm
+        val fin :
+          unit ->
+          (< answer : 'a; classif : 'b; state : [> `TDet of 'b lstate ]; .. >,
+           GAC_R.Dom.v)
+          lm
       end
     module AbstractDet :
       sig
         type tdet = GAC_R.Dom.v ref
-        type 'a lstate =
-            ('a, int ref) Direct.abstract * ('a, tdet) Direct.abstract
+        type 'a lstate = 'a Ge.LAMake(Direct).GenLA(GAC_R).AbstractDet.lstate
+        type 'a pc_constraint = unit
+          constraint 'a =
+            < classif : 'b; state : [> `TDet of 'b lstate ]; .. >
         type ('a, 'b) lm = ('a, 'b) GEF.cmonad
           constraint 'a =
             < answer : 'c; classif : 'd; state : [> `TDet of 'd lstate ];
@@ -10259,61 +11024,46 @@ module G_GAC_R :
           constraint 'a =
             < answer : 'c; classif : 'd; state : [> `TDet of 'd lstate ];
               .. >
-        val ip :
-          ('a -> [> `TDet of 'a ]) * ([> `TDet of 'b ] -> 'b option) * string
+        type 'a nm =
+            (< answer : ('c, 'b) Direct.abstract; state : 'd list >, unit)
+            StateCPSMonad.monad
+          constraint 'a =
+            < answer : 'b; classif : 'c;
+              state : [> `TDet of 'c lstate ] as 'd; .. >
         val decl :
           unit ->
-          (< answer : ('a, 'b) Direct.abstract;
-             state : [> `TDet of
-                          ('a, int ref) Direct.abstract *
-                          ('a, GAC_R.Dom.v ref) Direct.abstract ]
-                     list;
-             .. >,
-           ('c, unit) Direct.abstract)
-          StateCPSMonad.monad
+          < answer : 'a; classif : 'b; state : [> `TDet of 'b lstate ]; .. >
+          nm
         val upd_sign :
           unit ->
-          (< answer : 'a;
-             state : [> `TDet of ('b, int ref) Direct.abstract * 'c ] list;
-             .. >,
-           ('b, unit) Direct.abstract option)
-          StateCPSMonad.monad
+          (< answer : 'a; classif : 'b; state : [> `TDet of 'b lstate ]; .. >,
+           unit)
+          om
         val zero_sign :
           unit ->
-          (< answer : 'a;
-             state : [> `TDet of ('b, int ref) Direct.abstract * 'c ] list;
-             .. >,
-           ('b, unit) Direct.abstract)
-          StateCPSMonad.monad
+          (< answer : 'a; classif : 'b; state : [> `TDet of 'b lstate ]; .. >,
+           unit)
+          lm
+        val acc_magn :
+          ('a, GAC_R.Dom.v) Direct.abstract ->
+          (< answer : 'b; classif : 'a; state : [> `TDet of 'a lstate ]; .. >,
+           unit)
+          lm
         val get_magn :
           unit ->
-          (< answer : 'a; state : [> `TDet of 'b * 'c ] list; .. >, 'c)
-          StateCPSMonad.monad
+          (< answer : 'a; classif : 'b; state : [> `TDet of 'b lstate ]; .. >,
+           tdet)
+          lm
         val set_magn :
-          ('a, 'b) Direct.abstract ->
-          (< answer : 'c;
-             state : [> `TDet of 'd * ('a, 'b ref) Direct.abstract ] list;
-             .. >,
-           ('a, unit) Direct.abstract)
-          StateCPSMonad.monad
-        val acc_magn :
-          'a GAC_R.Dom.vc ->
-          (< answer : 'b;
-             state : [> `TDet of 'c * ('a, GAC_R.Dom.v ref) Direct.abstract ]
-                     list;
-             .. >,
-           ('a, unit) Direct.abstract)
-          StateCPSMonad.monad
+          ('a, GAC_R.Dom.v) Direct.abstract ->
+          (< answer : 'b; classif : 'a; state : [> `TDet of 'a lstate ]; .. >,
+           unit)
+          lm
         val fin :
           unit ->
-          (< answer : 'a;
-             state : [> `TDet of
-                          ('b, int ref) Direct.abstract *
-                          ('b, GAC_R.Dom.v ref) Direct.abstract ]
-                     list;
-             .. >,
-           ('b, GAC_R.Dom.v) Direct.abstract)
-          StateCPSMonad.monad
+          (< answer : 'a; classif : 'b; state : [> `TDet of 'b lstate ]; .. >,
+           GAC_R.Dom.v)
+          lm
       end
     module type UPDATE =
       functor (D : DETERMINANT) ->
@@ -10604,10 +11354,22 @@ module G_GAC_R :
                       type 'a pra = 'a GEF.PermList.pra
                       type 'a lstate =
                           ('a, GEF.PermList.perm_rep ref) Direct.abstract
+                      type 'a pc_constraint = unit
+                        constraint 'a =
+                          < classif : 'b; state : [> `TPivot of 'b lstate ];
+                            .. >
                       type ('a, 'b) lm = ('a, 'b) GEF.cmonad
                         constraint 'a =
                           < answer : 'c; classif : 'd;
                             state : [> `TPivot of 'd lstate ]; .. >
+                      type ('a, 'b) nm =
+                          (< answer : ('b, 'c) Direct.abstract;
+                             state : 'd list >,
+                           unit)
+                          StateCPSMonad.monad
+                        constraint 'a =
+                          < answer : 'c; classif : 'b;
+                            state : [> `TPivot of 'b lstate ] as 'd; .. >
                       val rowrep :
                         'a GEF.PermList.ira ->
                         'a GEF.PermList.ira -> 'a GEF.PermList.fra
@@ -10619,7 +11381,8 @@ module G_GAC_R :
                         ([> `TPivot of 'b ] -> 'b option) * string
                       val decl :
                         'a ->
-                        'b -> ('b -> ('c, unit) Direct.abstract -> 'd) -> 'd
+                        (< answer : 'b; state : 'c; .. >, unit)
+                        StateCPSMonad.monad
                       val add :
                         'a ->
                         (< answer : 'b; state : 'c; .. >, 'd option)
@@ -10724,10 +11487,22 @@ module G_GAC_R :
                       type 'a pra = 'a GEF.PermList.pra
                       type 'a lstate =
                           ('a, GEF.PermList.perm_rep ref) Direct.abstract
+                      type 'a pc_constraint = unit
+                        constraint 'a =
+                          < classif : 'b; state : [> `TPivot of 'b lstate ];
+                            .. >
                       type ('a, 'b) lm = ('a, 'b) GEF.cmonad
                         constraint 'a =
                           < answer : 'c; classif : 'd;
                             state : [> `TPivot of 'd lstate ]; .. >
+                      type ('a, 'b) nm =
+                          (< answer : ('b, 'c) Direct.abstract;
+                             state : 'd list >,
+                           unit)
+                          StateCPSMonad.monad
+                        constraint 'a =
+                          < answer : 'c; classif : 'b;
+                            state : [> `TPivot of 'b lstate ] as 'd; .. >
                       val rowrep :
                         'a GEF.PermList.ira ->
                         'a GEF.PermList.ira -> 'a GEF.PermList.fra
@@ -10739,7 +11514,8 @@ module G_GAC_R :
                         ([> `TPivot of 'b ] -> 'b option) * string
                       val decl :
                         'a ->
-                        'b -> ('b -> ('c, unit) Direct.abstract -> 'd) -> 'd
+                        (< answer : 'b; state : 'c; .. >, unit)
+                        StateCPSMonad.monad
                       val add :
                         'a ->
                         (< answer : 'b; state : 'c; .. >, 'd option)
@@ -10853,10 +11629,22 @@ module G_GAC_R :
                       type 'a pra = 'a GEF.PermList.pra
                       type 'a lstate =
                           ('a, GEF.PermList.perm_rep ref) Direct.abstract
+                      type 'a pc_constraint = unit
+                        constraint 'a =
+                          < classif : 'b; state : [> `TPivot of 'b lstate ];
+                            .. >
                       type ('a, 'b) lm = ('a, 'b) GEF.cmonad
                         constraint 'a =
                           < answer : 'c; classif : 'd;
                             state : [> `TPivot of 'd lstate ]; .. >
+                      type ('a, 'b) nm =
+                          (< answer : ('b, 'c) Direct.abstract;
+                             state : 'd list >,
+                           unit)
+                          StateCPSMonad.monad
+                        constraint 'a =
+                          < answer : 'c; classif : 'b;
+                            state : [> `TPivot of 'b lstate ] as 'd; .. >
                       val rowrep :
                         'a GEF.PermList.ira ->
                         'a GEF.PermList.ira -> 'a GEF.PermList.fra
@@ -10868,7 +11656,8 @@ module G_GAC_R :
                         ([> `TPivot of 'b ] -> 'b option) * string
                       val decl :
                         'a ->
-                        'b -> ('b -> ('c, unit) Direct.abstract -> 'd) -> 'd
+                        (< answer : 'b; state : 'c; .. >, unit)
+                        StateCPSMonad.monad
                       val add :
                         'a ->
                         (< answer : 'b; state : 'c; .. >, 'd option)
@@ -10983,10 +11772,22 @@ module G_GAC_R :
                       type 'a pra = 'a GEF.PermList.pra
                       type 'a lstate =
                           ('a, GEF.PermList.perm_rep ref) Direct.abstract
+                      type 'a pc_constraint = unit
+                        constraint 'a =
+                          < classif : 'b; state : [> `TPivot of 'b lstate ];
+                            .. >
                       type ('a, 'b) lm = ('a, 'b) GEF.cmonad
                         constraint 'a =
                           < answer : 'c; classif : 'd;
                             state : [> `TPivot of 'd lstate ]; .. >
+                      type ('a, 'b) nm =
+                          (< answer : ('b, 'c) Direct.abstract;
+                             state : 'd list >,
+                           unit)
+                          StateCPSMonad.monad
+                        constraint 'a =
+                          < answer : 'c; classif : 'b;
+                            state : [> `TPivot of 'b lstate ] as 'd; .. >
                       val rowrep :
                         'a GEF.PermList.ira ->
                         'a GEF.PermList.ira -> 'a GEF.PermList.fra
@@ -10998,7 +11799,8 @@ module G_GAC_R :
                         ([> `TPivot of 'b ] -> 'b option) * string
                       val decl :
                         'a ->
-                        'b -> ('b -> ('c, unit) Direct.abstract -> 'd) -> 'd
+                        (< answer : 'b; state : 'c; .. >, unit)
+                        StateCPSMonad.monad
                       val add :
                         'a ->
                         (< answer : 'b; state : 'c; .. >, 'd option)
@@ -11115,10 +11917,22 @@ module G_GAC_R :
                       type 'a pra = 'a OD.PivotRep.pra
                       type 'a lstate =
                           ('a, OD.PivotRep.perm_rep ref) Direct.abstract
+                      type 'a pc_constraint = unit
+                        constraint 'a =
+                          < classif : 'b; state : [> `TPivot of 'b lstate ];
+                            .. >
                       type ('a, 'b) lm = ('a, 'b) GEF.cmonad
                         constraint 'a =
                           < answer : 'c; classif : 'd;
                             state : [> `TPivot of 'd lstate ]; .. >
+                      type ('a, 'b) nm =
+                          (< answer : ('b, 'c) Direct.abstract;
+                             state : 'd list >,
+                           unit)
+                          StateCPSMonad.monad
+                        constraint 'a =
+                          < answer : 'c; classif : 'b;
+                            state : [> `TPivot of 'b lstate ] as 'd; .. >
                       val rowrep :
                         'a OD.PivotRep.ira ->
                         'a OD.PivotRep.ira -> 'a OD.PivotRep.fra
@@ -11136,7 +11950,7 @@ module G_GAC_R :
                                         Direct.abstract ]
                                    list;
                            .. >,
-                         ('c, unit) Direct.abstract)
+                         unit)
                         StateCPSMonad.monad
                       val add :
                         'a OD.PivotRep.fra ->
@@ -11261,10 +12075,22 @@ module G_GAC_R :
                       type 'a pra = 'a OD.PivotRep.pra
                       type 'a lstate =
                           ('a, OD.PivotRep.perm_rep ref) Direct.abstract
+                      type 'a pc_constraint = unit
+                        constraint 'a =
+                          < classif : 'b; state : [> `TPivot of 'b lstate ];
+                            .. >
                       type ('a, 'b) lm = ('a, 'b) GEF.cmonad
                         constraint 'a =
                           < answer : 'c; classif : 'd;
                             state : [> `TPivot of 'd lstate ]; .. >
+                      type ('a, 'b) nm =
+                          (< answer : ('b, 'c) Direct.abstract;
+                             state : 'd list >,
+                           unit)
+                          StateCPSMonad.monad
+                        constraint 'a =
+                          < answer : 'c; classif : 'b;
+                            state : [> `TPivot of 'b lstate ] as 'd; .. >
                       val rowrep :
                         'a OD.PivotRep.ira ->
                         'a OD.PivotRep.ira -> 'a OD.PivotRep.fra
@@ -11282,7 +12108,7 @@ module G_GAC_R :
                                         Direct.abstract ]
                                    list;
                            .. >,
-                         ('c, unit) Direct.abstract)
+                         unit)
                         StateCPSMonad.monad
                       val add :
                         'a OD.PivotRep.fra ->
@@ -11415,10 +12241,22 @@ module G_GAC_R :
                       type 'a pra = 'a OD.PivotRep.pra
                       type 'a lstate =
                           ('a, OD.PivotRep.perm_rep ref) Direct.abstract
+                      type 'a pc_constraint = unit
+                        constraint 'a =
+                          < classif : 'b; state : [> `TPivot of 'b lstate ];
+                            .. >
                       type ('a, 'b) lm = ('a, 'b) GEF.cmonad
                         constraint 'a =
                           < answer : 'c; classif : 'd;
                             state : [> `TPivot of 'd lstate ]; .. >
+                      type ('a, 'b) nm =
+                          (< answer : ('b, 'c) Direct.abstract;
+                             state : 'd list >,
+                           unit)
+                          StateCPSMonad.monad
+                        constraint 'a =
+                          < answer : 'c; classif : 'b;
+                            state : [> `TPivot of 'b lstate ] as 'd; .. >
                       val rowrep :
                         'a OD.PivotRep.ira ->
                         'a OD.PivotRep.ira -> 'a OD.PivotRep.fra
@@ -11436,7 +12274,7 @@ module G_GAC_R :
                                         Direct.abstract ]
                                    list;
                            .. >,
-                         ('c, unit) Direct.abstract)
+                         unit)
                         StateCPSMonad.monad
                       val add :
                         'a OD.PivotRep.fra ->
@@ -11559,18 +12397,30 @@ module G_GAC_R :
                           type 'a fra = 'a F.Output(F).IF.P.fra
                           type 'a pra = 'a F.Output(F).IF.P.pra
                           type 'a lstate = 'a F.Output(F).IF.P.lstate
+                          type 'a pc_constraint = unit
+                            constraint 'a =
+                              < classif : 'b;
+                                state : [> `TPivot of 'b lstate ]; .. >
                           type ('a, 'b) lm = ('a, 'b) GEF.cmonad
                             constraint 'a =
                               < answer : 'c; classif : 'd;
                                 state : [> `TPivot of 'd lstate ]; .. >
+                          type ('a, 'b) nm =
+                              (< answer : ('b, 'c) Direct.abstract;
+                                 state : 'd list >,
+                               unit)
+                              StateCPSMonad.monad
+                            constraint 'a =
+                              < answer : 'c; classif : 'b;
+                                state : [> `TPivot of 'b lstate ] as 'd; .. >
                           val rowrep : 'a ira -> 'a ira -> 'a fra
                           val colrep : 'a ira -> 'a ira -> 'a fra
                           val decl :
                             ('a, int) Direct.abstract ->
                             (< answer : 'b; classif : 'a;
                                state : [> `TPivot of 'a lstate ]; .. >,
-                             unit)
-                            lm
+                             'a)
+                            nm
                           val add :
                             'a fra ->
                             (< answer : 'b; classif : 'a;
@@ -11766,18 +12616,31 @@ module G_GAC_R :
                               type 'a lstate =
                                   ('a, GEF.PermList.perm_rep ref)
                                   Direct.abstract
+                              type 'a pc_constraint = unit
+                                constraint 'a =
+                                  < classif : 'b;
+                                    state : [> `TPivot of 'b lstate ]; .. >
                               type ('a, 'b) lm = ('a, 'b) GEF.cmonad
                                 constraint 'a =
                                   < answer : 'c; classif : 'd;
                                     state : [> `TPivot of 'd lstate ]; .. >
+                              type ('a, 'b) nm =
+                                  (< answer : ('b, 'c) Direct.abstract;
+                                     state : 'd list >,
+                                   unit)
+                                  StateCPSMonad.monad
+                                constraint 'a =
+                                  < answer : 'c; classif : 'b;
+                                    state : [> `TPivot of 'b lstate ] as 'd;
+                                    .. >
                               val rowrep : 'a ira -> 'a ira -> 'a fra
                               val colrep : 'a ira -> 'a ira -> 'a fra
                               val decl :
                                 ('a, int) Direct.abstract ->
                                 (< answer : 'b; classif : 'a;
                                    state : [> `TPivot of 'a lstate ]; .. >,
-                                 unit)
-                                lm
+                                 'a)
+                                nm
                               val add :
                                 'a fra ->
                                 (< answer : 'b; classif : 'a;
@@ -11932,6 +12795,9 @@ module G_GVC_Z3 :
       sig
         type tdet = GVC_Z3.Dom.v ref
         type 'a lstate
+        type 'a pc_constraint = unit
+          constraint 'a =
+            < classif : 'b; state : [> `TDet of 'b lstate ]; .. >
         type ('a, 'b) lm = ('a, 'b) GEF.cmonad
           constraint 'a =
             < answer : 'c; classif : 'd; state : [> `TDet of 'd lstate ];
@@ -11940,11 +12806,16 @@ module G_GVC_Z3 :
           constraint 'a =
             < answer : 'c; classif : 'd; state : [> `TDet of 'd lstate ];
               .. >
+        type 'a nm =
+            (< answer : ('c, 'b) Direct.abstract; state : 'd list >, unit)
+            StateCPSMonad.monad
+          constraint 'a =
+            < answer : 'b; classif : 'c;
+              state : [> `TDet of 'c lstate ] as 'd; .. >
         val decl :
           unit ->
-          (< answer : 'a; classif : 'b; state : [> `TDet of 'b lstate ]; .. >,
-           unit)
-          lm
+          < answer : 'a; classif : 'b; state : [> `TDet of 'b lstate ]; .. >
+          nm
         val upd_sign :
           unit ->
           (< answer : 'a; classif : 'b; state : [> `TDet of 'b lstate ]; .. >,
@@ -12024,24 +12895,10 @@ module G_GVC_Z3 :
     module NoDet :
       sig
         type tdet = GVC_Z3.Dom.v ref
-        type 'a lstate = unit
-        val decl :
-          unit -> 'a -> ('a -> ('b, unit) Direct.abstract -> 'c) -> 'c
-        val upd_sign :
-          unit ->
-          (< answer : 'a; state : 'b; .. >, 'c option) StateCPSMonad.monad
-        val zero_sign :
-          unit -> 'a -> ('a -> ('b, unit) Direct.abstract -> 'c) -> 'c
-        val acc_magn :
-          'a -> 'b -> ('b -> ('c, unit) Direct.abstract -> 'd) -> 'd
-        val get_magn :
-          unit ->
-          (< answer : 'a; state : 'b; .. >,
-           ('c, GVC_Z3.Dom.v ref) Direct.abstract)
-          StateCPSMonad.monad
-        val set_magn :
-          'a -> 'b -> ('b -> ('c, unit) Direct.abstract -> 'd) -> 'd
-        val fin : unit -> 'a
+        type 'a lstate = 'a Ge.LAMake(Direct).GenLA(GVC_Z3).NoDet.lstate
+        type 'a pc_constraint = unit
+          constraint 'a =
+            < classif : 'b; state : [> `TDet of 'b lstate ]; .. >
         type ('a, 'b) lm = ('a, 'b) GEF.cmonad
           constraint 'a =
             < answer : 'c; classif : 'd; state : [> `TDet of 'd lstate ];
@@ -12050,12 +12907,55 @@ module G_GVC_Z3 :
           constraint 'a =
             < answer : 'c; classif : 'd; state : [> `TDet of 'd lstate ];
               .. >
+        type 'a nm =
+            (< answer : ('c, 'b) Direct.abstract; state : 'd list >, unit)
+            StateCPSMonad.monad
+          constraint 'a =
+            < answer : 'b; classif : 'c;
+              state : [> `TDet of 'c lstate ] as 'd; .. >
+        val decl :
+          unit ->
+          < answer : 'a; classif : 'b; state : [> `TDet of 'b lstate ]; .. >
+          nm
+        val upd_sign :
+          unit ->
+          (< answer : 'a; classif : 'b; state : [> `TDet of 'b lstate ]; .. >,
+           unit)
+          om
+        val zero_sign :
+          unit ->
+          (< answer : 'a; classif : 'b; state : [> `TDet of 'b lstate ]; .. >,
+           unit)
+          lm
+        val acc_magn :
+          ('a, GVC_Z3.Dom.v) Direct.abstract ->
+          (< answer : 'b; classif : 'a; state : [> `TDet of 'a lstate ]; .. >,
+           unit)
+          lm
+        val get_magn :
+          unit ->
+          (< answer : 'a; classif : 'b; state : [> `TDet of 'b lstate ]; .. >,
+           tdet)
+          lm
+        val set_magn :
+          ('a, GVC_Z3.Dom.v) Direct.abstract ->
+          (< answer : 'b; classif : 'a; state : [> `TDet of 'a lstate ]; .. >,
+           unit)
+          lm
+        val fin :
+          unit ->
+          (< answer : 'a; classif : 'b; state : [> `TDet of 'b lstate ]; .. >,
+           GVC_Z3.Dom.v)
+          lm
       end
     module AbstractDet :
       sig
         type tdet = GVC_Z3.Dom.v ref
         type 'a lstate =
-            ('a, int ref) Direct.abstract * ('a, tdet) Direct.abstract
+            'a Ge.LAMake(Direct).GenLA(GVC_Z3).AbstractDet.lstate
+        type 'a pc_constraint = unit
+          constraint 'a =
+            < classif : 'b; state : [> `TDet of 'b lstate ]; .. >
         type ('a, 'b) lm = ('a, 'b) GEF.cmonad
           constraint 'a =
             < answer : 'c; classif : 'd; state : [> `TDet of 'd lstate ];
@@ -12064,61 +12964,46 @@ module G_GVC_Z3 :
           constraint 'a =
             < answer : 'c; classif : 'd; state : [> `TDet of 'd lstate ];
               .. >
-        val ip :
-          ('a -> [> `TDet of 'a ]) * ([> `TDet of 'b ] -> 'b option) * string
+        type 'a nm =
+            (< answer : ('c, 'b) Direct.abstract; state : 'd list >, unit)
+            StateCPSMonad.monad
+          constraint 'a =
+            < answer : 'b; classif : 'c;
+              state : [> `TDet of 'c lstate ] as 'd; .. >
         val decl :
           unit ->
-          (< answer : ('a, 'b) Direct.abstract;
-             state : [> `TDet of
-                          ('a, int ref) Direct.abstract *
-                          ('a, GVC_Z3.Dom.v ref) Direct.abstract ]
-                     list;
-             .. >,
-           ('c, unit) Direct.abstract)
-          StateCPSMonad.monad
+          < answer : 'a; classif : 'b; state : [> `TDet of 'b lstate ]; .. >
+          nm
         val upd_sign :
           unit ->
-          (< answer : 'a;
-             state : [> `TDet of ('b, int ref) Direct.abstract * 'c ] list;
-             .. >,
-           ('b, unit) Direct.abstract option)
-          StateCPSMonad.monad
+          (< answer : 'a; classif : 'b; state : [> `TDet of 'b lstate ]; .. >,
+           unit)
+          om
         val zero_sign :
           unit ->
-          (< answer : 'a;
-             state : [> `TDet of ('b, int ref) Direct.abstract * 'c ] list;
-             .. >,
-           ('b, unit) Direct.abstract)
-          StateCPSMonad.monad
+          (< answer : 'a; classif : 'b; state : [> `TDet of 'b lstate ]; .. >,
+           unit)
+          lm
+        val acc_magn :
+          ('a, GVC_Z3.Dom.v) Direct.abstract ->
+          (< answer : 'b; classif : 'a; state : [> `TDet of 'a lstate ]; .. >,
+           unit)
+          lm
         val get_magn :
           unit ->
-          (< answer : 'a; state : [> `TDet of 'b * 'c ] list; .. >, 'c)
-          StateCPSMonad.monad
+          (< answer : 'a; classif : 'b; state : [> `TDet of 'b lstate ]; .. >,
+           tdet)
+          lm
         val set_magn :
-          ('a, 'b) Direct.abstract ->
-          (< answer : 'c;
-             state : [> `TDet of 'd * ('a, 'b ref) Direct.abstract ] list;
-             .. >,
-           ('a, unit) Direct.abstract)
-          StateCPSMonad.monad
-        val acc_magn :
-          'a GVC_Z3.Dom.vc ->
-          (< answer : 'b;
-             state : [> `TDet of 'c * ('a, GVC_Z3.Dom.v ref) Direct.abstract ]
-                     list;
-             .. >,
-           ('a, unit) Direct.abstract)
-          StateCPSMonad.monad
+          ('a, GVC_Z3.Dom.v) Direct.abstract ->
+          (< answer : 'b; classif : 'a; state : [> `TDet of 'a lstate ]; .. >,
+           unit)
+          lm
         val fin :
           unit ->
-          (< answer : 'a;
-             state : [> `TDet of
-                          ('b, int ref) Direct.abstract *
-                          ('b, GVC_Z3.Dom.v ref) Direct.abstract ]
-                     list;
-             .. >,
-           ('b, GVC_Z3.Dom.v) Direct.abstract)
-          StateCPSMonad.monad
+          (< answer : 'a; classif : 'b; state : [> `TDet of 'b lstate ]; .. >,
+           GVC_Z3.Dom.v)
+          lm
       end
     module type UPDATE =
       functor (D : DETERMINANT) ->
@@ -12409,10 +13294,22 @@ module G_GVC_Z3 :
                       type 'a pra = 'a GEF.PermList.pra
                       type 'a lstate =
                           ('a, GEF.PermList.perm_rep ref) Direct.abstract
+                      type 'a pc_constraint = unit
+                        constraint 'a =
+                          < classif : 'b; state : [> `TPivot of 'b lstate ];
+                            .. >
                       type ('a, 'b) lm = ('a, 'b) GEF.cmonad
                         constraint 'a =
                           < answer : 'c; classif : 'd;
                             state : [> `TPivot of 'd lstate ]; .. >
+                      type ('a, 'b) nm =
+                          (< answer : ('b, 'c) Direct.abstract;
+                             state : 'd list >,
+                           unit)
+                          StateCPSMonad.monad
+                        constraint 'a =
+                          < answer : 'c; classif : 'b;
+                            state : [> `TPivot of 'b lstate ] as 'd; .. >
                       val rowrep :
                         'a GEF.PermList.ira ->
                         'a GEF.PermList.ira -> 'a GEF.PermList.fra
@@ -12424,7 +13321,8 @@ module G_GVC_Z3 :
                         ([> `TPivot of 'b ] -> 'b option) * string
                       val decl :
                         'a ->
-                        'b -> ('b -> ('c, unit) Direct.abstract -> 'd) -> 'd
+                        (< answer : 'b; state : 'c; .. >, unit)
+                        StateCPSMonad.monad
                       val add :
                         'a ->
                         (< answer : 'b; state : 'c; .. >, 'd option)
@@ -12529,10 +13427,22 @@ module G_GVC_Z3 :
                       type 'a pra = 'a GEF.PermList.pra
                       type 'a lstate =
                           ('a, GEF.PermList.perm_rep ref) Direct.abstract
+                      type 'a pc_constraint = unit
+                        constraint 'a =
+                          < classif : 'b; state : [> `TPivot of 'b lstate ];
+                            .. >
                       type ('a, 'b) lm = ('a, 'b) GEF.cmonad
                         constraint 'a =
                           < answer : 'c; classif : 'd;
                             state : [> `TPivot of 'd lstate ]; .. >
+                      type ('a, 'b) nm =
+                          (< answer : ('b, 'c) Direct.abstract;
+                             state : 'd list >,
+                           unit)
+                          StateCPSMonad.monad
+                        constraint 'a =
+                          < answer : 'c; classif : 'b;
+                            state : [> `TPivot of 'b lstate ] as 'd; .. >
                       val rowrep :
                         'a GEF.PermList.ira ->
                         'a GEF.PermList.ira -> 'a GEF.PermList.fra
@@ -12544,7 +13454,8 @@ module G_GVC_Z3 :
                         ([> `TPivot of 'b ] -> 'b option) * string
                       val decl :
                         'a ->
-                        'b -> ('b -> ('c, unit) Direct.abstract -> 'd) -> 'd
+                        (< answer : 'b; state : 'c; .. >, unit)
+                        StateCPSMonad.monad
                       val add :
                         'a ->
                         (< answer : 'b; state : 'c; .. >, 'd option)
@@ -12658,10 +13569,22 @@ module G_GVC_Z3 :
                       type 'a pra = 'a GEF.PermList.pra
                       type 'a lstate =
                           ('a, GEF.PermList.perm_rep ref) Direct.abstract
+                      type 'a pc_constraint = unit
+                        constraint 'a =
+                          < classif : 'b; state : [> `TPivot of 'b lstate ];
+                            .. >
                       type ('a, 'b) lm = ('a, 'b) GEF.cmonad
                         constraint 'a =
                           < answer : 'c; classif : 'd;
                             state : [> `TPivot of 'd lstate ]; .. >
+                      type ('a, 'b) nm =
+                          (< answer : ('b, 'c) Direct.abstract;
+                             state : 'd list >,
+                           unit)
+                          StateCPSMonad.monad
+                        constraint 'a =
+                          < answer : 'c; classif : 'b;
+                            state : [> `TPivot of 'b lstate ] as 'd; .. >
                       val rowrep :
                         'a GEF.PermList.ira ->
                         'a GEF.PermList.ira -> 'a GEF.PermList.fra
@@ -12673,7 +13596,8 @@ module G_GVC_Z3 :
                         ([> `TPivot of 'b ] -> 'b option) * string
                       val decl :
                         'a ->
-                        'b -> ('b -> ('c, unit) Direct.abstract -> 'd) -> 'd
+                        (< answer : 'b; state : 'c; .. >, unit)
+                        StateCPSMonad.monad
                       val add :
                         'a ->
                         (< answer : 'b; state : 'c; .. >, 'd option)
@@ -12788,10 +13712,22 @@ module G_GVC_Z3 :
                       type 'a pra = 'a GEF.PermList.pra
                       type 'a lstate =
                           ('a, GEF.PermList.perm_rep ref) Direct.abstract
+                      type 'a pc_constraint = unit
+                        constraint 'a =
+                          < classif : 'b; state : [> `TPivot of 'b lstate ];
+                            .. >
                       type ('a, 'b) lm = ('a, 'b) GEF.cmonad
                         constraint 'a =
                           < answer : 'c; classif : 'd;
                             state : [> `TPivot of 'd lstate ]; .. >
+                      type ('a, 'b) nm =
+                          (< answer : ('b, 'c) Direct.abstract;
+                             state : 'd list >,
+                           unit)
+                          StateCPSMonad.monad
+                        constraint 'a =
+                          < answer : 'c; classif : 'b;
+                            state : [> `TPivot of 'b lstate ] as 'd; .. >
                       val rowrep :
                         'a GEF.PermList.ira ->
                         'a GEF.PermList.ira -> 'a GEF.PermList.fra
@@ -12803,7 +13739,8 @@ module G_GVC_Z3 :
                         ([> `TPivot of 'b ] -> 'b option) * string
                       val decl :
                         'a ->
-                        'b -> ('b -> ('c, unit) Direct.abstract -> 'd) -> 'd
+                        (< answer : 'b; state : 'c; .. >, unit)
+                        StateCPSMonad.monad
                       val add :
                         'a ->
                         (< answer : 'b; state : 'c; .. >, 'd option)
@@ -12920,10 +13857,22 @@ module G_GVC_Z3 :
                       type 'a pra = 'a OD.PivotRep.pra
                       type 'a lstate =
                           ('a, OD.PivotRep.perm_rep ref) Direct.abstract
+                      type 'a pc_constraint = unit
+                        constraint 'a =
+                          < classif : 'b; state : [> `TPivot of 'b lstate ];
+                            .. >
                       type ('a, 'b) lm = ('a, 'b) GEF.cmonad
                         constraint 'a =
                           < answer : 'c; classif : 'd;
                             state : [> `TPivot of 'd lstate ]; .. >
+                      type ('a, 'b) nm =
+                          (< answer : ('b, 'c) Direct.abstract;
+                             state : 'd list >,
+                           unit)
+                          StateCPSMonad.monad
+                        constraint 'a =
+                          < answer : 'c; classif : 'b;
+                            state : [> `TPivot of 'b lstate ] as 'd; .. >
                       val rowrep :
                         'a OD.PivotRep.ira ->
                         'a OD.PivotRep.ira -> 'a OD.PivotRep.fra
@@ -12941,7 +13890,7 @@ module G_GVC_Z3 :
                                         Direct.abstract ]
                                    list;
                            .. >,
-                         ('c, unit) Direct.abstract)
+                         unit)
                         StateCPSMonad.monad
                       val add :
                         'a OD.PivotRep.fra ->
@@ -13066,10 +14015,22 @@ module G_GVC_Z3 :
                       type 'a pra = 'a OD.PivotRep.pra
                       type 'a lstate =
                           ('a, OD.PivotRep.perm_rep ref) Direct.abstract
+                      type 'a pc_constraint = unit
+                        constraint 'a =
+                          < classif : 'b; state : [> `TPivot of 'b lstate ];
+                            .. >
                       type ('a, 'b) lm = ('a, 'b) GEF.cmonad
                         constraint 'a =
                           < answer : 'c; classif : 'd;
                             state : [> `TPivot of 'd lstate ]; .. >
+                      type ('a, 'b) nm =
+                          (< answer : ('b, 'c) Direct.abstract;
+                             state : 'd list >,
+                           unit)
+                          StateCPSMonad.monad
+                        constraint 'a =
+                          < answer : 'c; classif : 'b;
+                            state : [> `TPivot of 'b lstate ] as 'd; .. >
                       val rowrep :
                         'a OD.PivotRep.ira ->
                         'a OD.PivotRep.ira -> 'a OD.PivotRep.fra
@@ -13087,7 +14048,7 @@ module G_GVC_Z3 :
                                         Direct.abstract ]
                                    list;
                            .. >,
-                         ('c, unit) Direct.abstract)
+                         unit)
                         StateCPSMonad.monad
                       val add :
                         'a OD.PivotRep.fra ->
@@ -13220,10 +14181,22 @@ module G_GVC_Z3 :
                       type 'a pra = 'a OD.PivotRep.pra
                       type 'a lstate =
                           ('a, OD.PivotRep.perm_rep ref) Direct.abstract
+                      type 'a pc_constraint = unit
+                        constraint 'a =
+                          < classif : 'b; state : [> `TPivot of 'b lstate ];
+                            .. >
                       type ('a, 'b) lm = ('a, 'b) GEF.cmonad
                         constraint 'a =
                           < answer : 'c; classif : 'd;
                             state : [> `TPivot of 'd lstate ]; .. >
+                      type ('a, 'b) nm =
+                          (< answer : ('b, 'c) Direct.abstract;
+                             state : 'd list >,
+                           unit)
+                          StateCPSMonad.monad
+                        constraint 'a =
+                          < answer : 'c; classif : 'b;
+                            state : [> `TPivot of 'b lstate ] as 'd; .. >
                       val rowrep :
                         'a OD.PivotRep.ira ->
                         'a OD.PivotRep.ira -> 'a OD.PivotRep.fra
@@ -13241,7 +14214,7 @@ module G_GVC_Z3 :
                                         Direct.abstract ]
                                    list;
                            .. >,
-                         ('c, unit) Direct.abstract)
+                         unit)
                         StateCPSMonad.monad
                       val add :
                         'a OD.PivotRep.fra ->
@@ -13364,18 +14337,30 @@ module G_GVC_Z3 :
                           type 'a fra = 'a F.Output(F).IF.P.fra
                           type 'a pra = 'a F.Output(F).IF.P.pra
                           type 'a lstate = 'a F.Output(F).IF.P.lstate
+                          type 'a pc_constraint = unit
+                            constraint 'a =
+                              < classif : 'b;
+                                state : [> `TPivot of 'b lstate ]; .. >
                           type ('a, 'b) lm = ('a, 'b) GEF.cmonad
                             constraint 'a =
                               < answer : 'c; classif : 'd;
                                 state : [> `TPivot of 'd lstate ]; .. >
+                          type ('a, 'b) nm =
+                              (< answer : ('b, 'c) Direct.abstract;
+                                 state : 'd list >,
+                               unit)
+                              StateCPSMonad.monad
+                            constraint 'a =
+                              < answer : 'c; classif : 'b;
+                                state : [> `TPivot of 'b lstate ] as 'd; .. >
                           val rowrep : 'a ira -> 'a ira -> 'a fra
                           val colrep : 'a ira -> 'a ira -> 'a fra
                           val decl :
                             ('a, int) Direct.abstract ->
                             (< answer : 'b; classif : 'a;
                                state : [> `TPivot of 'a lstate ]; .. >,
-                             unit)
-                            lm
+                             'a)
+                            nm
                           val add :
                             'a fra ->
                             (< answer : 'b; classif : 'a;
@@ -13571,18 +14556,31 @@ module G_GVC_Z3 :
                               type 'a lstate =
                                   ('a, GEF.PermList.perm_rep ref)
                                   Direct.abstract
+                              type 'a pc_constraint = unit
+                                constraint 'a =
+                                  < classif : 'b;
+                                    state : [> `TPivot of 'b lstate ]; .. >
                               type ('a, 'b) lm = ('a, 'b) GEF.cmonad
                                 constraint 'a =
                                   < answer : 'c; classif : 'd;
                                     state : [> `TPivot of 'd lstate ]; .. >
+                              type ('a, 'b) nm =
+                                  (< answer : ('b, 'c) Direct.abstract;
+                                     state : 'd list >,
+                                   unit)
+                                  StateCPSMonad.monad
+                                constraint 'a =
+                                  < answer : 'c; classif : 'b;
+                                    state : [> `TPivot of 'b lstate ] as 'd;
+                                    .. >
                               val rowrep : 'a ira -> 'a ira -> 'a fra
                               val colrep : 'a ira -> 'a ira -> 'a fra
                               val decl :
                                 ('a, int) Direct.abstract ->
                                 (< answer : 'b; classif : 'a;
                                    state : [> `TPivot of 'a lstate ]; .. >,
-                                 unit)
-                                lm
+                                 'a)
+                                nm
                               val add :
                                 'a fra ->
                                 (< answer : 'b; classif : 'a;
@@ -13737,6 +14735,9 @@ module G_GVC_Z19 :
       sig
         type tdet = GVC_Z19.Dom.v ref
         type 'a lstate
+        type 'a pc_constraint = unit
+          constraint 'a =
+            < classif : 'b; state : [> `TDet of 'b lstate ]; .. >
         type ('a, 'b) lm = ('a, 'b) GEF.cmonad
           constraint 'a =
             < answer : 'c; classif : 'd; state : [> `TDet of 'd lstate ];
@@ -13745,11 +14746,16 @@ module G_GVC_Z19 :
           constraint 'a =
             < answer : 'c; classif : 'd; state : [> `TDet of 'd lstate ];
               .. >
+        type 'a nm =
+            (< answer : ('c, 'b) Direct.abstract; state : 'd list >, unit)
+            StateCPSMonad.monad
+          constraint 'a =
+            < answer : 'b; classif : 'c;
+              state : [> `TDet of 'c lstate ] as 'd; .. >
         val decl :
           unit ->
-          (< answer : 'a; classif : 'b; state : [> `TDet of 'b lstate ]; .. >,
-           unit)
-          lm
+          < answer : 'a; classif : 'b; state : [> `TDet of 'b lstate ]; .. >
+          nm
         val upd_sign :
           unit ->
           (< answer : 'a; classif : 'b; state : [> `TDet of 'b lstate ]; .. >,
@@ -13829,24 +14835,10 @@ module G_GVC_Z19 :
     module NoDet :
       sig
         type tdet = GVC_Z19.Dom.v ref
-        type 'a lstate = unit
-        val decl :
-          unit -> 'a -> ('a -> ('b, unit) Direct.abstract -> 'c) -> 'c
-        val upd_sign :
-          unit ->
-          (< answer : 'a; state : 'b; .. >, 'c option) StateCPSMonad.monad
-        val zero_sign :
-          unit -> 'a -> ('a -> ('b, unit) Direct.abstract -> 'c) -> 'c
-        val acc_magn :
-          'a -> 'b -> ('b -> ('c, unit) Direct.abstract -> 'd) -> 'd
-        val get_magn :
-          unit ->
-          (< answer : 'a; state : 'b; .. >,
-           ('c, GVC_Z19.Dom.v ref) Direct.abstract)
-          StateCPSMonad.monad
-        val set_magn :
-          'a -> 'b -> ('b -> ('c, unit) Direct.abstract -> 'd) -> 'd
-        val fin : unit -> 'a
+        type 'a lstate = 'a Ge.LAMake(Direct).GenLA(GVC_Z19).NoDet.lstate
+        type 'a pc_constraint = unit
+          constraint 'a =
+            < classif : 'b; state : [> `TDet of 'b lstate ]; .. >
         type ('a, 'b) lm = ('a, 'b) GEF.cmonad
           constraint 'a =
             < answer : 'c; classif : 'd; state : [> `TDet of 'd lstate ];
@@ -13855,12 +14847,55 @@ module G_GVC_Z19 :
           constraint 'a =
             < answer : 'c; classif : 'd; state : [> `TDet of 'd lstate ];
               .. >
+        type 'a nm =
+            (< answer : ('c, 'b) Direct.abstract; state : 'd list >, unit)
+            StateCPSMonad.monad
+          constraint 'a =
+            < answer : 'b; classif : 'c;
+              state : [> `TDet of 'c lstate ] as 'd; .. >
+        val decl :
+          unit ->
+          < answer : 'a; classif : 'b; state : [> `TDet of 'b lstate ]; .. >
+          nm
+        val upd_sign :
+          unit ->
+          (< answer : 'a; classif : 'b; state : [> `TDet of 'b lstate ]; .. >,
+           unit)
+          om
+        val zero_sign :
+          unit ->
+          (< answer : 'a; classif : 'b; state : [> `TDet of 'b lstate ]; .. >,
+           unit)
+          lm
+        val acc_magn :
+          ('a, GVC_Z19.Dom.v) Direct.abstract ->
+          (< answer : 'b; classif : 'a; state : [> `TDet of 'a lstate ]; .. >,
+           unit)
+          lm
+        val get_magn :
+          unit ->
+          (< answer : 'a; classif : 'b; state : [> `TDet of 'b lstate ]; .. >,
+           tdet)
+          lm
+        val set_magn :
+          ('a, GVC_Z19.Dom.v) Direct.abstract ->
+          (< answer : 'b; classif : 'a; state : [> `TDet of 'a lstate ]; .. >,
+           unit)
+          lm
+        val fin :
+          unit ->
+          (< answer : 'a; classif : 'b; state : [> `TDet of 'b lstate ]; .. >,
+           GVC_Z19.Dom.v)
+          lm
       end
     module AbstractDet :
       sig
         type tdet = GVC_Z19.Dom.v ref
         type 'a lstate =
-            ('a, int ref) Direct.abstract * ('a, tdet) Direct.abstract
+            'a Ge.LAMake(Direct).GenLA(GVC_Z19).AbstractDet.lstate
+        type 'a pc_constraint = unit
+          constraint 'a =
+            < classif : 'b; state : [> `TDet of 'b lstate ]; .. >
         type ('a, 'b) lm = ('a, 'b) GEF.cmonad
           constraint 'a =
             < answer : 'c; classif : 'd; state : [> `TDet of 'd lstate ];
@@ -13869,61 +14904,46 @@ module G_GVC_Z19 :
           constraint 'a =
             < answer : 'c; classif : 'd; state : [> `TDet of 'd lstate ];
               .. >
-        val ip :
-          ('a -> [> `TDet of 'a ]) * ([> `TDet of 'b ] -> 'b option) * string
+        type 'a nm =
+            (< answer : ('c, 'b) Direct.abstract; state : 'd list >, unit)
+            StateCPSMonad.monad
+          constraint 'a =
+            < answer : 'b; classif : 'c;
+              state : [> `TDet of 'c lstate ] as 'd; .. >
         val decl :
           unit ->
-          (< answer : ('a, 'b) Direct.abstract;
-             state : [> `TDet of
-                          ('a, int ref) Direct.abstract *
-                          ('a, GVC_Z19.Dom.v ref) Direct.abstract ]
-                     list;
-             .. >,
-           ('c, unit) Direct.abstract)
-          StateCPSMonad.monad
+          < answer : 'a; classif : 'b; state : [> `TDet of 'b lstate ]; .. >
+          nm
         val upd_sign :
           unit ->
-          (< answer : 'a;
-             state : [> `TDet of ('b, int ref) Direct.abstract * 'c ] list;
-             .. >,
-           ('b, unit) Direct.abstract option)
-          StateCPSMonad.monad
+          (< answer : 'a; classif : 'b; state : [> `TDet of 'b lstate ]; .. >,
+           unit)
+          om
         val zero_sign :
           unit ->
-          (< answer : 'a;
-             state : [> `TDet of ('b, int ref) Direct.abstract * 'c ] list;
-             .. >,
-           ('b, unit) Direct.abstract)
-          StateCPSMonad.monad
+          (< answer : 'a; classif : 'b; state : [> `TDet of 'b lstate ]; .. >,
+           unit)
+          lm
+        val acc_magn :
+          ('a, GVC_Z19.Dom.v) Direct.abstract ->
+          (< answer : 'b; classif : 'a; state : [> `TDet of 'a lstate ]; .. >,
+           unit)
+          lm
         val get_magn :
           unit ->
-          (< answer : 'a; state : [> `TDet of 'b * 'c ] list; .. >, 'c)
-          StateCPSMonad.monad
+          (< answer : 'a; classif : 'b; state : [> `TDet of 'b lstate ]; .. >,
+           tdet)
+          lm
         val set_magn :
-          ('a, 'b) Direct.abstract ->
-          (< answer : 'c;
-             state : [> `TDet of 'd * ('a, 'b ref) Direct.abstract ] list;
-             .. >,
-           ('a, unit) Direct.abstract)
-          StateCPSMonad.monad
-        val acc_magn :
-          'a GVC_Z19.Dom.vc ->
-          (< answer : 'b;
-             state : [> `TDet of 'c * ('a, GVC_Z19.Dom.v ref) Direct.abstract ]
-                     list;
-             .. >,
-           ('a, unit) Direct.abstract)
-          StateCPSMonad.monad
+          ('a, GVC_Z19.Dom.v) Direct.abstract ->
+          (< answer : 'b; classif : 'a; state : [> `TDet of 'a lstate ]; .. >,
+           unit)
+          lm
         val fin :
           unit ->
-          (< answer : 'a;
-             state : [> `TDet of
-                          ('b, int ref) Direct.abstract *
-                          ('b, GVC_Z19.Dom.v ref) Direct.abstract ]
-                     list;
-             .. >,
-           ('b, GVC_Z19.Dom.v) Direct.abstract)
-          StateCPSMonad.monad
+          (< answer : 'a; classif : 'b; state : [> `TDet of 'b lstate ]; .. >,
+           GVC_Z19.Dom.v)
+          lm
       end
     module type UPDATE =
       functor (D : DETERMINANT) ->
@@ -14215,10 +15235,22 @@ module G_GVC_Z19 :
                       type 'a pra = 'a GEF.PermList.pra
                       type 'a lstate =
                           ('a, GEF.PermList.perm_rep ref) Direct.abstract
+                      type 'a pc_constraint = unit
+                        constraint 'a =
+                          < classif : 'b; state : [> `TPivot of 'b lstate ];
+                            .. >
                       type ('a, 'b) lm = ('a, 'b) GEF.cmonad
                         constraint 'a =
                           < answer : 'c; classif : 'd;
                             state : [> `TPivot of 'd lstate ]; .. >
+                      type ('a, 'b) nm =
+                          (< answer : ('b, 'c) Direct.abstract;
+                             state : 'd list >,
+                           unit)
+                          StateCPSMonad.monad
+                        constraint 'a =
+                          < answer : 'c; classif : 'b;
+                            state : [> `TPivot of 'b lstate ] as 'd; .. >
                       val rowrep :
                         'a GEF.PermList.ira ->
                         'a GEF.PermList.ira -> 'a GEF.PermList.fra
@@ -14230,7 +15262,8 @@ module G_GVC_Z19 :
                         ([> `TPivot of 'b ] -> 'b option) * string
                       val decl :
                         'a ->
-                        'b -> ('b -> ('c, unit) Direct.abstract -> 'd) -> 'd
+                        (< answer : 'b; state : 'c; .. >, unit)
+                        StateCPSMonad.monad
                       val add :
                         'a ->
                         (< answer : 'b; state : 'c; .. >, 'd option)
@@ -14335,10 +15368,22 @@ module G_GVC_Z19 :
                       type 'a pra = 'a GEF.PermList.pra
                       type 'a lstate =
                           ('a, GEF.PermList.perm_rep ref) Direct.abstract
+                      type 'a pc_constraint = unit
+                        constraint 'a =
+                          < classif : 'b; state : [> `TPivot of 'b lstate ];
+                            .. >
                       type ('a, 'b) lm = ('a, 'b) GEF.cmonad
                         constraint 'a =
                           < answer : 'c; classif : 'd;
                             state : [> `TPivot of 'd lstate ]; .. >
+                      type ('a, 'b) nm =
+                          (< answer : ('b, 'c) Direct.abstract;
+                             state : 'd list >,
+                           unit)
+                          StateCPSMonad.monad
+                        constraint 'a =
+                          < answer : 'c; classif : 'b;
+                            state : [> `TPivot of 'b lstate ] as 'd; .. >
                       val rowrep :
                         'a GEF.PermList.ira ->
                         'a GEF.PermList.ira -> 'a GEF.PermList.fra
@@ -14350,7 +15395,8 @@ module G_GVC_Z19 :
                         ([> `TPivot of 'b ] -> 'b option) * string
                       val decl :
                         'a ->
-                        'b -> ('b -> ('c, unit) Direct.abstract -> 'd) -> 'd
+                        (< answer : 'b; state : 'c; .. >, unit)
+                        StateCPSMonad.monad
                       val add :
                         'a ->
                         (< answer : 'b; state : 'c; .. >, 'd option)
@@ -14464,10 +15510,22 @@ module G_GVC_Z19 :
                       type 'a pra = 'a GEF.PermList.pra
                       type 'a lstate =
                           ('a, GEF.PermList.perm_rep ref) Direct.abstract
+                      type 'a pc_constraint = unit
+                        constraint 'a =
+                          < classif : 'b; state : [> `TPivot of 'b lstate ];
+                            .. >
                       type ('a, 'b) lm = ('a, 'b) GEF.cmonad
                         constraint 'a =
                           < answer : 'c; classif : 'd;
                             state : [> `TPivot of 'd lstate ]; .. >
+                      type ('a, 'b) nm =
+                          (< answer : ('b, 'c) Direct.abstract;
+                             state : 'd list >,
+                           unit)
+                          StateCPSMonad.monad
+                        constraint 'a =
+                          < answer : 'c; classif : 'b;
+                            state : [> `TPivot of 'b lstate ] as 'd; .. >
                       val rowrep :
                         'a GEF.PermList.ira ->
                         'a GEF.PermList.ira -> 'a GEF.PermList.fra
@@ -14479,7 +15537,8 @@ module G_GVC_Z19 :
                         ([> `TPivot of 'b ] -> 'b option) * string
                       val decl :
                         'a ->
-                        'b -> ('b -> ('c, unit) Direct.abstract -> 'd) -> 'd
+                        (< answer : 'b; state : 'c; .. >, unit)
+                        StateCPSMonad.monad
                       val add :
                         'a ->
                         (< answer : 'b; state : 'c; .. >, 'd option)
@@ -14594,10 +15653,22 @@ module G_GVC_Z19 :
                       type 'a pra = 'a GEF.PermList.pra
                       type 'a lstate =
                           ('a, GEF.PermList.perm_rep ref) Direct.abstract
+                      type 'a pc_constraint = unit
+                        constraint 'a =
+                          < classif : 'b; state : [> `TPivot of 'b lstate ];
+                            .. >
                       type ('a, 'b) lm = ('a, 'b) GEF.cmonad
                         constraint 'a =
                           < answer : 'c; classif : 'd;
                             state : [> `TPivot of 'd lstate ]; .. >
+                      type ('a, 'b) nm =
+                          (< answer : ('b, 'c) Direct.abstract;
+                             state : 'd list >,
+                           unit)
+                          StateCPSMonad.monad
+                        constraint 'a =
+                          < answer : 'c; classif : 'b;
+                            state : [> `TPivot of 'b lstate ] as 'd; .. >
                       val rowrep :
                         'a GEF.PermList.ira ->
                         'a GEF.PermList.ira -> 'a GEF.PermList.fra
@@ -14609,7 +15680,8 @@ module G_GVC_Z19 :
                         ([> `TPivot of 'b ] -> 'b option) * string
                       val decl :
                         'a ->
-                        'b -> ('b -> ('c, unit) Direct.abstract -> 'd) -> 'd
+                        (< answer : 'b; state : 'c; .. >, unit)
+                        StateCPSMonad.monad
                       val add :
                         'a ->
                         (< answer : 'b; state : 'c; .. >, 'd option)
@@ -14726,10 +15798,22 @@ module G_GVC_Z19 :
                       type 'a pra = 'a OD.PivotRep.pra
                       type 'a lstate =
                           ('a, OD.PivotRep.perm_rep ref) Direct.abstract
+                      type 'a pc_constraint = unit
+                        constraint 'a =
+                          < classif : 'b; state : [> `TPivot of 'b lstate ];
+                            .. >
                       type ('a, 'b) lm = ('a, 'b) GEF.cmonad
                         constraint 'a =
                           < answer : 'c; classif : 'd;
                             state : [> `TPivot of 'd lstate ]; .. >
+                      type ('a, 'b) nm =
+                          (< answer : ('b, 'c) Direct.abstract;
+                             state : 'd list >,
+                           unit)
+                          StateCPSMonad.monad
+                        constraint 'a =
+                          < answer : 'c; classif : 'b;
+                            state : [> `TPivot of 'b lstate ] as 'd; .. >
                       val rowrep :
                         'a OD.PivotRep.ira ->
                         'a OD.PivotRep.ira -> 'a OD.PivotRep.fra
@@ -14747,7 +15831,7 @@ module G_GVC_Z19 :
                                         Direct.abstract ]
                                    list;
                            .. >,
-                         ('c, unit) Direct.abstract)
+                         unit)
                         StateCPSMonad.monad
                       val add :
                         'a OD.PivotRep.fra ->
@@ -14873,10 +15957,22 @@ module G_GVC_Z19 :
                       type 'a pra = 'a OD.PivotRep.pra
                       type 'a lstate =
                           ('a, OD.PivotRep.perm_rep ref) Direct.abstract
+                      type 'a pc_constraint = unit
+                        constraint 'a =
+                          < classif : 'b; state : [> `TPivot of 'b lstate ];
+                            .. >
                       type ('a, 'b) lm = ('a, 'b) GEF.cmonad
                         constraint 'a =
                           < answer : 'c; classif : 'd;
                             state : [> `TPivot of 'd lstate ]; .. >
+                      type ('a, 'b) nm =
+                          (< answer : ('b, 'c) Direct.abstract;
+                             state : 'd list >,
+                           unit)
+                          StateCPSMonad.monad
+                        constraint 'a =
+                          < answer : 'c; classif : 'b;
+                            state : [> `TPivot of 'b lstate ] as 'd; .. >
                       val rowrep :
                         'a OD.PivotRep.ira ->
                         'a OD.PivotRep.ira -> 'a OD.PivotRep.fra
@@ -14894,7 +15990,7 @@ module G_GVC_Z19 :
                                         Direct.abstract ]
                                    list;
                            .. >,
-                         ('c, unit) Direct.abstract)
+                         unit)
                         StateCPSMonad.monad
                       val add :
                         'a OD.PivotRep.fra ->
@@ -15027,10 +16123,22 @@ module G_GVC_Z19 :
                       type 'a pra = 'a OD.PivotRep.pra
                       type 'a lstate =
                           ('a, OD.PivotRep.perm_rep ref) Direct.abstract
+                      type 'a pc_constraint = unit
+                        constraint 'a =
+                          < classif : 'b; state : [> `TPivot of 'b lstate ];
+                            .. >
                       type ('a, 'b) lm = ('a, 'b) GEF.cmonad
                         constraint 'a =
                           < answer : 'c; classif : 'd;
                             state : [> `TPivot of 'd lstate ]; .. >
+                      type ('a, 'b) nm =
+                          (< answer : ('b, 'c) Direct.abstract;
+                             state : 'd list >,
+                           unit)
+                          StateCPSMonad.monad
+                        constraint 'a =
+                          < answer : 'c; classif : 'b;
+                            state : [> `TPivot of 'b lstate ] as 'd; .. >
                       val rowrep :
                         'a OD.PivotRep.ira ->
                         'a OD.PivotRep.ira -> 'a OD.PivotRep.fra
@@ -15048,7 +16156,7 @@ module G_GVC_Z19 :
                                         Direct.abstract ]
                                    list;
                            .. >,
-                         ('c, unit) Direct.abstract)
+                         unit)
                         StateCPSMonad.monad
                       val add :
                         'a OD.PivotRep.fra ->
@@ -15171,18 +16279,30 @@ module G_GVC_Z19 :
                           type 'a fra = 'a F.Output(F).IF.P.fra
                           type 'a pra = 'a F.Output(F).IF.P.pra
                           type 'a lstate = 'a F.Output(F).IF.P.lstate
+                          type 'a pc_constraint = unit
+                            constraint 'a =
+                              < classif : 'b;
+                                state : [> `TPivot of 'b lstate ]; .. >
                           type ('a, 'b) lm = ('a, 'b) GEF.cmonad
                             constraint 'a =
                               < answer : 'c; classif : 'd;
                                 state : [> `TPivot of 'd lstate ]; .. >
+                          type ('a, 'b) nm =
+                              (< answer : ('b, 'c) Direct.abstract;
+                                 state : 'd list >,
+                               unit)
+                              StateCPSMonad.monad
+                            constraint 'a =
+                              < answer : 'c; classif : 'b;
+                                state : [> `TPivot of 'b lstate ] as 'd; .. >
                           val rowrep : 'a ira -> 'a ira -> 'a fra
                           val colrep : 'a ira -> 'a ira -> 'a fra
                           val decl :
                             ('a, int) Direct.abstract ->
                             (< answer : 'b; classif : 'a;
                                state : [> `TPivot of 'a lstate ]; .. >,
-                             unit)
-                            lm
+                             'a)
+                            nm
                           val add :
                             'a fra ->
                             (< answer : 'b; classif : 'a;
@@ -15380,18 +16500,31 @@ module G_GVC_Z19 :
                               type 'a lstate =
                                   ('a, GEF.PermList.perm_rep ref)
                                   Direct.abstract
+                              type 'a pc_constraint = unit
+                                constraint 'a =
+                                  < classif : 'b;
+                                    state : [> `TPivot of 'b lstate ]; .. >
                               type ('a, 'b) lm = ('a, 'b) GEF.cmonad
                                 constraint 'a =
                                   < answer : 'c; classif : 'd;
                                     state : [> `TPivot of 'd lstate ]; .. >
+                              type ('a, 'b) nm =
+                                  (< answer : ('b, 'c) Direct.abstract;
+                                     state : 'd list >,
+                                   unit)
+                                  StateCPSMonad.monad
+                                constraint 'a =
+                                  < answer : 'c; classif : 'b;
+                                    state : [> `TPivot of 'b lstate ] as 'd;
+                                    .. >
                               val rowrep : 'a ira -> 'a ira -> 'a fra
                               val colrep : 'a ira -> 'a ira -> 'a fra
                               val decl :
                                 ('a, int) Direct.abstract ->
                                 (< answer : 'b; classif : 'a;
                                    state : [> `TPivot of 'a lstate ]; .. >,
-                                 unit)
-                                lm
+                                 'a)
+                                nm
                               val add :
                                 'a fra ->
                                 (< answer : 'b; classif : 'a;
@@ -15546,6 +16679,9 @@ module G_GFC_F :
       sig
         type tdet = GFC_F.Dom.v ref
         type 'a lstate
+        type 'a pc_constraint = unit
+          constraint 'a =
+            < classif : 'b; state : [> `TDet of 'b lstate ]; .. >
         type ('a, 'b) lm = ('a, 'b) GEF.cmonad
           constraint 'a =
             < answer : 'c; classif : 'd; state : [> `TDet of 'd lstate ];
@@ -15554,11 +16690,16 @@ module G_GFC_F :
           constraint 'a =
             < answer : 'c; classif : 'd; state : [> `TDet of 'd lstate ];
               .. >
+        type 'a nm =
+            (< answer : ('c, 'b) Direct.abstract; state : 'd list >, unit)
+            StateCPSMonad.monad
+          constraint 'a =
+            < answer : 'b; classif : 'c;
+              state : [> `TDet of 'c lstate ] as 'd; .. >
         val decl :
           unit ->
-          (< answer : 'a; classif : 'b; state : [> `TDet of 'b lstate ]; .. >,
-           unit)
-          lm
+          < answer : 'a; classif : 'b; state : [> `TDet of 'b lstate ]; .. >
+          nm
         val upd_sign :
           unit ->
           (< answer : 'a; classif : 'b; state : [> `TDet of 'b lstate ]; .. >,
@@ -15638,24 +16779,10 @@ module G_GFC_F :
     module NoDet :
       sig
         type tdet = GFC_F.Dom.v ref
-        type 'a lstate = unit
-        val decl :
-          unit -> 'a -> ('a -> ('b, unit) Direct.abstract -> 'c) -> 'c
-        val upd_sign :
-          unit ->
-          (< answer : 'a; state : 'b; .. >, 'c option) StateCPSMonad.monad
-        val zero_sign :
-          unit -> 'a -> ('a -> ('b, unit) Direct.abstract -> 'c) -> 'c
-        val acc_magn :
-          'a -> 'b -> ('b -> ('c, unit) Direct.abstract -> 'd) -> 'd
-        val get_magn :
-          unit ->
-          (< answer : 'a; state : 'b; .. >,
-           ('c, GFC_F.Dom.v ref) Direct.abstract)
-          StateCPSMonad.monad
-        val set_magn :
-          'a -> 'b -> ('b -> ('c, unit) Direct.abstract -> 'd) -> 'd
-        val fin : unit -> 'a
+        type 'a lstate = 'a Ge.LAMake(Direct).GenLA(GFC_F).NoDet.lstate
+        type 'a pc_constraint = unit
+          constraint 'a =
+            < classif : 'b; state : [> `TDet of 'b lstate ]; .. >
         type ('a, 'b) lm = ('a, 'b) GEF.cmonad
           constraint 'a =
             < answer : 'c; classif : 'd; state : [> `TDet of 'd lstate ];
@@ -15664,12 +16791,54 @@ module G_GFC_F :
           constraint 'a =
             < answer : 'c; classif : 'd; state : [> `TDet of 'd lstate ];
               .. >
+        type 'a nm =
+            (< answer : ('c, 'b) Direct.abstract; state : 'd list >, unit)
+            StateCPSMonad.monad
+          constraint 'a =
+            < answer : 'b; classif : 'c;
+              state : [> `TDet of 'c lstate ] as 'd; .. >
+        val decl :
+          unit ->
+          < answer : 'a; classif : 'b; state : [> `TDet of 'b lstate ]; .. >
+          nm
+        val upd_sign :
+          unit ->
+          (< answer : 'a; classif : 'b; state : [> `TDet of 'b lstate ]; .. >,
+           unit)
+          om
+        val zero_sign :
+          unit ->
+          (< answer : 'a; classif : 'b; state : [> `TDet of 'b lstate ]; .. >,
+           unit)
+          lm
+        val acc_magn :
+          ('a, GFC_F.Dom.v) Direct.abstract ->
+          (< answer : 'b; classif : 'a; state : [> `TDet of 'a lstate ]; .. >,
+           unit)
+          lm
+        val get_magn :
+          unit ->
+          (< answer : 'a; classif : 'b; state : [> `TDet of 'b lstate ]; .. >,
+           tdet)
+          lm
+        val set_magn :
+          ('a, GFC_F.Dom.v) Direct.abstract ->
+          (< answer : 'b; classif : 'a; state : [> `TDet of 'a lstate ]; .. >,
+           unit)
+          lm
+        val fin :
+          unit ->
+          (< answer : 'a; classif : 'b; state : [> `TDet of 'b lstate ]; .. >,
+           GFC_F.Dom.v)
+          lm
       end
     module AbstractDet :
       sig
         type tdet = GFC_F.Dom.v ref
-        type 'a lstate =
-            ('a, int ref) Direct.abstract * ('a, tdet) Direct.abstract
+        type 'a lstate = 'a Ge.LAMake(Direct).GenLA(GFC_F).AbstractDet.lstate
+        type 'a pc_constraint = unit
+          constraint 'a =
+            < classif : 'b; state : [> `TDet of 'b lstate ]; .. >
         type ('a, 'b) lm = ('a, 'b) GEF.cmonad
           constraint 'a =
             < answer : 'c; classif : 'd; state : [> `TDet of 'd lstate ];
@@ -15678,61 +16847,46 @@ module G_GFC_F :
           constraint 'a =
             < answer : 'c; classif : 'd; state : [> `TDet of 'd lstate ];
               .. >
-        val ip :
-          ('a -> [> `TDet of 'a ]) * ([> `TDet of 'b ] -> 'b option) * string
+        type 'a nm =
+            (< answer : ('c, 'b) Direct.abstract; state : 'd list >, unit)
+            StateCPSMonad.monad
+          constraint 'a =
+            < answer : 'b; classif : 'c;
+              state : [> `TDet of 'c lstate ] as 'd; .. >
         val decl :
           unit ->
-          (< answer : ('a, 'b) Direct.abstract;
-             state : [> `TDet of
-                          ('a, int ref) Direct.abstract *
-                          ('a, GFC_F.Dom.v ref) Direct.abstract ]
-                     list;
-             .. >,
-           ('c, unit) Direct.abstract)
-          StateCPSMonad.monad
+          < answer : 'a; classif : 'b; state : [> `TDet of 'b lstate ]; .. >
+          nm
         val upd_sign :
           unit ->
-          (< answer : 'a;
-             state : [> `TDet of ('b, int ref) Direct.abstract * 'c ] list;
-             .. >,
-           ('b, unit) Direct.abstract option)
-          StateCPSMonad.monad
+          (< answer : 'a; classif : 'b; state : [> `TDet of 'b lstate ]; .. >,
+           unit)
+          om
         val zero_sign :
           unit ->
-          (< answer : 'a;
-             state : [> `TDet of ('b, int ref) Direct.abstract * 'c ] list;
-             .. >,
-           ('b, unit) Direct.abstract)
-          StateCPSMonad.monad
+          (< answer : 'a; classif : 'b; state : [> `TDet of 'b lstate ]; .. >,
+           unit)
+          lm
+        val acc_magn :
+          ('a, GFC_F.Dom.v) Direct.abstract ->
+          (< answer : 'b; classif : 'a; state : [> `TDet of 'a lstate ]; .. >,
+           unit)
+          lm
         val get_magn :
           unit ->
-          (< answer : 'a; state : [> `TDet of 'b * 'c ] list; .. >, 'c)
-          StateCPSMonad.monad
+          (< answer : 'a; classif : 'b; state : [> `TDet of 'b lstate ]; .. >,
+           tdet)
+          lm
         val set_magn :
-          ('a, 'b) Direct.abstract ->
-          (< answer : 'c;
-             state : [> `TDet of 'd * ('a, 'b ref) Direct.abstract ] list;
-             .. >,
-           ('a, unit) Direct.abstract)
-          StateCPSMonad.monad
-        val acc_magn :
-          'a GFC_F.Dom.vc ->
-          (< answer : 'b;
-             state : [> `TDet of 'c * ('a, GFC_F.Dom.v ref) Direct.abstract ]
-                     list;
-             .. >,
-           ('a, unit) Direct.abstract)
-          StateCPSMonad.monad
+          ('a, GFC_F.Dom.v) Direct.abstract ->
+          (< answer : 'b; classif : 'a; state : [> `TDet of 'a lstate ]; .. >,
+           unit)
+          lm
         val fin :
           unit ->
-          (< answer : 'a;
-             state : [> `TDet of
-                          ('b, int ref) Direct.abstract *
-                          ('b, GFC_F.Dom.v ref) Direct.abstract ]
-                     list;
-             .. >,
-           ('b, GFC_F.Dom.v) Direct.abstract)
-          StateCPSMonad.monad
+          (< answer : 'a; classif : 'b; state : [> `TDet of 'b lstate ]; .. >,
+           GFC_F.Dom.v)
+          lm
       end
     module type UPDATE =
       functor (D : DETERMINANT) ->
@@ -16023,10 +17177,22 @@ module G_GFC_F :
                       type 'a pra = 'a GEF.PermList.pra
                       type 'a lstate =
                           ('a, GEF.PermList.perm_rep ref) Direct.abstract
+                      type 'a pc_constraint = unit
+                        constraint 'a =
+                          < classif : 'b; state : [> `TPivot of 'b lstate ];
+                            .. >
                       type ('a, 'b) lm = ('a, 'b) GEF.cmonad
                         constraint 'a =
                           < answer : 'c; classif : 'd;
                             state : [> `TPivot of 'd lstate ]; .. >
+                      type ('a, 'b) nm =
+                          (< answer : ('b, 'c) Direct.abstract;
+                             state : 'd list >,
+                           unit)
+                          StateCPSMonad.monad
+                        constraint 'a =
+                          < answer : 'c; classif : 'b;
+                            state : [> `TPivot of 'b lstate ] as 'd; .. >
                       val rowrep :
                         'a GEF.PermList.ira ->
                         'a GEF.PermList.ira -> 'a GEF.PermList.fra
@@ -16038,7 +17204,8 @@ module G_GFC_F :
                         ([> `TPivot of 'b ] -> 'b option) * string
                       val decl :
                         'a ->
-                        'b -> ('b -> ('c, unit) Direct.abstract -> 'd) -> 'd
+                        (< answer : 'b; state : 'c; .. >, unit)
+                        StateCPSMonad.monad
                       val add :
                         'a ->
                         (< answer : 'b; state : 'c; .. >, 'd option)
@@ -16143,10 +17310,22 @@ module G_GFC_F :
                       type 'a pra = 'a GEF.PermList.pra
                       type 'a lstate =
                           ('a, GEF.PermList.perm_rep ref) Direct.abstract
+                      type 'a pc_constraint = unit
+                        constraint 'a =
+                          < classif : 'b; state : [> `TPivot of 'b lstate ];
+                            .. >
                       type ('a, 'b) lm = ('a, 'b) GEF.cmonad
                         constraint 'a =
                           < answer : 'c; classif : 'd;
                             state : [> `TPivot of 'd lstate ]; .. >
+                      type ('a, 'b) nm =
+                          (< answer : ('b, 'c) Direct.abstract;
+                             state : 'd list >,
+                           unit)
+                          StateCPSMonad.monad
+                        constraint 'a =
+                          < answer : 'c; classif : 'b;
+                            state : [> `TPivot of 'b lstate ] as 'd; .. >
                       val rowrep :
                         'a GEF.PermList.ira ->
                         'a GEF.PermList.ira -> 'a GEF.PermList.fra
@@ -16158,7 +17337,8 @@ module G_GFC_F :
                         ([> `TPivot of 'b ] -> 'b option) * string
                       val decl :
                         'a ->
-                        'b -> ('b -> ('c, unit) Direct.abstract -> 'd) -> 'd
+                        (< answer : 'b; state : 'c; .. >, unit)
+                        StateCPSMonad.monad
                       val add :
                         'a ->
                         (< answer : 'b; state : 'c; .. >, 'd option)
@@ -16272,10 +17452,22 @@ module G_GFC_F :
                       type 'a pra = 'a GEF.PermList.pra
                       type 'a lstate =
                           ('a, GEF.PermList.perm_rep ref) Direct.abstract
+                      type 'a pc_constraint = unit
+                        constraint 'a =
+                          < classif : 'b; state : [> `TPivot of 'b lstate ];
+                            .. >
                       type ('a, 'b) lm = ('a, 'b) GEF.cmonad
                         constraint 'a =
                           < answer : 'c; classif : 'd;
                             state : [> `TPivot of 'd lstate ]; .. >
+                      type ('a, 'b) nm =
+                          (< answer : ('b, 'c) Direct.abstract;
+                             state : 'd list >,
+                           unit)
+                          StateCPSMonad.monad
+                        constraint 'a =
+                          < answer : 'c; classif : 'b;
+                            state : [> `TPivot of 'b lstate ] as 'd; .. >
                       val rowrep :
                         'a GEF.PermList.ira ->
                         'a GEF.PermList.ira -> 'a GEF.PermList.fra
@@ -16287,7 +17479,8 @@ module G_GFC_F :
                         ([> `TPivot of 'b ] -> 'b option) * string
                       val decl :
                         'a ->
-                        'b -> ('b -> ('c, unit) Direct.abstract -> 'd) -> 'd
+                        (< answer : 'b; state : 'c; .. >, unit)
+                        StateCPSMonad.monad
                       val add :
                         'a ->
                         (< answer : 'b; state : 'c; .. >, 'd option)
@@ -16402,10 +17595,22 @@ module G_GFC_F :
                       type 'a pra = 'a GEF.PermList.pra
                       type 'a lstate =
                           ('a, GEF.PermList.perm_rep ref) Direct.abstract
+                      type 'a pc_constraint = unit
+                        constraint 'a =
+                          < classif : 'b; state : [> `TPivot of 'b lstate ];
+                            .. >
                       type ('a, 'b) lm = ('a, 'b) GEF.cmonad
                         constraint 'a =
                           < answer : 'c; classif : 'd;
                             state : [> `TPivot of 'd lstate ]; .. >
+                      type ('a, 'b) nm =
+                          (< answer : ('b, 'c) Direct.abstract;
+                             state : 'd list >,
+                           unit)
+                          StateCPSMonad.monad
+                        constraint 'a =
+                          < answer : 'c; classif : 'b;
+                            state : [> `TPivot of 'b lstate ] as 'd; .. >
                       val rowrep :
                         'a GEF.PermList.ira ->
                         'a GEF.PermList.ira -> 'a GEF.PermList.fra
@@ -16417,7 +17622,8 @@ module G_GFC_F :
                         ([> `TPivot of 'b ] -> 'b option) * string
                       val decl :
                         'a ->
-                        'b -> ('b -> ('c, unit) Direct.abstract -> 'd) -> 'd
+                        (< answer : 'b; state : 'c; .. >, unit)
+                        StateCPSMonad.monad
                       val add :
                         'a ->
                         (< answer : 'b; state : 'c; .. >, 'd option)
@@ -16534,10 +17740,22 @@ module G_GFC_F :
                       type 'a pra = 'a OD.PivotRep.pra
                       type 'a lstate =
                           ('a, OD.PivotRep.perm_rep ref) Direct.abstract
+                      type 'a pc_constraint = unit
+                        constraint 'a =
+                          < classif : 'b; state : [> `TPivot of 'b lstate ];
+                            .. >
                       type ('a, 'b) lm = ('a, 'b) GEF.cmonad
                         constraint 'a =
                           < answer : 'c; classif : 'd;
                             state : [> `TPivot of 'd lstate ]; .. >
+                      type ('a, 'b) nm =
+                          (< answer : ('b, 'c) Direct.abstract;
+                             state : 'd list >,
+                           unit)
+                          StateCPSMonad.monad
+                        constraint 'a =
+                          < answer : 'c; classif : 'b;
+                            state : [> `TPivot of 'b lstate ] as 'd; .. >
                       val rowrep :
                         'a OD.PivotRep.ira ->
                         'a OD.PivotRep.ira -> 'a OD.PivotRep.fra
@@ -16555,7 +17773,7 @@ module G_GFC_F :
                                         Direct.abstract ]
                                    list;
                            .. >,
-                         ('c, unit) Direct.abstract)
+                         unit)
                         StateCPSMonad.monad
                       val add :
                         'a OD.PivotRep.fra ->
@@ -16680,10 +17898,22 @@ module G_GFC_F :
                       type 'a pra = 'a OD.PivotRep.pra
                       type 'a lstate =
                           ('a, OD.PivotRep.perm_rep ref) Direct.abstract
+                      type 'a pc_constraint = unit
+                        constraint 'a =
+                          < classif : 'b; state : [> `TPivot of 'b lstate ];
+                            .. >
                       type ('a, 'b) lm = ('a, 'b) GEF.cmonad
                         constraint 'a =
                           < answer : 'c; classif : 'd;
                             state : [> `TPivot of 'd lstate ]; .. >
+                      type ('a, 'b) nm =
+                          (< answer : ('b, 'c) Direct.abstract;
+                             state : 'd list >,
+                           unit)
+                          StateCPSMonad.monad
+                        constraint 'a =
+                          < answer : 'c; classif : 'b;
+                            state : [> `TPivot of 'b lstate ] as 'd; .. >
                       val rowrep :
                         'a OD.PivotRep.ira ->
                         'a OD.PivotRep.ira -> 'a OD.PivotRep.fra
@@ -16701,7 +17931,7 @@ module G_GFC_F :
                                         Direct.abstract ]
                                    list;
                            .. >,
-                         ('c, unit) Direct.abstract)
+                         unit)
                         StateCPSMonad.monad
                       val add :
                         'a OD.PivotRep.fra ->
@@ -16834,10 +18064,22 @@ module G_GFC_F :
                       type 'a pra = 'a OD.PivotRep.pra
                       type 'a lstate =
                           ('a, OD.PivotRep.perm_rep ref) Direct.abstract
+                      type 'a pc_constraint = unit
+                        constraint 'a =
+                          < classif : 'b; state : [> `TPivot of 'b lstate ];
+                            .. >
                       type ('a, 'b) lm = ('a, 'b) GEF.cmonad
                         constraint 'a =
                           < answer : 'c; classif : 'd;
                             state : [> `TPivot of 'd lstate ]; .. >
+                      type ('a, 'b) nm =
+                          (< answer : ('b, 'c) Direct.abstract;
+                             state : 'd list >,
+                           unit)
+                          StateCPSMonad.monad
+                        constraint 'a =
+                          < answer : 'c; classif : 'b;
+                            state : [> `TPivot of 'b lstate ] as 'd; .. >
                       val rowrep :
                         'a OD.PivotRep.ira ->
                         'a OD.PivotRep.ira -> 'a OD.PivotRep.fra
@@ -16855,7 +18097,7 @@ module G_GFC_F :
                                         Direct.abstract ]
                                    list;
                            .. >,
-                         ('c, unit) Direct.abstract)
+                         unit)
                         StateCPSMonad.monad
                       val add :
                         'a OD.PivotRep.fra ->
@@ -16978,18 +18220,30 @@ module G_GFC_F :
                           type 'a fra = 'a F.Output(F).IF.P.fra
                           type 'a pra = 'a F.Output(F).IF.P.pra
                           type 'a lstate = 'a F.Output(F).IF.P.lstate
+                          type 'a pc_constraint = unit
+                            constraint 'a =
+                              < classif : 'b;
+                                state : [> `TPivot of 'b lstate ]; .. >
                           type ('a, 'b) lm = ('a, 'b) GEF.cmonad
                             constraint 'a =
                               < answer : 'c; classif : 'd;
                                 state : [> `TPivot of 'd lstate ]; .. >
+                          type ('a, 'b) nm =
+                              (< answer : ('b, 'c) Direct.abstract;
+                                 state : 'd list >,
+                               unit)
+                              StateCPSMonad.monad
+                            constraint 'a =
+                              < answer : 'c; classif : 'b;
+                                state : [> `TPivot of 'b lstate ] as 'd; .. >
                           val rowrep : 'a ira -> 'a ira -> 'a fra
                           val colrep : 'a ira -> 'a ira -> 'a fra
                           val decl :
                             ('a, int) Direct.abstract ->
                             (< answer : 'b; classif : 'a;
                                state : [> `TPivot of 'a lstate ]; .. >,
-                             unit)
-                            lm
+                             'a)
+                            nm
                           val add :
                             'a fra ->
                             (< answer : 'b; classif : 'a;
@@ -17185,18 +18439,31 @@ module G_GFC_F :
                               type 'a lstate =
                                   ('a, GEF.PermList.perm_rep ref)
                                   Direct.abstract
+                              type 'a pc_constraint = unit
+                                constraint 'a =
+                                  < classif : 'b;
+                                    state : [> `TPivot of 'b lstate ]; .. >
                               type ('a, 'b) lm = ('a, 'b) GEF.cmonad
                                 constraint 'a =
                                   < answer : 'c; classif : 'd;
                                     state : [> `TPivot of 'd lstate ]; .. >
+                              type ('a, 'b) nm =
+                                  (< answer : ('b, 'c) Direct.abstract;
+                                     state : 'd list >,
+                                   unit)
+                                  StateCPSMonad.monad
+                                constraint 'a =
+                                  < answer : 'c; classif : 'b;
+                                    state : [> `TPivot of 'b lstate ] as 'd;
+                                    .. >
                               val rowrep : 'a ira -> 'a ira -> 'a fra
                               val colrep : 'a ira -> 'a ira -> 'a fra
                               val decl :
                                 ('a, int) Direct.abstract ->
                                 (< answer : 'b; classif : 'a;
                                    state : [> `TPivot of 'a lstate ]; .. >,
-                                 unit)
-                                lm
+                                 'a)
+                                nm
                               val add :
                                 'a fra ->
                                 (< answer : 'b; classif : 'a;
@@ -17365,18 +18632,28 @@ module GenFA1 :
                 type 'a pra = 'a GEF.PermList.pra
                 type 'a lstate =
                     ('a, GEF.PermList.perm_rep ref) Direct.abstract
+                type 'a pc_constraint = unit
+                  constraint 'a =
+                    < classif : 'b; state : [> `TPivot of 'b lstate ]; .. >
                 type ('a, 'b) lm = ('a, 'b) GEF.cmonad
                   constraint 'a =
                     < answer : 'c; classif : 'd;
                       state : [> `TPivot of 'd lstate ]; .. >
+                type ('a, 'b) nm =
+                    (< answer : ('b, 'c) Direct.abstract; state : 'd list >,
+                     unit)
+                    StateCPSMonad.monad
+                  constraint 'a =
+                    < answer : 'c; classif : 'b;
+                      state : [> `TPivot of 'b lstate ] as 'd; .. >
                 val rowrep : 'a ira -> 'a ira -> 'a fra
                 val colrep : 'a ira -> 'a ira -> 'a fra
                 val decl :
                   ('a, int) Direct.abstract ->
                   (< answer : 'b; classif : 'a;
                      state : [> `TPivot of 'a lstate ]; .. >,
-                   unit)
-                  lm
+                   'a)
+                  nm
                 val add :
                   'a fra ->
                   (< answer : 'b; classif : 'a;
@@ -17426,7 +18703,8 @@ module GenFA1 :
         val make_result :
           'a G_GAC_F.wmatrix ->
           (< answer : 'b; classif : 'a;
-             state : [> `TDet of unit
+             state : [> `TDet of
+                          'a Ge.LAMake(Direct).GenLA(GAC_F).NoDet.lstate
                       | `TLower of 'a IF.L.lstate
                       | `TPivot of 'a IF.P.lstate
                       | `TRan of 'a GEF.TrackRank.lstate ];
@@ -17439,13 +18717,14 @@ module GenFA1 :
     val zerobelow :
       'a G_GAC_F.wmatrix ->
       'a G_GAC_F.curposval ->
-      ([> `TDet of unit | `TLower of ('a, GAC_F.contr) Direct.abstract ]
+      ([> `TDet of 'a Ge.LAMake(Direct).GenLA(GAC_F).NoDet.lstate
+        | `TLower of ('a, GAC_F.contr) Direct.abstract ]
        as 'b)
       list -> ('b list -> ('a, unit) Direct.abstract -> 'c) -> 'c
     val init :
       ('a, GAC_F.contr) Direct.abstract ->
       (< answer : ('a, 'b) Direct.abstract;
-         state : [> `TDet of unit
+         state : [> `TDet of 'a Ge.LAMake(Direct).GenLA(GAC_F).NoDet.lstate
                   | `TLower of ('a, GAC_F.contr) Direct.abstract
                   | `TPivot of
                       ('a, GEF.PermList.perm_rep ref) Direct.abstract
@@ -17458,7 +18737,7 @@ module GenFA1 :
     val forward_elim :
       'a G_GAC_F.wmatrix * ('a, int ref) Direct.abstract *
       ('a, int ref) Direct.abstract * ('a, int) Direct.abstract ->
-      ([> `TDet of unit
+      ([> `TDet of 'a Ge.LAMake(Direct).GenLA(GAC_F).NoDet.lstate
         | `TLower of ('a, GAC_F.contr) Direct.abstract
         | `TPivot of ('a, GEF.PermList.perm_rep ref) Direct.abstract
         | `TRan of 'a GEF.TrackRank.lstate ]
@@ -17467,7 +18746,7 @@ module GenFA1 :
     val gen :
       ('a, GAC_F.contr) Direct.abstract ->
       (< answer : ('a, 'b) Direct.abstract;
-         state : [> `TDet of unit
+         state : [> `TDet of 'a Ge.LAMake(Direct).GenLA(GAC_F).NoDet.lstate
                   | `TLower of 'a O.IF.L.lstate
                   | `TPivot of 'a O.IF.P.lstate
                   | `TRan of 'a GEF.TrackRank.lstate ]
@@ -17512,18 +18791,28 @@ module GenFA2 :
                 type 'a pra = 'a GEF.PermList.pra
                 type 'a lstate =
                     ('a, GEF.PermList.perm_rep ref) Direct.abstract
+                type 'a pc_constraint = unit
+                  constraint 'a =
+                    < classif : 'b; state : [> `TPivot of 'b lstate ]; .. >
                 type ('a, 'b) lm = ('a, 'b) GEF.cmonad
                   constraint 'a =
                     < answer : 'c; classif : 'd;
                       state : [> `TPivot of 'd lstate ]; .. >
+                type ('a, 'b) nm =
+                    (< answer : ('b, 'c) Direct.abstract; state : 'd list >,
+                     unit)
+                    StateCPSMonad.monad
+                  constraint 'a =
+                    < answer : 'c; classif : 'b;
+                      state : [> `TPivot of 'b lstate ] as 'd; .. >
                 val rowrep : 'a ira -> 'a ira -> 'a fra
                 val colrep : 'a ira -> 'a ira -> 'a fra
                 val decl :
                   ('a, int) Direct.abstract ->
                   (< answer : 'b; classif : 'a;
                      state : [> `TPivot of 'a lstate ]; .. >,
-                   unit)
-                  lm
+                   'a)
+                  nm
                 val add :
                   'a fra ->
                   (< answer : 'b; classif : 'a;
@@ -17574,8 +18863,8 @@ module GenFA2 :
           'a G_GAC_F.wmatrix ->
           (< answer : 'b; classif : 'a;
              state : [> `TDet of
-                          ('a, int ref) Direct.abstract *
-                          ('a, GAC_F.Dom.v ref) Direct.abstract
+                          'a
+                          Ge.LAMake(Direct).GenLA(GAC_F).AbstractDet.lstate
                       | `TLower of 'a IF.L.lstate
                       | `TPivot of 'a IF.P.lstate
                       | `TRan of 'a GEF.TrackRank.lstate ];
@@ -17588,9 +18877,7 @@ module GenFA2 :
     val zerobelow :
       'a G_GAC_F.wmatrix ->
       'a G_GAC_F.curposval ->
-      ([> `TDet of
-            ('a, int ref) Direct.abstract *
-            ('a, GAC_F.Dom.v ref) Direct.abstract
+      ([> `TDet of 'a Ge.LAMake(Direct).GenLA(GAC_F).AbstractDet.lstate
         | `TLower of ('a, GAC_F.contr) Direct.abstract ]
        as 'b)
       list -> ('b list -> ('a, unit) Direct.abstract -> 'c) -> 'c
@@ -17598,8 +18885,7 @@ module GenFA2 :
       ('a, GAC_F.contr) Direct.abstract ->
       (< answer : ('a, 'b) Direct.abstract;
          state : [> `TDet of
-                      ('a, int ref) Direct.abstract *
-                      ('a, GAC_F.Dom.v ref) Direct.abstract
+                      'a Ge.LAMake(Direct).GenLA(GAC_F).AbstractDet.lstate
                   | `TLower of ('a, GAC_F.contr) Direct.abstract
                   | `TPivot of
                       ('a, GEF.PermList.perm_rep ref) Direct.abstract
@@ -17612,9 +18898,7 @@ module GenFA2 :
     val forward_elim :
       'a G_GAC_F.wmatrix * ('a, int ref) Direct.abstract *
       ('a, int ref) Direct.abstract * ('a, int) Direct.abstract ->
-      ([> `TDet of
-            ('a, int ref) Direct.abstract *
-            ('a, GAC_F.Dom.v ref) Direct.abstract
+      ([> `TDet of 'a Ge.LAMake(Direct).GenLA(GAC_F).AbstractDet.lstate
         | `TLower of ('a, GAC_F.contr) Direct.abstract
         | `TPivot of ('a, GEF.PermList.perm_rep ref) Direct.abstract
         | `TRan of 'a GEF.TrackRank.lstate ]
@@ -17624,8 +18908,7 @@ module GenFA2 :
       ('a, GAC_F.contr) Direct.abstract ->
       (< answer : ('a, 'b) Direct.abstract;
          state : [> `TDet of
-                      ('a, int ref) Direct.abstract *
-                      ('a, GAC_F.Dom.v ref) Direct.abstract
+                      'a Ge.LAMake(Direct).GenLA(GAC_F).AbstractDet.lstate
                   | `TLower of 'a O.IF.L.lstate
                   | `TPivot of 'a O.IF.P.lstate
                   | `TRan of 'a GEF.TrackRank.lstate ]
@@ -17670,18 +18953,28 @@ module GenFA3 :
                 type 'a pra = 'a GEF.PermList.pra
                 type 'a lstate =
                     ('a, GEF.PermList.perm_rep ref) Direct.abstract
+                type 'a pc_constraint = unit
+                  constraint 'a =
+                    < classif : 'b; state : [> `TPivot of 'b lstate ]; .. >
                 type ('a, 'b) lm = ('a, 'b) GEF.cmonad
                   constraint 'a =
                     < answer : 'c; classif : 'd;
                       state : [> `TPivot of 'd lstate ]; .. >
+                type ('a, 'b) nm =
+                    (< answer : ('b, 'c) Direct.abstract; state : 'd list >,
+                     unit)
+                    StateCPSMonad.monad
+                  constraint 'a =
+                    < answer : 'c; classif : 'b;
+                      state : [> `TPivot of 'b lstate ] as 'd; .. >
                 val rowrep : 'a ira -> 'a ira -> 'a fra
                 val colrep : 'a ira -> 'a ira -> 'a fra
                 val decl :
                   ('a, int) Direct.abstract ->
                   (< answer : 'b; classif : 'a;
                      state : [> `TPivot of 'a lstate ]; .. >,
-                   unit)
-                  lm
+                   'a)
+                  nm
                 val add :
                   'a fra ->
                   (< answer : 'b; classif : 'a;
@@ -17731,7 +19024,8 @@ module GenFA3 :
         val make_result :
           'a G_GAC_F.wmatrix ->
           (< answer : 'b; classif : 'a;
-             state : [> `TDet of unit
+             state : [> `TDet of
+                          'a Ge.LAMake(Direct).GenLA(GAC_F).NoDet.lstate
                       | `TLower of 'a IF.L.lstate
                       | `TPivot of 'a IF.P.lstate
                       | `TRan of 'a GEF.TrackRank.lstate ];
@@ -17744,13 +19038,14 @@ module GenFA3 :
     val zerobelow :
       'a G_GAC_F.wmatrix ->
       'a G_GAC_F.curposval ->
-      ([> `TDet of unit | `TLower of ('a, GAC_F.contr) Direct.abstract ]
+      ([> `TDet of 'a Ge.LAMake(Direct).GenLA(GAC_F).NoDet.lstate
+        | `TLower of ('a, GAC_F.contr) Direct.abstract ]
        as 'b)
       list -> ('b list -> ('a, unit) Direct.abstract -> 'c) -> 'c
     val init :
       ('a, GAC_F.contr) Direct.abstract ->
       (< answer : ('a, 'b) Direct.abstract;
-         state : [> `TDet of unit
+         state : [> `TDet of 'a Ge.LAMake(Direct).GenLA(GAC_F).NoDet.lstate
                   | `TLower of ('a, GAC_F.contr) Direct.abstract
                   | `TPivot of
                       ('a, GEF.PermList.perm_rep ref) Direct.abstract
@@ -17763,7 +19058,7 @@ module GenFA3 :
     val forward_elim :
       'a G_GAC_F.wmatrix * ('a, int ref) Direct.abstract *
       ('a, int ref) Direct.abstract * ('a, int) Direct.abstract ->
-      ([> `TDet of unit
+      ([> `TDet of 'a Ge.LAMake(Direct).GenLA(GAC_F).NoDet.lstate
         | `TLower of ('a, GAC_F.contr) Direct.abstract
         | `TPivot of ('a, GEF.PermList.perm_rep ref) Direct.abstract
         | `TRan of 'a GEF.TrackRank.lstate ]
@@ -17772,7 +19067,7 @@ module GenFA3 :
     val gen :
       ('a, GAC_F.contr) Direct.abstract ->
       (< answer : ('a, 'b) Direct.abstract;
-         state : [> `TDet of unit
+         state : [> `TDet of 'a Ge.LAMake(Direct).GenLA(GAC_F).NoDet.lstate
                   | `TLower of 'a O.IF.L.lstate
                   | `TPivot of 'a O.IF.P.lstate
                   | `TRan of 'a GEF.TrackRank.lstate ]
@@ -17817,18 +19112,28 @@ module GenFA4 :
                 type 'a pra = 'a GEF.PermList.pra
                 type 'a lstate =
                     ('a, GEF.PermList.perm_rep ref) Direct.abstract
+                type 'a pc_constraint = unit
+                  constraint 'a =
+                    < classif : 'b; state : [> `TPivot of 'b lstate ]; .. >
                 type ('a, 'b) lm = ('a, 'b) GEF.cmonad
                   constraint 'a =
                     < answer : 'c; classif : 'd;
                       state : [> `TPivot of 'd lstate ]; .. >
+                type ('a, 'b) nm =
+                    (< answer : ('b, 'c) Direct.abstract; state : 'd list >,
+                     unit)
+                    StateCPSMonad.monad
+                  constraint 'a =
+                    < answer : 'c; classif : 'b;
+                      state : [> `TPivot of 'b lstate ] as 'd; .. >
                 val rowrep : 'a ira -> 'a ira -> 'a fra
                 val colrep : 'a ira -> 'a ira -> 'a fra
                 val decl :
                   ('a, int) Direct.abstract ->
                   (< answer : 'b; classif : 'a;
                      state : [> `TPivot of 'a lstate ]; .. >,
-                   unit)
-                  lm
+                   'a)
+                  nm
                 val add :
                   'a fra ->
                   (< answer : 'b; classif : 'a;
@@ -17879,8 +19184,8 @@ module GenFA4 :
           'a G_GAC_F.wmatrix ->
           (< answer : 'b; classif : 'a;
              state : [> `TDet of
-                          ('a, int ref) Direct.abstract *
-                          ('a, GAC_F.Dom.v ref) Direct.abstract
+                          'a
+                          Ge.LAMake(Direct).GenLA(GAC_F).AbstractDet.lstate
                       | `TLower of 'a IF.L.lstate
                       | `TPivot of 'a IF.P.lstate
                       | `TRan of 'a GEF.TrackRank.lstate ];
@@ -17893,9 +19198,7 @@ module GenFA4 :
     val zerobelow :
       'a G_GAC_F.wmatrix ->
       'a G_GAC_F.curposval ->
-      ([> `TDet of
-            ('a, int ref) Direct.abstract *
-            ('a, GAC_F.Dom.v ref) Direct.abstract
+      ([> `TDet of 'a Ge.LAMake(Direct).GenLA(GAC_F).AbstractDet.lstate
         | `TLower of ('a, GAC_F.contr) Direct.abstract ]
        as 'b)
       list -> ('b list -> ('a, unit) Direct.abstract -> 'c) -> 'c
@@ -17903,8 +19206,7 @@ module GenFA4 :
       ('a, GAC_F.contr) Direct.abstract ->
       (< answer : ('a, 'b) Direct.abstract;
          state : [> `TDet of
-                      ('a, int ref) Direct.abstract *
-                      ('a, GAC_F.Dom.v ref) Direct.abstract
+                      'a Ge.LAMake(Direct).GenLA(GAC_F).AbstractDet.lstate
                   | `TLower of ('a, GAC_F.contr) Direct.abstract
                   | `TPivot of
                       ('a, GEF.PermList.perm_rep ref) Direct.abstract
@@ -17917,9 +19219,7 @@ module GenFA4 :
     val forward_elim :
       'a G_GAC_F.wmatrix * ('a, int ref) Direct.abstract *
       ('a, int ref) Direct.abstract * ('a, int) Direct.abstract ->
-      ([> `TDet of
-            ('a, int ref) Direct.abstract *
-            ('a, GAC_F.Dom.v ref) Direct.abstract
+      ([> `TDet of 'a Ge.LAMake(Direct).GenLA(GAC_F).AbstractDet.lstate
         | `TLower of ('a, GAC_F.contr) Direct.abstract
         | `TPivot of ('a, GEF.PermList.perm_rep ref) Direct.abstract
         | `TRan of 'a GEF.TrackRank.lstate ]
@@ -17929,8 +19229,7 @@ module GenFA4 :
       ('a, GAC_F.contr) Direct.abstract ->
       (< answer : ('a, 'b) Direct.abstract;
          state : [> `TDet of
-                      ('a, int ref) Direct.abstract *
-                      ('a, GAC_F.Dom.v ref) Direct.abstract
+                      'a Ge.LAMake(Direct).GenLA(GAC_F).AbstractDet.lstate
                   | `TLower of 'a O.IF.L.lstate
                   | `TPivot of 'a O.IF.P.lstate
                   | `TRan of 'a GEF.TrackRank.lstate ]
@@ -17975,18 +19274,28 @@ module GenFA11 :
                 type 'a pra = 'a GEF.PermList.pra
                 type 'a lstate =
                     ('a, GEF.PermList.perm_rep ref) Direct.abstract
+                type 'a pc_constraint = unit
+                  constraint 'a =
+                    < classif : 'b; state : [> `TPivot of 'b lstate ]; .. >
                 type ('a, 'b) lm = ('a, 'b) GEF.cmonad
                   constraint 'a =
                     < answer : 'c; classif : 'd;
                       state : [> `TPivot of 'd lstate ]; .. >
+                type ('a, 'b) nm =
+                    (< answer : ('b, 'c) Direct.abstract; state : 'd list >,
+                     unit)
+                    StateCPSMonad.monad
+                  constraint 'a =
+                    < answer : 'c; classif : 'b;
+                      state : [> `TPivot of 'b lstate ] as 'd; .. >
                 val rowrep : 'a ira -> 'a ira -> 'a fra
                 val colrep : 'a ira -> 'a ira -> 'a fra
                 val decl :
                   ('a, int) Direct.abstract ->
                   (< answer : 'b; classif : 'a;
                      state : [> `TPivot of 'a lstate ]; .. >,
-                   unit)
-                  lm
+                   'a)
+                  nm
                 val add :
                   'a fra ->
                   (< answer : 'b; classif : 'a;
@@ -18036,7 +19345,8 @@ module GenFA11 :
         val make_result :
           'a G_GAC_F.wmatrix ->
           (< answer : 'b; classif : 'a;
-             state : [> `TDet of unit
+             state : [> `TDet of
+                          'a Ge.LAMake(Direct).GenLA(GAC_F).NoDet.lstate
                       | `TLower of 'a IF.L.lstate
                       | `TPivot of 'a IF.P.lstate
                       | `TRan of 'a GEF.TrackRank.lstate ];
@@ -18049,13 +19359,14 @@ module GenFA11 :
     val zerobelow :
       'a G_GAC_F.wmatrix ->
       'a G_GAC_F.curposval ->
-      ([> `TDet of unit | `TLower of ('a, GAC_F.contr) Direct.abstract ]
+      ([> `TDet of 'a Ge.LAMake(Direct).GenLA(GAC_F).NoDet.lstate
+        | `TLower of ('a, GAC_F.contr) Direct.abstract ]
        as 'b)
       list -> ('b list -> ('a, unit) Direct.abstract -> 'c) -> 'c
     val init :
       ('a, GAC_F.contr) Direct.abstract ->
       (< answer : ('a, 'b) Direct.abstract;
-         state : [> `TDet of unit
+         state : [> `TDet of 'a Ge.LAMake(Direct).GenLA(GAC_F).NoDet.lstate
                   | `TLower of ('a, GAC_F.contr) Direct.abstract
                   | `TPivot of
                       ('a, GEF.PermList.perm_rep ref) Direct.abstract
@@ -18068,7 +19379,7 @@ module GenFA11 :
     val forward_elim :
       'a G_GAC_F.wmatrix * ('a, int ref) Direct.abstract *
       ('a, int ref) Direct.abstract * ('a, int) Direct.abstract ->
-      ([> `TDet of unit
+      ([> `TDet of 'a Ge.LAMake(Direct).GenLA(GAC_F).NoDet.lstate
         | `TLower of ('a, GAC_F.contr) Direct.abstract
         | `TPivot of ('a, GEF.PermList.perm_rep ref) Direct.abstract
         | `TRan of 'a GEF.TrackRank.lstate ]
@@ -18077,7 +19388,7 @@ module GenFA11 :
     val gen :
       ('a, GAC_F.contr) Direct.abstract ->
       (< answer : ('a, 'b) Direct.abstract;
-         state : [> `TDet of unit
+         state : [> `TDet of 'a Ge.LAMake(Direct).GenLA(GAC_F).NoDet.lstate
                   | `TLower of 'a O.IF.L.lstate
                   | `TPivot of 'a O.IF.P.lstate
                   | `TRan of 'a GEF.TrackRank.lstate ]
@@ -18122,18 +19433,28 @@ module GenFA12 :
                 type 'a pra = 'a GEF.PermList.pra
                 type 'a lstate =
                     ('a, GEF.PermList.perm_rep ref) Direct.abstract
+                type 'a pc_constraint = unit
+                  constraint 'a =
+                    < classif : 'b; state : [> `TPivot of 'b lstate ]; .. >
                 type ('a, 'b) lm = ('a, 'b) GEF.cmonad
                   constraint 'a =
                     < answer : 'c; classif : 'd;
                       state : [> `TPivot of 'd lstate ]; .. >
+                type ('a, 'b) nm =
+                    (< answer : ('b, 'c) Direct.abstract; state : 'd list >,
+                     unit)
+                    StateCPSMonad.monad
+                  constraint 'a =
+                    < answer : 'c; classif : 'b;
+                      state : [> `TPivot of 'b lstate ] as 'd; .. >
                 val rowrep : 'a ira -> 'a ira -> 'a fra
                 val colrep : 'a ira -> 'a ira -> 'a fra
                 val decl :
                   ('a, int) Direct.abstract ->
                   (< answer : 'b; classif : 'a;
                      state : [> `TPivot of 'a lstate ]; .. >,
-                   unit)
-                  lm
+                   'a)
+                  nm
                 val add :
                   'a fra ->
                   (< answer : 'b; classif : 'a;
@@ -18184,8 +19505,8 @@ module GenFA12 :
           'a G_GAC_F.wmatrix ->
           (< answer : 'b; classif : 'a;
              state : [> `TDet of
-                          ('a, int ref) Direct.abstract *
-                          ('a, GAC_F.Dom.v ref) Direct.abstract
+                          'a
+                          Ge.LAMake(Direct).GenLA(GAC_F).AbstractDet.lstate
                       | `TLower of 'a IF.L.lstate
                       | `TPivot of 'a IF.P.lstate
                       | `TRan of 'a GEF.TrackRank.lstate ];
@@ -18198,9 +19519,7 @@ module GenFA12 :
     val zerobelow :
       'a G_GAC_F.wmatrix ->
       'a G_GAC_F.curposval ->
-      ([> `TDet of
-            ('a, int ref) Direct.abstract *
-            ('a, GAC_F.Dom.v ref) Direct.abstract
+      ([> `TDet of 'a Ge.LAMake(Direct).GenLA(GAC_F).AbstractDet.lstate
         | `TLower of ('a, GAC_F.contr) Direct.abstract ]
        as 'b)
       list -> ('b list -> ('a, unit) Direct.abstract -> 'c) -> 'c
@@ -18208,8 +19527,7 @@ module GenFA12 :
       ('a, GAC_F.contr) Direct.abstract ->
       (< answer : ('a, 'b) Direct.abstract;
          state : [> `TDet of
-                      ('a, int ref) Direct.abstract *
-                      ('a, GAC_F.Dom.v ref) Direct.abstract
+                      'a Ge.LAMake(Direct).GenLA(GAC_F).AbstractDet.lstate
                   | `TLower of ('a, GAC_F.contr) Direct.abstract
                   | `TPivot of
                       ('a, GEF.PermList.perm_rep ref) Direct.abstract
@@ -18222,9 +19540,7 @@ module GenFA12 :
     val forward_elim :
       'a G_GAC_F.wmatrix * ('a, int ref) Direct.abstract *
       ('a, int ref) Direct.abstract * ('a, int) Direct.abstract ->
-      ([> `TDet of
-            ('a, int ref) Direct.abstract *
-            ('a, GAC_F.Dom.v ref) Direct.abstract
+      ([> `TDet of 'a Ge.LAMake(Direct).GenLA(GAC_F).AbstractDet.lstate
         | `TLower of ('a, GAC_F.contr) Direct.abstract
         | `TPivot of ('a, GEF.PermList.perm_rep ref) Direct.abstract
         | `TRan of 'a GEF.TrackRank.lstate ]
@@ -18234,8 +19550,7 @@ module GenFA12 :
       ('a, GAC_F.contr) Direct.abstract ->
       (< answer : ('a, 'b) Direct.abstract;
          state : [> `TDet of
-                      ('a, int ref) Direct.abstract *
-                      ('a, GAC_F.Dom.v ref) Direct.abstract
+                      'a Ge.LAMake(Direct).GenLA(GAC_F).AbstractDet.lstate
                   | `TLower of 'a O.IF.L.lstate
                   | `TPivot of 'a O.IF.P.lstate
                   | `TRan of 'a GEF.TrackRank.lstate ]
@@ -18280,18 +19595,28 @@ module GenFA13 :
                 type 'a pra = 'a GEF.PermList.pra
                 type 'a lstate =
                     ('a, GEF.PermList.perm_rep ref) Direct.abstract
+                type 'a pc_constraint = unit
+                  constraint 'a =
+                    < classif : 'b; state : [> `TPivot of 'b lstate ]; .. >
                 type ('a, 'b) lm = ('a, 'b) GEF.cmonad
                   constraint 'a =
                     < answer : 'c; classif : 'd;
                       state : [> `TPivot of 'd lstate ]; .. >
+                type ('a, 'b) nm =
+                    (< answer : ('b, 'c) Direct.abstract; state : 'd list >,
+                     unit)
+                    StateCPSMonad.monad
+                  constraint 'a =
+                    < answer : 'c; classif : 'b;
+                      state : [> `TPivot of 'b lstate ] as 'd; .. >
                 val rowrep : 'a ira -> 'a ira -> 'a fra
                 val colrep : 'a ira -> 'a ira -> 'a fra
                 val decl :
                   ('a, int) Direct.abstract ->
                   (< answer : 'b; classif : 'a;
                      state : [> `TPivot of 'a lstate ]; .. >,
-                   unit)
-                  lm
+                   'a)
+                  nm
                 val add :
                   'a fra ->
                   (< answer : 'b; classif : 'a;
@@ -18341,7 +19666,8 @@ module GenFA13 :
         val make_result :
           'a G_GAC_F.wmatrix ->
           (< answer : 'b; classif : 'a;
-             state : [> `TDet of unit
+             state : [> `TDet of
+                          'a Ge.LAMake(Direct).GenLA(GAC_F).NoDet.lstate
                       | `TLower of 'a IF.L.lstate
                       | `TPivot of 'a IF.P.lstate
                       | `TRan of 'a GEF.TrackRank.lstate ];
@@ -18354,13 +19680,14 @@ module GenFA13 :
     val zerobelow :
       'a G_GAC_F.wmatrix ->
       'a G_GAC_F.curposval ->
-      ([> `TDet of unit | `TLower of ('a, GAC_F.contr) Direct.abstract ]
+      ([> `TDet of 'a Ge.LAMake(Direct).GenLA(GAC_F).NoDet.lstate
+        | `TLower of ('a, GAC_F.contr) Direct.abstract ]
        as 'b)
       list -> ('b list -> ('a, unit) Direct.abstract -> 'c) -> 'c
     val init :
       ('a, GAC_F.contr) Direct.abstract ->
       (< answer : ('a, 'b) Direct.abstract;
-         state : [> `TDet of unit
+         state : [> `TDet of 'a Ge.LAMake(Direct).GenLA(GAC_F).NoDet.lstate
                   | `TLower of ('a, GAC_F.contr) Direct.abstract
                   | `TPivot of
                       ('a, GEF.PermList.perm_rep ref) Direct.abstract
@@ -18373,7 +19700,7 @@ module GenFA13 :
     val forward_elim :
       'a G_GAC_F.wmatrix * ('a, int ref) Direct.abstract *
       ('a, int ref) Direct.abstract * ('a, int) Direct.abstract ->
-      ([> `TDet of unit
+      ([> `TDet of 'a Ge.LAMake(Direct).GenLA(GAC_F).NoDet.lstate
         | `TLower of ('a, GAC_F.contr) Direct.abstract
         | `TPivot of ('a, GEF.PermList.perm_rep ref) Direct.abstract
         | `TRan of 'a GEF.TrackRank.lstate ]
@@ -18382,7 +19709,7 @@ module GenFA13 :
     val gen :
       ('a, GAC_F.contr) Direct.abstract ->
       (< answer : ('a, 'b) Direct.abstract;
-         state : [> `TDet of unit
+         state : [> `TDet of 'a Ge.LAMake(Direct).GenLA(GAC_F).NoDet.lstate
                   | `TLower of 'a O.IF.L.lstate
                   | `TPivot of 'a O.IF.P.lstate
                   | `TRan of 'a GEF.TrackRank.lstate ]
@@ -18427,18 +19754,28 @@ module GenFA14 :
                 type 'a pra = 'a GEF.PermList.pra
                 type 'a lstate =
                     ('a, GEF.PermList.perm_rep ref) Direct.abstract
+                type 'a pc_constraint = unit
+                  constraint 'a =
+                    < classif : 'b; state : [> `TPivot of 'b lstate ]; .. >
                 type ('a, 'b) lm = ('a, 'b) GEF.cmonad
                   constraint 'a =
                     < answer : 'c; classif : 'd;
                       state : [> `TPivot of 'd lstate ]; .. >
+                type ('a, 'b) nm =
+                    (< answer : ('b, 'c) Direct.abstract; state : 'd list >,
+                     unit)
+                    StateCPSMonad.monad
+                  constraint 'a =
+                    < answer : 'c; classif : 'b;
+                      state : [> `TPivot of 'b lstate ] as 'd; .. >
                 val rowrep : 'a ira -> 'a ira -> 'a fra
                 val colrep : 'a ira -> 'a ira -> 'a fra
                 val decl :
                   ('a, int) Direct.abstract ->
                   (< answer : 'b; classif : 'a;
                      state : [> `TPivot of 'a lstate ]; .. >,
-                   unit)
-                  lm
+                   'a)
+                  nm
                 val add :
                   'a fra ->
                   (< answer : 'b; classif : 'a;
@@ -18489,8 +19826,8 @@ module GenFA14 :
           'a G_GAC_F.wmatrix ->
           (< answer : 'b; classif : 'a;
              state : [> `TDet of
-                          ('a, int ref) Direct.abstract *
-                          ('a, GAC_F.Dom.v ref) Direct.abstract
+                          'a
+                          Ge.LAMake(Direct).GenLA(GAC_F).AbstractDet.lstate
                       | `TLower of 'a IF.L.lstate
                       | `TPivot of 'a IF.P.lstate
                       | `TRan of 'a GEF.TrackRank.lstate ];
@@ -18503,9 +19840,7 @@ module GenFA14 :
     val zerobelow :
       'a G_GAC_F.wmatrix ->
       'a G_GAC_F.curposval ->
-      ([> `TDet of
-            ('a, int ref) Direct.abstract *
-            ('a, GAC_F.Dom.v ref) Direct.abstract
+      ([> `TDet of 'a Ge.LAMake(Direct).GenLA(GAC_F).AbstractDet.lstate
         | `TLower of ('a, GAC_F.contr) Direct.abstract ]
        as 'b)
       list -> ('b list -> ('a, unit) Direct.abstract -> 'c) -> 'c
@@ -18513,8 +19848,7 @@ module GenFA14 :
       ('a, GAC_F.contr) Direct.abstract ->
       (< answer : ('a, 'b) Direct.abstract;
          state : [> `TDet of
-                      ('a, int ref) Direct.abstract *
-                      ('a, GAC_F.Dom.v ref) Direct.abstract
+                      'a Ge.LAMake(Direct).GenLA(GAC_F).AbstractDet.lstate
                   | `TLower of ('a, GAC_F.contr) Direct.abstract
                   | `TPivot of
                       ('a, GEF.PermList.perm_rep ref) Direct.abstract
@@ -18527,9 +19861,7 @@ module GenFA14 :
     val forward_elim :
       'a G_GAC_F.wmatrix * ('a, int ref) Direct.abstract *
       ('a, int ref) Direct.abstract * ('a, int) Direct.abstract ->
-      ([> `TDet of
-            ('a, int ref) Direct.abstract *
-            ('a, GAC_F.Dom.v ref) Direct.abstract
+      ([> `TDet of 'a Ge.LAMake(Direct).GenLA(GAC_F).AbstractDet.lstate
         | `TLower of ('a, GAC_F.contr) Direct.abstract
         | `TPivot of ('a, GEF.PermList.perm_rep ref) Direct.abstract
         | `TRan of 'a GEF.TrackRank.lstate ]
@@ -18539,8 +19871,7 @@ module GenFA14 :
       ('a, GAC_F.contr) Direct.abstract ->
       (< answer : ('a, 'b) Direct.abstract;
          state : [> `TDet of
-                      ('a, int ref) Direct.abstract *
-                      ('a, GAC_F.Dom.v ref) Direct.abstract
+                      'a Ge.LAMake(Direct).GenLA(GAC_F).AbstractDet.lstate
                   | `TLower of 'a O.IF.L.lstate
                   | `TPivot of 'a O.IF.P.lstate
                   | `TRan of 'a GEF.TrackRank.lstate ]
@@ -18584,18 +19915,28 @@ module GenFA24 :
                 type 'a fra = ('a, Direct.perm) Direct.abstract
                 type 'a pra = ('a, Direct.perm list) Direct.abstract
                 type 'a lstate = ('a, Direct.perm list ref) Direct.abstract
+                type 'a pc_constraint = unit
+                  constraint 'a =
+                    < classif : 'b; state : [> `TPivot of 'b lstate ]; .. >
                 type ('a, 'b) lm = ('a, 'b) GEF.cmonad
                   constraint 'a =
                     < answer : 'c; classif : 'd;
                       state : [> `TPivot of 'd lstate ]; .. >
+                type ('a, 'b) nm =
+                    (< answer : ('b, 'c) Direct.abstract; state : 'd list >,
+                     unit)
+                    StateCPSMonad.monad
+                  constraint 'a =
+                    < answer : 'c; classif : 'b;
+                      state : [> `TPivot of 'b lstate ] as 'd; .. >
                 val rowrep : 'a ira -> 'a ira -> 'a fra
                 val colrep : 'a ira -> 'a ira -> 'a fra
                 val decl :
                   ('a, int) Direct.abstract ->
                   (< answer : 'b; classif : 'a;
                      state : [> `TPivot of 'a lstate ]; .. >,
-                   unit)
-                  lm
+                   'a)
+                  nm
                 val add :
                   'a fra ->
                   (< answer : 'b; classif : 'a;
@@ -18646,8 +19987,8 @@ module GenFA24 :
           'a G_GAC_F.wmatrix ->
           (< answer : 'b; classif : 'a;
              state : [> `TDet of
-                          ('a, int ref) Direct.abstract *
-                          ('a, GAC_F.Dom.v ref) Direct.abstract
+                          'a
+                          Ge.LAMake(Direct).GenLA(GAC_F).AbstractDet.lstate
                       | `TLower of 'a IF.L.lstate
                       | `TPivot of 'a IF.P.lstate
                       | `TRan of 'a GEF.TrackRank.lstate ];
@@ -18660,9 +20001,7 @@ module GenFA24 :
     val zerobelow :
       'a G_GAC_F.wmatrix ->
       'a G_GAC_F.curposval ->
-      ([> `TDet of
-            ('a, int ref) Direct.abstract *
-            ('a, GAC_F.Dom.v ref) Direct.abstract
+      ([> `TDet of 'a Ge.LAMake(Direct).GenLA(GAC_F).AbstractDet.lstate
         | `TLower of ('a, GAC_F.contr) Direct.abstract ]
        as 'b)
       list -> ('b list -> ('a, unit) Direct.abstract -> 'c) -> 'c
@@ -18670,8 +20009,7 @@ module GenFA24 :
       ('a, GAC_F.contr) Direct.abstract ->
       (< answer : ('a, 'b) Direct.abstract;
          state : [> `TDet of
-                      ('a, int ref) Direct.abstract *
-                      ('a, GAC_F.Dom.v ref) Direct.abstract
+                      'a Ge.LAMake(Direct).GenLA(GAC_F).AbstractDet.lstate
                   | `TLower of ('a, GAC_F.contr) Direct.abstract
                   | `TPivot of ('a, Direct.perm list ref) Direct.abstract
                   | `TRan of 'a GEF.TrackRank.lstate ]
@@ -18683,9 +20021,7 @@ module GenFA24 :
     val forward_elim :
       'a G_GAC_F.wmatrix * ('a, int ref) Direct.abstract *
       ('a, int ref) Direct.abstract * ('a, int) Direct.abstract ->
-      ([> `TDet of
-            ('a, int ref) Direct.abstract *
-            ('a, GAC_F.Dom.v ref) Direct.abstract
+      ([> `TDet of 'a Ge.LAMake(Direct).GenLA(GAC_F).AbstractDet.lstate
         | `TLower of ('a, GAC_F.contr) Direct.abstract
         | `TPivot of ('a, Direct.perm list ref) Direct.abstract
         | `TRan of 'a GEF.TrackRank.lstate ]
@@ -18695,8 +20031,7 @@ module GenFA24 :
       ('a, GAC_F.contr) Direct.abstract ->
       (< answer : ('a, 'b) Direct.abstract;
          state : [> `TDet of
-                      ('a, int ref) Direct.abstract *
-                      ('a, GAC_F.Dom.v ref) Direct.abstract
+                      'a Ge.LAMake(Direct).GenLA(GAC_F).AbstractDet.lstate
                   | `TLower of 'a O.IF.L.lstate
                   | `TPivot of 'a O.IF.P.lstate
                   | `TRan of 'a GEF.TrackRank.lstate ]
@@ -18740,18 +20075,28 @@ module GenFA25 :
                 type 'a fra = ('a, int * int) Direct.abstract
                 type 'a pra = ('a, int array) Direct.abstract
                 type 'a lstate = ('a, int array ref) Direct.abstract
+                type 'a pc_constraint = unit
+                  constraint 'a =
+                    < classif : 'b; state : [> `TPivot of 'b lstate ]; .. >
                 type ('a, 'b) lm = ('a, 'b) GEF.cmonad
                   constraint 'a =
                     < answer : 'c; classif : 'd;
                       state : [> `TPivot of 'd lstate ]; .. >
+                type ('a, 'b) nm =
+                    (< answer : ('b, 'c) Direct.abstract; state : 'd list >,
+                     unit)
+                    StateCPSMonad.monad
+                  constraint 'a =
+                    < answer : 'c; classif : 'b;
+                      state : [> `TPivot of 'b lstate ] as 'd; .. >
                 val rowrep : 'a ira -> 'a ira -> 'a fra
                 val colrep : 'a ira -> 'a ira -> 'a fra
                 val decl :
                   ('a, int) Direct.abstract ->
                   (< answer : 'b; classif : 'a;
                      state : [> `TPivot of 'a lstate ]; .. >,
-                   unit)
-                  lm
+                   'a)
+                  nm
                 val add :
                   'a fra ->
                   (< answer : 'b; classif : 'a;
@@ -18802,8 +20147,8 @@ module GenFA25 :
           'a G_GAC_F.wmatrix ->
           (< answer : 'b; classif : 'a;
              state : [> `TDet of
-                          ('a, int ref) Direct.abstract *
-                          ('a, GAC_F.Dom.v ref) Direct.abstract
+                          'a
+                          Ge.LAMake(Direct).GenLA(GAC_F).AbstractDet.lstate
                       | `TLower of 'a IF.L.lstate
                       | `TPivot of 'a IF.P.lstate
                       | `TRan of 'a GEF.TrackRank.lstate ];
@@ -18816,9 +20161,7 @@ module GenFA25 :
     val zerobelow :
       'a G_GAC_F.wmatrix ->
       'a G_GAC_F.curposval ->
-      ([> `TDet of
-            ('a, int ref) Direct.abstract *
-            ('a, GAC_F.Dom.v ref) Direct.abstract
+      ([> `TDet of 'a Ge.LAMake(Direct).GenLA(GAC_F).AbstractDet.lstate
         | `TLower of ('a, GAC_F.contr) Direct.abstract ]
        as 'b)
       list -> ('b list -> ('a, unit) Direct.abstract -> 'c) -> 'c
@@ -18826,8 +20169,7 @@ module GenFA25 :
       ('a, GAC_F.contr) Direct.abstract ->
       (< answer : ('a, 'b) Direct.abstract;
          state : [> `TDet of
-                      ('a, int ref) Direct.abstract *
-                      ('a, GAC_F.Dom.v ref) Direct.abstract
+                      'a Ge.LAMake(Direct).GenLA(GAC_F).AbstractDet.lstate
                   | `TLower of ('a, GAC_F.contr) Direct.abstract
                   | `TPivot of ('a, int array ref) Direct.abstract
                   | `TRan of 'a GEF.TrackRank.lstate ]
@@ -18839,9 +20181,7 @@ module GenFA25 :
     val forward_elim :
       'a G_GAC_F.wmatrix * ('a, int ref) Direct.abstract *
       ('a, int ref) Direct.abstract * ('a, int) Direct.abstract ->
-      ([> `TDet of
-            ('a, int ref) Direct.abstract *
-            ('a, GAC_F.Dom.v ref) Direct.abstract
+      ([> `TDet of 'a Ge.LAMake(Direct).GenLA(GAC_F).AbstractDet.lstate
         | `TLower of ('a, GAC_F.contr) Direct.abstract
         | `TPivot of ('a, int array ref) Direct.abstract
         | `TRan of 'a GEF.TrackRank.lstate ]
@@ -18851,8 +20191,7 @@ module GenFA25 :
       ('a, GAC_F.contr) Direct.abstract ->
       (< answer : ('a, 'b) Direct.abstract;
          state : [> `TDet of
-                      ('a, int ref) Direct.abstract *
-                      ('a, GAC_F.Dom.v ref) Direct.abstract
+                      'a Ge.LAMake(Direct).GenLA(GAC_F).AbstractDet.lstate
                   | `TLower of 'a O.IF.L.lstate
                   | `TPivot of 'a O.IF.P.lstate
                   | `TRan of 'a GEF.TrackRank.lstate ]
@@ -18897,18 +20236,28 @@ module GenFA26 :
                 type 'a pra = 'a GEF.PermList.pra
                 type 'a lstate =
                     ('a, GEF.PermList.perm_rep ref) Direct.abstract
+                type 'a pc_constraint = unit
+                  constraint 'a =
+                    < classif : 'b; state : [> `TPivot of 'b lstate ]; .. >
                 type ('a, 'b) lm = ('a, 'b) GEF.cmonad
                   constraint 'a =
                     < answer : 'c; classif : 'd;
                       state : [> `TPivot of 'd lstate ]; .. >
+                type ('a, 'b) nm =
+                    (< answer : ('b, 'c) Direct.abstract; state : 'd list >,
+                     unit)
+                    StateCPSMonad.monad
+                  constraint 'a =
+                    < answer : 'c; classif : 'b;
+                      state : [> `TPivot of 'b lstate ] as 'd; .. >
                 val rowrep : 'a ira -> 'a ira -> 'a fra
                 val colrep : 'a ira -> 'a ira -> 'a fra
                 val decl :
                   ('a, int) Direct.abstract ->
                   (< answer : 'b; classif : 'a;
                      state : [> `TPivot of 'a lstate ]; .. >,
-                   unit)
-                  lm
+                   'a)
+                  nm
                 val add :
                   'a fra ->
                   (< answer : 'b; classif : 'a;
@@ -18958,7 +20307,8 @@ module GenFA26 :
         val make_result :
           'a G_GAC_F.wmatrix ->
           (< answer : 'b; classif : 'a;
-             state : [> `TDet of unit
+             state : [> `TDet of
+                          'a Ge.LAMake(Direct).GenLA(GAC_F).NoDet.lstate
                       | `TLower of 'a IF.L.lstate
                       | `TPivot of 'a IF.P.lstate
                       | `TRan of 'a GEF.TrackRank.lstate ];
@@ -18971,13 +20321,14 @@ module GenFA26 :
     val zerobelow :
       'a G_GAC_F.wmatrix ->
       'a G_GAC_F.curposval ->
-      ([> `TDet of unit | `TLower of ('a, GAC_F.contr) Direct.abstract ]
+      ([> `TDet of 'a Ge.LAMake(Direct).GenLA(GAC_F).NoDet.lstate
+        | `TLower of ('a, GAC_F.contr) Direct.abstract ]
        as 'b)
       list -> ('b list -> ('a, unit) Direct.abstract -> 'c) -> 'c
     val init :
       ('a, GAC_F.contr) Direct.abstract ->
       (< answer : ('a, 'b) Direct.abstract;
-         state : [> `TDet of unit
+         state : [> `TDet of 'a Ge.LAMake(Direct).GenLA(GAC_F).NoDet.lstate
                   | `TLower of ('a, GAC_F.contr) Direct.abstract
                   | `TPivot of
                       ('a, GEF.PermList.perm_rep ref) Direct.abstract
@@ -18990,7 +20341,7 @@ module GenFA26 :
     val forward_elim :
       'a G_GAC_F.wmatrix * ('a, int ref) Direct.abstract *
       ('a, int ref) Direct.abstract * ('a, int) Direct.abstract ->
-      ([> `TDet of unit
+      ([> `TDet of 'a Ge.LAMake(Direct).GenLA(GAC_F).NoDet.lstate
         | `TLower of ('a, GAC_F.contr) Direct.abstract
         | `TPivot of ('a, GEF.PermList.perm_rep ref) Direct.abstract
         | `TRan of 'a GEF.TrackRank.lstate ]
@@ -18999,7 +20350,7 @@ module GenFA26 :
     val gen :
       ('a, GAC_F.contr) Direct.abstract ->
       (< answer : ('a, 'b) Direct.abstract;
-         state : [> `TDet of unit
+         state : [> `TDet of 'a Ge.LAMake(Direct).GenLA(GAC_F).NoDet.lstate
                   | `TLower of 'a O.IF.L.lstate
                   | `TPivot of 'a O.IF.P.lstate
                   | `TRan of 'a GEF.TrackRank.lstate ]
@@ -19044,18 +20395,28 @@ module GenFA5 :
                 type 'a pra = 'a GEF.PermList.pra
                 type 'a lstate =
                     ('a, GEF.PermList.perm_rep ref) Direct.abstract
+                type 'a pc_constraint = unit
+                  constraint 'a =
+                    < classif : 'b; state : [> `TPivot of 'b lstate ]; .. >
                 type ('a, 'b) lm = ('a, 'b) GEF.cmonad
                   constraint 'a =
                     < answer : 'c; classif : 'd;
                       state : [> `TPivot of 'd lstate ]; .. >
+                type ('a, 'b) nm =
+                    (< answer : ('b, 'c) Direct.abstract; state : 'd list >,
+                     unit)
+                    StateCPSMonad.monad
+                  constraint 'a =
+                    < answer : 'c; classif : 'b;
+                      state : [> `TPivot of 'b lstate ] as 'd; .. >
                 val rowrep : 'a ira -> 'a ira -> 'a fra
                 val colrep : 'a ira -> 'a ira -> 'a fra
                 val decl :
                   ('a, int) Direct.abstract ->
                   (< answer : 'b; classif : 'a;
                      state : [> `TPivot of 'a lstate ]; .. >,
-                   unit)
-                  lm
+                   'a)
+                  nm
                 val add :
                   'a fra ->
                   (< answer : 'b; classif : 'a;
@@ -19105,7 +20466,8 @@ module GenFA5 :
         val make_result :
           'a G_GAC_F.wmatrix ->
           (< answer : 'b; classif : 'a;
-             state : [> `TDet of unit
+             state : [> `TDet of
+                          'a Ge.LAMake(Direct).GenLA(GAC_F).NoDet.lstate
                       | `TLower of 'a IF.L.lstate
                       | `TPivot of 'a IF.P.lstate
                       | `TRan of 'a GEF.TrackRank.lstate ];
@@ -19118,13 +20480,14 @@ module GenFA5 :
     val zerobelow :
       'a G_GAC_F.wmatrix ->
       'a G_GAC_F.curposval ->
-      ([> `TDet of unit | `TLower of ('a, GAC_F.contr) Direct.abstract ]
+      ([> `TDet of 'a Ge.LAMake(Direct).GenLA(GAC_F).NoDet.lstate
+        | `TLower of ('a, GAC_F.contr) Direct.abstract ]
        as 'b)
       list -> ('b list -> ('a, unit) Direct.abstract -> 'c) -> 'c
     val init :
       ('a, GAC_F.contr * int) Direct.abstract ->
       (< answer : ('a, 'b) Direct.abstract;
-         state : [> `TDet of unit
+         state : [> `TDet of 'a Ge.LAMake(Direct).GenLA(GAC_F).NoDet.lstate
                   | `TLower of ('a, GAC_F.contr) Direct.abstract
                   | `TPivot of
                       ('a, GEF.PermList.perm_rep ref) Direct.abstract
@@ -19137,7 +20500,7 @@ module GenFA5 :
     val forward_elim :
       'a G_GAC_F.wmatrix * ('a, int ref) Direct.abstract *
       ('a, int ref) Direct.abstract * ('a, int) Direct.abstract ->
-      ([> `TDet of unit
+      ([> `TDet of 'a Ge.LAMake(Direct).GenLA(GAC_F).NoDet.lstate
         | `TLower of ('a, GAC_F.contr) Direct.abstract
         | `TPivot of ('a, GEF.PermList.perm_rep ref) Direct.abstract
         | `TRan of 'a GEF.TrackRank.lstate ]
@@ -19146,7 +20509,7 @@ module GenFA5 :
     val gen :
       ('a, GAC_F.contr * int) Direct.abstract ->
       (< answer : ('a, 'b) Direct.abstract;
-         state : [> `TDet of unit
+         state : [> `TDet of 'a Ge.LAMake(Direct).GenLA(GAC_F).NoDet.lstate
                   | `TLower of 'a O.IF.L.lstate
                   | `TPivot of 'a O.IF.P.lstate
                   | `TRan of 'a GEF.TrackRank.lstate ]
@@ -19191,18 +20554,28 @@ module GenFA6 :
                 type 'a pra = 'a GEF.PermList.pra
                 type 'a lstate =
                     ('a, GEF.PermList.perm_rep ref) Direct.abstract
+                type 'a pc_constraint = unit
+                  constraint 'a =
+                    < classif : 'b; state : [> `TPivot of 'b lstate ]; .. >
                 type ('a, 'b) lm = ('a, 'b) GEF.cmonad
                   constraint 'a =
                     < answer : 'c; classif : 'd;
                       state : [> `TPivot of 'd lstate ]; .. >
+                type ('a, 'b) nm =
+                    (< answer : ('b, 'c) Direct.abstract; state : 'd list >,
+                     unit)
+                    StateCPSMonad.monad
+                  constraint 'a =
+                    < answer : 'c; classif : 'b;
+                      state : [> `TPivot of 'b lstate ] as 'd; .. >
                 val rowrep : 'a ira -> 'a ira -> 'a fra
                 val colrep : 'a ira -> 'a ira -> 'a fra
                 val decl :
                   ('a, int) Direct.abstract ->
                   (< answer : 'b; classif : 'a;
                      state : [> `TPivot of 'a lstate ]; .. >,
-                   unit)
-                  lm
+                   'a)
+                  nm
                 val add :
                   'a fra ->
                   (< answer : 'b; classif : 'a;
@@ -19253,8 +20626,8 @@ module GenFA6 :
           'a G_GAC_F.wmatrix ->
           (< answer : 'b; classif : 'a;
              state : [> `TDet of
-                          ('a, int ref) Direct.abstract *
-                          ('a, GAC_F.Dom.v ref) Direct.abstract
+                          'a
+                          Ge.LAMake(Direct).GenLA(GAC_F).AbstractDet.lstate
                       | `TLower of 'a IF.L.lstate
                       | `TPivot of 'a IF.P.lstate
                       | `TRan of 'a GEF.TrackRank.lstate ];
@@ -19267,9 +20640,7 @@ module GenFA6 :
     val zerobelow :
       'a G_GAC_F.wmatrix ->
       'a G_GAC_F.curposval ->
-      ([> `TDet of
-            ('a, int ref) Direct.abstract *
-            ('a, GAC_F.Dom.v ref) Direct.abstract
+      ([> `TDet of 'a Ge.LAMake(Direct).GenLA(GAC_F).AbstractDet.lstate
         | `TLower of ('a, GAC_F.contr) Direct.abstract ]
        as 'b)
       list -> ('b list -> ('a, unit) Direct.abstract -> 'c) -> 'c
@@ -19277,8 +20648,7 @@ module GenFA6 :
       ('a, GAC_F.contr * int) Direct.abstract ->
       (< answer : ('a, 'b) Direct.abstract;
          state : [> `TDet of
-                      ('a, int ref) Direct.abstract *
-                      ('a, GAC_F.Dom.v ref) Direct.abstract
+                      'a Ge.LAMake(Direct).GenLA(GAC_F).AbstractDet.lstate
                   | `TLower of ('a, GAC_F.contr) Direct.abstract
                   | `TPivot of
                       ('a, GEF.PermList.perm_rep ref) Direct.abstract
@@ -19291,9 +20661,7 @@ module GenFA6 :
     val forward_elim :
       'a G_GAC_F.wmatrix * ('a, int ref) Direct.abstract *
       ('a, int ref) Direct.abstract * ('a, int) Direct.abstract ->
-      ([> `TDet of
-            ('a, int ref) Direct.abstract *
-            ('a, GAC_F.Dom.v ref) Direct.abstract
+      ([> `TDet of 'a Ge.LAMake(Direct).GenLA(GAC_F).AbstractDet.lstate
         | `TLower of ('a, GAC_F.contr) Direct.abstract
         | `TPivot of ('a, GEF.PermList.perm_rep ref) Direct.abstract
         | `TRan of 'a GEF.TrackRank.lstate ]
@@ -19303,8 +20671,7 @@ module GenFA6 :
       ('a, GAC_F.contr * int) Direct.abstract ->
       (< answer : ('a, 'b) Direct.abstract;
          state : [> `TDet of
-                      ('a, int ref) Direct.abstract *
-                      ('a, GAC_F.Dom.v ref) Direct.abstract
+                      'a Ge.LAMake(Direct).GenLA(GAC_F).AbstractDet.lstate
                   | `TLower of 'a O.IF.L.lstate
                   | `TPivot of 'a O.IF.P.lstate
                   | `TRan of 'a GEF.TrackRank.lstate ]
@@ -19349,18 +20716,28 @@ module GenFA7 :
                 type 'a pra = 'a GEF.PermList.pra
                 type 'a lstate =
                     ('a, GEF.PermList.perm_rep ref) Direct.abstract
+                type 'a pc_constraint = unit
+                  constraint 'a =
+                    < classif : 'b; state : [> `TPivot of 'b lstate ]; .. >
                 type ('a, 'b) lm = ('a, 'b) GEF.cmonad
                   constraint 'a =
                     < answer : 'c; classif : 'd;
                       state : [> `TPivot of 'd lstate ]; .. >
+                type ('a, 'b) nm =
+                    (< answer : ('b, 'c) Direct.abstract; state : 'd list >,
+                     unit)
+                    StateCPSMonad.monad
+                  constraint 'a =
+                    < answer : 'c; classif : 'b;
+                      state : [> `TPivot of 'b lstate ] as 'd; .. >
                 val rowrep : 'a ira -> 'a ira -> 'a fra
                 val colrep : 'a ira -> 'a ira -> 'a fra
                 val decl :
                   ('a, int) Direct.abstract ->
                   (< answer : 'b; classif : 'a;
                      state : [> `TPivot of 'a lstate ]; .. >,
-                   unit)
-                  lm
+                   'a)
+                  nm
                 val add :
                   'a fra ->
                   (< answer : 'b; classif : 'a;
@@ -19410,7 +20787,8 @@ module GenFA7 :
         val make_result :
           'a G_GAC_F.wmatrix ->
           (< answer : 'b; classif : 'a;
-             state : [> `TDet of unit
+             state : [> `TDet of
+                          'a Ge.LAMake(Direct).GenLA(GAC_F).NoDet.lstate
                       | `TLower of 'a IF.L.lstate
                       | `TPivot of 'a IF.P.lstate
                       | `TRan of 'a GEF.TrackRank.lstate ];
@@ -19423,13 +20801,14 @@ module GenFA7 :
     val zerobelow :
       'a G_GAC_F.wmatrix ->
       'a G_GAC_F.curposval ->
-      ([> `TDet of unit | `TLower of ('a, GAC_F.contr) Direct.abstract ]
+      ([> `TDet of 'a Ge.LAMake(Direct).GenLA(GAC_F).NoDet.lstate
+        | `TLower of ('a, GAC_F.contr) Direct.abstract ]
        as 'b)
       list -> ('b list -> ('a, unit) Direct.abstract -> 'c) -> 'c
     val init :
       ('a, GAC_F.contr * int) Direct.abstract ->
       (< answer : ('a, 'b) Direct.abstract;
-         state : [> `TDet of unit
+         state : [> `TDet of 'a Ge.LAMake(Direct).GenLA(GAC_F).NoDet.lstate
                   | `TLower of ('a, GAC_F.contr) Direct.abstract
                   | `TPivot of
                       ('a, GEF.PermList.perm_rep ref) Direct.abstract
@@ -19442,7 +20821,7 @@ module GenFA7 :
     val forward_elim :
       'a G_GAC_F.wmatrix * ('a, int ref) Direct.abstract *
       ('a, int ref) Direct.abstract * ('a, int) Direct.abstract ->
-      ([> `TDet of unit
+      ([> `TDet of 'a Ge.LAMake(Direct).GenLA(GAC_F).NoDet.lstate
         | `TLower of ('a, GAC_F.contr) Direct.abstract
         | `TPivot of ('a, GEF.PermList.perm_rep ref) Direct.abstract
         | `TRan of 'a GEF.TrackRank.lstate ]
@@ -19451,7 +20830,7 @@ module GenFA7 :
     val gen :
       ('a, GAC_F.contr * int) Direct.abstract ->
       (< answer : ('a, 'b) Direct.abstract;
-         state : [> `TDet of unit
+         state : [> `TDet of 'a Ge.LAMake(Direct).GenLA(GAC_F).NoDet.lstate
                   | `TLower of 'a O.IF.L.lstate
                   | `TPivot of 'a O.IF.P.lstate
                   | `TRan of 'a GEF.TrackRank.lstate ]
@@ -19496,18 +20875,28 @@ module GenFA8 :
                 type 'a pra = 'a GEF.PermList.pra
                 type 'a lstate =
                     ('a, GEF.PermList.perm_rep ref) Direct.abstract
+                type 'a pc_constraint = unit
+                  constraint 'a =
+                    < classif : 'b; state : [> `TPivot of 'b lstate ]; .. >
                 type ('a, 'b) lm = ('a, 'b) GEF.cmonad
                   constraint 'a =
                     < answer : 'c; classif : 'd;
                       state : [> `TPivot of 'd lstate ]; .. >
+                type ('a, 'b) nm =
+                    (< answer : ('b, 'c) Direct.abstract; state : 'd list >,
+                     unit)
+                    StateCPSMonad.monad
+                  constraint 'a =
+                    < answer : 'c; classif : 'b;
+                      state : [> `TPivot of 'b lstate ] as 'd; .. >
                 val rowrep : 'a ira -> 'a ira -> 'a fra
                 val colrep : 'a ira -> 'a ira -> 'a fra
                 val decl :
                   ('a, int) Direct.abstract ->
                   (< answer : 'b; classif : 'a;
                      state : [> `TPivot of 'a lstate ]; .. >,
-                   unit)
-                  lm
+                   'a)
+                  nm
                 val add :
                   'a fra ->
                   (< answer : 'b; classif : 'a;
@@ -19558,8 +20947,8 @@ module GenFA8 :
           'a G_GAC_F.wmatrix ->
           (< answer : 'b; classif : 'a;
              state : [> `TDet of
-                          ('a, int ref) Direct.abstract *
-                          ('a, GAC_F.Dom.v ref) Direct.abstract
+                          'a
+                          Ge.LAMake(Direct).GenLA(GAC_F).AbstractDet.lstate
                       | `TLower of 'a IF.L.lstate
                       | `TPivot of 'a IF.P.lstate
                       | `TRan of 'a GEF.TrackRank.lstate ];
@@ -19572,9 +20961,7 @@ module GenFA8 :
     val zerobelow :
       'a G_GAC_F.wmatrix ->
       'a G_GAC_F.curposval ->
-      ([> `TDet of
-            ('a, int ref) Direct.abstract *
-            ('a, GAC_F.Dom.v ref) Direct.abstract
+      ([> `TDet of 'a Ge.LAMake(Direct).GenLA(GAC_F).AbstractDet.lstate
         | `TLower of ('a, GAC_F.contr) Direct.abstract ]
        as 'b)
       list -> ('b list -> ('a, unit) Direct.abstract -> 'c) -> 'c
@@ -19582,8 +20969,7 @@ module GenFA8 :
       ('a, GAC_F.contr * int) Direct.abstract ->
       (< answer : ('a, 'b) Direct.abstract;
          state : [> `TDet of
-                      ('a, int ref) Direct.abstract *
-                      ('a, GAC_F.Dom.v ref) Direct.abstract
+                      'a Ge.LAMake(Direct).GenLA(GAC_F).AbstractDet.lstate
                   | `TLower of ('a, GAC_F.contr) Direct.abstract
                   | `TPivot of
                       ('a, GEF.PermList.perm_rep ref) Direct.abstract
@@ -19596,9 +20982,7 @@ module GenFA8 :
     val forward_elim :
       'a G_GAC_F.wmatrix * ('a, int ref) Direct.abstract *
       ('a, int ref) Direct.abstract * ('a, int) Direct.abstract ->
-      ([> `TDet of
-            ('a, int ref) Direct.abstract *
-            ('a, GAC_F.Dom.v ref) Direct.abstract
+      ([> `TDet of 'a Ge.LAMake(Direct).GenLA(GAC_F).AbstractDet.lstate
         | `TLower of ('a, GAC_F.contr) Direct.abstract
         | `TPivot of ('a, GEF.PermList.perm_rep ref) Direct.abstract
         | `TRan of 'a GEF.TrackRank.lstate ]
@@ -19608,8 +20992,7 @@ module GenFA8 :
       ('a, GAC_F.contr * int) Direct.abstract ->
       (< answer : ('a, 'b) Direct.abstract;
          state : [> `TDet of
-                      ('a, int ref) Direct.abstract *
-                      ('a, GAC_F.Dom.v ref) Direct.abstract
+                      'a Ge.LAMake(Direct).GenLA(GAC_F).AbstractDet.lstate
                   | `TLower of 'a O.IF.L.lstate
                   | `TPivot of 'a O.IF.P.lstate
                   | `TRan of 'a GEF.TrackRank.lstate ]
@@ -19653,18 +21036,28 @@ module GenFA9 :
                 type 'a fra = ('a, Direct.perm) Direct.abstract
                 type 'a pra = ('a, Direct.perm list) Direct.abstract
                 type 'a lstate = ('a, Direct.perm list ref) Direct.abstract
+                type 'a pc_constraint = unit
+                  constraint 'a =
+                    < classif : 'b; state : [> `TPivot of 'b lstate ]; .. >
                 type ('a, 'b) lm = ('a, 'b) GEF.cmonad
                   constraint 'a =
                     < answer : 'c; classif : 'd;
                       state : [> `TPivot of 'd lstate ]; .. >
+                type ('a, 'b) nm =
+                    (< answer : ('b, 'c) Direct.abstract; state : 'd list >,
+                     unit)
+                    StateCPSMonad.monad
+                  constraint 'a =
+                    < answer : 'c; classif : 'b;
+                      state : [> `TPivot of 'b lstate ] as 'd; .. >
                 val rowrep : 'a ira -> 'a ira -> 'a fra
                 val colrep : 'a ira -> 'a ira -> 'a fra
                 val decl :
                   ('a, int) Direct.abstract ->
                   (< answer : 'b; classif : 'a;
                      state : [> `TPivot of 'a lstate ]; .. >,
-                   unit)
-                  lm
+                   'a)
+                  nm
                 val add :
                   'a fra ->
                   (< answer : 'b; classif : 'a;
@@ -19714,7 +21107,8 @@ module GenFA9 :
         val make_result :
           'a G_GAC_F.wmatrix ->
           (< answer : 'b; classif : 'a;
-             state : [> `TDet of unit
+             state : [> `TDet of
+                          'a Ge.LAMake(Direct).GenLA(GAC_F).NoDet.lstate
                       | `TLower of 'a IF.L.lstate
                       | `TPivot of 'a IF.P.lstate
                       | `TRan of 'a GEF.TrackRank.lstate ];
@@ -19727,13 +21121,14 @@ module GenFA9 :
     val zerobelow :
       'a G_GAC_F.wmatrix ->
       'a G_GAC_F.curposval ->
-      ([> `TDet of unit | `TLower of ('a, GAC_F.contr) Direct.abstract ]
+      ([> `TDet of 'a Ge.LAMake(Direct).GenLA(GAC_F).NoDet.lstate
+        | `TLower of ('a, GAC_F.contr) Direct.abstract ]
        as 'b)
       list -> ('b list -> ('a, unit) Direct.abstract -> 'c) -> 'c
     val init :
       ('a, GAC_F.contr) Direct.abstract ->
       (< answer : ('a, 'b) Direct.abstract;
-         state : [> `TDet of unit
+         state : [> `TDet of 'a Ge.LAMake(Direct).GenLA(GAC_F).NoDet.lstate
                   | `TLower of ('a, GAC_F.contr) Direct.abstract
                   | `TPivot of ('a, Direct.perm list ref) Direct.abstract
                   | `TRan of 'a GEF.TrackRank.lstate ]
@@ -19745,7 +21140,7 @@ module GenFA9 :
     val forward_elim :
       'a G_GAC_F.wmatrix * ('a, int ref) Direct.abstract *
       ('a, int ref) Direct.abstract * ('a, int) Direct.abstract ->
-      ([> `TDet of unit
+      ([> `TDet of 'a Ge.LAMake(Direct).GenLA(GAC_F).NoDet.lstate
         | `TLower of ('a, GAC_F.contr) Direct.abstract
         | `TPivot of ('a, Direct.perm list ref) Direct.abstract
         | `TRan of 'a GEF.TrackRank.lstate ]
@@ -19754,7 +21149,7 @@ module GenFA9 :
     val gen :
       ('a, GAC_F.contr) Direct.abstract ->
       (< answer : ('a, 'b) Direct.abstract;
-         state : [> `TDet of unit
+         state : [> `TDet of 'a Ge.LAMake(Direct).GenLA(GAC_F).NoDet.lstate
                   | `TLower of 'a O.IF.L.lstate
                   | `TPivot of 'a O.IF.P.lstate
                   | `TRan of 'a GEF.TrackRank.lstate ]
@@ -19798,18 +21193,28 @@ module GenFA31 :
                 type 'a fra = ('a, Direct.perm) Direct.abstract
                 type 'a pra = ('a, Direct.perm list) Direct.abstract
                 type 'a lstate = ('a, Direct.perm list ref) Direct.abstract
+                type 'a pc_constraint = unit
+                  constraint 'a =
+                    < classif : 'b; state : [> `TPivot of 'b lstate ]; .. >
                 type ('a, 'b) lm = ('a, 'b) GEF.cmonad
                   constraint 'a =
                     < answer : 'c; classif : 'd;
                       state : [> `TPivot of 'd lstate ]; .. >
+                type ('a, 'b) nm =
+                    (< answer : ('b, 'c) Direct.abstract; state : 'd list >,
+                     unit)
+                    StateCPSMonad.monad
+                  constraint 'a =
+                    < answer : 'c; classif : 'b;
+                      state : [> `TPivot of 'b lstate ] as 'd; .. >
                 val rowrep : 'a ira -> 'a ira -> 'a fra
                 val colrep : 'a ira -> 'a ira -> 'a fra
                 val decl :
                   ('a, int) Direct.abstract ->
                   (< answer : 'b; classif : 'a;
                      state : [> `TPivot of 'a lstate ]; .. >,
-                   unit)
-                  lm
+                   'a)
+                  nm
                 val add :
                   'a fra ->
                   (< answer : 'b; classif : 'a;
@@ -19859,7 +21264,8 @@ module GenFA31 :
         val make_result :
           'a G_GAC_F.wmatrix ->
           (< answer : 'b; classif : 'a;
-             state : [> `TDet of unit
+             state : [> `TDet of
+                          'a Ge.LAMake(Direct).GenLA(GAC_F).NoDet.lstate
                       | `TLower of 'a IF.L.lstate
                       | `TPivot of 'a IF.P.lstate
                       | `TRan of 'a GEF.TrackRank.lstate ];
@@ -19872,13 +21278,14 @@ module GenFA31 :
     val zerobelow :
       'a G_GAC_F.wmatrix ->
       'a G_GAC_F.curposval ->
-      ([> `TDet of unit | `TLower of ('a, GAC_F.contr) Direct.abstract ]
+      ([> `TDet of 'a Ge.LAMake(Direct).GenLA(GAC_F).NoDet.lstate
+        | `TLower of ('a, GAC_F.contr) Direct.abstract ]
        as 'b)
       list -> ('b list -> ('a, unit) Direct.abstract -> 'c) -> 'c
     val init :
       ('a, GAC_F.contr) Direct.abstract ->
       (< answer : ('a, 'b) Direct.abstract;
-         state : [> `TDet of unit
+         state : [> `TDet of 'a Ge.LAMake(Direct).GenLA(GAC_F).NoDet.lstate
                   | `TLower of ('a, GAC_F.contr) Direct.abstract
                   | `TPivot of ('a, Direct.perm list ref) Direct.abstract
                   | `TRan of 'a GEF.TrackRank.lstate ]
@@ -19890,7 +21297,7 @@ module GenFA31 :
     val forward_elim :
       'a G_GAC_F.wmatrix * ('a, int ref) Direct.abstract *
       ('a, int ref) Direct.abstract * ('a, int) Direct.abstract ->
-      ([> `TDet of unit
+      ([> `TDet of 'a Ge.LAMake(Direct).GenLA(GAC_F).NoDet.lstate
         | `TLower of ('a, GAC_F.contr) Direct.abstract
         | `TPivot of ('a, Direct.perm list ref) Direct.abstract
         | `TRan of 'a GEF.TrackRank.lstate ]
@@ -19899,7 +21306,7 @@ module GenFA31 :
     val gen :
       ('a, GAC_F.contr) Direct.abstract ->
       (< answer : ('a, 'b) Direct.abstract;
-         state : [> `TDet of unit
+         state : [> `TDet of 'a Ge.LAMake(Direct).GenLA(GAC_F).NoDet.lstate
                   | `TLower of 'a O.IF.L.lstate
                   | `TPivot of 'a O.IF.P.lstate
                   | `TRan of 'a GEF.TrackRank.lstate ]
@@ -19943,18 +21350,28 @@ module GenFA32 :
                 type 'a fra = ('a, Direct.perm) Direct.abstract
                 type 'a pra = ('a, Direct.perm list) Direct.abstract
                 type 'a lstate = ('a, Direct.perm list ref) Direct.abstract
+                type 'a pc_constraint = unit
+                  constraint 'a =
+                    < classif : 'b; state : [> `TPivot of 'b lstate ]; .. >
                 type ('a, 'b) lm = ('a, 'b) GEF.cmonad
                   constraint 'a =
                     < answer : 'c; classif : 'd;
                       state : [> `TPivot of 'd lstate ]; .. >
+                type ('a, 'b) nm =
+                    (< answer : ('b, 'c) Direct.abstract; state : 'd list >,
+                     unit)
+                    StateCPSMonad.monad
+                  constraint 'a =
+                    < answer : 'c; classif : 'b;
+                      state : [> `TPivot of 'b lstate ] as 'd; .. >
                 val rowrep : 'a ira -> 'a ira -> 'a fra
                 val colrep : 'a ira -> 'a ira -> 'a fra
                 val decl :
                   ('a, int) Direct.abstract ->
                   (< answer : 'b; classif : 'a;
                      state : [> `TPivot of 'a lstate ]; .. >,
-                   unit)
-                  lm
+                   'a)
+                  nm
                 val add :
                   'a fra ->
                   (< answer : 'b; classif : 'a;
@@ -20004,7 +21421,8 @@ module GenFA32 :
         val make_result :
           'a G_GAC_F.wmatrix ->
           (< answer : 'b; classif : 'a;
-             state : [> `TDet of unit
+             state : [> `TDet of
+                          'a Ge.LAMake(Direct).GenLA(GAC_F).NoDet.lstate
                       | `TLower of 'a IF.L.lstate
                       | `TPivot of 'a IF.P.lstate
                       | `TRan of 'a GEF.TrackRank.lstate ];
@@ -20017,13 +21435,14 @@ module GenFA32 :
     val zerobelow :
       'a G_GAC_F.wmatrix ->
       'a G_GAC_F.curposval ->
-      ([> `TDet of unit | `TLower of ('a, GAC_F.contr) Direct.abstract ]
+      ([> `TDet of 'a Ge.LAMake(Direct).GenLA(GAC_F).NoDet.lstate
+        | `TLower of ('a, GAC_F.contr) Direct.abstract ]
        as 'b)
       list -> ('b list -> ('a, unit) Direct.abstract -> 'c) -> 'c
     val init :
       ('a, GAC_F.contr) Direct.abstract ->
       (< answer : ('a, 'b) Direct.abstract;
-         state : [> `TDet of unit
+         state : [> `TDet of 'a Ge.LAMake(Direct).GenLA(GAC_F).NoDet.lstate
                   | `TLower of ('a, GAC_F.contr) Direct.abstract
                   | `TPivot of ('a, Direct.perm list ref) Direct.abstract
                   | `TRan of 'a GEF.TrackRank.lstate ]
@@ -20035,7 +21454,7 @@ module GenFA32 :
     val forward_elim :
       'a G_GAC_F.wmatrix * ('a, int ref) Direct.abstract *
       ('a, int ref) Direct.abstract * ('a, int) Direct.abstract ->
-      ([> `TDet of unit
+      ([> `TDet of 'a Ge.LAMake(Direct).GenLA(GAC_F).NoDet.lstate
         | `TLower of ('a, GAC_F.contr) Direct.abstract
         | `TPivot of ('a, Direct.perm list ref) Direct.abstract
         | `TRan of 'a GEF.TrackRank.lstate ]
@@ -20044,7 +21463,7 @@ module GenFA32 :
     val gen :
       ('a, GAC_F.contr) Direct.abstract ->
       (< answer : ('a, 'b) Direct.abstract;
-         state : [> `TDet of unit
+         state : [> `TDet of 'a Ge.LAMake(Direct).GenLA(GAC_F).NoDet.lstate
                   | `TLower of 'a O.IF.L.lstate
                   | `TPivot of 'a O.IF.P.lstate
                   | `TRan of 'a GEF.TrackRank.lstate ]
@@ -20089,18 +21508,28 @@ module GenFV1 :
                 type 'a pra = 'a GEF.PermList.pra
                 type 'a lstate =
                     ('a, GEF.PermList.perm_rep ref) Direct.abstract
+                type 'a pc_constraint = unit
+                  constraint 'a =
+                    < classif : 'b; state : [> `TPivot of 'b lstate ]; .. >
                 type ('a, 'b) lm = ('a, 'b) GEF.cmonad
                   constraint 'a =
                     < answer : 'c; classif : 'd;
                       state : [> `TPivot of 'd lstate ]; .. >
+                type ('a, 'b) nm =
+                    (< answer : ('b, 'c) Direct.abstract; state : 'd list >,
+                     unit)
+                    StateCPSMonad.monad
+                  constraint 'a =
+                    < answer : 'c; classif : 'b;
+                      state : [> `TPivot of 'b lstate ] as 'd; .. >
                 val rowrep : 'a ira -> 'a ira -> 'a fra
                 val colrep : 'a ira -> 'a ira -> 'a fra
                 val decl :
                   ('a, int) Direct.abstract ->
                   (< answer : 'b; classif : 'a;
                      state : [> `TPivot of 'a lstate ]; .. >,
-                   unit)
-                  lm
+                   'a)
+                  nm
                 val add :
                   'a fra ->
                   (< answer : 'b; classif : 'a;
@@ -20150,7 +21579,8 @@ module GenFV1 :
         val make_result :
           'a G_GVC_F.wmatrix ->
           (< answer : 'b; classif : 'a;
-             state : [> `TDet of unit
+             state : [> `TDet of
+                          'a Ge.LAMake(Direct).GenLA(GVC_F).NoDet.lstate
                       | `TLower of 'a IF.L.lstate
                       | `TPivot of 'a IF.P.lstate
                       | `TRan of 'a GEF.TrackRank.lstate ];
@@ -20163,13 +21593,14 @@ module GenFV1 :
     val zerobelow :
       'a G_GVC_F.wmatrix ->
       'a G_GVC_F.curposval ->
-      ([> `TDet of unit | `TLower of ('a, GVC_F.contr) Direct.abstract ]
+      ([> `TDet of 'a Ge.LAMake(Direct).GenLA(GVC_F).NoDet.lstate
+        | `TLower of ('a, GVC_F.contr) Direct.abstract ]
        as 'b)
       list -> ('b list -> ('a, unit) Direct.abstract -> 'c) -> 'c
     val init :
       ('a, GVC_F.contr) Direct.abstract ->
       (< answer : ('a, 'b) Direct.abstract;
-         state : [> `TDet of unit
+         state : [> `TDet of 'a Ge.LAMake(Direct).GenLA(GVC_F).NoDet.lstate
                   | `TLower of ('a, GVC_F.contr) Direct.abstract
                   | `TPivot of
                       ('a, GEF.PermList.perm_rep ref) Direct.abstract
@@ -20182,7 +21613,7 @@ module GenFV1 :
     val forward_elim :
       'a G_GVC_F.wmatrix * ('a, int ref) Direct.abstract *
       ('a, int ref) Direct.abstract * ('a, int) Direct.abstract ->
-      ([> `TDet of unit
+      ([> `TDet of 'a Ge.LAMake(Direct).GenLA(GVC_F).NoDet.lstate
         | `TLower of ('a, GVC_F.contr) Direct.abstract
         | `TPivot of ('a, GEF.PermList.perm_rep ref) Direct.abstract
         | `TRan of 'a GEF.TrackRank.lstate ]
@@ -20191,7 +21622,7 @@ module GenFV1 :
     val gen :
       ('a, GVC_F.contr) Direct.abstract ->
       (< answer : ('a, 'b) Direct.abstract;
-         state : [> `TDet of unit
+         state : [> `TDet of 'a Ge.LAMake(Direct).GenLA(GVC_F).NoDet.lstate
                   | `TLower of 'a O.IF.L.lstate
                   | `TPivot of 'a O.IF.P.lstate
                   | `TRan of 'a GEF.TrackRank.lstate ]
@@ -20236,18 +21667,28 @@ module GenFV2 :
                 type 'a pra = 'a GEF.PermList.pra
                 type 'a lstate =
                     ('a, GEF.PermList.perm_rep ref) Direct.abstract
+                type 'a pc_constraint = unit
+                  constraint 'a =
+                    < classif : 'b; state : [> `TPivot of 'b lstate ]; .. >
                 type ('a, 'b) lm = ('a, 'b) GEF.cmonad
                   constraint 'a =
                     < answer : 'c; classif : 'd;
                       state : [> `TPivot of 'd lstate ]; .. >
+                type ('a, 'b) nm =
+                    (< answer : ('b, 'c) Direct.abstract; state : 'd list >,
+                     unit)
+                    StateCPSMonad.monad
+                  constraint 'a =
+                    < answer : 'c; classif : 'b;
+                      state : [> `TPivot of 'b lstate ] as 'd; .. >
                 val rowrep : 'a ira -> 'a ira -> 'a fra
                 val colrep : 'a ira -> 'a ira -> 'a fra
                 val decl :
                   ('a, int) Direct.abstract ->
                   (< answer : 'b; classif : 'a;
                      state : [> `TPivot of 'a lstate ]; .. >,
-                   unit)
-                  lm
+                   'a)
+                  nm
                 val add :
                   'a fra ->
                   (< answer : 'b; classif : 'a;
@@ -20298,8 +21739,8 @@ module GenFV2 :
           'a G_GVC_F.wmatrix ->
           (< answer : 'b; classif : 'a;
              state : [> `TDet of
-                          ('a, int ref) Direct.abstract *
-                          ('a, GVC_F.Dom.v ref) Direct.abstract
+                          'a
+                          Ge.LAMake(Direct).GenLA(GVC_F).AbstractDet.lstate
                       | `TLower of 'a IF.L.lstate
                       | `TPivot of 'a IF.P.lstate
                       | `TRan of 'a GEF.TrackRank.lstate ];
@@ -20312,9 +21753,7 @@ module GenFV2 :
     val zerobelow :
       'a G_GVC_F.wmatrix ->
       'a G_GVC_F.curposval ->
-      ([> `TDet of
-            ('a, int ref) Direct.abstract *
-            ('a, GVC_F.Dom.v ref) Direct.abstract
+      ([> `TDet of 'a Ge.LAMake(Direct).GenLA(GVC_F).AbstractDet.lstate
         | `TLower of ('a, GVC_F.contr) Direct.abstract ]
        as 'b)
       list -> ('b list -> ('a, unit) Direct.abstract -> 'c) -> 'c
@@ -20322,8 +21761,7 @@ module GenFV2 :
       ('a, GVC_F.contr) Direct.abstract ->
       (< answer : ('a, 'b) Direct.abstract;
          state : [> `TDet of
-                      ('a, int ref) Direct.abstract *
-                      ('a, GVC_F.Dom.v ref) Direct.abstract
+                      'a Ge.LAMake(Direct).GenLA(GVC_F).AbstractDet.lstate
                   | `TLower of ('a, GVC_F.contr) Direct.abstract
                   | `TPivot of
                       ('a, GEF.PermList.perm_rep ref) Direct.abstract
@@ -20336,9 +21774,7 @@ module GenFV2 :
     val forward_elim :
       'a G_GVC_F.wmatrix * ('a, int ref) Direct.abstract *
       ('a, int ref) Direct.abstract * ('a, int) Direct.abstract ->
-      ([> `TDet of
-            ('a, int ref) Direct.abstract *
-            ('a, GVC_F.Dom.v ref) Direct.abstract
+      ([> `TDet of 'a Ge.LAMake(Direct).GenLA(GVC_F).AbstractDet.lstate
         | `TLower of ('a, GVC_F.contr) Direct.abstract
         | `TPivot of ('a, GEF.PermList.perm_rep ref) Direct.abstract
         | `TRan of 'a GEF.TrackRank.lstate ]
@@ -20348,8 +21784,7 @@ module GenFV2 :
       ('a, GVC_F.contr) Direct.abstract ->
       (< answer : ('a, 'b) Direct.abstract;
          state : [> `TDet of
-                      ('a, int ref) Direct.abstract *
-                      ('a, GVC_F.Dom.v ref) Direct.abstract
+                      'a Ge.LAMake(Direct).GenLA(GVC_F).AbstractDet.lstate
                   | `TLower of 'a O.IF.L.lstate
                   | `TPivot of 'a O.IF.P.lstate
                   | `TRan of 'a GEF.TrackRank.lstate ]
@@ -20394,18 +21829,28 @@ module GenFV3 :
                 type 'a pra = 'a GEF.PermList.pra
                 type 'a lstate =
                     ('a, GEF.PermList.perm_rep ref) Direct.abstract
+                type 'a pc_constraint = unit
+                  constraint 'a =
+                    < classif : 'b; state : [> `TPivot of 'b lstate ]; .. >
                 type ('a, 'b) lm = ('a, 'b) GEF.cmonad
                   constraint 'a =
                     < answer : 'c; classif : 'd;
                       state : [> `TPivot of 'd lstate ]; .. >
+                type ('a, 'b) nm =
+                    (< answer : ('b, 'c) Direct.abstract; state : 'd list >,
+                     unit)
+                    StateCPSMonad.monad
+                  constraint 'a =
+                    < answer : 'c; classif : 'b;
+                      state : [> `TPivot of 'b lstate ] as 'd; .. >
                 val rowrep : 'a ira -> 'a ira -> 'a fra
                 val colrep : 'a ira -> 'a ira -> 'a fra
                 val decl :
                   ('a, int) Direct.abstract ->
                   (< answer : 'b; classif : 'a;
                      state : [> `TPivot of 'a lstate ]; .. >,
-                   unit)
-                  lm
+                   'a)
+                  nm
                 val add :
                   'a fra ->
                   (< answer : 'b; classif : 'a;
@@ -20455,7 +21900,8 @@ module GenFV3 :
         val make_result :
           'a G_GVC_F.wmatrix ->
           (< answer : 'b; classif : 'a;
-             state : [> `TDet of unit
+             state : [> `TDet of
+                          'a Ge.LAMake(Direct).GenLA(GVC_F).NoDet.lstate
                       | `TLower of 'a IF.L.lstate
                       | `TPivot of 'a IF.P.lstate
                       | `TRan of 'a GEF.TrackRank.lstate ];
@@ -20468,13 +21914,14 @@ module GenFV3 :
     val zerobelow :
       'a G_GVC_F.wmatrix ->
       'a G_GVC_F.curposval ->
-      ([> `TDet of unit | `TLower of ('a, GVC_F.contr) Direct.abstract ]
+      ([> `TDet of 'a Ge.LAMake(Direct).GenLA(GVC_F).NoDet.lstate
+        | `TLower of ('a, GVC_F.contr) Direct.abstract ]
        as 'b)
       list -> ('b list -> ('a, unit) Direct.abstract -> 'c) -> 'c
     val init :
       ('a, GVC_F.contr) Direct.abstract ->
       (< answer : ('a, 'b) Direct.abstract;
-         state : [> `TDet of unit
+         state : [> `TDet of 'a Ge.LAMake(Direct).GenLA(GVC_F).NoDet.lstate
                   | `TLower of ('a, GVC_F.contr) Direct.abstract
                   | `TPivot of
                       ('a, GEF.PermList.perm_rep ref) Direct.abstract
@@ -20487,7 +21934,7 @@ module GenFV3 :
     val forward_elim :
       'a G_GVC_F.wmatrix * ('a, int ref) Direct.abstract *
       ('a, int ref) Direct.abstract * ('a, int) Direct.abstract ->
-      ([> `TDet of unit
+      ([> `TDet of 'a Ge.LAMake(Direct).GenLA(GVC_F).NoDet.lstate
         | `TLower of ('a, GVC_F.contr) Direct.abstract
         | `TPivot of ('a, GEF.PermList.perm_rep ref) Direct.abstract
         | `TRan of 'a GEF.TrackRank.lstate ]
@@ -20496,7 +21943,7 @@ module GenFV3 :
     val gen :
       ('a, GVC_F.contr) Direct.abstract ->
       (< answer : ('a, 'b) Direct.abstract;
-         state : [> `TDet of unit
+         state : [> `TDet of 'a Ge.LAMake(Direct).GenLA(GVC_F).NoDet.lstate
                   | `TLower of 'a O.IF.L.lstate
                   | `TPivot of 'a O.IF.P.lstate
                   | `TRan of 'a GEF.TrackRank.lstate ]
@@ -20541,18 +21988,28 @@ module GenFV4 :
                 type 'a pra = 'a GEF.PermList.pra
                 type 'a lstate =
                     ('a, GEF.PermList.perm_rep ref) Direct.abstract
+                type 'a pc_constraint = unit
+                  constraint 'a =
+                    < classif : 'b; state : [> `TPivot of 'b lstate ]; .. >
                 type ('a, 'b) lm = ('a, 'b) GEF.cmonad
                   constraint 'a =
                     < answer : 'c; classif : 'd;
                       state : [> `TPivot of 'd lstate ]; .. >
+                type ('a, 'b) nm =
+                    (< answer : ('b, 'c) Direct.abstract; state : 'd list >,
+                     unit)
+                    StateCPSMonad.monad
+                  constraint 'a =
+                    < answer : 'c; classif : 'b;
+                      state : [> `TPivot of 'b lstate ] as 'd; .. >
                 val rowrep : 'a ira -> 'a ira -> 'a fra
                 val colrep : 'a ira -> 'a ira -> 'a fra
                 val decl :
                   ('a, int) Direct.abstract ->
                   (< answer : 'b; classif : 'a;
                      state : [> `TPivot of 'a lstate ]; .. >,
-                   unit)
-                  lm
+                   'a)
+                  nm
                 val add :
                   'a fra ->
                   (< answer : 'b; classif : 'a;
@@ -20603,8 +22060,8 @@ module GenFV4 :
           'a G_GVC_F.wmatrix ->
           (< answer : 'b; classif : 'a;
              state : [> `TDet of
-                          ('a, int ref) Direct.abstract *
-                          ('a, GVC_F.Dom.v ref) Direct.abstract
+                          'a
+                          Ge.LAMake(Direct).GenLA(GVC_F).AbstractDet.lstate
                       | `TLower of 'a IF.L.lstate
                       | `TPivot of 'a IF.P.lstate
                       | `TRan of 'a GEF.TrackRank.lstate ];
@@ -20617,9 +22074,7 @@ module GenFV4 :
     val zerobelow :
       'a G_GVC_F.wmatrix ->
       'a G_GVC_F.curposval ->
-      ([> `TDet of
-            ('a, int ref) Direct.abstract *
-            ('a, GVC_F.Dom.v ref) Direct.abstract
+      ([> `TDet of 'a Ge.LAMake(Direct).GenLA(GVC_F).AbstractDet.lstate
         | `TLower of ('a, GVC_F.contr) Direct.abstract ]
        as 'b)
       list -> ('b list -> ('a, unit) Direct.abstract -> 'c) -> 'c
@@ -20627,8 +22082,7 @@ module GenFV4 :
       ('a, GVC_F.contr) Direct.abstract ->
       (< answer : ('a, 'b) Direct.abstract;
          state : [> `TDet of
-                      ('a, int ref) Direct.abstract *
-                      ('a, GVC_F.Dom.v ref) Direct.abstract
+                      'a Ge.LAMake(Direct).GenLA(GVC_F).AbstractDet.lstate
                   | `TLower of ('a, GVC_F.contr) Direct.abstract
                   | `TPivot of
                       ('a, GEF.PermList.perm_rep ref) Direct.abstract
@@ -20641,9 +22095,7 @@ module GenFV4 :
     val forward_elim :
       'a G_GVC_F.wmatrix * ('a, int ref) Direct.abstract *
       ('a, int ref) Direct.abstract * ('a, int) Direct.abstract ->
-      ([> `TDet of
-            ('a, int ref) Direct.abstract *
-            ('a, GVC_F.Dom.v ref) Direct.abstract
+      ([> `TDet of 'a Ge.LAMake(Direct).GenLA(GVC_F).AbstractDet.lstate
         | `TLower of ('a, GVC_F.contr) Direct.abstract
         | `TPivot of ('a, GEF.PermList.perm_rep ref) Direct.abstract
         | `TRan of 'a GEF.TrackRank.lstate ]
@@ -20653,8 +22105,7 @@ module GenFV4 :
       ('a, GVC_F.contr) Direct.abstract ->
       (< answer : ('a, 'b) Direct.abstract;
          state : [> `TDet of
-                      ('a, int ref) Direct.abstract *
-                      ('a, GVC_F.Dom.v ref) Direct.abstract
+                      'a Ge.LAMake(Direct).GenLA(GVC_F).AbstractDet.lstate
                   | `TLower of 'a O.IF.L.lstate
                   | `TPivot of 'a O.IF.P.lstate
                   | `TRan of 'a GEF.TrackRank.lstate ]
@@ -20699,18 +22150,28 @@ module GenFV5 :
                 type 'a pra = 'a GEF.PermList.pra
                 type 'a lstate =
                     ('a, GEF.PermList.perm_rep ref) Direct.abstract
+                type 'a pc_constraint = unit
+                  constraint 'a =
+                    < classif : 'b; state : [> `TPivot of 'b lstate ]; .. >
                 type ('a, 'b) lm = ('a, 'b) GEF.cmonad
                   constraint 'a =
                     < answer : 'c; classif : 'd;
                       state : [> `TPivot of 'd lstate ]; .. >
+                type ('a, 'b) nm =
+                    (< answer : ('b, 'c) Direct.abstract; state : 'd list >,
+                     unit)
+                    StateCPSMonad.monad
+                  constraint 'a =
+                    < answer : 'c; classif : 'b;
+                      state : [> `TPivot of 'b lstate ] as 'd; .. >
                 val rowrep : 'a ira -> 'a ira -> 'a fra
                 val colrep : 'a ira -> 'a ira -> 'a fra
                 val decl :
                   ('a, int) Direct.abstract ->
                   (< answer : 'b; classif : 'a;
                      state : [> `TPivot of 'a lstate ]; .. >,
-                   unit)
-                  lm
+                   'a)
+                  nm
                 val add :
                   'a fra ->
                   (< answer : 'b; classif : 'a;
@@ -20761,8 +22222,8 @@ module GenFV5 :
           'a G_GVC_F.wmatrix ->
           (< answer : 'b; classif : 'a;
              state : [> `TDet of
-                          ('a, int ref) Direct.abstract *
-                          ('a, GVC_F.Dom.v ref) Direct.abstract
+                          'a
+                          Ge.LAMake(Direct).GenLA(GVC_F).AbstractDet.lstate
                       | `TLower of 'a IF.L.lstate
                       | `TPivot of 'a IF.P.lstate
                       | `TRan of 'a GEF.TrackRank.lstate ];
@@ -20775,9 +22236,7 @@ module GenFV5 :
     val zerobelow :
       'a G_GVC_F.wmatrix ->
       'a G_GVC_F.curposval ->
-      ([> `TDet of
-            ('a, int ref) Direct.abstract *
-            ('a, GVC_F.Dom.v ref) Direct.abstract
+      ([> `TDet of 'a Ge.LAMake(Direct).GenLA(GVC_F).AbstractDet.lstate
         | `TLower of ('a, GVC_F.contr) Direct.abstract ]
        as 'b)
       list -> ('b list -> ('a, unit) Direct.abstract -> 'c) -> 'c
@@ -20785,8 +22244,7 @@ module GenFV5 :
       ('a, GVC_F.contr) Direct.abstract ->
       (< answer : ('a, 'b) Direct.abstract;
          state : [> `TDet of
-                      ('a, int ref) Direct.abstract *
-                      ('a, GVC_F.Dom.v ref) Direct.abstract
+                      'a Ge.LAMake(Direct).GenLA(GVC_F).AbstractDet.lstate
                   | `TLower of ('a, GVC_F.contr) Direct.abstract
                   | `TPivot of
                       ('a, GEF.PermList.perm_rep ref) Direct.abstract
@@ -20799,9 +22257,7 @@ module GenFV5 :
     val forward_elim :
       'a G_GVC_F.wmatrix * ('a, int ref) Direct.abstract *
       ('a, int ref) Direct.abstract * ('a, int) Direct.abstract ->
-      ([> `TDet of
-            ('a, int ref) Direct.abstract *
-            ('a, GVC_F.Dom.v ref) Direct.abstract
+      ([> `TDet of 'a Ge.LAMake(Direct).GenLA(GVC_F).AbstractDet.lstate
         | `TLower of ('a, GVC_F.contr) Direct.abstract
         | `TPivot of ('a, GEF.PermList.perm_rep ref) Direct.abstract
         | `TRan of 'a GEF.TrackRank.lstate ]
@@ -20811,8 +22267,7 @@ module GenFV5 :
       ('a, GVC_F.contr) Direct.abstract ->
       (< answer : ('a, 'b) Direct.abstract;
          state : [> `TDet of
-                      ('a, int ref) Direct.abstract *
-                      ('a, GVC_F.Dom.v ref) Direct.abstract
+                      'a Ge.LAMake(Direct).GenLA(GVC_F).AbstractDet.lstate
                   | `TLower of 'a O.IF.L.lstate
                   | `TPivot of 'a O.IF.P.lstate
                   | `TRan of 'a GEF.TrackRank.lstate ]
@@ -20856,18 +22311,28 @@ module GenFV6 :
                 type 'a fra = ('a, Direct.perm) Direct.abstract
                 type 'a pra = ('a, Direct.perm list) Direct.abstract
                 type 'a lstate = ('a, Direct.perm list ref) Direct.abstract
+                type 'a pc_constraint = unit
+                  constraint 'a =
+                    < classif : 'b; state : [> `TPivot of 'b lstate ]; .. >
                 type ('a, 'b) lm = ('a, 'b) GEF.cmonad
                   constraint 'a =
                     < answer : 'c; classif : 'd;
                       state : [> `TPivot of 'd lstate ]; .. >
+                type ('a, 'b) nm =
+                    (< answer : ('b, 'c) Direct.abstract; state : 'd list >,
+                     unit)
+                    StateCPSMonad.monad
+                  constraint 'a =
+                    < answer : 'c; classif : 'b;
+                      state : [> `TPivot of 'b lstate ] as 'd; .. >
                 val rowrep : 'a ira -> 'a ira -> 'a fra
                 val colrep : 'a ira -> 'a ira -> 'a fra
                 val decl :
                   ('a, int) Direct.abstract ->
                   (< answer : 'b; classif : 'a;
                      state : [> `TPivot of 'a lstate ]; .. >,
-                   unit)
-                  lm
+                   'a)
+                  nm
                 val add :
                   'a fra ->
                   (< answer : 'b; classif : 'a;
@@ -20917,7 +22382,8 @@ module GenFV6 :
         val make_result :
           'a G_GVC_F.wmatrix ->
           (< answer : 'b; classif : 'a;
-             state : [> `TDet of unit
+             state : [> `TDet of
+                          'a Ge.LAMake(Direct).GenLA(GVC_F).NoDet.lstate
                       | `TLower of 'a IF.L.lstate
                       | `TPivot of 'a IF.P.lstate
                       | `TRan of 'a GEF.TrackRank.lstate ];
@@ -20930,13 +22396,14 @@ module GenFV6 :
     val zerobelow :
       'a G_GVC_F.wmatrix ->
       'a G_GVC_F.curposval ->
-      ([> `TDet of unit | `TLower of ('a, GVC_F.contr) Direct.abstract ]
+      ([> `TDet of 'a Ge.LAMake(Direct).GenLA(GVC_F).NoDet.lstate
+        | `TLower of ('a, GVC_F.contr) Direct.abstract ]
        as 'b)
       list -> ('b list -> ('a, unit) Direct.abstract -> 'c) -> 'c
     val init :
       ('a, GVC_F.contr) Direct.abstract ->
       (< answer : ('a, 'b) Direct.abstract;
-         state : [> `TDet of unit
+         state : [> `TDet of 'a Ge.LAMake(Direct).GenLA(GVC_F).NoDet.lstate
                   | `TLower of ('a, GVC_F.contr) Direct.abstract
                   | `TPivot of ('a, Direct.perm list ref) Direct.abstract
                   | `TRan of 'a GEF.TrackRank.lstate ]
@@ -20948,7 +22415,7 @@ module GenFV6 :
     val forward_elim :
       'a G_GVC_F.wmatrix * ('a, int ref) Direct.abstract *
       ('a, int ref) Direct.abstract * ('a, int) Direct.abstract ->
-      ([> `TDet of unit
+      ([> `TDet of 'a Ge.LAMake(Direct).GenLA(GVC_F).NoDet.lstate
         | `TLower of ('a, GVC_F.contr) Direct.abstract
         | `TPivot of ('a, Direct.perm list ref) Direct.abstract
         | `TRan of 'a GEF.TrackRank.lstate ]
@@ -20957,7 +22424,7 @@ module GenFV6 :
     val gen :
       ('a, GVC_F.contr) Direct.abstract ->
       (< answer : ('a, 'b) Direct.abstract;
-         state : [> `TDet of unit
+         state : [> `TDet of 'a Ge.LAMake(Direct).GenLA(GVC_F).NoDet.lstate
                   | `TLower of 'a O.IF.L.lstate
                   | `TPivot of 'a O.IF.P.lstate
                   | `TRan of 'a GEF.TrackRank.lstate ]
@@ -21001,18 +22468,28 @@ module GenFV7 :
                 type 'a fra = ('a, Direct.perm) Direct.abstract
                 type 'a pra = ('a, Direct.perm list) Direct.abstract
                 type 'a lstate = ('a, Direct.perm list ref) Direct.abstract
+                type 'a pc_constraint = unit
+                  constraint 'a =
+                    < classif : 'b; state : [> `TPivot of 'b lstate ]; .. >
                 type ('a, 'b) lm = ('a, 'b) GEF.cmonad
                   constraint 'a =
                     < answer : 'c; classif : 'd;
                       state : [> `TPivot of 'd lstate ]; .. >
+                type ('a, 'b) nm =
+                    (< answer : ('b, 'c) Direct.abstract; state : 'd list >,
+                     unit)
+                    StateCPSMonad.monad
+                  constraint 'a =
+                    < answer : 'c; classif : 'b;
+                      state : [> `TPivot of 'b lstate ] as 'd; .. >
                 val rowrep : 'a ira -> 'a ira -> 'a fra
                 val colrep : 'a ira -> 'a ira -> 'a fra
                 val decl :
                   ('a, int) Direct.abstract ->
                   (< answer : 'b; classif : 'a;
                      state : [> `TPivot of 'a lstate ]; .. >,
-                   unit)
-                  lm
+                   'a)
+                  nm
                 val add :
                   'a fra ->
                   (< answer : 'b; classif : 'a;
@@ -21062,7 +22539,8 @@ module GenFV7 :
         val make_result :
           'a G_GVC_F.wmatrix ->
           (< answer : 'b; classif : 'a;
-             state : [> `TDet of unit
+             state : [> `TDet of
+                          'a Ge.LAMake(Direct).GenLA(GVC_F).NoDet.lstate
                       | `TLower of 'a IF.L.lstate
                       | `TPivot of 'a IF.P.lstate
                       | `TRan of 'a GEF.TrackRank.lstate ];
@@ -21075,13 +22553,14 @@ module GenFV7 :
     val zerobelow :
       'a G_GVC_F.wmatrix ->
       'a G_GVC_F.curposval ->
-      ([> `TDet of unit | `TLower of ('a, GVC_F.contr) Direct.abstract ]
+      ([> `TDet of 'a Ge.LAMake(Direct).GenLA(GVC_F).NoDet.lstate
+        | `TLower of ('a, GVC_F.contr) Direct.abstract ]
        as 'b)
       list -> ('b list -> ('a, unit) Direct.abstract -> 'c) -> 'c
     val init :
       ('a, GVC_F.contr) Direct.abstract ->
       (< answer : ('a, 'b) Direct.abstract;
-         state : [> `TDet of unit
+         state : [> `TDet of 'a Ge.LAMake(Direct).GenLA(GVC_F).NoDet.lstate
                   | `TLower of ('a, GVC_F.contr) Direct.abstract
                   | `TPivot of ('a, Direct.perm list ref) Direct.abstract
                   | `TRan of 'a GEF.TrackRank.lstate ]
@@ -21093,7 +22572,7 @@ module GenFV7 :
     val forward_elim :
       'a G_GVC_F.wmatrix * ('a, int ref) Direct.abstract *
       ('a, int ref) Direct.abstract * ('a, int) Direct.abstract ->
-      ([> `TDet of unit
+      ([> `TDet of 'a Ge.LAMake(Direct).GenLA(GVC_F).NoDet.lstate
         | `TLower of ('a, GVC_F.contr) Direct.abstract
         | `TPivot of ('a, Direct.perm list ref) Direct.abstract
         | `TRan of 'a GEF.TrackRank.lstate ]
@@ -21102,7 +22581,7 @@ module GenFV7 :
     val gen :
       ('a, GVC_F.contr) Direct.abstract ->
       (< answer : ('a, 'b) Direct.abstract;
-         state : [> `TDet of unit
+         state : [> `TDet of 'a Ge.LAMake(Direct).GenLA(GVC_F).NoDet.lstate
                   | `TLower of 'a O.IF.L.lstate
                   | `TPivot of 'a O.IF.P.lstate
                   | `TRan of 'a GEF.TrackRank.lstate ]
@@ -21147,18 +22626,28 @@ module GenIA1 :
                 type 'a pra = 'a GEF.PermList.pra
                 type 'a lstate =
                     ('a, GEF.PermList.perm_rep ref) Direct.abstract
+                type 'a pc_constraint = unit
+                  constraint 'a =
+                    < classif : 'b; state : [> `TPivot of 'b lstate ]; .. >
                 type ('a, 'b) lm = ('a, 'b) GEF.cmonad
                   constraint 'a =
                     < answer : 'c; classif : 'd;
                       state : [> `TPivot of 'd lstate ]; .. >
+                type ('a, 'b) nm =
+                    (< answer : ('b, 'c) Direct.abstract; state : 'd list >,
+                     unit)
+                    StateCPSMonad.monad
+                  constraint 'a =
+                    < answer : 'c; classif : 'b;
+                      state : [> `TPivot of 'b lstate ] as 'd; .. >
                 val rowrep : 'a ira -> 'a ira -> 'a fra
                 val colrep : 'a ira -> 'a ira -> 'a fra
                 val decl :
                   ('a, int) Direct.abstract ->
                   (< answer : 'b; classif : 'a;
                      state : [> `TPivot of 'a lstate ]; .. >,
-                   unit)
-                  lm
+                   'a)
+                  nm
                 val add :
                   'a fra ->
                   (< answer : 'b; classif : 'a;
@@ -21209,8 +22698,8 @@ module GenIA1 :
           'a G_GAC_I.wmatrix ->
           (< answer : 'b; classif : 'a;
              state : [> `TDet of
-                          ('a, int ref) Direct.abstract *
-                          ('a, GAC_I.Dom.v ref) Direct.abstract
+                          'a
+                          Ge.LAMake(Direct).GenLA(GAC_I).AbstractDet.lstate
                       | `TLower of 'a IF.L.lstate
                       | `TPivot of 'a IF.P.lstate
                       | `TRan of 'a GEF.TrackRank.lstate ];
@@ -21223,9 +22712,7 @@ module GenIA1 :
     val zerobelow :
       'a G_GAC_I.wmatrix ->
       'a G_GAC_I.curposval ->
-      ([> `TDet of
-            ('a, int ref) Direct.abstract *
-            ('a, GAC_I.Dom.v ref) Direct.abstract
+      ([> `TDet of 'a Ge.LAMake(Direct).GenLA(GAC_I).AbstractDet.lstate
         | `TLower of ('a, GAC_I.contr) Direct.abstract ]
        as 'b)
       list -> ('b list -> ('a, unit) Direct.abstract -> 'c) -> 'c
@@ -21233,8 +22720,7 @@ module GenIA1 :
       ('a, GAC_I.contr) Direct.abstract ->
       (< answer : ('a, 'b) Direct.abstract;
          state : [> `TDet of
-                      ('a, int ref) Direct.abstract *
-                      ('a, GAC_I.Dom.v ref) Direct.abstract
+                      'a Ge.LAMake(Direct).GenLA(GAC_I).AbstractDet.lstate
                   | `TLower of ('a, GAC_I.contr) Direct.abstract
                   | `TPivot of
                       ('a, GEF.PermList.perm_rep ref) Direct.abstract
@@ -21247,9 +22733,7 @@ module GenIA1 :
     val forward_elim :
       'a G_GAC_I.wmatrix * ('a, int ref) Direct.abstract *
       ('a, int ref) Direct.abstract * ('a, int) Direct.abstract ->
-      ([> `TDet of
-            ('a, int ref) Direct.abstract *
-            ('a, GAC_I.Dom.v ref) Direct.abstract
+      ([> `TDet of 'a Ge.LAMake(Direct).GenLA(GAC_I).AbstractDet.lstate
         | `TLower of ('a, GAC_I.contr) Direct.abstract
         | `TPivot of ('a, GEF.PermList.perm_rep ref) Direct.abstract
         | `TRan of 'a GEF.TrackRank.lstate ]
@@ -21259,8 +22743,7 @@ module GenIA1 :
       ('a, GAC_I.contr) Direct.abstract ->
       (< answer : ('a, 'b) Direct.abstract;
          state : [> `TDet of
-                      ('a, int ref) Direct.abstract *
-                      ('a, GAC_I.Dom.v ref) Direct.abstract
+                      'a Ge.LAMake(Direct).GenLA(GAC_I).AbstractDet.lstate
                   | `TLower of 'a O.IF.L.lstate
                   | `TPivot of 'a O.IF.P.lstate
                   | `TRan of 'a GEF.TrackRank.lstate ]
@@ -21306,18 +22789,28 @@ module GenIA2 :
                 type 'a pra = 'a GEF.PermList.pra
                 type 'a lstate =
                     ('a, GEF.PermList.perm_rep ref) Direct.abstract
+                type 'a pc_constraint = unit
+                  constraint 'a =
+                    < classif : 'b; state : [> `TPivot of 'b lstate ]; .. >
                 type ('a, 'b) lm = ('a, 'b) GEF.cmonad
                   constraint 'a =
                     < answer : 'c; classif : 'd;
                       state : [> `TPivot of 'd lstate ]; .. >
+                type ('a, 'b) nm =
+                    (< answer : ('b, 'c) Direct.abstract; state : 'd list >,
+                     unit)
+                    StateCPSMonad.monad
+                  constraint 'a =
+                    < answer : 'c; classif : 'b;
+                      state : [> `TPivot of 'b lstate ] as 'd; .. >
                 val rowrep : 'a ira -> 'a ira -> 'a fra
                 val colrep : 'a ira -> 'a ira -> 'a fra
                 val decl :
                   ('a, int) Direct.abstract ->
                   (< answer : 'b; classif : 'a;
                      state : [> `TPivot of 'a lstate ]; .. >,
-                   unit)
-                  lm
+                   'a)
+                  nm
                 val add :
                   'a fra ->
                   (< answer : 'b; classif : 'a;
@@ -21368,8 +22861,8 @@ module GenIA2 :
           'a G_GAC_I.wmatrix ->
           (< answer : 'b; classif : 'a;
              state : [> `TDet of
-                          ('a, int ref) Direct.abstract *
-                          ('a, GAC_I.Dom.v ref) Direct.abstract
+                          'a
+                          Ge.LAMake(Direct).GenLA(GAC_I).AbstractDet.lstate
                       | `TLower of 'a IF.L.lstate
                       | `TPivot of 'a IF.P.lstate
                       | `TRan of 'a GEF.TrackRank.lstate ];
@@ -21382,9 +22875,7 @@ module GenIA2 :
     val zerobelow :
       'a G_GAC_I.wmatrix ->
       'a G_GAC_I.curposval ->
-      ([> `TDet of
-            ('a, int ref) Direct.abstract *
-            ('a, GAC_I.Dom.v ref) Direct.abstract
+      ([> `TDet of 'a Ge.LAMake(Direct).GenLA(GAC_I).AbstractDet.lstate
         | `TLower of ('a, GAC_I.contr) Direct.abstract ]
        as 'b)
       list -> ('b list -> ('a, unit) Direct.abstract -> 'c) -> 'c
@@ -21392,8 +22883,7 @@ module GenIA2 :
       ('a, GAC_I.contr) Direct.abstract ->
       (< answer : ('a, 'b) Direct.abstract;
          state : [> `TDet of
-                      ('a, int ref) Direct.abstract *
-                      ('a, GAC_I.Dom.v ref) Direct.abstract
+                      'a Ge.LAMake(Direct).GenLA(GAC_I).AbstractDet.lstate
                   | `TLower of ('a, GAC_I.contr) Direct.abstract
                   | `TPivot of
                       ('a, GEF.PermList.perm_rep ref) Direct.abstract
@@ -21406,9 +22896,7 @@ module GenIA2 :
     val forward_elim :
       'a G_GAC_I.wmatrix * ('a, int ref) Direct.abstract *
       ('a, int ref) Direct.abstract * ('a, int) Direct.abstract ->
-      ([> `TDet of
-            ('a, int ref) Direct.abstract *
-            ('a, GAC_I.Dom.v ref) Direct.abstract
+      ([> `TDet of 'a Ge.LAMake(Direct).GenLA(GAC_I).AbstractDet.lstate
         | `TLower of ('a, GAC_I.contr) Direct.abstract
         | `TPivot of ('a, GEF.PermList.perm_rep ref) Direct.abstract
         | `TRan of 'a GEF.TrackRank.lstate ]
@@ -21418,8 +22906,7 @@ module GenIA2 :
       ('a, GAC_I.contr) Direct.abstract ->
       (< answer : ('a, 'b) Direct.abstract;
          state : [> `TDet of
-                      ('a, int ref) Direct.abstract *
-                      ('a, GAC_I.Dom.v ref) Direct.abstract
+                      'a Ge.LAMake(Direct).GenLA(GAC_I).AbstractDet.lstate
                   | `TLower of 'a O.IF.L.lstate
                   | `TPivot of 'a O.IF.P.lstate
                   | `TRan of 'a GEF.TrackRank.lstate ]
@@ -21464,18 +22951,28 @@ module GenIA3 :
                 type 'a pra = 'a GEF.PermList.pra
                 type 'a lstate =
                     ('a, GEF.PermList.perm_rep ref) Direct.abstract
+                type 'a pc_constraint = unit
+                  constraint 'a =
+                    < classif : 'b; state : [> `TPivot of 'b lstate ]; .. >
                 type ('a, 'b) lm = ('a, 'b) GEF.cmonad
                   constraint 'a =
                     < answer : 'c; classif : 'd;
                       state : [> `TPivot of 'd lstate ]; .. >
+                type ('a, 'b) nm =
+                    (< answer : ('b, 'c) Direct.abstract; state : 'd list >,
+                     unit)
+                    StateCPSMonad.monad
+                  constraint 'a =
+                    < answer : 'c; classif : 'b;
+                      state : [> `TPivot of 'b lstate ] as 'd; .. >
                 val rowrep : 'a ira -> 'a ira -> 'a fra
                 val colrep : 'a ira -> 'a ira -> 'a fra
                 val decl :
                   ('a, int) Direct.abstract ->
                   (< answer : 'b; classif : 'a;
                      state : [> `TPivot of 'a lstate ]; .. >,
-                   unit)
-                  lm
+                   'a)
+                  nm
                 val add :
                   'a fra ->
                   (< answer : 'b; classif : 'a;
@@ -21526,8 +23023,8 @@ module GenIA3 :
           'a G_GAC_I.wmatrix ->
           (< answer : 'b; classif : 'a;
              state : [> `TDet of
-                          ('a, int ref) Direct.abstract *
-                          ('a, GAC_I.Dom.v ref) Direct.abstract
+                          'a
+                          Ge.LAMake(Direct).GenLA(GAC_I).AbstractDet.lstate
                       | `TLower of 'a IF.L.lstate
                       | `TPivot of 'a IF.P.lstate
                       | `TRan of 'a GEF.TrackRank.lstate ];
@@ -21540,9 +23037,7 @@ module GenIA3 :
     val zerobelow :
       'a G_GAC_I.wmatrix ->
       'a G_GAC_I.curposval ->
-      ([> `TDet of
-            ('a, int ref) Direct.abstract *
-            ('a, GAC_I.Dom.v ref) Direct.abstract
+      ([> `TDet of 'a Ge.LAMake(Direct).GenLA(GAC_I).AbstractDet.lstate
         | `TLower of ('a, GAC_I.contr) Direct.abstract ]
        as 'b)
       list -> ('b list -> ('a, unit) Direct.abstract -> 'c) -> 'c
@@ -21550,8 +23045,7 @@ module GenIA3 :
       ('a, GAC_I.contr) Direct.abstract ->
       (< answer : ('a, 'b) Direct.abstract;
          state : [> `TDet of
-                      ('a, int ref) Direct.abstract *
-                      ('a, GAC_I.Dom.v ref) Direct.abstract
+                      'a Ge.LAMake(Direct).GenLA(GAC_I).AbstractDet.lstate
                   | `TLower of ('a, GAC_I.contr) Direct.abstract
                   | `TPivot of
                       ('a, GEF.PermList.perm_rep ref) Direct.abstract
@@ -21564,9 +23058,7 @@ module GenIA3 :
     val forward_elim :
       'a G_GAC_I.wmatrix * ('a, int ref) Direct.abstract *
       ('a, int ref) Direct.abstract * ('a, int) Direct.abstract ->
-      ([> `TDet of
-            ('a, int ref) Direct.abstract *
-            ('a, GAC_I.Dom.v ref) Direct.abstract
+      ([> `TDet of 'a Ge.LAMake(Direct).GenLA(GAC_I).AbstractDet.lstate
         | `TLower of ('a, GAC_I.contr) Direct.abstract
         | `TPivot of ('a, GEF.PermList.perm_rep ref) Direct.abstract
         | `TRan of 'a GEF.TrackRank.lstate ]
@@ -21576,8 +23068,7 @@ module GenIA3 :
       ('a, GAC_I.contr) Direct.abstract ->
       (< answer : ('a, 'b) Direct.abstract;
          state : [> `TDet of
-                      ('a, int ref) Direct.abstract *
-                      ('a, GAC_I.Dom.v ref) Direct.abstract
+                      'a Ge.LAMake(Direct).GenLA(GAC_I).AbstractDet.lstate
                   | `TLower of 'a O.IF.L.lstate
                   | `TPivot of 'a O.IF.P.lstate
                   | `TRan of 'a GEF.TrackRank.lstate ]
@@ -21622,18 +23113,28 @@ module GenIA4 :
                 type 'a pra = 'a GEF.PermList.pra
                 type 'a lstate =
                     ('a, GEF.PermList.perm_rep ref) Direct.abstract
+                type 'a pc_constraint = unit
+                  constraint 'a =
+                    < classif : 'b; state : [> `TPivot of 'b lstate ]; .. >
                 type ('a, 'b) lm = ('a, 'b) GEF.cmonad
                   constraint 'a =
                     < answer : 'c; classif : 'd;
                       state : [> `TPivot of 'd lstate ]; .. >
+                type ('a, 'b) nm =
+                    (< answer : ('b, 'c) Direct.abstract; state : 'd list >,
+                     unit)
+                    StateCPSMonad.monad
+                  constraint 'a =
+                    < answer : 'c; classif : 'b;
+                      state : [> `TPivot of 'b lstate ] as 'd; .. >
                 val rowrep : 'a ira -> 'a ira -> 'a fra
                 val colrep : 'a ira -> 'a ira -> 'a fra
                 val decl :
                   ('a, int) Direct.abstract ->
                   (< answer : 'b; classif : 'a;
                      state : [> `TPivot of 'a lstate ]; .. >,
-                   unit)
-                  lm
+                   'a)
+                  nm
                 val add :
                   'a fra ->
                   (< answer : 'b; classif : 'a;
@@ -21684,8 +23185,8 @@ module GenIA4 :
           'a G_GAC_I.wmatrix ->
           (< answer : 'b; classif : 'a;
              state : [> `TDet of
-                          ('a, int ref) Direct.abstract *
-                          ('a, GAC_I.Dom.v ref) Direct.abstract
+                          'a
+                          Ge.LAMake(Direct).GenLA(GAC_I).AbstractDet.lstate
                       | `TLower of 'a IF.L.lstate
                       | `TPivot of 'a IF.P.lstate
                       | `TRan of 'a GEF.TrackRank.lstate ];
@@ -21698,9 +23199,7 @@ module GenIA4 :
     val zerobelow :
       'a G_GAC_I.wmatrix ->
       'a G_GAC_I.curposval ->
-      ([> `TDet of
-            ('a, int ref) Direct.abstract *
-            ('a, GAC_I.Dom.v ref) Direct.abstract
+      ([> `TDet of 'a Ge.LAMake(Direct).GenLA(GAC_I).AbstractDet.lstate
         | `TLower of ('a, GAC_I.contr) Direct.abstract ]
        as 'b)
       list -> ('b list -> ('a, unit) Direct.abstract -> 'c) -> 'c
@@ -21708,8 +23207,7 @@ module GenIA4 :
       ('a, GAC_I.contr) Direct.abstract ->
       (< answer : ('a, 'b) Direct.abstract;
          state : [> `TDet of
-                      ('a, int ref) Direct.abstract *
-                      ('a, GAC_I.Dom.v ref) Direct.abstract
+                      'a Ge.LAMake(Direct).GenLA(GAC_I).AbstractDet.lstate
                   | `TLower of ('a, GAC_I.contr) Direct.abstract
                   | `TPivot of
                       ('a, GEF.PermList.perm_rep ref) Direct.abstract
@@ -21722,9 +23220,7 @@ module GenIA4 :
     val forward_elim :
       'a G_GAC_I.wmatrix * ('a, int ref) Direct.abstract *
       ('a, int ref) Direct.abstract * ('a, int) Direct.abstract ->
-      ([> `TDet of
-            ('a, int ref) Direct.abstract *
-            ('a, GAC_I.Dom.v ref) Direct.abstract
+      ([> `TDet of 'a Ge.LAMake(Direct).GenLA(GAC_I).AbstractDet.lstate
         | `TLower of ('a, GAC_I.contr) Direct.abstract
         | `TPivot of ('a, GEF.PermList.perm_rep ref) Direct.abstract
         | `TRan of 'a GEF.TrackRank.lstate ]
@@ -21734,8 +23230,7 @@ module GenIA4 :
       ('a, GAC_I.contr) Direct.abstract ->
       (< answer : ('a, 'b) Direct.abstract;
          state : [> `TDet of
-                      ('a, int ref) Direct.abstract *
-                      ('a, GAC_I.Dom.v ref) Direct.abstract
+                      'a Ge.LAMake(Direct).GenLA(GAC_I).AbstractDet.lstate
                   | `TLower of 'a O.IF.L.lstate
                   | `TPivot of 'a O.IF.P.lstate
                   | `TRan of 'a GEF.TrackRank.lstate ]
@@ -21782,18 +23277,28 @@ module GenIV1 :
                 type 'a pra = 'a GEF.PermList.pra
                 type 'a lstate =
                     ('a, GEF.PermList.perm_rep ref) Direct.abstract
+                type 'a pc_constraint = unit
+                  constraint 'a =
+                    < classif : 'b; state : [> `TPivot of 'b lstate ]; .. >
                 type ('a, 'b) lm = ('a, 'b) GEF.cmonad
                   constraint 'a =
                     < answer : 'c; classif : 'd;
                       state : [> `TPivot of 'd lstate ]; .. >
+                type ('a, 'b) nm =
+                    (< answer : ('b, 'c) Direct.abstract; state : 'd list >,
+                     unit)
+                    StateCPSMonad.monad
+                  constraint 'a =
+                    < answer : 'c; classif : 'b;
+                      state : [> `TPivot of 'b lstate ] as 'd; .. >
                 val rowrep : 'a ira -> 'a ira -> 'a fra
                 val colrep : 'a ira -> 'a ira -> 'a fra
                 val decl :
                   ('a, int) Direct.abstract ->
                   (< answer : 'b; classif : 'a;
                      state : [> `TPivot of 'a lstate ]; .. >,
-                   unit)
-                  lm
+                   'a)
+                  nm
                 val add :
                   'a fra ->
                   (< answer : 'b; classif : 'a;
@@ -21844,8 +23349,8 @@ module GenIV1 :
           'a G_GVC_I.wmatrix ->
           (< answer : 'b; classif : 'a;
              state : [> `TDet of
-                          ('a, int ref) Direct.abstract *
-                          ('a, GVC_I.Dom.v ref) Direct.abstract
+                          'a
+                          Ge.LAMake(Direct).GenLA(GVC_I).AbstractDet.lstate
                       | `TLower of 'a IF.L.lstate
                       | `TPivot of 'a IF.P.lstate
                       | `TRan of 'a GEF.TrackRank.lstate ];
@@ -21858,9 +23363,7 @@ module GenIV1 :
     val zerobelow :
       'a G_GVC_I.wmatrix ->
       'a G_GVC_I.curposval ->
-      ([> `TDet of
-            ('a, int ref) Direct.abstract *
-            ('a, GVC_I.Dom.v ref) Direct.abstract
+      ([> `TDet of 'a Ge.LAMake(Direct).GenLA(GVC_I).AbstractDet.lstate
         | `TLower of ('a, GVC_I.contr) Direct.abstract ]
        as 'b)
       list -> ('b list -> ('a, unit) Direct.abstract -> 'c) -> 'c
@@ -21868,8 +23371,7 @@ module GenIV1 :
       ('a, GVC_I.contr) Direct.abstract ->
       (< answer : ('a, 'b) Direct.abstract;
          state : [> `TDet of
-                      ('a, int ref) Direct.abstract *
-                      ('a, GVC_I.Dom.v ref) Direct.abstract
+                      'a Ge.LAMake(Direct).GenLA(GVC_I).AbstractDet.lstate
                   | `TLower of ('a, GVC_I.contr) Direct.abstract
                   | `TPivot of
                       ('a, GEF.PermList.perm_rep ref) Direct.abstract
@@ -21882,9 +23384,7 @@ module GenIV1 :
     val forward_elim :
       'a G_GVC_I.wmatrix * ('a, int ref) Direct.abstract *
       ('a, int ref) Direct.abstract * ('a, int) Direct.abstract ->
-      ([> `TDet of
-            ('a, int ref) Direct.abstract *
-            ('a, GVC_I.Dom.v ref) Direct.abstract
+      ([> `TDet of 'a Ge.LAMake(Direct).GenLA(GVC_I).AbstractDet.lstate
         | `TLower of ('a, GVC_I.contr) Direct.abstract
         | `TPivot of ('a, GEF.PermList.perm_rep ref) Direct.abstract
         | `TRan of 'a GEF.TrackRank.lstate ]
@@ -21894,8 +23394,7 @@ module GenIV1 :
       ('a, GVC_I.contr) Direct.abstract ->
       (< answer : ('a, 'b) Direct.abstract;
          state : [> `TDet of
-                      ('a, int ref) Direct.abstract *
-                      ('a, GVC_I.Dom.v ref) Direct.abstract
+                      'a Ge.LAMake(Direct).GenLA(GVC_I).AbstractDet.lstate
                   | `TLower of 'a O.IF.L.lstate
                   | `TPivot of 'a O.IF.P.lstate
                   | `TRan of 'a GEF.TrackRank.lstate ]
@@ -21940,18 +23439,28 @@ module GenIV2 :
                 type 'a pra = 'a GEF.PermList.pra
                 type 'a lstate =
                     ('a, GEF.PermList.perm_rep ref) Direct.abstract
+                type 'a pc_constraint = unit
+                  constraint 'a =
+                    < classif : 'b; state : [> `TPivot of 'b lstate ]; .. >
                 type ('a, 'b) lm = ('a, 'b) GEF.cmonad
                   constraint 'a =
                     < answer : 'c; classif : 'd;
                       state : [> `TPivot of 'd lstate ]; .. >
+                type ('a, 'b) nm =
+                    (< answer : ('b, 'c) Direct.abstract; state : 'd list >,
+                     unit)
+                    StateCPSMonad.monad
+                  constraint 'a =
+                    < answer : 'c; classif : 'b;
+                      state : [> `TPivot of 'b lstate ] as 'd; .. >
                 val rowrep : 'a ira -> 'a ira -> 'a fra
                 val colrep : 'a ira -> 'a ira -> 'a fra
                 val decl :
                   ('a, int) Direct.abstract ->
                   (< answer : 'b; classif : 'a;
                      state : [> `TPivot of 'a lstate ]; .. >,
-                   unit)
-                  lm
+                   'a)
+                  nm
                 val add :
                   'a fra ->
                   (< answer : 'b; classif : 'a;
@@ -22002,8 +23511,8 @@ module GenIV2 :
           'a G_GVC_I.wmatrix ->
           (< answer : 'b; classif : 'a;
              state : [> `TDet of
-                          ('a, int ref) Direct.abstract *
-                          ('a, GVC_I.Dom.v ref) Direct.abstract
+                          'a
+                          Ge.LAMake(Direct).GenLA(GVC_I).AbstractDet.lstate
                       | `TLower of 'a IF.L.lstate
                       | `TPivot of 'a IF.P.lstate
                       | `TRan of 'a GEF.TrackRank.lstate ];
@@ -22016,9 +23525,7 @@ module GenIV2 :
     val zerobelow :
       'a G_GVC_I.wmatrix ->
       'a G_GVC_I.curposval ->
-      ([> `TDet of
-            ('a, int ref) Direct.abstract *
-            ('a, GVC_I.Dom.v ref) Direct.abstract
+      ([> `TDet of 'a Ge.LAMake(Direct).GenLA(GVC_I).AbstractDet.lstate
         | `TLower of ('a, GVC_I.contr) Direct.abstract ]
        as 'b)
       list -> ('b list -> ('a, unit) Direct.abstract -> 'c) -> 'c
@@ -22026,8 +23533,7 @@ module GenIV2 :
       ('a, GVC_I.contr) Direct.abstract ->
       (< answer : ('a, 'b) Direct.abstract;
          state : [> `TDet of
-                      ('a, int ref) Direct.abstract *
-                      ('a, GVC_I.Dom.v ref) Direct.abstract
+                      'a Ge.LAMake(Direct).GenLA(GVC_I).AbstractDet.lstate
                   | `TLower of ('a, GVC_I.contr) Direct.abstract
                   | `TPivot of
                       ('a, GEF.PermList.perm_rep ref) Direct.abstract
@@ -22040,9 +23546,7 @@ module GenIV2 :
     val forward_elim :
       'a G_GVC_I.wmatrix * ('a, int ref) Direct.abstract *
       ('a, int ref) Direct.abstract * ('a, int) Direct.abstract ->
-      ([> `TDet of
-            ('a, int ref) Direct.abstract *
-            ('a, GVC_I.Dom.v ref) Direct.abstract
+      ([> `TDet of 'a Ge.LAMake(Direct).GenLA(GVC_I).AbstractDet.lstate
         | `TLower of ('a, GVC_I.contr) Direct.abstract
         | `TPivot of ('a, GEF.PermList.perm_rep ref) Direct.abstract
         | `TRan of 'a GEF.TrackRank.lstate ]
@@ -22052,8 +23556,7 @@ module GenIV2 :
       ('a, GVC_I.contr) Direct.abstract ->
       (< answer : ('a, 'b) Direct.abstract;
          state : [> `TDet of
-                      ('a, int ref) Direct.abstract *
-                      ('a, GVC_I.Dom.v ref) Direct.abstract
+                      'a Ge.LAMake(Direct).GenLA(GVC_I).AbstractDet.lstate
                   | `TLower of 'a O.IF.L.lstate
                   | `TPivot of 'a O.IF.P.lstate
                   | `TRan of 'a GEF.TrackRank.lstate ]
@@ -22098,18 +23601,28 @@ module GenIV3 :
                 type 'a pra = 'a GEF.PermList.pra
                 type 'a lstate =
                     ('a, GEF.PermList.perm_rep ref) Direct.abstract
+                type 'a pc_constraint = unit
+                  constraint 'a =
+                    < classif : 'b; state : [> `TPivot of 'b lstate ]; .. >
                 type ('a, 'b) lm = ('a, 'b) GEF.cmonad
                   constraint 'a =
                     < answer : 'c; classif : 'd;
                       state : [> `TPivot of 'd lstate ]; .. >
+                type ('a, 'b) nm =
+                    (< answer : ('b, 'c) Direct.abstract; state : 'd list >,
+                     unit)
+                    StateCPSMonad.monad
+                  constraint 'a =
+                    < answer : 'c; classif : 'b;
+                      state : [> `TPivot of 'b lstate ] as 'd; .. >
                 val rowrep : 'a ira -> 'a ira -> 'a fra
                 val colrep : 'a ira -> 'a ira -> 'a fra
                 val decl :
                   ('a, int) Direct.abstract ->
                   (< answer : 'b; classif : 'a;
                      state : [> `TPivot of 'a lstate ]; .. >,
-                   unit)
-                  lm
+                   'a)
+                  nm
                 val add :
                   'a fra ->
                   (< answer : 'b; classif : 'a;
@@ -22160,8 +23673,8 @@ module GenIV3 :
           'a G_GVC_I.wmatrix ->
           (< answer : 'b; classif : 'a;
              state : [> `TDet of
-                          ('a, int ref) Direct.abstract *
-                          ('a, GVC_I.Dom.v ref) Direct.abstract
+                          'a
+                          Ge.LAMake(Direct).GenLA(GVC_I).AbstractDet.lstate
                       | `TLower of 'a IF.L.lstate
                       | `TPivot of 'a IF.P.lstate
                       | `TRan of 'a GEF.TrackRank.lstate ];
@@ -22174,9 +23687,7 @@ module GenIV3 :
     val zerobelow :
       'a G_GVC_I.wmatrix ->
       'a G_GVC_I.curposval ->
-      ([> `TDet of
-            ('a, int ref) Direct.abstract *
-            ('a, GVC_I.Dom.v ref) Direct.abstract
+      ([> `TDet of 'a Ge.LAMake(Direct).GenLA(GVC_I).AbstractDet.lstate
         | `TLower of ('a, GVC_I.contr) Direct.abstract ]
        as 'b)
       list -> ('b list -> ('a, unit) Direct.abstract -> 'c) -> 'c
@@ -22184,8 +23695,7 @@ module GenIV3 :
       ('a, GVC_I.contr) Direct.abstract ->
       (< answer : ('a, 'b) Direct.abstract;
          state : [> `TDet of
-                      ('a, int ref) Direct.abstract *
-                      ('a, GVC_I.Dom.v ref) Direct.abstract
+                      'a Ge.LAMake(Direct).GenLA(GVC_I).AbstractDet.lstate
                   | `TLower of ('a, GVC_I.contr) Direct.abstract
                   | `TPivot of
                       ('a, GEF.PermList.perm_rep ref) Direct.abstract
@@ -22198,9 +23708,7 @@ module GenIV3 :
     val forward_elim :
       'a G_GVC_I.wmatrix * ('a, int ref) Direct.abstract *
       ('a, int ref) Direct.abstract * ('a, int) Direct.abstract ->
-      ([> `TDet of
-            ('a, int ref) Direct.abstract *
-            ('a, GVC_I.Dom.v ref) Direct.abstract
+      ([> `TDet of 'a Ge.LAMake(Direct).GenLA(GVC_I).AbstractDet.lstate
         | `TLower of ('a, GVC_I.contr) Direct.abstract
         | `TPivot of ('a, GEF.PermList.perm_rep ref) Direct.abstract
         | `TRan of 'a GEF.TrackRank.lstate ]
@@ -22210,8 +23718,7 @@ module GenIV3 :
       ('a, GVC_I.contr) Direct.abstract ->
       (< answer : ('a, 'b) Direct.abstract;
          state : [> `TDet of
-                      ('a, int ref) Direct.abstract *
-                      ('a, GVC_I.Dom.v ref) Direct.abstract
+                      'a Ge.LAMake(Direct).GenLA(GVC_I).AbstractDet.lstate
                   | `TLower of 'a O.IF.L.lstate
                   | `TPivot of 'a O.IF.P.lstate
                   | `TRan of 'a GEF.TrackRank.lstate ]
@@ -22256,18 +23763,28 @@ module GenIV4 :
                 type 'a pra = 'a GEF.PermList.pra
                 type 'a lstate =
                     ('a, GEF.PermList.perm_rep ref) Direct.abstract
+                type 'a pc_constraint = unit
+                  constraint 'a =
+                    < classif : 'b; state : [> `TPivot of 'b lstate ]; .. >
                 type ('a, 'b) lm = ('a, 'b) GEF.cmonad
                   constraint 'a =
                     < answer : 'c; classif : 'd;
                       state : [> `TPivot of 'd lstate ]; .. >
+                type ('a, 'b) nm =
+                    (< answer : ('b, 'c) Direct.abstract; state : 'd list >,
+                     unit)
+                    StateCPSMonad.monad
+                  constraint 'a =
+                    < answer : 'c; classif : 'b;
+                      state : [> `TPivot of 'b lstate ] as 'd; .. >
                 val rowrep : 'a ira -> 'a ira -> 'a fra
                 val colrep : 'a ira -> 'a ira -> 'a fra
                 val decl :
                   ('a, int) Direct.abstract ->
                   (< answer : 'b; classif : 'a;
                      state : [> `TPivot of 'a lstate ]; .. >,
-                   unit)
-                  lm
+                   'a)
+                  nm
                 val add :
                   'a fra ->
                   (< answer : 'b; classif : 'a;
@@ -22318,8 +23835,8 @@ module GenIV4 :
           'a G_GVC_I.wmatrix ->
           (< answer : 'b; classif : 'a;
              state : [> `TDet of
-                          ('a, int ref) Direct.abstract *
-                          ('a, GVC_I.Dom.v ref) Direct.abstract
+                          'a
+                          Ge.LAMake(Direct).GenLA(GVC_I).AbstractDet.lstate
                       | `TLower of 'a IF.L.lstate
                       | `TPivot of 'a IF.P.lstate
                       | `TRan of 'a GEF.TrackRank.lstate ];
@@ -22332,9 +23849,7 @@ module GenIV4 :
     val zerobelow :
       'a G_GVC_I.wmatrix ->
       'a G_GVC_I.curposval ->
-      ([> `TDet of
-            ('a, int ref) Direct.abstract *
-            ('a, GVC_I.Dom.v ref) Direct.abstract
+      ([> `TDet of 'a Ge.LAMake(Direct).GenLA(GVC_I).AbstractDet.lstate
         | `TLower of ('a, GVC_I.contr) Direct.abstract ]
        as 'b)
       list -> ('b list -> ('a, unit) Direct.abstract -> 'c) -> 'c
@@ -22342,8 +23857,7 @@ module GenIV4 :
       ('a, GVC_I.contr) Direct.abstract ->
       (< answer : ('a, 'b) Direct.abstract;
          state : [> `TDet of
-                      ('a, int ref) Direct.abstract *
-                      ('a, GVC_I.Dom.v ref) Direct.abstract
+                      'a Ge.LAMake(Direct).GenLA(GVC_I).AbstractDet.lstate
                   | `TLower of ('a, GVC_I.contr) Direct.abstract
                   | `TPivot of
                       ('a, GEF.PermList.perm_rep ref) Direct.abstract
@@ -22356,9 +23870,7 @@ module GenIV4 :
     val forward_elim :
       'a G_GVC_I.wmatrix * ('a, int ref) Direct.abstract *
       ('a, int ref) Direct.abstract * ('a, int) Direct.abstract ->
-      ([> `TDet of
-            ('a, int ref) Direct.abstract *
-            ('a, GVC_I.Dom.v ref) Direct.abstract
+      ([> `TDet of 'a Ge.LAMake(Direct).GenLA(GVC_I).AbstractDet.lstate
         | `TLower of ('a, GVC_I.contr) Direct.abstract
         | `TPivot of ('a, GEF.PermList.perm_rep ref) Direct.abstract
         | `TRan of 'a GEF.TrackRank.lstate ]
@@ -22368,8 +23880,7 @@ module GenIV4 :
       ('a, GVC_I.contr) Direct.abstract ->
       (< answer : ('a, 'b) Direct.abstract;
          state : [> `TDet of
-                      ('a, int ref) Direct.abstract *
-                      ('a, GVC_I.Dom.v ref) Direct.abstract
+                      'a Ge.LAMake(Direct).GenLA(GVC_I).AbstractDet.lstate
                   | `TLower of 'a O.IF.L.lstate
                   | `TPivot of 'a O.IF.P.lstate
                   | `TRan of 'a GEF.TrackRank.lstate ]
@@ -22414,18 +23925,28 @@ module GenIV5 :
                 type 'a pra = 'a GEF.PermList.pra
                 type 'a lstate =
                     ('a, GEF.PermList.perm_rep ref) Direct.abstract
+                type 'a pc_constraint = unit
+                  constraint 'a =
+                    < classif : 'b; state : [> `TPivot of 'b lstate ]; .. >
                 type ('a, 'b) lm = ('a, 'b) GEF.cmonad
                   constraint 'a =
                     < answer : 'c; classif : 'd;
                       state : [> `TPivot of 'd lstate ]; .. >
+                type ('a, 'b) nm =
+                    (< answer : ('b, 'c) Direct.abstract; state : 'd list >,
+                     unit)
+                    StateCPSMonad.monad
+                  constraint 'a =
+                    < answer : 'c; classif : 'b;
+                      state : [> `TPivot of 'b lstate ] as 'd; .. >
                 val rowrep : 'a ira -> 'a ira -> 'a fra
                 val colrep : 'a ira -> 'a ira -> 'a fra
                 val decl :
                   ('a, int) Direct.abstract ->
                   (< answer : 'b; classif : 'a;
                      state : [> `TPivot of 'a lstate ]; .. >,
-                   unit)
-                  lm
+                   'a)
+                  nm
                 val add :
                   'a fra ->
                   (< answer : 'b; classif : 'a;
@@ -22476,8 +23997,8 @@ module GenIV5 :
           'a G_GVC_I.wmatrix ->
           (< answer : 'b; classif : 'a;
              state : [> `TDet of
-                          ('a, int ref) Direct.abstract *
-                          ('a, GVC_I.Dom.v ref) Direct.abstract
+                          'a
+                          Ge.LAMake(Direct).GenLA(GVC_I).AbstractDet.lstate
                       | `TLower of 'a IF.L.lstate
                       | `TPivot of 'a IF.P.lstate
                       | `TRan of 'a GEF.TrackRank.lstate ];
@@ -22490,9 +24011,7 @@ module GenIV5 :
     val zerobelow :
       'a G_GVC_I.wmatrix ->
       'a G_GVC_I.curposval ->
-      ([> `TDet of
-            ('a, int ref) Direct.abstract *
-            ('a, GVC_I.Dom.v ref) Direct.abstract
+      ([> `TDet of 'a Ge.LAMake(Direct).GenLA(GVC_I).AbstractDet.lstate
         | `TLower of ('a, GVC_I.contr) Direct.abstract ]
        as 'b)
       list -> ('b list -> ('a, unit) Direct.abstract -> 'c) -> 'c
@@ -22500,8 +24019,7 @@ module GenIV5 :
       ('a, GVC_I.contr) Direct.abstract ->
       (< answer : ('a, 'b) Direct.abstract;
          state : [> `TDet of
-                      ('a, int ref) Direct.abstract *
-                      ('a, GVC_I.Dom.v ref) Direct.abstract
+                      'a Ge.LAMake(Direct).GenLA(GVC_I).AbstractDet.lstate
                   | `TLower of ('a, GVC_I.contr) Direct.abstract
                   | `TPivot of
                       ('a, GEF.PermList.perm_rep ref) Direct.abstract
@@ -22514,9 +24032,7 @@ module GenIV5 :
     val forward_elim :
       'a G_GVC_I.wmatrix * ('a, int ref) Direct.abstract *
       ('a, int ref) Direct.abstract * ('a, int) Direct.abstract ->
-      ([> `TDet of
-            ('a, int ref) Direct.abstract *
-            ('a, GVC_I.Dom.v ref) Direct.abstract
+      ([> `TDet of 'a Ge.LAMake(Direct).GenLA(GVC_I).AbstractDet.lstate
         | `TLower of ('a, GVC_I.contr) Direct.abstract
         | `TPivot of ('a, GEF.PermList.perm_rep ref) Direct.abstract
         | `TRan of 'a GEF.TrackRank.lstate ]
@@ -22526,8 +24042,7 @@ module GenIV5 :
       ('a, GVC_I.contr) Direct.abstract ->
       (< answer : ('a, 'b) Direct.abstract;
          state : [> `TDet of
-                      ('a, int ref) Direct.abstract *
-                      ('a, GVC_I.Dom.v ref) Direct.abstract
+                      'a Ge.LAMake(Direct).GenLA(GVC_I).AbstractDet.lstate
                   | `TLower of 'a O.IF.L.lstate
                   | `TPivot of 'a O.IF.P.lstate
                   | `TRan of 'a GEF.TrackRank.lstate ]
@@ -22571,18 +24086,28 @@ module GenIV6 :
                 type 'a fra = ('a, Direct.perm) Direct.abstract
                 type 'a pra = ('a, Direct.perm list) Direct.abstract
                 type 'a lstate = ('a, Direct.perm list ref) Direct.abstract
+                type 'a pc_constraint = unit
+                  constraint 'a =
+                    < classif : 'b; state : [> `TPivot of 'b lstate ]; .. >
                 type ('a, 'b) lm = ('a, 'b) GEF.cmonad
                   constraint 'a =
                     < answer : 'c; classif : 'd;
                       state : [> `TPivot of 'd lstate ]; .. >
+                type ('a, 'b) nm =
+                    (< answer : ('b, 'c) Direct.abstract; state : 'd list >,
+                     unit)
+                    StateCPSMonad.monad
+                  constraint 'a =
+                    < answer : 'c; classif : 'b;
+                      state : [> `TPivot of 'b lstate ] as 'd; .. >
                 val rowrep : 'a ira -> 'a ira -> 'a fra
                 val colrep : 'a ira -> 'a ira -> 'a fra
                 val decl :
                   ('a, int) Direct.abstract ->
                   (< answer : 'b; classif : 'a;
                      state : [> `TPivot of 'a lstate ]; .. >,
-                   unit)
-                  lm
+                   'a)
+                  nm
                 val add :
                   'a fra ->
                   (< answer : 'b; classif : 'a;
@@ -22633,8 +24158,8 @@ module GenIV6 :
           'a G_GVC_I.wmatrix ->
           (< answer : 'b; classif : 'a;
              state : [> `TDet of
-                          ('a, int ref) Direct.abstract *
-                          ('a, GVC_I.Dom.v ref) Direct.abstract
+                          'a
+                          Ge.LAMake(Direct).GenLA(GVC_I).AbstractDet.lstate
                       | `TLower of 'a IF.L.lstate
                       | `TPivot of 'a IF.P.lstate
                       | `TRan of 'a GEF.TrackRank.lstate ];
@@ -22647,9 +24172,7 @@ module GenIV6 :
     val zerobelow :
       'a G_GVC_I.wmatrix ->
       'a G_GVC_I.curposval ->
-      ([> `TDet of
-            ('a, int ref) Direct.abstract *
-            ('a, GVC_I.Dom.v ref) Direct.abstract
+      ([> `TDet of 'a Ge.LAMake(Direct).GenLA(GVC_I).AbstractDet.lstate
         | `TLower of ('a, GVC_I.contr) Direct.abstract ]
        as 'b)
       list -> ('b list -> ('a, unit) Direct.abstract -> 'c) -> 'c
@@ -22657,8 +24180,7 @@ module GenIV6 :
       ('a, GVC_I.contr) Direct.abstract ->
       (< answer : ('a, 'b) Direct.abstract;
          state : [> `TDet of
-                      ('a, int ref) Direct.abstract *
-                      ('a, GVC_I.Dom.v ref) Direct.abstract
+                      'a Ge.LAMake(Direct).GenLA(GVC_I).AbstractDet.lstate
                   | `TLower of ('a, GVC_I.contr) Direct.abstract
                   | `TPivot of ('a, Direct.perm list ref) Direct.abstract
                   | `TRan of 'a GEF.TrackRank.lstate ]
@@ -22670,9 +24192,7 @@ module GenIV6 :
     val forward_elim :
       'a G_GVC_I.wmatrix * ('a, int ref) Direct.abstract *
       ('a, int ref) Direct.abstract * ('a, int) Direct.abstract ->
-      ([> `TDet of
-            ('a, int ref) Direct.abstract *
-            ('a, GVC_I.Dom.v ref) Direct.abstract
+      ([> `TDet of 'a Ge.LAMake(Direct).GenLA(GVC_I).AbstractDet.lstate
         | `TLower of ('a, GVC_I.contr) Direct.abstract
         | `TPivot of ('a, Direct.perm list ref) Direct.abstract
         | `TRan of 'a GEF.TrackRank.lstate ]
@@ -22682,8 +24202,7 @@ module GenIV6 :
       ('a, GVC_I.contr) Direct.abstract ->
       (< answer : ('a, 'b) Direct.abstract;
          state : [> `TDet of
-                      ('a, int ref) Direct.abstract *
-                      ('a, GVC_I.Dom.v ref) Direct.abstract
+                      'a Ge.LAMake(Direct).GenLA(GVC_I).AbstractDet.lstate
                   | `TLower of 'a O.IF.L.lstate
                   | `TPivot of 'a O.IF.P.lstate
                   | `TRan of 'a GEF.TrackRank.lstate ]
@@ -22728,18 +24247,28 @@ module GenRA1 :
                 type 'a pra = 'a GEF.PermList.pra
                 type 'a lstate =
                     ('a, GEF.PermList.perm_rep ref) Direct.abstract
+                type 'a pc_constraint = unit
+                  constraint 'a =
+                    < classif : 'b; state : [> `TPivot of 'b lstate ]; .. >
                 type ('a, 'b) lm = ('a, 'b) GEF.cmonad
                   constraint 'a =
                     < answer : 'c; classif : 'd;
                       state : [> `TPivot of 'd lstate ]; .. >
+                type ('a, 'b) nm =
+                    (< answer : ('b, 'c) Direct.abstract; state : 'd list >,
+                     unit)
+                    StateCPSMonad.monad
+                  constraint 'a =
+                    < answer : 'c; classif : 'b;
+                      state : [> `TPivot of 'b lstate ] as 'd; .. >
                 val rowrep : 'a ira -> 'a ira -> 'a fra
                 val colrep : 'a ira -> 'a ira -> 'a fra
                 val decl :
                   ('a, int) Direct.abstract ->
                   (< answer : 'b; classif : 'a;
                      state : [> `TPivot of 'a lstate ]; .. >,
-                   unit)
-                  lm
+                   'a)
+                  nm
                 val add :
                   'a fra ->
                   (< answer : 'b; classif : 'a;
@@ -22789,7 +24318,8 @@ module GenRA1 :
         val make_result :
           'a G_GAC_R.wmatrix ->
           (< answer : 'b; classif : 'a;
-             state : [> `TDet of unit
+             state : [> `TDet of
+                          'a Ge.LAMake(Direct).GenLA(GAC_R).NoDet.lstate
                       | `TLower of 'a IF.L.lstate
                       | `TPivot of 'a IF.P.lstate
                       | `TRan of 'a GEF.TrackRank.lstate ];
@@ -22802,13 +24332,14 @@ module GenRA1 :
     val zerobelow :
       'a G_GAC_R.wmatrix ->
       'a G_GAC_R.curposval ->
-      ([> `TDet of unit | `TLower of ('a, GAC_R.contr) Direct.abstract ]
+      ([> `TDet of 'a Ge.LAMake(Direct).GenLA(GAC_R).NoDet.lstate
+        | `TLower of ('a, GAC_R.contr) Direct.abstract ]
        as 'b)
       list -> ('b list -> ('a, unit) Direct.abstract -> 'c) -> 'c
     val init :
       ('a, GAC_R.contr) Direct.abstract ->
       (< answer : ('a, 'b) Direct.abstract;
-         state : [> `TDet of unit
+         state : [> `TDet of 'a Ge.LAMake(Direct).GenLA(GAC_R).NoDet.lstate
                   | `TLower of ('a, GAC_R.contr) Direct.abstract
                   | `TPivot of
                       ('a, GEF.PermList.perm_rep ref) Direct.abstract
@@ -22821,7 +24352,7 @@ module GenRA1 :
     val forward_elim :
       'a G_GAC_R.wmatrix * ('a, int ref) Direct.abstract *
       ('a, int ref) Direct.abstract * ('a, int) Direct.abstract ->
-      ([> `TDet of unit
+      ([> `TDet of 'a Ge.LAMake(Direct).GenLA(GAC_R).NoDet.lstate
         | `TLower of ('a, GAC_R.contr) Direct.abstract
         | `TPivot of ('a, GEF.PermList.perm_rep ref) Direct.abstract
         | `TRan of 'a GEF.TrackRank.lstate ]
@@ -22830,7 +24361,7 @@ module GenRA1 :
     val gen :
       ('a, GAC_R.contr) Direct.abstract ->
       (< answer : ('a, 'b) Direct.abstract;
-         state : [> `TDet of unit
+         state : [> `TDet of 'a Ge.LAMake(Direct).GenLA(GAC_R).NoDet.lstate
                   | `TLower of 'a O.IF.L.lstate
                   | `TPivot of 'a O.IF.P.lstate
                   | `TRan of 'a GEF.TrackRank.lstate ]
@@ -22875,18 +24406,28 @@ module GenRA2 :
                 type 'a pra = 'a GEF.PermList.pra
                 type 'a lstate =
                     ('a, GEF.PermList.perm_rep ref) Direct.abstract
+                type 'a pc_constraint = unit
+                  constraint 'a =
+                    < classif : 'b; state : [> `TPivot of 'b lstate ]; .. >
                 type ('a, 'b) lm = ('a, 'b) GEF.cmonad
                   constraint 'a =
                     < answer : 'c; classif : 'd;
                       state : [> `TPivot of 'd lstate ]; .. >
+                type ('a, 'b) nm =
+                    (< answer : ('b, 'c) Direct.abstract; state : 'd list >,
+                     unit)
+                    StateCPSMonad.monad
+                  constraint 'a =
+                    < answer : 'c; classif : 'b;
+                      state : [> `TPivot of 'b lstate ] as 'd; .. >
                 val rowrep : 'a ira -> 'a ira -> 'a fra
                 val colrep : 'a ira -> 'a ira -> 'a fra
                 val decl :
                   ('a, int) Direct.abstract ->
                   (< answer : 'b; classif : 'a;
                      state : [> `TPivot of 'a lstate ]; .. >,
-                   unit)
-                  lm
+                   'a)
+                  nm
                 val add :
                   'a fra ->
                   (< answer : 'b; classif : 'a;
@@ -22937,8 +24478,8 @@ module GenRA2 :
           'a G_GAC_R.wmatrix ->
           (< answer : 'b; classif : 'a;
              state : [> `TDet of
-                          ('a, int ref) Direct.abstract *
-                          ('a, GAC_R.Dom.v ref) Direct.abstract
+                          'a
+                          Ge.LAMake(Direct).GenLA(GAC_R).AbstractDet.lstate
                       | `TLower of 'a IF.L.lstate
                       | `TPivot of 'a IF.P.lstate
                       | `TRan of 'a GEF.TrackRank.lstate ];
@@ -22951,9 +24492,7 @@ module GenRA2 :
     val zerobelow :
       'a G_GAC_R.wmatrix ->
       'a G_GAC_R.curposval ->
-      ([> `TDet of
-            ('a, int ref) Direct.abstract *
-            ('a, GAC_R.Dom.v ref) Direct.abstract
+      ([> `TDet of 'a Ge.LAMake(Direct).GenLA(GAC_R).AbstractDet.lstate
         | `TLower of ('a, GAC_R.contr) Direct.abstract ]
        as 'b)
       list -> ('b list -> ('a, unit) Direct.abstract -> 'c) -> 'c
@@ -22961,8 +24500,7 @@ module GenRA2 :
       ('a, GAC_R.contr) Direct.abstract ->
       (< answer : ('a, 'b) Direct.abstract;
          state : [> `TDet of
-                      ('a, int ref) Direct.abstract *
-                      ('a, GAC_R.Dom.v ref) Direct.abstract
+                      'a Ge.LAMake(Direct).GenLA(GAC_R).AbstractDet.lstate
                   | `TLower of ('a, GAC_R.contr) Direct.abstract
                   | `TPivot of
                       ('a, GEF.PermList.perm_rep ref) Direct.abstract
@@ -22975,9 +24513,7 @@ module GenRA2 :
     val forward_elim :
       'a G_GAC_R.wmatrix * ('a, int ref) Direct.abstract *
       ('a, int ref) Direct.abstract * ('a, int) Direct.abstract ->
-      ([> `TDet of
-            ('a, int ref) Direct.abstract *
-            ('a, GAC_R.Dom.v ref) Direct.abstract
+      ([> `TDet of 'a Ge.LAMake(Direct).GenLA(GAC_R).AbstractDet.lstate
         | `TLower of ('a, GAC_R.contr) Direct.abstract
         | `TPivot of ('a, GEF.PermList.perm_rep ref) Direct.abstract
         | `TRan of 'a GEF.TrackRank.lstate ]
@@ -22987,8 +24523,7 @@ module GenRA2 :
       ('a, GAC_R.contr) Direct.abstract ->
       (< answer : ('a, 'b) Direct.abstract;
          state : [> `TDet of
-                      ('a, int ref) Direct.abstract *
-                      ('a, GAC_R.Dom.v ref) Direct.abstract
+                      'a Ge.LAMake(Direct).GenLA(GAC_R).AbstractDet.lstate
                   | `TLower of 'a O.IF.L.lstate
                   | `TPivot of 'a O.IF.P.lstate
                   | `TRan of 'a GEF.TrackRank.lstate ]
@@ -23033,18 +24568,28 @@ module GenRA3 :
                 type 'a pra = 'a GEF.PermList.pra
                 type 'a lstate =
                     ('a, GEF.PermList.perm_rep ref) Direct.abstract
+                type 'a pc_constraint = unit
+                  constraint 'a =
+                    < classif : 'b; state : [> `TPivot of 'b lstate ]; .. >
                 type ('a, 'b) lm = ('a, 'b) GEF.cmonad
                   constraint 'a =
                     < answer : 'c; classif : 'd;
                       state : [> `TPivot of 'd lstate ]; .. >
+                type ('a, 'b) nm =
+                    (< answer : ('b, 'c) Direct.abstract; state : 'd list >,
+                     unit)
+                    StateCPSMonad.monad
+                  constraint 'a =
+                    < answer : 'c; classif : 'b;
+                      state : [> `TPivot of 'b lstate ] as 'd; .. >
                 val rowrep : 'a ira -> 'a ira -> 'a fra
                 val colrep : 'a ira -> 'a ira -> 'a fra
                 val decl :
                   ('a, int) Direct.abstract ->
                   (< answer : 'b; classif : 'a;
                      state : [> `TPivot of 'a lstate ]; .. >,
-                   unit)
-                  lm
+                   'a)
+                  nm
                 val add :
                   'a fra ->
                   (< answer : 'b; classif : 'a;
@@ -23094,7 +24639,8 @@ module GenRA3 :
         val make_result :
           'a G_GAC_R.wmatrix ->
           (< answer : 'b; classif : 'a;
-             state : [> `TDet of unit
+             state : [> `TDet of
+                          'a Ge.LAMake(Direct).GenLA(GAC_R).NoDet.lstate
                       | `TLower of 'a IF.L.lstate
                       | `TPivot of 'a IF.P.lstate
                       | `TRan of 'a GEF.TrackRank.lstate ];
@@ -23107,13 +24653,14 @@ module GenRA3 :
     val zerobelow :
       'a G_GAC_R.wmatrix ->
       'a G_GAC_R.curposval ->
-      ([> `TDet of unit | `TLower of ('a, GAC_R.contr) Direct.abstract ]
+      ([> `TDet of 'a Ge.LAMake(Direct).GenLA(GAC_R).NoDet.lstate
+        | `TLower of ('a, GAC_R.contr) Direct.abstract ]
        as 'b)
       list -> ('b list -> ('a, unit) Direct.abstract -> 'c) -> 'c
     val init :
       ('a, GAC_R.contr) Direct.abstract ->
       (< answer : ('a, 'b) Direct.abstract;
-         state : [> `TDet of unit
+         state : [> `TDet of 'a Ge.LAMake(Direct).GenLA(GAC_R).NoDet.lstate
                   | `TLower of ('a, GAC_R.contr) Direct.abstract
                   | `TPivot of
                       ('a, GEF.PermList.perm_rep ref) Direct.abstract
@@ -23126,7 +24673,7 @@ module GenRA3 :
     val forward_elim :
       'a G_GAC_R.wmatrix * ('a, int ref) Direct.abstract *
       ('a, int ref) Direct.abstract * ('a, int) Direct.abstract ->
-      ([> `TDet of unit
+      ([> `TDet of 'a Ge.LAMake(Direct).GenLA(GAC_R).NoDet.lstate
         | `TLower of ('a, GAC_R.contr) Direct.abstract
         | `TPivot of ('a, GEF.PermList.perm_rep ref) Direct.abstract
         | `TRan of 'a GEF.TrackRank.lstate ]
@@ -23135,7 +24682,7 @@ module GenRA3 :
     val gen :
       ('a, GAC_R.contr) Direct.abstract ->
       (< answer : ('a, 'b) Direct.abstract;
-         state : [> `TDet of unit
+         state : [> `TDet of 'a Ge.LAMake(Direct).GenLA(GAC_R).NoDet.lstate
                   | `TLower of 'a O.IF.L.lstate
                   | `TPivot of 'a O.IF.P.lstate
                   | `TRan of 'a GEF.TrackRank.lstate ]
@@ -23180,18 +24727,28 @@ module GenRA4 :
                 type 'a pra = 'a GEF.PermList.pra
                 type 'a lstate =
                     ('a, GEF.PermList.perm_rep ref) Direct.abstract
+                type 'a pc_constraint = unit
+                  constraint 'a =
+                    < classif : 'b; state : [> `TPivot of 'b lstate ]; .. >
                 type ('a, 'b) lm = ('a, 'b) GEF.cmonad
                   constraint 'a =
                     < answer : 'c; classif : 'd;
                       state : [> `TPivot of 'd lstate ]; .. >
+                type ('a, 'b) nm =
+                    (< answer : ('b, 'c) Direct.abstract; state : 'd list >,
+                     unit)
+                    StateCPSMonad.monad
+                  constraint 'a =
+                    < answer : 'c; classif : 'b;
+                      state : [> `TPivot of 'b lstate ] as 'd; .. >
                 val rowrep : 'a ira -> 'a ira -> 'a fra
                 val colrep : 'a ira -> 'a ira -> 'a fra
                 val decl :
                   ('a, int) Direct.abstract ->
                   (< answer : 'b; classif : 'a;
                      state : [> `TPivot of 'a lstate ]; .. >,
-                   unit)
-                  lm
+                   'a)
+                  nm
                 val add :
                   'a fra ->
                   (< answer : 'b; classif : 'a;
@@ -23242,8 +24799,8 @@ module GenRA4 :
           'a G_GAC_R.wmatrix ->
           (< answer : 'b; classif : 'a;
              state : [> `TDet of
-                          ('a, int ref) Direct.abstract *
-                          ('a, GAC_R.Dom.v ref) Direct.abstract
+                          'a
+                          Ge.LAMake(Direct).GenLA(GAC_R).AbstractDet.lstate
                       | `TLower of 'a IF.L.lstate
                       | `TPivot of 'a IF.P.lstate
                       | `TRan of 'a GEF.TrackRank.lstate ];
@@ -23256,9 +24813,7 @@ module GenRA4 :
     val zerobelow :
       'a G_GAC_R.wmatrix ->
       'a G_GAC_R.curposval ->
-      ([> `TDet of
-            ('a, int ref) Direct.abstract *
-            ('a, GAC_R.Dom.v ref) Direct.abstract
+      ([> `TDet of 'a Ge.LAMake(Direct).GenLA(GAC_R).AbstractDet.lstate
         | `TLower of ('a, GAC_R.contr) Direct.abstract ]
        as 'b)
       list -> ('b list -> ('a, unit) Direct.abstract -> 'c) -> 'c
@@ -23266,8 +24821,7 @@ module GenRA4 :
       ('a, GAC_R.contr) Direct.abstract ->
       (< answer : ('a, 'b) Direct.abstract;
          state : [> `TDet of
-                      ('a, int ref) Direct.abstract *
-                      ('a, GAC_R.Dom.v ref) Direct.abstract
+                      'a Ge.LAMake(Direct).GenLA(GAC_R).AbstractDet.lstate
                   | `TLower of ('a, GAC_R.contr) Direct.abstract
                   | `TPivot of
                       ('a, GEF.PermList.perm_rep ref) Direct.abstract
@@ -23280,9 +24834,7 @@ module GenRA4 :
     val forward_elim :
       'a G_GAC_R.wmatrix * ('a, int ref) Direct.abstract *
       ('a, int ref) Direct.abstract * ('a, int) Direct.abstract ->
-      ([> `TDet of
-            ('a, int ref) Direct.abstract *
-            ('a, GAC_R.Dom.v ref) Direct.abstract
+      ([> `TDet of 'a Ge.LAMake(Direct).GenLA(GAC_R).AbstractDet.lstate
         | `TLower of ('a, GAC_R.contr) Direct.abstract
         | `TPivot of ('a, GEF.PermList.perm_rep ref) Direct.abstract
         | `TRan of 'a GEF.TrackRank.lstate ]
@@ -23292,8 +24844,7 @@ module GenRA4 :
       ('a, GAC_R.contr) Direct.abstract ->
       (< answer : ('a, 'b) Direct.abstract;
          state : [> `TDet of
-                      ('a, int ref) Direct.abstract *
-                      ('a, GAC_R.Dom.v ref) Direct.abstract
+                      'a Ge.LAMake(Direct).GenLA(GAC_R).AbstractDet.lstate
                   | `TLower of 'a O.IF.L.lstate
                   | `TPivot of 'a O.IF.P.lstate
                   | `TRan of 'a GEF.TrackRank.lstate ]
@@ -23337,18 +24888,28 @@ module GenZp3 :
                 type 'a fra = ('a, Direct.perm) Direct.abstract
                 type 'a pra = ('a, Direct.perm list) Direct.abstract
                 type 'a lstate = ('a, Direct.perm list ref) Direct.abstract
+                type 'a pc_constraint = unit
+                  constraint 'a =
+                    < classif : 'b; state : [> `TPivot of 'b lstate ]; .. >
                 type ('a, 'b) lm = ('a, 'b) GEF.cmonad
                   constraint 'a =
                     < answer : 'c; classif : 'd;
                       state : [> `TPivot of 'd lstate ]; .. >
+                type ('a, 'b) nm =
+                    (< answer : ('b, 'c) Direct.abstract; state : 'd list >,
+                     unit)
+                    StateCPSMonad.monad
+                  constraint 'a =
+                    < answer : 'c; classif : 'b;
+                      state : [> `TPivot of 'b lstate ] as 'd; .. >
                 val rowrep : 'a ira -> 'a ira -> 'a fra
                 val colrep : 'a ira -> 'a ira -> 'a fra
                 val decl :
                   ('a, int) Direct.abstract ->
                   (< answer : 'b; classif : 'a;
                      state : [> `TPivot of 'a lstate ]; .. >,
-                   unit)
-                  lm
+                   'a)
+                  nm
                 val add :
                   'a fra ->
                   (< answer : 'b; classif : 'a;
@@ -23399,8 +24960,8 @@ module GenZp3 :
           'a G_GVC_Z3.wmatrix ->
           (< answer : 'b; classif : 'a;
              state : [> `TDet of
-                          ('a, int ref) Direct.abstract *
-                          ('a, GVC_Z3.Dom.v ref) Direct.abstract
+                          'a
+                          Ge.LAMake(Direct).GenLA(GVC_Z3).AbstractDet.lstate
                       | `TLower of 'a IF.L.lstate
                       | `TPivot of 'a IF.P.lstate
                       | `TRan of 'a GEF.TrackRank.lstate ];
@@ -23413,9 +24974,7 @@ module GenZp3 :
     val zerobelow :
       'a G_GVC_Z3.wmatrix ->
       'a G_GVC_Z3.curposval ->
-      ([> `TDet of
-            ('a, int ref) Direct.abstract *
-            ('a, GVC_Z3.Dom.v ref) Direct.abstract
+      ([> `TDet of 'a Ge.LAMake(Direct).GenLA(GVC_Z3).AbstractDet.lstate
         | `TLower of ('a, GVC_Z3.contr) Direct.abstract ]
        as 'b)
       list -> ('b list -> ('a, unit) Direct.abstract -> 'c) -> 'c
@@ -23423,8 +24982,7 @@ module GenZp3 :
       ('a, GVC_Z3.contr) Direct.abstract ->
       (< answer : ('a, 'b) Direct.abstract;
          state : [> `TDet of
-                      ('a, int ref) Direct.abstract *
-                      ('a, GVC_Z3.Dom.v ref) Direct.abstract
+                      'a Ge.LAMake(Direct).GenLA(GVC_Z3).AbstractDet.lstate
                   | `TLower of ('a, GVC_Z3.contr) Direct.abstract
                   | `TPivot of ('a, Direct.perm list ref) Direct.abstract
                   | `TRan of 'a GEF.TrackRank.lstate ]
@@ -23436,9 +24994,7 @@ module GenZp3 :
     val forward_elim :
       'a G_GVC_Z3.wmatrix * ('a, int ref) Direct.abstract *
       ('a, int ref) Direct.abstract * ('a, int) Direct.abstract ->
-      ([> `TDet of
-            ('a, int ref) Direct.abstract *
-            ('a, GVC_Z3.Dom.v ref) Direct.abstract
+      ([> `TDet of 'a Ge.LAMake(Direct).GenLA(GVC_Z3).AbstractDet.lstate
         | `TLower of ('a, GVC_Z3.contr) Direct.abstract
         | `TPivot of ('a, Direct.perm list ref) Direct.abstract
         | `TRan of 'a GEF.TrackRank.lstate ]
@@ -23448,8 +25004,7 @@ module GenZp3 :
       ('a, GVC_Z3.contr) Direct.abstract ->
       (< answer : ('a, 'b) Direct.abstract;
          state : [> `TDet of
-                      ('a, int ref) Direct.abstract *
-                      ('a, GVC_Z3.Dom.v ref) Direct.abstract
+                      'a Ge.LAMake(Direct).GenLA(GVC_Z3).AbstractDet.lstate
                   | `TLower of 'a O.IF.L.lstate
                   | `TPivot of 'a O.IF.P.lstate
                   | `TRan of 'a GEF.TrackRank.lstate ]
@@ -23493,18 +25048,28 @@ module GenZp19 :
                 type 'a fra = ('a, Direct.perm) Direct.abstract
                 type 'a pra = ('a, Direct.perm list) Direct.abstract
                 type 'a lstate = ('a, Direct.perm list ref) Direct.abstract
+                type 'a pc_constraint = unit
+                  constraint 'a =
+                    < classif : 'b; state : [> `TPivot of 'b lstate ]; .. >
                 type ('a, 'b) lm = ('a, 'b) GEF.cmonad
                   constraint 'a =
                     < answer : 'c; classif : 'd;
                       state : [> `TPivot of 'd lstate ]; .. >
+                type ('a, 'b) nm =
+                    (< answer : ('b, 'c) Direct.abstract; state : 'd list >,
+                     unit)
+                    StateCPSMonad.monad
+                  constraint 'a =
+                    < answer : 'c; classif : 'b;
+                      state : [> `TPivot of 'b lstate ] as 'd; .. >
                 val rowrep : 'a ira -> 'a ira -> 'a fra
                 val colrep : 'a ira -> 'a ira -> 'a fra
                 val decl :
                   ('a, int) Direct.abstract ->
                   (< answer : 'b; classif : 'a;
                      state : [> `TPivot of 'a lstate ]; .. >,
-                   unit)
-                  lm
+                   'a)
+                  nm
                 val add :
                   'a fra ->
                   (< answer : 'b; classif : 'a;
@@ -23555,8 +25120,8 @@ module GenZp19 :
           'a G_GVC_Z19.wmatrix ->
           (< answer : 'b; classif : 'a;
              state : [> `TDet of
-                          ('a, int ref) Direct.abstract *
-                          ('a, GVC_Z19.Dom.v ref) Direct.abstract
+                          'a
+                          Ge.LAMake(Direct).GenLA(GVC_Z19).AbstractDet.lstate
                       | `TLower of 'a IF.L.lstate
                       | `TPivot of 'a IF.P.lstate
                       | `TRan of 'a GEF.TrackRank.lstate ];
@@ -23569,9 +25134,7 @@ module GenZp19 :
     val zerobelow :
       'a G_GVC_Z19.wmatrix ->
       'a G_GVC_Z19.curposval ->
-      ([> `TDet of
-            ('a, int ref) Direct.abstract *
-            ('a, GVC_Z19.Dom.v ref) Direct.abstract
+      ([> `TDet of 'a Ge.LAMake(Direct).GenLA(GVC_Z19).AbstractDet.lstate
         | `TLower of ('a, GVC_Z19.contr) Direct.abstract ]
        as 'b)
       list -> ('b list -> ('a, unit) Direct.abstract -> 'c) -> 'c
@@ -23579,8 +25142,7 @@ module GenZp19 :
       ('a, GVC_Z19.contr) Direct.abstract ->
       (< answer : ('a, 'b) Direct.abstract;
          state : [> `TDet of
-                      ('a, int ref) Direct.abstract *
-                      ('a, GVC_Z19.Dom.v ref) Direct.abstract
+                      'a Ge.LAMake(Direct).GenLA(GVC_Z19).AbstractDet.lstate
                   | `TLower of ('a, GVC_Z19.contr) Direct.abstract
                   | `TPivot of ('a, Direct.perm list ref) Direct.abstract
                   | `TRan of 'a GEF.TrackRank.lstate ]
@@ -23592,9 +25154,7 @@ module GenZp19 :
     val forward_elim :
       'a G_GVC_Z19.wmatrix * ('a, int ref) Direct.abstract *
       ('a, int ref) Direct.abstract * ('a, int) Direct.abstract ->
-      ([> `TDet of
-            ('a, int ref) Direct.abstract *
-            ('a, GVC_Z19.Dom.v ref) Direct.abstract
+      ([> `TDet of 'a Ge.LAMake(Direct).GenLA(GVC_Z19).AbstractDet.lstate
         | `TLower of ('a, GVC_Z19.contr) Direct.abstract
         | `TPivot of ('a, Direct.perm list ref) Direct.abstract
         | `TRan of 'a GEF.TrackRank.lstate ]
@@ -23604,8 +25164,7 @@ module GenZp19 :
       ('a, GVC_Z19.contr) Direct.abstract ->
       (< answer : ('a, 'b) Direct.abstract;
          state : [> `TDet of
-                      ('a, int ref) Direct.abstract *
-                      ('a, GVC_Z19.Dom.v ref) Direct.abstract
+                      'a Ge.LAMake(Direct).GenLA(GVC_Z19).AbstractDet.lstate
                   | `TLower of 'a O.IF.L.lstate
                   | `TPivot of 'a O.IF.P.lstate
                   | `TRan of 'a GEF.TrackRank.lstate ]

@@ -41,7 +41,7 @@ let orec_find ((_,_,name) as ip:(('a,'b) open_rec)) (s:'b list) : 'a =
 let mo_extend (ip:('a,'b) open_rec) (v:'a) : ('c, unit) monad =
   perform s <-- fetch; store (orec_store ip v s)
 
-let mo_lookup (ip:('a,'b) open_rec) : ('c, 'd) monad =
+let mo_lookup (ip:('a,'b) open_rec) : ('c, 'a) monad =
   perform s <-- fetch; ret (orec_find ip s)
 
 

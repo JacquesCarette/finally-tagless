@@ -920,10 +920,10 @@ let orec_find ((_,_,name) as ip:(('a,'b) open_rec)) (s:'b list) : 'a =
   try lookup ip s 
   with Not_found -> failwith ("Failed to locate orec field: " ^ name)
 
-let mo_extend (ip:('a,'b) open_rec) (v:'a) : ('c, 'd) monad = 
+let mo_extend (ip:('a,'b) open_rec) (v:'a) : ('c, unit) monad = 
   perform s <-- fetch; store (orec_store ip v s)
 
-let mo_lookup (ip:('a,'b) open_rec) : ('c, 'd) monad =
+let mo_lookup (ip:('a,'b) open_rec) : ('c, 'a) monad =
   perform s <-- fetch; ret (orec_find ip s)
 \end{code}
 %
@@ -972,7 +972,7 @@ let swap_cols a (n,m) c j =
       end
   in loop c j
 \end{code}
-We refer to the $a_{ij}$-the element of the matrix as |a.(i*m+j)|,
+We refer to the $a_{ij}$\hyp th element of the matrix as |a.(i*m+j)|,
 where |a| is the array component of the record |container2dfromvector|.
 The code above defines three auxiliary functions, typically used in 
 textbook pseudo-code: |swap a i j| swaps two elements; 
@@ -1061,7 +1061,7 @@ As is typical of textbook presentations, the main algorithm depends on
 a separately-defined function |pivot| to find a pivot. Here we use
 full-pivoting, i.e. searching the complete as yet unexamined portion of the
 matrix, the rectangular block |(r,c)-(n,m)|, for the element with the 
-maximum absolute value. The function returns the value of the
+nonzero minimum absolute value. The function returns the value of the
 pivot thus found, and its location; the return value is an option type with
 |None| indicating that all examined elements are zeroes. In the main
 algorithm, after we have found the pivot, we swap the current column 
