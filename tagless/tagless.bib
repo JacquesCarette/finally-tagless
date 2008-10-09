@@ -1,8 +1,10 @@
 @STRING{j_acmcs			= "{ACM} Computing Surveys" }
 @STRING{j_hosc			= "Higher-Order and Symbolic Computation" }
+@STRING{j_icomp			= "Information and Computation" }
 @STRING{j_jacm			= "Journal of the {ACM}" }
 @STRING{j_jcss			= "Journal of Computer and System Sciences" }
 @STRING{j_jfp			= "Journal of Functional Programming" }
+@STRING{j_mscs			= "Mathematical Structures in Computer Science" }
 @STRING{j_ngc			= "New Generation Computing" }
 @STRING{j_scp			= "Science of Computer Programming" }
 @STRING{j_sigplan		= "{ACM} {SIG{\-}PLAN} Notices" }
@@ -844,6 +846,37 @@ generator, we generate ML code, C code, and OCaml byte code.
                  analysis",
 }
 
+@Article{	danvy-representing,
+  author	= "Olivier Danvy and Andrzej Filinski",
+  title		= "Representing Control: A Study of the {CPS} Transformation",
+  journal	= j_mscs,
+  year		= 1992,
+  month		= dec,
+  volume	= 2,
+  number	= 4,
+  pages		= "361--391",
+  url		= "http://www.diku.dk/~andrzej/papers/RC.dvi http://www.diku.dk/~andrzej/papers/RC.ps.gz"
+}
+
+@InProceedings{	filinski-representing,
+  author	= "Andrzej Filinski",
+  title		= "Representing Monads",
+  pages		= "446--457",
+  crossref	= "popl1994",
+  url		= "http://www.diku.dk/~andrzej/papers/RM-abstract.html http://www.diku.dk/~andrzej/papers/RM.dvi http://www.diku.dk/~andrzej/papers/RM.ps.gz"
+}
+
+@Article{	moggi-notions,
+  author	= "Eugenio Moggi",
+  title		= "Notions of Computation and Monads",
+  journal	= j_icomp,
+  year		= 1991,
+  volume	= 93,
+  number	= 1,
+  pages		= "55--92",
+  url		= "http://www.disi.unige.it/person/MoggiE/ftp/ic91.ps.gz"
+}
+
 %------------------------------------------------------------------------
 % After this, only procedings etc
 
@@ -902,6 +935,18 @@ generator, we generate ML code, C code, and OCaml byte code.
   address	= pub_acm_addr,
   publisher	= pub_acm,
   year		= 2006,
+  location	= "Portland, OR"
+}
+
+@Proceedings{	popl1994,
+  key		= "{\relax POPL}",
+  title		= proc_popl_1 # "94"  # proc_popl_2,
+  booktitle	= proc_popl_1 # "94"  # proc_popl_2,
+  address	= pub_acm_addr,
+  publisher	= pub_acm,
+  year		= 1994,
+  isbn		= "0-89791-636-0",
+  issn		= "0730-8566",
   location	= "Portland, OR"
 }
 

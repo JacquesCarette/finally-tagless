@@ -30,8 +30,7 @@ In other words, we represent object terms not in an initial algebra
 but using the coalgebraic structure of the $\lambda$-calculus.
 Our representation also simulates inductive maps from types to
 types, which are required for typed partial evaluation and CPS transformations.
-
-Our encoding of an object term abstracts over the various ways to
+Our encoding of an object term abstracts uniformly over the family of ways to
 interpret it, yet statically assures that the interpreters never get
 stuck.  
 %% To achieve self\hyp interpretation and show Jones\hyp
@@ -39,9 +38,8 @@ stuck.
 %% polymorphism \ifshort\else (provided by ML functors and Haskell~98 
 %% constructor classes) \fi to plugging a term into a context of 
 %% let\hyp polymorphic bindings.
-
-As a side-effect, we provide another convincing application of the 
-usefulness of being able to abstract over higher-kinded types.
+This family of interpreters thus demonstrates again that it is
+useful to abstract over higher-kinded types.
 \end{abstract}
 
 \begin{quote}
@@ -439,7 +437,7 @@ result they call desirable.  Our contributions are as follows.
 %% \item We describe an approach to self\hyp interpretation compatible with the
 %%   above\ifshort\else~(\S\ref{selfinterp})\fi.  Self\hyp interpretation turned
 %%   out to be harder than expected.\ifshort\footnotemark[\value{footnote}]\fi
-\item Show how higher-kinded abstraction can be useful for building
+\item We show how to use higher-kinded abstraction to build
     embedded DSLs.
 \end{enumerate}
 Our code is surprisingly simple and obvious in hindsight, but
@@ -1687,6 +1685,12 @@ Our approach accommodates
 several variants, including
 a call-by-name CPS interpreter and a call-by-value CPS
 transformation.
+Of course, CPS is a well-studied topic, and \citearound{'s work on
+program generation}\citet{Thiemann-combinators} already includes a
+CPS evaluator expressed
+using combinator functions rather than data constructors.
+We focus here on expressing CPS transformations as part of a larger,
+typed family of interpreters.
 \ifshort\label{state}\label{S:CPS}%
 This lets us decouple the evaluation strategy of the object language
 from that of the metalanguage. The accompanying code shows the CBN CPS
@@ -1747,11 +1751,13 @@ general framework. Alas, as in~\S\ref{S:PE-problem}, the type of
 an object term inductively determines the type of its interpretation:
 the interpretation of an object term of type~$t$ may not have type
 |(|$t$|->'w)->'w|, because $t$ may be a function type.  Again we
-simulate a type function with a typecase distinction, using an extra
-type argument to |repr|. Luckily, the type function |static| needed for
+simulate a type function with a typecase distinction, by changing the
+type arguments to |repr|. Luckily, the type function |static| needed for
 the partial evaluator 
 in~\S\ref{S:PE-solution} is precisely the same type function we
-need for CBN CPS\@.
+need for CBN CPS\@, so our CBN interpreter can match the
+|Symantics| signature in~\S\ref{S:PE-solution}, without even
+using the |'dv| argument to |repr|.
 \begin{code}
 module RCN = struct
   type ('c,'sv,'dv) repr = {ko: 'w. ('sv -> 'w) -> 'w}
@@ -1769,18 +1775,18 @@ end
 
 This interpreter~|RCN| is fully polymorphic over the answer type,
 using higher-rank polymorphism through OCaml record types.
-To avoid this higher-rank polymorphism in the core language, which
-Standard ML does not support, we could also define |RCN| as
+To avoid this higher-rank polymorphism in the core language,
+we could also define |RCN| as
 a functor parameterized over
 the answer type.
 \begin{code}
-module RCN(W : sig type w end)= struct
-  type ('c,'sv,'dv) repr = ('sv -> W.w) -> W.w
-  ...
+module RCN(W: sig type w end) = struct
+  type ('c,'sv,'dv) repr = ('sv -> W.w) -> W.w   ...
 \end{code}
-This allows a translation of these techniques to, for example, Standard ML\@.
-Unfortunately, the loss of polymorphism in the answer type makes the 
-CPS evaluator less pleasant to use than the other implementations.
+This alternative is more cumbersome to use because the functor
+needs to applied once for each answer type, but it translates
+to, for example, Standard ML\@, whose core language does not
+support higher-rank polymorphism.
 
 Because |RCN| has the signature |Symantics|, we can instantiate our previous
 examples with it, and all works as expected.  More interesting
@@ -1812,15 +1818,18 @@ module RCV = struct include RCN
 end
 \end{code}
 Now an applied abstraction
-evaluates its argument before proceeding. This approach is in
-line with \citets{reynolds-relation}, albeit typed. The
+evaluates its argument before proceeding.  The
 interpreter~|RCV| is useful for CBV evaluation of the object language
 whether the metalanguage is CBV or CBN\@.
+To match the same |Symantics| signature as |RCN| above, |RCV| uses
+\citets{reynolds-relation} CBV CPS transformation, in which variables
+denote computations (that is, functions from continuations),
+rather than \citets{PlotkinCBN}, in which variables denote values.
 
 We turn to a more general approach to CBV CPS: a CPS transformer that
 turns any implementation of |Symantics| into a CPS version of that
 evaluator.
-This functor on interpreters performs a textbook
+This functor on interpreters performs \citets{PlotkinCBN} textbook
 CPS transformation on the object language.
 \begin{code}
 module CPST(S: Symantics) = struct
@@ -1852,7 +1861,7 @@ the type of \texttt{lam (add (int~1))} is
 Hence, to write the type equation defining |CPST.repr| we again need
 a type function with a typecase distinction, similar to |static|
 in~\S\ref{S:PE-solution}. Alas, the type function we need is not
-identical to |static|, so we need to add another type argument to
+identical to |static|, so again we need to change the type arguments to
 |repr| in the |Symantics| signature. As in~\S\ref{S:PE-solution}, the
 terms in previous implementations of |Symantics| stay unchanged, but the
 |repr| type equations in those implementations have to take a new
@@ -1901,6 +1910,85 @@ redexes, we just change~|T| to instantiate |CPST| with |P| instead.
 {P.st = Some <fun>; P.dy = .<fun x_5 -> x_5 true>.}
 \end{code}
 
+\subsection{Abstracting over an inductive map on object types}
+
+\begin{figure}[t]
+\begin{floatrule}
+\begin{code}
+module type Symantics1 = sig
+  type 'c dint
+  type 'c dbool
+  type ('c,'da,'db) darr
+  type ('c,'dv) repr
+  val int : int  -> ('c, 'c dint) repr
+  val bool: bool -> ('c, 'c dbool) repr
+  val lam : (('c,'da) repr -> ('c,'db) repr) -> ('c, ('c,'da,'db) darr) repr
+  val app : ('c, ('c,'da,'db) darr) repr -> ('c, 'da) repr -> ('c, 'db) repr
+  val fix : ('x -> 'x) -> (('c, ('c,'da,'db) darr) repr as 'x)
+  val add : ('c, 'c dint) repr -> ('c, 'c dint) repr -> ('c, 'c dint) repr
+  val mul : ('c, 'c dint) repr -> ('c, 'c dint) repr -> ('c, 'c dint) repr
+  val leq : ('c, 'c dint) repr -> ('c, 'c dint) repr -> ('c, 'c dbool) repr
+  val if_ : ('c, 'c dbool) repr
+            -> (unit -> 'x) -> (unit -> 'x) -> (('c, 'da) repr as 'x)
+end
+\end{code}
+\end{floatrule}
+\caption{A (Meta)OCaml embedding that abstracts over an inductive map on object types}
+\label{fig:inductive}
+\end{figure}
+
+Having seen that each CPS interpreter above matches a differently
+modified |Symantics| signature, one may wonder whether |Symantics|
+can be generalized to encompass them all.  The answer is yes: the
+|Symantics1| signature in Figure~\ref{fig:inductive} abstracts our
+representation of object terms not only over the type constructor
+|repr| but also over the three branches that make up an inductive
+map, such as |static| in~\S\ref{S:PE-solution}, from object types
+to metalanguage types.  The first two branches (for the object
+types $\ZZ$ and~$\BB$) become the abstract types |dint| and
+|dbool|, whereas the third branch (for object types $t_1\to t_2$)
+becomes the new abstract type constructor |darr|.
+
+Almost every interpreter in this paper can be made to match the
+|Symantics1| signature without changing any terms, by defining
+|dint|, |dbool|, |darr|, and |repr| suitably.  For example,
+the types in the evaluator~|R| and the CBV CPS transformer |CPST|
+should be changed as follows.
+\begin{code}[commandchars=\@\[\]]
+module R = struct
+  type 'c dint = int
+  type 'c dbool = bool
+  type ('c,'da,'db) darr = 'da -> 'db
+  type ('c,'dv) repr = 'dv   ...
+
+module CPST(S: Symantics1)(W: sig type 'c dw end) = struct open W
+  type 'c dint = 'c S.dint
+  type 'c dbool = 'c S.dbool
+  type ('c,'da,'db) darr =
+    ('c, 'da, ('c, ('c, 'db, 'c dw) S.darr, 'c dw) S.darr) S.darr
+  type ('c,'dv) repr =
+    ('c, ('c, ('c, 'dv, 'c dw) S.darr, 'c dw) S.darr) S.repr   ...
+\end{code}
+Modified thus, |CPST| produces modules that match |Symantics1| and
+thus can be not only evaluated or compiled but also transformed
+using |CPST| again.  The accompanying source file |inco.ml| shows
+the details, including one-pass CPS transformations in the
+higher-order style of \citet{danvy-representing}.
+
+The only interpreter in this paper that does not fit |Symantics1|
+is the partial evaluator~|P|.  It does not fit because it uses
+\emph{two} inductive maps on object types---both |'sv| and |'dv|
+in Figure~\ref{fig:ocaml}.  We could define a |Symantics2|
+signature to abstract over \emph{two} inductive maps over object
+types; it would include 4 abstract types and 2 abstract type
+constructors in addition to |repr|.  It would then be easy to
+make~|P| match |Symantics2|, but the output of~|P| can still only
+match |Symantics1|.  This escalation points to a need for either
+record-kind polymorphism (so that |'dv| in
+Figure~\ref{fig:inductive} may be more than just one type) or
+type-indexed types (so that we do not need to emulate them in the
+first place).
+
 \subsection{State and imperative features}
 \label{state}
 
@@ -1918,18 +2006,23 @@ redexes, we just change~|T| to instantiate |CPST| with |P| instead.
 
 We can modify a CBN or CBV CPS transformation to pass a piece of state
 along with the continuation. This technique lets us support mutable
-state. As Figure~\ref{fig:state} shows, we extend our object language
+state (or more generally any monadic effect) by representing it
+using continuations \citep{filinski-representing}.
+As Figure~\ref{fig:state} shows, we extend our object language
 with three imperative features.
 \begin{enumerate}
     \item ``$\deref$'' gets the current state;
     \item ``$\set e$'' sets the state to the value of~$e$ and returns
         the previous value of the state;
     \item the let-form ``$\lapp{e_1}{x}e_2$'' evaluates $e_1$
-        before~$e_2$ even if $e_2$ does not use~$x$.
+        before~$e_2$ even if $e_2$ does not use~$x$ and even if
+        evaluation is CBN\@.
 \end{enumerate}
-If $x$ does not appear in~$e_2$, then ``$\lapp{e_1}{x}e_2$'' is same as
+The form ``$\lapp{e_1}{x}e_2$'' is equivalent to
+``let'' in \citearound{'s monadic metalanguage}\citet{moggi-notions}.
+If $x$ does not appear in~$e_2$, then it is same as
 the more familiar sequencing form ``$e_1;e_2$''.
-We can embed this extended object language into OCaml by extending the
+We embed this extended object language into OCaml by extending the
 |Symantics| signature in Figure~\ref{fig:ocaml}.
 \begin{code}
 module type SymSI = sig
@@ -1966,10 +2059,7 @@ module RCPS(ST: sig
   type 'c states 
   type ('c,'sv,'dv) repr = 
       {ko: 'w. ('sv -> 'c states -> 'w) -> 'c states -> 'w}
-end) = struct
-  include ST
-  type ('c, 'sv, 'dv) result = 'c states -> 'sv
-  ... 
+end) = struct include ST ... 
   let lapp e2 e1 = {ko = fun k ->
       e2.ko (fun v -> (app (lam e1) {ko = fun k -> k v}).ko k)}
   let deref () = {ko = fun k s -> k s s}
@@ -2008,7 +2098,7 @@ extended object language (for example, applied to an implementation of
 unextended object language: we can pass |RCPSI|
 to the functor |EX| (Figure~\ref{fig:ocaml-simple}) and run 
 the example |test1| from there. The main use for |RCPSI| is to interpret the 
-extended object language.
+extended language.
 \begin{code}
 module EXPSI_INT = EXSI_INT(RCPSI)
 let cpsitesti1 = RCPSI.get_res (EXPSI_INT.test1 ()) 100
@@ -2021,12 +2111,40 @@ techniques.
 We can also add mutable references to the object language using
 mutable references of the metalanguage, as shown in the accompanying
 code.
+Yet another way to add side effects to the object language is to
+write a monadic interpreter (for a specific monad or a general
+class of monads), which can be structured as a module matching the
+|Symantics1| signature in Figure~\ref{fig:inductive}.
 \fi
 \fi
 
 \ifshort\else
 \begin{comment}
 \jacques{Should we really eliminate this entirely?}
+\section{Polymorphism over interpreters}
+
+It is crucial to our achievements above that the same object term can be
+interpreted by multiple interpreters, whether an evaluator, compiler, partial
+evaluator, or CPS transformer.  In the typical \emph{initial} approach to DSL
+embedding, interpretation is represented in the metalanguage by applying the
+interpreter to the object term.  Flipping this application around, our
+\emph{final} approach applies the object term to the interpreter.  In this
+section, we explain how this flip amounts to Church-encoding the recursive GADT
+of well-typed object terms and how it affects the notion of self-interpretation
+and Jones optimality.
+
+At the type level, an interpreter is represented by its type constructor
+|repr|.  For example, a |Symantics| module or instance that matches the simple
+encoding in~\S\ref{language} is in System~$F_\omega$ an interpreter
+
+
+
+, over which an object term is a polymorphic function---either an ML
+functor from a |Symantics| module containing |repr| or a Haskell value with
+a |Symantics| constraint over |repr|.
+
+
+
 \section{Self-interpretation}\label{selfinterp}
 
 We turn to interpreting the object language in the object language, to

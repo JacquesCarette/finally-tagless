@@ -72,26 +72,6 @@ p16
      \oleg{I agree; let's keep our optimizations and argue for them in
      our response to the reviewer.}
 
-p18, CPS interpretation
-     The cbv version is almost literally in the above-cited paper
-     (Thiemann 1999) \cite{Thiemann-combinators}
-     \jacques{Of course!  It is the obvious way to do it.  We do not
-     claim originality for that, do we?  The originality is that
-     CPS interpretation 'fits' the whole scheme}
-
-     A few details of the representation should be discussed in the
-     paper. In particular, you should discuss why you cannot pull this
-     strategy off for a Plotkin-style CBV-CPS interpreter (you need to
-     use Reynolds style as shown later in the paper, but without
-     explanation why it has to be this complicated). 
-     \jacques{I am sure one of you would be better suited to deal with 
-     this one.}
-
-     Actually, you can write a CBV-CPS interpreter which implements
-     lam f in exactly the same way as stated in the paper by extending
-     the Symantics signature accordingly.
-     \jacques{Sure, but why extend if it's not needed?}
-
 p19, starting with CPST
      It's nice to see that you can unify all these transformations
      under one signature, but is this still a natural way of dealing
@@ -99,11 +79,8 @@ p19, starting with CPST
      needs its specific type infrastructure. To me, the interesting
      question here is, where does this specialization stop? Which
      features are needed to obtain a "fixpoint"?
-     \jacques{Not 'each'.  And while this is an interesting question,
-     it is out-of-scope of this current paper.  In any case, without a nice set
-     of test cases, it would be quite hard to make the required set
-     of features precise.  In all cases though, it looks like only
-     simple (i.e. total) type-level functions are needed.}
+     \ccshan{In the new Section 5.3, we show a general type
+     infrastructure that handles all these CPS transformations.}
 
 p20, section 5.3
      This feels like a hack to me. Why can't you write everything in
@@ -112,12 +89,22 @@ p20, section 5.3
      If you do something specialized for state, then a polymorphic
      treatment of reference operators would be more convincing to me!
 
+     \ccshan{We now note at the beginning of Section 5.4 (previously
+     5.3) that our support for mutable state generalizes to other
+     monadic effects, because we can always represent a monadic effect
+     using continuations.  We also note at the end of Section 5.4 that
+     another way to support state is indeed to "write everything in
+     monadic style and then plug in a state monad when needed".}
+
 p21, lapp is monadic let!
      It's only needed to drive the CPS transformation. 
      Its presence should be explained like that.
+     \ccshan{We now explain lapp as "equivalent to `let' in Moggi's
+     monadic metalanguage.}
 
      Why is the ... result type in RCPS needed?
-
+     \ccshan{It was just for internal convenience.  It is now removed
+     from the paper.}
 
 p28, "This shift also underlies ..."
      I don't see the connection to the present work.
@@ -565,4 +552,19 @@ Rev2, p16
      interpretations for the same object language, and offline PE
      would force us to change the object language to one annotated
      with binding times, so online PE distracts from our point less.}
+
+p18, CPS interpretation
+     The cbv version is almost literally in the above-cited paper
+     (Thiemann 1999) \cite{Thiemann-combinators}
+     \ccshan{Noted at the beginning of Section 5}
+
+     A few details of the representation should be discussed in the
+     paper. In particular, you should discuss why you cannot pull this
+     strategy off for a Plotkin-style CBV-CPS interpreter (you need to
+     use Reynolds style as shown later in the paper, but without
+     explanation why it has to be this complicated). 
+     Actually, you can write a CBV-CPS interpreter which implements
+     lam f in exactly the same way as stated in the paper by extending
+     the Symantics signature accordingly.
+     \jacques{Noted at the beginning of Section 5.2}
 
