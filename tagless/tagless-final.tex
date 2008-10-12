@@ -2521,15 +2521,20 @@ such as addition and application, then providing multiple
 interpretations of them.
 The techniques we use to form such a family of interpreters
 find their seeds in \citearound{'s \emph{language
-triplets}}\citet{Holst-AMIX}, though in an untyped setting.  In the typed
-setting, \citet{Nielson88} uses a typed $\lambda$-calculus as a metalanguage
-for expressing families of program analyses; however the embedding of the
-object language into the metalanguage, unlike our |Symantics| is not typed.
+triplets}}\citet{Holst-AMIX}, though in an untyped setting.
 \Citet{JonesNielson:94:AbstractInterpretation} also
 prefigured this separation when they decomposed a denotational definition of an
 untyped object language into a core semantics (which we call abstract syntax)
-and multiple interpretations.  When implementing an embedded DSL in this
-way, it is also common practice to use phantom types to rule out
+and multiple interpretations.
+
+In the typed
+setting, \citet{Nielson88} expressed families of program analyses on
+typed object languages using a typed $\lambda$-calculus as
+a metalanguage; however, the embeddings of the
+object language and the analyses are not type-checked in the
+metalanguage, unlike with our |Symantics| signature.
+When implementing a typed, embedded DSL\@,
+it is also common practice to use phantom types to rule out
 ill-typed object terms, as done in Lava
 \citep{Lava} and by \citet{Rhiger-thesis}. However, these two approaches
 are not tagless because they still use universal types, such as Lava's
