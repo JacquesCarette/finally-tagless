@@ -1784,7 +1784,7 @@ module RCN(W: sig type w end) = struct
   type ('c,'sv,'dv) repr = ('sv -> W.w) -> W.w   ...
 \end{code}
 This alternative is more cumbersome to use because the functor
-needs to applied once for each answer type, but it translates
+needs to be applied once for each answer type, but it translates
 to, for example, Standard ML\@, whose core language does not
 support higher-rank polymorphism.
 
@@ -1970,7 +1970,7 @@ module CPST(S: Symantics1)(W: sig type 'c dw end) = struct open W
     ('c, ('c, ('c, 'dv, 'c dw) S.darr, 'c dw) S.darr) S.repr   ...
 \end{code}
 Modified thus, |CPST| produces modules that match |Symantics1| and
-thus can be not only evaluated or compiled but also transformed
+can be not only evaluated or compiled but also transformed
 using |CPST| again.  The accompanying source file |inco.ml| shows
 the details, including one-pass CPS transformations in the
 higher-order style of \citet{danvy-representing}.
