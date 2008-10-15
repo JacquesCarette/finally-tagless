@@ -99,3 +99,23 @@
         (Ad (lambda-c (e1 e2 env) (@c appD (e1 env) (e2 env))))
         (Ld (lambda-c (e env) (lamD (lambda (x) (e (@c rcons x env)))))))
     (@c t Z S As Ls Ad Ld env0)))
+
+; Actually put in some tests right in here
+
+; helper functions
+(define (cout . args) (for-each display args)) 
+(define nl #\newline)
+
+; for unparsing
+(cout "test0: "
+  (unparse1 (@c lamD (lambda (x) (let ((axx (@c appD x x))) (@c appD axx (lamD (lambda (y) (@c appD y axx)))))) church-nil))
+   nl )
+
+; for the actual specializer
+(cout "stress 1: "
+      (unparse1 ((spec (lambda-c (Z S As Ls Ad Ld) (@c As (Ls (Ld (@c Ad Z (S Z)))) (Ld Z)))) church-nil))
+      nl )
+
+(cout "stress 2: "
+    (unparse1 ((spec (lambda-c (Z S As Ls Ad Ld) (Ld (@c As (Ls (Ld (S Z))) Z)))) church-nil))
+      nl )
