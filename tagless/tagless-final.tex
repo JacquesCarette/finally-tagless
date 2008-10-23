@@ -347,10 +347,11 @@ object terms, such as an evaluator.  Or, as a referee puts it aptly, our
 proposal is ``a way to write a typed fold function over a typed term.''
 
 We emphasize ``typed'' and ``fold'' in the previous sentence.
-Our encoding of the recursive type of terms \citep{bohm-automatic}
+We use a typed version of \citets{Mogensen-SelfApplicable}
+encoding of the recursive type of terms \citep{bohm-automatic}, which
 makes folds over terms much easier to write than functions over
 terms that are not primitive recursive (or, compositional).
-In contrast, \citearound{'s encoding of the sum type of
+In contrast, \citearound{'s earlier encoding of the sum type of
 terms}\citet{JFP-Mogensen} does not privilege folds.
 In exchange, we statically express object types in the metalanguage
 and prevent both kinds of run-time errors in
@@ -1627,12 +1628,12 @@ of term combinators in a typed metalanguage.  Like us, \citeauthor{sumii-hybrid}
 follow \citet{Sperber-SelfApplicable} and \citet{asai-binding-time} in building
 static and dynamic terms in tandem, to combine offline and online partial
 evaluation.
-\citearound{'s earlier self-reducer for the untyped
-$\lambda$-calculus}\Citet{JFP-Mogensen} also
-builds static and dynamic terms in tandem.  However, it
-builds a static term for every object term, even a bound variable,
-so it moves some work from |app| to~|pdyn| (in terms of Figure~\ref{fig:pe})
-and remains untyped.  In contrast, we follow Sperber, Asai,
+\citearound{'s earlier self-reducers for the untyped
+$\lambda$-calculus}\Citet{JFP-Mogensen,Mogensen-SelfApplicable} also
+build static and dynamic terms in tandem.  However, they
+build a static term for every object term, even a bound variable,
+so they move some work from |app| to~|pdyn| (in terms of Figure~\ref{fig:pe})
+and remain untyped.  In contrast, we follow Sperber, Asai,
 and \citeauthor{sumii-hybrid} in leaving the static term
 optional, so as to perform lifting without
 juggling explicit type indices in the encoding of an object term.
