@@ -1975,6 +1975,35 @@ using |CPST| again.  The accompanying source file |inco.ml| shows
 the details, including one-pass CPS transformations in the
 higher-order style of \citet{danvy-representing}.
 
+The abstract type constructors in Figure~\ref{fig:inductive} exemplify
+the amount of polymorphism that our technique requires of the
+metalanguage in order to represent a given object language.  Generally,
+our technique represents term constructions (such as~$+$) by applying
+abstract functions (such as \texttt{add}) and represents type
+constructions (such as~$\to$) and typing judgments (namely `$:$') by
+applying abstract type constructors (such as \texttt{darr} and
+\texttt{repr}).  Therefore, it requires the metalanguage to support
+enough polymorphism to abstract over the interpretation of each
+inference rule for well-typed terms and well-kinded types.  For example,
+to encode System~F's term generalization rule
+\begin{equation*}
+    \begin{prooftree}
+        \[ [\alpha:\star] \proofoverdots e : t \]
+        \justifies \Lambda\alpha.\,e : \forall\alpha.\,t \text,
+    \end{prooftree}
+\end{equation*}
+the metalanguage must let terms (representing $\Lambda\alpha.\,e$)
+abstract over terms (interpreting~$\Lambda$) that are polymorphic both
+over type constructors of kind $\star\to\star$ (representing $t$ with
+$\alpha$ free) and over polymorphic terms of type
+$\forall\alpha\colon\star\dotso$ (representing $e$ with $\alpha$ free).
+These uses of
+higher-rank and higher-kind
+polymorphism let us type-check and compile object terms separately from
+interpreters.  This observation is consistent with the role of
+polymorphism in the separate compilation of modules
+\citep{shao-typed}.
+
 The only interpreter in this paper that does not fit |Symantics1|
 is the partial evaluator~|P|.  It does not fit because it uses
 \emph{two} inductive maps on object types---both |'sv| and |'dv|
@@ -2646,13 +2675,6 @@ Particularly intriguing is the link to the
 coinductive aspects of B\"{o}hm trees, as pointed out by
 \citet{berarducci-models} and Jacobs \citeyearpar[Example 4.3.4]{jacobs-coalgebra}.
 \fi
-
-We observe that
-higher-rank and higher-kind
-polymorphism lets us type-check and compile object terms separately from
-interpreters.  This \ifshort\else observation \fi is consistent with the role of
-polymorphism in the separate compilation of modules
-\citep{shao-typed}.
 
 \section{Conclusions}\label{conclusion}
 

@@ -37,6 +37,7 @@ p4, section 1.3
     addressed fully could take a fair bit of space.  We should however
     discuss this a little.  Probably not in 1.3, but perhaps at the end
     of section 4?}
+    \ccshan{Now at the end of Section 5.3.}
 
 p11, proposition 4
      This is not formalized, but really obvious (unlike the
@@ -45,6 +46,8 @@ p11, proposition 4
      \jacques{This is now proposition 5.  However, the reviewer is 
      correct that we implicitly use 'tricky and non-obvious' properties
      of .~ and .< >.  Shouldn't we add a reference?}
+     \ccshan{Well, the one-sentence proof of proposition 5 no longer
+     mentions any properties. (:}
 
 p15, section 4.4
      btw, I do not find these names R, L, and C very intuitive or
@@ -122,6 +125,7 @@ p28, "This shift also underlies ..."
      and that is crucial.  Section 6 required even higher levels, but
      we need some of this.  So we need to adjust our comments about
      this in a more subtle fashion.}
+    \ccshan{Now at the end of Section 5.3.}
 
 ==========================================================================
 
