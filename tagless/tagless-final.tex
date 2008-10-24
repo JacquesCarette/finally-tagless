@@ -2654,8 +2654,6 @@ strongly of our attempts at self-interpretation without the notion of a
 syntactic hole.
 \end{comment}
 
-
-
 We could not find work that establishes that
 the \emph{typed} $\lambda$-calculus has a final coalgebra structure.
 \ifshort
@@ -2676,6 +2674,15 @@ Particularly intriguing is the link to the
 coinductive aspects of B\"{o}hm trees, as pointed out by
 \citet{berarducci-models} and Jacobs \citeyearpar[Example 4.3.4]{jacobs-coalgebra}.
 \fi
+
+Very recently others have also begun to realize the usefulness of being
+able to abstract over higher-kinded types, like our |repr|.
+\Citet{moors-generics-higher-kind} illustrate how they have leveraged the 
+same power within Scala.  \Citet{HORM08} also uses Scala, yet are clearly
+influenced by our work \citep{carette-kiselyov-shan-aplas}
+(as they themselves note); where we have concentrated
+on multiple efficient interpretations of the same language, they have 
+concentrated on composability.
 
 \section{Conclusions}\label{conclusion}
 

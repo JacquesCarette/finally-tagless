@@ -17,39 +17,14 @@ REPORT FROM REFEREE #2
 
 DETAILS
 
-
 p4, section 1.3
     Clearly the encoding is monadic but you are not mentioning this
     fact at all. I miss a discussion why an abstraction over a monad
     would not be sufficient to achieve all you want to achieve.
-    \jacques{We don't mention it because we don't use it, not 
-    directly.  We do implement some kind of fold, but over what exactly
-    is not clear.  This would be distracting.  I guess we should mention
-    that our encoding is indeed monadic, but we (currently?) do not
-    make use of this fact}
     \oleg{What does it mean for an encoding to be monadic?
     Where in the R or C interpreters we fix the evaluation order?}
 
-    It should also be discussed in what way the type system of the
-    metalanguage restricts the expressible type systems for the object
-    language.
-    \jacques{Now, that is a much more interesting comment.  To be 
-    addressed fully could take a fair bit of space.  We should however
-    discuss this a little.  Probably not in 1.3, but perhaps at the end
-    of section 4?}
-    \ccshan{Now at the end of Section 5.3.}
-
-p11, proposition 4
-     This is not formalized, but really obvious (unlike the
-     others). However, the mentioned properties of .~ and .< >. that
-     you rely on are tricky and non-obvious.
-     \jacques{This is now proposition 5.  However, the reviewer is 
-     correct that we implicitly use 'tricky and non-obvious' properties
-     of .~ and .< >.  Shouldn't we add a reference?}
-     \ccshan{Well, the one-sentence proof of proposition 5 no longer
-     mentions any properties. (:}
-
-p15, section 4.4
+Rev2, p15, section 4.4
      btw, I do not find these names R, L, and C very intuitive or
      readable. 
      \jacques{We could insert a 'key', where
@@ -64,68 +39,8 @@ p15, section 4.4
      state-passing CBN CPS : RCPS}
      \oleg{Not a bad idea...}
 
-p16
-     The optimizing online pe is completely besides the point of this
-     work and obscures the code in Fig 5. 
-     \jacques{Sigh.  Quite true - but then the results are quite ugly.
-     The 'optimizing' is so easy, does it really obscure things so much?
-     I would prefer to keep this minimal optimization in, we've already
-     cut out significant parts of the 'optimization' present in our
-     working code}
-     \oleg{I agree; let's keep our optimizations and argue for them in
-     our response to the reviewer.}
-
-p19, starting with CPST
-     It's nice to see that you can unify all these transformations
-     under one signature, but is this still a natural way of dealing
-     with the transformations? It seems to me like each transformation
-     needs its specific type infrastructure. To me, the interesting
-     question here is, where does this specialization stop? Which
-     features are needed to obtain a "fixpoint"?
-     \ccshan{In the new Section 5.3, we show a general type
-     infrastructure that handles all these CPS transformations.}
-
-p20, section 5.3
-     This feels like a hack to me. Why can't you write everything in
-     monadic style and then plug in a state monad when needed?
-
-     If you do something specialized for state, then a polymorphic
-     treatment of reference operators would be more convincing to me!
-
-     \ccshan{We now note at the beginning of Section 5.4 (previously
-     5.3) that our support for mutable state generalizes to other
-     monadic effects, because we can always represent a monadic effect
-     using continuations.  We also note at the end of Section 5.4 that
-     another way to support state is indeed to "write everything in
-     monadic style and then plug in a state monad when needed".}
-
-p21, lapp is monadic let!
-     It's only needed to drive the CPS transformation. 
-     Its presence should be explained like that.
-     \ccshan{We now explain lapp as "equivalent to `let' in Moggi's
-     monadic metalanguage.}
-
-     Why is the ... result type in RCPS needed?
-     \ccshan{It was just for internal convenience.  It is now removed
-     from the paper.}
-
 p28, "This shift also underlies ..."
      I don't see the connection to the present work.
-     \jacques{I must admit that this is indeed not obvious.  Should
-     we add some weasel words like "We believe that this shift..."?}
-
-     "higher-kind polymorphism"
-     Where is that needed in the present work?
-     \jacques{should we put some explicit sentence about higher-kind
-     polymorphism at the end of 6.1?  [as in, if we had xxx feature
-     in the object language, we coudl do it].  Then we could put in 
-     a backlink.}
-     \oleg{If we remove Sec 6, that point would be moot...}
-     \jacques{Except that Symantics defines repr, which is higher-kinded
-     and that is crucial.  Section 6 required even higher levels, but
-     we need some of this.  So we need to adjust our comments about
-     this in a more subtle fashion.}
-    \ccshan{Now at the end of Section 5.3.}
 
 ==========================================================================
 
@@ -136,7 +51,7 @@ have already been dealt with.
 One final question, to Jacques: Why does Gluck's ASIA-PEPM paper about
 Jones optimality show that tags inevitably degrade performance?
 }
-\jacques{I does not :-(.  I don't know why I thought it did.}
+\jacques{it does not :-(.  I don't know why I thought it did.}
 
 Another buried TODO:
 add a ref to  Lars Birkedal's master thesis
@@ -265,6 +180,16 @@ Rev2, p3, line -1
     term. 
 \jacques{Correct, I used the above phrasing instead.}
 
+p4, section 1.3
+    It should also be discussed in what way the type system of the
+    metalanguage restricts the expressible type systems for the object
+    language.
+    \jacques{Now, that is a much more interesting comment.  To be 
+    addressed fully could take a fair bit of space.  We should however
+    discuss this a little.  Probably not in 1.3, but perhaps at the end
+    of section 4?}
+    \ccshan{Now at the end of Section 5.3.}
+
 Rev2, p6, "inference-preserving module system"
     What's that?
     \oleg{I guess I meant this: in ML, we can write structures without
@@ -320,6 +245,16 @@ Rev2,p9,
     This is very fuzzy. I have no immediate intuition how to formalize
     the statement of this proposition.
     \jacques{I have tried to rectify this.  It needs to be double-checked}
+
+p11, proposition 4
+     This is not formalized, but really obvious (unlike the
+     others). However, the mentioned properties of .~ and .< >. that
+     you rely on are tricky and non-obvious.
+     \jacques{This is now proposition 5.  However, the reviewer is 
+     correct that we implicitly use 'tricky and non-obvious' properties
+     of .~ and .< >.}
+     \ccshan{Well, the one-sentence proof of proposition 5 no longer
+     mentions any properties. (:}
 
 Rev2,p16, "the type equation for repr_pe above"
      * "above" is fuzzy
@@ -571,4 +506,58 @@ p18, CPS interpretation
      lam f in exactly the same way as stated in the paper by extending
      the Symantics signature accordingly.
      \jacques{Noted at the beginning of Section 5.2}
+
+Rev2, p16
+     The optimizing online pe is completely besides the point of this
+     work and obscures the code in Fig 5. 
+     \jacques{Sigh.  Quite true - but then the results are quite ugly.
+     The 'optimizing' is so easy, does it really obscure things so much?
+     I would prefer to keep this minimal optimization in, we've already
+     cut out significant parts of the 'optimization' present in our
+     working code}
+     \oleg{I agree; let's keep our optimizations and argue for them in
+     our response to the reviewer.}
+
+Rev2, p19, starting with CPST
+     It's nice to see that you can unify all these transformations
+     under one signature, but is this still a natural way of dealing
+     with the transformations? It seems to me like each transformation
+     needs its specific type infrastructure. To me, the interesting
+     question here is, where does this specialization stop? Which
+     features are needed to obtain a "fixpoint"?
+     \ccshan{In the new Section 5.3, we show a general type
+     infrastructure that handles all these CPS transformations.}
+
+Rev2, p20, section 5.3
+     This feels like a hack to me. Why can't you write everything in
+     monadic style and then plug in a state monad when needed?
+
+     If you do something specialized for state, then a polymorphic
+     treatment of reference operators would be more convincing to me!
+
+     \ccshan{We now note at the beginning of Section 5.4 (previously
+     5.3) that our support for mutable state generalizes to other
+     monadic effects, because we can always represent a monadic effect
+     using continuations.  We also note at the end of Section 5.4 that
+     another way to support state is indeed to "write everything in
+     monadic style and then plug in a state monad when needed".}
+
+Rev2, p28
+     "higher-kind polymorphism"
+     Where is that needed in the present work?
+     \jacques{Symantics defines repr, which is higher-kinded
+     and that is crucial.  Section 6 required even higher levels, but
+     we need some of this.  So we need to adjust our comments about
+     this in a more subtle fashion.}
+    \ccshan{Now at the end of Section 5.3.}
+
+p21, lapp is monadic let!
+     It's only needed to drive the CPS transformation. 
+     Its presence should be explained like that.
+     \ccshan{We now explain lapp as "equivalent to `let' in Moggi's
+     monadic metalanguage.}
+
+     Why is the ... result type in RCPS needed?
+     \ccshan{It was just for internal convenience.  It is now removed
+     from the paper.}
 
