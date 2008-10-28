@@ -1633,7 +1633,10 @@ $\lambda$-calculus}\Citet{JFP-Mogensen,Mogensen-SelfApplicable} also
 build static and dynamic terms in tandem.  However, they
 build a static term for every object term, even a bound variable,
 so they move some work from |app| to~|pdyn| (in terms of Figure~\ref{fig:pe})
-and remain untyped.  In contrast, we follow Sperber, Asai,
+and remain untyped.  
+The idea of generating both static and dynamic components alongside each
+other seems to be in found in an early form in \citet[\S5]{consel-schism-93}. 
+In contrast, we follow Sperber, Asai,
 and \citeauthor{sumii-hybrid} in leaving the static term
 optional, so as to perform lifting without
 juggling explicit type indices in the encoding of an object term.
