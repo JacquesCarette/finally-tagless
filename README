@@ -190,6 +190,12 @@ and Applications" can be found at
     in-place update; and how monads can be used to build parsers.
 
 
+** Brian Hurt and Robert Fischer, "Monad Tutorial for Ocaml"
+
+    Brian Hurt and Robert Fischer wrote a comprehensive monad tutorial
+    particularly for OCaml programmers.
+
+
 ** Theodore Norvel, "Monads for the Working Haskell Programmer"
 
     This short tutorial introduces monads to Haskell programmers.
@@ -225,7 +231,7 @@ and Applications" can be found at
     express certain aspects of universal algebra.  Functional
     programmers invented list comprehensions in the 1970's to
     concisely express certain programs involving lists.  This paper
-    shows how list comprehensions may be generalised to an arbitrary
+    shows how list comprehensions may be generalized to an arbitrary
     monad, and how the resulting programming feature can concisely
     express in a pure functional language some programs that
     manipulate state, handle exceptions, parse text, or invoke
@@ -274,7 +280,8 @@ of the License, or (at your option) any later version.
 This program is distributed in the hope that it will be useful, but
 WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-General Public License in the file "COPYING" for more details.
+General Public License in the file "LGPL" for more details.
+
 
 * MIT
 
