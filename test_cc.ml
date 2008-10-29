@@ -1,6 +1,7 @@
-(* name:          test-cc.ml
+(* name:          test_cc.ml
  * synopsis:      test the delimited continuation monad
- * ocaml version: 3.09.0 *)
+ * author:        Oleg Kiselyov
+ * ocaml version: 3.12.0 *)
 
 
 open Cc

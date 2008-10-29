@@ -1,8 +1,8 @@
-(* name:          monadic-io.ml
+(* name:          monadic_io.ml
  * synopsis:      Do input/output in a monadic way
- * author:        Lydia E. Van Dijk
- * last revision: Sun Jan 22 08:59:34 UTC 2006
- * ocaml version: 3.09.0 *)
+ * author:        Lydia E. van Dijk
+ * last revision: Wed Oct 29 10:04:40 UTC 2008
+ * ocaml version: 3.12.0 *)
 
 
 let bind = Io.bind

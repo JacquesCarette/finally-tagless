@@ -1,6 +1,6 @@
 (* name:          io.ml
  * synopsis:      Rudimentary IO-Monad
- * author:        Lydia E. Van Dijk
+ * author:        Lydia E. van Dijk
  * last revision: Sun Jan 22 08:59:49 UTC 2006
  * ocaml version: 3.09.0
  *

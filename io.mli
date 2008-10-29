@@ -1,6 +1,6 @@
 (* name:          io.mli
  * synopsis:      Interface of rudimentary IO-Monad
- * author:        Lydia E. Van Dijk
+ * author:        Lydia E. van Dijk
  * last revision: Sun Jan 22 08:59:43 UTC 2006
  * ocaml version: 3.09.0
  *

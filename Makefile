@@ -30,14 +30,14 @@ SYNTAX-EXTENSION := pa_monad.cmo
 
 # Names of all sources that define non-interactive tests.  These files
 # will be compiled and run.
-TESTS := pythagorean-triples.ml \
-         test-exception.ml test-syntax.ml test-monad.ml test-rec.ml \
-         test-cc.ml
+TESTS := pythagorean_triples.ml \
+         test_exception.ml test_syntax.ml test_monad.ml test_rec.ml \
+         test_cc.ml
 
 
 # Sources of interactive tests.  These files will only be compiled,
 # but not run by any make(1) command.
-INTERACTIVE-TESTS := monadic-io.ml
+INTERACTIVE-TESTS := monadic_io.ml
 
 
 # Names of all modules in addition to the syntax-extension that are
@@ -315,38 +315,38 @@ cc.cmo: cc.cmi
 
 
 # Additional dependencies of the "CC Monad" example
-test-cc.cmo: cc.cmi utest.cmi $(SYNTAX-EXTENSION)
-test-cc: cc.cmo utest.cmo
+test_cc.cmo: cc.cmi utest.cmi $(SYNTAX-EXTENSION)
+test_cc: cc.cmo utest.cmo
 
 
 # Additional dependencies of the "Exception Monad" example
-test-exception.cmo: exception.cmi utest.cmi $(SYNTAX-EXTENSION)
-test-exception: exception.cmo utest.cmo
+test_exception.cmo: exception.cmi utest.cmi $(SYNTAX-EXTENSION)
+test_exception: exception.cmo utest.cmo
 
 
 # Additional dependencies of the "Pythogorean-Tiples" example
-pythagorean-triples.cmo: utest.cmi $(SYNTAX-EXTENSION)
-pythagorean-triples: utest.cmo
+pythagorean_triples.cmo: utest.cmi $(SYNTAX-EXTENSION)
+pythagorean_triples: utest.cmo
 
 
 # Additional dependencies of the syntax tests
-test-syntax.cmo: utest.cmi $(SYNTAX-EXTENSION)
-test-syntax: utest.cmo
+test_syntax.cmo: utest.cmi $(SYNTAX-EXTENSION)
+test_syntax: utest.cmo
 
 
 # Additional dependencies of the application tests
-test-monad.cmo: utest.cmi $(SYNTAX-EXTENSION)
-test-monad: utest.cmo
+test_monad.cmo: utest.cmi $(SYNTAX-EXTENSION)
+test_monad: utest.cmo
 
 
 # Additional dependencies of the recursive-binding tests
-test-rec.cmo: utest.cmi $(SYNTAX-EXTENSION)
-test-rec: utest.cmo
+test_rec.cmo: utest.cmi $(SYNTAX-EXTENSION)
+test_rec: utest.cmo
 
 
 # Dependencies of "Monadic IO" example.  In contrary to the other
 # tests this one is interactive.  Thus we do not want it to run with
 # the non-interactive tests.
-monadic-io.cmo: monadic-io.ml exception.cmi io.cmi $(SYNTAX-EXTENSION)
+monadic_io.cmo: monadic_io.ml exception.cmi io.cmi $(SYNTAX-EXTENSION)
 	$(OCAMLC) $(OCAMLCFLAGS) $(PP) -c $(@:cmo=ml)
-monadic-io: exception.cmo io.cmo monadic-io.cmo
+monadic_io: exception.cmo io.cmo monadic_io.cmo

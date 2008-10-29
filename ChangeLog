@@ -1,5 +1,19 @@
 2008-10-29  Lydia van Dijk  <lvandijk@freenet.de>
 
+	Rename all source files with dashes in their names to avoid a new
+	compiler warning.  Use an underscore instead of a dash.
+	* monadic_io.ml: Rename from "monadic-io.ml".
+	* pythagorean_triples.ml: Rename from "pythagorean-triples.ml".
+	* test_cc.ml: Rename from "test-cc.ml".
+	* test_exception.ml: Rename from "test-exception.ml".
+	* test_monad.ml: Rename from "test-monad.ml".
+	* test_rec.ml: Rename from "test-rec.ml".
+	* test_syntax.ml: Rename from "test-syntax.ml".
+	* Makefile: Change filenames according to the renaming spree at
+	filesystem level.
+	* README: Correctly refer to the new filenames.
+	* index.html: Ditto.
+
 	* README (Literature): Mention Brian Hurt's and Robert Fischer's
 	"Monad Tutorial for Ocaml".
 	(LGPL): Refer to specific file that contains the GNU license.

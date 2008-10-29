@@ -1,8 +1,8 @@
-(* name:          test-rec.ml
+(* name:          test_rec.ml
  * synopsis:      test recursive bindings of "pa_monad"
- * author:        Lydia E. Van Dijk
- * last revision: Sat Apr  1 07:34:02 UTC 2006
- * ocaml version: 3.09.0 *)
+ * author:        Lydia E. van Dijk
+ * last revision: Wed Oct 29 09:59:12 UTC 2008
+ * ocaml version: 3.12.0 *)
 
 
 (* standalone top-level bindings *)

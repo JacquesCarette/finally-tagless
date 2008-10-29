@@ -1,8 +1,8 @@
-(* name:          test-exception.ml
+(* name:          test_exception.ml
  * synopsis:      test exception monad
  * author:        Lydia E. van Dijk
- * last revision: Sat Apr  1 07:33:31 UTC 2006
- * ocaml version: 3.09.0 *)
+ * last revision: Wed Oct 29 09:56:10 UTC 2008
+ * ocaml version: 3.12.0 *)
 
 
 module type LIMIT =

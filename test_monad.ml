@@ -1,8 +1,8 @@
-(* name:          test-monad.ml
+(* name:          test_monad.ml
  * synopsis:      simple test frame for monadic syntax sugar
  * author:        Lydia E. van Dijk
- * last revision: Sat Apr  1 07:37:45 UTC 2006
- * ocaml version: 3.09.0 *)
+ * last revision: Wed Oct 29 09:57:45 UTC 2008
+ * ocaml version: 3.12.0 *)
 
 
 let test_simple_expression _ =
