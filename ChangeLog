@@ -1,3 +1,11 @@
+2008-10-30  Lydia van Dijk  <lvandijk@freenet.de>
+
+	* pa_monad-custom-tuareg.el: New file.
+	* tuareg-1.45.2.el.patch: Remove file.
+	* tuareg-1.46.2.el.patch: Ditto.
+	* README: Remove references to Tuareg mode patches.  Instead
+	mention the new elisp customization file.
+
 2008-10-29  Lydia van Dijk  <lvandijk@freenet.de>
 
 	Rename all source files with dashes in their names to avoid a new

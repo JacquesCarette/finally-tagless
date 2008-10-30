@@ -4,38 +4,41 @@
 
 * Contents
 
-COPYING                  -  License under which the present version is
-                            released (a copy of one of the 2 below)
-LGPL                     -  LGPL compatible of Objective Caml
-MIT                      -  Alternate license (upon request)
-ChangeLog                -  Recent changes
-META.in                  -  Configuration information for findlib
-Makefile                 -  GNU make build rules for the extension and
-                            the test frame
-README                   -  This file
-cc.ml                    -  Interface of delimited continuation monad
-cc.mli                   -  Implementation of delimited continuation monad
-exception.ml             -  Implementation of exception monad
-exception.mli            -  Interface of exception monad
-io.ml                    -  Implementation of I/O-monad
-io.mli                   -  Interface of I/O-monad
-monadic_io.ml            -  Example of input/output with the I/O-monad
-pa_monad.ml              -  Camlp4 syntax extension for Objective Caml
-                            versions 3.10 and later
-pa_monad-camlp4-3.09.ml  -  Camlp4 syntax extension for Objective Caml
-                            version 3.09
-pythagorean_triples.ml   -  Nondeterminism monad (backtracking) coded
-                            with "pa_monad.ml"
-test_cc.ml               -  Test of delimited continuation monad
-test_exception.ml        -  Test of the exception monad
-test_monad.ml            -  Simple test frame for "pa_monad.ml"
-test_rec.ml              -  Test of recursive-binding features
-test_syntax.ml           -  Thorough test of the syntax extension
-tuareg-1.45.2.el.patch   -  Patch for Emacs tuareg-mode version 1.45.2
-                            and later
-tuareg-1.46.2.el.patch   -  Patch for Emacs tuareg-mode version 1.46.2
-utest.ml                 -  Implementation of the unit-test framework
-utest.mli                -  Interface of the unit-test framework
+COPYING                    -  License under which the present version
+                              is released (a copy of one of the 2
+                              below)
+LGPL                       -  LGPL compatible of Objective Caml
+MIT                        -  Alternate license (upon request)
+ChangeLog                  -  Recent changes
+META.in                    -  Configuration information for findlib
+Makefile                   -  GNU make build rules for the extension
+                              and the test frame
+README                     -  This file
+cc.ml                      -  Interface of delimited continuation
+                              monad
+cc.mli                     -  Implementation of delimited continuation
+                              monad
+exception.ml               -  Implementation of exception monad
+exception.mli              -  Interface of exception monad
+io.ml                      -  Implementation of I/O-monad
+io.mli                     -  Interface of I/O-monad
+monadic_io.ml              -  Example of input/output with the
+                              I/O-monad
+pa_monad.ml                -  Camlp4 syntax extension for Objective
+                              Caml versions 3.10 and later
+pa_monad-camlp4-3.09.ml    -  Camlp4 syntax extension for Objective
+                              Caml version 3.09
+pa_monad-custom-tuareg.el  -  Emacs customization for pa_monad
+pythagorean_triples.ml     -  Nondeterminism monad (backtracking)
+                              coded with "pa_monad.ml"
+test_cc.ml                 -  Test of delimited continuation monad
+test_exception.ml          -  Test of the exception monad
+test_monad.ml              -  Simple test frame for "pa_monad.ml"
+test_rec.ml                -  Test of recursive-binding features
+test_syntax.ml             -  Thorough test of the syntax extension
+utest.ml                   -  Implementation of the unit-test
+                              framework
+utest.mli                  -  Interface of the unit-test framework
 
 
 * Supported Camlp4 Versions
@@ -165,9 +168,9 @@ After installation, findlib users cast the usual spell
 
 * Emacs - Tuareg Mode
 
-We have included two patches against Tuareg-mode version 1.45.2 and
-version 1.46.2 that make "perform" a keyword with the correct
-indentation behavior.
+We have included a customization for Tuareg-mode that makes "perform"
+a keyword with the correct indentation behavior.  Include it in Your
+".emacs" to activate it.
 
 
 * Useful Literature On Monads
