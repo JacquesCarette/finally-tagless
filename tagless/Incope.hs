@@ -25,21 +25,17 @@ module Incope where
 -- This class defines syntax (and its instances, semantics) of our language
 -- This class is Haskell98!
 class Symantics repr where
-    int :: Int -> repr Int                -- int literal
+    int  :: Int  -> repr Int              -- int literal
     bool :: Bool -> repr Bool             -- bool literal
 
     lam :: (repr a -> repr b) -> repr (a->b)
     app :: repr (a->b) -> repr a -> repr b
     fix :: (repr a -> repr a) -> repr a
 
-    add :: repr Int -> repr Int -> repr Int
-    mul :: repr Int -> repr Int -> repr Int
+    add :: repr Int  -> repr Int -> repr Int
+    mul :: repr Int  -> repr Int -> repr Int
+    leq :: repr Int  -> repr Int -> repr Bool
     if_ :: repr Bool -> repr a -> repr a -> repr a
-    leq :: repr Int -> repr Int -> repr Bool
-
--- The following `projection' function is specific to repr.
--- It is like `run' of the monad
---    comp :: repr a -> something a
 
 test1 () = add (int 1) (int 2)
 test2 () = lam (\x -> add x x)
@@ -378,7 +374,7 @@ ptestpw7  = compP . testpowfix7 $ ()
 ptestpw72 = compP  (app (testpowfix7 ()) (int 2))
 
 
-{- GADTs, although work, are still not quite satsifactory:
+{- GADTs, although work, are still not quite satisfactory:
 let us look at the following lines in incope.hs
 
     app ef ea = case ef of
@@ -407,35 +403,65 @@ apparent.
 -- that Asai's code type-checks in Hindley-Milner as soon as we
 -- deforest the static code representation.
 
-data Rep repr dynamic static = 
-    Rep { dynamic :: repr dynamic, static :: Maybe static }
+-- Generalized Semantics, with an inductive type map
 
-zE dynamic = Rep dynamic Nothing
+class Symantics2 rep where
+    zint  :: Int  -> rep Int Int              -- int literal
+    zbool :: Bool -> rep Bool Bool            -- bool literal
 
-zint x = Rep (int x) (Just x)
-zbool b = Rep (bool b) (Just b)
-zlam f = Rep (lam (dynamic . f . zE)) (Just f)
-zapp (Rep _ (Just f)) = f
-zapp (Rep f _       ) = zE . app f . dynamic
-zadd (Rep _ (Just n1)) (Rep _ (Just n2)) = zint (n1 + n2)
-zadd (Rep n1 _       ) (Rep n2 _       ) = zE (add n1 n2)
-zmul (Rep _ (Just n1)) (Rep _ (Just n2)) = zint (n1 * n2)
-zmul (Rep n1 _       ) (Rep n2 _       ) = zE (mul n1 n2)
-zleq (Rep _ (Just n1)) (Rep _ (Just n2)) = zbool (n1 <= n2)
-zleq (Rep n1 _       ) (Rep n2 _       ) = zE (leq n1 n2)
-zif_ (Rep _ (Just b1)) et ee = if b1 then et else ee
-zif_ (Rep be _       ) et ee = zE (if_ be (dynamic et) (dynamic ee))
+    zlam :: (rep sa da -> rep sb db) -> rep (rep sa da -> rep sb db) (da->db)
+    zapp :: rep (rep sa da -> rep sb db) (da->db) -> rep sa da -> rep sb db
+    zfix :: (rep sa da -> rep sa da) -> rep sa da
 
-zfix f = case f (zfix f)  of
-	  Rep _ (Just g) -> Rep dfix
+    zadd :: rep Int Int -> rep Int Int -> rep Int Int
+    zmul :: rep Int Int -> rep Int Int -> rep Int Int
+    zleq :: rep Int Int -> rep Int Int -> rep Bool Bool
+    zif_ :: rep Bool Bool -> rep s d -> rep s d -> rep s d
+
+
+data RP repr static dynamic = 
+    RP { dynamic :: repr dynamic, static :: Maybe static }
+zE dynamic = RP dynamic Nothing
+
+instance Symantics repr => Symantics2 (RP repr) where
+    zint x  = RP (int x) (Just x)
+    zbool b = RP (bool b) (Just b)
+
+    zadd (RP _ (Just n1)) (RP _ (Just n2)) = zint (n1 + n2)
+    zadd (RP n1 _       ) (RP n2 _       ) = zE (add n1 n2)
+    zmul (RP _ (Just n1)) (RP _ (Just n2)) = zint (n1 * n2)
+    zmul (RP n1 _       ) (RP n2 _       ) = zE (mul n1 n2)
+    zleq (RP _ (Just n1)) (RP _ (Just n2)) = zbool (n1 <= n2)
+    zleq (RP n1 _       ) (RP n2 _       ) = zE (leq n1 n2)
+    zif_ (RP _ (Just b1)) et ee = if b1 then et else ee
+    zif_ (RP be _       ) et ee = zE (if_ be (dynamic et) (dynamic ee))
+
+    zlam f = RP (lam (dynamic . f . zE)) (Just f)
+    zapp (RP _ (Just f)) = f
+    zapp (RP f _       ) = zE . app f . dynamic
+    zfix f = case f (zfix f) of
+	      (RP _ (Just s)) -> RP dfix (Just s)
+	      _               -> RP dfix Nothing
+       where dfix = fix (dynamic . f . zE)
+
+
+{-
+zzfix3 f = case f (zzfix3 f)  of
+	  RP _ (Just g) -> RP dfix
 			        (Just (\x -> 
 				       case x of
-			                Rep cde Nothing -> zE (app dfix cde)
+			                RP cde Nothing -> zE (app dfix cde)
 			                x     -> g x))
-	  Rep _ Nothing -> zE dfix
- where dfix = fix (dynamic . f . zE)
+	  RP _ Nothing -> zE dfix
+     where dfix = fix (dynamic . f . zE)
 
--- unit to supress the monomorphism restriction
+zzfix4 f = case f (zzfix4 f)  of
+	  r@(RP _ (Just _)) -> RP dfix (Just (zapp r))
+	  RP _ Nothing -> zE dfix
+     where dfix = fix (dynamic . f . zE)
+-}
+
+-- unit to suppress the monomorphism restriction
 
 ztestgib () = zlam (\x -> zlam (\y ->
                 zfix (\self -> zlam (\n ->
@@ -460,6 +486,49 @@ testL_ztestgib5 = compL (dynamic (ztestgib5 ())) -- 9
 testC_ztestgib5 = compC (dynamic (ztestgib5 ()))
 -- (\V0 -> (\V1 -> ((((V1 + V0) + V1) + (V1 + V0)) + ((V1 + V0) + V1))))
 
+-- Every instance of Symantics can be injected into Symantics2
+
+newtype S12 repr s d = S12{unS12:: repr d}
+
+instance Symantics repr => Symantics2 (S12 repr) where
+    zint x  = S12 $ int x
+    zbool b = S12 $ bool b
+
+    zadd (S12 e1) (S12 e2) = S12 $ add e1 e2
+    zmul (S12 e1) (S12 e2) = S12 $ mul e1 e2
+    zleq (S12 e1) (S12 e2) = S12 $ leq e1 e2
+    zif_ (S12 e) (S12 e1) (S12 e2) = S12 $ if_ e e1 e2
+
+    zlam f = S12 $ lam (unS12 . f . S12 )
+    zapp (S12 f) (S12 a) = S12 $ app f a
+    zfix f = S12 $ fix (unS12 . f . S12 )
+
+testR_zztestgib1 = compR $ unS12 $ ztestgib1 () -- 8
+testL_zztestgib1 = compL $ unS12 $ ztestgib1 () -- 23
+testC_zztestgib1 = compC $ unS12 $ ztestgib1 () -- big code
+
+
+ztestpowfix () = zlam (\x ->
+                      zfix (\self -> zlam (\n ->
+                        zif_ (zleq n (zint 0)) (zint 1)
+                            (zmul x (zapp self (zadd n (zint (-1))))))))
+ztestpowfix7 () = zlam (\x -> zapp (zapp (ztestpowfix ()) x) (zint 7))
+
+-- We can interpret ztespowerfix directly, using R, L or C
+testR_zztestpw7 = (compR $ unS12 $ ztestpowfix7 ()) 2 -- 128
+testL_zztestpw7 = compL $ unS12 $ ztestpowfix7 () -- 15
+testC_zztestpw7 = compC $ unS12 $ ztestpowfix7 ()
+{-
+  (\V0 -> (((\V1 -> 
+    (fix\V2 (\V3 -> (if (V3 <= 0) then 1 else (V1 * (V2 (V3 + -1))))))) V0) 7))
+-}
+
+-- Or we can partially evaluate ztestpowfix7, and then interpret,
+-- using various interpreters
+testR_ztestpw7 = (compR $ dynamic $ ztestpowfix7 ()) 2 -- 128
+testL_ztestpw7 = compL $ dynamic $ ztestpowfix7 () -- 9
+testC_ztestpw7 = compC $ dynamic $ ztestpowfix7 ()
+-- (\V0 -> (V0 * (V0 * (V0 * (V0 * (V0 * (V0 * (V0 * 1))))))))
 
 -- ------------------------------------------------------------------------
 -- The HOAS bytecode compiler
