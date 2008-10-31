@@ -1207,10 +1207,10 @@ To extract a dynamic term from this type, we create the function
 let abstrI0 (e : ('c,int) repr) : ('c,int) C.repr =
   match e with S0 e -> C.int e | D0 e -> e
 \end{code}
-and the similar function |abstrB0| for dynamic boolean terms. Here, 
+and a similar function |abstrB0| for dynamic boolean terms. Here, 
 |C.int| is used to convert a static term (of type |('c,int) R.repr|, 
 which is just |int|) to a dynamic term. We can now define the following
-components required by the |Semantics| signature:
+components required by the |Symantics| signature:
 \begin{code}
 let int  (x:int)  = S0 (R.int x)
 let bool (x:bool) = S0 (R.bool x)
@@ -1871,7 +1871,8 @@ terms in previous implementations of |Symantics| stay unchanged, but the
 |repr| type equations in those implementations have to take a new
 (phantom) type argument.
 The verbosity of these types is the only difficulty in defining a
-new signature to replace |Symantics| that the output of |CPST| matches.
+replacement signature for |Symantics| which captures that of |CPST|
+as well.
 
 For brevity, we just
 use the module returned by |CPST| as is. Because it does not
@@ -2553,7 +2554,7 @@ DSL by specifying an abstract syntax of object\hyp language pervasives,
 such as addition and application, then providing multiple
 interpretations of them.
 The techniques we use to form such a family of interpreters
-find their seeds in \citearound{'s \emph{language
+find their origins in \citearound{'s \emph{language
 triplets}}\citet{Holst-AMIX}, though in an untyped setting.
 \Citet{JonesNielson:94:AbstractInterpretation} also
 prefigured this separation when they decomposed a denotational definition of an
