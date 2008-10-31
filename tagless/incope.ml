@@ -367,66 +367,87 @@ struct
        in {st = Some self; dy = fdyn}
 end;;
 
-
 module EXP = EX(P1);;
 
 (* all the tests together *)
-let itest1 = EXR.test1r ();;
-let ctest1 = EXC.test1r ();;
-let ptest1 = EXP.test1r ();;
-let ltest1 = EXL.test1r ();;
+let itest1 = EXR.test1r ();; (* 3 *)
+let ctest1 = EXC.test1r ();; (* .<(1 + 2)>. *)
+let ptest1 = EXP.test1r ();; (* {P1.st = Some 3; P1.dy = .<3>.} *)
+let ltest1 = EXL.test1r ();; (* 3 *)
 
-let itest2 = EXR.test2r ();;
-let ctest2 = EXC.test2r ();;
-let ptest2 = EXP.test2r ();;
-let ltest2 = EXL.test2r ();;
+let itest2 = EXR.test2r () 10 ;; (* 20 *)
+let ctest2 = EXC.test2r ();; (* .<fun x_1 -> (x_1 + x_1)>. *)
+let ptest2 = EXP.test2r ();; (* P1.dy -- same as above *)
+let ltest2 = EXL.test2r ();; (* 2 *)
 
-let itest3 = EXR.test3r ();;
-let ctest3 = EXC.test3r ();;
-let ptest3 = EXP.test3r ();;
-let ltest3 = EXL.test3r ();;
+let itest3 = EXR.test3r () succ;; (* 4 *)
+let ctest3 = EXC.test3r ();; (* .<fun x_1 -> ((x_1 1) + 2)>. *)
+let ptest3 = EXP.test3r ();; (* P1.dy -- same as above *)
+let ltest3 = EXL.test3r ();; (* 5 *)
 
-let itestg = EXR.testgibr ();;
-let ctestg = EXC.testgibr ();;
-let ptestg = EXP.testgibr ();;
-let ltestg = EXL.testgibr ();;
+let itestg = EXR.testgibr () 1 1 5;; (* 8 *)
+let ctestg = EXC.testgibr ();; (* big code *)
+let ptestg = EXP.testgibr ();; (* likewise big code *)
+let ltestg = EXL.testgibr ();; (* 17 *)
 
-let itestg1 = EXR.testgib1r ();;
-let ctestg1 = EXC.testgib1r ();;
-let ptestg1 = EXP.testgib1r ();;
-let ltestg1 = EXL.testgib1r ();;
+let itestg1 = EXR.testgib1r ();; (* 8 *)
+let ctestg1 = EXC.testgib1r ();; (* big code with beta redices *)
+let ptestg1 = EXP.testgib1r ();; (* {P1.st = Some 8; P1.dy = .<8>.} *)
+let ltestg1 = EXL.testgib1r ();; (* 23 *)
 
-let itestg2 = EXR.testgib2r ();;
-let ctestg2 = EXC.testgib2r ();;
+let itestg2 = EXR.testgib2r () 1 1;; (* 8 *)
+let ctestg2 = EXC.testgib2r ();; (* big code with beta redices *)
 let ptestg2 = EXP.testgib2r ();;
-let ltestg2 = EXL.testgib2r ();;
+(*
+   P1.dy =
+    .<fun x_1 ->
+   fun x_2 -> ((((x_2 + x_1) + x_2) + (x_2 + x_1)) + ((x_2 + x_1) + x_2))>.}
+*)
+let ltestg2 = EXL.testgib2r ();; (* 23 *)
 
-let itestp7 = EXR.testpowfix7r ();;
-let ctestp7 = EXC.testpowfix7r ();;
+let itestp7 = EXR.testpowfix7r () 2;; (* 128 *)
+let ctestp7 = EXC.testpowfix7r ();; (* big code with beta redices *)
 let ptestp7 = EXP.testpowfix7r ();;
-let ltestp7 = EXL.testpowfix7r ();;
+(* 
+ P1.dy = .<fun x_1 -> (x_1 * (x_1 * (x_1 * (x_1 * (x_1 * (x_1 * x_1))))))>.}
+*)
+let ltestp7 = EXL.testpowfix7r ();; (* 15 *)
 
-let itestp0 = EXR.testpowfix0r ();;
-let ctestp0 = EXC.testpowfix0r ();;
+let itestp0 = EXR.testpowfix0r () 2;; (* 0 *)
+let ctestp0 = EXC.testpowfix0r ();; (* big code with beta redices *)
 let ptestp0 = EXP.testpowfix0r ();;
-let ltestp0 = EXL.testpowfix0r ();;
+(*
+    .<fun x_1 ->
+   ((let rec self_6 =
+      fun n_7 -> ((fun x_8 -> if (x_8 <= 0) then 1 else 0) n_7) in
+     self_6) x_1)>.}
+*)
+let ltestp0 = EXL.testpowfix0r ();; (* 15 *)
 
-let itestf0 = EXR.testfactr ();;
-let ctestf0 = EXC.testfactr ();;
-let ptestf0 = EXP.testfactr ();;
-let ltestf0 = EXL.testfactr ();;
+let itestf0 = EXR.testfactr ();; (* 120 *)
+let ctestf0 = EXC.testfactr ();; (* big code with beta redices *)
+let ptestf0 = EXP.testfactr ();; (* {P1.st = Some 120; P1.dy = .<120>.} *)
+let ltestf0 = EXL.testfactr ();; (* 12 *)
 
 let itesta0 = EXR.testackr1 ();;
-let itesta3 = EXR.testackr13 ();;
+let itesta3 = EXR.testackr13 ();; (* 9 *)
 let ctesta0 = EXC.testackr1 ();;
 let ptesta0 = EXP.testackr1 ();;
-let ptesta3 = EXP.testackr13 ();;
-
-(* these are no longer relevant, for now
-let itesti1 = EXR.testi1r ();;
-let ctesti1 = EXC.testi1r ();;
-let ptesti1 = EXP.testi1r ();;
-let ltesti1 = EXL.testi1r ();; *)
+(*
+   P1.dy =
+    .<let rec self_34 =
+   fun n_35 ->
+    ((fun x_36 ->
+       if (x_36 = 0) then 3
+       else
+        ((let rec self_27 =
+           fun n_28 ->
+            ((fun x_29 ->
+               if (x_29 = 0) then 2 else ((self_27 (x_29 + (-1))) + 1)) n_28) in
+          self_27) (self_34 (x_36 + (-1))))) n_35) in
+  self_34>.}
+*)
+let ptesta3 = EXP.testackr13 ();; (* {P1.st = Some 9; P1.dy = .<9>.} *)
 
 (* Remnants of an earlier idea: compile the PE: make a code, which,
 when run, will make a PE...
