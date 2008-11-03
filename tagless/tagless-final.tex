@@ -2027,7 +2027,8 @@ in Figure~\ref{fig:ocaml}.  We could define a |Symantics2|
 signature to abstract over \emph{two} inductive maps over object
 types; it would include 4 abstract types and 2 abstract type
 constructors in addition to |repr|.  It would then be easy to
-make~|P| match |Symantics2|, but the output of~|P| can still only
+turn~|P| into a functor that returns a |Symantics2| module, but
+the input to~|P| can still only
 match |Symantics1|.  This escalation points to a need for either
 record-kind polymorphism (so that |'dv| in
 Figure~\ref{fig:inductive} may be more than just one type) or
@@ -2692,14 +2693,14 @@ coinductive aspects of B\"{o}hm trees, as pointed out by
 \citet{berarducci-models} and Jacobs \citeyearpar[Example 4.3.4]{jacobs-coalgebra}.
 \fi
 
-Very recently others have also begun to realize the usefulness of being
-able to abstract over higher-kinded types, like our |repr|.
-\Citet{moors-generics-higher-kind} illustrate how they have leveraged the 
-same power within Scala.  \Citet{HORM08} also uses Scala, yet are clearly
-influenced by our work \citep{carette-kiselyov-shan-aplas}
-(as they themselves note); where we have concentrated
+Other researchers have very recently realized that it is useful to
+abstract over higher-kinded types, like our |repr|.
+\Citet{moors-generics-higher-kind} put the
+same power to work in Scala.  \Citet{HORM08} also use Scala and note
+that they are influenced by our work
+\citep{carette-kiselyov-shan-aplas}.  Where we have concentrated
 on multiple efficient interpretations of the same language, they have 
-concentrated on composability.
+concentrated on composing the languages and interpretations.
 
 \section{Conclusions}\label{conclusion}
 
