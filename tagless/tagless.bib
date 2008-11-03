@@ -1,4 +1,5 @@
 @STRING{j_acmcs			= "{ACM} Computing Surveys" }
+@STRING{j_cacm			= "Communications of the {ACM}" }
 @STRING{j_hosc			= "Higher-Order and Symbolic Computation" }
 @STRING{j_icomp			= "Information and Computation" }
 @STRING{j_jacm			= "Journal of the {ACM}" }
@@ -20,6 +21,7 @@
 @STRING{proc_popl_2		= ": Conference Record of the Annual {ACM} Symposium on Principles of Programming Languages" }
 @STRING{pub_acm			= "{ACM} {P}ress" }
 @STRING{pub_acm_addr		= "{N}ew {Y}ork" }
+@STRING{pub_cambridge		= "Cambridge University Press" }
 @STRING{pub_elsevier		= "Elsevier Science" }
 @STRING{pub_elsevier_addr	= "Amsterdam" }
 @STRING{pub_ph			= "Prentice-Hall" }
@@ -150,6 +152,23 @@
   note		= "To appear",
   url		= "http://www.cs.cmu.edu/~fp/papers/tocl07.pdf",
   annote	= "Frank Pfenning's talk \cite{pfenning-contexts-talk}"
+}
+
+@Article{	landin-next,
+  author	= "Peter J. Landin",
+  title		= "The Next 700 Programming Languages",
+  journal	= j_cacm,
+  year		= 1966,
+  month		= mar,
+  volume	= 9,
+  number	= 3,
+  pages		= "157--166",
+  url		= "http://www.cs.utah.edu/~wilson/compilers/old/papers/p157-landin.pdf",
+  abstract	= "A family of unimplemented computing languages is described that is intended to span differences of application area by a unified framework. This framework dictates the rules about the uses of user-coined names, and the
+		  conventions about characterizing functional relationships. Within this framework the design of a specific language splits into two independent parts. One is the choice of written appearances of programs (or more generally,
+		  their physical representation). The other is the choice of the abstract entities (such as numbers, character-strings, lists of them, functional relations among them) that can be referred to in the language.\par The system
+		  is biased towards ``expressions'' rather than ``statements.'' It includes a nonprocedural (purely functional) subsystem that aims to expand the class of users' needs that can be met by a single print-instruction, without
+		  sacrificing the important properties that make conventional right-hand-side expressions easy to construct and understand."
 }
 
 @InProceedings{	reynolds-definitional,
@@ -910,15 +929,134 @@ generator, we generate ML code, C code, and OCaml byte code.
 
 @inproceedings{consel-schism-93,
  author = {Charles Consel},
- title = {A tour of Schism: a partial evaluation system for higher-order applicative languages},
+ title = {A Tour of {S}chism: A Partial Evaluation System for Higher-Order Applicative Languages},
  year = {1993},
  pages = {145--154},
  doi = {http://doi.acm.org/10.1145/154630.154645},
  crossref = {pepm1993}
  }
 
+@Article{	futamura-partial,
+  author	= "Yoshihiko Futamura",
+  title		= "Partial Evaluation of Computation Process---An Approach to a Compiler-Compiler",
+  journal	= j_hosc,
+  year		= 1999,
+  month		= dec,
+  volume	= 12,
+  number	= 4,
+  pages		= "381--391",
+  abstract	= "This paper reports the relationship between formal description of semantics (i.e., interpreter) of a programming language and an actual compiler. The paper also describes a method to automatically generate an actual
+		  compiler from a formal description which is, in some sense, the partial evaluation of a computation process. The compiler-compiler inspired by this method differs from conventional ones in that the compiler-compiler based
+		  on our method can describe an evaluation procedure (interpreter) in defining the semantics of a programming language, while the conventional one describes a translation process.",
+  keywords	= "partial evaluation - program transformation - compiler - interpreter - Futamura projections"
+}
+
+@InProceedings{	danvy-simple,
+  author	= {Olivier Danvy},
+  title		= {A Simple Solution to Type Specialization},
+  pages		= {908--917},
+  crossref	= {icalp1998},
+  url		= {http://www.brics.dk/RS/98/1/},
+  abstract	= {Partial evaluation specializes terms, but traditionally this specialization does not apply to the type of these terms. As a result, specializing, e.g., an interpreter written in a typed language, which requires a
+		  ``universal'' type to encode expressible values, yields residual programs with type tags all over. Neil Jones has stated that getting rid of these type tags was an open problem, despite possible solutions such as Torben
+		  Mogensen's ``constructor specialization.'' To solve this problem, John Hughes has proposed a new paradigm for partial evaluation, ``Type Specialization,'' based on type inference instead of being based on symbolic
+		  interpretation. Type Specialization is very elegant in principle but it also appears non-trivial in practice.\par Stating the problem in terms of types instead of in terms of type encodings suggests a very simple
+		  type-directed solution, namely, to use a projection from the universal type to the specific type of the residual program. Standard partial evaluation then yields a residual program without type tags, simply and
+		  efficiently.}
+}
+
+@Article{	hughes-type,
+  author	= {John Hughes},
+  title		= {Type Specialization},
+  journal	= j_acmcs,
+  year		= 1998,
+  month		= sep,
+  volume	= 30,
+  number	= "3es:14",
+  pages		= "1--6"
+}
+
+@InProceedings{	bawden-quasiquotation,
+  author	= {Alan Bawden},
+  title		= {Quasiquotation in {L}isp},
+  pages		= {4--12},
+  crossref	= "pepm1999"
+}
+
+@InProceedings{	nielson-automatic,
+  author	= "Nielson, Flemming and Hanne Riis Nielson",
+  title		= {Automatic Binding Time Analysis for a Typed {$\lambda$}-Calculus},
+  pages		= {98--106},
+  crossref	= "popl1988",
+  abstract	= {For a typed $\lambda$-calculus we develop an algorithm that, given some partial information about what must happen at run-time, will work out what actually can be computed at compile-time and what must be deferred to
+		  run-time.}
+}
+
+@Article{	gomard-partial,
+  author	= {Carsten K. Gomard and Neil D. Jones},
+  title		= {A Partial Evaluator for the Untyped Lambda Calculus},
+  journal	= j_jfp,
+  year		= 1991,
+  volume	= 1,
+  number	= 1,
+  pages		= {21--69},
+  url		= {ftp://ftp.diku.dk/diku/semantics/papers/D-15.ps.gz}
+}
+
+@InProceedings{	taha-sound,
+  author	= {Walid Taha},
+  title		= {A Sound Reduction Semantics for Untyped {CBN} Multi-stage Computation. Or, the Theory of {M}eta{ML} is Non-trival (Extended Abstract)},
+  pages		= {34--43},
+  crossref	= "pepm2000",
+  url		= "http://www.cs.rice.edu/~taha/publications/conference/pepm00.dvi http://www.cs.rice.edu/~taha/publications/conference/pepm00.ps http://www.cs.rice.edu/~taha/publications/conference/pepm00.pdf",
+  abstract	= "A multi-stage computation is one involving more than one stage of execution. MetaML is a language for programming multi-stage computations. Previous studies presented big-step semantics, categorical semantics, and sound
+		  type systems for MetaML. In this paper, we report on a confluent and sound reduction semantics for untyped call-by name (CBN) MetaML. The reduction semantics can be used to formally justify some optimization performed by a
+		  CBN MetaML implementation. The reduction semantics demonstrates that non-trivial equalities hold for object-code, even in the untyped setting. The paper also emphasizes that adding intensional analysis (that is,
+		  taking-apart object programs) to MetaML remains an interesting open problem."
+}
+
 %------------------------------------------------------------------------
 % After this, only procedings etc
+
+@Proceedings{	pepm1999,
+  editor	= "Olivier Danvy",
+  title		= "Proceedings of the 1999 {ACM} {SIG{\-}PLAN} Workshop on Partial Evaluation and Semantics-Based Program Manipulation",
+  booktitle	= "Proceedings of the 1999 {ACM} {SIG{\-}PLAN} Workshop on Partial Evaluation and Semantics-Based Program Manipulation",
+  publisher	= "BRICS",
+  year		= 1999,
+  month		= jan,
+  number	= "NS-99-1",
+  series	= "Note",
+  url		= "http://www.brics.dk/NS/99/1/BRICS-NS-99-1.pdf http://www.brics.dk/~pepm99/",
+  location	= "San Antonio, TX"
+}
+
+@Proceedings{	pepm2000,
+  editor	= "Julia L. Lawall",
+  title		= "Proceedings of the 2000 {ACM} {SIG{\-}PLAN} Workshop on Partial Evaluation and Semantics-Based Program Manipulation",
+  booktitle	= "Proceedings of the 2000 {ACM} {SIG{\-}PLAN} Workshop on Partial Evaluation and Semantics-Based Program Manipulation",
+  address	= pub_acm_addr,
+  publisher	= pub_acm,
+  year		= 1999,
+  month		= nov,
+  volume	= "34(11)",
+  series	= j_sigplan,
+  isbn		= {1-58113-201-8}
+}
+
+@Proceedings{	icalp1998,
+  editor	= "Kim Guldstrand Larsen and Sven Skyum and Glynn Winskel",
+  title		= "Proceedings of {ICALP}'98: 25th International Colloquium on Automata, Languages, and Programming",
+  booktitle	= "Proceedings of {ICALP}'98: 25th International Colloquium on Automata, Languages, and Programming",
+  address	= pub_sv_addr,
+  publisher	= pub_sv,
+  year		= 1998,
+  number	= 1443,
+  series	= s_lncs,
+  url		= "http://www.cs.auc.dk/icalp98/",
+  isbn		= "3-540-64781-3",
+  location	= "Aalborg, Denmark"
+}
 
 @Proceedings{	acm1972,
   key		= "{\relax ACM}",
@@ -976,6 +1114,17 @@ generator, we generate ML code, C code, and OCaml byte code.
   publisher	= pub_acm,
   year		= 2006,
   location	= "Portland, OR"
+}
+
+@Proceedings{	popl1988,
+  key		= "{\relax POPL}",
+  title		= proc_popl_1 # "88"  # proc_popl_2,
+  booktitle	= proc_popl_1 # "88"  # proc_popl_2,
+  address	= pub_acm_addr,
+  publisher	= pub_acm,
+  year		= 1988,
+  isbn		= {0-89791-252-7},
+  location	= {San Diego, CA}
 }
 
 @Proceedings{	popl1994,
@@ -1288,3 +1437,9 @@ generator, we generate ML code, C code, and OCaml byte code.
   bibsource = {DBLP, http://dblp.uni-trier.de}
 }
 
+@Book{		nielson-two-level,
+  author	= "Nielson, Flemming and Hanne Riis Nielson",
+  title		= "Two-Level Functional Languages",
+  publisher	= pub_cambridge,
+  year		= 1992
+}
