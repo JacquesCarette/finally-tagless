@@ -88,7 +88,7 @@ and type systems (see~\S\ref{s:fancier}).
     \begin{proofrules}
         \[ \[ [x:t_1] \proofoverdots e:t_2 \] \justifies \fun{x}e:t_1\to t_2 \]
         \[ \[ [f:t_1\to t_2] \proofoverdots e:t_1\to t_2 \] \justifies \fix{f}e:t_1\to t_2 \]
-        \[ e_1:t_1\to t_2 \quad e_2:t_1 \justifies e_1 e_2: t_2 \]
+        \[ e_0:t_1\to t \quad e_1:t_1 \justifies e_0 e_1: t \]
         \[ \text{$n$ is an integer} \justifies n:\ZZ \]
         \[ \text{$b$ is a boolean} \justifies b:\BB \]
         \[ e:\BB \quad e_1:t \quad e_2:t \justifies \cond{e}{e_1}{e_2}:t \]
@@ -425,7 +425,7 @@ result they call desirable.  Our contributions are as follows.
    styles\ifshort\else\ (\S\ref{variations})\fi.
 \item These interpreters use no type tags
     and need no advanced type-system features such as GADTs, dependent types,
-    or intentional type analysis.
+    or intensional type analysis.
     Yet the type system of the metalanguage
     assures statically that each object program is well-typed and closed,
     and that each interpreter preserves types and never gets stuck.
@@ -787,6 +787,9 @@ $\fun{x}xx$ and its
 encoding |lam (\x -> app x x)| both fail occurs-checks in type checking.
 Both Haskell's and MetaOCaml's type checkers also flag syntactically invalid
 object terms, such as if we forget |app| somewhere above.
+\ccshan{Make the point that the error messages are nice because we also
+metacircularly take advantage of any niceness in the error messages of
+the metalanguage implementation!}
 
 \subsection{Two tagless interpreters}
 \label{S:interpreter-RL}
@@ -1584,6 +1587,7 @@ orthogonal to our presentation.
 A separate concern in our treatment of |fix| is possible code bloat in
 the residual program, which calls for let-insertion
 \citep{BondorfDanvy,SwadiTahaKiselyovPasalic2006}.
+\ccshan{Fix the citations in the preceding sentence.}
 
 
 Given this implementation of~|P|, our running example
@@ -1639,12 +1643,14 @@ build static and dynamic terms in tandem.  However, they
 build a static term for every object term, even a bound variable,
 so they move some work from |app| to~|pdyn| (in terms of Figure~\ref{fig:pe})
 and remain untyped.  
-The idea of generating both static and dynamic components alongside each
-other seems to be in found in an early form in \citet[\S5]{consel-schism-93}. 
 In contrast, we follow Sperber, Asai,
 and \citeauthor{sumii-hybrid} in leaving the static term
 optional, so as to perform lifting without
 juggling explicit type indices in the encoding of an object term.
+The idea of generating static and dynamic components alongside each
+other is found in an early form in Schism \citep[\S5]{consel-schism-93}. 
+\ccshan{Refer to PE tradition and (earlier, even) the category-theory
+concept of \emph{gluing}.}
 
 Our contribution to the literature on partial evaluation is to use mere
 Hindley-Milner types in the metalanguage to assure statically and patently that
@@ -2528,8 +2534,8 @@ detect exhaustive pattern matching.  We also wanted to find the minimal
 set of widespread language features needed for tagless
 type-preserving interpretation.
 
-The simply typed $\lambda$-calculus can be interpreted even just in
-itself, provided we use universal types \citep{taha-tag}.  The
+The simply typed $\lambda$-calculus can interpret itself,
+provided we use universal types \citep{taha-tag}.  The
 ensuing tagging overhead motivated \citet{Makholm-TagElim,taha-tag} 
 to propose \emph{tag
 elimination}, which however does not statically guarantee that all tags
@@ -2544,6 +2550,8 @@ a sum type (at some level of the hierarchy).
 While the logic is sound, we (following \citet{yang-encoding}) showed that the
 premise is not valid.
 
+\ccshan{The following should be far from the first mention of optimality
+in this paper.}
 \citet{Danvy-tagging-encoding} discuss Jones optimality at length and
 apply HOAS to typed self\hyp interpretation.  However, their source
 language is untyped.  Therefore, their object\hyp term encoding has
@@ -2606,7 +2614,7 @@ polymorphic lift, they could have invented
 
 We are not the first to implement a typed interpreter for a typed
 language.  \Citet{laod93} use type classes to implement a metacircular
-interpreter (a special kind of self\hyp interpreter) of a
+interpreter of a
 typed version of the SK language, which is quite different from our
 object language.  Their interpreter
 appears to be tagless, but they could not have implemented a
@@ -2700,7 +2708,7 @@ metalanguage without using GADTs, dependent types, or a universal type.
 Our family of interpreters includes an evaluator, a compiler, a partial
 evaluator, and CPS transformers.  It is patent that they never get stuck,
 because we represent object types as metalanguage types.  This work
-makes it safer and more efficient to embed DSLs
+improves the safety and reduces the overhead of embedding DSLs
 in practical metalanguages such as Haskell and ML\@.
 
 Our main idea is to represent object programs not in an initial algebra
