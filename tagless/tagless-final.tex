@@ -349,8 +349,8 @@ proposal is ``a way to write a typed fold function over a typed term.''
 We emphasize ``typed'' and ``fold'' in the previous sentence.
 We use a typed version of \citets{Mogensen-SelfApplicable}
 encoding of the recursive type of terms \citep{bohm-automatic}, which
-makes folds over terms much easier to write than functions over
-terms that are not primitive recursive (or, compositional).
+makes it much easier to write folds over terms than term functions
+that are not primitive recursive (or, compositional).
 In contrast, \citearound{'s earlier encoding of the sum type of
 terms}\citet{JFP-Mogensen} does not privilege folds.
 In exchange, we statically express object types in the metalanguage
@@ -394,7 +394,7 @@ we refer the reader to the accompanying code for this.}\fi
 \end{itemize}
 We have programmed all our interpreters and examples in OCaml (and, for staging,
 \citet{metaocaml}) and standard Haskell. The complete code is
-available at \url{http://okmij.org/ftp/packages/tagless-final.tar.gz}
+available at \url{http://okmij.org/ftp/tagless-final/}
 to supplement the paper. 
 \ifshort For simplicity, main examples in the paper will be in MetaOCaml;
 all examples have also been implemented in Haskell.
@@ -502,7 +502,7 @@ In contrast to \S\ref{intro}, in the rest of the paper
 we use higher-order
 abstract syntax (HOAS) \citep{miller-manipulating,pfenning-higher-order}
 rather than de Bruijn indices to encode binding and
-ensures that our object programs are closed.
+ensure that our object programs are closed.
 We find HOAS to be more convenient, but we have also implemented our
 approach using de Bruijn indices
 (in \S\ref{S:de-Bruijn} and the accompanying source file
@@ -780,7 +780,7 @@ If we err, say replace |int 7| with |bool True| in
 |Int| does not match the inferred |Bool|.  Similarly, the object term
 $\fun{x}xx$ and its
 encoding |lam (\x -> app x x)| both fail occurs-checks in type checking.
-Both Haskell's and MetaOCaml's type checker also flags syntactically invalid
+Both Haskell's and MetaOCaml's type checkers also flag syntactically invalid
 object terms, such as if we forget |app| somewhere above.
 
 \subsection{Two tagless interpreters}
@@ -1019,7 +1019,7 @@ within a bracket and specifies that the expression~$e$ must be evaluated
 at the current stage; its result, which must be a code value, is
 spliced into the code being built by the enclosing bracket. The \emph{run} form |.!|$e$ evaluates
 the future-stage code value~$e$ by compiling and linking it at run time.
-Bracket, escape, and run are akin to
+Bracket, escape, and run are akin (modulo hygiene) to
 quasi-quotation, unquotation, and |eval| of Lisp.
 
 % this code does not have the 'sv parameter. It shows up later.
@@ -1291,7 +1291,7 @@ a static part (of type |('c,int->int) R.repr|).  The dynamic part is useful
 when this function is passed to another function that is only
 dynamically known, as in $\fun{k}k(\fun{x}x)$.  The static part is
 useful when this function is applied to a static argument, as in
-$(\fun{x}x)\True$.  Neither part, however, lets us \emph{partially}
+$(\fun{x}x)1$.  Neither part, however, lets us \emph{partially}
 evaluate the function, that is, compute as much as possible statically
 when it is applied to a mix of static and dynamic inputs.  For example,
 the partial evaluator should turn $\fun{n}(\fun{x}x)n$ into $\fun{n}n$
