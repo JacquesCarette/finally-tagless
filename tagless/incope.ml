@@ -1,6 +1,11 @@
 (* Interpreter, Compiler, Partial Evaluator *)
 
 (*
+  Code accompanying the paper by
+    Jacques Carette, Oleg Kiselyov, and Chung-chieh Shan
+*)
+
+(*
   The language is simply-typed lambda-calculus with fixpoint,
   integers [plus basic operations], booleans [ditto] and comparison.
 
@@ -370,32 +375,32 @@ end;;
 module EXP = EX(P1);;
 
 (* all the tests together *)
-let itest1 = EXR.test1r ();; (* 3 *)
+let 3 = EXR.test1r ();;
 let ctest1 = EXC.test1r ();; (* .<(1 + 2)>. *)
 let ptest1 = EXP.test1r ();; (* {P1.st = Some 3; P1.dy = .<3>.} *)
-let ltest1 = EXL.test1r ();; (* 3 *)
+let 3 = EXL.test1r ();;
 
-let itest2 = EXR.test2r () 10 ;; (* 20 *)
+let 20 = EXR.test2r () 10 ;;
 let ctest2 = EXC.test2r ();; (* .<fun x_1 -> (x_1 + x_1)>. *)
 let ptest2 = EXP.test2r ();; (* P1.dy -- same as above *)
-let ltest2 = EXL.test2r ();; (* 2 *)
+let 2 = EXL.test2r ();;
 
-let itest3 = EXR.test3r () succ;; (* 4 *)
+let 4 = EXR.test3r () succ;;
 let ctest3 = EXC.test3r ();; (* .<fun x_1 -> ((x_1 1) + 2)>. *)
 let ptest3 = EXP.test3r ();; (* P1.dy -- same as above *)
-let ltest3 = EXL.test3r ();; (* 5 *)
+let 5 = EXL.test3r ();;
 
-let itestg = EXR.testgibr () 1 1 5;; (* 8 *)
+let 8 = EXR.testgibr () 1 1 5;;
 let ctestg = EXC.testgibr ();; (* big code *)
 let ptestg = EXP.testgibr ();; (* likewise big code *)
-let ltestg = EXL.testgibr ();; (* 17 *)
+let 17 = EXL.testgibr ();;
 
-let itestg1 = EXR.testgib1r ();; (* 8 *)
+let 8 = EXR.testgib1r ();;
 let ctestg1 = EXC.testgib1r ();; (* big code with beta redices *)
 let ptestg1 = EXP.testgib1r ();; (* {P1.st = Some 8; P1.dy = .<8>.} *)
-let ltestg1 = EXL.testgib1r ();; (* 23 *)
+let 23 = EXL.testgib1r ();;
 
-let itestg2 = EXR.testgib2r () 1 1;; (* 8 *)
+let 8 = EXR.testgib2r () 1 1;;
 let ctestg2 = EXC.testgib2r ();; (* big code with beta redices *)
 let ptestg2 = EXP.testgib2r ();;
 (*
@@ -403,17 +408,17 @@ let ptestg2 = EXP.testgib2r ();;
     .<fun x_1 ->
    fun x_2 -> ((((x_2 + x_1) + x_2) + (x_2 + x_1)) + ((x_2 + x_1) + x_2))>.}
 *)
-let ltestg2 = EXL.testgib2r ();; (* 23 *)
+let 23 = EXL.testgib2r ();;
 
-let itestp7 = EXR.testpowfix7r () 2;; (* 128 *)
+let 128 = EXR.testpowfix7r () 2;;
 let ctestp7 = EXC.testpowfix7r ();; (* big code with beta redices *)
 let ptestp7 = EXP.testpowfix7r ();;
 (* 
  P1.dy = .<fun x_1 -> (x_1 * (x_1 * (x_1 * (x_1 * (x_1 * (x_1 * x_1))))))>.}
 *)
-let ltestp7 = EXL.testpowfix7r ();; (* 15 *)
+let 15 = EXL.testpowfix7r ();;
 
-let itestp0 = EXR.testpowfix0r () 2;; (* 0 *)
+let 0 = EXR.testpowfix0r () 2;;
 let ctestp0 = EXC.testpowfix0r ();; (* big code with beta redices *)
 let ptestp0 = EXP.testpowfix0r ();;
 (*
@@ -422,15 +427,15 @@ let ptestp0 = EXP.testpowfix0r ();;
       fun n_7 -> ((fun x_8 -> if (x_8 <= 0) then 1 else 0) n_7) in
      self_6) x_1)>.}
 *)
-let ltestp0 = EXL.testpowfix0r ();; (* 15 *)
+let 15 = EXL.testpowfix0r ();;
 
-let itestf0 = EXR.testfactr ();; (* 120 *)
+let 120 = EXR.testfactr ();;
 let ctestf0 = EXC.testfactr ();; (* big code with beta redices *)
 let ptestf0 = EXP.testfactr ();; (* {P1.st = Some 120; P1.dy = .<120>.} *)
-let ltestf0 = EXL.testfactr ();; (* 12 *)
+let 12 = EXL.testfactr ();;
 
 let itesta0 = EXR.testackr1 ();;
-let itesta3 = EXR.testackr13 ();; (* 9 *)
+let 9 = EXR.testackr13 ();;
 let ctesta0 = EXC.testackr1 ();;
 let ptesta0 = EXP.testackr1 ();;
 (*
@@ -831,8 +836,8 @@ let cpsitestp7 = RCPSI.get_res (EXPSI.testpowfix7r ()) 100;;
 *)
 
 module EXPSI_INT = EXSI_INT(RCPSI);;
-let cpsitesti1 = RCPSI.get_res (EXPSI_INT.test1 ()) 100;; (* 102 *)
-let cpsitesti2 = RCPSI.get_res (EXPSI_INT.test2 ()) 100;; (* 102 *)
+let 102 = RCPSI.get_res (EXPSI_INT.test1 ()) 100;;
+let 102 = RCPSI.get_res (EXPSI_INT.test2 ()) 100;;
 let cpsipow = RCPSI.get_res (EXPSI_INT.pow ()) 100;;
 let cpsipow7 = RCPSI.get_res (EXPSI_INT.pow7 ()) 100;;
 let cpsipow27 = RCPSI.get_res (EXPSI_INT.pow27 ()) 100;;

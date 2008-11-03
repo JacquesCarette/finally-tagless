@@ -2,6 +2,11 @@
 (* deBruijn indices *)
 
 (*
+  Code accompanying the paper by
+    Jacques Carette, Oleg Kiselyov, and Chung-chieh Shan
+*)
+
+(*
   The language is simply-typed lambda-calculus with fixpoint,
   integers [plus basic operations], booleans [ditto] and comparison.
 
@@ -19,6 +24,8 @@
   are *all* typed. The interpreter and the compiler use no tags.
   There is no pattern-match failure possible: the evaluators never
   get stuck.
+
+  Please refer to incope.ml for further explanations and comparison.  
 *)
 
 
@@ -124,17 +131,17 @@ end;;
 
 module EXR = EX(R);;
 
-let itest1 = R.runit EXR.test1;;
-let itest2 = R.runit EXR.test2;;
-let itest3 = R.runit EXR.test3;;
+let 3 = R.runit EXR.test1;;
+let 4 = R.runit EXR.test2 2;;
+let 4 = R.runit EXR.test3 succ;;
 
-let itestg  = R.runit EXR.testgib;;
-let itestg1 = R.runit EXR.testgib1;; (* 8 *)
-let itestg2 = R.runit EXR.testgib2;;
+let 8 = R.runit EXR.testgib 1 1 5;;
+let 8 = R.runit EXR.testgib1;;
+let 8 = R.runit EXR.testgib2 1 1;;
 
-let itestp  = R.runit EXR.testpowfix;;
-let itestp7 = R.runit EXR.testpowfix7 2;; (* 128 *)
-let itestp0 = R.runit EXR.testpowfix0;;
+let 128 = R.runit EXR.testpowfix 2 7;;
+let 128 = R.runit EXR.testpowfix7 2;; (* 128 *)
+let 0   = R.runit EXR.testpowfix0 2;;
 
 
 (* ------------------------------------------------------------------------ *)
@@ -167,17 +174,17 @@ end;;
 
 module EXL = EX(L);;
 
-let ltest1 = L.runit EXL.test1;; (* 3 *)
-let ltest2 = L.runit EXL.test2;; (* 2 *)
-let ltest3 = L.runit EXL.test3;; (* 5 *)
+let 3 = L.runit EXL.test1;;
+let 2 = L.runit EXL.test2;;
+let 5 = L.runit EXL.test3;;
 
-let ltestg  = L.runit EXL.testgib;; (* 17 *)
-let ltestg1 = L.runit EXL.testgib1;; (* 23 *)
-let ltestg2 = L.runit EXL.testgib2;; (* 23 *)
+let 17  = L.runit EXL.testgib;;
+let 23 = L.runit EXL.testgib1;;
+let 23 = L.runit EXL.testgib2;;
 
-let ltestp  = L.runit EXL.testpowfix;;  (* 11 *)
-let ltestp7 = L.runit EXL.testpowfix7;; (* 15 *)
-let ltestp0 = L.runit EXL.testpowfix0;; (* 15 *)
+let 11  = L.runit EXL.testpowfix;;
+let 15 = L.runit EXL.testpowfix7;;
+let 15 = L.runit EXL.testpowfix0;;
 
 
 (* ------------------------------------------------------------------------ *)
@@ -220,12 +227,12 @@ let ctest3 = C.runit EXC.test3;;
 
 let ctestg  = C.runit EXC.testgib;;
 let ctestg1  = C.runit EXC.testgib1;;
-let ctestg1r = .! (C.runit EXC.testgib1);; (* 8 *)
+let 8 = .! (C.runit EXC.testgib1);;
 let ctestg2 = C.runit EXC.testgib2;;
 
 let ctestp  = C.runit EXC.testpowfix;;
 let ctestp7 = C.runit EXC.testpowfix7;;
-let ctestp7r = (.! (C.runit EXC.testpowfix7)) 2;; (* 128 *)
+let 128 = (.! (C.runit EXC.testpowfix7)) 2;;
 let ctestp0 = C.runit EXC.testpowfix0;;
 
 (* ------------------------------------------------------------------------ *)
@@ -297,20 +304,33 @@ end;;
 
 module EXP = EX(P);;
 
-let ptest1 = P.runit EXP.test1;;
-let ptest2 = P.runit EXP.test2;;
-let ptest3 = P.runit EXP.test3;;
+let ptest1 = P.runit EXP.test1;; (* {P.st = Some 3; P.dy = .<3>.} *)
+let ptest2 = P.runit EXP.test2;; (* P.dy = .<fun x_1 -> (x_1 + x_1)>. *)
+let ptest3 = P.runit EXP.test3;; (* P.dy = .<fun x_1 -> (x_1 + x_1)>. *)
 
 let ptestg  = P.runit EXP.testgib;;
-let ptestg1  = P.runit EXP.testgib1;; (* {P.st = Some 8; P.dy = .<8>.} *)
+let ptestg1 = P.runit EXP.testgib1;; (* {P.st = Some 8; P.dy = .<8>.} *)
 let ptestg2 = P.runit EXP.testgib2;;
+(*
+ {P.st = Some <fun>;
+  P.dy =
+  .<fun x_1 ->
+    fun x_2 -> ((((x_2 + x_1) + x_2) + (x_2 + x_1)) + ((x_2 + x_1) + x_2))>.}
+*)
+let 8 = (.! (P.runit EXP.testgib2).P.dy) 1 1;;
 
 let ptestp  = P.runit EXP.testpowfix;;
 let ptestp7 = P.runit EXP.testpowfix7;;
-let ptestp7r2 = (.! (P.runit EXP.testpowfix7).P.dy) 2;; (* 128 *)
-let ptestp0 = P.runit EXP.testpowfix0;;
-
-
 (*
-  let eql e1 e2 = build bool R.eql C.eql (e1,e2)
+{P.st = Some <fun>;
+ P.dy = .<fun x_1 -> (x_1 * (x_1 * (x_1 * (x_1 * (x_1 * (x_1 * x_1))))))>.}
+*)
+let 128 = (.! (P.runit EXP.testpowfix7).P.dy) 2;;
+let ptestp0 = P.runit EXP.testpowfix0;;
+(*
+ P.dy =
+  .<fun x_1 ->
+   ((let rec self_6 =
+      fun n_7 -> ((fun x_8 -> if (x_8 <= 0) then 1 else 0) n_7) in
+     self_6) x_1)>.
 *)

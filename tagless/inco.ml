@@ -1,3 +1,27 @@
+(* Interpreter, Compiler, CPS Transformer *)
+(* Abstracting over object language types: bool, int, and arrow. *)
+(*
+  Code accompanying the paper by
+    Jacques Carette, Oleg Kiselyov, and Chung-chieh Shan
+*)
+
+(*
+  The language is simply-typed lambda-calculus with fixpoint,
+  integers [plus basic operations], booleans [ditto] and comparison.
+
+  Lam hoas_fn | App e e | Fix hoas_fn |
+  I Int | Add ie1 ie2 | Mul ie1 ie2 
+  B Bool |
+  IF b e-then e-else
+
+  Please refer to incope.ml for further explanations and comparison.  
+*)
+
+
+(* This class/type defines syntax (and its instances, semantics) 
+   of our language
+ *)
+
 module type Symantics1 = sig
   type ('c,'dv) repr
   type 'c dint
@@ -65,12 +89,14 @@ end;;
 
 module EXC = EX(C);;
 
+(* CBV CPS Transformer *)
 module CPST(S: Symantics1)(W: sig type 'c dw end) = struct
   open W
   type ('c,'dv) repr = ('c, ('c, ('c, 'dv, 'c dw) S.darr, 'c dw) S.darr) S.repr
   type 'c dint = 'c S.dint
   type 'c dbool = 'c S.dbool
-  type ('c,'da,'db) darr = ('c, 'da, ('c, ('c, 'db, 'c dw) S.darr, 'c dw) S.darr) S.darr
+  type ('c,'da,'db) darr = 
+      ('c, 'da, ('c, ('c, 'db, 'c dw) S.darr, 'c dw) S.darr) S.darr
   let int i = S.lam (fun k -> S.app k (S.int i))
   let bool b = S.lam (fun k -> S.app k (S.bool b))
   let add e1 e2 = S.lam (fun k ->
@@ -96,11 +122,12 @@ end;;
 module RCPST = CPST(R)(struct type 'c dw = 'c R.dint end);;
 module EXRCPST = EX(RCPST);;
 let 128 = RCPST.app (EXRCPST.testpowfix7 ()) (RCPST.int 2) (fun x -> x);;
-let 129 = .! .<1 + .~(CCPST.app (EXCCPST.testpowfix7 ()) (CCPST.int 2)) (fun x -> x)>.;;
 module RCPSTCPST = CPST(RCPST)(struct type 'c dw = 'c R.dbool end);;
 
 module CCPST = CPST(C)(struct type 'c dw = 'c C.dint end);;
 module EXCCPST = EX(CCPST);;
+let 129 = .! .<1 + .~(CCPST.app (EXCCPST.testpowfix7 ()) (CCPST.int 2))
+    (fun x -> x)>.;;
 
 (* Danvy and Filinski, "Representing Control", Figure 7 *)
 module CN(S: Symantics1)(W: sig type 'c dw end) = struct
@@ -133,6 +160,7 @@ let 1 = EXRCN.diverg () (fun x -> x);;
 
 module CCN = CN(C)(struct type 'c dw = 'c C.dint end);;
 module EXCCN = EX(CCN);;
-let 129 = .! .< 1 + .~(CCN.app (EXCCN.testpowfix7 ()) (CCN.int 2) (fun x -> x)) >.;;
+let 129 = .! .< 1 + .~(CCN.app (EXCCN.testpowfix7 ()) (CCN.int 2) 
+			 (fun x -> x)) >.;;
 let 2 = .! .< 1 + .~(EXCCN.diverg () (fun x -> x)) >.;;
 

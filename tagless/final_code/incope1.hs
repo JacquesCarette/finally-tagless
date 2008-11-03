@@ -2,8 +2,8 @@
 {-# OPTIONS -fallow-undecidable-instances #-}
 
 -- Interpreter, Compiler, Partial Evaluator
--- The Partial Evaluator is implemented with typeclasses instead of GADTs
---
+-- This is the typeclass version of the code in Incope.hs
+
 -- Code accompanying the paper by
 --   Jacques Carette, Oleg Kiselyov, and Chung-chieh Shan
 
@@ -17,9 +17,7 @@ module Incope1 where
   I Int | Add ie1 ie2 |
   IFEQ ie1 ie2 e-then e-else
   
-  The language is just expressive enough for the Fibonacci function.
-
-  This is the typeclass version of the code in incope.hs
+  The language is just expressive enough for the Gibonacci function.
 -}
 
 -- This class defines syntax (and its instances, semantics) of our language
@@ -36,6 +34,7 @@ class SymanticsA ar a ci ca | ar -> ci, ar a -> ci ca  where
 class SymanticsAB ar a b ca cb cab | ar a->ca, ar b->cb, ar a b -> ca cb cab  where
     lam :: (ar ca a -> ar cb b) -> ar cab (a->b)
     app :: ar cab (a->b) -> ar ca a -> ar cb b
+
 
 test1 () = add (int 1) (int 2)
 test2 () = lam (\x -> add x x)
@@ -85,10 +84,6 @@ itestg = mkitest testgib1
 -- (typed bytecode). The GADT does _not_ use the higher-order abstract
 -- syntax. We could have used template Haskell. Alas, its expressions
 -- are untyped.
--- Note how ByteCode represents MetaOCaml's `code'. Thus the compiler
--- below neatly maps to the MetaOCaml (with no GADTs).
--- Note how the compiler never raises any exception and matches no tags
--- (no generated code has any tags)
 
 data ByteCode t where
     Var :: Int -> ByteCode t                -- variables identified by numbers
@@ -99,7 +94,6 @@ data ByteCode t where
     Add :: ByteCode Int -> ByteCode Int -> ByteCode Int
     IFEQ :: ByteCode Int -> ByteCode Int -> ByteCode t -> ByteCode t ->
             ByteCode t
-
 instance Show (ByteCode t) where
     show (Var n) = "V" ++ show n
     show (Lam n b) = "(\\V" ++ show n ++ " -> " ++ show b ++ ")"
@@ -157,14 +151,15 @@ ctestg = compC . testgib1 $ ()
 
 -- We need no Lift byte-code instruction: no parametric CSP. That is great!
 
--- The code below is NOT parametric. We could have used type-classes
--- instead of GADTs. The code below could be re-functionalized,
--- and so could in fact be translated into MetaOCaml.
+-- The code below is NOT parametric. We are using type-classes
+-- instead of GADTs.
 
 data P cr t = PV cr | PE (C () t)
 
 newtype PVS t = PVS t
+
 newtype PF a b ca cb = PF (P ca a -> P cb b)
+
 
 class PRep t crep | t -> crep where
     abstr :: P crep t -> C () t
@@ -172,6 +167,7 @@ class PRep t crep | t -> crep where
 instance PRep Int (PVS Int) where
     abstr (PV (PVS x)) = int x
     abstr (PE x) = x
+
 
 instance (PRep a ca, PRep b cb) => PRep (a->b) (PF a b ca cb) where
     abstr (PV (PF f)) = lam (abstr . f . PE)

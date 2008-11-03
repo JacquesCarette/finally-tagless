@@ -1,15 +1,15 @@
-{-# OPTIONS -fglasgow-exts -W #-}
+{-# LANGUAGE GADTs, TypeOperators, ScopedTypeVariables #-}
+{-# OPTIONS_GHC -W #-}
 
 -- Interpreter, Compiler, Partial Evaluator
 -- Code accompanying the paper by
 --   Jacques Carette, Oleg Kiselyov, and Chung-chieh Shan
 
-
 module Incope where
 
 {-
   The language is simply-typed lambda-calculus with fixpoint,
-  integers, booleans and comparison.
+  integers, booleans and comparison: essentially, PCF.
 
   Lam hoas_fn | App e e | Fix hoas_fn |
   I Int | B Bool | Add ie1 ie2 | Mul ie1 ie2 | Leq ie1 ie2 |
@@ -27,21 +27,17 @@ module Incope where
 -- This class defines syntax (and its instances, semantics) of our language
 -- This class is Haskell98!
 class Symantics repr where
-    int :: Int -> repr Int                -- int literal
+    int  :: Int  -> repr Int              -- int literal
     bool :: Bool -> repr Bool             -- bool literal
 
     lam :: (repr a -> repr b) -> repr (a->b)
     app :: repr (a->b) -> repr a -> repr b
     fix :: (repr a -> repr a) -> repr a
 
-    add :: repr Int -> repr Int -> repr Int
-    mul :: repr Int -> repr Int -> repr Int
+    add :: repr Int  -> repr Int -> repr Int
+    mul :: repr Int  -> repr Int -> repr Int
+    leq :: repr Int  -> repr Int -> repr Bool
     if_ :: repr Bool -> repr a -> repr a -> repr a
-    leq :: repr Int -> repr Int -> repr Bool
-
--- The following `projection' function is specific to repr.
--- It is like `run' of the monad
---    comp :: repr a -> something a
 
 test1 () = add (int 1) (int 2)
 test2 () = lam (\x -> add x x)
@@ -147,25 +143,29 @@ ltest3 = compL . test3 $ ()
 
 
 ltestgib  = compL . testgib  $ ()
-ltestgib1 = compL . testgib1 $ ()
+ltestgib1 = compL . testgib1 $ () -- 23
 ltestgib2 = compL . testgib2 $ ()
 
 ltestpw   = compL . testpowfix $ ()
 ltestpw7  = compL . testpowfix7 $ ()
-ltestpw72 = compL (app (testpowfix7 ()) (int 2))
+ltestpw72 = compL (app (testpowfix7 ()) (int 2)) -- 17
+
+
 
 -- ------------------------------------------------------------------------
 -- The compiler
 -- We compile to GADT, to be understood as a typed assembly language
--- (typed bytecode). The GADT does _not_ use higher-order abstract
+-- (typed bytecode). The GADT does _not_ use the higher-order abstract
 -- syntax. We could have used template Haskell. Alas, its expressions
 -- are untyped.
--- Note how ByteCode represents MetaOCaml's `code'. Thus the compiler
+-- ByteCode represents MetaOCaml's `code'. Thus the compiler
 -- below neatly maps to the MetaOCaml (with no GADTs).
--- Also note, that like MetaOCaml `code', we never pattern-match on
--- ByteCode!
--- Furthermore the compiler never raises any exception and matches no tags
--- (no generated code has any tags)
+-- Like MetaOCaml `code', we never pattern-match on ByteCode!
+-- The compiler never raises any exception and matches no tags:
+-- generated code has no tags at all.
+
+-- The LIFT bytecode operation is used only during evaluation and for fmap
+-- it corresponds to a CSP in MetaOCaml.
 
 data ByteCode t where
     Var :: Int -> ByteCode t                -- variables identified by numbers
@@ -178,6 +178,7 @@ data ByteCode t where
     Mul :: ByteCode Int -> ByteCode Int -> ByteCode Int
     Leq :: ByteCode t1 -> ByteCode t1 -> ByteCode Bool
     IF  :: ByteCode Bool -> ByteCode t -> ByteCode t -> ByteCode t
+    LIFT :: t -> ByteCode t                 -- Used only for eval and fmap
 
 instance Show (ByteCode t) where
     show (Var n) = "V" ++ show n
@@ -255,7 +256,7 @@ ctestpw72 = compC  (app (testpowfix7 ()) (int 2))
 -- ------------------------------------------------------------------------
 -- The partial evaluator: the combination of the interpreter (R) and
 -- the compiler (C).
--- We need no Lift instruction: no parametric CSP. That is great!
+-- We need no Lift byte-code instruction: no parametric CSP. That is great!
 
 -- First attempt: works for the first-order fragment of our language,
 -- but stumbles on the higher-order fragment.
@@ -282,6 +283,7 @@ instance Symantics P1 where
 -- which is which until we apply the function 'f' to a particular
 -- P1 value. 
 
+
 -- The code below is NOT parametric. We could have used type-classes
 -- instead of GADTs (see incope1.hs, where we did just that). 
 -- See also the GADT-less solution below.
@@ -303,6 +305,7 @@ instance Functor P where
     fmap f = E . fmap f . abstr
 -}
 
+
 instance Symantics P where
     int x  = VI x
     bool b = VB b
@@ -320,7 +323,7 @@ instance Symantics P where
     -- residualize
     fix f = f (E (fix (abstr . f . E)))
     -}
-    -- Now, we just go all the way 
+    -- Now, we just go all the way
     -- provided `fixing' produces static results...
 
     fix f = pfix f -- need this charade for GADTs sake
@@ -393,41 +396,139 @@ apparent.
 -- ------------------------------------------------------------------------
 -- A partial evaluator that does not use GADTs (except in using C)
 
--- In some sense we are just observing 
+-- Ken thinks that, without GADTs, it's not possible to explain in Haskell or
+-- MetaOCaml how PE is an instance of Symantics (unless Symantics is 
+-- generalized to carry both `static' and `dynamic' parts). But we can 
+-- still explain PE by itself. In some sense we're just observing 
 -- that Asai's code type-checks in Hindley-Milner as soon as we
 -- deforest the static code representation.
 
-data Rep dynamic static = Rep { dynamic :: C dynamic, static :: Maybe static }
+-- Generalized Semantics, with an inductive type map
 
-zE dynamic = Rep dynamic Nothing
+class Symantics2 rep where
+    zint  :: Int  -> rep Int Int              -- int literal
+    zbool :: Bool -> rep Bool Bool            -- bool literal
 
-zint x = Rep (int x) (Just x)
-zbool b = Rep (bool b) (Just b)
-zlam f = Rep (lam (dynamic . f . zE)) (Just f)
-zapp (Rep _ (Just f)) = f
-zapp (Rep f _       ) = zE . app f . dynamic
-zfix f = f (zE (fix (dynamic . f . zE)))
-zadd (Rep _ (Just n1)) (Rep _ (Just n2)) = zint (n1 + n2)
-zadd (Rep n1 _       ) (Rep n2 _       ) = zE (add n1 n2)
-zmul (Rep _ (Just n1)) (Rep _ (Just n2)) = zint (n1 * n2)
-zmul (Rep n1 _       ) (Rep n2 _       ) = zE (mul n1 n2)
-zleq (Rep _ (Just n1)) (Rep _ (Just n2)) = zbool (n1 <= n2)
-zleq (Rep n1 _       ) (Rep n2 _       ) = zE (leq n1 n2)
-zif_ (Rep _ (Just b1)) et ee = if b1 then et else ee
-zif_ (Rep be _       ) et ee = zE (if_ be (dynamic et) (dynamic ee))
+    zlam :: (rep sa da -> rep sb db) -> rep (rep sa da -> rep sb db) (da->db)
+    zapp :: rep (rep sa da -> rep sb db) (da->db) -> rep sa da -> rep sb db
+    zfix :: (rep sa da -> rep sa da) -> rep sa da
 
-ztestgib = zlam (\x -> zlam (\y ->
+    zadd :: rep Int Int -> rep Int Int -> rep Int Int
+    zmul :: rep Int Int -> rep Int Int -> rep Int Int
+    zleq :: rep Int Int -> rep Int Int -> rep Bool Bool
+    zif_ :: rep Bool Bool -> rep s d -> rep s d -> rep s d
+
+
+data RP repr static dynamic = 
+    RP { dynamic :: repr dynamic, static :: Maybe static }
+zE dynamic = RP dynamic Nothing
+
+instance Symantics repr => Symantics2 (RP repr) where
+    zint x  = RP (int x) (Just x)
+    zbool b = RP (bool b) (Just b)
+
+    zadd (RP _ (Just n1)) (RP _ (Just n2)) = zint (n1 + n2)
+    zadd (RP n1 _       ) (RP n2 _       ) = zE (add n1 n2)
+    zmul (RP _ (Just n1)) (RP _ (Just n2)) = zint (n1 * n2)
+    zmul (RP n1 _       ) (RP n2 _       ) = zE (mul n1 n2)
+    zleq (RP _ (Just n1)) (RP _ (Just n2)) = zbool (n1 <= n2)
+    zleq (RP n1 _       ) (RP n2 _       ) = zE (leq n1 n2)
+    zif_ (RP _ (Just b1)) et ee = if b1 then et else ee
+    zif_ (RP be _       ) et ee = zE (if_ be (dynamic et) (dynamic ee))
+
+    zlam f = RP (lam (dynamic . f . zE)) (Just f)
+    zapp (RP _ (Just f)) = f
+    zapp (RP f _       ) = zE . app f . dynamic
+    zfix f = case f (zfix f) of
+	      (RP _ (Just s)) -> RP dfix (Just s)
+	      _               -> RP dfix Nothing
+       where dfix = fix (dynamic . f . zE)
+
+
+{-
+zzfix3 f = case f (zzfix3 f)  of
+	  RP _ (Just g) -> RP dfix
+			        (Just (\x -> 
+				       case x of
+			                RP cde Nothing -> zE (app dfix cde)
+			                x     -> g x))
+	  RP _ Nothing -> zE dfix
+     where dfix = fix (dynamic . f . zE)
+
+zzfix4 f = case f (zzfix4 f)  of
+	  r@(RP _ (Just _)) -> RP dfix (Just (zapp r))
+	  RP _ Nothing -> zE dfix
+     where dfix = fix (dynamic . f . zE)
+-}
+
+-- unit to suppress the monomorphism restriction
+
+ztestgib () = zlam (\x -> zlam (\y ->
                 zfix (\self -> zlam (\n ->
                     zif_ (zleq n (zint 0)) x
                       (zif_ (zleq n (zint 1)) y
                        (zadd (zapp self (zadd n (zint (-1))))
                              (zapp self (zadd n (zint (-2))))))))))
 
-ztestgib1 = zapp (zapp (zapp ztestgib (zint 1)) (zint 1)) (zint 5)
+ztestgib5 () = zlam (\x -> zlam (\y ->
+	zapp (zapp (zapp (ztestgib ()) x) y) (zint 5)))
 
--- "show ptest3 == show (compC (dynamic ztestgib1))" is True
+ztestgib1 () = zapp (zapp (zapp (ztestgib ()) (zint 1)) (zint 1)) (zint 5)
 
--- "show ptest3' == show (compC (dynamic ztestgib1'))" is True
+-- The result of PE can be interpreted is several ways, as usual
+
+testR_ztestgib1 = compR (dynamic (ztestgib1 ())) -- 8
+testL_ztestgib1 = compL (dynamic (ztestgib1 ())) -- 1
+testC_ztestgib1 = compC (dynamic (ztestgib1 ())) -- 8
+
+testR_ztestgib5 = compR (dynamic (ztestgib5 ())) 1 1 -- 8
+testL_ztestgib5 = compL (dynamic (ztestgib5 ())) -- 9
+testC_ztestgib5 = compC (dynamic (ztestgib5 ()))
+-- (\V0 -> (\V1 -> ((((V1 + V0) + V1) + (V1 + V0)) + ((V1 + V0) + V1))))
+
+-- Every instance of Symantics can be injected into Symantics2
+
+newtype S12 repr s d = S12{unS12:: repr d}
+
+instance Symantics repr => Symantics2 (S12 repr) where
+    zint x  = S12 $ int x
+    zbool b = S12 $ bool b
+
+    zadd (S12 e1) (S12 e2) = S12 $ add e1 e2
+    zmul (S12 e1) (S12 e2) = S12 $ mul e1 e2
+    zleq (S12 e1) (S12 e2) = S12 $ leq e1 e2
+    zif_ (S12 e) (S12 e1) (S12 e2) = S12 $ if_ e e1 e2
+
+    zlam f = S12 $ lam (unS12 . f . S12 )
+    zapp (S12 f) (S12 a) = S12 $ app f a
+    zfix f = S12 $ fix (unS12 . f . S12 )
+
+testR_zztestgib1 = compR $ unS12 $ ztestgib1 () -- 8
+testL_zztestgib1 = compL $ unS12 $ ztestgib1 () -- 23
+testC_zztestgib1 = compC $ unS12 $ ztestgib1 () -- big code
+
+
+ztestpowfix () = zlam (\x ->
+                      zfix (\self -> zlam (\n ->
+                        zif_ (zleq n (zint 0)) (zint 1)
+                            (zmul x (zapp self (zadd n (zint (-1))))))))
+ztestpowfix7 () = zlam (\x -> zapp (zapp (ztestpowfix ()) x) (zint 7))
+
+-- We can interpret ztespowerfix directly, using R, L or C
+testR_zztestpw7 = (compR $ unS12 $ ztestpowfix7 ()) 2 -- 128
+testL_zztestpw7 = compL $ unS12 $ ztestpowfix7 () -- 15
+testC_zztestpw7 = compC $ unS12 $ ztestpowfix7 ()
+{-
+  (\V0 -> (((\V1 -> 
+    (fix\V2 (\V3 -> (if (V3 <= 0) then 1 else (V1 * (V2 (V3 + -1))))))) V0) 7))
+-}
+
+-- Or we can partially evaluate ztestpowfix7, and then interpret,
+-- using various interpreters
+testR_ztestpw7 = (compR $ dynamic $ ztestpowfix7 ()) 2 -- 128
+testL_ztestpw7 = compL $ dynamic $ ztestpowfix7 () -- 9
+testC_ztestpw7 = compC $ dynamic $ ztestpowfix7 ()
+-- (\V0 -> (V0 * (V0 * (V0 * (V0 * (V0 * (V0 * (V0 * 1))))))))
 
 -- ------------------------------------------------------------------------
 -- The HOAS bytecode compiler
@@ -438,10 +539,9 @@ ztestgib1 = zapp (zapp (zapp ztestgib (zint 1)) (zint 1)) (zint 5)
 -- 'a code -> 'b code is trivially convertible to ('a->'b) code.
 -- Also, HOAS bytecode certainly seems to match better with MetaOCaml's
 -- syntax for functions.
--- Also note, that like MetaOCaml `code', we never pattern-match on
--- HByteCode!
--- Furthermore, the compiler never raises any exception and matches no tags
--- (no generated code has any tags)
+-- Like MetaOCaml `code', we never pattern-match on HByteCode!
+-- Furthermore, the compiler never raises any exception and matches no tags:
+-- generated code has no tags.
 
 -- The HVar bytecode operation is used only during evaluation
 -- it corresponds to a CSP in MetaOCaml.
@@ -490,6 +590,7 @@ eval (HMul e1 e2) = eval e1 * eval e2
 eval (HLeq e1 e2) = eval e1 <= eval e2
 eval (HIF be et ee) = if (eval be) then eval et else eval ee
 
+
 instance Symantics HByteCode where
     int  = HINT
     bool = HBOOL
@@ -512,237 +613,4 @@ htest2 = compH . test2 $ ()
 htest2r = eval . test2 $ ()
 htestgib1  = compH . testgib1 $ ()
 htestgib1r = eval . testgib1 $ ()
-
--- ---------------------------------------------------------------------------
--- Self-interpretation
-
-twice_inc_3_e () =
-    -- The evaluation context in the following four lines is a self-interpreter
-    -- of the object language, encoded in the metalanguage.
-    let lam_ = lam (\f -> f) in
-    let app_ = lam (\f -> lam (\x -> app f x)) in
-    let add_ = lam (\m -> lam (\n -> add m n)) in
-    let int_ = lam (\i -> i) in
-    -- The term in the following three lines is the object term
-    --      let twice_ f x = f (f x) in let inc_ n = n + 1 in twice_ inc_ 3
-    -- encoded in the object language then encoded in the metalanguage.
-    let twice_ = app lam_ (lam (\f -> 
-	   app lam_ (lam (\x -> app (app app_ f) (app (app app_ f) x))))) in
-    let inc_ = app lam_ (lam (\n -> app (app add_ n) (app int_ (int 1)))) in
-    app (app app_ (app (app app_ twice_) inc_)) (app int_ (int 3))
-test_inc3e_r = compR $ twice_inc_3_e ()
-test_inc3e_c = compC $ twice_inc_3_e ()
-test_inc3e_p = compP $ twice_inc_3_e ()
--- to verify the Prop 5
-test_inc3p = compP $ (app (app
-                       (lam (\twice -> lam (\inc_ -> 
-                                              app (app twice inc_) (int 3))))
-                       (lam (\f -> lam (\x -> app f (app f x)))))
-                       (lam (\n -> add n (int 1))))
--- 5
-
--- This is for computing *size*.
-twice_inc_3_se () =
-    -- The evaluation context in the following four lines is a self-interpreter
-    -- of the object language, encoded in the metalanguage.
-    let lam_ = lam (\f -> add (int 1) (app f (int 0)) ) in
-    let app_ = lam (\f -> lam (\x -> add (int 1) (add f x))) in
-    let add_ = lam (\m -> lam (\n -> add (int 1) (add m n))) in
-    let int_ = lam (\_ -> int 1) in
-    -- The term in the following three lines is the object term
-    --      let twice_ f x = f (f x) in let inc_ n = n + 1 in twice_ inc_ 3
-    -- encoded in the object language then encoded in the metalanguage.
-    let twice_ = app lam_ (lam (\f -> 
-	   app lam_ (lam (\x -> app (app app_ f) (app (app app_ f) x))))) in
-    let inc_ = app lam_ (lam (\n -> app (app add_ n) (app int_ (int 1)))) in
-    app (app app_ (app (app app_ twice_) inc_)) (app int_ (int 3))
-test_inc3se_r = compR $ twice_inc_3_se ()
-test_inc3se_c = compC $ twice_inc_3_se ()
-test_inc3se_p = compP $ twice_inc_3_se ()
--- 10
-
-twice_inc_3_ee () =
-    -- The evaluation context in the following four lines is a self-interpreter
-    -- of the object language, encoded in the metalanguage.
-    let lam_ = lam (\f -> f) in
-    let app_ = lam (\f -> lam (\x -> app f x)) in
-    let add_ = lam (\m -> lam (\n -> add m n)) in
-    let int_ = lam (\i -> i) in
-    -- The evaluation context in the following four lines is a self-interpreters
-    -- of the object language (the same one as above), encoded in the object
-    -- language then encoded in the metalanguage.  We use two underscores in
-    -- the variable names only because Haskell's "let" is "letrec".
-    let lam__ = app lam_ (lam (\f -> f)) in
-    let app__ = app lam_ (lam (\f -> app lam_ (lam (\x -> app (app app_ f) x)))) in
-    let add__ = app lam_ (lam (\m -> app lam_ (lam (\n -> app (app add_ m) n)))) in
-    let int__ = app lam_ (lam (\i -> app int_ i)) in
-    -- Rename *__ back to *_.
-    let lam_ = lam__ in
-    let app_ = app__ in
-    let add_ = add__ in
-    let int_ = int__ in
-    -- The term in the following three lines is the object term
-    --      let twice_ f x = f (f x) in let inc_ n = n + 1 in twice_ inc_ 3
-    -- encoded in the object language then encoded in the metalanguage.
-    let twice_ = app lam_ (lam (\f -> app lam_ (lam (\x -> app (app app_ f) (app (app app_ f) x))))) in
-    let inc_ = app lam_ (lam (\n -> app (app add_ n) (app int_ (int 1)))) in
-    app (app app_ (app (app app_ twice_) inc_)) (app int_ (int 3))
-
-test_inc3ee_r = compR $ twice_inc_3_ee ()
-test_inc3ee_c = compC $ twice_inc_3_ee ()
-test_inc3ee_p = compP $ twice_inc_3_ee ()
--- *Incope> compC (dynamic (twice_inc_3_ee ()))
--- 5
-
--- test_inc3e_c and test_inc3ee_c are most illustrative.
-
--- Implement a term that is a lambda term rather than a ground term
--- this is test3 above.
-test3_e () =
-    -- The evaluation context in the following four lines is a self-interpreter
-    -- of the object language, encoded in the metalanguage.
-    let lam_ = lam (\f -> f) in
-    let app_ = lam (\f -> lam (\x -> app f x)) in
-    let add_ = lam (\m -> lam (\n -> add m n)) in
-    let int_ = lam (\i -> i) in
-    -- The term in the following three lines is the object term
-    -- let test3_ = \x -> (x 1) + 2
-    -- encoded in the object language then encoded in the metalanguage.
-    app lam_ (lam (\x -> (app 
-			   (app add_
-			    (app (app app_ x) (app int_ (int 1))))
-			   (app int_ (int 2)))))
-test_t3_r = compR $ test3_e ()
-test_t3_c = compC $ test3_e ()
-test_t3_p = compP $ test3_e ()
--- to verify the Prop 5
-test_t3p = compP $ lam (\x -> (add (app x (int 1)) (int 2)))
-
-
-{- And now something harder: powfix
-testpowfix () = lam (\x ->
-                      fix (\self -> lam (\n ->
-                        if_ (leq n (int 0)) (int 1)
-                            (mul x (app self (add n (int (-1))))))))
-at the same time, do
-testpowfix7 () = lam (\x -> app (app (testpowfix ()) x) (int 7))
--}
-testpowfix_e () =
-    -- The evaluation context in the following lines is a self-interpreter
-    -- of the object language, encoded in the metalanguage.
-    let lam_ = lam (\f -> f) in
-    let app_ = lam (\f -> lam (\x -> app f x)) in
-    let add_ = lam (\m -> lam (\n -> add m n)) in
-    let mul_ = lam (\m -> lam (\n -> mul m n)) in
-    let leq_ = lam (\m -> lam (\n -> leq m n)) in
-    let if__ = lam (\be -> lam (\ee -> lam (\te -> if_ be ee te))) in
-    let int_ = lam (\i -> i) in
-    let fix_ = lam (\f -> fix (\self -> app f self)) in
-    -- The term in the following three lines is the object term
-    -- testpowfix above
-    -- encoded in the object language then encoded in the metalanguage.
-    -- That is seriously not pretty, but it works!
-    let tpf = app lam_ (lam (\x ->
-          app fix_ (lam (\self -> app lam_ (lam (\n ->
-             (app (app (app if__ (app (app leq_ n) (app int_ (int 0))))
-                (app int_ (int 1)))
-                (app (app mul_ x) (app (app app_ self)
-                     (app (app add_ n) (app int_ (int (-1))))))))))))) in  
-    let tpf7 = app lam_ (lam (\x ->
-          app (app app_ (app (app app_ tpf) x)) (app int_ (int 7)))) in
-    (tpf, tpf7)
-
-test_pf_r = compR.fst $ testpowfix_e ()
-test_pf_c = compC.fst $ testpowfix_e ()
-test_pf_p = compP.fst $ testpowfix_e ()
-test_pf7_r = compR.snd $ testpowfix_e ()
-test_pf7_c = compC.snd $ testpowfix_e ()
-test_pf7_p = compP.snd $ testpowfix_e ()
--- to verify the Prop 5
-test_pfp = compP $ testpowfix ()
-test_pf7p = compP $ testpowfix7 ()
-
--- The following doesn't work because "repr" and "forall a." quite reasonably
--- do not commute
--- Use CSP to encode the object language in the object language?
-
-open_lam :: (Symantics repr, Functor repr) 
-	                     => repr (forall a b. (r a -> r b) -> r (a -> b))
-                             -> repr (            (r a -> r b) -> r (a -> b))
-open_lam = fmap id
-
-open_app :: (Symantics repr, Functor repr)
-	                     => repr (forall a b. r (a -> b) -> (r a -> r b))
-                             -> repr (            r (a -> b) -> (r a -> r b))
-open_app = fmap id
-
-open_csp :: (Symantics repr, Functor repr)
-	                     => repr (forall a. a -> r a)
-                             -> repr (          a -> r a)
-open_csp = fmap id
-
-twice_encoded :: (Symantics repr, Functor repr) => repr
-    ((forall a b. (r a -> r b) -> r (a -> b)) ->
-     (forall a b. r (a -> b) -> (r a -> r b)) ->
-     (forall a. a -> r a) ->
-     r ((c -> c)  -> (c -> c)))
-twice_encoded =
-    lam (\_lam ->
-    lam (\_app ->
-    lam (\_csp ->
-    app (open_lam _lam)
-        (lam (\f -> app (open_lam _lam)
-                        (lam (\x -> app (app (open_app _app) f)
-                                        (app (app (open_app _app) f) x))))))))
-
-open_encoded :: (Symantics repr, Functor repr)
-    => repr (forall r. (forall a b. (r a -> r b) -> r (a -> b)) ->
-                       (forall a b. r (a -> b) -> (r a -> r b)) ->
-                       (forall a. a -> r a) ->
-                       r c)
-    -> repr (          (forall a b. (r a -> r b) -> r (a -> b)) ->
-                       (forall a b. r (a -> b) -> (r a -> r b)) ->
-                       (forall a. a -> r a) ->
-                       r c)
-open_encoded = fmap id
-
--- Need repr to not just be covariant but also "continuous" for universal intro
-{-
-self_interp :: (Symantics repr) => repr
-    ((forall r.
-      (forall a b. (r a -> r b) -> r (a -> b)) ->
-      (forall a b. r (a -> b) -> (r a -> r b)) ->
-      (forall a b. (a -> b) -> (r a-> r b)) ->
-      r c)
-     -> c)
-self_interp = lam (\exp_encoded ->
-    app (open_encoded exp_encoded)
--}
-
-
-newtype RR r a = RR{unRR::r a} deriving Functor
-
-instance Symantics r => Symantics (RR r) where
-    int  = RR . int
-    bool = RR . bool
-
-    lam f = RR (lam (unRR . f . RR))
-    app e1 e2 = RR( app (unRR e1) (unRR e2) )
-    fix f = RR(fix (unRR . f . RR))
-
-    add e1 e2 = RR( add (unRR e1) (unRR e2) )
-    mul e1 e2 = RR( mul (unRR e1) (unRR e2) )
-    leq e1 e2 = RR( leq (unRR e1) (unRR e2) )
-    if_ be et ee = RR( if_ (unRR be) (unRR et) (unRR ee) )
-
-
--- test3_1 and test3_2 have the same signature!
-test3_1 :: (Symantics repr) => repr ((Int->Int)->Int)
-test3_1 = lam (\x -> add (app x (int 1)) (int 2))
-
-test3_2 :: (Symantics repr) => repr ((Int->Int)->Int)
-test3_2 = unRR (test3_1)
-
-test3_3 :: (Symantics repr) => repr ((Int->Int)->Int)
-test3_3 = unRR (test3_1)
 

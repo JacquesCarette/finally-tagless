@@ -2,6 +2,10 @@
 {-# OPTIONS -fallow-undecidable-instances #-}
 
 -- Interpreter, Compiler, Partial Evaluator
+-- This is the typeclass version of the code in Incope.hs
+
+-- Code accompanying the paper by
+--   Jacques Carette, Oleg Kiselyov, and Chung-chieh Shan
 
 module Incope1 where
 
@@ -14,19 +18,6 @@ module Incope1 where
   IFEQ ie1 ie2 e-then e-else
   
   The language is just expressive enough for the Gibonacci function.
-
-  The compiler, the interpreter and the source and target languages
-  are *all* typed. The interpreter and the compiler use no tags.
-  There is no pattern-match failure possible: the evaluators never
-  get stuck.
-
-  The implementation below is *almost* possible in OCaml. Indeed,
-  one can emulate Haskell typeclasses using explicit dictionary passing.
-  The dictionary will by a polymorphic (rank-2) record -- but it is OK,
-  OCaml permits it. Alas, The typeclass below uses higher-order type
-  constructors: repr and res are of a kind * -> *. OCaml does not support
-  higher-order polymorphism.
-
 -}
 
 -- This class defines syntax (and its instances, semantics) of our language
@@ -44,10 +35,6 @@ class SymanticsAB ar a b ca cb cab | ar a->ca, ar b->cb, ar a b -> ca cb cab  wh
     lam :: (ar ca a -> ar cb b) -> ar cab (a->b)
     app :: ar cab (a->b) -> ar ca a -> ar cb b
 
-
--- The following `projection' function is specific to repr.
--- It is like `run' of the monad
---    comp :: repr a -> something a
 
 test1 () = add (int 1) (int 2)
 test2 () = lam (\x -> add x x)
@@ -68,8 +55,6 @@ testgib1 () = app (app (app (testgib ()) (int 1)) (int 1)) (int 5)
 -- It is typed, tagless interpreter: R is not a tag. The interpreter
 -- never gets stuck, because it evaluates typed terms only
 
--- Note that everything going on here is straight out of
--- "Boxes go Bananas" by Washburn and Weirich (intended or otherwise)
 newtype R t a = R a deriving Show
 unR (R x) = x
 
@@ -99,10 +84,6 @@ itestg = mkitest testgib1
 -- (typed bytecode). The GADT does _not_ use the higher-order abstract
 -- syntax. We could have used template Haskell. Alas, its expressions
 -- are untyped.
--- Note how ByteCode represents MetaOCaml's `code'. Thus the compiler
--- below neatly maps to the MetaOCaml (with no GADTs).
--- Note how the compiler never raises any exception and matches no tags
--- (no generated code has any tags)
 
 data ByteCode t where
     Var :: Int -> ByteCode t                -- variables identified by numbers
@@ -170,16 +151,12 @@ ctestg = compC . testgib1 $ ()
 
 -- We need no Lift byte-code instruction: no parametric CSP. That is great!
 
--- The code below is NOT parametric. We could have used type-classes
--- instead of GADTs. Ken noted that the code below could be re-functionalized,
--- and so could in fact be translated into MetaOCaml.
--- Or, if we observe the correspondence between GADT and MetaOCaml <code>,
--- perhaps we can translate to MetaOCaml with an additional layer of code?
+-- The code below is NOT parametric. We are using type-classes
+-- instead of GADTs.
 
 data P cr t = PV cr | PE (C () t)
 
 newtype PVS t = PVS t
--- newtype PFII  = PFII (PVS Int -> PVS Int)
 
 newtype PF a b ca cb = PF (P ca a -> P cb b)
 
@@ -195,29 +172,6 @@ instance PRep Int (PVS Int) where
 instance (PRep a ca, PRep b cb) => PRep (a->b) (PF a b ca cb) where
     abstr (PV (PF f)) = lam (abstr . f . PE)
     abstr (PE x) = x
-
-{-
-class (PRep a ca, PRep b cb) => PFGen a b ca cb | a -> ca, b -> cb where
-    pf_fun :: (P ca a -> P cb b) -> P (PF a b ca cb) (a->b)
-    pf_app :: P (PF a b ca cb) (a->b) -> P ca a -> P cb b
--}
-
--- instance PFGen Int Int (PVS Int) (PVS Int) PFII where
---    pf_fun = PV . PFII
-
-
-{-
-data P t where
-    VI :: Int -> P Int                -- Possibly static (base type)
-    VF :: (P a -> P b) -> P (a->b)
-    E  :: C t -> P t                  -- Purely dynamic
-
-abstr :: P t -> C t
-abstr (VI i) = int i
-abstr (VF f) = lam (abstr . f . E)
-abstr (E x) = x
--}
-
 
 instance SymanticsInt P (PVS Int) where
     int = PV . PVS
@@ -263,7 +217,7 @@ ptestg = compP . testgib1 $ ()
 --        P (PF a b ca1 cb1) (a -> b) -> P ca a -> P cb b
 -- why ca1 cb1 where we should have ca cb? Note, that the type
 -- for pp2 is more precise. Looks like a GHC bug?
--- See correspondence with Martin, Feb 2007
+-- See correspondence with Martin Sulzmann, Feb 2007
 -- the constraint c -> a b is _NOT the same as c -> a, c -> b
 pp1 f@PE{} x = app f x
 

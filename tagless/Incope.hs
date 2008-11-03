@@ -2,6 +2,8 @@
 {-# OPTIONS_GHC -W #-}
 
 -- Interpreter, Compiler, Partial Evaluator
+-- Code accompanying the paper by
+--   Jacques Carette, Oleg Kiselyov, and Chung-chieh Shan
 
 module Incope where
 
@@ -62,8 +64,6 @@ testpowfix7 () = lam (\x -> app (app (testpowfix ()) x) (int 7))
 -- It is a typed, tagless interpreter: R is not a tag. The interpreter
 -- never gets stuck, because it evaluates typed terms only
 
--- Note that everything going on in the interpreter is straight out of
--- "Boxes go Bananas" by Washburn and Weirich (intended or otherwise)
 newtype R a = R a deriving Show
 unR (R x) = x
 
@@ -158,12 +158,11 @@ ltestpw72 = compL (app (testpowfix7 ()) (int 2)) -- 17
 -- (typed bytecode). The GADT does _not_ use the higher-order abstract
 -- syntax. We could have used template Haskell. Alas, its expressions
 -- are untyped.
--- Note how ByteCode represents MetaOCaml's `code'. Thus the compiler
+-- ByteCode represents MetaOCaml's `code'. Thus the compiler
 -- below neatly maps to the MetaOCaml (with no GADTs).
--- Also note, that like MetaOCaml `code', we never pattern-match on
--- ByteCode!
--- Note how the compiler never raises any exception and matches no tags
--- (no generated code has any tags)
+-- Like MetaOCaml `code', we never pattern-match on ByteCode!
+-- The compiler never raises any exception and matches no tags:
+-- generated code has no tags at all.
 
 -- The LIFT bytecode operation is used only during evaluation and for fmap
 -- it corresponds to a CSP in MetaOCaml.
@@ -201,6 +200,7 @@ newtype C t = C (Int -> (ByteCode t, Int))
 unC (C t) vc0 = t vc0
 
 {-
+-- If we had a polymorphic LIFT function, we could do:
 instance Functor C where
     fmap f = app (C(\vc -> (LIFT f, vc)))
 -}
@@ -323,7 +323,7 @@ instance Symantics P where
     -- residualize
     fix f = f (E (fix (abstr . f . E)))
     -}
-    -- Now, we just go all the way (see Jacques' point)
+    -- Now, we just go all the way
     -- provided `fixing' produces static results...
 
     fix f = pfix f -- need this charade for GADTs sake
@@ -539,10 +539,9 @@ testC_ztestpw7 = compC $ dynamic $ ztestpowfix7 ()
 -- 'a code -> 'b code is trivially convertible to ('a->'b) code.
 -- Also, HOAS bytecode certainly seems to match better with MetaOCaml's
 -- syntax for functions.
--- Also note, that like MetaOCaml `code', we never pattern-match on
--- HByteCode!
--- Note how the compiler never raises any exception and matches no tags
--- (no generated code has any tags)
+-- Like MetaOCaml `code', we never pattern-match on HByteCode!
+-- Furthermore, the compiler never raises any exception and matches no tags:
+-- generated code has no tags.
 
 -- The HVar bytecode operation is used only during evaluation
 -- it corresponds to a CSP in MetaOCaml.
