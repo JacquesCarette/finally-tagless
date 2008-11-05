@@ -70,15 +70,18 @@ Most interpreters suffer from various kinds of overhead, making it less
 efficient to run object programs via the metalanguage than to implement
 the object language directly on the machine running the metalanguage
 \citep{jones-partial}.  Two major sources of overhead are dispatching on
-the syntax of object terms and checking the types of object values.  If
+the syntax of object terms and tagging the types of object values.  If
 the metalanguage supports code generation
 \citep{nielson-two-level,nielson-automatic,gomard-partial,bawden-quasiquotation,taha-sound},
 then the embedding can avoid the dispatching overhead by compiling
 object programs, that is, by specializing an interpreter to object
 programs \citep{futamura-partial}.  Specializing an interpreter is thus
-a promising way to build a DSL\@.  However, the type-checking overhead
+a promising way to build a DSL\@.  However, the tagging overhead
 remains, especially if the object language and the metalanguage both
-have a sound type system.  This overhead has motivated much work on
+have a sound type system.
+The quest to remove all interpretive overhead, in particular by
+specializing the interpreter using a \emph{Jones-optimal} partial
+evaluator \citep{jones-partial}, has motivated much work on
 typed specialization
 \citep{danvy-simple,Danvy-tagging-encoding,hughes-type,Birkedal-PE-ML,taha-tag,Makholm-TagElim}
 and type systems (see~\S\ref{s:fancier}).
@@ -101,13 +104,13 @@ and type systems (see~\S\ref{s:fancier}).
     \label{fig:object}
 \end{figure}
 
-This paper shows how to eliminate type-checking overhead, whether in the
+This paper shows how to eliminate tagging overhead, whether in the
 context of code generation and whether in the presence of dispatching
 overhead.  We use metalanguage types, without such fancy features as
 generalized algebraic data types (GADTs) or dependent types, to rule out
 ill-typed object terms statically,
 thus speeding up interpretation and assuring that our interpreters
-do not get stuck.  We illustrate the problem of type-checking overhead
+do not get stuck.  We illustrate the problem of tagging overhead
 in this section using a simple evaluator as example.  We apply our
 solution first to evaluation, then to code\hyp generation tasks such as
 partial evaluation.
@@ -787,9 +790,10 @@ $\fun{x}xx$ and its
 encoding |lam (\x -> app x x)| both fail occurs-checks in type checking.
 Both Haskell's and MetaOCaml's type checkers also flag syntactically invalid
 object terms, such as if we forget |app| somewhere above.
-\ccshan{Make the point that the error messages are nice because we also
-metacircularly take advantage of any niceness in the error messages of
-the metalanguage implementation!}
+Because our encoding of terms and types are so straightforward and
+metacircular, these error messages from the metalanguage implementation
+are just about as readable as those for ``native'' type errors such as
+|fun x -> x x|.
 
 \subsection{Two tagless interpreters}
 \label{S:interpreter-RL}
@@ -1586,8 +1590,7 @@ Many sophisticated approaches have been developed to decide how much to unfold
 orthogonal to our presentation.
 A separate concern in our treatment of |fix| is possible code bloat in
 the residual program, which calls for let-insertion
-\citep{BondorfDanvy,SwadiTahaKiselyovPasalic2006}.
-\ccshan{Fix the citations in the preceding sentence.}
+\citep{BondorfDanvy}.
 
 
 Given this implementation of~|P|, our running example
@@ -1648,9 +1651,8 @@ and \citeauthor{sumii-hybrid} in leaving the static term
 optional, so as to perform lifting without
 juggling explicit type indices in the encoding of an object term.
 The idea of generating static and dynamic components alongside each
-other is found in an early form in Schism \citep[\S5]{consel-schism-93}. 
-\ccshan{Refer to PE tradition and (earlier, even) the category-theory
-concept of \emph{gluing}.}
+other is part of the tradition that developed partial evaluators such as
+Schism \citep[\S5]{consel-schism-93}. 
 
 Our contribution to the literature on partial evaluation is to use mere
 Hindley-Milner types in the metalanguage to assure statically and patently that
@@ -2551,8 +2553,6 @@ a sum type (at some level of the hierarchy).
 While the logic is sound, we (following \citet{yang-encoding}) showed that the
 premise is not valid.
 
-\ccshan{The following should be far from the first mention of optimality
-in this paper.}
 \citet{Danvy-tagging-encoding} discuss Jones optimality at length and
 apply HOAS to typed self\hyp interpretation.  However, their source
 language is untyped.  Therefore, their object\hyp term encoding has
