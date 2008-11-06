@@ -281,7 +281,7 @@ end;;
   P1 value. 
 *)
 
-(* Final solution, Inspired by Ken's solution *)
+(* Final solution *)
 
 module P =
 struct

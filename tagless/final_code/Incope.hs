@@ -396,10 +396,10 @@ apparent.
 -- ------------------------------------------------------------------------
 -- A partial evaluator that does not use GADTs (except in using C)
 
--- Ken thinks that, without GADTs, it's not possible to explain in Haskell or
--- MetaOCaml how PE is an instance of Symantics (unless Symantics is 
--- generalized to carry both `static' and `dynamic' parts). But we can 
--- still explain PE by itself. In some sense we're just observing 
+-- At first, it seemed that, without GADTs, it was not possible to explain
+-- in Haskell or MetaOCaml how PE is an instance of Symantics (unless 
+-- Symantics is generalized to carry both `static' and `dynamic' parts). But 
+-- we can still explain PE by itself. In some sense we're just observing 
 -- that Asai's code type-checks in Hindley-Milner as soon as we
 -- deforest the static code representation.
 
