@@ -51,7 +51,10 @@ signatures, functors and the core type system as defined by Milner et
 al 1997).
 --
 We have clarified in Section 1.4 that indeed, our use of Haskell
-constructor classes or OCaml/SML signatures and functors is essential.
+constructor classes or OCaml/SML signatures and functors is essential
+for expressing terms parameterized over interpreters. If we fix the
+interpreter, the usual HM system suffices to express the tagless final
+interpreter for our object language.
 
 
 Also, the paper should discuss up front what is lost when using this
@@ -230,7 +233,15 @@ p9, module R
 We make very heavy use of type-dependent-types, but not do
 not use value-dependent-types, which is what is usually understood
 when talking about 'dependent types'.  We explicitly mention type-indexed-types
-in the text (and cite references).
+in the text (and cite references).  We are not aware that the module system of
+SML being commonly called `dependently typed'. Likewise, although Haskell's
+multi-parameter type classes with functional dependencies are capable of
+expressing arbitrary type-level computation and could be considered crossing
+into the `dependent type' territory, to our knowledge Haskell98 type classes
+are not called `dependently typed'.  If you have pointers to a commonly
+accepted definition of `dependent types' that differs from that, we would
+appreciate getting these pointers.
+
 
 p16, "the type equation for repr_pe above"
      * "above" is fuzzy
@@ -346,30 +357,36 @@ It was just for internal convenience.  It is now removed from the paper.
 
 *************************************************************************
 
+We have a few outstanding questions/comments for the reviewers.
+
 Reviewer 1:
-
 p1, citation
-    The other Reynolds citation that emphasizes the duality between
-    first-order and higher-order term representations would be more
-    appropriate. 
-    \jacques{"other" citation?  He certainly does not mean the other
-    Reynolds paper we cite, not from my reading of it (it is available
-    from Reynold's home page.  So what does this mean?}
-    \oleg{we just leave this as the question to the reviewer}
+The other Reynolds citation that emphasizes the duality between
+first-order and higher-order term representations would be more
+appropriate. 
+--
+Which "other" citation?  The other Reynolds paper we cite is on a
+rather different topic. 
 
-3 comments from Reviewer 2:
+
+Reviewer 2:
 
 p4, section 1.3
-    Clearly the encoding is monadic but you are not mentioning this
-    fact at all. I miss a discussion why an abstraction over a monad
-    would not be sufficient to achieve all you want to achieve.
-    \oleg{What does it mean for an encoding to be monadic?
-    Where in the R or C interpreters we fix the evaluation order?}
+Clearly the encoding is monadic but you are not mentioning this
+fact at all. I miss a discussion why an abstraction over a monad
+would not be sufficient to achieve all you want to achieve.
+--
+To us, monads in PL are used for structuring and sequencing computations.
+We do not understand the meaning of "an encoding is monadic".  For example,
+in the R and C interpreters, we do no fix the evaluation order, so we do
+not see how this would be monadic.
+
 
 p15, section 4.4
      btw, I do not find these names R, L, and C very intuitive or
      readable. 
-     \jacques{We could insert a 'key', where
+--
+We could insert a 'key', where
      evaluator (i.e. run)  : R
      length                : L
      compile               : C
@@ -378,8 +395,14 @@ p15, section 4.4
      evaluator (by-name)   : RCN
      evaluator (by-value)  : RCV
      CPS transformer       : CPST
-     state-passing CBN CPS : RCPS}
-     \oleg{Not a bad idea...}
+     state-passing CBN CPS : RCPS
+but we are not sure if this would help / be worth the space.
 
 p28, "This shift also underlies ..."
      I don't see the connection to the present work.
+-- 
+Well, we meant it as a general remark, that the shift from consumer to
+producer -- doing more work when producing a value -- is a general
+technique used in many areas (not related to the current work), and we
+mention a few examples.
+
