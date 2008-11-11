@@ -78,7 +78,7 @@ Page 17:
 Some people would say that Haskell has call-by-need rather than
 call-by-name.
 --
-We note the difference.
+We note the difference, in footnote 2.
 
 Page 4 line -5: 
 Is there some underlining or other part of the OCaml
@@ -102,7 +102,7 @@ that 0 is a version suffix.
 Page 14: In the definition of "abstr" maybe use C.int, C.bool and
 so on to indicate where these terms come from.
 --
-We removed that section and that code
+We removed that section and that code, as recommended by reviewer 2.
 
 Page 18: 
 Here the OCaml higher-rank record types seem to play an essential
@@ -110,11 +110,11 @@ role.  This raises the question whether the same encoding could be
 made in Standard ML (as defined by the Milner et al book 1997)?  This
 question must be answered in the paper.
 --
-We state that RCN can also be defined as a functor parameterized
-over the answer type, to avoid the use of higher-rank polymorphism in
-the core language.
-In fact, be quite explicit about the functor variant, and explicitly
-mention Standard ML -- but bemoan the polymorphism and usability loss.
+We state, at the end of Sec 5.1, that RCN can also be defined as a
+functor parameterized over the answer type, to avoid the use of
+higher-rank polymorphism in the core language.  In fact, we are quite
+explicit about the functor variant, and explicitly mention Standard ML
+-- but bemoan the polymorphism and usability loss.
 
 
 The rapid change between OCaml and Haskell is not always helpful. It
@@ -182,11 +182,12 @@ with a signature or not) we can just say "open M" and use the terms of
 M in any ML expression without any need to write any type
 annotation. By contrast, consider an object system of OCaml (or of
 any other typed OOP). An object system can be thought of as a module
-system (and often plays this role, e.g. in Java and C++). Here, in
-class declarations, we must write full annotations. Mainly, when
+system (and often plays this role, e.g. in Java and C++). Here, 
+we must write full annotations, not only in the interface declarations
+but also in all class declarations. Mainly, when
 we use objects, we have to, occasionally, write type
 annotations (e.g., when writing coercions). So, in OCaml, objects
-is an example of a non-inference preserving module system.}
+is an example of a non-inference preserving module system.
 
 p7, proposition 1
 p9, proposition 2
@@ -214,9 +215,9 @@ p8, section 2.2
     "Each interpreter [is] ..."
     -> [can be expressed as]
 --
-We really are abstraction over both the term representation as well as the
-meaning of 'interpreter'.  Sentence clarified to make it clear that our term
-rephased the first sentence to make it clear that our term
+We really are abstracting over both the term representation as well as the
+meaning of 'interpreter'.  We rephased the first sentence to make it
+clear that our term
 representation is independent of interpretations.  The sentence
 "Each interpreter [is]..." stays as it is correct.
 
