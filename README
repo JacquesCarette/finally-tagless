@@ -48,7 +48,7 @@ massively revamped.  This invalidated most syntax extensions written
 for version 3.09 including pa_monad.
 
 The current package includes "pa_monad.ml" that works with OCaml-3.10
-up to 3.12.  For convenience we supply "pa_monad-camlp4-3.09.ml" that
+up to 3.11.  For convenience we supply "pa_monad-camlp4-3.09.ml" that
 works with the older OCaml-3.09.  See section "How to... Compile" for
 instructions to build with OCaml-3.09.
 
@@ -110,7 +110,6 @@ have a look at the examples "exception.ml" or
 
 See the section "Known Issues" in the documentation.
 
-
 * How to...
 
 ** Compile
@@ -129,7 +128,7 @@ and preprocessor say for example
              PP-EXT="-pp '\$(CAMLP4) -I . pa_extend.cmo q_MLast.cmo'" \
              SYNTAX-EXTENSION=pa_monad-camlp4-3.09.cmo
 
-where OCAMLC and CAMLP4 define the name of Your compiler and
+where OCAMLC and CAMLP4 define the name of your compiler and
 preprocessor.
 
 
@@ -169,13 +168,13 @@ After installation, findlib users cast the usual spell
 * Emacs - Tuareg Mode
 
 We have included a customization for Tuareg-mode that makes "perform"
-a keyword with the correct indentation behavior.  Include it in Your
+a keyword with the correct indentation behavior.  Include it in your
 ".emacs" to activate it.
 
 
 * Useful Literature On Monads
 
-Literature on the use of monads in OCaml does not yet exist.  Most of
+Literature on the use of monads in OCaml is sparse at best.  Most of
 the following articles are either language independent or use the
 Haskell language.  A large bibliography on "Monads and Arrows: Theory
 and Applications" can be found at

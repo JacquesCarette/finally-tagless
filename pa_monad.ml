@@ -197,6 +197,8 @@ used in the "[with module]"-form must enclose
           val failwith: string -> 'a monad
         end
 ]}
+Note that although a proper monad requires a [return] function, the
+translation itself does not need it.
 
 
 {3 Semantics (as re-writing into the core language)}
@@ -231,7 +233,7 @@ It is be possible to use "[<-]" instead of "[<--]".  In that case, the
 similarity to the "[do]" notation of Haskell will be complete.
 However, if the program has [_ <- exp] outside of [perform], this will
 be accepted by the parser (and create an (incomprehensible) error
-later on.  It is better to use a dedicated symbol "[<--]", so if the
+later on).  It is better to use a dedicated symbol "[<--]", so if the
 user abuses it, the error should be clear right away.
 
 The major difficulty with the [perform] notation is that it cannot
@@ -280,7 +282,7 @@ message about an unbound identifier "<--", which is our intention.
   are permissible in [fun].  And perhaps this is the optimal decision.
 
 - The recursive form "[rec ... <-- ...]" is not implemented completely.
-  It lacks support for a (user-sepecified) fix-point function.  See
+  It lacks support for a (user-specified) fix-point function.  See
   for example Erkök and Launchbury's
   {{:http://www.cse.ogi.edu/PacSoft/projects/rmb/recdo.ps.gz} "A
   Recursive do for Haskell"}.
@@ -559,7 +561,7 @@ let qualify
 
 (* Here we have to do the same nasty trick that Camlp4 uses and even
  * mentions in its documentation (viz. 'horrible hack' in pa_o.ml).  We
- * see if we can expect [patt <--] succeed.  Here [patt] is a simple
+ * see if we can expect [patt <--] to succeed.  Here [patt] is a simple
  * pattern and it definitely does not parse as an expression.
  * Rather than resorting to unlimited lookahead and emulating the
  * Pcaml.patt LEVEL simple grammar, we do it the other way around: We

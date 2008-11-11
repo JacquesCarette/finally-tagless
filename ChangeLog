@@ -1,3 +1,9 @@
+2008-11-10  Jacques Carette <carette@mcmaster.ca>
+
+	* README: Fix some comments
+	* pa_monad.ml: Fix some comments.  Mention 'return' as not
+	    needed from the translation (this confused some users).
+
 2008-10-30  Lydia van Dijk  <lvandijk@freenet.de>
 
 	* pa_monad-custom-tuareg.el: New file.
