@@ -1,3 +1,8 @@
+2008-11-12  Jacques Carette <carette@mcmaster.ca>
+
+	* index.html: update for new release (see all 2008 changes)
+	* Makefile (VERSION): Bump forward.
+
 2008-11-10  Jacques Carette <carette@mcmaster.ca>
 
 	* README: Fix some comments

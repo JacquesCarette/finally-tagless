@@ -26,10 +26,9 @@ li { margin-bottom: 5pt; }
 </head>
 <body text="#000000">
 <h1> Syntax extension for Monads in Ocaml</h1>
-	<p><b>Jacques Carette,  Lydia E. van Dijk and Oleg Kiselyov</b></p>
-	<h2>Summary</h2>
-	<p>
-This Camlp4 extension some syntactic sugar to beautify monadic
+<p><b>Jacques Carette,  Lydia E. van Dijk and Oleg Kiselyov</b></p>
+<h2>Summary</h2>
+<p> This Camlp4 extension provides some syntactic sugar to beautify monadic
 expressions.  </p>
 
 <p>Example: A simple but realistic example of the use of a list monad
@@ -58,18 +57,19 @@ the sum of each pair of values of the input lists.  For more examples
 have a look at the examples <a href="exception.ml">exception.ml</a> or
 <a href="pythagorean_triples.ml">pythagorean_triples.ml</a>.  </p>
 
-<p>A <a href="pa_monad.tar.gz">complete package</a> (as a .tar.gz file) containing 
-the extension itself, a 
+<p>A <a href="pa_monad.tar.gz">complete package</a> (as a .tar.gz file)
+containing the extension itself, a 
 <a href="Makefile">Makefile</a>, examples and several tests is available.  See
 the <a href="README">README</a> for more details.  </p>
 
 <p>Change history:<br />
 <ul>
+    <li>1.2.1 - update for Ocaml 3.11, compatible with 3.10 (and some 
+    forthcoming 3.12 changes too).  Version for 3.09 still included.
+    Switch to elisp-mode hook rather than patch for tuareg.</li>
     <li>1.2.0 - adds support for Ocaml 3.10.  Version for 3.09 still included.</li>
-    <li>1.1.1 - support tuareg 1.46.2, the previous patch no longer worked, 
-<a href="tuareg-1.46.2.el.patch">this one</a> should.
-The <a href="tuareg-1.45.2.el.patch">tuareg 1.45.2</a> patch is still available.
-</li>
+    <li>1.1.1 - support tuareg 1.46.2, the previous patch no longer worked; 
+      (this patch has been superceded)</li>
 <li>1.1 - added findlib support and includes 
 <a href="http://okmij.org/ftp/Computation/Continuations.html#caml-shift">Oleg's</a>
 support for <a href="cc.mli">delimited continuations</a>
@@ -82,6 +82,6 @@ support for <a href="cc.mli">delimited continuations</a>
 the <a href="COPYING">GNU library general public license</a> in a way which is 
 compatible with <a href="http://caml.inria.fr">Ocaml's</a> own license.  </p>
 <hr size=1>
-<small><i>version 1.2.0.  August 23, 2007</i></small>
+<small><i>version 1.2.1.  November 12, 2008</i></small>
 </body>
 </html>

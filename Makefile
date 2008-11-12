@@ -118,7 +118,7 @@ DISTNAME := monad-syntax-extension
 
 
 # Version number of the tarball.  (See DISTNAME.)
-VERSION := 5.1
+VERSION := 5.2
 
 
 # Name of the package for findlib
