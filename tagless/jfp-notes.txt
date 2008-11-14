@@ -1,18 +1,19 @@
 Dear Colin,
 
 The referee comments were very useful to us, but required quite a bit
-of work on our part to address -- thus the long delay.  
+of work on our part to address -- thus the long delay.  Our sincere
+thanks to the referees and you.
 
 Every small error pointed out by the referees has been fixed.  We have also
 added many new references (those pointed out by the referees as well as 
 additional references, and appropriate discussion) to put our work in its
 proper historical context.  We will not comment any further on these topics.
 
-As we have removed one section (section 6 in the previous version) dealing
+As we have removed one section (Section 6 in the previous version) dealing
 with self-interpretation, the referees' comments on this section are now
-moot, and will not be commented upon either.  The comments were indeed the
+moot, and will not be commented upon either.  The comments were the
 reason we chose to remove this section, as the work in that section was
-indeed not ready for publication (and not so easily ``fixed'').
+not ready for publication (and not so easily ``fixed'').
 
 Reviewer 2 wrote:
 ^^^^^^^^^^^^^^^^^
@@ -73,9 +74,9 @@ Torben Mogensen was the first to use a dual representation of terms
 and values (in his HOAS-based self-interpreter for the untyped lambda
 calculus, JFP ca 1994)
 --
-We now discuss Mogensen's use of Church encoding in Section 1.3,
+We now discuss Mogensen's uses of Church encoding in Section 1.3,
 and his (subtly and slightly different) dual representation of terms
-and values in Section 7.
+and values in what is now Section 4.3.
 
 Page 17:
 Some people would say that Haskell has call-by-need rather than
@@ -113,7 +114,7 @@ role.  This raises the question whether the same encoding could be
 made in Standard ML (as defined by the Milner et al book 1997)?  This
 question must be answered in the paper.
 --
-We state, at the end of Sec 5.1, that RCN can also be defined as a
+We state, at the end of Section 5.1, that RCN can also be defined as a
 functor parameterized over the answer type, to avoid the use of
 higher-rank polymorphism in the core language.  In fact, we are quite
 explicit about the functor variant, and explicitly mention Standard ML
@@ -125,7 +126,7 @@ would be better to stick to one formulation throughout the paper
 and explain the other e.g. in an appendix.
 --
 All of the Haskell which was not essential to the paper has been removed.
-The accompanying code (available on the bwe) still has both full
+The accompanying code (available on the web) still has both full
 implementations.
 
 
@@ -133,7 +134,7 @@ The idea of dual representation which is attributed to Asai also
 appears in [Sperber]
 --
     Thank you; we now cite Sperber alongside Asai (as Sumii and
-    Kobayashi do).  We also now mention Consel, who also had something
+    Kobayashi do).  We also now mention Consel, who described something
     similar in Schism.
 
 Reviewer 1, Page 28 section 8 line -3: This is the paper's first mention of
@@ -141,7 +142,8 @@ primitive recursion.  This should be discussed much earlier, when the
 term representation is introduced.  Also, it is unclear what would be
 gained by a non-primitive recursive term representation.
 --
-The issue is mentioned much earlier now, along with the relation to folds.
+The issue is mentioned much earlier now, along with the relation to folds,
+in Section 1.3.
 
 ==========================================================================
 
@@ -165,7 +167,7 @@ p3, line -1
     typing. But that typing does not reflect the type of the encoded
     term. 
 --
-Correct, the above better phrasing is now used instead.
+Correct; the above better phrasing is now used instead.
 
 p4, section 1.3
     It should also be discussed in what way the type system of the
@@ -177,20 +179,11 @@ Now discussed at the end of Section 5.3.
 p6, "inference-preserving module system"
     What's that?
 --
-This particular phrase has been removed.  However, what we meant was that
-in ML, we can write structures without
-explicit signature annotations. The signature will be
-inferred. Mainly, for any structure (whether it has been annotated
-with a signature or not) we can just say "open M" and use the terms of
-M in any ML expression without any need to write any type
-annotation. By contrast, consider an object system of OCaml (or of
-any other typed OOP). An object system can be thought of as a module
-system (and often plays this role, e.g. in Java and C++). Here, 
-we must write full annotations, not only in the interface declarations
-but also in all class declarations. Mainly, when
-we use objects, we have to, occasionally, write type
-annotations (e.g., when writing coercions). So, in OCaml, objects
-is an example of a non-inference preserving module system.
+This particular phrase has been removed.  (What we meant was that
+our encoding is concise enough for practical use thanks in part to
+the fact that the type system infers the signatures of modules (such
+as R and C) and the output signatures of functors (such as our term
+representations).)
 
 p7, proposition 1
 p9, proposition 2
@@ -230,17 +223,19 @@ p9, module R
     fact, using dependent types, at least in a stylized way. Hence, as
     it stands, the abstract is incorrect.
 --
-We make very heavy use of type-dependent-types, but not do
-not use value-dependent-types, which is what is usually understood
-when talking about 'dependent types'.  We explicitly mention type-indexed-types
-in the text (and cite references).  We are not aware that the module system of
-SML being commonly called `dependently typed'. Likewise, although Haskell's
-multi-parameter type classes with functional dependencies are capable of
-expressing arbitrary type-level computation and could be considered crossing
-into the `dependent type' territory, to our knowledge Haskell98 type classes
-are not called `dependently typed'.  If you have pointers to a commonly
-accepted definition of `dependent types' that differs from that, we would
-appreciate getting these pointers.
+We use many type-dependent types, but no value-dependent types, which
+is what is usually understood when talking about 'dependent types'.  We
+explicitly mention type-indexed types in the text (and cite references).
+Although the ML module system has been formalized using what looks like
+dependent types (e.g., Dreyer et al., POPL 2003), it obeys the phase
+distinction (Harper et al., POPL 1990), so types don't really depend
+on values despite both being parts of structures.  Likewise, although
+Haskell's multi-parameter type classes with functional dependencies
+can express arbitrary type-level computation and could be considered
+crossing into dependent-type territory, to our knowledge Haskell 98 type
+classes are not called `dependently typed'.  We would appreciate any
+pointers to a commonly accepted definition of `dependent types' that
+differs from these usages.
 
 
 p16, "the type equation for repr_pe above"
@@ -253,7 +248,7 @@ p2, section 1
     The translation between the object language and its encoding
     should be made explicit.
 --
-An explicit encoding has been added in section 2.1
+An explicit encoding has been added in Section 2.1.
 
 p11, section 4
      "Surprisingly ..."
@@ -264,7 +259,7 @@ p11, section 4
      what that means.
 --
 At the beginning of Section 4, we now clarify
-that what's surprising is that the family of interpretations can
+tionthat what's surprising is that the family of interpretations can
 encompass partial evaluation, and state up front that our partial
 evaluator is online.
 
@@ -276,7 +271,8 @@ Our paper stresses a family of multiple
 interpretations for the same object language, and offline PE
 would force us to change the object language to one annotated
 with binding times, so online PE distracts from our point less.
-Note that all PE, offline or online, is tagged in one way or another.
+Our revised introduction clarifies that we focus on removing
+_type_ tags.
 
 p16
      The optimizing online pe is completely besides the point of this
@@ -289,9 +285,9 @@ p17, "partial evaluation ... gives the desired result:"
 These optimizations are indeed a side point
 and do not affect the result of EX(P) much, but we find the
 ease of adding these optimizations and the clarity of where to
-put them so appealing, simple, and undistracting that we think
+put them so appealing, simple, and undistracting that
 the paper is still better for them.  As a matter of fact, our 
-implementation provides significantly more optimizations (because they
+implementation provides many more optimizations (because they
 were so easy to implement).
 
 p18, CPS interpretation
@@ -308,7 +304,7 @@ p18, CPS interpretation
      lam f in exactly the same way as stated in the paper by extending
      the Symantics signature accordingly.
 --
-This is now discussed at the beginning of Section 5.2
+This is now discussed at the beginning of Section 5.2.
 
 p19, starting with CPST
      It's nice to see that you can unify all these transformations
@@ -348,7 +344,7 @@ p21, lapp is monadic let!
      Its presence should be explained like that.
 --
      We now explain lapp as "equivalent to `let' in Moggi's
-     monadic metalanguage.
+     monadic metalanguage."
 
 p21
      Why is the ... result type in RCPS needed?
@@ -368,19 +364,17 @@ appropriate.
 Which "other" citation?  The other Reynolds paper we cite is on a
 rather different topic. 
 
-
 Reviewer 2:
-
 p4, section 1.3
 Clearly the encoding is monadic but you are not mentioning this
 fact at all. I miss a discussion why an abstraction over a monad
 would not be sufficient to achieve all you want to achieve.
 --
-To us, monads in PL are used for structuring and sequencing computations.
-We do not understand the meaning of "an encoding is monadic".  For example,
-in the R and C interpreters, we do no fix the evaluation order, so we do
-not see how this would be monadic.
-
+What does "the encoding is monadic" mean?  We don't understand this
+phrase because, to us, monads in programming languages are used to
+structure and sequence computations.  In the R and C interpreters for
+example, we do not fix the evaluation order, so we do not see how this
+encoding is monadic.
 
 p15, section 4.4
      btw, I do not find these names R, L, and C very intuitive or
