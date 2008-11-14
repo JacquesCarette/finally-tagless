@@ -1,27 +1,49 @@
-(* Delimited continuations: multi-prompt shift/reset with the
- * polymorphic answertype and variously typed prompts.
+(* name:          cc.ml
+ * synopsis:      Delimited continuation monad
+ *                shift/reset with multiple prompts
+ * authors:       Oleg Kiselyov, Chung-chieh Shan, and Amr Sabry
+ * last revision: Thu Nov 13 10:05:14 UTC 2008
+ * ocaml version: 3.12.0
  *
- * This code uses neither existentials nor universals, and relies on
- * NO unsafe operations like Obj.magic.
+ * Copyright (C) 2006-2008  O. Kiselyov, C.-c. Shan, A. Sabry
  *
- * This code was a part of a constructive proof that if reference
- * cells are available, then the single-prompt shift/reset without
- * polymorphic answertype is sufficient to implement multi-prompt
- * shift/reset with the polymorphic answertype -- while fully
- * preserving strong typing.  In other words, if a type system is
- * strong enough to support reference cells, it shall support
- * multi-prompt delimited continuations.
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Library General Public
+ * License as published by the Free Software Foundation; either
+ * version 2 of the License, or (at your option) any later version.
  *
- * So, given typed delimited continuations one can get typed reference
- * cells, and vice versa -- preserving the typing.  This code proves
- * the vice versa direction.
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Library General Public License for more details.
  *
- * This code is given with no explanations whatsoever.  There is no
- * published explanation.  The one that exists is considered ``terse''
- * by one of the co-authors.  We are planning to submit the technique
- * to a suitable venue.  We are not sure which.
- *
- * This is joint work with Chung-chieh Shan and Amr Sabry. *)
+ * You should have received a copy of the GNU Library General Public
+ * License along with this library; if not, write to the Free
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *)
+
+
+(** This code uses neither existentials nor universals, and relies on
+    NO unsafe operations like Obj.magic.
+
+    This code was a part of a constructive proof that if reference
+    cells are available, then the single-prompt shift/reset without
+    polymorphic answertype is sufficient to implement multi-prompt
+    shift/reset with the polymorphic answertype -- while fully
+    preserving strong typing.  In other words, if a type system is
+    strong enough to support reference cells, it shall support
+    multi-prompt delimited continuations.
+
+    So, given typed delimited continuations one can get typed
+    reference cells, and vice versa -- preserving the typing.  This
+    code proves the vice versa direction.
+
+    This code is given with no explanations whatsoever.  There is no
+    published explanation.  The one that exists is considered
+    ``terse'' by one of the co-authors.  We are planning to submit the
+    technique to a suitable venue.  We are not sure which.
+
+    This is joint work with Chung-chieh Shan and Amr Sabry. *)
 
 
 (** Haskell's Cont monad _without_ the answer-type polymorphism. *)

@@ -1,13 +1,46 @@
+2008-11-13  Lydia van Dijk  <lvandijk@freenet.de>
+
+	Separate version information from "Makefile".
+	* Makefile: Add sentence-ending period to complete sentences.
+	(RM, RMDIR, SED): New variables.
+	(clean, distclean, %:%.in): Use new variables.
+	(doc): Drop the extension ".html" as the documentation system now
+	automatically adds it.
+	(VERSION): Get the actual version number from file "VERSION".
+	(INTERACTIVE-LIBRARIES): New variable.  Drop "pa_extend.cmo" as it
+	does not exist anymore in newer Ocaml versions.  Add "dynlink.cma"
+	to satisfy the reference to "Dynlink".
+	(top-level): Use variable INTERACTIVE-LIBRARIES.
+	* VERSION: New file.
+
+	Add or update copyright information.
+	* cc.ml, cc.mli: Add copyright notice including GPL.
+	* monadic_io.ml, pythagorean_triples.ml: Ditto.
+	* test_cc.ml, test_exception.ml, test_monad.ml: Ditto.
+	* test_rec.ml, test_syntax.ml: Ditto.
+	* exception.ml, exception.mli: Update copyright year range.
+	* io.ml, io.mli: Ditto.
+	* pa_monad-camlp4-3.09.ml: Ditto.
+	* utest.ml, utest.mli: Ditto.
+
+	* pa_monad.ml: Spice up the documentation by adding hyperlinks to
+	the OCaml documentation.  Refer to code in the text more
+	consistently.  Insert some linebreaks to make code layout more
+	consistent.  Clarify some error messages.
+	(quality): Rename local variable.
+
+	* index.html: Tidy; use Un*x-like line ends.
+
 2008-11-12  Jacques Carette <carette@mcmaster.ca>
 
-	* index.html: update for new release (see all 2008 changes)
+	* index.html: Update for new release (see all 2008 changes).
 	* Makefile (VERSION): Bump forward.
 
 2008-11-10  Jacques Carette <carette@mcmaster.ca>
 
-	* README: Fix some comments
-	* pa_monad.ml: Fix some comments.  Mention 'return' as not
-	    needed from the translation (this confused some users).
+	* README: Fix some comments.
+	* pa_monad.ml: Fix some comments.  Mention "return" as not
+	needed from the translation (this confused some users).
 
 2008-10-30  Lydia van Dijk  <lvandijk@freenet.de>
 

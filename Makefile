@@ -1,8 +1,8 @@
 # name:          Makefile
 # synopsis:      Construction rules for monadic "do" syntax extension
 # authors:       Chris L. Spiel (nifty stuff), Lydia E. van Dijk (boring rest)
-# last revision: Sat Aug 11 06:28:36 UTC 2007
-# ocaml version: 3.11.0
+# last revision: Thu Nov 13 08:28:15 UTC 2008
+# make version:  3.81
 
 
 ########################################################################
@@ -12,7 +12,7 @@
 ########################################################################
 
 # [$(call rotate-left, LIST)] answers LIST rotated to the left by one
-# position
+# position.
 define rotate-left
 $(wordlist 2, 999, $(1)) $(word 1, $(1))
 endef
@@ -40,6 +40,12 @@ TESTS := pythagorean_triples.ml \
 INTERACTIVE-TESTS := monadic_io.ml
 
 
+# These are the libraries necessary to run the OCaml interpreter with
+# out syntax extension.  For older OCaml version use "camlp4o.cma
+# pa_extend.cmo".
+INTERACTIVE-LIBRARIES := dynlink.cma camlp4o.cma
+
+
 # Names of all modules in addition to the syntax-extension that are
 # documented.
 ADDITIONAL-DOCUMENTED-MODULES := cc.ml exception.ml io.ml utest.ml
@@ -61,11 +67,15 @@ PP := -pp '$(CAMLP4) -I . $(SYNTAX-EXTENSION)'
 PP-EXT := -pp $(CAMLP4)
 
 
-# Directory for the html documentation
+# Directory for the HTML documentation
 HTML-DOCUMENTATION := html-doc
 
 
 # OCaml interpreter
+#
+# Use for example [rlwrap ocaml] to get convenient command-line
+# editing within the interpreter.  RLWrap can be found at
+# http://utopia.knoware.nl/~hlub/uck/rlwrap/.
 OCAML := ocaml
 
 
@@ -117,12 +127,29 @@ OCAMLFINDFLAGS :=
 DISTNAME := monad-syntax-extension
 
 
-# Version number of the tarball.  (See DISTNAME.)
-VERSION := 5.2
+# Get the version number of the packages from file "VERSION".
+VERSION := $(shell cat VERSION)
 
 
 # Name of the package for findlib
 FINDLIB-NAME := monad
+
+
+# Non Ocaml Tools
+
+# Name of the program to erase files.
+RM := rm -f
+
+
+# Name of the program to erase directories.
+RMDIR := rmdir
+
+
+# Name of the program to replace strings in files.
+#
+# If you have no working sed(1) on your machine or your are not into
+# Latin, use [perl -Wp] instead.
+SED := sed
 
 
 ########################################################################
@@ -141,23 +168,23 @@ all: $(SYNTAX-EXTENSION)
 test: $(foreach file,$(TESTS:.ml=),run-$(file)) $(INTERACTIVE-TESTS:.ml=)
 
 
-# Run a selected test only
+# Run a selected test only.
 run-%: %
 	./$^
 
 
 # Generate the documentation.
 .PHONY: doc
-doc: $(HTML-DOCUMENTATION)/$(SYNTAX-EXTENSION:.cmo=).html
+doc: $(HTML-DOCUMENTATION)/$(SYNTAX-EXTENSION:.cmo=)
 
 
-# Let findlib install the syntax extension
+# Let findlib install the syntax extension.
 .PHONY: findlib-install
 findlib-install: META $(SYNTAX-EXTENSION)
 	$(OCAMLFIND) install $(OCAMLFINDFLAGS) $(FINDLIB-NAME) $^
 
 
-# Let findlib install the syntax extension
+# Let findlib un-install the syntax extension.
 .PHONY: findlib-uninstall
 findlib-uninstall:
 	$(OCAMLFIND) remove $(OCAMLFINDFLAGS) $(FINDLIB-NAME)
@@ -173,14 +200,14 @@ dist:
             --file=$(DISTNAME)-$(VERSION).tar.gz \
             --directory=.. \
             $(DISTNAME)-$(VERSION)
-	rm ../$(DISTNAME)-$(VERSION)/*
-	rmdir ../$(DISTNAME)-$(VERSION)
+	$(RM) ../$(DISTNAME)-$(VERSION)/*
+	$(RMDIR) ../$(DISTNAME)-$(VERSION)
 
 
 # Check whether the project is ready for distribution:
 # (1) Remove all files that can be remade.
 # (2) Rebuild everything and run all tests.
-# (3) Generate documentation
+# (3) Generate documentation.
 .PHONY: distcheck
 distcheck: distclean test doc
 
@@ -189,26 +216,26 @@ distcheck: distclean test doc
 # extensions.
 .PHONY: top-level
 top-level: $(SYNTAX-EXTENSION)
-	$(OCAML) camlp4o.cma pa_extend.cmo $(SYNTAX-EXTENSION)
+	$(OCAML) $(INTERACTIVE-LIBRARIES) $(SYNTAX-EXTENSION)
 
 
-# Remove most files that we can remake
+# Remove most files that we can remake.
 .PHONY: clean
 clean:
-	rm -f *.cm[iox] *.annot
-	rm -f $(TESTS:.ml=) $(TESTS:.ml=.opt)
-	rm -f $(INTERACTIVE-TESTS:.ml=) $(INTERACTIVE-TESTS:.ml=.opt)
+	$(RM) *.cm[iox] *.annot
+	$(RM) $(TESTS:.ml=) $(TESTS:.ml=.opt)
+	$(RM) $(INTERACTIVE-TESTS:.ml=) $(INTERACTIVE-TESTS:.ml=.opt)
 
 
 # Remove all files that we can remake and all uninteresting ones, too.
 .PHONY: distclean
 distclean: clean
-	rm --force *.ml-pp *.mli-gen $(DISTNAME)-*.tar.gz *~
-	rm --force --recursive $(HTML-DOCUMENTATION)
-	rm --force META
+	$(RM) *.ml-pp *.mli-gen $(DISTNAME)-*.tar.gz *~
+	$(RM) -r $(HTML-DOCUMENTATION)
+	$(RM) META transcript.log
 
 
-# Target for forced rule application
+# Canonical target for forced rule application
 .PHONY: FORCE
 
 
@@ -281,10 +308,10 @@ $(TESTS:.ml=.cmo): %.cmo: %.ml
 
 # Instantiate generic files with the values of this Makefile.
 %: %.in
-	sed \
-	    -e 's|@VERSION@|$(VERSION)|g' \
-	    -e 's|@NAME@|$(FINDLIB-NAME)|g' \
-	    -e 's|@EXTENSION@|$(SYNTAX-EXTENSION)|g' \
+	$(SED) \
+	    -e 's|\@VERSION@|$(VERSION)|g;' \
+	    -e 's|\@NAME@|$(FINDLIB-NAME)|g;' \
+	    -e 's|\@EXTENSION@|$(SYNTAX-EXTENSION)|g;' \
 	    < $< > $@
 
 
@@ -295,7 +322,7 @@ $(TESTS:.ml=.cmo): %.cmo: %.ml
 ########################################################################
 
 # Generate the documentation for our syntax extension.
-$(HTML-DOCUMENTATION)/$(SYNTAX-EXTENSION:.cmo=).html: \
+$(HTML-DOCUMENTATION)/$(SYNTAX-EXTENSION:.cmo=): \
   $(SYNTAX-EXTENSION:.cmo=.ml) $(ADDITIONAL-DOCUMENTED-MODULES:.ml=.cmi)
 	test -d $(HTML-DOCUMENTATION) || mkdir $(HTML-DOCUMENTATION)
 	$(OCAMLDOC) $(OCAMLDOCFLAGS) -html -d $(HTML-DOCUMENTATION) \

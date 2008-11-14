@@ -1,10 +1,10 @@
 (* name:          utest.ml
  * synopsis:      simple unit-test framework
  * author:        Lydia E. van Dijk
- * last revision: Sun Mar 19 15:41:50 UTC 2006
- * ocaml version: 3.09.0
+ * last revision: Thu Nov 13 09:54:11 UTC 2008
+ * ocaml version: 3.12.0
  *
- * Copyright (C) 2006  J. Carette, L. E. van Dijk, O. Kiselyov
+ * Copyright (C) 2006-2008  J. Carette, L. E. van Dijk, O. Kiselyov
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public

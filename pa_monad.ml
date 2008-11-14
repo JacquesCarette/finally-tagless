@@ -2,10 +2,10 @@
  * synopsis:      Haskell-like "do" for monads
  * authors:       Jacques Carette and Oleg Kiselyov,
  *                based in part of work of Lydia E. Van Dijk
- * last revision: Sat Aug 11 06:21:17 UTC 2007
- * ocaml version: 3.10.0
+ * last revision: Thu Nov 13 09:27:46 UTC 2008
+ * ocaml version: 3.12.0
  *
- * Copyright (C) 2006, 2007  J. Carette, L. E. van Dijk, O. Kiselyov
+ * Copyright (C) 2006-2008  J. Carette, L. E. van Dijk, O. Kiselyov
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -25,7 +25,7 @@
 
 (** {2 Syntax Extension to Support Monads}
 
-This module extends OCaml's syntax by a Haskell-like "do"-notation
+This module extends OCaml's syntax by a Haskell-like "[do]"-notation
 particularly suited for the work with monads.
 
 By the nature of the translation process (at pre-processing time,
@@ -35,45 +35,45 @@ actually obeys the three fundamental laws for all monads:
 + [bind m return]      is identical to  [m]
 + [bind (bind m f) g]  is identical to  [bind m (fun x -> bind (f x) g)]
 
-where [bind] and [return] are user defined functions. Incidentally, in
-Haskell, too, it is entirely the responsibility of the programmer to
-make sure that [bind] and [return] implemented for a particular Monad
-do indeed obey the above laws.
+where [bind] and [return] are user defined functions.  Incidentally,
+in Haskell, too, it is entirely the responsibility of the programmer
+to make sure that [bind] and [return] are implemented for a particular
+Monad do indeed obey the above laws.
 
 
 {2 Conversion Rules}
 
 {3 Grammar informally}
-We support four different constructs to introduce a monadic
+We support four different constructs to introduce monadic
 expressions.
 - [perform exp]
 - [perform exp1; exp2]
 - [perform x <-- exp1; exp2]
 - [perform let x = foo in exp]
 
-which is almost literally the grammar of the Haskell's "do"-notation,
-with the differences that Haskell uses "do" and "<-" where we use
-"[perform]" and "[<--]".
+which is almost literally the grammar of the Haskell's
+"[do]"-notation, with the differences that Haskell uses "[do]" and
+"[<-]" where we use "[perform]" and "[<--]".
 
-We support not only [let x = foo in ...]  expressions but arbitrarily
+We support not only [let x = foo in ...] expressions but arbitrarily
 complex [let]-expressions, including [let rec] and [let module].
 
 
 {4 Extended Forms}
 The actual bind function of the monad defaults to "[bind]" and the
-match-failure function to "[failwith]" (only used for refutable
-patterns; see below).  To select a different function, use the
+match-failure function to "[failwith]".  The latter is only used for
+refutable patterns; see below.  To select different functions, use the
 extended forms of "[perform]".
 
-{b Expression:} Use the given expression as bind-function and apply
-the default match-failure function ([failwith]) where necessary.
+{b Expression:} Use the given expression as "[bind]"-function and
+apply the default match-failure function ([failwith]) where necessary.
 {[
         perform with exp1 in exp2
         perform with exp1 in exp3; exp4
         perform with exp1 in x <-- exp2; exp3
         perform with exp in let x = foo in exp
 ]}
-Use the first given expression ([exp1]) as bind-function and the
+Use the first given expression ([exp1]) as "[bind]"-function and the
 second ([exp2]) as match-failure function.
 {[
         perform with exp1 and exp2 in exp3
@@ -100,6 +100,7 @@ An irrefutable pattern is either:
 - A tuple with irrefutable patterns,
 - A record with irrefutable patterns, or
 - An irrefutable pattern with a type constraint.
+
 Any other pattern is refutable.
 
 Why do we need this distinction?  Well, the expression
@@ -136,21 +137,29 @@ discussion} on the same issue.
 Formally the grammar of [pa_monad] can be specified as follows.
 {[
         "perform" ["with" <user-function-spec> "in"] <perform-body>
+
         <user-function-spec> ::=
                   EXPR ["and" EXPR]
                 | "module" MODULE-NAME
-        <binding> ::=
-                  PATTERN "<--" EXPR
+
         <perform-body> ::=
                   <LET-FORM> <perform-body>
                 | EXPR
                 | <binding> ";" <perform-body>
                 | "rec" <binding> ["and" <binding> [...]] ";" <perform-body>
+
+        <binding> ::= PATTERN "<--" EXPR
 ]}
-where [EXPR] is an OCaml expression {i expr} as defined in Section 6.7
-of the OCaml manual, [MODULE-NAME] a {i module-name} (Sec. 6.3),
-[LET-FORM] is any of the [let], [let rec], or [let module] {i let-forms}
-(Sec. 6.7), and [PATTERN] a {i pattern} (Sec. 6.6).
+where
+- [EXPR] is an OCaml expression {i expr} as defined in
+{{:http://caml.inria.fr/pub/docs/manual-ocaml/expr.html} Section 6.7, "Expressions"},
+of the OCaml manual,
+- [MODULE-NAME] a {i module-name}
+({{:http://caml.inria.fr/pub/docs/manual-ocaml/manual011.html} Sec. 6.3, "Names"}),
+- [LET-FORM] is any of the [let], [let rec], or [let module] {i let-forms}
+({{:http://caml.inria.fr/pub/docs/manual-ocaml/expr.html} Sec. 6.7, "Expressions"}), and
+- [PATTERN] a {i pattern}
+({{:http://caml.inria.fr/pub/docs/manual-ocaml/patterns.html} Sec. 6.6, "Patterns"}).
 
 The "[rec]" keyword allows for a recursive binding in
 {[
@@ -163,11 +172,10 @@ The syntax extension groups all bindings in a "[rec]"-"[and]", but
 it does not group consecutive "[rec]"-bindings.  This grouping is
 sometimes called segmentation.
 
-Example:
-Define a recursive group of bindings consisting of three patterns
-(PATTERN1-PATTERN3) and expressions (EXPR1-EXPR3), a non-recursive
-binding PATTERN4/EXPR4, and finally a single recursive binding
-PATTERN5/EXPR5:
+{b Example:} Define a recursive group of bindings consisting of three
+patterns ([PATTERN1]-[PATTERN3]) and expressions ([EXPR1]-[EXPR3]), a
+non-recursive binding [PATTERN4]/[EXPR4], and finally a single
+recursive binding [PATTERN5]/[EXPR5]:
 {[
         "rec" PATTERN1 "<--" EXPR1
         "and" PATTERN2 "<--" EXPR2
@@ -175,12 +183,19 @@ PATTERN5/EXPR5:
               PATTERN4 "<--" EXPR4 ";"
         "rec" PATTERN5 "<--" EXPR5 ";"
 ]}
-Please consult Section 7.3 of the Manual for valid recursive
-definitions of values, as the only allowed [PATTERN] in the recursive
-case is a [NAME], similarly stringent restrictions apply to [EXPR].
-The theoretical aspects of recursive monadic bindings can be found in
-Levent Erkök, John Launchbury: "{i A Recursive do for Haskell}".
+Please consult
+{{:http://caml.inria.fr/pub/docs/manual-ocaml/manual021.html} Section
+7.3, "Recursive definitions of values"} of the Manual for valid
+recursive definitions of values, as the only allowed [PATTERN] in the
+recursive case is a [NAME].  Similarly stringent restrictions apply to
+[EXPR].
 
+The theoretical aspects of recursive monadic bindings can be found in:
+Levent Erkök and John Launchbury,
+{{:http://www.cse.ogi.edu/PacSoft/projects/rmb/recdo.ps.gz} "A
+Recursive do for Haskell"}.
+
+{b Formal Types of [bind] and [failwith]}
 
 For any ['a monad] the expansion uses the functions "[bind]" and
 "[failwith]" with the signatures
@@ -232,9 +247,9 @@ refutable patterns with [rpat].
 It is be possible to use "[<-]" instead of "[<--]".  In that case, the
 similarity to the "[do]" notation of Haskell will be complete.
 However, if the program has [_ <- exp] outside of [perform], this will
-be accepted by the parser (and create an (incomprehensible) error
-later on).  It is better to use a dedicated symbol "[<--]", so if the
-user abuses it, the error should be clear right away.
+be accepted by the parser (and create an incomprehensible error later
+on).  It is better to use a dedicated symbol "[<--]", so if the user
+abuses it, the error should be clear right away.
 
 The major difficulty with the [perform] notation is that it cannot
 truly be parsed by an LR-grammar.  Indeed, to figure out if we should
@@ -242,17 +257,18 @@ start parsing <perform-body> as an expression or a pattern, we have to
 parse it as a pattern and check for the "[<--]" delimiter.  If it is
 not there, we should {e backtrack} and parse it again as an
 expression.  Furthermore, [a <-- b] (or [a <- b]) can also be parsed
-as an expression.  However, some patterns, for example ([_ <-- exp]),
+as an expression.  However, some patterns, for example [_ <-- exp],
 cannot be parsed as an expression.
 
 It is possible (via some kind of flag) to avoid parsing [_ <-- exp]
-outside of perform. But this becomes quite complex and unreliable.  To
-record a particular expression [patt <-- exp] in AST, we use the node
+outside of [perform].  But this becomes quite complex and unreliable.
+To record a particular expression [patt <-- exp] in the AST, we use
+the node
 {[
     <:expr< let [(patt, exp)] in $lid:"<--"$ >>
 ]}
 If the construction [_ <-- exp] is used by mistake, we get an error
-message about an unbound identifier "<--", which is our intention.
+message about an unbound identifier "[<--]", which is our intention.
 
 
 {2 Known Issues}
@@ -264,7 +280,7 @@ message about an unbound identifier "<--", which is our intention.
   ]}
   and later use
   {[
-        perform T <- T; ...
+        perform T <-- T; ...
   ]}
   you get "Warning U: this match case is unused." which is not deserved.
 
@@ -354,8 +370,9 @@ let rec exp_to_patt (_loc: Ast.Loc.t) (an_expression: Ast.expr): Ast.patt =
     | <:expr< ($e$ : $t$) >> ->                (* type restriction *)
       let p = exp_to_patt _loc e in
         <:patt< ($p$ : $t$) >>
-    | _ -> Loc.raise _loc
-        (Stream.Error "exp_to_patt: this pattern is not yet supported")
+    | _ ->
+      Loc.raise _loc
+        (Stream.Error "exp_to_patt: this expression is not yet supported")
 (** [recbinding_to_pattrec _loc an_exp_record]
 
     Convert [an_exp_record] to a pattern matching a record. *)
@@ -376,7 +393,7 @@ and recbinding_to_patt (_loc: Ast.Loc.t) (an_exp_record: Ast.rec_binding): Ast.p
 
 (** [patt_to_exp _loc a_pattern]
 
-    Convert [a_pattern] to an expression, if we must reuse it an a
+    Convert [a_pattern] to an expression, if we must reuse it in a
     different semantic position. *)
 let rec patt_to_exp (_loc: Ast.Loc.t) (a_pattern: Ast.patt): Ast.expr =
   match a_pattern with
@@ -403,7 +420,10 @@ let rec patt_to_exp (_loc: Ast.Loc.t) (a_pattern: Ast.patt): Ast.expr =
         <:expr< ($p$ : $t$) >>
     | _ ->
       Loc.raise _loc
-        (Stream.Error "patt_to_exp: this expression is not yet supported")
+        (Stream.Error "patt_to_exp: this pattern is not yet supported")
+(** [patt_to_recbinding _loc a_pattern]
+
+    Convert [a_pattern] to a recursive binding. *)
 and patt_to_recbinding (_loc: Ast.Loc.t) (a_pattern: Ast.patt): Ast.rec_binding =
   match a_pattern with
       <:patt< >> -> <:rec_binding< >>
@@ -417,7 +437,9 @@ and patt_to_recbinding (_loc: Ast.Loc.t) (a_pattern: Ast.patt): Ast.rec_binding 
     | <:patt< $anti:_$ >> ->
       Loc.raise _loc
         (Stream.Error "patt_to_recbinding: antiquotation are not yet supported")
-    | _ -> Loc.raise _loc (Stream.Error "patt_to_recbinding: not reached")
+    | _ ->
+      Loc.raise _loc
+        (Stream.Error "patt_to_recbinding: never reached")
 
 
 (** [is_irrefutable_pattern a_pattern]
@@ -483,7 +505,7 @@ let convert
     match a_perform_body with
         <:expr< let $rec:_$ $_$ in $lid:"<--"$ >> ->
           Loc.raise _loc
-            (Stream.Error "convert: monadic binding cannot be last a \"perform\" body")
+            (Stream.Error "convert: monadic binding cannot be last in a \"perform\" body")
       | <:expr< let $rec:r$ $binding:bs$ in $body$ >> ->
         let body' = loop _loc body in
           <:expr< let $rec:r$ $binding:bs$ in $body'$ >>
@@ -545,18 +567,18 @@ let convert
   in loop _loc a_perform_body
 
 
-(** [qualify _loc a_module_expression a_function_expression]
+(** [qualify _loc a_module_ident a_function_expression]
 
     Append [a_function_expression] to the module name given in
-    [a_module_expression], this is, qualify [a_function_expression] by
-    [a_module_expression].  Fail if [a_module_expression] is not a valid
+    [a_module_ident], this is, qualify [a_function_expression] by
+    [a_module_ident].  Fail if [a_module_ident] is not a valid
     module name. *)
 let qualify
     (_loc: Ast.Loc.t)
     (a_module_ident: Ast.ident)
     (a_function_expression: Ast.expr): Ast.expr =
-  let me = <:expr< $id:a_module_ident$ >> in
-    <:expr< $me$ . $a_function_expression$ >>
+  let mod_expr = <:expr< $id:a_module_ident$ >> in
+    <:expr< $mod_expr$ . $a_function_expression$ >>
 
 
 (* Here we have to do the same nasty trick that Camlp4 uses and even

@@ -5,7 +5,7 @@
  * last revision: Wed Mar 22 07:22:00 UTC 2006
  * ocaml version: 3.09.0
  *
- * Copyright (C) 2006  J. Carette, L. E. van Dijk, O. Kiselyov
+ * Copyright (C) 2006-2008  J. Carette, L. E. van Dijk, O. Kiselyov
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public

@@ -1,10 +1,10 @@
 (* name:          exception.ml
  * synopsis:      exception monad
  * author:        Lydia E. van Dijk
- * last revision: Sat Jan 21 18:39:03 UTC 2006
- * ocaml version: 3.09.0
+ * last revision: Thu Nov 13 09:51:57 UTC 2008
+ * ocaml version: 3.12.0
  *
- * Copyright (C) 2006  J. Carette, L. E. van Dijk, O. Kiselyov
+ * Copyright (C) 2006-2008  J. Carette, L. E. van Dijk, O. Kiselyov
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public

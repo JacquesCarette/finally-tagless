@@ -1,38 +1,41 @@
-<!doctype html public "-//w3c//dtd html 4.0 transitional//en">
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
 <html>
 <head>
-<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
-<title> Syntax extension for Monads in Ocaml</title>
-<style type="text/css">
-body
-{ background-color: #FFFFF0; /* ivory */
-text-align: justify;
-line-height: 1.1;
-margin: 2%;
-}
+<meta http-equiv="Content-Type" content="text/html; charset=us-ascii">
+<title>Syntax extension for Monads in Ocaml</title>
 
-h1 {font-size: 180%; color: #0080CF }
-h2 {font-size: 130%; color: #BF0000 }
+<style type="text/css">
+body {background-color: #FFFFF0; /* ivory */
+      text-align: justify;
+      line-height: 1.1;
+      margin: 2%}
+
+h1 {font-size: 180%; color: #0080CF}
+h2 {font-size: 130%; color: #BF0000}
 h3 {font-size: 120%}
 h4 {font-size: 110%}
 h5 {font-size: 105%}
 h6 {font-size: 100%}
 
-dt {font-weight: bold; padding-top: 2pt }
+dt {font-weight: bold; padding-top: 2pt}
 
-li { margin-bottom: 5pt; }
+li {margin-bottom: 5pt}
 </style>
-
 </head>
-<body text="#000000">
-<h1> Syntax extension for Monads in Ocaml</h1>
-<p><b>Jacques Carette,  Lydia E. van Dijk and Oleg Kiselyov</b></p>
-<h2>Summary</h2>
-<p> This Camlp4 extension provides some syntactic sugar to beautify monadic
-expressions.  </p>
 
-<p>Example: A simple but realistic example of the use of a list monad
-looks like this
+<body text="#000000">
+<h1>Syntax extension for Monads in Ocaml</h1>
+
+<p><b>Jacques Carette, Lydia E. van Dijk and Oleg Kiselyov</b></p>
+
+<h2>Summary</h2>
+
+<p>This Camlp4 extension provides some syntactic sugar to beautify
+monadic expressions.</p>
+
+<p>Example: A simple but realistic example of the use of a list
+monad looks like this</p>
+
 <pre>
         bind
           [1; 2; 3]
@@ -40,48 +43,54 @@ looks like this
                       [3; 4; 5]
                       (fun b -&gt; return (a + b)))
 </pre>
-where we assume the appropriate definitions of the functions "bind"
-and "return".  With the help of "pa_monad" this can be written as
+
+<p>where we assume the appropriate definitions of the functions "bind"
+and "return".  With the help of "pa_monad" this can be written as</p>
+
 <pre>
         perform
           a &lt;-- [1; 2; 3];
           b &lt;-- [3; 4; 5];
           return (a + b)
 </pre>
-which is much clearer and thus easier to understand and maintain.  By
-the way, the expression evaluates to
 
-        [4; 5; 6; 5; 6; 7; 6; 7; 8]
+<p>which is much clearer and thus easier to understand and maintain.
+By the way, the expression evaluates to [4; 5; 6; 5; 6; 7; 6; 7; 8]
+the sum of each pair of values of the input lists.  For more
+examples have a look at the examples <a href=
+"exception.ml">exception.ml</a> or <a href=
+"pythagorean_triples.ml">pythagorean_triples.ml</a>.
+A <a href="pa_monad.tar.gz">complete package</a> (as a .tar.gz
+file) containing the extension itself, a <a href=
+"Makefile">Makefile</a>, examples and several tests is available.
+See the <a href="README">README</a> for more details.</p>
 
-the sum of each pair of values of the input lists.  For more examples
-have a look at the examples <a href="exception.ml">exception.ml</a> or
-<a href="pythagorean_triples.ml">pythagorean_triples.ml</a>.  </p>
+<p>Change history:</p>
 
-<p>A <a href="pa_monad.tar.gz">complete package</a> (as a .tar.gz file)
-containing the extension itself, a 
-<a href="Makefile">Makefile</a>, examples and several tests is available.  See
-the <a href="README">README</a> for more details.  </p>
-
-<p>Change history:<br />
 <ul>
-    <li>1.2.1 - update for Ocaml 3.11, compatible with 3.10 (and some 
-    forthcoming 3.12 changes too).  Version for 3.09 still included.
-    Switch to elisp-mode hook rather than patch for tuareg.</li>
-    <li>1.2.0 - adds support for Ocaml 3.10.  Version for 3.09 still included.</li>
-    <li>1.1.1 - support tuareg 1.46.2, the previous patch no longer worked; 
-      (this patch has been superceded)</li>
-<li>1.1 - added findlib support and includes 
-<a href="http://okmij.org/ftp/Computation/Continuations.html#caml-shift">Oleg's</a>
-support for <a href="cc.mli">delimited continuations</a>
-(<a href="test_cc.ml">examples</a>).  </li>
+<li>1.2.1 - update for Ocaml 3.11, compatible with 3.10 (and some
+forthcoming 3.12 changes too).  Version for 3.09 still included.
+Switch to elisp-mode hook rather than patch for tuareg.</li>
+
+<li>1.2.0 - adds support for Ocaml 3.10.  Version for 3.09 still
+included.</li>
+
+<li>1.1.1 - support tuareg 1.46.2, the previous patch no longer
+worked; (this patch has been superceded)</li>
+
+<li>1.1 - added findlib support and includes <a href=
+"http://okmij.org/ftp/Computation/Continuations.html#caml-shift">Oleg's</a>
+support for <a href="cc.mli">delimited continuations</a> (<a href=
+"test_cc.ml">examples</a>).</li>
 <li>1.0 - Initial release</li>
 </ul>
-</p>
 
-<p>This code is released under
-the <a href="COPYING">GNU library general public license</a> in a way which is 
-compatible with <a href="http://caml.inria.fr">Ocaml's</a> own license.  </p>
-<hr size=1>
-<small><i>version 1.2.1.  November 12, 2008</i></small>
+<p>This code is released under the <a href="COPYING">GNU library
+general public license</a> in a way which is compatible with
+<a href="http://caml.inria.fr">Ocaml's</a> own license.</p>
+
+<hr size="1">
+
+<small><i>version 1.2.1. November 12, 2008</i></small>
 </body>
 </html>
