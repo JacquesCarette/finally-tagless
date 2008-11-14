@@ -259,7 +259,7 @@ p11, section 4
      what that means.
 --
 At the beginning of Section 4, we now clarify
-tionthat what's surprising is that the family of interpretations can
+that what's surprising is that the family of interpretations can
 encompass partial evaluation, and state up front that our partial
 evaluator is online.
 
