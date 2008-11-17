@@ -40,8 +40,7 @@ let test_ones _ =
          List.nth ones 0 = 1 && List.nth ones 1 = 1)
 
 
-(* Richard Bird's famous example
- * See also: http://www.cse.ogi.edu/PacSoft/projects/rmb/repMin.html *)
+(* Richard Bird's famous "repMin" example *)
 
 type 'a tree =
     Leaf of 'a

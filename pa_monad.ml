@@ -191,9 +191,7 @@ recursive case is a [NAME].  Similarly stringent restrictions apply to
 [EXPR].
 
 The theoretical aspects of recursive monadic bindings can be found in:
-Levent Erkök and John Launchbury,
-{{:http://www.cse.ogi.edu/PacSoft/projects/rmb/recdo.ps.gz} "A
-Recursive do for Haskell"}.
+Levent Erkök and John Launchbury, "A Recursive do for Haskell".
 
 {b Formal Types of [bind] and [failwith]}
 
@@ -299,9 +297,7 @@ message about an unbound identifier "[<--]", which is our intention.
 
 - The recursive form "[rec ... <-- ...]" is not implemented completely.
   It lacks support for a (user-specified) fix-point function.  See
-  for example Erkök and Launchbury's
-  {{:http://www.cse.ogi.edu/PacSoft/projects/rmb/recdo.ps.gz} "A
-  Recursive do for Haskell"}.
+  for example Erkök and Launchbury's "A Recursive do for Haskell".
  *)
 
 

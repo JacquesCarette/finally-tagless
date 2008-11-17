@@ -1,3 +1,8 @@
+2008-11-17  Lydia van Dijk  <lvandijk@freenet.de>
+
+	* pa_monad.ml: Remove links to documents that no longer exist.
+	* test_rec.ml: Ditto.
+
 2008-11-13  Lydia van Dijk  <lvandijk@freenet.de>
 
 	Separate version information from "Makefile".
