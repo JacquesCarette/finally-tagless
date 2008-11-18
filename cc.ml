@@ -3,7 +3,7 @@
  *                shift/reset with multiple prompts
  * authors:       Oleg Kiselyov, Chung-chieh Shan, and Amr Sabry
  * last revision: Thu Nov 13 10:05:14 UTC 2008
- * ocaml version: 3.12.0
+ * ocaml version: 3.11
  *
  * Copyright (C) 2006-2008  O. Kiselyov, C.-c. Shan, A. Sabry
  *

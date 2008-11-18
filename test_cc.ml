@@ -1,7 +1,7 @@
 (* name:          test_cc.ml
  * synopsis:      test the delimited continuation monad
  * author:        Oleg Kiselyov
- * ocaml version: 3.12.0
+ * ocaml version: 3.11
  *
  * Copyright (C) 2006-2008  J. Carette, L. E. van Dijk, O. Kiselyov
  *

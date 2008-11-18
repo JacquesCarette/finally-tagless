@@ -3,7 +3,7 @@
  * authors:       Jacques Carette and Oleg Kiselyov,
  *                based in part of work of Lydia E. Van Dijk
  * last revision: Thu Nov 13 09:27:46 UTC 2008
- * ocaml version: 3.12.0
+ * ocaml version: 3.11
  *
  * Copyright (C) 2006-2008  J. Carette, L. E. van Dijk, O. Kiselyov
  *

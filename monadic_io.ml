@@ -2,7 +2,7 @@
  * synopsis:      Do input/output in a monadic way
  * author:        Lydia E. van Dijk
  * last revision: Wed Oct 29 10:04:40 UTC 2008
- * ocaml version: 3.12.0
+ * ocaml version: 3.11
  *
  * Copyright (C) 2006-2008  J. Carette, L. E. van Dijk, O. Kiselyov
  *

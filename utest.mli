@@ -2,7 +2,7 @@
  * synopsis:      simple unit-test framework
  * author:        Lydia E. van Dijk
  * last revision: Thu Nov 13 09:54:23 UTC 2008
- * ocaml version: 3.12.0
+ * ocaml version: 3.11
  *
  * Copyright (C) 2006-2008  J. Carette, L. E. van Dijk, O. Kiselyov
  *

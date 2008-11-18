@@ -2,7 +2,7 @@
  * synopsis:      Test non-determinism monad in the simplest possible implementation.
  * authors:       Jacques Carette and Oleg Kiselyov,
  * last revision: Wed Oct 29 09:44:35 UTC 2008
- * ocaml version: 3.12.0
+ * ocaml version: 3.11
  *
  * Copyright (C) 2006-2008  J. Carette, L. E. van Dijk, O. Kiselyov
  *
