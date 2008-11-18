@@ -1,7 +1,17 @@
 2008-11-18  Lydia van Dijk  <lvandijk@freenet.de>
 
+	Unify package version numbers.
+	* ChangeLog: Augment ChangeLog with the version numbers from
+	all 'Makefile' revisions.
+	* index.html: Convert document to strict XHTML.  Add a 'keywords'
+	meta-tag.  Improve text and code markup.
+	Replace the list of changes (Jacques' version numbers) with a
+	table of changes according to Lydia's version numbers formerly in
+	'Makefile'.
+
+	Revert OCaml version numbers.
 	* cc.ml, cc.mli: Revert OCaml version number in the file headers
-	from "3.12.0" to "3.11".  At this point actually everything runs
+	from '3.12.0' to '3.11'.  At this point actually everything runs
 	with OCaml 3.12.0+dev0.
 	* exception.ml, exception.mli: Ditto.
 	* io.ml, io.mli: Ditto.
@@ -19,16 +29,16 @@
 
 2008-11-13  Lydia van Dijk  <lvandijk@freenet.de>
 
-	Separate version information from "Makefile".
+	Separate version information from 'Makefile'.
 	* Makefile: Add sentence-ending period to complete sentences.
 	(RM, RMDIR, SED): New variables.
 	(clean, distclean, %:%.in): Use new variables.
-	(doc): Drop the extension ".html" as the documentation system now
+	(doc): Drop the extension '.html' as the documentation system now
 	automatically adds it.
-	(VERSION): Get the actual version number from file "VERSION".
-	(INTERACTIVE-LIBRARIES): New variable.  Drop "pa_extend.cmo" as it
-	does not exist anymore in newer Ocaml versions.  Add "dynlink.cma"
-	to satisfy the reference to "Dynlink".
+	(VERSION): Get the actual version number from file 'VERSION'.
+	(INTERACTIVE-LIBRARIES): New variable.  Drop 'pa_extend.cmo' as it
+	does not exist anymore in newer Ocaml versions.  Add 'dynlink.cma'
+	to satisfy the reference to 'Dynlink'.
 	(top-level): Use variable INTERACTIVE-LIBRARIES.
 	* VERSION: New file.
 
@@ -50,6 +60,10 @@
 
 	* index.html: Tidy; use Un*x-like line ends.
 
+
+Version 5.2
+
+
 2008-11-12  Jacques Carette <carette@mcmaster.ca>
 
 	* index.html: Update for new release (see all 2008 changes).
@@ -58,7 +72,7 @@
 2008-11-10  Jacques Carette <carette@mcmaster.ca>
 
 	* README: Fix some comments.
-	* pa_monad.ml: Fix some comments.  Mention "return" as not
+	* pa_monad.ml: Fix some comments.  Mention 'return' as not
 	needed from the translation (this confused some users).
 
 2008-10-30  Lydia van Dijk  <lvandijk@freenet.de>
@@ -73,21 +87,25 @@
 
 	Rename all source files with dashes in their names to avoid a new
 	compiler warning.  Use an underscore instead of a dash.
-	* monadic_io.ml: Rename from "monadic-io.ml".
-	* pythagorean_triples.ml: Rename from "pythagorean-triples.ml".
-	* test_cc.ml: Rename from "test-cc.ml".
-	* test_exception.ml: Rename from "test-exception.ml".
-	* test_monad.ml: Rename from "test-monad.ml".
-	* test_rec.ml: Rename from "test-rec.ml".
-	* test_syntax.ml: Rename from "test-syntax.ml".
+	* monadic_io.ml: Rename from 'monadic-io.ml'.
+	* pythagorean_triples.ml: Rename from 'pythagorean-triples.ml'.
+	* test_cc.ml: Rename from 'test-cc.ml'.
+	* test_exception.ml: Rename from 'test-exception.ml'.
+	* test_monad.ml: Rename from 'test-monad.ml'.
+	* test_rec.ml: Rename from 'test-rec.ml'.
+	* test_syntax.ml: Rename from 'test-syntax.ml'.
 	* Makefile: Change filenames according to the renaming spree at
 	filesystem level.
 	* README: Correctly refer to the new filenames.
 	* index.html: Ditto.
 
 	* README (Literature): Mention Brian Hurt's and Robert Fischer's
-	"Monad Tutorial for Ocaml".
+	'Monad Tutorial for Ocaml'.
 	(LGPL): Refer to specific file that contains the GNU license.
+
+
+Version 5.1
+
 
 2008-08-28  Jacques Carette <carette@mcmaster.ca>
 
@@ -103,6 +121,10 @@
 	OCaml-3.11.  (Tested with 3.11+dev12.)
 	Add R. Bird's book to literature section.
 	* cc.ml: Fix link to Haskell wiki.  Reformat code.
+
+
+Version 5.0
+
 
 2007-08-11  Lydia van Dijk  <lvandijk@freenet.de>
 
@@ -127,6 +149,10 @@
 	* Makefile (VERSION): Bump forward.
 	(dist): Create tarball using subversion.
 
+
+Version 4.2
+
+
 2007-04-22  Lydia van Dijk  <lvandijk@freenet.de>
 
 	* README (Contents): Add cc.ml, cc.mli, and test-cc.ml.
@@ -150,6 +176,10 @@
 
 	* cc.ml, cc.mli, test-cc.ml: New files.  Delimited continuation
 	monad (multi-prompt shift/reset) and the test cases.
+
+
+Version 4.1
+
 
 2006-06-16  Lydia van Dijk  <lvandijk@freenet.de>
 
@@ -349,6 +379,10 @@
 
 	* README: Add URL of a comprehensive bibliography on monads.
 
+
+Version 4.0
+
+
 2006-01-10  Lydia van Dijk  <lvandijk@freenet.de>
 
 	Mutually recursive bindings.
@@ -373,6 +407,10 @@
 	* README: Add section on highlights of the syntax extension.
 	* Makefile (VERSION): Bump forward.
 
+
+Version 3.0
+
+
 2006-01-09  Lydia van Dijk  <lvandijk@freenet.de>
 
 	* README: Extend and reword.  Add patch for Tuareg-mode to
@@ -395,6 +433,10 @@
 	construct are still commented out as 'pa_monad' cannot translate
 	it yet.
 	(monadic_deviation): Dito.
+
+
+Version 2.1
+
 
 2006-01-05  Oleg Kiselyov <oleg@pobox.com>
 
@@ -500,6 +542,10 @@
 
 	* Makefile: Rewrite almost completely.
 
+
+Version 2.0
+
+
 2005-12-18  Lydia van Dijk  <lvandijk@freenet.de>
 
 	* pa_monad.ml: Beautify documentation.  Add section on known
@@ -536,6 +582,10 @@
 	Rename 'mdo' to 'perform'.
 	* pa_monad.ml: Rename 'mdo' to 'perform'.
 	* test-syntax: Dito.
+
+
+Version 1.0
+
 
 2005-12-11  Lydia van Dijk  <lvandijk@freenet.de>
 

@@ -1,8 +1,10 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
-<html>
+<?xml version="1.0" encoding="us-ascii"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+      "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-<meta http-equiv="Content-Type" content="text/html; charset=us-ascii">
-<title>Syntax extension for Monads in Ocaml</title>
+<meta http-equiv="Content-Type" content="text/html; charset=us-ascii" />
+<meta name="keywords" content="ocaml, camlp4, syntax extension, monad" />
 
 <style type="text/css">
 body {background-color: #FFFFF0; /* ivory */
@@ -21,20 +23,22 @@ dt {font-weight: bold; padding-top: 2pt}
 
 li {margin-bottom: 5pt}
 </style>
+
+<title>Syntax extension for Monads in OCaml</title>
 </head>
 
-<body text="#000000">
+<body>
 <h1>Syntax extension for Monads in Ocaml</h1>
 
 <p><b>Jacques Carette, Lydia E. van Dijk and Oleg Kiselyov</b></p>
 
 <h2>Summary</h2>
 
-<p>This Camlp4 extension provides some syntactic sugar to beautify
-monadic expressions.</p>
+<p>This Camlp4 extension provides some syntactic sugar to beautify monadic
+expressions.</p>
 
-<p>Example: A simple but realistic example of the use of a list
-monad looks like this</p>
+<p>Example: A simple but realistic example of the use of a list monad looks
+like this</p>
 
 <pre>
         bind
@@ -44,8 +48,9 @@ monad looks like this</p>
                       (fun b -&gt; return (a + b)))
 </pre>
 
-<p>where we assume the appropriate definitions of the functions "bind"
-and "return".  With the help of "pa_monad" this can be written as</p>
+<p>where we assume the appropriate definitions of the functions
+"<code>bind</code>" and "<code>return</code>".  With the help of "pa_monad"
+this can be written as</p>
 
 <pre>
         perform
@@ -54,43 +59,119 @@ and "return".  With the help of "pa_monad" this can be written as</p>
           return (a + b)
 </pre>
 
-<p>which is much clearer and thus easier to understand and maintain.
-By the way, the expression evaluates to [4; 5; 6; 5; 6; 7; 6; 7; 8]
-the sum of each pair of values of the input lists.  For more
-examples have a look at the examples <a href=
-"exception.ml">exception.ml</a> or <a href=
-"pythagorean_triples.ml">pythagorean_triples.ml</a>.
-A <a href="pa_monad.tar.gz">complete package</a> (as a .tar.gz
-file) containing the extension itself, a <a href=
-"Makefile">Makefile</a>, examples and several tests is available.
-See the <a href="README">README</a> for more details.</p>
+<p>which is much clearer and thus easier to understand and maintain.  By the
+way, the expression evaluates to</p>
 
-<p>Change history:</p>
+<pre>
+        [4; 5; 6; 5; 6; 7; 6; 7; 8]
+</pre>
 
-<ul>
-<li>1.2.1 - update for Ocaml 3.11, compatible with 3.10 (and some
-forthcoming 3.12 changes too).  Version for 3.09 still included.
-Switch to elisp-mode hook rather than patch for tuareg.</li>
+<p>the sum of each pair of values of the input lists.</p>
 
-<li>1.2.0 - adds support for Ocaml 3.10.  Version for 3.09 still
-included.</li>
+<p>For more examples have a look at the examples
+<i><a href="exception.ml">exception.ml</a></i> or <i><a href=
+"pythagorean_triples.ml">pythagorean_triples.ml</a></i>.
+A <a href="pa_monad.tar.gz">complete package</a> (as
+a <i>.tar.gz</i>&nbsp;file) containing the extension itself, a <i><a href=
+"Makefile">Makefile</a></i>, examples and several tests is available.  See
+the <i><a href="README">README</a></i> for more details.</p>
 
-<li>1.1.1 - support tuareg 1.46.2, the previous patch no longer
-worked; (this patch has been superceded)</li>
 
-<li>1.1 - added findlib support and includes <a href=
-"http://okmij.org/ftp/Computation/Continuations.html#caml-shift">Oleg's</a>
-support for <a href="cc.mli">delimited continuations</a> (<a href=
-"test_cc.ml">examples</a>).</li>
-<li>1.0 - Initial release</li>
-</ul>
+<h2>Change history</h2>
 
-<p>This code is released under the <a href="COPYING">GNU library
-general public license</a> in a way which is compatible with
-<a href="http://caml.inria.fr">Ocaml's</a> own license.</p>
+<!-- We do not link to ChangeLog.  This is to hide the email addresses therein
+     from web crawlers.   Kill all the spammers, kill 'em tonight. -->
+<p>For a detailed list of changes please refer to the <i>ChangeLog</i>.</p>
 
-<hr size="1">
+<table border="0" summary="Major changes of each version.">
+<thead>
+<tr>
+<th>Version</th>
+<th>Changes</th>
+</tr>
+</thead>
 
-<small><i>version 1.2.1. November 12, 2008</i></small>
+<tbody>
+<tr>
+<td>Tip</td>
+<td>Separate version information from <i>Makefile</i>: the package's version
+number now resides in file&nbsp;<i>VERSION</i>.</td>
+</tr>
+
+<tr>
+<td>5.2</td>
+<td>Remove Tuareg mode patches; use Elisp customization file instead.  Rename
+all source files with dashes in their names to avoid a new compiler
+warning.</td>
+</tr>
+
+<tr>
+<td>5.1</td>
+<td>Add <acronym>MIT</acronym> license as a possible alternative
+to <acronym>LGPL</acronym>.</td>
+</tr>
+
+<tr>
+<td>5.0</td>
+<td>Adapt to OCaml's new preprocessor in version&nbsp;3.10.  Big thanks go to
+Till Varoquaux for his assistance with this particular change!  A version for
+OCaml&nbsp;3.09 is still included.</td>
+</tr>
+
+<tr>
+<td>4.2</td>
+<td>Add patch for Tuareg&nbsp;1.46.2.  Add delimited continuation monad
+(multi-prompt shift/reset) example.</td>
+</tr>
+
+<tr>
+<td>4.1</td>
+<td>Change syntax of recursive bindings to
+"<code>rec</code>"-"<code>and</code>".  Attach "<code>rec</code>"&nbsp;keyword
+to individual recursive binding not to the "<code>perform</code>"&nbsp;keyword.
+Replace <acronym>GPL</acronym> with <acronym>LGPL</acronym>.  Update
+documentation concerning the discussions on the Haskell mailing list.
+Add <acronym>IO</acronym>-monad example.</td>
+</tr>
+
+<tr>
+<td>4.0</td>
+<td>Support mutually recursive bindings.</td>
+</tr>
+
+<tr>
+<td>3.0</td>
+<td>Add patch for Tuareg-mode to recognize
+"<code>perform</code>"&nbsp;keyword.</td>
+</tr>
+
+<tr>
+<td>2.1</td>
+<td>Use homegrown unit-test suite.  Add syntax for recursive bindings
+("<code>perform rec ...</code>").  Drop the semicolon from "<code>let ID = EXPR
+in; EXPR</code>"&nbsp;construction.</td>
+</tr>
+
+<tr>
+<td>2.0</td>
+<td>Extend syntax with a "<code>with exp1 and exp2</code>"&nbsp;form.  Rename
+"<code>fail</code>" to "<code>failwith</code>" and rename "<code>mdo</code>" to
+"<code>perform</code>".</td>
+</tr>
+
+<tr>
+<td>1.0</td>
+<td>Initial version.</td>
+</tr>
+</tbody>
+</table>
+
+<p>This code is released under the <a href="COPYING"><acronym>GNU</acronym>
+library general public license</a> in a way which is compatible with
+<a href="http://caml.inria.fr">OCaml</a>'s own license.</p>
+
+<hr />
+
+<p><small><i>version&nbsp;5.2. November 12, 2008</i></small></p>
 </body>
 </html>
