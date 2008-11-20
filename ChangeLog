@@ -1,3 +1,11 @@
+Version 6.0
+
+2008-11-20  Jacques Carette <carette@mcmaster.ca>
+
+	* index.html: Name this version 6.0 from the little accumulated changes
+    since 5.0, including renumbering the versions.
+	* VERSION: Bump forward.
+
 2008-11-18  Lydia van Dijk  <lvandijk@freenet.de>
 
 	Unify package version numbers.
