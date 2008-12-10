@@ -158,6 +158,11 @@ let test_tuple _ =
  *     x + y + z (* - : int = 6 *) *)
 
 
+let test_lazy _ =
+  Utest.expect_pass
+    "lazy"
+    (fun () -> 1 = perform lazy x <-- lazy 1; x)
+
 let test_type_restriction _ =
   Utest.expect_pass
     "type restriction"

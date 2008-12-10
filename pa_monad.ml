@@ -366,6 +366,9 @@ let rec exp_to_patt (_loc: Ast.Loc.t) (an_expression: Ast.expr): Ast.patt =
     | <:expr< ($e$ : $t$) >> ->                (* type restriction *)
       let p = exp_to_patt _loc e in
         <:patt< ($p$ : $t$) >>
+    | <:expr< lazy $e$ >> ->                   (* lazy value *)
+      let p = exp_to_patt _loc e in
+        <:patt< lazy $p$ >>
     | _ ->
       Loc.raise _loc
         (Stream.Error "exp_to_patt: this expression is not yet supported")
@@ -462,6 +465,8 @@ let rec is_irrefutable_pattern (a_pattern: Ast.patt): bool =
       is_irrefutable_pattern t1 && is_irrefutable_pattern t2
     | <:patt< ($tup:t$) >> ->           (* tuple *)
       is_irrefutable_pattern t
+    | <:patt< lazy $p$ >> ->            (* lazy *)
+      is_irrefutable_pattern p
     | <:patt< $lid:_$ >> -> true        (* variable *)
     | <:patt< _ >> -> true              (* wildcard *)
     | _ -> false
