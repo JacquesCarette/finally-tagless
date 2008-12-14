@@ -1,8 +1,8 @@
 (* name:          test_syntax.ml
  * synopsis:      test the syntax extension "pa_monad"
  * author:        Lydia E. van Dijk
- * last revision: Sun Dec 14 07:53:33 UTC 2008
- * ocaml version: 3.11, 3.12.0+dev1
+ * last revision: Sun Dec 14 07:53:56 UTC 2008
+ * ocaml version: 3.10
  *
  * Copyright (C) 2006-2008  J. Carette, L. E. van Dijk, O. Kiselyov
  *
@@ -156,12 +156,6 @@ let test_tuple _ =
  *   perform
  *     ((x, y, z) as tuple) <-- 1, 2, 3;
  *     x + y + z (* - : int = 6 *) *)
-
-
-let test_lazy _ =
-  Utest.expect_pass
-    "lazy"
-    (fun () -> 1 = perform lazy x <-- lazy 1; x)
 
 
 let test_type_restriction _ =
@@ -357,7 +351,6 @@ let () =
        test_extra_parenthesis;
        test_wildcard;
        test_tuple;
-       test_lazy;
        test_type_restriction;
        test_advanced_let;
        test_record;

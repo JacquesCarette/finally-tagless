@@ -1,7 +1,7 @@
 # name:          Makefile
 # synopsis:      Construction rules for monadic "do" syntax extension
 # authors:       Chris L. Spiel (nifty stuff), Lydia E. van Dijk (boring rest)
-# last revision: Thu Nov 13 08:28:15 UTC 2008
+# last revision: Sun Dec 14 07:56:59 UTC 2008
 # make version:  3.81
 
 
@@ -147,7 +147,7 @@ RMDIR := rmdir
 
 # Name of the program to replace strings in files.
 #
-# If you have no working sed(1) on your machine or your are not into
+# If you have no working sed(1) on your machine and you are not into
 # Latin, use [perl -Wp] instead.
 SED := sed
 

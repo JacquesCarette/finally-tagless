@@ -83,7 +83,7 @@ val bind: 'a t -> ('a -> 'b t) -> 'b t
 
 (** [return a_value]
 
-    List [a_value] into the IO-monad. *)
+    Lift [a_value] into the IO-monad. *)
 val return: 'a -> 'a t
 
 

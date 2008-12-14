@@ -1,16 +1,35 @@
 Version 6.1
 
+2008-12-14  Lydia van Dijk  <lvandijk@freenet.de>
+
+	Restore version compatible with OCaml-3.10.
+	* pa_monad-ocaml-3.10.ml: New file.  This is the same revision as
+	of 2008-11-20, this is, package version 6.0.
+	* test_syntax-ocaml-3.10.ml: Ditto.
+	* README: Describe how to build with OCaml-3.10.
+	* test_syntax.ml: Really run "lazy pattern" test.
+
+	Minor corrections.
+	* pa_monad.ml: Minute spacing corrections.
+	* io.mli: Fix typo in the documentation.
+	* Makefile: Fix spelling in comment.
+	* README: Minor rewordings and additions.
+	* VERSION: Increment minor version number.
+
 2008-12-10  Jacques Carette <carette@mcmaster.ca>
 
-	* pa_monad.ml, test_syntax.ml: apply patch from Jeremie Dimino
-	implementing lazy patterns
+	* pa_monad.ml, test_syntax.ml: Apply patch from Jeremie Dimino
+	implementing lazy patterns.  (Lazy patterns are new in OCaml
+	version 3.11.)
+
 
 Version 6.0
 
+
 2008-11-20  Jacques Carette <carette@mcmaster.ca>
 
-	* index.html: Name this version 6.0 from the little accumulated changes
-	since 5.0, including renumbering the versions.
+	* index.html: Name this version 6.0 from the little accumulated
+	changes since 5.0, including renumbering the versions.
 	* VERSION: Bump forward.
 
 2008-11-18  Lydia van Dijk  <lvandijk@freenet.de>

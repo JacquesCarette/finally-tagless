@@ -2,8 +2,8 @@
  * synopsis:      Haskell-like "do" for monads
  * authors:       Jacques Carette and Oleg Kiselyov,
  *                based in part of work of Lydia E. Van Dijk
- * last revision: Sun Dec 14 07:52:18 UTC 2008
- * ocaml version: 3.11, 3.12.0+dev1
+ * last revision: Sun Dec 14 07:50:55 UTC 2008
+ * ocaml version: 3.10
  *
  * Copyright (C) 2006-2008  J. Carette, L. E. van Dijk, O. Kiselyov
  *
@@ -366,9 +366,6 @@ let rec exp_to_patt (_loc: Ast.Loc.t) (an_expression: Ast.expr): Ast.patt =
     | <:expr< ($e$ : $t$) >> ->                (* type restriction *)
       let p = exp_to_patt _loc e in
         <:patt< ($p$ : $t$) >>
-    | <:expr< lazy $e$ >> ->                   (* lazy value *)
-      let p = exp_to_patt _loc e in
-        <:patt< lazy $p$ >>
     | _ ->
       Loc.raise _loc
         (Stream.Error "exp_to_patt: this expression is not yet supported")
@@ -465,8 +462,6 @@ let rec is_irrefutable_pattern (a_pattern: Ast.patt): bool =
       is_irrefutable_pattern t1 && is_irrefutable_pattern t2
     | <:patt< ($tup:t$) >> ->           (* tuple *)
       is_irrefutable_pattern t
-    | <:patt< lazy $p$ >> ->            (* lazy *)
-      is_irrefutable_pattern p
     | <:patt< $lid:_$ >> -> true        (* variable *)
     | <:patt< _ >> -> true              (* wildcard *)
     | _ -> false
