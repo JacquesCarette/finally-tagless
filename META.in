@@ -9,3 +9,7 @@ archive(syntax, preprocessor) = "@EXTENSION@"
 archive(syntax, toploop) = "@EXTENSION@"
 archive(syntax, byte) = ""
 archive(syntax, native) = ""
+
+# Local Variables:
+# mode: conf
+# End:

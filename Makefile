@@ -1,7 +1,7 @@
 # name:          Makefile
 # synopsis:      Construction rules for monadic "do" syntax extension
 # authors:       Chris L. Spiel (nifty stuff), Lydia E. van Dijk (boring rest)
-# last revision: Sun Dec 14 07:56:59 UTC 2008
+# last revision: Fri Dec 19 08:49:10 UTC 2008
 # make version:  3.81
 
 
@@ -24,8 +24,22 @@ endef
 #
 ########################################################################
 
-# Name of compiled syntax extension
-SYNTAX-EXTENSION := pa_monad.cmo
+# Name of our compiled syntax extension.
+MONAD-EXTENSION := pa_monad.cmo
+
+
+# Directory where the sources for "optcomp" are
+OPTCOMP-DIRECTORY := optcomp
+
+
+# Name the syntax extension to perform conditional compilation.  We
+# depend on this one!
+OPTCOMP-EXTENSION := $(OPTCOMP-DIRECTORY)/pa_optcomp.cmo
+
+
+# List of all sub-directories we must consider when building the
+# syntax extension or the tests.
+SUBDIRECTORIES := $(OPTCOMP-DIRECTORY)
 
 
 # Names of all sources that define non-interactive tests.  These files
@@ -51,24 +65,34 @@ INTERACTIVE-LIBRARIES := dynlink.cma camlp4o.cma
 ADDITIONAL-DOCUMENTED-MODULES := cc.ml exception.ml io.ml utest.ml
 
 
-# Pre-Precessor-Pretty-Printer for OCaml
-CAMLP4 := camlp4orf
+# Plain vanilla pre-precessor-pretty-printer for OCaml.
+CAMLP4 := camlp4
+
+
+# The pre-precessor-pretty-printer we need for out syntax extension.
+#
+# "o": Host language (outside of quotations) is original OCaml.
+# "r": Embedded language (inside of quotations) follows the Revised
+#      Syntax.
+# "f": Fully loaded preprocessor with parsers, grammars, quotations,
+#      macros, and list comprehensions.
+CAMLP4-FULL := $(CAMLP4)orf
 
 
 # Option to feed OCaml sources through the pre-processor. This
-# particular incantation is used to compile the test of our syntax
-# extensions.
-PP := -pp '$(CAMLP4) -I . $(SYNTAX-EXTENSION)'
+# particular incantation is used to compile the tests of our syntax
+# extension.
+PP := -pp '$(CAMLP4-FULL) $(OPTCOMP-EXTENSION) $(MONAD-EXTENSION)'
 
 
 # Option to feed OCaml sources through the pre-processor.  This
 # particular incantation is used to compile a syntax extension for the
 # OCaml language.
-PP-EXT := -pp $(CAMLP4)
+PP-EXT := -pp '$(CAMLP4-FULL) $(OPTCOMP-EXTENSION)'
 
 
 # Directory for the HTML documentation
-HTML-DOCUMENTATION := html-doc
+HTML-DIRECTORY := html-doc
 
 
 # OCaml interpreter
@@ -135,7 +159,10 @@ VERSION := $(shell cat VERSION)
 FINDLIB-NAME := monad
 
 
+#
 # Non Ocaml Tools
+#
+
 
 # Name of the program to erase files.
 RM := rm -f
@@ -152,6 +179,36 @@ RMDIR := rmdir
 SED := sed
 
 
+# The text explains the most important features of this Makefile.  It
+# is used by the phony target "help".
+#
+# IMPLEMENTATION NOTE
+#     We use a single string constructed by Make(1), because this is
+#     much faster than writing each line with a separate "echo", which
+#     implicitly spawns a new shell.
+HELP-TEXT := "\
+This is the Makefile for the OCaml monadic syntax extension.\n\
+\n\
+* Phony Targets\n\
+    help:: Display this help message\n\
+    all:: Build the syntax extension '$(MONAD-EXTENSION)'\n\
+    doc:: Generate HTML-documentation in directory '$(HTML-DIRECTORY)'\n\
+    clean:: Delete most generated files\n\
+    distclean:: Delete all files not belonging to the distribution\n\
+    top-level:: Launch a toplevel interpreter, pre-load '$(MONAD-EXTENSION)'\n\
+\n\
+* Implicit Rules\n\
+    %.ml-pp:%.ml:: Preprocess %.ml with the syntax extension\n\
+\n\
+* Influential Variables\n\
+    OCAMLC:: Name of the Ocaml byte-code compiler '$(OCAMLC)'\n\
+    CAMLP4:: Name of the plain-vanilla OCaml preprocessor '$(CAMLP4)'\n\
+    OCAMLFLAGS:: Flags for the byte-code and the native compiler '$(OCAMLFLAGS)'\n\
+\n\
+The text inside single quotes are the current values.\n\
+"
+
+
 ########################################################################
 #
 # Special Targets
@@ -160,7 +217,17 @@ SED := sed
 
 # Build all syntax extensions.
 .PHONY: all
-all: $(SYNTAX-EXTENSION)
+all: $(MONAD-EXTENSION)
+
+
+# Build "optcomp", a parser module that enables C-like conditional
+# compilation.  It is third-party software and thus resides in a
+# separate directory.
+.PHONY: optcomp
+optcomp:
+	$(MAKE) --directory=$(OPTCOMP-DIRECTORY) \
+                OCAMLC=$(OCAMLC) CAMLP4=$(CAMLP4) \
+                pa_optcomp.cmo
 
 
 # Run all binaries with tests.  Stop if any test fails.
@@ -175,12 +242,12 @@ run-%: %
 
 # Generate the documentation.
 .PHONY: doc
-doc: $(HTML-DOCUMENTATION)/$(SYNTAX-EXTENSION:.cmo=)
+doc: $(HTML-DIRECTORY)/$(MONAD-EXTENSION:.cmo=)
 
 
 # Let findlib install the syntax extension.
 .PHONY: findlib-install
-findlib-install: META $(SYNTAX-EXTENSION)
+findlib-install: META $(MONAD-EXTENSION)
 	$(OCAMLFIND) install $(OCAMLFINDFLAGS) $(FINDLIB-NAME) $^
 
 
@@ -215,24 +282,34 @@ distcheck: distclean test doc
 # Launch an OCaml interpreter enriched with all of our syntax
 # extensions.
 .PHONY: top-level
-top-level: $(SYNTAX-EXTENSION)
-	$(OCAML) $(INTERACTIVE-LIBRARIES) $(SYNTAX-EXTENSION)
+top-level: $(MONAD-EXTENSION)
+	$(OCAML) $(INTERACTIVE-LIBRARIES) $(MONAD-EXTENSION)
 
 
 # Remove most files that we can remake.
 .PHONY: clean
 clean:
+	for dir in $(SUBDIRECTORIES); do $(MAKE) --directory=$$dir clean; done
 	$(RM) *.cm[iox] *.annot
 	$(RM) $(TESTS:.ml=) $(TESTS:.ml=.opt)
 	$(RM) $(INTERACTIVE-TESTS:.ml=) $(INTERACTIVE-TESTS:.ml=.opt)
+	$(RM) test_syntax-camlp4-3.09*
 
 
 # Remove all files that we can remake and all uninteresting ones, too.
 .PHONY: distclean
 distclean: clean
+	for dir in $(SUBDIRECTORIES); do $(MAKE) --directory=$$dir distclean; done
 	$(RM) *.ml-pp *.mli-gen $(DISTNAME)-*.tar.gz *~
-	$(RM) -r $(HTML-DOCUMENTATION)
 	$(RM) META transcript.log
+	$(RM) $(HTML-DIRECTORY)
+
+
+# Print help on this Makefile.
+.PHONY: help
+help:
+	@echo -e $(HELP-TEXT) | \
+	    $(SED) -e 's/^ //' -e 's/^ *\(.*\):: */    \1: /'
 
 
 # Canonical target for forced rule application
@@ -251,8 +328,8 @@ pa_%.cmo: pa_%.ml
 
 
 # Pretty-print an OCaml file.
-%.ml-pp: %.ml $(SYNTAX-EXTENSION) FORCE
-	$(CAMLP4) -I . $(SYNTAX-EXTENSION) pr_o.cmo $< > $@
+%.ml-pp: %.ml $(MONAD-EXTENSION) FORCE
+	$(CAMLP4-FULL) -I . $(MONAD-EXTENSION) pr_o.cmo $< > $@
 
 
 # Extract the interface definition from an OCaml implementation
@@ -311,7 +388,7 @@ $(TESTS:.ml=.cmo): %.cmo: %.ml
 	$(SED) \
 	    -e 's|\@VERSION@|$(VERSION)|g;' \
 	    -e 's|\@NAME@|$(FINDLIB-NAME)|g;' \
-	    -e 's|\@EXTENSION@|$(SYNTAX-EXTENSION)|g;' \
+	    -e 's|\@EXTENSION@|$(MONAD-EXTENSION)|g;' \
 	    < $< > $@
 
 
@@ -321,12 +398,30 @@ $(TESTS:.ml=.cmo): %.cmo: %.ml
 #
 ########################################################################
 
+# The syntax extension for conditional compilation lives in its own
+# subdirectory.  We use its own Makefile to build it.
+$(OPTCOMP-EXTENSION): $(OPTCOMP-DIRECTORY)/pa_optcomp.ml
+	$(MAKE) --directory=$(OPTCOMP-DIRECTORY) pa_optcomp.cmo
+
+
+# Our syntax extension uses conditional compilation.  It therefore
+# depends on the parser "pa_optcomp.cmo".  Some of the unit tests
+# depend on it too, but these -- of course -- need MONAD-EXTENSION,
+# so we do not need to add the dependency everywhere.
+$(MONAD-EXTENSION): $(OPTCOMP-EXTENSION)
+
+
 # Generate the documentation for our syntax extension.
-$(HTML-DOCUMENTATION)/$(SYNTAX-EXTENSION:.cmo=): \
-  $(SYNTAX-EXTENSION:.cmo=.ml) $(ADDITIONAL-DOCUMENTED-MODULES:.ml=.cmi)
-	test -d $(HTML-DOCUMENTATION) || mkdir $(HTML-DOCUMENTATION)
-	$(OCAMLDOC) $(OCAMLDOCFLAGS) -html -d $(HTML-DOCUMENTATION) \
-	    -o $@ $< $(ADDITIONAL-DOCUMENTED-MODULES:.ml=.mli) $(ADDITIONAL-DOCUMENTED-MODULES)
+$(HTML-DIRECTORY)/$(MONAD-EXTENSION:.cmo=): \
+  $(OPTCOMP-EXTENSION) \
+  $(MONAD-EXTENSION:.cmo=.ml) \
+  $(ADDITIONAL-DOCUMENTED-MODULES:.ml=.cmi)
+	test -d $(HTML-DIRECTORY) || mkdir $(HTML-DIRECTORY)
+	$(OCAMLDOC) $(OCAMLDOCFLAGS) -html -d $(HTML-DIRECTORY) \
+	    -o $@ \
+            $(filter-out %.cmo,$<) \
+            $(ADDITIONAL-DOCUMENTED-MODULES:.ml=.mli) \
+            $(ADDITIONAL-DOCUMENTED-MODULES)
 
 
 # Additional dependencies of the exception monad
@@ -342,38 +437,49 @@ cc.cmo: cc.cmi
 
 
 # Additional dependencies of the "CC Monad" example
-test_cc.cmo: cc.cmi utest.cmi $(SYNTAX-EXTENSION)
+test_cc.cmo: cc.cmi utest.cmi $(MONAD-EXTENSION)
 test_cc: cc.cmo utest.cmo
 
 
 # Additional dependencies of the "Exception Monad" example
-test_exception.cmo: exception.cmi utest.cmi $(SYNTAX-EXTENSION)
+test_exception.cmo: exception.cmi utest.cmi $(MONAD-EXTENSION)
 test_exception: exception.cmo utest.cmo
 
 
 # Additional dependencies of the "Pythogorean-Tiples" example
-pythagorean_triples.cmo: utest.cmi $(SYNTAX-EXTENSION)
+pythagorean_triples.cmo: utest.cmi $(MONAD-EXTENSION)
 pythagorean_triples: utest.cmo
 
 
-# Additional dependencies of the syntax tests
-test_syntax.cmo: utest.cmi $(SYNTAX-EXTENSION)
+# Additional dependencies of the syntax tests for OCaml version 3.10
+# and later versions
+test_syntax.cmo: utest.cmi $(MONAD-EXTENSION)
 test_syntax: utest.cmo
 
 
+# Strip conditional compilation directives for OCaml-3.09.
+test_syntax-camlp4-3.09.ml: test_syntax.ml
+	$(SED) -e '/^#if/,/^#endif/d' < $< > $@
+
+
+# Additional dependencies of the syntax tests for OCaml version 3.09
+test_syntax-camlp4-3.09.cmo: utest.cmi $(MONAD-EXTENSION)
+test_syntax-camlp4-3.09: utest.cmo
+
+
 # Additional dependencies of the application tests
-test_monad.cmo: utest.cmi $(SYNTAX-EXTENSION)
+test_monad.cmo: utest.cmi $(MONAD-EXTENSION)
 test_monad: utest.cmo
 
 
 # Additional dependencies of the recursive-binding tests
-test_rec.cmo: utest.cmi $(SYNTAX-EXTENSION)
+test_rec.cmo: utest.cmi $(MONAD-EXTENSION)
 test_rec: utest.cmo
 
 
 # Dependencies of "Monadic IO" example.  In contrary to the other
 # tests this one is interactive.  Thus we do not want it to run with
 # the non-interactive tests.
-monadic_io.cmo: monadic_io.ml exception.cmi io.cmi $(SYNTAX-EXTENSION)
+monadic_io.cmo: monadic_io.ml exception.cmi io.cmi $(MONAD-EXTENSION)
 	$(OCAMLC) $(OCAMLCFLAGS) $(PP) -c $(@:cmo=ml)
 monadic_io: exception.cmo io.cmo monadic_io.cmo

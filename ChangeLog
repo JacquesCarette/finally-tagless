@@ -1,5 +1,62 @@
 Version 6.1
 
+2008-12-21  Lydia van Dijk  <lvandijk@freenet.d>
+
+	Conditionally compile parts of the package, thereby unify the
+	branches of version 3.10 and 3.11+ without sacrificing
+	expressiveness.
+	* README: Rewrite sections on the differences of OCaml version
+	3.09, 3.10, and 3.11. -- Holy Hanna, aren't there more?
+	* pa_monad-ocaml-3.10.ml: Remove.
+	* test_syntax-ocaml-3.10.ml: Ditto.
+	* optcomp: New directory.  It holds the 'optcomp' parser module by
+	Jeremie Dimino <jeremie@dimino.org>.
+	* pa_monad.ml: Compile conditionally.
+	* test_syntax.ml: Ditto.
+	* Makefile (SUBDIRECTORIES): New variable.
+	(OPTCOMP-DIRECTORY): Ditto.
+	(OPTCOMP-EXTENSION): Ditto.
+	(MONAD-EXTENSION): New name for 'SYNTAX-EXTENSION' as we now have
+	to deal with two extensions, the one we use: 'OPTCOMP-EXTENSION'
+	and the one we want to build 'MONAD-EXTENSION'.
+	(CAMLP4): Do not use the full-blown preprocessor, but only the
+	most skinny incarnation.  This variable is used for example to
+	pass on the path to the preprocessor binary to sub-make processes.
+	Currently, only 'optcomp' is compiled in a sub-make process and it
+	already uses a different preprocessor 'CAMLP4-FULL' than we use
+	here.
+	(CAMLP4-FULL): New variable.  This is the full-blown version of
+	the preprocessor; the one we need to build and test our syntax
+	extension.
+	(PP): Use 'CAMLP4-FULL' instead of 'CAMLP4' and add
+	'OPTCOMP-EXTENSION' as any source now could contain preprocessor
+	directives.
+	(PP-EXT): Ditto as 'MONAD-EXTENSION' now contains preprocessor
+	directives.
+	(optcomp): New phony target.
+	(all): Use 'MONAD-EXTENSION' instead of 'SYNTAX-EXTENSION'.
+	(findlib-install): Ditto.
+	(top-level): Ditto.
+	(%.ml-pp: %.ml): Ditto.
+	(%: %.in): Ditto.
+	(test_cc.cmo, test_exception.cmo, pythagorean_triples.cmo): Ditto.
+	(test_syntax.cmo, test_monad.cmo, test_rec.cmo): Ditto.
+	(monadic_io.cmo): Ditto.
+	($(HTML-DIRECTORY)/$(MONAD-EXTENSION:.cmo=)): Ditto.
+	(clean): Call Make in each of the 'SUBDIRECTORIES'.
+	(distclean): Ditto.
+	($(OPTCOMP-EXTENSION)): New target.
+	($(MONAD-EXTENSION)): Ditto.
+
+	Give the directory of the HTML-documentation a better name.
+	* Makefile (HTML-DIRECTORY): New name for 'HTML-DOCUMENTATION'.
+	(doc): Use 'HTML-DIRECTORY' instead of 'HTML-DOCUMENTATION'.
+
+	Minor beautifications.
+	* Makefile (help): New phony target.
+	(HELP-TEXT): New variable.
+	* META.in: Edit file in Emacs' 'conf'-mode.
+
 2008-12-14  Lydia van Dijk  <lvandijk@freenet.de>
 
 	Restore version compatible with OCaml-3.10.

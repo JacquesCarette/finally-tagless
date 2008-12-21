@@ -1,0 +1,6 @@
+# -*- conf -*-
+name = "optcomp"
+version = "@VERSION@"
+description = "Optional compilation with cpp-like directives"
+requires = "camlp4"
+archive(syntax, preprocessor) = "pa_optcomp.cmo"

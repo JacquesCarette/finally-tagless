@@ -25,13 +25,13 @@ io.ml                      -  Implementation of I/O-monad
 io.mli                     -  Interface of I/O-monad
 monadic_io.ml              -  Example of input/output with the
                               I/O-monad
+optcomp                    -  Jeremie Dimino's conditional compilation
+                              extension
 pa_monad.ml                -  Camlp4 syntax extension for Objective
-                              Caml versions 3.11 and later
+                              Caml versions 3.10 and later
 pa_monad-camlp4-3.09.ml    -  Camlp4 syntax extension for Objective
                               Caml version 3.09
 pa_monad-custom-tuareg.el  -  Emacs customization for pa_monad
-pa_monad-ocaml-3.10.ml     -  Camlp4 syntax extension for Objective
-                              Caml version 3.10
 pythagorean_triples.ml     -  Nondeterminism monad (backtracking)
                               coded with "pa_monad.ml"
 test_cc.ml                 -  Test of delimited continuation monad
@@ -39,8 +39,6 @@ test_exception.ml          -  Test of the exception monad
 test_monad.ml              -  Simple test frame for "pa_monad.ml"
 test_rec.ml                -  Test of recursive-binding features
 test_syntax.ml             -  Thorough test of the syntax extension
-test_syntax-ocaml-3.10.ml  -  Syntax tests for Objective Caml version
-                              3.10
 utest.ml                   -  Implementation of the unit-test
                               framework
 utest.mli                  -  Interface of the unit-test framework
@@ -53,13 +51,14 @@ massively revamped.  This invalidated most syntax extensions written
 for version 3.09 including pa_monad.
 
 OCaml-3.11 adds "lazy patterns", a feature that is not supported by
-older Objective Caml versions.
+older Objective Caml versions.  We use conditional compilation to
+maximally share the code for version 3.10 and 3.11 and support "lazy
+patterns" when pa_monad is compiled under OCaml version 3.11 or later.
 
-The current package includes "pa_monad.ml" that works with OCaml-3.11,
-and a specific version for OCaml-3.10 "pa_monad-ocaml-3.10.ml".  For
-convenience we also supply "pa_monad-camlp4-3.09.ml" that works with
-the older OCaml-3.09.  See section "How to... Compile" for
-instructions to build with OCaml-3.09 or OCaml-3.10.
+The current package includes "pa_monad.ml" that works with OCaml-3.10
+and later.  For convenience we also supply "pa_monad-camlp4-3.09.ml"
+that works with the older OCaml-3.09.  See section "How to... Compile"
+for instructions to build with OCaml-3.09.
 
 
 * What It Does
@@ -123,9 +122,16 @@ See the section "Known Issues" in the documentation.
 
 * How to...
 
+** Get help on the Makefile
+
+        make help
+
+This target will explain the most important features of the Makefile.
+
+
 ** Compile
 
-*** Objective Caml 3.11 and later
+*** Objective Caml 3.10 and later
 
         make
 
@@ -133,17 +139,11 @@ Note that "pa_monad.cmo" is the only interesting product file.  There
 is no "pa_monad.cmx" for OCaml just needs the byte-code version of the
 syntax extension.
 
+You can use a specific compiler and preprocessor if you override
+the variables OCAMLC and CAMLP4 at the command line.  For example:
 
-*** Objective Caml 3.10
-
-To compile pa_monad with version 3.10 of the compiler say for example
-
-        make OCAMLC=~/ocaml/ocaml-3.10.2/bin/ocamlc \
-             CAMLP4=~/ocaml/ocaml-3.10.2/bin/camlp4orf \
-             SYNTAX-EXTENSION=pa_monad-ocaml-3.10.cmo
-
-where OCAMLC and CAMLP4 define the name of your compiler and
-preprocessor.
+        make OCAMLC=~/ocaml/ocaml-3.11.0/bin/ocamlc \
+             CAMLP4=~/ocaml/ocaml-3.11.0/bin/camlp4
 
 
 *** Objective Caml 3.09
@@ -151,36 +151,38 @@ preprocessor.
 To compile the old version of pa_monad, using a pre-3.10.0 compiler
 and preprocessor say for example
 
-        make OCAMLC=~/ocaml/ocaml-3.09.3/bin/ocamlc \
-             CAMLP4=~/ocaml/ocaml-3.09.3/bin/camlp4orf \
-             PP-EXT="-pp '\$(CAMLP4) -I . pa_extend.cmo q_MLast.cmo'" \
-             SYNTAX-EXTENSION=pa_monad-camlp4-3.09.cmo
+        make MONAD-EXTENSION=pa_monad-camlp4-3.09.cmo \
+             OPTCOMP-EXTENSION='' \
+             OCAMLC=~/ocaml/ocaml-3.09.3/bin/ocamlc \
+             CAMLP4=~/ocaml/ocaml-3.09.3/bin/camlp4 \
+             CAMLP4-FULL="\$(CAMLP4)o -I ." \
+             PP-EXT="-pp '\$(CAMLP4)o pa_extend.cmo q_MLast.cmo'"
 
 where OCAMLC and CAMLP4 define the name of your compiler and
-preprocessor.
+preprocessor, MONAD-EXTENSION relates the ancient source file with the
+object name and OPTCOMP-EXTENSION disables compilation and use of the
+conditional compilation.
 
 
 ** Test
 
-*** Objective Caml 3.11 and later
+*** Objective Caml 3.10 and later
 
         make test
-
-
-*** Objective Caml 3.10
-
-If you want to run the test suite, it is easiest to move or sym-link
-"test_syntax-ocaml-3.10.ml" to "test_syntax.ml" like
-
-        mv test_syntax-ocaml-3.10.ml test_syntax.ml
-
-and then run the tests as usual.
 
 
 *** Objective Caml 3.09
 
 For OCaml-3.09: Append "test" to the command line given in sub-section
 "Compile".
+
+You will get a parse error in "test_syntax.ml" because of the
+"#if"-"#endif" directives.  If you really want to run the tests in
+this file, add
+
+       TESTS=test_syntax-camlp4-3.09.ml
+
+to the make command.  Yes, add it to all the other gobbledegook.
 
 
 ** Generate (HTML) Documentation
@@ -197,7 +199,7 @@ For OCaml-3.09: Append "test" to the command line given in sub-section
 
 Given the compiled extension "pa_monad.cmo" feed the source into the
 preprocessor by saying
-        ocamlc -pp 'camlp4orf -I . pa_monad.cmo' -c ...
+        ocamlc -pp 'camlp4orf pa_monad.cmo' -c ...
 Depending on where the cmo-file lives the include path needs
 tweaking.
 
@@ -212,7 +214,7 @@ After installation, findlib users cast the usual spell
 
 We have included a customization for Tuareg-mode that makes "perform"
 a keyword with the correct indentation behavior.  Include it in your
-".emacs" to activate it.
+"~/.emacs" or "~/.emacs-custom" to activate it.
 
 
 * Useful Literature On Monads

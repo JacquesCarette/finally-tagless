@@ -158,10 +158,12 @@ let test_tuple _ =
  *     x + y + z (* - : int = 6 *) *)
 
 
+#if ocaml_version >= (3, 11)
 let test_lazy _ =
   Utest.expect_pass
     "lazy"
     (fun () -> 1 = perform lazy x <-- lazy 1; x)
+#endif
 
 
 let test_type_restriction _ =
@@ -357,7 +359,9 @@ let () =
        test_extra_parenthesis;
        test_wildcard;
        test_tuple;
+#if ocaml_version >= (3, 11)
        test_lazy;
+#endif
        test_type_restriction;
        test_advanced_let;
        test_record;
