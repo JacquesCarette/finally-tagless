@@ -1,0 +1,824 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\documentclass[11pt,fleqn]{article}
+
+\usepackage{fleqn,amssymb,amsmath,latexsym}
+
+% BIG PAGE:  fill the page out in breadth and height
+
+
+% SIDE MARGINS:
+\oddsidemargin -20pt    %   Note that \oddsidemargin = \evensidemargin
+\evensidemargin -20pt
+\marginparwidth 50pt 
+\marginparsep 5pt       % Horizontal space between outer margin and 
+                        % marginal note
+% VERTICAL SPACING:        
+                         %Top of page:
+\topmargin -10pt         % Nominal distance from top of page to top of
+                         %    box containing running head.
+% DIMENSION OF TEXT:
+\textheight 220mm        % Height of text (including footnotes and figures, 
+                         % excluding running head and foot).
+\textwidth 170mm         % Width of text line.
+
+
+% NEWCOMMANDS
+
+\newcommand{\com}{\newcommand}
+\newcommand{\rcom}{\renewcommand}
+\newcommand{\newenv}{\newenvironment}
+
+\newcommand{\ignore}[1]{#1}
+\newcommand{\maybe}[1]{}
+
+% \prglab{...} macro for setting a framed label in program text
+\makeatletter
+\newcommand{\prglab}[1]{{\newbox\prglabbox\newbox\innerlabbox
+    \setbox\innerlabbox=\hbox{\fontsize{6}{7}\selectfont#1}%
+    \dp\innerlabbox=0pt
+    \setbox\prglabbox=\hbox{\fbox{\box\innerlabbox}}%
+  \newdimen\charwidth \settowidth\charwidth{M}\newcount\labelchars
+  \labelchars=\wd\prglabbox
+  \advance\labelchars by -1 \divide\labelchars by \charwidth
+  \advance\labelchars by 1  \multiply\charwidth by \labelchars
+  \edef\@tempa{\ttdefault}\ifx\@tempa\f@family
+    \wd\prglabbox=\charwidth
+  \fi
+  \box\prglabbox}}
+\makeatother
+
+\com{\deq}{{\downarrow}{\raisebox{1ex}{\rmfamily\hspace{-1.3ex}\scriptsize=}}}
+\com{\deqsm}{\downarrow{}^{\hspace{-1.1ex}=}}
+
+\newcommand{\head}[1]{\bc \underline{\Huge\bf#1}\ec}
+\newcommand{\thm}[1]{\fl{\bf Theorem} #1}
+\newcommand{\lem}[1]{\fl{\bf Lemma} #1}
+\newcommand{\dfn}[1]{\fl{\bf Definition} #1}
+
+\newcommand{\judge}[3]
+{\pgt{p},\,\mbox{$#1$}\mbox{$\,\vdash\,${\tt#2}}\mbox{$\rightarrow#3$}}
+
+
+\newcommand{\judgeif}[5]
+{\pgt{p},\,\mbox{$#1,\,#2$}\mbox{$\,\vdash^{if}\,${\tt#3},{\tt#4}}
+\mbox{$\rightarrow#5$}}
+
+\newcommand{\judget}[4]
+{\pgt{p},\,
+\mbox{$#1$}
+\mbox{$\,\vdash\,${\tt#2}}
+\mbox{$\rightarrow#3,#4$}}
+
+\newcommand{\judgec}[5]
+{\pgt{p},\,
+\mbox{$#1,#2$}
+\mbox{$\,\vdash\,${\tt#3}}
+\mbox{$\rightarrow#4,#5$}
+}
+
+\newcommand{\un}[1]{\underline{#1}}
+
+\newcommand{\fl}{\noindent}
+\newcommand{\hair}{\hspace{3mm}}
+\newcommand{\vair}{\vspace{3mm}}
+\newcommand{\lngth}[1]{\mbox{$\mid$#1$\mid$}}
+\newcommand{\nat}{{I\!\!N}}
+\newcommand{\ints} { Z\!\!\!Z}
+\newcommand{\bools}{{I\!\!B}}
+\newcommand{\lwhile}{{\tt WHILE}}
+\newcommand{\pairs}{I\!\!D}
+\newcommand{\startprog}{\begin{program}}
+\newcommand{\stopprog}{\vspace{0.5cm}\end{program}}
+
+\newcommand{\bpic}{\begin{center} \begin{picture}(50,50)(-25,-25)}
+\newcommand{\epic}{\end{picture} \end{center}}
+\newcommand{\ptext}[1]{\makebox(0,0){#1}}
+
+\newcommand{\lsem}{\mbox{$\lbrack\hspace{-0.3ex}\lbrack$}}
+\newcommand{\rsem}{\mbox{$\rbrack\hspace{-0.3ex}\rbrack$}}
+\newcommand{\sempar}[1]{\mbox{\lsem\pgt{#1}\rsem}}
+\newcommand{\semparlang}[2]{\sempar{#1}$^\pgt{#2}$}
+
+\newcommand{\bq}{\begin{quote}}
+\newcommand{\eq}{\end{quote}}
+
+\newcommand{\bc}{\begin{center}}
+\newcommand{\ec}{\end{center}}
+
+\newcommand{\bi}{\begin{itemize}}
+\newcommand{\ei}{\end{itemize}}
+
+\newcommand{\be}{\begin{enumerate}}
+\newcommand{\ee}{\end{enumerate}}
+
+\newcommand{\ba}{\begin{array}}
+\newcommand{\ea}{\end{array}}
+
+\newcommand{\bd}{\begin{description}}
+\newcommand{\ed}{\end{description}}
+
+\newcommand{\bdfn}{\begin{definition}}
+\newcommand{\edfn}{\end{definition}}
+
+\newcommand{\blem}{\begin{lemma}}
+\newcommand{\elem}{\end{lemma}}
+
+\newcommand{\bcor}{\begin{corollary}}
+\newcommand{\ecor}{\end{corollary}}
+
+\newcommand{\bprf}{\fl{\bf Proof~}}
+\newcommand{\eprf}{}
+
+\newcommand{\bthm}{\begin{theorem}}
+\newcommand{\ethm}{\end{theorem}}
+
+\newcommand{\bp}{\begin{program}}
+\newcommand{\ep}{\end{program}}
+
+\newcommand{\bt}{\begin{tabular}}
+\newcommand{\et}{\end{tabular}}
+
+\newcommand{\runpgm}[2]{\mbox{\lsem\pgt{#1}\rsem}(\pgt{#2})}
+\newcommand{\runpgmlang}[3]{\mbox{\lsem\pgt{#1}\rsem$^\pgt{#3}({\pgt#2})$}}
+\newcommand{\runpgmlangnest}[3]{\mbox{\lsem#1\rsem$^\pgt{#3}(\pgt{#2})$}}
+\newcommand{\timepgm}[2]{\mbox{{\em time}$_\pgt{#1}(\pgt{#2})$}} 
+\newcommand{\timepgmlang}[3]{\mbox{{\em
+time}$^\pgt{#3}_\pgt{#1}(\pgt{#2})$}}
+
+\newcommand{\spacepgm}[2]{\mbox{{\em space}$_\pgt{#1}(\pgt{#2})$}} 
+\newcommand{\spacepgmlang}[3]{\mbox{{\em
+space}$^\pgt{#3}_\pgt{#1}(\pgt{#2})$}}
+
+\com{\pgt}[1]{{\tt #1}}
+
+\newcommand{\startproof}{\par\noindent{\bf Proof\ \ }}
+\newcommand{\stopproof}{}
+
+
+\com{\irule}[2]{$\frac{\mbox{\raisebox{.2ex}{#1}}}{\mbox{\raisebox{-.4ex}[1.5ex][1.5ex]{#2}}}$}
+
+
+% Latex Examples and Propositions
+
+\newtheorem{example-thm}{Example}[section]
+\newenvironment{example}{\begin{example-thm}\rm}%
+	{\end{example-thm}}
+
+\newtheorem{proposition-thm}[example-thm]{Proposition}
+\newenvironment{proposition}{\begin{proposition-thm}\rm}%
+	{\end{proposition-thm}}
+
+\newtheorem{theorem-thm}[example-thm]{Theorem}
+\newenvironment{theorem}{\begin{theorem-thm}\rm}%
+	{\end{theorem-thm}}
+
+\newtheorem{corollary-thm}[example-thm]{Corollary}
+\newenvironment{corollary}{\begin{corollary-thm}\rm}%
+	{ \end{corollary-thm}}
+
+\newtheorem{observation-thm}[example-thm]{Observation}
+\newenvironment{observation}{\begin{observation-thm}\rm}%
+	{ \end{observation-thm}}
+
+\newtheorem{lemma-thm}[example-thm]{Lemma}
+\newenvironment{lemma}{\begin{lemma-thm}\rm}%
+	{ \end{lemma-thm}}
+
+\newtheorem{definition-thm}[example-thm]{Definition}
+\newenvironment{definition}{\begin{definition-thm}\rm}%
+	{\end{definition-thm}}
+
+
+
+\newcommand{\programenvironment}{\programmode%
+	\def\par{\leavevmode\endgraf}\obeylines\nobreak%
+	\programmode}
+\newcommand{\programinfig}{%
+	 \parindent 0em
+	 \nobreak\programenvironment}
+\newcommand{\programmode}{\small\tt%   Is: \small\tt, PS 1992-09-23
+	\catcode`\_=12 \catcode`\?=12 \catcode`\.=12 \catcode`\,=12
+	\catcode`\;=12 \catcode`\:=12 \catcode`\@=12 \catcode`\~=12
+        \catcode`\#=12 \catcode`\&=12      % Added by PS 1991-06-17
+	\obeyspaces\frenchspacing}%
+
+\newenvironment{programintext}{\programenvironment}{}
+
+\newenvironment{program}{\setlength{\partopsep}{0mm}\setlength{\topsep}{0mm}
+	\begin{trivlist}\item[]
+	\hspace*{\mathindent}\begin{minipage}{0.90\textwidth}
+	\vspace{1mm}
+	\begin{programintext}
+	}{\end{programintext}
+	\vspace{1mm}
+	\end{minipage}
+	\end{trivlist}
+	\noindent}
+
+% The following code makes Tex respect spaces and tabs in the source text, 
+% which is useful for program layout.
+
+{\catcode`\^^I=\active \obeyspaces\global\def^^I{ }}
+{\obeyspaces\global\let =\ } % let active space = control space
+{\catcode`\`=\active \gdef`{\relax\lq}}
+% Environment for displaying material (to replace quote and vair
+% etc.).  Indents the same amount as displaymath, equations, etc.
+
+\newenvironment{quot}{\begin{list}{{}}{
+	\setlength{\partopsep}{0mm}\setlength{\topsep}{3mm}
+	\setlength{\leftmargin}{\mathindent}\setlength{\rightmargin}{0mm}}
+	\item[]}{\end{list}}
+
+  %% doframeit draws a box around it argument by manipulating boxes.  It
+  %% is used in the frame environments.
+  %% 
+  %%  Rene' Seindal (seindal@diku.denet) Fri Feb 12 16:03:07 1988
+  %%  added \fboxrule and \fboxsep to \doframeit
+
+\def\doframeit#1{\vbox{%
+  \hrule height\fboxrule
+    \hbox{%
+      \vrule width\fboxrule \kern\fboxsep
+      \vbox{\kern\fboxsep #1\kern\fboxsep }%
+      \kern\fboxsep \vrule width\fboxrule }%
+    \hrule height\fboxrule }}
+
+  %% The frameit and Frameit environments formats text within a single 
+  %% Anything can be framed, including verbatim text.
+
+\def\frameit{\smallskip \advance \linewidth by -7.5pt \setbox0=\vbox \bgroup
+\strut \ignorespaces }
+
+\def\endframeit{\ifhmode \par \nointerlineskip \fi \egroup
+\doframeit{\box0}}
+
+
+%
+%-----------------------------------------------------------------------------
+%     figure environment
+%
+%  #1 = caption, #2 = location, #3 = label
+%
+
+\newcounter{figur}[section]
+\def\thefigur{\thesection.\arabic{figur}}
+\newsavebox{\fighack}
+
+\newenvironment{fig}[3]
+{
+\refstepcounter{figur}
+\label{#3}
+\sbox{\fighack}{{\it Figure \ref{#3}: #1}}
+\begin{figure}[#2]
+\begin{frameit}
+\hspace*{3mm}\begin{minipage}{0.95\textwidth}}{\end{minipage}\end{frameit}\usebox{\fighack}\end{figure}}
+
+
+
+
+\newenvironment{fig0}[3]
+{
+\refstepcounter{figur}
+\label{#3}
+\sbox{\fighack}{{\it Figure \ref{#3}: #1}}
+\begin{figure}[#2]
+%\begin{frameit}
+\hspace*{3mm}\begin{minipage}{0.95\textwidth}}{\end{minipage} 
+%\end{frameit}
+\usebox{\fighack}\end{figure}}
+
+
+\newcommand{\state}[2]{\mbox{\tt#1} $::\, #2$}
+
+\newcommand{\code}[1]{\mbox{$\ulcorner$}{\tt#1}\mbox{$\urcorner $}}
+
+\newcommand{\ifp}{\mathtt{if}}
+
+\newcommand{\loopp}{\mathtt{loop}}
+
+\newcommand{\dynamic}[1]{\underline{#1}}
+
+\newcommand{\static}[1]{\underline{\underline{#1}}}
+
+\newcommand{\val}{\mathit{Value}}
+
+
+\newcommand{\pg}[1]{\paragraph{#1}}
+
+
+\title{An Operational Semantics verson of the Futamura Projections}
+
+\author{Neil D.\ Jones}
+
+\twocolumn
+
+\begin{document}
+
+\maketitle
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% 1. Notations/definitions from book PEAPG
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\bc\fbox{\bf Notations/definitions from book PEAPG}
+\ec
+
+
+\vspace{25mm}
+
+{\bf Language L} 
+\bi
+\item A set $L-programs$, elements $p, q, comp, int,\ldots$
+\item A set $L-data$, elements $d, s, source, target,\ldots$
+
+\item Pairing function $(\_,\_) : L-data \times L-data \to L-data$
+\item Semantic function
+$$
+\lsem\_\rsem : L-programs \to (L-data \to L-data_\bot)
+$$
+\ei
+
+
+
+\vspace{3mm}
+
+\pg{Equality of values:} values in $L-data_\bot$ may be partial (either defined or undefined $\bot$). We often write
+$ v_1 = v_2$  instead of the more precise $ v_1 \doteq v_2$.
+
+
+\pg{Program equivalence:} programs $p,q$ are equivalent if $\lsem p\rsem = \lsem q\rsem$, i.e., they denote the same partial input-output function. 
+
+
+\vspace{18mm}
+
+\pg{Programs as data:} when needed, assume $$L-programs \subseteq L-data$$
+so programs {\em are} data
+
+\newpage
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% 1. Curried versions of PEAPG not's/def'ns
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\bc\fbox{\bf Curried versions of PEAPG not's/def'ns}
+\ec
+
+
+
+All first-order. Generalised a bit: not necessarily {\em one} program input and output.
+No pairing function. Modify equality, semantic function, etc. (all the way).
+
+
+\vspace{5mm}
+
+{\bf Language L} 
+\bi
+\item A set $L-programs$, elements $p, q, comp, int,\ldots$
+\item A set $L-data$, elements $d, s, source, target,\ldots$
+
+\item -- no pairing function --
+\item Semantic function: for each program $p \in L-programs$, a set of {\em observable runs}
+$$
+\lsem p\rsem  \subseteq (L-data)^+
+$$
+An observable run $(v_1\ldots v_n, v) \in \lsem p\rsem$  may be written (in a more familar syntax)
+as
+$$\lsem p\rsem v_1\ldots v_n = v
+$$
+
+\ei
+
+
+
+
+
+\pg{Equality of values:} values in $L-data$ are all defined (there is no undefined value $\bot$). Equality is as usual.
+
+\pg{Program equivalence:} programs $p,q$ are equivalent if $\lsem p\rsem = \lsem q\rsem$. 
+
+This is essentially the well-known {\em observational  equivalence} $p \approx q$, defined to hold if 
+
+$$
+\forall n\forall v, v_1,\ldots,v_n \in \val$$
+$$( 
+\lsem p\rsem v_1\ldots v_n = v
+\mbox{\ iff\ }
+\lsem q\rsem v_1\ldots v_n = v )
+$$
+
+
+\pg{Programs as data:} when needed, assume $$L-programs \subseteq L-data$$
+so programs {\em are} data
+
+
+
+
+\newpage
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% 2. (ctd) Notations/definitions from book PEAPG
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\bc\fbox{\bf Notations/definitions from book PEAPG}
+\ec
+
+\pg{L-to-L compiler:} a program $comp$ such that
+$$
+\forall p\forall d\ \lsem p\rsem(d) = \lsem\lsem comp\rsem(p)\rsem(d)
+$$
+
+
+\pg{Interpreter:} a program $int$ such that
+$$
+\forall p\forall d\ \lsem int\rsem(p,d) = \lsem p\rsem(d) 
+$$
+
+\vspace{15mm}
+
+\pg{Self-interpretation:} consequence is that
+$$
+\forall p\forall d(\ \lsem p\rsem(d) = \lsem int\rsem(p,d)  = \lsem int\rsem(int,(p,d)) 
+$$
+
+%\vspace{5mm}
+
+\pg{Specialiser:} program $spec$ such that
+$$
+\forall p\forall s,d\  \lsem\lsem spec\rsem(p,s)\rsem(d) = \lsem p\rsem(s,d) 
+$$
+
+
+%\vspace{5mm}
+
+\pg{Futamura 1:}  If $q =  \lsem spec\rsem(p,s)  $
+ then 
+$$
+\forall d\ (
+\lsem q \rsem(d) =  \lsem p\rsem(s,d) )
+ $$
+Special case: $target =  \lsem spec\rsem(int,source)  $, so
+$$
+\lsem target\rsem(d) = \lsem int\rsem(source,d) = \lsem source\rsem(d) 
+$$
+\vspace{5mm}
+
+\pg{Futamura 2:}  If $p\mbox{-}gen =  \lsem spec\rsem(spec,p)  $
+ then 
+$$
+\forall s,d\ (
+\lsem \lsem p\mbox{-}gen\rsem(s) \rsem(d) =  \lsem p\rsem(s,d) )
+ $$
+Special case: $comp =  \lsem spec\rsem(spec,int)  = int\mbox{-}gen$.
+
+ \vspace{5mm}
+
+\pg{Futamura 3:} If $cogen =  \lsem spec\rsem(spec,spec)  $
+and $p\mbox{-}gen =  \lsem cogen\rsem(p) $ then 
+$$
+\forall s,d\ (
+\lsem \lsem p\mbox{-}gen\rsem(s) \rsem(d) =  \lsem p\rsem(s,d) )
+ $$
+
+
+
+Special case: $comp =  \lsem cogen\rsem(int)  = int\mbox{-}gen$.
+
+\newpage
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% 2. (ctd) Curried versions of PEAPG not's/def'ns
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+\bc\fbox{\bf Curried versions of PEAPG not's/def'ns}
+\ec
+
+\pg{L-to-L compiler:} a program $comp$ such that
+$$
+\forall p (\  p \approx  \lsem comp\rsem(p)\ )
+$$
+
+
+\pg{Interpreter:} a program $int$ such that
+$$
+ \forall p(\ \lsem int\rsem\  p =\lsem p\rsem\  )
+$$
+where this new notation means:  $\forall p, n, v_0,\ldots,v_n$
+$$
+\lsem int\rsem \ p \ v_1\ldots v_n = v_0
+\mbox{\ iff\ }
+\lsem p\rsem v_1\ldots v_n = v_0 
+$$
+
+
+\pg{Self-interpretation:} a consequence is that
+$$
+\forall p\ \lsem p\rsem = \lsem int\rsem\ p  = \lsem int\rsem\  int\ p 
+$$
+
+%\vspace{5mm}
+
+\pg{Specialiser:} program $spec$ such that
+$$
+\forall p\forall s\  \lsem\lsem spec\rsem\ p\ s\rsem = \lsem p\rsem\ s 
+$$
+%\vspace{5mm}
+
+\pg{Futamura 1:}  If $q =  \lsem spec\rsem\ p\ s  $
+ then 
+$$
+\lsem q \rsem =  \lsem p\rsem\ s
+ $$
+Special case: $target =  \lsem spec\rsem\ int\ source  $, so
+$$
+\lsem target\rsem = \lsem int\rsem\ source = \lsem source\rsem
+$$
+\vspace{5mm}
+
+\pg{Futamura 2:}  If $p\mbox{-}gen =  \lsem spec\rsem\ spec\ p  $
+ then 
+$$
+\forall s\ (
+\lsem \lsem p\mbox{-}gen\rsem\ s \rsem =  \lsem p\rsem\ s )
+ $$
+Special case: $comp =  \lsem spec\rsem\ spec\ int  = int\mbox{-}gen$.
+
+ \vspace{5mm}
+
+\pg{Futamura 3:} If $cogen =  \lsem spec\rsem\ spec\ spec  $
+and $p\mbox{-}gen =  \lsem cogen\rsem\ p $ then 
+$$
+\forall s\ (
+\lsem \lsem p\mbox{-}gen\rsem\ s \rsem =  \lsem p\rsem\ s )
+ $$
+
+
+
+Special case: $comp =  \lsem cogen\rsem\ int  = int\mbox{-}gen$.
+
+\newpage
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% 1. Curried versions of PEAPG not's/def'ns
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\bc\fbox{\bf Curried versions of PEAPG not's/def'ns}
+\ec
+
+
+
+All first-order. Generalised a bit: not necessarily {\em one} program input and output.
+No pairing function. Modify equality, semantic function, etc. (all the way).
+
+
+\vspace{5mm}
+
+{\bf Language L} 
+\bi
+\item A set $L-programs$, elements $p, q, comp, int,\ldots$
+\item A set $L-data$, elements $d, s, source, target,\ldots$
+
+\item -- no pairing function --
+\item Semantic function: for each program $p \in L-programs$, a set of {\em observable runs}
+$$
+\lsem p\rsem  \subseteq (L-data)^+
+$$
+An observable run $(v_1\ldots v_n, v) \in \lsem p\rsem$  may be written (in a more familar syntax)
+as
+$$\lsem p\rsem v_1\ldots v_n = v
+$$
+
+\ei
+
+
+
+
+
+\pg{Equality of values:} values in $L-data$ are all defined (there is no undefined value $\bot$). Equality is as usual.
+
+\pg{Program equivalence:} programs $p,q$ are equivalent if $\lsem p\rsem = \lsem q\rsem$. 
+This is essentially the well-known {\em observational  equivalence} $p \approx q$, defined to hold if 
+$$
+\forall n\forall v, v_1,\ldots,v_n \in \val$$
+$$ 
+\lsem p\rsem v_1\ldots v_n = v
+\mbox{\ iff\ }
+\lsem q\rsem v_1\ldots v_n = v 
+$$
+
+
+\pg{Programs as data:} when needed, assume $$L-programs \subseteq L-data$$
+so programs {\em are} data
+
+
+
+
+\newpage
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% 3. Operational semantics analogy (of Curried versions of PEAPG not's/def'ns)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\bc\fbox{\bf Operational semantics analogy}
+\ec
+
+All first-order, made from Curried version of PEAPG. Not necessarily {\em one} program input and output.
+No pairing function.
+
+\medskip
+
+{\bf Language L} 
+\bi
+\item A set $\mathit{Terms}$ (unspecified, closed). Elements  $e, e', p, q, comp, int, spec$.\item A subset $\mathit{Values} \subseteq \mathit{Terms}$. Elements  $v, v'$.
+\item Evaluation relation $e \Downarrow v$, not necessarily total (conceivably not even single-valued).
+\item Application operation (often elided)
+$$@:\mathit{Terms} \times \mathit{Terms} \to \mathit{Terms}$$
+(just syntax, no special interpretation)
+
+\ei
+
+\vspace{25mm}
+
+
+\pg{Equality on $\mathit{Values} $}  is as usual.
+
+\pg{Program equivalence:} Observational equivalence defines
+$e \approx e'$ if (eliding $@$ for brevity)
+$$
+\forall n\forall v, v_1,\ldots,v_n \in \val$$
+$$ 
+e v_1\ldots v_n \Downarrow v 
+\mbox{\ iff\ }
+e' v_1\ldots v_n \Downarrow v 
+$$
+
+
+
+\pg{Programs as data:} A bit different, as programs are not data values in themselves. We use a representation (or encoding) meta-function
+$$
+Q : \mathit{Terms} \to \mathit{Values}
+$$
+such that $Q[v]\Downarrow v$ for $v \in\mathit{Values}$, and $Q$ is one-to-one.
+
+\newpage
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% 2. (ctd) Curried versions of PEAPG not's/def'ns
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+\bc\fbox{\bf Curried versions of PEAPG not's/def'ns}
+\ec
+
+\pg{L-to-L compiler:} a program $comp$ such that
+$$
+\forall p (\  p \approx  \lsem comp\rsem(p)\ )
+$$
+
+
+\pg{Interpreter:} a program $int$ such that
+$$
+ \forall p(\ \lsem int\rsem\  p =\lsem p\rsem\  )
+$$
+%where this new notation means:  $\forall p, n, v_0,\ldots,v_n$
+%$$
+%\lsem int\rsem \ p \ v_1\ldots v_n = v_0
+%\mbox{\ iff\ }
+%\lsem p\rsem v_1\ldots v_n = v_0 
+%$$
+
+
+\pg{Self-interpretation:} a consequence is that
+$$
+\forall p\ \lsem p\rsem = \lsem int\rsem\ p  = \lsem int\rsem\  int\ p 
+$$
+
+\vspace{5mm}
+
+\pg{Specialiser:} program $spec$ such that
+$$
+\forall p\forall s\  \lsem\lsem spec\rsem\ p\ s\rsem = \lsem p\rsem\ s 
+$$
+\vspace{5mm}
+
+\pg{Futamura 1:}  If $  \lsem spec\rsem\ p\ s  = q$
+ then 
+$$
+\lsem q \rsem =  \lsem p\rsem\ s
+ $$
+Special case: $  \lsem spec\rsem\ int\ source = target $, so
+$$
+\lsem target\rsem = \lsem int\rsem\ source = \lsem source\rsem
+$$
+%\vspace{5mm}
+
+\pg{Futamura 2:}  If $  \lsem spec\rsem\ spec\ p  = p\mbox{-}gen $
+ then 
+$$
+\forall s\ (
+\lsem \lsem p\mbox{-}gen\rsem\ s \rsem =  \lsem p\rsem\ s )
+ $$
+Special case: $  \lsem spec\rsem\ spec\ int  = int\mbox{-}gen = comp $.
+
+ \vspace{5mm}
+
+\pg{Futamura 3:} If $  \lsem spec\rsem\ spec\ spec  = cogen $
+and $ \lsem cogen\rsem\ p = p\mbox{-}gen $ then 
+$$
+\forall s\ (
+\lsem \lsem p\mbox{-}gen\rsem\ s \rsem =  \lsem p\rsem\ s )
+ $$
+
+
+
+Special case: $  \lsem cogen\rsem\ int  = int\mbox{-}gen = comp $.
+
+\newpage
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% 3. (ctd) Operational semantics analogy (of Curried versions of PEAPG not's/def'ns)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\bc \fbox{\bf Operational Semantics analogy}
+\ec
+
+\pg{L-to-L compiler:} a term $comp$ such that
+$$
+\forall p, q\ ((comp @ Q[p]) \Downarrow Q[q] \mbox{\ implies\ } p \approx q)
+$$
+
+\pg{Interpreter:} a program $int$ such that
+$$
+\forall p\ (\  (int\ @\ Q[p]) \approx p\ )
+$$
+
+
+
+\pg{Self-interpretation:} consequence is that
+$$
+\forall p\ (\ int\ @\ (Q[ int\ @\ Q[p]]) \approx  (int\ @\ Q[p]) \approx p\ )
+$$
+Note: double encoding of the leftmost $p$.
+
+
+
+\pg{Specialiser:} a term $spec$ such that $\forall p\forall s\forall q$
+$$
+(spec\ @\ Q[p]\ @\ s) \Downarrow Q[q] \mbox{\ implies\ } q \approx  p@s 
+$$
+(Note: the first $s$ is {\em not} encoded, e.g., no  $Q[s]$.)
+
+\vspace{5mm}
+
+
+\pg{Futamura 1:}  $\forall p\forall s\forall q$
+$$
+(spec\ @\ Q[p]\ @\ s) \Downarrow Q[q]
+\mbox{\ implies\ }
+ q \approx  p@s 
+ $$
+Special case: $(spec\ @\ Q[int]\ @\ Q[source]) \Downarrow Q[target]$, so
+$$target \approx int \ @\ Q[source] \approx source
+$$
+
+\pg{Futamura 2:}  $
+(spec\ @\ Q[spec]\ @\ Q[p]) \Downarrow p\mbox{-}gen$
+$$
+\mbox{ implies\ }
+\forall s (\ 
+p\mbox{-}gen@s \Downarrow Q[q]
+\mbox{ implies\ }
+q \approx p @ s\ )
+$$
+Special case: $(spec\ @\ Q[spec]\ @\ Q[int]) \Downarrow comp$.
+ \vspace{5mm}
+
+\pg{Futamura 3:}  $
+(spec\ @\ Q[spec]\ @\ Q[spec]) \Downarrow cogen$
+and $(cogen@Q[p]) \Downarrow Q[p\mbox{-}gen]$
+imply
+$$
+\forall s (\ 
+p\mbox{-}gen@s \Downarrow Q[q]
+\mbox{ implies\ }
+q \approx p @ s\ )
+$$
+Special case: $(cogen\ @\ Q[int]) \Downarrow comp$.
+
+\newpage
+
+
+\end{document}
