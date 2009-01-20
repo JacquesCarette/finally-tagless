@@ -243,6 +243,15 @@ and Applications" can be found at
     particularly for OCaml programmers.
 
 
+** Matias Giovannini, "Alaska Ataca a Kamtchatka: Monads are Plug-ins"
+
+    Giovannini introduces to monads in OCaml emphasizing their
+    interface and composability properties.  His blog entry provides a
+    lot of example code, which is all OCaml.  The discussion is a well
+    balanced blend of theoretical aspects and highly practical
+    applications.
+
+
 ** Theodore Norvel, "Monads for the Working Haskell Programmer"
 
     This short tutorial introduces monads to Haskell programmers.
