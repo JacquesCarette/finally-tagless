@@ -306,11 +306,10 @@ space}$^\pgt{#3}_\pgt{#1}(\pgt{#2})$}}
 \newcommand{\pg}[1]{\paragraph{#1}}
 
 
-\title{An Operational Semantics verson of the Futamura Projections}
+\title{II: An Operational Semantics version of the Futamura Projections}
 
-\author{Neil D.\ Jones}
+%\author{Neil D.\ Jones}
 
-\twocolumn
 
 \begin{document}
 
@@ -322,56 +321,19 @@ space}$^\pgt{#3}_\pgt{#1}(\pgt{#2})$}}
 % 1. Notations/definitions from book PEAPG
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\bc\fbox{\bf Notations/definitions from book PEAPG}
-\ec
-
-
-\vspace{25mm}
-
-{\bf Language L} 
-\bi
-\item A set $L-programs$, elements $p, q, comp, int,\ldots$
-\item A set $L-data$, elements $d, s, source, target,\ldots$
-
-\item Pairing function $(\_,\_) : L-data \times L-data \to L-data$
-\item Semantic function
-$$
-\lsem\_\rsem : L-programs \to (L-data \to L-data_\bot)
-$$
-\ei
-
-
-
-\vspace{3mm}
-
-\pg{Equality of values:} values in $L-data_\bot$ may be partial (either defined or undefined $\bot$). We often write
-$ v_1 = v_2$  instead of the more precise $ v_1 \doteq v_2$.
-
-
-\pg{Program equivalence:} programs $p,q$ are equivalent if $\lsem p\rsem = \lsem q\rsem$, i.e., they denote the same partial input-output function. 
-
-
-\vspace{18mm}
-
-\pg{Programs as data:} when needed, assume $$L-programs \subseteq L-data$$
-so programs {\em are} data
-
-\newpage
-
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % 1. Curried versions of PEAPG not's/def'ns
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\bc\fbox{\bf Curried versions of PEAPG not's/def'ns}
+\bc\fbox{\bf Curried versions of PEAPG notations and definitions}
 \ec
 
 
 
 All first-order. Generalised a bit: not necessarily {\em one} program input and output.
-No pairing function. Modify equality, semantic function, etc. (all the way).
-
+No pairing function. Modify equality, semantic function, etc. 
 
 \vspace{5mm}
 
@@ -385,249 +347,105 @@ No pairing function. Modify equality, semantic function, etc. (all the way).
 $$
 \lsem p\rsem  \subseteq (L-data)^+
 $$
-An observable run $(v_1\ldots v_n, v) \in \lsem p\rsem$  may be written (in a more familar syntax)
-as
-$$\lsem p\rsem v_1\ldots v_n = v
-$$
-
+Syntactic sugar: write $\lsem p\rsem v_1\ldots v_n = v$  if $(v_1,\ldots, v_n, v) \in \lsem p\rsem$
+is an observable run.
 \ei
 
 
 
 
 
-\pg{Equality of values:} values in $L-data$ are all defined (there is no undefined value $\bot$). Equality is as usual.
+\pg{Equality of values:} there is no undefined value $\bot$. Equality is identity.
 
 \pg{Program equivalence:} programs $p,q$ are equivalent if $\lsem p\rsem = \lsem q\rsem$. 
-
-This is essentially the well-known {\em observational  equivalence} $p \approx q$, defined to hold if 
+This is essentially the well-known {\em observational  equivalence} $p \approx q$, defined by:
 
 $$
-\forall n\forall v, v_1,\ldots,v_n \in \val$$
-$$( 
+p \approx q
+ \mbox{\ iff\ }
+\forall n\forall v, v_1,\ldots,v_n \in \val
+( \ 
 \lsem p\rsem v_1\ldots v_n = v
 \mbox{\ iff\ }
-\lsem q\rsem v_1\ldots v_n = v )
+\lsem q\rsem v_1\ldots v_n = v  \ )
 $$
 
 
-\pg{Programs as data:} when needed, assume $$L-programs \subseteq L-data$$
-so programs {\em are} data
+\pg{Programs as data:} when needed, assume $L-programs \subseteq L-data$
+so programs {\em are} data.
 
 
 
-
-\newpage
-
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% 2. (ctd) Notations/definitions from book PEAPG
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-\bc\fbox{\bf Notations/definitions from book PEAPG}
-\ec
 
 \pg{L-to-L compiler:} a program $comp$ such that
-$$
-\forall p\forall d\ \lsem p\rsem(d) = \lsem\lsem comp\rsem(p)\rsem(d)
-$$
-
-
-\pg{Interpreter:} a program $int$ such that
-$$
-\forall p\forall d\ \lsem int\rsem(p,d) = \lsem p\rsem(d) 
-$$
-
-\vspace{15mm}
-
-\pg{Self-interpretation:} consequence is that
-$$
-\forall p\forall d(\ \lsem p\rsem(d) = \lsem int\rsem(p,d)  = \lsem int\rsem(int,(p,d)) 
-$$
-
-%\vspace{5mm}
-
-\pg{Specialiser:} program $spec$ such that
-$$
-\forall p\forall s,d\  \lsem\lsem spec\rsem(p,s)\rsem(d) = \lsem p\rsem(s,d) 
-$$
-
-
-%\vspace{5mm}
-
-\pg{Futamura 1:}  If $q =  \lsem spec\rsem(p,s)  $
- then 
-$$
-\forall d\ (
-\lsem q \rsem(d) =  \lsem p\rsem(s,d) )
- $$
-Special case: $target =  \lsem spec\rsem(int,source)  $, so
-$$
-\lsem target\rsem(d) = \lsem int\rsem(source,d) = \lsem source\rsem(d) 
-$$
-\vspace{5mm}
-
-\pg{Futamura 2:}  If $p\mbox{-}gen =  \lsem spec\rsem(spec,p)  $
- then 
-$$
-\forall s,d\ (
-\lsem \lsem p\mbox{-}gen\rsem(s) \rsem(d) =  \lsem p\rsem(s,d) )
- $$
-Special case: $comp =  \lsem spec\rsem(spec,int)  = int\mbox{-}gen$.
-
- \vspace{5mm}
-
-\pg{Futamura 3:} If $cogen =  \lsem spec\rsem(spec,spec)  $
-and $p\mbox{-}gen =  \lsem cogen\rsem(p) $ then 
-$$
-\forall s,d\ (
-\lsem \lsem p\mbox{-}gen\rsem(s) \rsem(d) =  \lsem p\rsem(s,d) )
- $$
-
-
-
-Special case: $comp =  \lsem cogen\rsem(int)  = int\mbox{-}gen$.
-
-\newpage
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% 2. (ctd) Curried versions of PEAPG not's/def'ns
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-
-
-\bc\fbox{\bf Curried versions of PEAPG not's/def'ns}
-\ec
-
-\pg{L-to-L compiler:} a program $comp$ such that
-$$
+$
 \forall p (\  p \approx  \lsem comp\rsem(p)\ )
-$$
+$
 
 
 \pg{Interpreter:} a program $int$ such that
 $$
- \forall p(\ \lsem int\rsem\  p =\lsem p\rsem\  )
-$$
-where this new notation means:  $\forall p, n, v_0,\ldots,v_n$
-$$
-\lsem int\rsem \ p \ v_1\ldots v_n = v_0
+\forall p, n, v_0,\ldots,v_n(\ \lsem int\rsem \ p \ v_1\ldots v_n = v_0
 \mbox{\ iff\ }
-\lsem p\rsem v_1\ldots v_n = v_0 
+\lsem p\rsem v_1\ldots v_n = v_0 \ )
 $$
-
+This can be shortened by abuse of notation: write
+$
+ \forall p(\ \lsem int\rsem\  p =\lsem p\rsem\  )
+$
+with the same meaning.
 
 \pg{Self-interpretation:} a consequence is that
-$$
+$
 \forall p\ \lsem p\rsem = \lsem int\rsem\ p  = \lsem int\rsem\  int\ p 
-$$
+$.
 
 %\vspace{5mm}
 
 \pg{Specialiser:} program $spec$ such that
-$$
+$
 \forall p\forall s\  \lsem\lsem spec\rsem\ p\ s\rsem = \lsem p\rsem\ s 
-$$
+$.
 %\vspace{5mm}
 
 \pg{Futamura 1:}  If $q =  \lsem spec\rsem\ p\ s  $
  then 
-$$
+$
 \lsem q \rsem =  \lsem p\rsem\ s
- $$
+ $.
+ \medskip
+ 
 Special case: $target =  \lsem spec\rsem\ int\ source  $, so
-$$
+$
 \lsem target\rsem = \lsem int\rsem\ source = \lsem source\rsem
-$$
-\vspace{5mm}
+$.
+%\vspace{5mm}
 
 \pg{Futamura 2:}  If $p\mbox{-}gen =  \lsem spec\rsem\ spec\ p  $
  then 
-$$
+$
 \forall s\ (
 \lsem \lsem p\mbox{-}gen\rsem\ s \rsem =  \lsem p\rsem\ s )
- $$
+ $
+ \medskip
+ 
 Special case: $comp =  \lsem spec\rsem\ spec\ int  = int\mbox{-}gen$.
 
- \vspace{5mm}
+% \vspace{5mm}
 
 \pg{Futamura 3:} If $cogen =  \lsem spec\rsem\ spec\ spec  $
 and $p\mbox{-}gen =  \lsem cogen\rsem\ p $ then 
-$$
+$
 \forall s\ (
 \lsem \lsem p\mbox{-}gen\rsem\ s \rsem =  \lsem p\rsem\ s )
- $$
-
+ $.
+\medskip
 
 
 Special case: $comp =  \lsem cogen\rsem\ int  = int\mbox{-}gen$.
 
-\newpage
-
-
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% 1. Curried versions of PEAPG not's/def'ns
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-\bc\fbox{\bf Curried versions of PEAPG not's/def'ns}
-\ec
-
-
-
-All first-order. Generalised a bit: not necessarily {\em one} program input and output.
-No pairing function. Modify equality, semantic function, etc. (all the way).
-
-
-\vspace{5mm}
-
-{\bf Language L} 
-\bi
-\item A set $L-programs$, elements $p, q, comp, int,\ldots$
-\item A set $L-data$, elements $d, s, source, target,\ldots$
-
-\item -- no pairing function --
-\item Semantic function: for each program $p \in L-programs$, a set of {\em observable runs}
-$$
-\lsem p\rsem  \subseteq (L-data)^+
-$$
-An observable run $(v_1\ldots v_n, v) \in \lsem p\rsem$  may be written (in a more familar syntax)
-as
-$$\lsem p\rsem v_1\ldots v_n = v
-$$
-
-\ei
-
-
-
-
-
-\pg{Equality of values:} values in $L-data$ are all defined (there is no undefined value $\bot$). Equality is as usual.
-
-\pg{Program equivalence:} programs $p,q$ are equivalent if $\lsem p\rsem = \lsem q\rsem$. 
-This is essentially the well-known {\em observational  equivalence} $p \approx q$, defined to hold if 
-$$
-\forall n\forall v, v_1,\ldots,v_n \in \val$$
-$$ 
-\lsem p\rsem v_1\ldots v_n = v
-\mbox{\ iff\ }
-\lsem q\rsem v_1\ldots v_n = v 
-$$
-
-
-\pg{Programs as data:} when needed, assume $$L-programs \subseteq L-data$$
-so programs {\em are} data
-
-
-
-
-\newpage
-
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% 3. Operational semantics analogy (of Curried versions of PEAPG not's/def'ns)
+% Operational semantics analogy (of Curried versions of PEAPG not's/def'ns)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \bc\fbox{\bf Operational semantics analogy}
@@ -640,174 +458,114 @@ No pairing function.
 
 {\bf Language L} 
 \bi
-\item A set $\mathit{Terms}$ (unspecified, closed). Elements  $e, e', p, q, comp, int, spec$.\item A subset $\mathit{Values} \subseteq \mathit{Terms}$. Elements  $v, v'$.
-\item Evaluation relation $e \Downarrow v$, not necessarily total (conceivably not even single-valued).
-\item Application operation (often elided)
-$$@:\mathit{Terms} \times \mathit{Terms} \to \mathit{Terms}$$
-(just syntax, no special interpretation)
+
+\item A set $\mathit{Terms}$ (unspecified, closed). Elements  $e, e', p, q, comp, int, spec, source, target, cogen,  int\mbox{-}gen,  p\mbox{-}gen$.
+
+\item A subset $\mathit{Values} \subseteq \mathit{Terms}$. Elements  $v, v', s, d$.
+
+\item Evaluation relation $e \Downarrow v$  such that $v \Downarrow v$ for any $v \in \mathit{Values} $.  $ \Downarrow $ is in general not total.
+
+\item Application operation $@:\mathit{Terms} \times \mathit{Terms} \to \mathit{Terms}$ (often elided, just syntax, no special interpretation).
+
 
 \ei
 
-\vspace{25mm}
 
-
-\pg{Equality on $\mathit{Values} $}  is as usual.
+\pg{Equality on $\mathit{Values} $}  is identity as usual. It could be extended to $\alpha$-equivalence. It should {\em not}  be extended to $\beta$-equivalence.
 
 \pg{Program equivalence:} Observational equivalence defines
-$e \approx e'$ if (eliding $@$ for brevity)
+ (eliding $@$ for brevity)
 $$
-\forall n\forall v, v_1,\ldots,v_n \in \val$$
-$$ 
-e v_1\ldots v_n \Downarrow v 
+e \approx e'
 \mbox{\ iff\ }
-e' v_1\ldots v_n \Downarrow v 
+\forall n\forall v, v_1,\ldots,v_n \in \val
+(\ e v_1\ldots v_n \Downarrow v 
+\mbox{\ iff\ }
+e' v_1\ldots v_n \Downarrow v \ )
 $$
 
 
+\pg{Relation between $\Downarrow$ and $\approx$:}   
+\bi
+\item $\Downarrow$ expresses computation. It is black-box for whole programs, i.e.,  so it need not deal with binding, etc. (although an {\em implementation} of  $\Downarrow$ could be done with environments, De Bruijn numbers, HOAS, etc.). 
+\item Program behavior, e.g., running time, 
+is visible in an implementation of  $\Downarrow$.
 
-\pg{Programs as data:} A bit different, as programs are not data values in themselves. We use a representation (or encoding) meta-function
-$$
+\item $\approx$  expresses extensional equivalence, after computations have been completed. It is used, e.g., to state the correctness of a compiler, without regard to running time or other intensional factors.
+\item Program behavior, e.g., running time, 
+is not relevant to or visible in   $\approx $ .
+\ei
+
+
+\pg{Programs as data:}   a representation (or encoding) {\em one-to-one} meta-function
+$
 Q : \mathit{Terms} \to \mathit{Values}
-$$
-such that $Q[v]\Downarrow v$ for $v \in\mathit{Values}$, and $Q$ is one-to-one.
-
-\newpage
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% 2. (ctd) Curried versions of PEAPG not's/def'ns
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+$.
 
 
-
-\bc\fbox{\bf Curried versions of PEAPG not's/def'ns}
-\ec
-
-\pg{L-to-L compiler:} a program $comp$ such that
-$$
-\forall p (\  p \approx  \lsem comp\rsem(p)\ )
-$$
-
-
-\pg{Interpreter:} a program $int$ such that
-$$
- \forall p(\ \lsem int\rsem\  p =\lsem p\rsem\  )
-$$
-%where this new notation means:  $\forall p, n, v_0,\ldots,v_n$
-%$$
-%\lsem int\rsem \ p \ v_1\ldots v_n = v_0
-%\mbox{\ iff\ }
-%\lsem p\rsem v_1\ldots v_n = v_0 
-%$$
-
-
-\pg{Self-interpretation:} a consequence is that
-$$
-\forall p\ \lsem p\rsem = \lsem int\rsem\ p  = \lsem int\rsem\  int\ p 
-$$
-
-\vspace{5mm}
-
-\pg{Specialiser:} program $spec$ such that
-$$
-\forall p\forall s\  \lsem\lsem spec\rsem\ p\ s\rsem = \lsem p\rsem\ s 
-$$
-\vspace{5mm}
-
-\pg{Futamura 1:}  If $  \lsem spec\rsem\ p\ s  = q$
- then 
-$$
-\lsem q \rsem =  \lsem p\rsem\ s
- $$
-Special case: $  \lsem spec\rsem\ int\ source = target $, so
-$$
-\lsem target\rsem = \lsem int\rsem\ source = \lsem source\rsem
-$$
-%\vspace{5mm}
-
-\pg{Futamura 2:}  If $  \lsem spec\rsem\ spec\ p  = p\mbox{-}gen $
- then 
-$$
-\forall s\ (
-\lsem \lsem p\mbox{-}gen\rsem\ s \rsem =  \lsem p\rsem\ s )
- $$
-Special case: $  \lsem spec\rsem\ spec\ int  = int\mbox{-}gen = comp $.
-
- \vspace{5mm}
-
-\pg{Futamura 3:} If $  \lsem spec\rsem\ spec\ spec  = cogen $
-and $ \lsem cogen\rsem\ p = p\mbox{-}gen $ then 
-$$
-\forall s\ (
-\lsem \lsem p\mbox{-}gen\rsem\ s \rsem =  \lsem p\rsem\ s )
- $$
-
-
-
-Special case: $  \lsem cogen\rsem\ int  = int\mbox{-}gen = comp $.
-
-\newpage
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% 3. (ctd) Operational semantics analogy (of Curried versions of PEAPG not's/def'ns)
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-\bc \fbox{\bf Operational Semantics analogy}
-\ec
 
 \pg{L-to-L compiler:} a term $comp$ such that
-$$
+$
 \forall p, q\ ((comp @ Q[p]) \Downarrow Q[q] \mbox{\ implies\ } p \approx q)
-$$
+$.
 
 \pg{Interpreter:} a program $int$ such that
-$$
+$
 \forall p\ (\  (int\ @\ Q[p]) \approx p\ )
-$$
+$.
 
 
 
 \pg{Self-interpretation:} consequence is that
-$$
+$
 \forall p\ (\ int\ @\ (Q[ int\ @\ Q[p]]) \approx  (int\ @\ Q[p]) \approx p\ )
-$$
+$.
+\medskip
+
 Note: double encoding of the leftmost $p$.
 
 
 
-\pg{Specialiser:} a term $spec$ such that $\forall p\forall s\forall q$
-$$
+\pg{Specialiser:} a term $spec$ such that $\forall p\forall s\forall q
 (spec\ @\ Q[p]\ @\ s) \Downarrow Q[q] \mbox{\ implies\ } q \approx  p@s 
-$$
-(Note: the first $s$ is {\em not} encoded, e.g., no  $Q[s]$.)
+$.
+\medskip
 
-\vspace{5mm}
+
+(Note: the first $s$ is {\em not} encoded, e.g., no  $Q[s]$.)
 
 
 \pg{Futamura 1:}  $\forall p\forall s\forall q$
-$$
+$
 (spec\ @\ Q[p]\ @\ s) \Downarrow Q[q]
 \mbox{\ implies\ }
  q \approx  p@s 
- $$
-Special case: $(spec\ @\ Q[int]\ @\ Q[source]) \Downarrow Q[target]$, so
-$$target \approx int \ @\ Q[source] \approx source
-$$
+ $.
+\medskip
 
+
+ 
+Special case: $(spec\ @\ Q[int]\ @\ Q[source]) \Downarrow Q[target]$, so
+$target \approx int \ @\ Q[source] \approx source
+$.
+ \vspace{5mm}
+ 
 \pg{Futamura 2:}  $
-(spec\ @\ Q[spec]\ @\ Q[p]) \Downarrow p\mbox{-}gen$
-$$
+(spec\ @\ Q[spec]\ @\ Q[p]) \Downarrow Q[p\mbox{-}gen]
 \mbox{ implies\ }
 \forall s (\ 
 p\mbox{-}gen@s \Downarrow Q[q]
 \mbox{ implies\ }
 q \approx p @ s\ )
-$$
-Special case: $(spec\ @\ Q[spec]\ @\ Q[int]) \Downarrow comp$.
+$.
+\medskip
+
+
+Special case: $(spec\ @\ Q[spec]\ @\ Q[int]) \Downarrow Q[comp]$.
  \vspace{5mm}
 
 \pg{Futamura 3:}  $
-(spec\ @\ Q[spec]\ @\ Q[spec]) \Downarrow cogen$
+(spec\ @\ Q[spec]\ @\ Q[spec]) \Downarrow Q[cogen]¨$
 and $(cogen@Q[p]) \Downarrow Q[p\mbox{-}gen]$
 imply
 $$
@@ -816,7 +574,7 @@ p\mbox{-}gen@s \Downarrow Q[q]
 \mbox{ implies\ }
 q \approx p @ s\ )
 $$
-Special case: $(cogen\ @\ Q[int]) \Downarrow comp$.
+Special case: $(cogen\ @\ Q[int]) \Downarrow Q[comp]$.
 
 \newpage
 
