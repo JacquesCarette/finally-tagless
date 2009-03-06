@@ -604,7 +604,8 @@ accompanying code has the complete implementations.
 \fi
 
 \begin{SaveVerbatim}{ocaml-simple}
-module type Symantics = sig type ('c, 'dv) repr
+module type Symantics = sig
+  type ('c, 'dv) repr
   val int : int  -> ('c, int) repr
   val bool: bool -> ('c, bool) repr
 
@@ -620,7 +621,8 @@ module type Symantics = sig type ('c, 'dv) repr
 end
 \end{SaveVerbatim}
 \begin{SaveVerbatim}{ocaml-examples}
-module EX(S: Symantics) = struct open S
+module EX(S: Symantics) = struct
+  open S
   let test1 () = app (lam (fun x -> x)) (bool true)
   let testpowfix () =
        lam (fun x -> fix (fun self -> lam (fun n ->
@@ -696,7 +698,7 @@ shows how to represent \emph{every} well-typed object term in the
 metalanguage.
 We formalize this representation by defining $H$ and~$M$,
 two inductive maps from terms and types in our object language
-to terms and types in Haskell and OCaml:
+to terms and types in Haskell and OCaml:\pagebreak
 \begin{align}
     H(\ZZ) &= \texttt{Int} &
     M(\ZZ) &= \texttt{int} \notag\\
@@ -708,8 +710,8 @@ to terms and types in Haskell and OCaml:
     M(x) &= x \notag\\
     H(\fun{x}e) &= \texttt{lam (\textbackslash $x$ -> $H(e)$)} &
     M(\fun{x}e) &= \texttt{lam (fun $x$ -> $M(e)$)} \notag\\
-    H(\fix{f}e) &= \texttt{fix (\textbackslash $x$ -> $H(e)$)} &
-    M(\fix{x}e) &= \texttt{fix (fun $x$ -> $M(e)$)} \notag\\
+    H(\fix{f}e) &= \texttt{fix (\textbackslash $f$ -> $H(e)$)} &
+    M(\fix{f}e) &= \texttt{fix (fun $f$ -> $M(e)$)} \notag\\
     H(e_1 e_2) &= \texttt{app $H(e_1)$ $H(e_2)$} &
     M(e_1 e_2) &= \texttt{app $M(e_1)$ $M(e_2)$} \notag\\
     H(n) &= \texttt{int $n$} &
@@ -1522,7 +1524,7 @@ For example, the compiler |C| now begins
 module C = struct
   type ('c,'sv,'dv) repr = ('c,'dv) code
 \end{code}
-with the rest the same.
+with the rest being the same.
 
 Figure~\ref{fig:pe} shows the partial evaluator~|P|.
 Its type |repr| expresses the definition for |static| given
@@ -2133,7 +2135,7 @@ module RCPSI = RCPS(struct
 end)
 \end{code}
 If the state has a higher-order type, then the types |state| and |'c states|
-are no longer the same, and |'s states| is mutually
+are no longer the same, and |'c states| is mutually
 recursive with the type |('c,'sv,'dv) repr|, as demonstrated in the
 accompanying source code.
 
