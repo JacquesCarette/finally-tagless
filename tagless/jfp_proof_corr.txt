@@ -1,0 +1,237 @@
+Corrections to the paper:
+
+The format for citations in text should be consistent but is not
+("Nielson & Nielson 1988, 1992" vs "Birkedal and Welinder, 1993").
+
+On pages 7, 21, and 31, "Hindley-Milner" should be typeset using a
+hyphen rather than an en-dash.
+
+Page 2, footnote 1: "work of Pa{\v s}ali{\'c} et al." -> 
+    "Pa{\v s}ali{\'c} et al.'s work"
+
+Page 3, line 7: "was untyped" -> "were untyped"
+
+Page 4, first line: "well typed and ill typed" -> "well-typed and
+ill-typed"
+
+Page 4, line 7: "is well typed" -> "is well-typed"
+
+Page 6, Section 1.4, item 2: "each object program is well typed and
+closed" -> "each object program is well-typed and closed"
+
+Page 10: "object term is well typed" -> "object term is well-typed"
+
+Page 5, bottom line: "http://www.metaocaml.org" should be set in
+Computer Modern Typewriter, like all other URLs in this paper.
+
+Page 6, Section 1.4, first paragraph, last sentence: "Our contributions
+are as follow:" -> "Our contributions are as follows."  Please note the
+final letter "s" and the final period instead of a colon.
+
+Page 7, second line of Section 2: "Plotkin's (1977) PCF" -> "Plotkin's
+PCF (1977)"
+
+Page 8, 8th line below Figure 2: "from Section 1.1" -> "from Section 1.1
+above"
+
+Page 8, 16th line below Figure 2: "The dummy argument ()" -> "The dummy
+argument () above"
+
+p9: change the line (within eq (2))
+   H(fix f.e) = fix(\x -> H(e))   M(fix x.e) = fix (fun x -> M(e))
+
+into
+   H(fix f.e) = fix(\f -> H(e))   M(fix f.e) = fix (fun f -> M(e))
+
+That is, change all three occurrences of 'x' in this line into 'f'.
+
+Page 12, 5th line of Section 2.3: "case analyzed" -> "case-analyzed"
+
+Page 15: "Template Haskell, Sheard and Peyton Jones 2002, as our" ->
+"Template Haskell (Sheard and Peyton Jones 2002) as our"  After all,
+a Haskell feature is not a paper but can only be described by a paper.
+
+Page 16: "Xi et al. 2003; Taha and Nielsen 2003" should follow the
+citation order in the original manuscript, "Taha and Nielsen 2003;
+Xi et al. 2003"
+
+Page 16: "following pattern matching" -> "all pattern matching below"
+
+Page 18: "phantom-type argument" -> "phantom type argument"
+
+Page 18, last line: "rest of the same" -> "rest the same"
+
+Page 19: "Ramsey 2005; Benton 2005" should follow the citation order in
+the original manuscript, "Benton 2005; Ramsey 2005"
+
+Page 21, line 11: "Mogensen's (1992, 1995) earlier self-reducers for the
+untyped lambda-calculus" -> "Mogensen's earlier self-reducers for the
+untyped lambda-calculus (1992, 1995)"
+
+Page 21, line 26: "compiler generator (cogen) of Birkedal and Wilinder
+(1993) for ML" -> "Birkedal and Wilinder's compiler generator (cogen)
+for ML"
+
+Page 21, line 33: "Fiorefor" -> "Fiore"
+
+Page 21, line 38: "composition of Sperber and Thiemann (1997) of a
+partial evaluator and a compiler" -> "Sperber and Thiemann's composition
+of a partial evaluator and a compiler (1997)"
+
+Page 21, last line: "Thiemann's (1999) work on program generation" ->
+"Thiemann's work on program generation (1999)"
+
+Page 27, first line below the list: "Moggi's (1991) monadic
+metalanguage" -> "Moggi's monadic metalanguage (1991)"
+
+Page 27, third line below the list: "``$e_1;e_2$.''" -> "``$e_1;e_2$''."
+It's important that the period be outside the pair of quotation marks.
+
+p28, after the displayed equation "module RCPSI = ..."
+replace 's states with 'c states
+
+Page 29, Section 6, line 4: "all these technical machineries" -> "all
+this technical machinery"  Please see the Oxford English Dictionary on
+the use of "machinery" as a mass noun, which is our intention in the
+original manuscript.
+
+Page 29, Section 6, line 18: "(following Yang 2004) Yang (2004))" ->
+"(following Yang (2004))"  Note the unbalanced parentheses in the proof.
+
+Page 29, Section 6, line 11 from the bottom: "Holst's (1988) _language
+triplets_" -> "Holst's _language triplets_ (1988)"  The phrase "language
+triplets" should stay in italics.
+
+Page 30, the line before the last two paragraphs:
+"avoided in Section 4.1" -> "avoid in Section 4.1"
+
+Page 30, the second-to-last paragraph: "Honsell and Lenisa's (1999)
+bibliography" -> "Honsell and Lenisa's bibliography (1999)"
+
+References:
+Bawden, Alan (1999). It seems the name of the editor is mis-arranged:
+it should be Olivier Danvy rather than Danvy Olivier.
+
+Reference to our APLAS paper:
+	-- Ken's name is mis-typed. It should be "Shan, Chung-chieh".
+	-- Aplas must be in all caps.
+
+Reference to Fogarty, Seth, Pasalic, Emir, ...
+Emir's last name should be Pa{\v s}ali{\'c}
+
+Reference to Moors, Adriaan, Piessens, Frank, ...
+	-- Oopsla should be in all caps
+	-- Is it really necessary to list the general chair?
+
+Page 35, in Taha, Walid (1999): "non-trival" -> "non-trivial"
+  (hyphen not en-dash)
+
+----
+
+We would also ask for the following two layout changes:
+
+In Fig.2, write the first line
+	module type Symantics = sig type ('s,'dv) repr
+as two lines
+	module type Symantics = sig 
+	  type ('s,'dv) repr
+Similarly, in Fig. 3, split the first line
+	module EX(S: Symantics) = struct open S
+into two:
+	module EX(S: Symantics) = struct 
+          open S
+
+
+===============================================
+
+Answers to specific questions:
+Q1:
+Name - email - affiliation
+Jacques Carette - carette@mcmaster.ca - McMaster University
+Oleg Kiselyov - oleg@pobox.org - FNMOC
+Chung-chieh Shan -  ccshan@rutgers.edu - Rutgers University
+
+Q2:
+The publisher is BRICS - University of Aarhus
+
+Q3:
+The full bibliography entry for the proceedings is
+@proceedings{DBLP:conf/gpce/2005,
+editor = {Robert Gl{\"u}ck and
+Michael R. Lowry},
+title = {Generative Programming and Component Engineering, 4th International
+Conference, GPCE 2005, Tallinn, Estonia, September 29 -
+October 1, 2005, Proceedings},
+booktitle = {GPCE},
+publisher = {Springer},
+series = {Lecture Notes in Computer Science},
+volume = {3676},
+year = {2005},
+isbn = {3-540-29138-5},
+bibsource = {DBLP, http://dblp.uni-trier.de}
+}
+
+Q4:
+The full bibliography entry for the the first entry is
+@inproceedings{DBLP <http://dblp.uni-trier.de/db/about/bibtex.html>:conf/gpce/HoferORM08,
+author = {Christian Hofer and
+Klaus Ostermann and
+Tillmann Rendel and
+Adriaan Moors},
+title = {Polymorphic embedding of dsls},
+booktitle = {GPCE},
+year = {2008},
+pages = {137-148},
+ee = {http://doi.acm.org/10.1145/1449913.1449935},
+crossref = {DBLP:conf/gpce/2008},
+bibsource = {DBLP, http://dblp.uni-trier.de}
+}
+
+@proceedings{DBLP <http://dblp.uni-trier.de/db/about/bibtex.html>:conf/gpce/2008,
+editor = {Yannis Smaragdakis and
+Jeremy G. Siek},
+title = {Generative Programming and Component Engineering, 7th International
+Conference, GPCE 2008, Nashville, TN, USA, October 19-23,
+2008, Proceedings},
+booktitle = {GPCE},
+publisher = {ACM},
+year = {2008},
+isbn = {978-1-60558-267-2},
+bibsource = {DBLP, http://dblp.uni-trier.de}
+}
+
+and the second is
+
+@InProceedings{laod93,
+  author	= "Konstantin L{\"a}ufer and Martin Odersky",
+  booktitle	= "Proceedings of the 4th Annual {OOPSLA}\slash {ECOOP} Workshop on Object-Oriented Reflection and Metalevel Architectures",
+  month      = oct,
+  title      = {Self-Interpretation and Reflection in a Statically Typed Language},
+  organization = {ACM},
+  year       = {1993},
+  location = {Washington, D.C.},
+  url = "http://webpages.cs.luc.edu/~laufer/papers/reflection93.pdf"
+}
+
+Q5:
+This is still a book *draft* (available on the web), and thus no fixed
+'publisher'. Working title (of book) is as indicated in reference.
+
+Q6:
+Updated reference is
+
+@article{1352591,
+author = {Nanevski,, Aleksandar and Pfenning,, Frank and Pientka,, Brigitte},
+title = {Contextual modal type theory},
+journal = {ACM Trans. Comput. Logic},
+volume = {9},
+number = {3},
+year = {2008},
+issn = {1529-3785},
+pages = {1--49},
+doi = {http://doi.acm.org/10.1145/1352582.1352591},
+publisher = {ACM},
+address = {New York, NY, USA},
+
+
+}
