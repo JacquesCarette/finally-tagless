@@ -1,10 +1,18 @@
-Corrections to the paper:
+Corrections to the paper (negative line numbers mean from bottom):
 
 The format for citations in text should be consistent but is not
 ("Nielson & Nielson 1988, 1992" vs "Birkedal and Welinder, 1993").
+Probably these should use &, like the bibliography itself, so corrections 
+are needed on:
+p.2 l.5,6 (of the text), p.4 l.20,21, p.5 l.20, p.6 l.-7 (second 'and'),
+p.7 l.17,28,29, p.8, l.-1, p.12 l.-12, p.13 l.5 (of text), p.15 l.13,
+p.16 l.21,29, p.17 l.-10,-6, p.19 l.-7,-8, p.20 l.11,22, 
+p.21 l.6 (second and), l.10 (first and), 15, 27, 38,
+p.26 l.4 (of text), 
+p.29 l.6, 7, 23, 34, p.30 l.6, 10, 15, 21, 23, 26, 30, 35, 36
 
-On pages 7, 21, and 31, "Hindley-Milner" should be typeset using a
-hyphen rather than an en-dash.
+On pages 7 l.8, 21 l.19, and 31 l.10, "Hindley-Milner" should be typeset using
+a hyphen rather than an en-dash.
 
 Page 2, footnote 1: "work of Pa{\v s}ali{\'c} et al." -> 
     "Pa{\v s}ali{\'c} et al.'s work"
@@ -13,23 +21,24 @@ Page 3, line 7: "was untyped" -> "were untyped"
 
 Page 4, first line: "well typed and ill typed" -> "well-typed and
 ill-typed"
+[We have verified that it is the industry standard to hyphenate these words]
 
 Page 4, line 7: "is well typed" -> "is well-typed"
 
-Page 6, Section 1.4, item 2: "each object program is well typed and
+Page 6, Section 1.4, item 2 (line 21): "each object program is well typed and
 closed" -> "each object program is well-typed and closed"
 
-Page 10: "object term is well typed" -> "object term is well-typed"
+Page 10 l.25: "object term is well typed" -> "object term is well-typed"
 
 Page 5, bottom line: "http://www.metaocaml.org" should be set in
 Computer Modern Typewriter, like all other URLs in this paper.
 
-Page 6, Section 1.4, first paragraph, last sentence: "Our contributions
-are as follow:" -> "Our contributions are as follows."  Please note the
-final letter "s" and the final period instead of a colon.
+Page 6, Section 1.4, first paragraph, last sentence (line 14): "Our
+contributions are as follow:" -> "Our contributions are as follows."  Please
+note the final letter "s" and the final period instead of a colon.
 
-Page 7, second line of Section 2: "Plotkin's (1977) PCF" -> "Plotkin's
-PCF (1977)"
+Page 7, second line of Section 2 (line -16): "Plotkin's (1977) PCF" ->
+"Plotkin's PCF (1977)"
 
 Page 8, 8th line below Figure 2: "from Section 1.1" -> "from Section 1.1
 above"
@@ -37,7 +46,7 @@ above"
 Page 8, 16th line below Figure 2: "The dummy argument ()" -> "The dummy
 argument () above"
 
-p9: change the line (within eq (2))
+p9: change the line (within eq (2)) [ie line -10]
    H(fix f.e) = fix(\x -> H(e))   M(fix x.e) = fix (fun x -> M(e))
 
 into
@@ -47,21 +56,21 @@ That is, change all three occurrences of 'x' in this line into 'f'.
 
 Page 12, 5th line of Section 2.3: "case analyzed" -> "case-analyzed"
 
-Page 15: "Template Haskell, Sheard and Peyton Jones 2002, as our" ->
+Page 15 line 13: "Template Haskell, Sheard and Peyton Jones 2002, as our" ->
 "Template Haskell (Sheard and Peyton Jones 2002) as our"  After all,
 a Haskell feature is not a paper but can only be described by a paper.
 
-Page 16: "Xi et al. 2003; Taha and Nielsen 2003" should follow the
+Page 16 line 21: "Xi et al. 2003; Taha and Nielsen 2003" should follow the
 citation order in the original manuscript, "Taha and Nielsen 2003;
 Xi et al. 2003"
 
-Page 16: "following pattern matching" -> "all pattern matching below"
+Page 16 line -3: "following pattern matching" -> "all pattern matching below"
 
-Page 18: "phantom-type argument" -> "phantom type argument"
+Page 18 line -4: "phantom-type argument" -> "phantom type argument"
 
 Page 18, last line: "rest of the same" -> "rest the same"
 
-Page 19: "Ramsey 2005; Benton 2005" should follow the citation order in
+Page 19 line -9: "Ramsey 2005; Benton 2005" should follow the citation order in
 the original manuscript, "Benton 2005; Ramsey 2005"
 
 Page 21, line 11: "Mogensen's (1992, 1995) earlier self-reducers for the
@@ -87,7 +96,7 @@ metalanguage" -> "Moggi's monadic metalanguage (1991)"
 Page 27, third line below the list: "``$e_1;e_2$.''" -> "``$e_1;e_2$''."
 It's important that the period be outside the pair of quotation marks.
 
-p28, after the displayed equation "module RCPSI = ..."
+p28, after the displayed equation "module RCPSI = ..." (ie line -17)
 replace 's states with 'c states
 
 Page 29, Section 6, line 4: "all these technical machineries" -> "all
@@ -98,44 +107,46 @@ original manuscript.
 Page 29, Section 6, line 18: "(following Yang 2004) Yang (2004))" ->
 "(following Yang (2004))"  Note the unbalanced parentheses in the proof.
 
-Page 29, Section 6, line 11 from the bottom: "Holst's (1988) _language
+Page 29, Section 6, line -11 : "Holst's (1988) _language
 triplets_" -> "Holst's _language triplets_ (1988)"  The phrase "language
 triplets" should stay in italics.
 
-Page 30, the line before the last two paragraphs:
+Page 30, the line before the last two paragraphs (line -13):
 "avoided in Section 4.1" -> "avoid in Section 4.1"
 
 Page 30, the second-to-last paragraph: "Honsell and Lenisa's (1999)
 bibliography" -> "Honsell and Lenisa's bibliography (1999)"
+(ie line -10)
 
 References:
+p.31 l.-7
 Bawden, Alan (1999). It seems the name of the editor is mis-arranged:
 it should be Olivier Danvy rather than Danvy Olivier.
 
-Reference to our APLAS paper:
+Reference to our APLAS paper (p.32 l. 15)
 	-- Ken's name is mis-typed. It should be "Shan, Chung-chieh".
-	-- Aplas must be in all caps.
+	-- Aplas must be in all caps. (APLAS)
 
-Reference to Fogarty, Seth, Pasalic, Emir, ...
+Reference to Fogarty, Seth, Pasalic, Emir, ... (p.32 l. -6)
 Emir's last name should be Pa{\v s}ali{\'c}
 
-Reference to Moors, Adriaan, Piessens, Frank, ...
+Reference to Moors, Adriaan, Piessens, Frank, ... (p.34 l.9-12)
 	-- Oopsla should be in all caps
 	-- Is it really necessary to list the general chair?
 
-Page 35, in Taha, Walid (1999): "non-trival" -> "non-trivial"
+Page 35, in Taha, Walid (1999) [line -20]: "non-trival" -> "non-trivial"
   (hyphen not en-dash)
 
 ----
 
 We would also ask for the following two layout changes:
 
-In Fig.2, write the first line
+(p.8 line 1) In Fig.2, write the first line
 	module type Symantics = sig type ('s,'dv) repr
 as two lines
 	module type Symantics = sig 
 	  type ('s,'dv) repr
-Similarly, in Fig. 3, split the first line
+(p.9 line 1) Similarly, in Fig. 3, split the first line
 	module EX(S: Symantics) = struct open S
 into two:
 	module EX(S: Symantics) = struct 
