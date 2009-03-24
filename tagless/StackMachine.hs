@@ -1,7 +1,7 @@
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE PatternSignatures, ScopedTypeVariables #-}
 {-# LANGUAGE MultiParamTypeClasses, FunctionalDependencies, 
-  FlexibleInstances, FlexibleContexts, UndecidableInstances #-}
+  FlexibleInstances, UndecidableInstances #-}
 
 -- A typed stack machine: typed PostScript
 
@@ -113,8 +113,8 @@ instance (StackZip (s,s2a) s1A s1,
 stype :: s -> fr s
 stype = undefined
 
-stypefn :: s1 -> s2 -> fr s1 -> fr s2
-stypefn = undefined
+-- stypefn :: s1 -> s2 -> fr s1 -> fr s2
+-- stypefn = undefined
 
 -- s1a --> (a,s1b)  and (b,s2a) --> s2b
 -- Here, 'a' and 'b' must match-up 
