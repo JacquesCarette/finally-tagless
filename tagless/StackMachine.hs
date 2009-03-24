@@ -1,5 +1,5 @@
 {-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE PatternSignatures, ScopedTypeVariables #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE MultiParamTypeClasses, FunctionalDependencies, 
   FlexibleInstances, UndecidableInstances #-}
 
@@ -85,7 +85,8 @@ instance Compose s1 N N s2   s1 s2 where
 
 -- s1a --> s1  and N --> s2b
 -- Put the stack s2B on top of s1
-instance (StackZip' s1A (s, s1b),
+instance (StackZip' (s1A,s1As) (s, s1b),
+	  StackZip' s1As s1b,
 	  StackZip' s2s s1b,
 	  StackZip' s2B s2b,
 	  StackZip (s, s1b) s2B sb) 
@@ -100,7 +101,8 @@ instance (StackZip' s1A (s, s1b),
 -- s1a --> N  and s2a --> s2b 
 -- Put s2a underneath of s1a, so s1 is s1a on the top of s2a
 instance (StackZip (s,s2a) s1A s1,
-	  StackZip' s2A (s,s2a),
+	  StackZip' (s2A,s2As) (s,s2a),
+	  StackZip' s2As s2a,
 	  StackZip' s2s s2a,
 	  StackZip' s1A s1a) 
     => Compose s1a N (s,s2a) s2b  s1 s2b where
