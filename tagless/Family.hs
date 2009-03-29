@@ -2,6 +2,10 @@
 module Family where
 import Incope (Symantics(..), compC, testpowfix7)
 
+------------------------------------------------------------------------
+-- Using associated types
+------------------------------------------------------------------------
+
 data family Static a :: (* -> *) -> *
 newtype instance Static Int    repr = SInt   Int
 newtype instance Static Bool   repr = SBool  Bool
@@ -34,3 +38,40 @@ instance (Symantics c) => Symantics (P c) where
 
 -- Test repeated partial evaluation
 test = compC (dynamic (dynamic (testpowfix7 ())))
+
+------------------------------------------------------------------------
+-- Using associated type synonyms
+------------------------------------------------------------------------
+
+type family Static' a (repr :: (* -> *))
+type instance Static' Int    repr = Int
+type instance Static' Bool   repr = Bool
+type instance Static' (a->b) repr = (repr a -> repr b)
+
+data P' c a = P' { dynamic' :: c a, static' :: Maybe (Static' a (P' c)) }
+
+pdyn' dynamic' = P' dynamic' Nothing
+
+instance (Symantics c) => Symantics (P' c) where
+    int  x = P' (int  x) (Just x)
+    bool x = P' (bool x) (Just x)
+
+    add (P' _ (Just n1)) (P' _ (Just n2)) = int (n1 + n2)
+    add (P' n1 _) (P' n2 _) = pdyn' (add n1 n2)
+    mul (P' _ (Just n1)) (P' _ (Just n2)) = int (n1 * n2)
+    mul (P' n1 _) (P' n2 _) = pdyn' (mul n1 n2)
+    leq (P' _ (Just n1)) (P' _ (Just n2)) = bool (n1 <= n2)
+    leq (P' n1 _) (P' n2 _) = pdyn' (leq n1 n2)
+    if_ (P' _ (Just b1)) et ee = if b1 then et else ee
+    if_ (P' be _) et ee = pdyn' (if_ be (dynamic' et) (dynamic' ee))
+
+    lam f = P' (lam (dynamic' . f . pdyn')) (Just f)
+    app (P' _ (Just f)) = f
+    app (P' f _) = pdyn' . app f . dynamic'
+    fix f = case f (fix f) of
+              (P' _ (Just s)) -> P' dfix (Just s)
+              _              -> P' dfix Nothing
+       where dfix = fix (dynamic' . f . pdyn')
+
+-- Test repeated partial evaluation
+test' = compC (dynamic' (dynamic' (testpowfix7 ())))
