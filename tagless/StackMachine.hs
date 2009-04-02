@@ -10,6 +10,9 @@ module StackMachine where
 import Prelude hiding ((>>), drop)
 import qualified Prelude
 
+-- N should be understood as a polymorphic variable which designates
+-- an ``arbitrary'' stack; more specifically, it is used in practice
+-- for the ``rest'' of the stack in a given situation.
 data N = N deriving Show
 data A = A deriving Show		-- bottom of the register file
 
@@ -36,43 +39,52 @@ class StackMachine fr => Forth fr where
     appl :: fr (fr s1 -> fr s2,s1) -> fr s2
     ifte':: fr (fr s1 -> fr s2, (fr s1 -> fr s2, (Bool, s1))) -> fr s2
 
-
-class StackZip s1 s2 s | s1 s2 -> s, s s2 -> s1 where
+-- This class says that stack s is made with t on top and b on bottom
+class Atop b t s | b t -> s, s t -> b where
     sz_up :: StackMachine fr =>
-	     fr s1 -> fr s2 -> fr s	-- Put accum s2 on the top of s1
+	     fr b -> fr t -> fr s	-- Put accum t on the top of b
     sz_dn :: StackMachine fr =>
-	     fr s  -> (fr s1, fr s2)    -- Remove the top to the accumulator
+	     fr s  -> (fr b, fr t)	-- Remove the top to the accumulator
 
-instance StackZip s1 A s1 where
+-- s is really the full stack
+instance Atop s A s where
     sz_up x _ = x			-- fr A is ignorable
-    sz_dn x = (x,accu)
+    sz_dn x   = (x,accu)
 
-instance StackZip s1 s2s s' => StackZip s1 (s2,s2s) (s2,s') where
-    sz_up x a = let (s2s,s2) = xmit a accu
-		    s' = sz_up x s2s
-		in snd $ xmit s2 s'
-    sz_dn x =   let (s',s2) = xmit x accu
-		    (s1,s2s) = sz_dn s'
-		in (s1, snd $ xmit s2 s2s)
+-- use e for 'e'lement, since this is a simpler way to visualize this.
+instance Atop b t s => Atop b (e,t) (e,s) where
+    sz_up x a = let (te,t) = xmit a accu -- (a :: (e,t))
+                    s' = sz_up x te
+                in snd $ xmit t s'
+    sz_dn x =   let (s',t) = xmit x accu  -- (x :: (e,s))
+                    (b,te) = sz_dn s'
+                in (b, snd $ xmit t te)
 
+-- This class is to make sure 2 stacks are the same height.
+-- This is witnessed by 2 functions:
+--   spush which pushes a stack (acc) atop an arbitrary (including empty!)
+--         stack (N) to get the second (s)
+--   spop  which splits a stack into a 'rest' (N) and a 'top' (acc), with 
+--        the 'rest' being arbitrary
+-- The acc stack is thought of as the 'accumulator'
+class SameStacks acc s | s -> acc, acc -> s where
+    spush :: StackMachine fr =>
+             fr N -> fr acc -> fr s     -- Put accum acc on the top of N
+    spop :: StackMachine fr =>
+             fr s  -> (fr N, fr acc)    -- Remove the top of a to accum acc
 
-class StackZip' s2 s | s -> s2, s2 -> s where
-    sz_up' :: StackMachine fr =>
-	     fr N -> fr s2 -> fr s	-- Put accum s2 on the top of N
-    sz_dn' :: StackMachine fr =>
-	     fr s  -> (fr N, fr s2)    -- Remove the top to the accumulator
+instance SameStacks A N where
+    spush x _ = x			-- fr A is ignorable
+    spop x = (x,accu)
 
-instance StackZip' A N where
-    sz_up' x _ = x			-- fr A is ignorable
-    sz_dn' x = (x,accu)
-
-instance StackZip' s2s s' => StackZip' (s2,s2s) (s2,s') where
-    sz_up' x a = let (s2s,s2) = xmit a accu
-		     s' = sz_up' x s2s
-		 in snd $ xmit s2 s'
-    sz_dn' x =   let (s',s2) = xmit x accu
-		     (s1,s2s) = sz_dn' s'
-		 in (s1, snd $ xmit s2 s2s)
+-- Naming convention: Xe means X without e
+instance SameStacks se te => SameStacks (e,se) (e,te) where
+    spush x a = let (se,s) = xmit a accu
+                    t = spush x se
+                in snd $ xmit s t
+    spop x =   let (t,s2) = xmit x accu
+                   (n1,se) = spop t
+                 in (n1, snd $ xmit s2 se)
 
 -- We consider type N to be sort of a type variable
 -- The class below does the unification
@@ -80,37 +92,43 @@ class Compose s1a s1b s2a s2b sa sb | s1a s1b s2a s2b -> sa sb  where
     (>>) :: StackMachine fr =>
 	    (fr s1a -> fr s1b) -> (fr s2a -> fr s2b) -> (fr sa -> fr sb)
 
+-- Note how the 'rest' of stack 1 is the SAME as what the 2nd function
+-- consumes.  In other words, if we have something that consumes s1, 
+-- leaving N, and something which produces s2 in all contexts (as N is 
+-- really arbitrary), we can get something that consumes exactly
+-- s1 and produces exactly s2.
+-- ie s1 --> N and N --> s2 then s1 --> s2
 instance Compose s1 N N s2   s1 s2 where
     (>>) = flip (.)
 
--- s1a --> s1  and N --> s2b
--- Put the stack s2B on top of s1
-instance (StackZip' (s1A,s1As) (s, s1b),
-	  StackZip' s1As s1b,
-	  StackZip' s2s s1b,
-	  StackZip' s2B s2b,
-	  StackZip (s, s1b) s2B sb) 
+-- In the next 2 instances, the (s,-) are to avoid overlap
+
+-- s1a --> (s,s1b)  and N --> s2b then s1a -> [Atop (s, s1b) s2b sb]
+-- Put the stack s2b on top of (s,s1b)
+instance (SameStacks (s,s1A) (s, s1b),
+	  SameStacks s1A s1b,
+	  SameStacks s2B s2b,
+	  Atop (s, s1b) s2B sb) 
     => Compose s1a (s,s1b) N s2b  s1a sb where
     f1 >> f2 = \s1a -> let s1 = f1 s1a
-		           (n1,s1A) = sz_dn' s1
+		           (n1,s1A) = spop s1   -- pull off (s,s1b) into s1A
 			   s2b   = f2 n1
-			   (n2,s2B) = sz_dn' s2b
-			   s1' = sz_up' n2 s1A
-		       in sz_up s1' s2B
+			   (n2,s2B) = spop s2b  -- pull off s2b into s2B
+			   s1' = spush n2 s1A   -- stick n2 under s1A
+		       in sz_up s1' s2B         -- s1' == s2B
 
 -- s1a --> N  and s2a --> s2b 
 -- Put s2a underneath of s1a, so s1 is s1a on the top of s2a
-instance (StackZip (s,s2a) s1A s1,
-	  StackZip' (s2A,s2As) (s,s2a),
-	  StackZip' s2As s2a,
-	  StackZip' s2s s2a,
-	  StackZip' s1A s1a) 
+instance (Atop (s,s2a) s1A s1,
+	  SameStacks (s,s2As) (s,s2a),
+	  SameStacks s2As s2a,
+	  SameStacks s1A s1a) 
     => Compose s1a N (s,s2a) s2b  s1 s2b where
     f1 >> f2 = \s1 ->  let (s1',s1A) = sz_dn s1
-			   (n1,s2A)  = sz_dn' s1'
-			   s1a = sz_up' n1 s1A
+			   (n1,s2A)  = spop s1'
+			   s1a = spush n1 s1A
 			   n2  = f1 s1a
-		       in f2 $ sz_up' n2 s2A
+		       in f2 $ spush n2 s2A
 
 stype :: s -> fr s
 stype = undefined
@@ -122,13 +140,13 @@ stype = undefined
 -- Here, 'a' and 'b' must match-up 
 instance (TypeCast (a,A) (b,A),
 	  Compose s1a s1b s2a s2b s1 s2,
-	  StackZip' s1'A s1',
-	  StackZip s1' s1A s1,
-	  StackZip' s1A s1a) 
+	  SameStacks s1'A s1',
+	  Atop s1' s1A s1,
+	  SameStacks s1A s1a) 
     => Compose s1a (a,s1b) (b,s2a) s2b  s1 s2 where
     f1 >> f2 = \s1 ->  let (s1',s1A) = sz_dn s1
-			   (n1,s1'A) = sz_dn' s1'
-			   s1a       = sz_up' n1 s1A
+			   (n1,s1'A) = spop s1'
+			   s1a       = spush n1 s1A
 			   (s1b,a)   = xmit (f1 s1a) accu
 			   b         = typeCast a
 			   f1' s1a'  = s1b where
