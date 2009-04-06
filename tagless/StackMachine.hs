@@ -138,7 +138,7 @@ stype = undefined
 
 -- s1a --> (a,s1b)  and (b,s2a) --> s2b
 -- Here, 'a' and 'b' must match-up 
-instance (TypeCast (a,A) (b,A),
+instance (TypeCast a b,
 	  Compose s1a s1b s2a s2b s1 s2,
 	  SameStacks s1'A s1',
 	  Atop s1' s1A s1,
@@ -155,10 +155,18 @@ instance (TypeCast (a,A) (b,A),
 			   f2' s2a   = f2 (snd (xmit b s2a))
 		       in (f1' >> f2') s1
 
-
+{-
 class TypeCast   a b   | a -> b, b->a   where typeCast   :: f a -> f b
 class TypeCast'  t a b | t a -> b, t b -> a where typeCast'  :: t->f a-> f b
 class TypeCast'' t a b | t a -> b, t b -> a where typeCast'' :: t->f a-> f b
+instance TypeCast'  () a b => TypeCast a b where typeCast x = typeCast' () x
+instance TypeCast'' t a b => TypeCast' t a b where typeCast' = typeCast''
+instance TypeCast'' () a a where typeCast'' _ x  = x
+-}
+
+class TypeCast   a b   | a -> b, b->a   where typeCast   :: fr (a,A) -> fr (b,A)
+class TypeCast'  t a b | t a -> b, t b -> a where typeCast'  :: t->fr (a,A) -> fr (b,A)
+class TypeCast'' t a b | t a -> b, t b -> a where typeCast'' :: t->fr (a,A) -> fr (b,A)
 instance TypeCast'  () a b => TypeCast a b where typeCast x = typeCast' () x
 instance TypeCast'' t a b => TypeCast' t a b where typeCast' = typeCast''
 instance TypeCast'' () a a where typeCast'' _ x  = x
