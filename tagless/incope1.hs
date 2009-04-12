@@ -1,5 +1,5 @@
 {-# OPTIONS -fglasgow-exts #-}
-{-# OPTIONS -fallow-undecidable-instances #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 -- Interpreter, Compiler, Partial Evaluator
 -- This is the typeclass version of the code in Incope.hs
@@ -219,5 +219,6 @@ ptestg = compP . testgib1 $ ()
 -- for pp2 is more precise. Looks like a GHC bug?
 -- See correspondence with Martin Sulzmann, Feb 2007
 -- the constraint c -> a b is _NOT the same as c -> a, c -> b
+-- (this appears fixed in GHC 6.10 ?)
 pp1 f@PE{} x = app f x
 
