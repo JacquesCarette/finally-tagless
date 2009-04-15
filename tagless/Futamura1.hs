@@ -6,7 +6,7 @@
 --   Jacques Carette, Oleg Kiselyov, and Chung-chieh Shan
 
 
-module Incope where
+module Futamura1 where
 
 import Data.Maybe (fromJust)
 
@@ -40,13 +40,25 @@ class Symantics repr where
     add :: repr Int  -> repr Int -> repr Int
     mul :: repr Int  -> repr Int -> repr Int
     leq :: repr Int  -> repr Int -> repr Bool
-    eql :: Eq a => repr a    -> repr a   -> repr Bool
+    eql :: repr Int  -> repr Int -> repr Bool
     if_ :: repr Bool -> repr a -> repr a -> repr a
 
     unit :: repr ()
     pair :: repr a  -> repr b -> repr (a,b)
     pfst  :: repr (a,b) -> repr a
     psnd  :: repr (a,b) -> repr b
+
+and_ x y = if_ x (bool True) y
+not_ x   = if_ x (bool False) (bool True)
+class Equal a where
+    equal :: (Symantics repr) => repr a -> repr a -> repr Bool
+instance Equal Bool where
+    equal x y = if_ x y (not_ y)
+instance Equal Int where
+    equal = eql
+instance (Equal a, Equal b) => Equal (a,b) where
+    equal x y = and_ (equal (pfst x) (pfst y))
+                     (equal (psnd x) (psnd y))
 
 test1 () = add (int 1) (int 2)
 test2 () = lam (\x -> add x x)
@@ -311,7 +323,7 @@ class Symantics2 rep where
     zadd :: rep Int Int -> rep Int Int -> rep Int Int
     zmul :: rep Int Int -> rep Int Int -> rep Int Int
     zleq :: rep Int Int -> rep Int Int -> rep Bool Bool
-    zeql :: Eq a => rep a a -> rep a a -> rep Bool Bool
+    zeql :: rep Int Int -> rep Int Int -> rep Bool Bool
     zif_ :: rep Bool Bool -> rep s d -> rep s d -> rep s d
 
     zunit :: rep () ()                        -- unit literal
