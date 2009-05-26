@@ -8,6 +8,28 @@
    many times. We show two different interpreters.
 *)
 
+(* The essence of GADT: the witness of type equality 
+   It is fully safe, meaning never leads to segmentation faults.
+*)
+module EQ = struct
+  type ('a,'b) eq = Refl of 'a option ref * 'b option ref
+
+  let refl () = let r = ref None in Refl (r,r)
+
+  let symm : ('a,'b) eq -> ('b,'a) eq = function 
+      Refl (x,y) -> Refl (y,x)
+
+
+  let apply_eq : ('a,'b) eq -> 'a -> 'b = function
+      Refl (rx,ry) -> fun x ->
+        rx := Some x;
+        match !ry with
+	| Some y -> rx := None; y
+	|     _  -> failwith "Impossible"
+end;;
+
+(* The following is a more optimal implementation
+
 (* Here is the principal component, the kernel of trust.
    Only this module uses Obj.magic. One has to be careful here.
 *)
@@ -28,6 +50,7 @@ end = struct
     let feq Refl = Refl			(* Just like in Agda *)
   end
 end;;
+*)
 
 open EQ;;
 
@@ -52,19 +75,19 @@ let e_err = {ef_int  = None;
 
 
 (* smart constructors *)
-let e_int x = {e_err with ef_int = Some (fun k -> k refl x)};;
+let e_int x = {e_err with ef_int = Some (fun k -> k (refl ()) x)};;
 (* val e_int : int -> int exp = <fun> *)
 
-let e_inc   = {e_err with ef_inc = Some (fun k -> k refl)};;
+let e_inc   = {e_err with ef_inc = Some (fun k -> k (refl ()))};;
 (* val e_inc : (int -> int) exp = *)
 
-let e_lft x = {e_err with ef_lft = Some (fun k -> k refl x)};;
+let e_lft x = {e_err with ef_lft = Some (fun k -> k (refl ()) x)};;
 (* val e_lft : 'a -> 'a exp = <fun> *)
 
-let e_lam f = {e_err with ef_lam = Some (fun k -> k.lam_k (refl,f))};;
+let e_lam f = {e_err with ef_lam = Some (fun k -> k.lam_k (refl (),f))};;
 (* val e_lam : ('a exp -> 'b exp) -> ('a -> 'b) exp = <fun> *)
 
-let e_app f x = {e_err with ef_app = Some (fun k -> k.app_k (refl,f,x))};;
+let e_app f x = {e_err with ef_app = Some (fun k -> k.app_k (refl (),f,x))};;
 (* val e_app : ('a -> 'b) exp -> 'a exp -> 'b exp = <fun> *)
 
 
