@@ -65,7 +65,9 @@ end;;
 
 module EXR = Ex1(R);;
 
-(* The even-odd, abstract interpretation *)
+(* The even-odd, abstract interpretation, using explicit Top
+ * This is not precise enough in that we can't do anything sensible
+ * with conditionals *)
 
 module IParity = struct
   type 'c dint  = Even | Odd
@@ -105,6 +107,68 @@ end;;
 
 module EXI = Ex1(IParity) ;;
 
+(* Now, try again, but with memoization *)
+type ('a,'b) frepr = 'a -> ('b -> unit) -> unit
+
+let memo' : ('a,'b) frepr -> ('a -> 'b -> unit) * ('a,'b) frepr =
+    let add (ys,ks) y =
+        if not (Hashtbl.mem ys y) then
+        (Hashtbl.add ys y (); List.iter (fun k -> k y) !ks)
+    in
+    fun f ->
+    let find = let table = Hashtbl.create 17 in
+               fun x ->
+               try Hashtbl.find table x with Not_found ->
+               let entry = (Hashtbl.create 17, ref []) in
+               Hashtbl.add table x entry;
+               f x (add entry);
+               entry
+    in
+    (fun x -> add (find x)),
+    (fun x k -> 
+        match find x with ys,ks ->
+        ks := k :: !ks;
+        Hashtbl.iter (fun y () -> k y) ys)
+
+let memo (f : ('a,'b) frepr) : ('a,'b) frepr = snd (memo' f)
+
+module IParity2 = struct
+  type 'c dint  = Even | Odd
+  type 'c dbool = bool
+  type ('c, 'da, 'db) darr = ('da, 'db) frepr
+  type ('c,'dv) repr = ('dv -> unit) -> unit
+  let int (x:int) = fun k -> k (if x land 1 = 0 then Even else Odd)
+  let bool (b:bool) = fun k -> k b
+  let add e1 e2 = fun k -> e1 (fun n1 -> e2 (fun n2 -> 
+  match (n1, n2) with
+  | (Even,Even) | (Odd,Odd)  -> k Even
+  | (Even,Odd)  | (Odd,Even) -> k Odd ))
+  let mul e1 e2 = fun k -> e1 (fun n1 -> e2 (fun n2 -> 
+  match (n1, n2) with
+  | (Odd,Odd)  -> k Odd
+  | (Even,_) | (_,Even)  -> k Even))
+  let leq _ _ = fun k -> k true; k false
+  let eql e1 e2 = fun k -> e1 (fun x -> e2 (fun y ->
+      if (x = y) then (k true; k false) else k false))
+  let if_ eb et ee = fun k -> eb (fun b ->
+      if b then (et ()) (fun t -> k t) else (ee ()) (fun e -> k e))
+
+  let lam f = (fun k -> k (memo (fun x -> (f (fun k' -> k' x)))))
+  let app e1 e2 = fun k -> e1 (fun f -> e2 (fun x -> (f x) k))
+
+  (* What really needs to happen is that lam replaces f with a 
+   * memoizing version of f, so that if_ can then actually call each
+   * branch safely; as this may be done in the context of fix, someone
+   * needs to stop the recursion! *)
+  let fix f = let rec self n = f self n in self
+end;;
+
+module EXI2 = Ex1(IParity2) ;;
+let run_int s f = f (fun x -> 
+    match x with 
+    | IParity2.Even -> Printf.printf "%s = Even\n" s
+    | IParity2.Odd  -> Printf.printf "%s = Odd\n" s )
+
 let r1 = EXR.test1()
 let r2 = EXR.test2()
 let r3 = EXR.test3()
@@ -117,4 +181,9 @@ let i3 = match EXI.test3() with
     | None   -> None
 let i4 = EXI.test4()
 let i5 = EXI.test5()
+let j1 = run_int "test1" (EXI2.test1())
+let j2 = run_int "test2" (EXI2.test2())
+let j3 = EXI2.test3()
+let j4 = run_int "test4" (EXI2.test4())
+(* let j5 = run_int "test5" (EXI2.test5()) *)
 ;;
