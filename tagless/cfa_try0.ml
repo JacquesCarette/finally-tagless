@@ -1,5 +1,24 @@
 (* 0-CFA in tagless final style, attempt 0 *)
 
+(* We essentially implement the specification of 0CFA in Table 3.1
+   of Nielson, Nielson, and Hankin book ``Principles of program
+   Analysis.''
+
+   The code should fairly well correspond to the table of
+   Our particular contribution, however minor that may be,
+   is to show how to _program_ that abstract, unalgorithmic
+   specification in the form of an evaluator, over an
+   _HOAS_. The `HOAS' and `being an evaluator' are two features
+   of our 0-CFA.
+
+   We might claim that our formulation makes 0-CFA more
+   lucid; and that we can easily add a data flow analysis.
+   We also avoid the global fixpoint on cache and any global
+   mutable state (sans gensym, which is used essentailly for
+   debugging).
+*)
+
+(* We label program points and variables by strings *)
 type label = string;;
 type varlab = string;;
 
@@ -7,10 +26,23 @@ let gensym =
   let counter = ref 0 in
   fun () -> incr counter; "g" ^ string_of_int !counter;;
 
+(* A map showing the flow into a given program location l
+   and the possible binding for a variable v.
+   Both variables and locations are strings, so we track both
+   in the cache.
+   We implement the map as an associative list. 
+   The range of the map is a set of labels; we implement it by
+   allowing an association with the same key appear more than once.
+*)
+   
 type cache = (label * label) list;;
 
 (* Abstract values and the representation. The variant D
    is like S in our paper
+   In the present code, we don't deal with values much at all:
+   the pure CFA deals with control rather than data. We still
+   have to track the closures, since higher-order functions express
+   `control'.
 *)
 type ('a,'b) av = V of label list | D of 'b;;
 
