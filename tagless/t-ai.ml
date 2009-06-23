@@ -42,6 +42,8 @@ module Ex1(S:Symantics1) = struct
 
  let test4 () = app (app (mmul ()) (int 0)) (int 3)
  let test5 () = app (app (mmul ()) (int 1)) (int 4)
+ let test6 () = app (app (mmul ()) (int 2)) (int 3)
+ let test7 () = app (app (mmul ()) (int 11)) (int 7)
 end;;
 
 (* Pure interpreter. It is essentially the identity transformer *)
@@ -156,34 +158,42 @@ module IParity2 = struct
   let lam f = (fun k -> k (memo (fun x -> (f (fun k' -> k' x)))))
   let app e1 e2 = fun k -> e1 (fun f -> e2 (fun x -> (f x) k))
 
-  (* What really needs to happen is that lam replaces f with a 
-   * memoizing version of f, so that if_ can then actually call each
-   * branch safely; as this may be done in the context of fix, someone
-   * needs to stop the recursion! *)
-  let fix f = let rec self n = f self n in self
+  (* let fix f = let rec self n = f self n in self *)
+  let fix f k = k 
+     (let self = ref None in 
+     self := Some (memo (fun x k'' -> f 
+         (match !self with Some s -> fun k' -> k' s) 
+         (fun g -> g x k''))); 
+     match !self with Some s -> s)
 end;;
 
 module EXI2 = Ex1(IParity2) ;;
-let run_int s f = f (fun x -> 
-    match x with 
+let print_int s = function
     | IParity2.Even -> Printf.printf "%s = Even\n" s
-    | IParity2.Odd  -> Printf.printf "%s = Odd\n" s )
+    | IParity2.Odd  -> Printf.printf "%s = Odd\n" s
+
+let run_int s f = f (print_int s)
+let run_int2 s f = f (print_int s, print_int s)
 
 let r1 = EXR.test1()
 let r2 = EXR.test2()
 let r3 = EXR.test3()
 let r4 = EXR.test4()
 let r5 = EXR.test5()
-let i1 = EXI.test1()
+let r6 = EXR.test6()
+let r7 = EXR.test7()
+(* let i1 = EXI.test1()
 let i2 = EXI.test2()
 let i3 = match EXI.test3() with
     | Some f -> Some (f (Some IParity.Even), f (Some IParity.Odd))
     | None   -> None
 let i4 = EXI.test4()
-let i5 = EXI.test5()
+let i5 = EXI.test5() *)
 let j1 = run_int "test1" (EXI2.test1())
 let j2 = run_int "test2" (EXI2.test2())
 let j3 = EXI2.test3()
 let j4 = run_int "test4" (EXI2.test4())
-(* let j5 = run_int "test5" (EXI2.test5()) *)
+let j5 = run_int "test5" (EXI2.test5())
+let j6 = run_int "test6" (EXI2.test6())
+let j7 = run_int "test7" (EXI2.test7())
 ;;
