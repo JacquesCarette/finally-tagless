@@ -4,6 +4,62 @@
  Neil Jones has kindly sent the excerpt, to be referred to as JN
 *)
 
+(*
+Neil Jones' comments, Wed, 10 Sep 2008.
+A couple of relevant pages are attached from the Jones-Nielson survey.
+The start "Relation to Scott-style..." is the main point, though the
+independent attribute/relational dichotomy is also relevant.
+
+ From the July 21 mail: the treatments of "cond" and "whil" are rather
+different:
+
+
+Standard interpretation:
+- "cond" selects ONE branch
+- "whil" exits from its fixpoint recursion when the "else" branch
+doesn't call "whil"
+
+
+Even-odd interpretation:
+- "cond" computes a lub |_| of BOTH branches
+- "whil" iterates until the (entire) store is unchanged
+
+> Could you point out a simple example of an abstract
+> interpretation that needs a fixpoint? It would be great if it uses the
+> same language as in your book with Nielson...
+
+
+1. Well, the Even-odd interpretation of "whil" is already iterating to
+a fixpoint
+
+2. Constant propagation is anther abstract interpretations that needs
+a fixpoint.
+
+3. Further (and semantically trickier, some abstract interpretations
+are "backwards" along control flow, e.g., the well-known "live
+variable" analysis. Some use greatest and some use least fixpoints,
+all motivated by accuracy (and soundness) considerations in compiler
+construction.
+
+4.  Your phrase "given more and more precise `seed' " suggests a
+greatest fixpoint rather than a least, beginning with a least precise
+answer "top" and iterating downwards in the flow lattice.
+
+5. How would you go about proving (or even arguing informally)
+correctness of the Even-odd analysis with respect to the precise
+semantics?
+
+6. Connecting these requires to reflect the two views of fixpoints:
+
+- "information order" in in Scott domains, ie "higher" is more
+completely calculated
+
+- in an abstract value domain, "higher" is a less accurate
+description, e.g., to say "top" when actual runs would yield even
+values.
+
+*)
+
 module type Symantics = sig
   (* Domain definitions: exactly the same as in JN, p4 *)
   type var = int

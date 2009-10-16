@@ -1,5 +1,39 @@
 ; Two helper macros to make defining and applying curried functions easier
 
+; Neil Jones, in a message 14 Oct 2008, suggested a good example:
+;;
+;; ; program p such that  p <n> a1 a2 ... an  => a1+a2+...+an
+;;
+;; (define p
+;;    (lambda (t)
+;;       (((t
+;;          (lambda(acc) acc)
+;;          )
+;;         (lambda(n)(lambda(acc)(lambda(x)(n(+ acc x))))
+;;        ))
+;;        0)))
+;;  
+;; ; Examples
+;; ;
+;; ;   > (p zero)
+;; ;  0
+;; ;   > ((p one) 42)
+;; ;  42
+;; ;   > (((p two) 9) 16)
+;; ;  25
+;; ;   > ((((p three) 2) 3) 4)
+;; ;  9
+;; ;
+;;
+;; The result of specialising this p to say "two" should be something like
+;;
+;;    \ x \ y   (+ (+ 0 x) y)
+;;
+;; The test run was done using Church numerals, and the output was
+;; ordinary numbers, for readability. That's not important, any
+;; convenient variation would be fine.
+
+
 (define-syntax lambda-c
 (syntax-rules ()
   ((lambda-c () body) body)

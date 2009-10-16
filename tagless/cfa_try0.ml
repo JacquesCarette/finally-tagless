@@ -16,6 +16,14 @@
    We also avoid the global fixpoint on cache and any global
    mutable state (sans gensym, which is used essentailly for
    debugging).
+
+ See the paper about relating CFA and abstract interpretation, ICFP2009:
+ Control-Flow Analysis of Function Calls and Returns by Abstract Interpretation
+ by Jan Midtgaard, Thomas P. Jensen.
+
+ Jan Midtgaard has mentioned that the key idea of Olin's theses that
+ in a higher-order language, control-flow analysis is entangled with the
+ data flow analysis. So, we must do DFA alongside of CFA.
 *)
 
 (* We label program points and variables by strings *)
