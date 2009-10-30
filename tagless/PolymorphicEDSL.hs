@@ -1,11 +1,11 @@
 {-# LANGUAGE MultiParamTypeClasses, FunctionalDependencies #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE KindSignatures #-}
-{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE FlexibleInstances, FlexibleContexts #-}
+{-# LANGUAGE KindSignatures, ScopedTypeVariables #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
 
 -- Polymorphic EDSL in tagless final style, using 1-typeclass style
+-- Inspired by the conversation with Tom Schrijvers and Dominic Orchard,
+-- October 2009.
 
 module Poly1 where
 
