@@ -1,0 +1,32 @@
+Making the exploration-exploitation trade-off
+to abstract and specialize mathematics software
+
+    "From discovery to calculation and back"?
+    (specialization (exploitation) means to move toward (efficient?)
+    calculation; decision-making (exploration) means to move toward 
+    (creative?) discovery)                                         
+                          
+    Overall/background goal: reconcile modularity with performance when
+    simplifying mathematical expressions.  Help with the gray area     
+    between practice (calculation) and research (creativity).  Target
+    (generally) undecidable problems.                                
+                                     
+    Decision-making: We want to balance between running algorithms
+    (decision procedures) and choosing between them (making decisions).
+    These choices would use randomized and statistical algorithms, such
+    as UCT, to estimate and optimize the computational cost.           
+                                                            
+    Control structure: express backtracking, randomization, partial
+    pattern-matching, prioritization, etc. more succinctly in direct
+    style.                                                          
+          
+    Writing simplifier generators instead of individual simplifiers, and
+    decide whether/how to generate these simplifiers on the fly ("just  
+    in time") using said decision-making.                             
+                                         
+    Potential applications: compilers, SAT solving, simplification,
+    constraint programming, ...                                    
+                               
+    Funding will be used for: travel/lodging/hosting workshops/hiring
+    students to write the code.                                      
+
