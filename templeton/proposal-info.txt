@@ -1,0 +1,152 @@
+   2010 Funding Cycle 1:
+     * OFI Deadline: April 15
+     * OFI Decisions: May 21
+     * Full Proposal Deadline: Sept 15
+     * Funding Decisions: Dec 22
+
+   Project Information
+
+   Please answer the questions below in the space provided. If you are
+   invited to submit a Full Proposal, you will be given the opportunity to
+   provide more detailed responses.
+
+   Project title:
+   Please provide us with a descriptive project title. Please limit your
+   response to 150 characters.
+
+Making the exploration-exploitation trade-off
+to generalize and specialize mathematical software
+
+   Executive Summary:
+   Please provide an executive summary of your proposal. The summary
+   should highlight the strategic problem or opportunity you intend to
+   address, the main activities of your proposed project, including any
+   innovative approaches, and the anticipated concrete outputs and
+   outcomes. Please limit your response to 1,300 characters.
+
+The creation and application of abstractions is one of the most
+celebrated and widespread modes of mathematical reasoning, yet it is
+elusive even in the engineering of off-the-shelf computer algebra
+systems.  How can an expression simplifier decide to prove a lemma
+that holds for all monoids, and how can an equation solver decide to
+optimize its machine code for subproblems of a linear form?  We aim to
+build prototype software that makes such decisions and carries them out
+under the inherent uncertainty of creative research.  To do so, we will
+combine recently developed (a) algorithms in artificial intelligence
+for making the exploration-exploitation trade-off; (b) techniques in
+symbolic computation for representing and composing code; (c) constructs
+in programming languages for generating and prioritizing execution
+paths.  The confluence of these interdisciplinary developments makes
+the time ripe for advancing this area of foundational and practical
+importance.  As internationally recognized experts on these disciplines,
+we will collaborate in a series of focused research workshops, each
+also involving graduate students and invited experts.  Along the way of
+building software, we will produce scientific papers and interactive
+tutorials for a wide variety of audiences.
+
+   Project Description:
+   Please describe the program or project for which you are seeking
+   support. What activities are involved in the project? Who will be
+   involved (as co-investigators, co-organizers, speakers at a conference,
+   judges, etc.)? What core questions or hypotheses do you plan to
+   explore, including any possible "Big Questions"? Please limit your
+   response to 4,000 characters.
+
+   If the description of your project requires the use of special
+   characters or formatting that is not compatible with this plain text
+   field, use this field to attach this supplemental information. Please
+   do not repeat the project description provided above.:
+   Maximum File Size: 10MB
+   Allowed extensions: txt, rtf, doc, docx
+
+Bill Farmer
+John Harrison
+
+   Strategic Promise:
+   Why is the proposed project important relative to the current state of
+   knowledge in your field or across fields? Please limit your response to
+   1,000 characters.
+
+   Capacity for Success:
+   Please explain how you (the applicant, the project team, and/or the
+   organization(s) connected to the proposed project) are positioned to
+   carry out the proposed activities with distinction and a high standard
+   of excellence. Please limit your response to 1,000 characters.
+
+   Expected Outputs:
+   Outputs are the specific, quantifiable work products that you will
+   create during the project. Examples include but are not limited to:
+   academic papers submitted for publication, book manuscripts, conference
+   proceedings, training sessions, curricula, prize competitions, films,
+   events, and publicity campaigns.
+   Please describe the expected outputs of your project. Please limit your
+   response to 1,000 characters.
+
+   Expected Outcomes:
+   Outcomes are the realistic and measurable differences that you believe
+   will result from your project's outputs. Examples include but are not
+   limited to: significant new lines of inquiry that might develop if your
+   research hypotheses are confirmed, and measurable changes that your
+   work might bring about in the actions or attitudes of your target
+   audience.
+   Please specify the audiences that your project seeks to reach, as well
+   as the specific outcomes that you expect will result. Please limit your
+   response to 1,000 characters.
+
+   Currency:
+   Please select the currency of your funding request. The Foundation
+   awards grants in US dollars, euros, and British pounds.
+
+US dollars
+
+   Request Amount:
+   Please provide us with the amount of funding you are requesting from
+   the Foundation. Please round to the nearest dollar, euro, or pound, and
+   do not use symbols or punctuation.
+
+   Total Project Amount:
+   Please provide the total amount of funding necessary for the
+   implementation and completion of the project. This amount may be equal
+   to or greater than the amount of funding you are requesting from the
+   Foundation. Please round to the nearest dollar, euro, or pound, and do
+   not use symbols or punctuation.
+
+   Additional Funding from Other Sources:
+   The Foundation favors projects that have leveraged additional funding
+   from other sources. Please provide us with the names of up to five
+   additional sources of funding for this project. For each potential
+   source, please list the amount of funding you have secured or are
+   requesting and the status of your request. We do accept high-quality
+   proposals that identify the John Templeton Foundation as the only
+   potential funder. Please limit your response to 1,000 characters.
+
+   Proposed Project Start Date:
+   Please provide the date you would like to start the project, taking
+   into consideration the number of months it will take the Foundation to
+   review and decide upon your Full Proposal request. Please refer to the
+   Foundation's grantmaking calendar to learn when you will receive a
+   decision about your Full Proposal from the Foundation (if invited).
+
+Jan 15, 2011
+
+   Proposed Project End Date:
+   Please indicate when your proposed project will be completed. The
+   Foundation generally funds projects for no more than three years. In
+   rare instances the Foundation funds projects for up to five years. The
+   Foundation is restricted from funding any project for longer than five
+   years.
+
+Jan 15, 2014
+
+   Relation to Sir John Templeton's Donor Intent:
+   We recognize that our high aspirations can be achieved only through the
+   vision, passion, and action of extraordinary grantees. At the same
+   time, we are legally and ethically bound by Sir John Templeton's
+   charter to fund only those proposed projects that have the capacity to
+   advance his philanthropic vision. We invite you to describe how your
+   vision for the proposed project aligns with Sir John's Donor Intent.
+   In constructing your response, please be sure to describe how
+   your proposed project addresses one or more of the Big Questions
+   associated with the Foundational Questions in the Mathematical Sciences
+   Funding Priority. Please limit your response to 1,000 characters.
+
