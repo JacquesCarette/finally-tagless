@@ -15,7 +15,7 @@
    response to 150 characters.
 
 Making the exploration-exploitation trade-off
-to generalize and specialize mathematical software
+in the generalize-specialize approach to mathematical software
 
    Executive Summary:
    Please provide an executive summary of your proposal. The summary
@@ -26,8 +26,8 @@ to generalize and specialize mathematical software
 
 The creation and application of abstractions is one of the most
 celebrated and widespread modes of mathematical reasoning, yet it is
-elusive even in the engineering of off-the-shelf computer algebra
-systems.  How can an expression simplifier decide to prove a lemma
+elusive even in the engineering of software for mathematics.
+How can an expression simplifier decide to prove a lemma
 that holds for all monoids, and how can an equation solver decide to
 optimize its machine code for subproblems of a linear form?  We aim to
 build prototype software that makes such decisions and carries them out
@@ -39,10 +39,10 @@ in programming languages for generating and prioritizing execution
 paths.  The confluence of these interdisciplinary developments makes
 the time ripe for advancing this area of foundational and practical
 importance.  As internationally recognized experts on these disciplines,
-we will collaborate in a series of focused research workshops, each
-also involving graduate students and invited experts.  Along the way of
-building software, we will produce scientific papers and interactive
-tutorials for a wide variety of audiences.
+we will organize a series of focused research workshops, 
+involving graduate students and invited experts.  As well as producing
+software, we will document (through scientific papers) our work, and
+produce tutorials for a wide variety of audiences.
 
    Project Description:
    Please describe the program or project for which you are seeking
@@ -52,15 +52,61 @@ tutorials for a wide variety of audiences.
    explore, including any possible "Big Questions"? Please limit your
    response to 4,000 characters.
 
+Our big question:  ``How do we automate as much of mathematics as 
+possible?''  We propose to explore the question of the appropriate 
+software infrastructure needed for a ``mathematical assistant''.  A
+tremendous amount of mathematical knowledge already exists in various
+forms -- formalized proofs, informal proofs, computational procedures, etc.
+Our interest lies in assembling digital mathematical information into
+reusable components in such a way that the result is properly scalable
+(current systems are discovering the severe limits of their designs).
+Frequently these systems do not take advantage of the inherent structures
+present in mathematical theories.  In other words, the polymorphism 
+which is prevalent in mathematics is not properly leveraged in current
+systems.  Furthermore, a lot of current work focuses on algorithms
+and decision procedures, which we know are fundamentally limited in their
+scope.  We wish to attack the problem head-on: by properly combining
+algorithms and semi-decision procedures, we want to build tools for ``hard''
+problems.  The simplest of these is surely SAT, well-known to be NP-complete.
+It is also well-known that many structured SAT problems are actually 
+solvable in polynomial time, at least once the appropriate structure is found
+and exploited.  This generalizes: undecidable problems such as expression
+simplification, and even termination checking, are frequently quite 
+tractable once the proper `structure' is found and exploited.
+
+But to do this, we need to arrange our software in quite different ways.
+As our running example, we will use expression simplification, which 
+is basically the process of looking for ``smaller'' expressions which are
+semantically equivalent.  Our abstract approach would proceed something
+like this:  
+
+Start ``simplifying'' by (recursively) applying rewrite rules
+which are known simplifiers, but while doing this process ``learn'' the
+structural properties of the expression; use this information for 
+predicting how long the current process will take.  If this is small, just
+proceed, else see if there is sufficient known structure to exploit a 
+specialized algorithm, otherwise continue exploring the expression, both
+for applicable simplifications and also using structure-revealing 
+transformations (which are not necessarily simplifications).  It would
+be unwise to write our software such that all transformations and 
+structure-revealing transformations were aware of the larger search, 
+back-tracking, learning, weaving of different phases, etc happening in the
+driver algorithm -- but this is not how things are currently done!  We want
+to use modern knowledge of programming languages to help use organize and
+modularize these various aspects of complex mathematical code.
+
+-----------
+
+Other people to involve (in various ways):
+Bill Farmer, John Harrison, Walid Taha, James Davenport, ...
+
+
    If the description of your project requires the use of special
    characters or formatting that is not compatible with this plain text
    field, use this field to attach this supplemental information. Please
    do not repeat the project description provided above.:
    Maximum File Size: 10MB
    Allowed extensions: txt, rtf, doc, docx
-
-Bill Farmer
-John Harrison
 
    Strategic Promise:
    Why is the proposed project important relative to the current state of
