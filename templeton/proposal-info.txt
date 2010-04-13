@@ -128,6 +128,8 @@ Bill Farmer, John Harrison, Walid Taha, James Davenport, ...
    Please describe the expected outputs of your project. Please limit your
    response to 1,000 characters.
 
+[Just notes]  Software, papers, workshops, (tutorials?)
+
    Expected Outcomes:
    Outcomes are the realistic and measurable differences that you believe
    will result from your project's outputs. Examples include but are not
@@ -138,6 +140,9 @@ Bill Farmer, John Harrison, Walid Taha, James Davenport, ...
    Please specify the audiences that your project seeks to reach, as well
    as the specific outcomes that you expect will result. Please limit your
    response to 1,000 characters.
+
+[Notes]  Sustainable software architecture for exploration/exploitation,
+especially in the presence of abstraction/specialization.
 
    Currency:
    Please select the currency of your funding request. The Foundation
@@ -165,6 +170,9 @@ US dollars
    requesting and the status of your request. We do accept high-quality
    proposals that identify the John Templeton Foundation as the only
    potential funder. Please limit your response to 1,000 characters.
+
+[Jacques: I have some (small amounts of) money from NSERC, MITACS and
+the Ontario governement on 'related' projects]
 
    Proposed Project Start Date:
    Please provide the date you would like to start the project, taking
