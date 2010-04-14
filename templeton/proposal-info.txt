@@ -52,60 +52,60 @@ produce tutorials for a wide variety of audiences.
    explore, including any possible "Big Questions"? Please limit your
    response to 4,000 characters.
 
-Our big questions are, what do mathematicians do, and how can
-computers best help?  A common informal answer to the first question
-is that mathematicians alternate between proving general theorems and
-calculating special cases.  Analogously, mathematics software today can
-be categorized as either provers or calculators.  Just as it is ill
-understood how mathematicians mediate between the two crucial activities
-of proof and calculation, the two kinds of mathematics software --
-though both valuable -- are engineered with incompatible organizations
+What do mathematicians do, and how can computers best help?  A common
+answer to the first question is that mathematicians alternate between
+proving general theorems and calculating special cases.  Analogously,
+mathematics software today can be categorized as either provers
+or calculators.  Just as it is unclear how mathematicians mediate
+between proof and calculation, the two kinds of mathematics software
+-- both valuable -- are engineered with incompatible organizations
 today.  We propose to build the software infrastructure needed for a
 mathematical assistant to intertwine these activities and thus model how
 a mathematician too might do so.
 
-A tremendous amount of mathematical knowledge already exists in
-various forms -- formalized proofs, informal arguments, computational
-procedures, etc.  Mathematicians are much better than mathematics
-software today at using all this knowledge, for at least two reasons.
-First, digital mathematical knowledge has yet to be assembled into
-a scalable collection of reusable components.  Current systems are
-discovering the severe limits of their designs, which do not take
-advantage of how *general* mathematical theories are.  Second, the
-current focus on complete algorithms and decision procedures does
-not explain how to recognize the *special* structure present in most
-problems that lets them be solved efficiently.  For example, although
-SAT is an NP-complete problem, and although expression simplification
-and termination checking are undecidable in general, instances of these
-problems encountered in practice are frequently quite tractable -- even
-in polynomial time -- once the proper structure is found and exploited.
-We wish to attack these `hard' problems head-on by coordinating
-semi-decision procedures, with the help of algorithms from artificial
-intelligence (especially from reinforcement learning) for balancing
-exploring generalizations against exploiting specializations.
+A huge amount of mathematical knowledge already exists in various forms
+-- formalized proofs, informal arguments, computational procedures,
+etc.  Mathematicians are much better than computers today at using all
+this knowledge, for at least two reasons.  First, digital mathematical
+knowledge has yet to be assembled into a scalable collection of reusable
+components.  Current systems are severely limited by their failure to
+take advantage of how *general* mathematical theories are.  Second,
+the current focus on complete algorithms and decision procedures
+does not explain how to recognize the *special* structure present in
+most problems that lets them be solved efficiently.  For example,
+although SAT is NP-complete, and although expression simplification
+and termination checking are undecidable in general, instances of
+these problems encountered in practice are frequently quite tractable
+-- even in polynomial time -- once the proper structure is found
+and exploited.  We wish to attack these `hard' problems head-on by
+coordinating semi-decision procedures, with the help of algorithms
+from artificial intelligence (especially reinforcement learning) for
+balancing exploring generalizations against exploiting specializations.
 
-To do this, we need to arrange our mathematics software in a new way.
-For example, our top candidate for a prototype to build using our
+To do this, we need to arrange our software in a new way.  For
+example, our top candidate for a prototype to build using our
 generalize-specialize approach is a *simplifier*: a program that looks
 for expressions that are equivalent to a given expression but smaller.
 Our simplifier would apply known simplification rules recursively as
-usual, while at the same time learning the structural regularities
-of the expression.  It would use these regularities and randomized
-look-ahead to predict how long the current process would take, to
-search for a specialized algorithm, to select structure-revealing
-transformation paths (which are not necessarily simplifications), and
-most importantly, to decide dynamically how much processing time to
-devote to each of these activities -- that is, to trade off exploration
-against exploitation.
+usual, while learning recurring structures in the expression that
+repeatedly admit the same sequence of rules.  It would also try
+different rule orderings to learn which ones tend to help most.  Both
+kinds of learning would enable the simplifier to predict how long the
+process would take, to search for a specialized algorithm, to select
+rules that reveal structure rather than simplify right away, and most
+importantly, to decide how much time to devote to each these activities
+-- that is, to trade off exploration against exploitation.
 
 For these activities to be manageable to build and efficient to
-orchestrate, they must not be tangled up in a monolithic code
-base, but rather be modules that exchange control and data through
-well-defined interfaces.  In this regard, they should resemble user
-processes running alongside each other in an operating system, but
-collaborate more tightly and with less nesting overhead.  We will apply
-programming-language constructs such as delimited control and type
-abstraction to achieve such efficient modularity.
+orchestrate, they must not be tangled up in a monolithic code base, but
+rather be modules that exchange control and data through well-defined
+interfaces.  Hence, they should resemble user processes running
+alongside each other in an operating system, but cooperate more tightly
+and with less nesting overhead.  We will apply programming-language
+constructs such as delimited control and type abstraction to achieve
+such efficient modularity.  In particular, the top-level driver of our
+simplifier would work like a scheduler that performs random speculative
+execution to predict the duration of user processes.
 
 The research activities of this project will center around a series of 4
 workshops, each about two weeks long and involving the three principal
