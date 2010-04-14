@@ -107,7 +107,7 @@ collaborate more tightly and with less nesting overhead.  We will apply
 programming-language constructs such as delimited control and type
 abstraction to achieve such efficient modularity.
 
-The research activities of this project will center around a series of 6
+The research activities of this project will center around a series of 4
 workshops, each about two weeks long and involving the three principal
 investigators (Jacques Carette, Oleg Kiselyov, and Chung-chieh Shan),
 a couple of their students, and a few varying invited experts such as
@@ -120,6 +120,17 @@ technical discussions that allow for spontaneous presentations.
    Why is the proposed project important relative to the current state of
    knowledge in your field or across fields? Please limit your response to
    1,000 characters.
+
+The fields of artificial intelligence and symbolic computation have
+recently renewed their mutual interest.  For example, probabilistic
+reasoning in complex domains rely on symbolic representations, while
+mathematical computations for open-ended problems are guided by learned
+heuristics.  This project will establish a new way to build software and
+exchange knowledge at the intersection of these fields.  In particular,
+we will study mathematical reasoning, a pinnacle of human creativity, as
+a prime instance of learning while acting.  We will show how to program
+modular solutions to the familiar exploration-exploitation trade-off
+that arises from learning while acting.
 
    Capacity for Success:
    Please explain how you (the applicant, the project team, and/or the
