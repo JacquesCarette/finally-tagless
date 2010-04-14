@@ -87,7 +87,7 @@ example, our top candidate for a prototype to build using our
 generalize-specialize approach is a *simplifier*: a program that looks
 for expressions that are equivalent to a given expression but smaller.
 Our simplifier would apply known simplification rules recursively as
-usual, while learning recurring structures in the expression that
+usual, while learning structural regularities in the expression that
 repeatedly admit the same sequence of rules.  It would also try
 different rule orderings to learn which ones tend to help most.  Both
 kinds of learning would enable the simplifier to predict how long the
@@ -126,11 +126,15 @@ recently renewed their mutual interest.  For example, probabilistic
 reasoning in complex domains rely on symbolic representations, while
 mathematical computations for open-ended problems are guided by learned
 heuristics.  This project will establish a new way to build software and
-exchange knowledge at the intersection of these fields.  In particular,
+exchange knowledge at the intersection of these fields.  The new way will
+scale more readily to problem regularities that vary more widely and
+solution procedures that cooperate more tightly.  In particular,
 we will model mathematical reasoning, a pinnacle of human creativity, as
 a prime instance of learning while acting.  We will show how to program
 modular solutions to the familiar exploration-exploitation trade-off
-that arises from learning while acting.
+that arises from learning while acting.  More broadly speaking, our work
+will produce a computational model of the human balance between creative
+and mundane work.
 
    Capacity for Success:
    Please explain how you (the applicant, the project team, and/or the
