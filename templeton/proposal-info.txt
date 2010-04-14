@@ -121,16 +121,16 @@ technical discussions that allow for spontaneous presentations.
    knowledge in your field or across fields? Please limit your response to
    1,000 characters.
 
-The fields of artificial intelligence and symbolic computation have
-recently renewed their mutual interest.  For example, probabilistic
-reasoning in complex domains rely on symbolic representations, while
-mathematical computations for open-ended problems are guided by learned
-heuristics.  This project will establish a new way to build software and
-exchange knowledge at the intersection of these fields.  The new way will
-scale more readily to problem regularities that vary more widely and
-solution procedures that cooperate more tightly.  In particular,
-we will model mathematical reasoning, a pinnacle of human creativity, as
-a prime instance of learning while acting.  We will show how to program
+This project belongs to both artificial intelligence and symbolic
+computation.  These fields have recently renewed their mutual interest;
+for example, probabilistic reasoning in complex domains rely on
+simplifying symbolic expressions, which in turn can be guided by
+learned heuristics.  We will establish at the intersection of these
+fields a new way to build software and share knowledge that scales to
+problem regularities that vary more widely and solution procedures that
+cooperate more tightly.  In particular, we will model mathematical
+reasoning, a pinnacle of human creativity, as a prime instance of
+learning while acting.  In that context, we will show how to program
 modular solutions to the familiar exploration-exploitation trade-off
 that arises from learning while acting.  More broadly speaking, our work
 will produce a computational model of the human balance between creative
@@ -244,3 +244,18 @@ Jan 15, 2013
    associated with the Foundational Questions in the Mathematical Sciences
    Funding Priority. Please limit your response to 1,000 characters.
 
+The exploration-exploitation trade-off is a dilemma well-known in
+artificial intelligence.  It is faced especially by agents that need
+to budget their mental effort between thinking and thinking about
+thinking (and further levels of metareasoning).  Mathematicians are
+a prominent group of such agents: every day they choose between
+specialization and generalization, as they move from arithmetic and
+algebra to group theory and category theory and back.  Our mathematical
+software will be architected to make this choice explicitly, not to
+supplant mathematicians but to understand their work better.  The limits
+that our software faces, due to its uncertainty as to whether a known
+tool is worth generalizing or specializing, are the same limits that
+mathematicians face as they endeavor to advance abstract human knowledge
+in useful and beautiful directions.  The obstacles that our project
+encounters will thus serve as a computational model of the difficulties
+of conscious self-improvement.
