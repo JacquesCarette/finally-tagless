@@ -26,23 +26,23 @@ in the generalize-specialize approach to mathematical software
 
 The creation and application of abstractions is one of the most
 celebrated and widespread modes of mathematical reasoning, yet it is
-elusive even in the engineering of software for mathematics.
-How can an expression simplifier decide to prove a lemma
-that holds for all monoids, and how can an equation solver decide to
-optimize its machine code for subproblems of a linear form?  We aim to
-build prototype software that makes such decisions and carries them out
-under the inherent uncertainty of creative research.  To do so, we will
-combine recently developed (a) algorithms in artificial intelligence
-for making the exploration-exploitation trade-off; (b) techniques in
-symbolic computation for representing and composing code; (c) constructs
-in programming languages for generating and prioritizing execution
-paths.  The confluence of these interdisciplinary developments makes
-the time ripe for advancing this area of foundational and practical
-importance.  As internationally recognized experts on these disciplines,
-we will organize a series of focused research workshops, 
-involving graduate students and invited experts.  As well as producing
-software, we will document our work through scientific papers and
-produce tutorials for a wide variety of audiences.
+elusive even in the engineering of software for mathematics.  How can
+an expression simplifier decide to prove a lemma that holds for all
+monoids, and how can an equation solver decide to optimize its machine
+code for subproblems of a linear form?  We aim to build prototype
+software that makes such decisions and carries them out under the
+inherent uncertainty of creative research.  To do so, we will combine
+recently developed (a) algorithms in artificial intelligence for making
+the exploration-exploitation trade-off; (b) techniques in symbolic
+computation for representing and composing code; (c) constructs in
+programming languages for generating and prioritizing execution paths.
+The confluence of these interdisciplinary developments makes the time
+ripe for advancing this area of foundational and practical importance.
+As internationally recognized experts on these disciplines, we will
+organize a series of focused research workshops, involving graduate
+students and invited experts.  As well as producing software, we will
+document our work through scientific papers and produce tutorials for a
+wide variety of audiences.
 
    Project Description:
    Please describe the program or project for which you are seeking
@@ -86,9 +86,9 @@ To do this, we need to arrange our software in a new way.  For
 example, our top candidate for a prototype to build using our
 generalize-specialize approach is a *simplifier*: a program that looks
 for expressions that are equivalent to a given expression but smaller.
-Our simplifier would apply known simplification rules recursively as
-usual, while learning structural regularities in the expression that
-repeatedly admit the same sequence of rules.  It would also try
+Our simplifier would apply known simplification rules recursively
+as usual, while learning structural regularities in the expression
+that repeatedly admit the same sequence of rules.  It would also try
 different rule orderings to learn which ones tend to help most.  Both
 kinds of learning would enable the simplifier to predict how long the
 process would take, to search for a specialized algorithm, to select
