@@ -127,7 +127,7 @@ reasoning in complex domains rely on symbolic representations, while
 mathematical computations for open-ended problems are guided by learned
 heuristics.  This project will establish a new way to build software and
 exchange knowledge at the intersection of these fields.  In particular,
-we will study mathematical reasoning, a pinnacle of human creativity, as
+we will model mathematical reasoning, a pinnacle of human creativity, as
 a prime instance of learning while acting.  We will show how to program
 modular solutions to the familiar exploration-exploitation trade-off
 that arises from learning while acting.
@@ -138,12 +138,16 @@ that arises from learning while acting.
    carry out the proposed activities with distinction and a high standard
    of excellence. Please limit your response to 1,000 characters.
 
-Chung-chieh Shan is an active and widely published researcher and
-teacher of programming language theory, artificial intelligence,
-formal logic, and cognitive science at Rutgers University, where he
-collaborates with the groups of Michael Littman (reinforcement learning)
-in computer science and Rochel Gelman (mathematical reasoning) in
-cognitive science and psychology.
+Chung-chieh Shan is an active researcher of programming languages,
+artificial intelligence, and logic at Rutgers University, where his
+collaborations include the groups of Michael Littman (reinforcement
+learning) in computer science and Rochel Gelman (mathematical reasoning)
+in cognitive science and psychology.
+
+Although the core topic and approach of this project is new, the 3 of
+us have already worked individually and together on many pieces of the
+puzzle, such as expression simplification, program specialization,
+probabilistic reasoning, and delimited control.
 
    Expected Outputs:
    Outputs are the specific, quantifiable work products that you will
