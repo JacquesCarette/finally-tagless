@@ -181,12 +181,16 @@ US dollars
    the Foundation. Please round to the nearest dollar, euro, or pound, and
    do not use symbols or punctuation.
 
+260000
+
    Total Project Amount:
    Please provide the total amount of funding necessary for the
    implementation and completion of the project. This amount may be equal
    to or greater than the amount of funding you are requesting from the
    Foundation. Please round to the nearest dollar, euro, or pound, and do
    not use symbols or punctuation.
+
+270000 + Jacques's additional funding
 
    Additional Funding from Other Sources:
    The Foundation favors projects that have leveraged additional funding
@@ -196,6 +200,8 @@ US dollars
    requesting and the status of your request. We do accept high-quality
    proposals that identify the John Templeton Foundation as the only
    potential funder. Please limit your response to 1,000 characters.
+
+Rutgers University start-up funding (secured $10000)
 
 [Jacques: I have some (small amounts of) money from NSERC, MITACS and
 the Ontario governement on 'related' projects]
