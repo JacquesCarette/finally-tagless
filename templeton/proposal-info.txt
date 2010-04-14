@@ -116,13 +116,6 @@ Michael Littman, Jeff Pelletier, and Walid Taha.  Each workshop will
 feature a motivating talk, a joint programming goal, and detailed
 technical discussions that allow for spontaneous presentations.
 
-   If the description of your project requires the use of special
-   characters or formatting that is not compatible with this plain text
-   field, use this field to attach this supplemental information. Please
-   do not repeat the project description provided above.:
-   Maximum File Size: 10MB
-   Allowed extensions: txt, rtf, doc, docx
-
    Strategic Promise:
    Why is the proposed project important relative to the current state of
    knowledge in your field or across fields? Please limit your response to
@@ -133,6 +126,13 @@ technical discussions that allow for spontaneous presentations.
    organization(s) connected to the proposed project) are positioned to
    carry out the proposed activities with distinction and a high standard
    of excellence. Please limit your response to 1,000 characters.
+
+Chung-chieh Shan is an active and widely published researcher and
+teacher of programming language theory, artificial intelligence,
+formal logic, and cognitive science at Rutgers University, where he
+collaborates with the groups of Michael Littman (reinforcement learning)
+in computer science and Rochel Gelman (mathematical reasoning) in
+cognitive science and psychology.
 
    Expected Outputs:
    Outputs are the specific, quantifiable work products that you will
