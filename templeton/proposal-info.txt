@@ -41,7 +41,7 @@ the time ripe for advancing this area of foundational and practical
 importance.  As internationally recognized experts on these disciplines,
 we will organize a series of focused research workshops, 
 involving graduate students and invited experts.  As well as producing
-software, we will document (through scientific papers) our work, and
+software, we will document our work through scientific papers and
 produce tutorials for a wide variety of audiences.
 
    Project Description:
@@ -52,27 +52,37 @@ produce tutorials for a wide variety of audiences.
    explore, including any possible "Big Questions"? Please limit your
    response to 4,000 characters.
 
-Our big question:  ``How do we automate as much of mathematics as 
-possible?''  We propose to explore the question of the appropriate 
-software infrastructure needed for a ``mathematical assistant''.  A
-tremendous amount of mathematical knowledge already exists in various
-forms -- formalized proofs, informal proofs, computational procedures, etc.
-Our interest lies in assembling digital mathematical information into
-reusable components in such a way that the result is properly scalable
-(current systems are discovering the severe limits of their designs).
-Frequently these systems do not take advantage of the inherent structures
-present in mathematical theories.  In other words, the polymorphism 
-which is prevalent in mathematics is not properly leveraged in current
-systems.  Furthermore, a lot of current work focuses on algorithms
-and decision procedures, which we know are fundamentally limited in their
-scope.  We wish to attack the problem head-on: by properly combining
-algorithms and semi-decision procedures, we want to build tools for ``hard''
-problems.  The simplest of these is surely SAT, well-known to be NP-complete.
-It is also well-known that many structured SAT problems are actually 
-solvable in polynomial time, at least once the appropriate structure is found
-and exploited.  This generalizes: undecidable problems such as expression
-simplification, and even termination checking, are frequently quite 
-tractable once the proper `structure' is found and exploited.
+Our big questions are, what do mathematicians do, and how can
+computers best help?  A common informal answer to the first question
+is that mathematicians alternate between proving general theorems and
+calculating special cases.  Analogously, mathematics software today can
+be categorized as either provers or calculators.  Just as it is ill
+understood how mathematicians mediate between the two crucial activities
+of proof and calculation, the two kinds of mathematics software --
+though both valuable -- are engineered with incompatible organizations
+today.  We propose to build the software infrastructure needed for a
+mathematical assistant to intertwine these activities and thus model how
+a mathematician too might do so.
+
+A tremendous amount of mathematical knowledge already exists in
+various forms -- formalized proofs, informal arguments, computational
+procedures, etc.  Mathematicians are much better than mathematics
+software today at using all this knowledge, for at least two reasons.
+First, digital mathematical knowledge has yet to be assembled into
+a scalable collection of reusable components.  Current systems are
+discovering the severe limits of their designs, which do not take
+advantage of how *general* mathematical theories are.  Second, the
+current focus on complete algorithms and decision procedures does
+not explain how to recognize the *special* structure present in most
+problems that lets them be solved efficiently.  For example, although
+SAT is an NP-complete problem, and although expression simplification
+and termination checking are undecidable in general, instances of these
+problems encountered in practice are frequently quite tractable -- even
+in polynomial time -- once the proper structure is found and exploited.
+We wish to attack these `hard' problems head-on by orchestrating
+semi-decision procedures, with the help of algorithms from artificial
+intelligence (especially from reinforcement learning) for balancing
+exploring generalizations against exploiting specializations.
 
 But to do this, we need to arrange our software in quite different ways.
 As our running example, we will use expression simplification, which 
@@ -96,6 +106,8 @@ to use modern knowledge of programming languages to help use organize and
 modularize these various aspects of complex mathematical code.
 
 -----------
+
+Need to say more about "what activities are involved in the project".
 
 Other people to involve (in various ways):
 Bill Farmer, John Harrison, Walid Taha, James Davenport, ...
