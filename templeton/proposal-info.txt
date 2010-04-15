@@ -145,8 +145,8 @@ and mundane work.
 Chung-chieh Shan is an active researcher of programming languages,
 artificial intelligence, and logic at Rutgers University, where his
 collaborations include the groups of Michael Littman (reinforcement
-learning) in computer science and Rochel Gelman (mathematical reasoning)
-in cognitive science and psychology.
+learning) in computer science and Rochel Gelman (mathematical and
+conceptual reasoning) in cognitive science and psychology.
 
 Although the core topic and approach of this project is new, the 3 of
 us have already worked individually and together on many pieces of the
@@ -162,7 +162,14 @@ probabilistic reasoning, and delimited control.
    Please describe the expected outputs of your project. Please limit your
    response to 1,000 characters.
 
-[Just notes]  Software, papers, workshops, (tutorials?)
+Besides organizing the workshop series described above, we will produce
+prototype mathematical software, namely an expression simplifier and
+a constraint programming library, and submit academic papers that
+document the architecture of the software -- how the programs make the
+exploration-exploitation trade-off and decide whether to generalize or
+specialize in a modular and efficient way.  We will also disseminate
+our eventual approach by giving tutorials at conferences on symbolic
+computation and artificial intelligence.
 
    Expected Outcomes:
    Outcomes are the realistic and measurable differences that you believe
@@ -175,8 +182,21 @@ probabilistic reasoning, and delimited control.
    as the specific outcomes that you expect will result. Please limit your
    response to 1,000 characters.
 
-[Notes]  Sustainable software architecture for exploration/exploitation,
-especially in the presence of abstraction/specialization.
+Our primary audience is people who build software for mathematical
+reasoning, especially automated reasoning and symbolic computation.
+Our secondary audience is people who model human cognition, especially
+its mathematical and conceptual aspects.  For both audiences, we
+expect our project to establish and exercise the fact that the
+exploration-exploitation trade-off is inherent in the decision
+whether to generalize or specialize a mathematical tool.  For the
+primary audience, we further expect to popularize the use of advanced
+artificial-intelligence algorithms and programming-language constructs
+to manage the exploration-exploitation trade-off in a scalable way.  By
+building concrete prototype programs that illustrate in working detail
+our software architecture for generalization and specialization, we
+hope to hasten the exchange of ideas and techniques among the fields
+of artificial intelligence, programming languages, and symbolic
+computation.
 
    Currency:
    Please select the currency of your funding request. The Foundation
