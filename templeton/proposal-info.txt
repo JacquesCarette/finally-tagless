@@ -227,7 +227,7 @@ US dollars
    Foundation. Please round to the nearest dollar, euro, or pound, and do
    not use symbols or punctuation.
 
-270000 + Jacques's additional funding
+379000
 
    Additional Funding from Other Sources:
    The Foundation favors projects that have leveraged additional funding
@@ -239,9 +239,10 @@ US dollars
    potential funder. Please limit your response to 1,000 characters.
 
 Rutgers University start-up funding (secured $10000)
-
-[Jacques: I have some (small amounts of) money from NSERC, MITACS and
-the Ontario governement on 'related' projects]
+Mathematics of Information Technology and Complex Systems ($10000)
+Ontario Research Fund - Research Excellence [Part of Software Certification
+grant] ($62000)
+National Science and Engineering Research Council - Discovery Grant ($37000)
 
    Proposed Project Start Date:
    Please provide the date you would like to start the project, taking
