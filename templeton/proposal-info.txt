@@ -172,10 +172,10 @@ probabilistic reasoning, and delimited control.
    response to 1,000 characters.
 
 Besides organizing the workshop series described above, we will produce
-prototype mathematical software, namely an expression simplifier and
-a constraint programming library, and submit academic papers that
-document the architecture of the software -- how the programs make the
-exploration-exploitation trade-off and decide whether to generalize or
+prototype mathematical software (to be made freely available), namely an
+expression simplifier and a constraint programming library, and submit academic
+papers that document the architecture of the software -- how the programs make
+the exploration-exploitation trade-off and decide whether to generalize or
 specialize in a modular and efficient way.  We will also disseminate
 our eventual approach by giving tutorials at conferences on symbolic
 computation and artificial intelligence.
