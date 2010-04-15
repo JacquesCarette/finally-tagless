@@ -191,13 +191,12 @@ computation and artificial intelligence.
    as the specific outcomes that you expect will result. Please limit your
    response to 1,000 characters.
 
-Our primary audience is people who build software for mathematical
-reasoning, especially automated reasoning and symbolic computation.
+Our primary audience is people who build mathematical software,
+especially automated reasoning and symbolic computation.
 Our secondary audience is people who model human cognition, especially
-its mathematical and conceptual aspects.  For both audiences, we
-expect our project to establish and exercise the fact that the
-exploration-exploitation trade-off is inherent in the decision
-whether to generalize or specialize a mathematical tool.  For the
+its mathematical and conceptual aspects.  We will demonstrate to both
+audiences that the exploration-exploitation trade-off is inherent in the
+decision whether to generalize or specialize a mathematical tool.  For the
 primary audience, we further expect to popularize the use of advanced
 artificial-intelligence algorithms and programming-language constructs
 to manage the exploration-exploitation trade-off in a scalable way.  By
@@ -205,7 +204,8 @@ building concrete prototype programs that illustrate in working detail
 our software architecture for generalization and specialization, we
 hope to hasten the exchange of ideas and techniques among the fields
 of artificial intelligence, programming languages, and symbolic
-computation.
+computation.  Eventually, our software should be more effective than
+current offerings.
 
    Currency:
    Please select the currency of your funding request. The Foundation
