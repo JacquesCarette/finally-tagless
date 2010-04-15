@@ -277,15 +277,13 @@ Jan 15, 2013
 The exploration-exploitation trade-off is a dilemma well-known in
 artificial intelligence.  It is faced especially by agents that need
 to budget their mental effort between thinking and thinking about
-thinking (and further levels of metareasoning).  Mathematicians are
-a prominent group of such agents: every day they choose between
-specialization and generalization, as they move from arithmetic and
-algebra to group theory and category theory and back.  Our mathematical
-software will be architected to make this choice explicitly, not to
-supplant mathematicians but to understand their work better.  The limits
-that our software faces, due to its uncertainty as to whether a known
-tool is worth generalizing or specializing, are the same limits that
-mathematicians face as they endeavor to advance abstract human knowledge
-in useful and beautiful directions.  The obstacles that our project
-encounters will thus serve as a computational model of the difficulties
-of conscious self-improvement.
+thinking (and further levels of metareasoning).  Mathematicians are prominent
+such agents: they routinely choose between specialization and generalization,
+moving from routine computation to group theory, cohomology and category
+theory, and back.  Our mathematical software will be architected to make these
+choices explicit, not to supplant mathematicians but to understand their work
+better.  As it is uncertain whether a known tool is worth generalizing or
+specializing, this limit to our software is the same that mathematicians face
+as they endeavor to advance abstract human knowledge in useful and beautiful
+directions.  The obstacles that our project encounters will thus serve as a
+computational model of the difficulties of conscious self-improvement.
