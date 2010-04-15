@@ -134,7 +134,7 @@ learning while acting.  In that context, we will show how to program
 modular solutions to the familiar exploration-exploitation trade-off
 that arises from learning while acting.  More broadly speaking, our work
 will produce a computational model of the human balance between creative
-and mundane work.
+and mundane (algorithmic) work, reviving Leibniz's dream in modern guise.
 
    Capacity for Success:
    Please explain how you (the applicant, the project team, and/or the
@@ -143,10 +143,19 @@ and mundane work.
    of excellence. Please limit your response to 1,000 characters.
 
 Chung-chieh Shan is an active researcher of programming languages,
-artificial intelligence, and logic at Rutgers University, where his
-collaborations include the groups of Michael Littman (reinforcement
-learning) in computer science and Rochel Gelman (mathematical and
-conceptual reasoning) in cognitive science and psychology.
+artificial intelligence, and logic at Rutgers University, collaborating
+with the groups of Michael Littman (reinforcement learning) in CS and Rochel
+Gelman (mathematical and conceptual reasoning) in cognitive science and
+psychology.
+
+Jacques Carette is an active researcher in mechanized mathematics with
+deep expertize in symbolic computation and generative programming.
+At McMaster University, he collaborates closely with William M.
+Farmer (interactive theorem proving) on the MathScheme project.
+
+Oleg Kiselyov is an internationally renowned researcher and programmer,
+best known for his breadth and depth of knowledge in many areas of 
+computing.
 
 Although the core topic and approach of this project is new, the 3 of
 us have already worked individually and together on many pieces of the
