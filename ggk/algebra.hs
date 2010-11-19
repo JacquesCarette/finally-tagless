@@ -1,4 +1,4 @@
-{-# LANGUAGE TemplateHaskell, FlexibleContexts #-}
+{-# LANGUAGE TemplateHaskell, FlexibleContexts, FlexibleInstances #-}
 
 module Algebra where
 
@@ -9,14 +9,13 @@ class MultiplicativeMonoid r where
     one :: r
     mul :: r -> r -> r
 
-class (Lift r, MultiplicativeMonoid r) => LMM r where
-instance LMM Int
+-- instance LMM r =>
+--         MultiplicativeMonoid (S.Staged r) where
+--     one = S.of_immediate one
+--     mul = S.mk_binary (S.Binary (mul) 
+--                                 (\a b -> S.lift_comp $ mul2 (S.c a) (S.c b)))
 
-instance LMM r =>
-        MultiplicativeMonoid (S.Staged r) where
-    one = S.of_immediate one
-    mul = S.mk_binary (S.Binary (mul) (S.lift2 mul))
-
-instance MultiplicativeMonoid Int where
-    one = 1
-    mul = (*)
+instance MultiplicativeMonoid (S.Staged Int) where
+    one = S.of_immediate 1
+    mul = S.mk_binary (S.Binary (*) 
+                                (\a b -> S.lift_comp $ [| $(S.c a) * $(S.c b) |] ))

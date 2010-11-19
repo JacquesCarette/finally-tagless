@@ -5,8 +5,9 @@ module Staged where
 
 import Language.Haskell.TH
 import Language.Haskell.TH.Syntax
+import Control.Monad (liftM2)
 
-type RawCode b = Q Exp
+type RawCode b = ExpQ
 
 data Code b = Code { c :: RawCode b, a :: Bool }
 data Staged b = Now b | Later (Code b)
@@ -33,6 +34,3 @@ mk_binary f (Now x) (Now y) = Now (bnow f x y)
 mk_binary f (Now x) (Later y) = Later (blater f (lift_atom [|x|]) y)
 mk_binary f (Later x) (Now y) = Later (blater f x (lift_atom [|y|]))
 mk_binary f (Later x) (Later y) = Later (blater f x y)
-
-lift2 :: (b -> b -> b) -> Code b -> Code b -> Code b
-lift2 f = \x y -> lift_comp [| $(dyn "f") $(c x) $(c y) |]
