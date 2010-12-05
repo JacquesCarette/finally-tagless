@@ -1,0 +1,61 @@
+{VERSION 6 0 "IBM INTEL NT" "6.0" }
+{USTYLETAB {CSTYLE "Maple Input" -1 0 "Courier" 0 1 255 0 0 1 0 1 0 0 
+1 0 0 0 0 1 }{CSTYLE "2D Math" -1 2 "Times" 0 1 0 0 0 0 0 0 2 0 0 0 0 
+0 0 1 }{CSTYLE "2D Output" 2 20 "" 0 1 0 0 255 1 0 0 0 0 0 0 0 0 0 1 }
+{PSTYLE "Normal" -1 0 1 {CSTYLE "" -1 -1 "" 0 1 0 0 0 0 0 0 0 0 0 0 0 
+0 0 0 }0 0 0 -1 -1 -1 0 0 0 0 0 0 -1 0 }{PSTYLE "Maple Output" 0 11 1 
+{CSTYLE "" -1 -1 "" 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 }3 3 0 -1 -1 -1 0 
+0 0 0 0 0 -1 0 }}
+{SECT 0 {EXCHG {PARA 0 "> " 0 "" {MPLTEXT 1 0 8 "restart;" }}}{EXCHG 
+{PARA 0 "> " 0 "" {MPLTEXT 1 0 13 "assume(N>=0);" }}}{EXCHG {PARA 0 ">
+ " 0 "" {MPLTEXT 1 0 52 "f := (-(mu1-delta1)^2/2-SUM((x[i]-mu1)^2/2,i \+
+in S));" }}{PARA 11 "" 1 "" {XPPMATH 20 "6#>%\"fG,&*&\"\"#!\"\",&%$mu1
+G\"\"\"%'delta1GF(F'F(-%$SUMG6$,$*&#F+F'F+*$),&&%\"xG6#%\"iGF+F*F(F'F+
+F+F+-%#inG6$F9%\"SGF(" }}}{EXCHG }{EXCHG }{EXCHG }{EXCHG }{EXCHG }
+{EXCHG }{EXCHG }{EXCHG }{EXCHG }{EXCHG }{EXCHG }{EXCHG {PARA 0 "> " 0 
+"" {MPLTEXT 1 0 10 "expand(f);" }}{PARA 11 "" 1 "" {XPPMATH 20 "6#,.*&
+\"\"#!\"\"%$mu1GF%F&*&F'\"\"\"%'delta1GF)F)*&F%F&F*F%F&-%$SUMG6$,$*&#F
+)F%F)*$)&%\"xG6#%\"iGF%F)F)F)-%#inG6$F7%\"SGF&-F-6$,$*&F4F)F'F)F&F8F&-
+F-6$,$*&F%F&F'F%F)F8F&" }}}{EXCHG {PARA 0 "> " 0 "" {MPLTEXT 1 0 136 "
+`expand/SUM` := proc(a,b) \n    local c, cc, dd;\n    c := expand(a);
+\n    if c::`+` then\n        (cc,dd) := selectremove(has, c, op(1,b))
+;" }{TEXT -1 0 "" }{MPLTEXT 1 0 90 "\n        maptype(`+`, SUM, cc, b)
+ + SUM(dd, b);\n    else\n        SUM(c,b)\n    end if;\nend;" }}
+{PARA 11 "" 1 "" {XPPMATH 20 "6#>%+expand/SUMGf*6$%\"aG%\"bG6%%\"cG%#c
+cG%#ddG6\"F-C$>8$-%'expandG6#9$@%'F0%\"+GC$>6$8%8&-%-selectremoveG6%%$
+hasGF0-%#opG6$\"\"\"9%,&-%(maptypeG6&F7%$SUMGF;FEFD-FJ6$F<FEFD-FJ6$F0F
+EF-F-F-" }}}{EXCHG {PARA 0 "> " 0 "" {MPLTEXT 1 0 25 "interface(verbos
+eproc=3);" }}{PARA 11 "" 1 "" {XPPMATH 20 "6#\"\"\"" }}}{EXCHG {PARA 
+0 "> " 0 "" {MPLTEXT 1 0 42 "selectremove(has, a*x + b + 3*x^2 + c, x)
+;" }}{PARA 11 "" 1 "" {XPPMATH 20 "6$,&*&%\"aG\"\"\"%\"xGF&F&*&\"\"$F&
+)F'\"\"#F&F&,&%\"bGF&%\"cGF&" }}}{EXCHG {PARA 0 "> " 0 "" {MPLTEXT 1 
+0 20 "print(`expand/sum`);" }}{PARA 11 "" 1 "" {XPPMATH 20 "6#f*6$%\"f
+G'%\"rG<$%%nameG/F)%)anythingG6*%\"eG%\"xG%$inxG%'notinxG%\"zG%\"cG%\"
+sG%%optsG6#%aoCopyright~(c)~1993~by~the~University~of~Waterloo.~All~ri
+ghts~reserved.G6\"C,>8$-%'normalG6#9$@%-%%typeG6$9%F)>8%FC>FE-%#opG6$
+\"\"\"FC>8+&9\"6#;\"\"$9#>8'FJ>8&FJ@'-FA6$F:%\"*G?&8(F:%%trueG@%-%$has
+G6$FfnFE>FV*&FVFJFfnFJ>FT*&FTFJFfnFJ-Fjn6$F:FE>FVF:>FTF:@$-FA6$FV%\"+G
+C'>8)-%)icontentG6#FV>FT*&FjoFJFTFJ>FV*&FVFJFjo!\"\">8*-%*traperrorG6#
+-%%signG6#-%'lcoeffG6$FVFE@$/FdpFbpC$>FT,$FTFbp>FV,$FVFbp>FV-%'expandG
+F]p>Fdp-%$sumG6%FVFCFL@)/Fdp\"\"!-Fgq6#*&FTFJFdpFJ5-FA6$Fdp%*undefined
+G-FA6$Fdp%)infinityG-Fjq6%*&FVFJFTFJFCFL3-FA6$Fdp%)functionG/-FH6$F^rF
+dpFjqFarF_rF7F7F7" }}}{EXCHG {PARA 0 "> " 0 "" {MPLTEXT 1 0 10 "expand
+(f);" }}{PARA 11 "" 1 "" {XPPMATH 20 "6#,.*&\"\"#!\"\"%$mu1GF%F&*&F'\"
+\"\"%'delta1GF)F)*&F%F&F*F%F&-%$SUMG6$,$*&#F)F%F)*$)&%\"xG6#%\"iGF%F)F
+)F)-%#inG6$F7%\"SGF&-F-6$,$*&F4F)F'F)F&F8F&-F-6$,$*&F%F&F'F%F)F8F&" }}
+}{EXCHG }{EXCHG }{EXCHG {PARA 0 "> " 0 "" {MPLTEXT 1 0 38 "int(exp((f)
+),mu1=-infinity..infinity);" }}{PARA 11 "" 1 "" {XPPMATH 20 "6#-%$intG
+6$-%$expG6#,**&\"\"#!\"\",&%$mu1G\"\"\"%'delta1GF,F+F,-%$SumG6$,$*&#F/
+F+F/*$)&%\"xG6#%\"iGF+F/F/F/-%#inG6$F<<%%\"aG%\"bG%\"cGF,-F26$,$*&F9F/
+F.F/F,F=F,-F26$,$*&F+F,F.F+F/F=F,/F.;,$%)infinityGF,FO" }}}{EXCHG }
+{EXCHG {PARA 0 "> " 0 "" {MPLTEXT 1 0 12 "simplify(%);" }}{PARA 11 "" 
+1 "" {XPPMATH 20 "6#,$**\"\"#\"\"\"-%$expG6#,$*&#F&F%F&*&,,*&)%'delta1
+GF%F&%#N|irGF&F&*&-%$sumG6$*$)&%\"xG6#%\"iGF%F&/F<;F&F2F&F2F&F&F4F&*(F
+%F&F1F&-F56$F9F=F&!\"\"*$)F@F%F&FBF&,&F2F&F&F&FBF&FBF&,&*&F%F&F2F&F&F%
+F&#FBF%%#PiG#F&F%F&" }}}{EXCHG {PARA 0 "> " 0 "" {MPLTEXT 1 0 13 "coll
+ect(%,N);" }}{PARA 11 "" 1 "" {XPPMATH 20 "6#,$**\"\"#\"\"\"-%$expG6#,
+$*&#F&F%F&*&,,*&)%'delta1GF%F&%#N|irGF&F&*&-%$sumG6$*$)&%\"xG6#%\"iGF%
+F&/F<;F&F2F&F2F&F&F4F&*(F%F&F1F&-F56$F9F=F&!\"\"*$)F@F%F&FBF&,&F2F&F&F
+&FBF&FBF&,&*&F%F&F2F&F&F%F&#FBF%%#PiG#F&F%F&" }}}{EXCHG {PARA 0 "> " 
+0 "" {MPLTEXT 1 0 0 "" }}}{EXCHG }}{MARK "2 0 0" 52 }{VIEWOPTS 1 1 0 
+1 1 1803 1 1 1 1 }{PAGENUMBERS 0 1 2 33 1 1 }
