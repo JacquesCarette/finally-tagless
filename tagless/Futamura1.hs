@@ -2,9 +2,10 @@
 {-# OPTIONS_GHC -W #-}
 
 -- Interpreter, Compiler, Partial Evaluator
--- Code accompanying the paper by
+-- based on the ``tagless final'' encoding.
+-- Original code by
 --   Jacques Carette, Oleg Kiselyov, and Chung-chieh Shan
-
+-- with maybe modifications by Jacques Carette
 
 module Futamura1 where
 
@@ -14,17 +15,16 @@ import Data.Maybe (fromJust)
   The language is simply-typed lambda-calculus with fixpoint,
   integers, booleans and comparison: essentially, PCF.
 
-  Lam hoas_fn | App e e | Fix hoas_fn |
-  I Int | B Bool | Add ie1 ie2 | Mul ie1 ie2 | Leq ie1 ie2 |
-  IF b e-then e-else
-  
-  For ease of programming, we add tuples and unit and equality,
-  as well as tuple projections in this version
+  For ease of programming, we add tuples, unit, equality,
+  (binary) sum, 
+  and lists as well as tuple and list projections.
 
   The compiler, the interpreter and the source and target languages
   are *all* typed. The interpreter and the compiler use no tags.
   There is no pattern-match failure possible: the evaluators never
-  get stuck.
+  get stuck.  For list, we provide a discriminator, which is 
+  sufficient to implement other (total) functions that consume 
+  lists).
 -}
 
 -- This class defines syntax (and its instances, semantics) of our language
@@ -38,6 +38,7 @@ class Symantics repr where
     fix :: (repr a -> repr a) -> repr a
 
     add :: repr Int  -> repr Int -> repr Int
+    sub :: repr Int  -> repr Int -> repr Int
     mul :: repr Int  -> repr Int -> repr Int
     leq :: repr Int  -> repr Int -> repr Bool
     eql :: repr Int  -> repr Int -> repr Bool
@@ -48,8 +49,16 @@ class Symantics repr where
     pfst  :: repr (a,b) -> repr a
     psnd  :: repr (a,b) -> repr b
 
-and_ x y = if_ x (bool True) y
+    lcons :: repr a -> repr [a] -> repr [a]
+
+    left :: repr a -> repr (Either a b)
+    right :: repr b -> repr (Either a b)
+    elimOr :: repr (a -> c) -> repr (b -> c) -> repr (Either a b) -> repr c
+
+and_ x y = if_ x y           (bool False)
+or_  x y = if_ x (bool True) y
 not_ x   = if_ x (bool False) (bool True)
+
 class Equal a where
     equal :: (Symantics repr) => repr a -> repr a -> repr Bool
 instance Equal Bool where
@@ -88,24 +97,38 @@ testpowfix7 () = lam (\x -> app (app (testpowfix ()) x) (int 7))
 newtype R a = R a deriving Show
 unR (R x) = x
 
+-- repeated patterns:
+oneR f = R . f . unR
+twoR f = \e1 e2 -> R( (unR e1) `f` (unR e2))
+liftFunR f = unR . f . R
+
+-- note that oneR/twoR are exactly liftA and liftA2 for the Identity Applicative 
+-- Functor
+
 instance Symantics R where
-    int x = R x
-    bool b = R b
+    int = R
+    bool = R
 
-    lam f = R (unR . f . R)
-    app e1 e2 = R( (unR e1) (unR e2) )
-    fix f = R( fx (unR . f . R)) where fx f = f (fx f)
+    lam = R . liftFunR
+    fix f = R( fx (liftFunR f)) where fx f = f (fx f)
+    app = twoR ($)
 
-    add e1 e2 = R( (unR e1) + (unR e2) )
-    mul e1 e2 = R( (unR e1) * (unR e2) )
-    leq e1 e2 = R( (unR e1) <= (unR e2) )
-    eql e1 e2 = R( (unR e1) == (unR e2) )
+    add = twoR (+)
+    sub = twoR (-)
+    mul = twoR (*)
+    leq = twoR (<=)
+    eql = twoR (==)
     if_ be et ee = R( if (unR be) then unR et else unR ee )
 
     unit = R ()
-    pair e1 e2 = R( (unR e1), (unR e2) )
-    pfst = R . fst . unR
-    psnd = R . snd . unR
+    pair = twoR (,)
+    pfst = oneR fst
+    psnd = oneR snd
+
+    lcons = twoR (:)
+    left = oneR Left
+    right = oneR Right
+    elimOr l r m = R $ either (unR l) (unR r) (unR m)
 
 compR = unR
 
@@ -149,24 +172,35 @@ No tags at all...
 newtype L a = L Int deriving Show
 unL (L x) = x
 
+-- some useful abbreviations
+unitL = L 1
+oneL e1 = L( (unL e1) + 1)
+twoL e1 e2 = L( (unL e1) + (unL e2) + 1)
+
 instance Symantics L where
-    int _  = L 1
-    bool _ = L 1
+    int _  = unitL
+    bool _ = unitL
 
     lam f = L( unL (f (L 0)) + 1 )
-    app e1 e2 = L( unL e1 + unL e2 + 1 )
+    app = twoL
     fix f = L( unL (f (L 0)) + 1 )
 
-    add e1 e2 = L( unL e1 + unL e2 + 1 )
-    mul e1 e2 = L( unL e1 + unL e2 + 1 )
-    leq e1 e2 = L( unL e1 + unL e2 + 1 )
-    eql e1 e2 = L( unL e1 + unL e2 + 1 )
+    add = twoL
+    sub = twoL
+    mul = twoL
+    leq = twoL
+    eql = twoL
     if_ be et ee = L( unL be +  unL et + unL ee  + 1 )
 
-    unit = L 1
-    pair e1 e2 = L( (unL e1) + (unL e2) + 1 )
-    pfst e1 = L( (unL e1) + 1)
-    psnd e1 = L( (unL e1) + 1)
+    unit = unitL
+    pair = twoL
+    pfst = oneL
+    psnd = oneL
+
+    lcons = twoL
+    left = oneL
+    right = oneL
+    elimOr l r m = L( unL l + unL r + unL m + 1)
 
 compL = unL
 
@@ -183,8 +217,6 @@ ltestpw   = compL . testpowfix $ ()
 ltestpw7  = compL . testpowfix7 $ ()
 ltestpw72 = compL (app (testpowfix7 ()) (int 2)) -- 17
 
-
-
 -- ------------------------------------------------------------------------
 -- The compiler
 -- We compile to GADT, to be understood as a typed assembly language
@@ -192,13 +224,14 @@ ltestpw72 = compL (app (testpowfix7 ()) (int 2)) -- 17
 -- syntax. We could have used template Haskell. Alas, its expressions
 -- are untyped.
 -- ByteCode represents MetaOCaml's `code'. Thus the compiler
--- below neatly maps to the MetaOCaml (with no GADTs).
+-- below neatly maps to MetaOCaml (with no GADTs).
 -- Like MetaOCaml `code', we never pattern-match on ByteCode!
 -- The compiler never raises any exception and matches no tags:
 -- generated code has no tags at all.
 
--- The LIFT bytecode operation is used only during evaluation and for fmap
--- it corresponds to a CSP in MetaOCaml.
+-- The LIFT bytecode operation is used only as an optimization for the
+-- partial evaluator, to be able to 'lift' computations.
+-- it corresponds to a CSP in MetaOCaml. 
 
 data ByteCode t where
     Var :: Int -> ByteCode t                -- variables identified by numbers
@@ -208,88 +241,101 @@ data ByteCode t where
     INT :: Int -> ByteCode Int
     BOOL:: Bool -> ByteCode Bool
     Add :: ByteCode Int -> ByteCode Int -> ByteCode Int
+    Sub :: ByteCode Int -> ByteCode Int -> ByteCode Int
     Mul :: ByteCode Int -> ByteCode Int -> ByteCode Int
     Leq :: ByteCode Int -> ByteCode Int -> ByteCode Bool
     Eql :: ByteCode t1 -> ByteCode t1 -> ByteCode Bool
     IF  :: ByteCode Bool -> ByteCode t -> ByteCode t -> ByteCode t
-    -- LIFT :: t -> ByteCode t                 -- Used only for eval and fmap
+    LIFT :: t -> ByteCode t                 -- Used only in PE 
     UNIT :: ByteCode ()
     Pair :: ByteCode t1 -> ByteCode t2 -> ByteCode (t1,t2)
     Pfst :: ByteCode (t1,t2) -> ByteCode t1
     Psnd :: ByteCode (t1,t2) -> ByteCode t2
+    Lcons :: ByteCode t1 -> ByteCode [t1] -> ByteCode [t1]
+    ELeft :: ByteCode t1 -> ByteCode (Either t1 t2)
+    ERight :: ByteCode t2 -> ByteCode (Either t1 t2)
+    ElimOr :: ByteCode (t1 -> t3) -> ByteCode (t2 -> t3) -> ByteCode (Either t1 t2) -> ByteCode t3
+
+-- helpers
+bp :: String -> String
+bp x = "(" ++ x ++ ")"
+mid :: (Show a, Show b) => String -> a -> b -> String
+mid s e1 e2 = show e1 ++ s ++ show e2
 
 instance Show (ByteCode t) where
     show (Var n) = "V" ++ show n
-    show (Lam n b) = "(\\V" ++ show n ++ " -> " ++ show b ++ ")"
-    show (App e1 e2) = "(" ++ show e1 ++ " " ++ show e2 ++ ")"
-    show (Fix n b) = "(fix\\V" ++ show n ++ " " ++ show b ++ ")"
+    show (Lam n b) = "(\\V" ++ (mid " -> " n b) ++ ")"
+    show (App e1 e2) = bp $ mid " " e1 e2
+    show (Fix n b) = "(fix\\V" ++ (mid " " n b) ++ ")"
     show (INT n) = show n
     show (BOOL b) = show b
-    show (Add e1 e2) = "(" ++ show e1 ++ " + " ++ show e2 ++ ")"
-    show (Mul e1 e2) = "(" ++ show e1 ++ " * " ++ show e2 ++ ")"
-    show (Leq e1 e2) = "(" ++ show e1 ++ " <= " ++ show e2 ++ ")"
-    show (Eql e1 e2) = "(" ++ show e1 ++ " = " ++ show e2 ++ ")"
+    show (Add e1 e2) = bp $ mid " + " e1 e2 
+    show (Sub e1 e2) = bp $ mid " - " e1 e2 
+    show (Mul e1 e2) = bp $ mid " * " e1 e2 
+    show (Leq e1 e2) = bp $ mid " <= " e1 e2 
+    show (Eql e1 e2) = bp $ mid " == " e1 e2 
     show (IF be et ee)
         = "(if " ++ show be ++ 
           " then " ++ show et ++ " else " ++ show ee ++ ")"
+    show (LIFT _) = "<csp>"
     show (UNIT) = "() "
-    show (Pair e1 e2) = "(" ++ show e1 ++ ", " ++ show e2 ++ ")"
+    show (Pair e1 e2) = bp $ mid ", " e1 e2
     show (Pfst e1)  = "(fst " ++ show e1 ++ ")"
-    show (Psnd e1)  = "(fst " ++ show e1 ++ ")"
+    show (Psnd e1)  = "(snd " ++ show e1 ++ ")"
+    show (Lcons e1 e2) = bp $ mid ": " e1 e2
+    show (ELeft e1) = "(left" ++ show e1 ++ ")"
+    show (ERight e1) = "(right" ++ show e1 ++ ")"
+    show (ElimOr l r m) = "(either " ++ show l ++ " " ++ show r ++ " " ++ show m ++ ")"
 
 -- Int is the variable counter
 -- for allocation of fresh variables
 newtype C t = C (Int -> (ByteCode t, Int)) 
 unC (C t) vc0 = t vc0
 
+-- helper
+toC x = C(\vc -> (x, vc))
+oneC f e1 = C(\vc -> let (e1b,vc1) = unC e1 vc
+                     in (f e1b ,vc1))
+twoC f e1 e2 = C(\vc -> let (e1b,vc1) = unC e1 vc
+                            (e2b,vc2) = unC e2 vc1
+                         in (f e1b e2b,vc2))
+
 instance Symantics C where
-    int x  = C(\vc -> (INT x, vc))
-    bool b = C(\vc -> (BOOL b, vc))
+    int  = toC . INT
+    bool = toC . BOOL
 
     lam f = C(\vc -> let v = vc
                          var = C(\vc -> (Var v, vc))
                          (body,vc') = unC (f var) (succ vc)
                      in (Lam v body, vc'))
-    app e1 e2 = C(\vc -> let (e1b,vc1) = unC e1 vc
-                             (e2b,vc2) = unC e2 vc1
-                         in (App e1b e2b,vc2))
-
     fix f = C(\vc -> let v = vc
                          var = C(\vc -> (Var v, vc))
                          (body,vc') = unC (f var) (succ vc)
                      in (Fix v body, vc'))
+    app = twoC App
 
-    add e1 e2 = C(\vc -> let (e1b,vc1) = unC e1 vc
-                             (e2b,vc2) = unC e2 vc1
-                         in (Add e1b e2b,vc2))
-
-    mul e1 e2 = C(\vc -> let (e1b,vc1) = unC e1 vc
-                             (e2b,vc2) = unC e2 vc1
-                         in (Mul e1b e2b,vc2))
-
-    leq e1 e2 = C(\vc -> let (e1b,vc1) = unC e1 vc
-                             (e2b,vc2) = unC e2 vc1
-                         in (Leq e1b e2b,vc2))
-
-    eql e1 e2 = C(\vc -> let (e1b,vc1) = unC e1 vc
-                             (e2b,vc2) = unC e2 vc1
-                         in (Eql e1b e2b,vc2))
-
+    add = twoC Add
+    sub = twoC Sub
+    mul = twoC Mul
+    leq = twoC Leq
+    eql = twoC Eql
     if_ be et ee = C(\vc -> let (beb,vc1) = unC be vc
                                 (etb,vc2)  = unC et vc1
                                 (eeb,vc3)  = unC ee vc2
                          in (IF beb etb eeb,vc3))
 
     unit   = C(\vc -> (UNIT, vc))
-    pair e1 e2 = C(\vc -> let (e1b,vc1) = unC e1 vc
-                              (e2b,vc2) = unC e2 vc1
-                          in (Pair e1b e2b,vc2))
+    pair = twoC Pair
 
-    pfst e1 = C(\vc -> let (e1b,vc1) = unC e1 vc
-                       in (Pfst e1b ,vc1))
-    psnd e1 = C(\vc -> let (e1b,vc1) = unC e1 vc
-                       in (Psnd e1b ,vc1))
-
+    pfst = oneC Pfst
+    psnd = oneC Psnd
+    lcons = twoC Lcons
+    left = oneC ELeft
+    right = oneC ERight
+    elimOr l r m = C(\vc -> let (bl, vc1) = unC l vc
+                                (br, vc2) = unC r vc1
+                                (bm, vc3) = unC m vc2
+                            in (ElimOr bl br bm, vc3))
 
 compC repr = fst $ unC repr 0
 
@@ -308,7 +354,6 @@ ctestpw72 = compC  (app (testpowfix7 ()) (int 2))
 -- ------------------------------------------------------------------------
 -- The partial evaluator: the combination of the interpreter (R) and
 -- the compiler (C).
--- We need no Lift byte-code instruction: no parametric CSP. That is great!
 
 -- Generalized Semantics, with an inductive type map
 
@@ -330,6 +375,9 @@ class Symantics2 rep where
     zpair :: rep a a -> rep b b -> rep (a,b) (a,b)
     zfst  :: rep (a,b) (a,b) -> rep a a
     zsnd  :: rep (a,b) (a,b) -> rep b b
+    zcons :: rep a a -> rep [a] [a] -> rep [a] [a]
+    zleft :: rep a a -> rep (Either a b) (Either a b)
+    zright :: rep b b -> rep (Either a b) (Either a b)
 
 -- Unlike in Incope.hs, this P explicitly refers to C and R, and isn't
 -- polymorphic.  This can have a deleterious effect on the static part!
@@ -337,18 +385,46 @@ data P static dynamic =
     P { dynamic :: C dynamic, static :: Maybe (R static) }
 zE dynamic = P dynamic Nothing
 
+-- takes a 'static cast' and a static and dynamic binary operation
+-- works for results at directly embedable types, i.e. static'
+-- must be a known ground type.
+ztwo :: (static' -> P static' dynamic') -> 
+        (R s1 -> R s2 -> R static') -> 
+        (C d1 -> C d2 -> C dynamic') ->
+        (P s1 d1) -> (P s2 d2) ->
+        (P static' dynamic')
+ztwo cast op_s op_d = zop
+  where
+    zop (P _ (Just n1)) (P _ (Just n2)) = cast . unR $ op_s n1 n2
+    zop (P n1 _       ) (P n2 _       ) = zE (op_d n1 n2)
+    
+-- cast from static to P -- CSP
+zcast x = P (toC . LIFT . unR $ x) (Just x)
+
+-- Similar to ztwo, but uses polymorphic lift
+ztwoP :: (R s1 -> R s2 -> R res) -> (C d1 -> C d2 -> C res) ->
+         (P s1 d1) -> (P s2 d2) -> (P res res)
+ztwoP op_s op_d = zop
+  where
+    zop (P _ (Just n1)) (P _ (Just n2)) = zcast (op_s n1 n2)
+    zop (P n1 _       ) (P n2 _       ) = zE (op_d n1 n2)
+    
+-- And a unary version
+zoneP :: (R s1 -> R res) -> (C d1 -> C res) ->
+         (P s1 d1) -> (P res res)
+zoneP op_s op_d = zop
+  where
+    zop (P _ (Just n1)) = zcast (op_s n1)
+    zop (P n1 _       ) = zE (op_d n1)
+    
 instance Symantics2 P where
     zint x  = P (int x) (Just (int x))
     zbool b = P (bool b) (Just (bool b))
 
-    zadd (P _ (Just n1)) (P _ (Just n2)) = zint (unR (add n1 n2))
-    zadd (P n1 _       ) (P n2 _       ) = zE (add n1 n2)
-    zmul (P _ (Just n1)) (P _ (Just n2)) = zint (unR (mul n1 n2))
-    zmul (P n1 _       ) (P n2 _       ) = zE (mul n1 n2)
-    zleq (P _ (Just n1)) (P _ (Just n2)) = zbool (unR (leq n1 n2))
-    zleq (P n1 _       ) (P n2 _       ) = zE (leq n1 n2)
-    zeql (P _ (Just n1)) (P _ (Just n2)) = zbool (unR (eql n1 n2))
-    zeql (P n1 _       ) (P n2 _       ) = zE (eql n1 n2)
+    zadd = ztwo zint add add -- note that the 2 'add' are at different types!
+    zmul = ztwo zint mul mul
+    zleq = ztwo zbool leq leq
+    zeql = ztwo zbool eql eql
     zif_ (P _ (Just b1)) et ee = if unR b1 then et else ee
     zif_ (P be _       ) et ee = zE (if_ be (dynamic et) (dynamic ee))
 
@@ -356,33 +432,17 @@ instance Symantics2 P where
     zapp (P _ (Just f)) x = (unR f) x
     zapp (P f _       ) x = zE (app f (dynamic x))
     zfix f = case f (zfix f) of
-	      (P _ (Just s)) -> P dfix (Just s)
-	      _               -> P dfix Nothing
+          (P _ (Just s)) -> P dfix (Just s)
+          _              -> P dfix Nothing
        where dfix = fix (dynamic . f . zE)
 
     zunit = P (unit) (Just unit)
-    -- not quite as satisfactory as other codes
-    zpair (P d1 (Just n1)) (P d2 (Just n2)) = P (pair d1 d2) (Just (pair n1 n2))
-    zpair (P n1 _       ) (P n2 _       ) = zE (pair n1 n2)
-    zfst  (P d1 (Just n1))  = P (pfst d1) (Just (pfst n1))
-    zfst  (P n1 _       )   = zE (pfst n1)
-    zsnd  (P d1 (Just n1))  = P (psnd d1) (Just (psnd n1))
-    zsnd  (P n1 _       )   = zE (psnd n1)
-{-
-zzfix3 f = case f (zzfix3 f)  of
-	  P _ (Just g) -> P dfix
-			        (Just (\x -> 
-				       case x of
-			                P cde Nothing -> zE (app dfix cde)
-			                x     -> g x))
-	  P _ Nothing -> zE dfix
-     where dfix = fix (dynamic . f . zE)
-
-zzfix4 f = case f (zzfix4 f)  of
-	  r@(P _ (Just _)) -> P dfix (Just (zapp r))
-	  P _ Nothing -> zE dfix
-     where dfix = fix (dynamic . f . zE)
--}
+    zpair = ztwoP pair pair
+    zfst = zoneP pfst pfst
+    zsnd = zoneP psnd psnd
+    zcons = ztwoP lcons lcons
+    zleft = zoneP left left
+    zright = zoneP right right
 
 -- unit to suppress the monomorphism restriction
 
@@ -394,7 +454,7 @@ ztestgib () = zlam (\x -> zlam (\y ->
                              (zapp self (zadd n (zint (-2))))))))))
 
 ztestgib5 () = zlam (\x -> zlam (\y ->
-	zapp (zapp (zapp (ztestgib ()) x) y) (zint 5)))
+    zapp (zapp (zapp (ztestgib ()) x) y) (zint 5)))
 
 ztestgib1 () = zapp (zapp (zapp (ztestgib ()) (zint 1)) (zint 1)) (zint 5)
 
@@ -409,24 +469,30 @@ testC_ztestgib5 = compC (dynamic (ztestgib5 ()))
 -- Every instance of Symantics can be injected into Symantics2
 newtype S12 repr s d = S12{unS12:: repr d}
 
+oneS f (S12 e1) = S12 $ f e1
+twoS f (S12 e1) (S12 e2) = S12 $ f e1 e2
+
 instance Symantics repr => Symantics2 (S12 repr) where
     zint x  = S12 $ int x
     zbool b = S12 $ bool b
 
-    zadd (S12 e1) (S12 e2) = S12 $ add e1 e2
-    zmul (S12 e1) (S12 e2) = S12 $ mul e1 e2
-    zleq (S12 e1) (S12 e2) = S12 $ leq e1 e2
-    zeql (S12 e1) (S12 e2) = S12 $ eql e1 e2
+    zadd = twoS add
+    zmul = twoS mul
+    zleq = twoS leq
+    zeql = twoS eql
     zif_ (S12 e) (S12 e1) (S12 e2) = S12 $ if_ e e1 e2
 
     zlam f = S12 $ lam (unS12 . f . S12 )
-    zapp (S12 f) (S12 a) = S12 $ app f a
     zfix f = S12 $ fix (unS12 . f . S12 )
+    zapp = twoS app
 
     zunit = S12 (unit)
-    zpair (S12 e1) (S12 e2) = S12 $ pair e1 e2
-    zfst (S12 p) = S12 $ pfst p
-    zsnd (S12 p) = S12 $ psnd p
+    zpair = twoS pair
+    zfst = oneS pfst
+    zsnd = oneS psnd
+    zcons = twoS lcons
+    zleft = oneS left
+    zright = oneS right
 
 testR_zztestgib1 = compR $ unS12 $ ztestgib1 () -- 8
 testL_zztestgib1 = compL $ unS12 $ ztestgib1 () -- 23
@@ -474,6 +540,7 @@ data HByteCode t where
     HINT :: Int -> HByteCode Int
     HBOOL:: Bool -> HByteCode Bool
     HAdd :: HByteCode Int -> HByteCode Int -> HByteCode Int
+    HSub :: HByteCode Int -> HByteCode Int -> HByteCode Int
     HMul :: HByteCode Int -> HByteCode Int -> HByteCode Int
     HLeq :: HByteCode Int -> HByteCode Int -> HByteCode Bool
     HEql :: Eq t1 => HByteCode t1  -> HByteCode t1  -> HByteCode Bool
@@ -482,22 +549,12 @@ data HByteCode t where
     HPair :: HByteCode t1 -> HByteCode t2 -> HByteCode (t1,t2)
     HFst :: HByteCode (t1,t2) -> HByteCode t1
     HSnd :: HByteCode (t1,t2) -> HByteCode t2
+    HCons :: HByteCode t1 -> HByteCode [t1] -> HByteCode [t1]
+    HLeft :: HByteCode t1 -> HByteCode (Either t1 t2)
+    HRight :: HByteCode t2 -> HByteCode (Either t1 t2)
+    HElimOr :: HByteCode (t1 -> t3) -> HByteCode (t2 -> t3) -> HByteCode (Either t1 t2) -> HByteCode t3
 
-{- Showing HOAS has always been problematic... We just skip it for now...
-
-instance Show (HByteCode t) where
-    show (HVar n) = "V" ++ show n
-    show (Lam n b) = "(\\V" ++ show n ++ " -> " ++ show b ++ ")"
-    show (App e1 e2) = "(" ++ show e1 ++ " " ++ show e2 ++ ")"
-    show (Fix n b) = "(fix\\V" ++ show n ++ " " ++ show b ++ ")"
-    show (INT n) = show n
-    show (BOOL b) = show b
-    show (Add e1 e2) = "(" ++ show e1 ++ " + " ++ show e2 ++ ")"
-    show (Eql e1 e2) = "(" ++ show e1 ++ " == " ++ show e2 ++ ")"
-    show (IF be et ee)
-        = "(if " ++ show be ++ 
-          " then " ++ show et ++ " else " ++ show ee ++ ")"
--}
+-- Showing HOAS has always been problematic... We just skip it for now...
 
 -- An evaluator for the ByteCode: the virtual machine
 -- It is total (modulo potential non-termination in fix)
@@ -511,6 +568,7 @@ eval (HFix f) = eval (f (HFix f))
 eval (HINT n) = n
 eval (HBOOL n) = n
 eval (HAdd e1 e2) = eval e1 + eval e2
+eval (HSub e1 e2) = eval e1 - eval e2
 eval (HMul e1 e2) = eval e1 * eval e2
 eval (HLeq e1 e2) = eval e1 <= eval e2
 eval (HEql e1 e2) = eval e1 == eval e2
@@ -519,7 +577,10 @@ eval (HUNIT) = ()
 eval (HPair e1 e2) = (eval e1, eval e2)
 eval (HFst e1) = fst (eval e1)
 eval (HSnd e1) = snd (eval e1)
-
+eval (HCons e1 e2) = (eval e1) : (eval e2)
+eval (HLeft e1) = Left (eval e1)
+eval (HRight e1) = Right (eval e1)
+eval (HElimOr l r m) = either (eval l) (eval r) (eval m)
 
 instance Symantics HByteCode where
     int  = HINT
@@ -530,6 +591,7 @@ instance Symantics HByteCode where
 
     fix  = HFix
     add  = HAdd
+    sub  = HSub
     mul  = HMul
     leq  = HLeq
     eql  = HEql
@@ -539,6 +601,10 @@ instance Symantics HByteCode where
     pair = HPair
     pfst = HFst
     psnd = HSnd
+    lcons = HCons
+    left = HLeft
+    right = HRight
+    elimOr = HElimOr
 
 compH :: HByteCode t -> HByteCode t
 compH = id 
