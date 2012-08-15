@@ -12,8 +12,8 @@ newtype R a = R a deriving Show
 unR (R x) = x
 
 instance T.Symantics R where
-    int x = R $(T.lift1 id [|x|])
-    bool b = R $(T.lift1 id [|b|])
+    int = R
+    bool = R
 
     -- lam f = R (unR . f . R)
     lam f = R (let g = unR . f . R in $(T.liftfn1 T.lam [|g|]))

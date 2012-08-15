@@ -120,7 +120,7 @@ instance Symantics C where
 
 compC = unC
 
--- helpful
+-- helpful in implementations
 lift1 f x = unC $ f (C x) 
 lift2 f x y = unC $ f (C x) (C y)
 lift3 f x y z = unC $ f (C x) (C y) (C z)
@@ -237,4 +237,3 @@ testpowfix () = lam (\x ->
                         if_ (leq n (int 0)) (int 1)
                             (mul x (app self (add n (int (-1))))))))
 testpowfix7 () = lam (\x -> app (app (testpowfix ()) x) (int 7))
-
