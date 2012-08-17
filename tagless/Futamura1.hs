@@ -10,6 +10,11 @@
 module Futamura1 where
 
 import Data.Maybe (fromJust)
+import Control.Applicative
+import qualified Data.Function as F
+
+class Applicative f => Liftable1 f where
+  pull :: (f a -> f b) -> f (a -> b)
 
 {-
   The language is simply-typed lambda-calculus with fixpoint,
@@ -29,7 +34,7 @@ import Data.Maybe (fromJust)
 
 -- This class defines syntax (and its instances, semantics) of our language
 -- This class is Haskell98!
-class Symantics repr where
+class Liftable1 repr => Symantics repr where
     int  :: Int  -> repr Int              -- int literal
     bool :: Bool -> repr Bool             -- bool literal
 
@@ -55,20 +60,6 @@ class Symantics repr where
     right :: repr b -> repr (Either a b)
     elimOr :: repr (a -> c) -> repr (b -> c) -> repr (Either a b) -> repr c
 
-and_ x y = if_ x y           (bool False)
-or_  x y = if_ x (bool True) y
-not_ x   = if_ x (bool False) (bool True)
-
-class Equal a where
-    equal :: (Symantics repr) => repr a -> repr a -> repr Bool
-instance Equal Bool where
-    equal x y = if_ x y (not_ y)
-instance Equal Int where
-    equal = eql
-instance (Equal a, Equal b) => Equal (a,b) where
-    equal x y = and_ (equal (pfst x) (pfst y))
-                     (equal (psnd x) (psnd y))
-
 test1 () = add (int 1) (int 2)
 test2 () = lam (\x -> add x x)
 test3 () = lam (\x -> add (app x (int 1)) (int 2))
@@ -89,6 +80,9 @@ testpowfix () = lam (\x ->
                             (mul x (app self (add n (int (-1))))))))
 testpowfix7 () = lam (\x -> app (app (testpowfix ()) x) (int 7))
 
+if' :: Bool -> a -> a -> a
+if' eb et el = if eb then et else el
+
 -- ------------------------------------------------------------------------
 -- The interpreter
 -- It is a typed, tagless interpreter: R is not a tag. The interpreter
@@ -97,38 +91,40 @@ testpowfix7 () = lam (\x -> app (app (testpowfix ()) x) (int 7))
 newtype R a = R a deriving Show
 unR (R x) = x
 
--- repeated patterns:
-oneR f = R . f . unR
-twoR f = \e1 e2 -> R( (unR e1) `f` (unR e2))
-liftFunR f = unR . f . R
+instance Functor R where
+    fmap f (R x) = R (f x)
 
--- note that oneR/twoR are exactly liftA and liftA2 for the Identity Applicative 
--- Functor
+instance Applicative R where
+    pure = R
+    R f <*> R a = R (f a)
+
+instance Liftable1 R where
+    pull f = R (unR . f . R)
 
 instance Symantics R where
-    int = R
-    bool = R
+    int = pure
+    bool = pure
 
-    lam = R . liftFunR
-    fix f = R( fx (liftFunR f)) where fx f = f (fx f)
-    app = twoR ($)
+    lam = pull
+    fix f = fmap F.fix (pull f)
+    app = (<*>)
 
-    add = twoR (+)
-    sub = twoR (-)
-    mul = twoR (*)
-    leq = twoR (<=)
-    eql = twoR (==)
-    if_ be et ee = R( if (unR be) then unR et else unR ee )
+    add = liftA2 (+)
+    sub = liftA2 (-)
+    mul = liftA2 (*)
+    leq = liftA2 (<=)
+    eql = liftA2 (==)
+    if_ = liftA3 (if')
 
-    unit = R ()
-    pair = twoR (,)
-    pfst = oneR fst
-    psnd = oneR snd
+    unit = pure ()
+    pair = liftA2 (,)
+    pfst = fmap fst
+    psnd = fmap snd
 
-    lcons = twoR (:)
-    left = oneR Left
-    right = oneR Right
-    elimOr l r m = R $ either (unR l) (unR r) (unR m)
+    lcons = liftA2 (:)
+    left = fmap Left
+    right = fmap Right
+    elimOr = liftA3 either
 
 compR = unR
 
@@ -148,9 +144,9 @@ itestpw7  = mkitest testpowfix7
 itestpw72 = mkitest (\() -> app (testpowfix7 ()) (int 2))
 
 {-
-The expression "R (unR . f . R)" _looks_ like tag introduction and
-elimination.
-But. the function unR is *total*. There is no run-time error
+The expression "R (unR . f . R)" aka "pull" _looks_ like tag 
+introduction and elimination.
+But the function unR is *total*. There is no run-time error
 is possible at all -- and this fact is fully apparent to the
 compiler.
 Note the corresponding code in incope.ml:
@@ -172,35 +168,46 @@ No tags at all...
 newtype L a = L Int deriving Show
 unL (L x) = x
 
+instance Functor L where
+    fmap _ (L x) = L (x + 1) -- builtin app costs 1
+
+instance Applicative L where
+    pure _ = L 1
+    L f <*> L a = L (f + a) -- a pure app costs nothing
+          -- else liftA2 costs "too much"
+
+instance Liftable1 L where
+    pull f = L ((unL . f . L $ 0) + 1)
+
 -- some useful abbreviations
 unitL = L 1
 oneL e1 = L( (unL e1) + 1)
 twoL e1 e2 = L( (unL e1) + (unL e2) + 1)
 
 instance Symantics L where
-    int _  = unitL
-    bool _ = unitL
+    int = pure
+    bool = pure
 
-    lam f = L( unL (f (L 0)) + 1 )
-    app = twoL
-    fix f = L( unL (f (L 0)) + 1 )
+    lam = pull
+    app = (<*>)
+    fix f = fmap F.fix (pull f)
 
-    add = twoL
-    sub = twoL
-    mul = twoL
-    leq = twoL
-    eql = twoL
-    if_ be et ee = L( unL be +  unL et + unL ee  + 1 )
+    add = liftA2 (+)
+    sub = liftA2 (-)
+    mul = liftA2 (*)
+    leq = liftA2 (<=)
+    eql = liftA2 (==)
+    if_ = liftA3 (if')
 
-    unit = unitL
-    pair = twoL
-    pfst = oneL
-    psnd = oneL
+    unit = pure ()
+    pair = liftA2 ((,))
+    pfst = fmap fst
+    psnd = fmap snd
 
-    lcons = twoL
-    left = oneL
-    right = oneL
-    elimOr l r m = L( unL l + unL r + unL m + 1)
+    lcons = liftA2 (:)
+    left = fmap Left
+    right = fmap Right
+    elimOr = liftA3 either
 
 compL = unL
 
@@ -210,13 +217,14 @@ ltest3 = compL . test3 $ ()
 
 
 ltestgib  = compL . testgib  $ ()
-ltestgib1 = compL . testgib1 $ () -- 23
+ltestgib1 = compL . testgib1 $ () -- 19
 ltestgib2 = compL . testgib2 $ ()
 
 ltestpw   = compL . testpowfix $ ()
 ltestpw7  = compL . testpowfix7 $ ()
-ltestpw72 = compL (app (testpowfix7 ()) (int 2)) -- 17
+ltestpw72 = compL (app (testpowfix7 ()) (int 2)) -- 14
 
+{-
 -- ------------------------------------------------------------------------
 -- The compiler
 -- We compile to GADT, to be understood as a typed assembly language
@@ -615,3 +623,4 @@ htest2 = compH . test2 $ ()
 htest2r = eval . test2 $ ()
 htestgib1  = compH . testgib1 $ ()
 htestgib1r = eval . testgib1 $ ()
+-}
