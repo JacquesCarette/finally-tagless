@@ -1,4 +1,5 @@
 {-# LANGUAGE GADTs, TypeOperators, ScopedTypeVariables #-}
+{-# LANGUAGE FlexibleInstances, UndecidableInstances #-}
 {-# OPTIONS_GHC -W #-}
 
 -- Interpreter, Compiler, Partial Evaluator
@@ -34,7 +35,7 @@ class Applicative f => Liftable1 f where
 
 -- This class defines syntax (and its instances, semantics) of our language
 -- This class is Haskell98!
-class Liftable1 repr => Symantics repr where
+class Symantics repr where
     int  :: Int  -> repr Int              -- int literal
     bool :: Bool -> repr Bool             -- bool literal
 
@@ -54,12 +55,13 @@ class Liftable1 repr => Symantics repr where
     pfst  :: repr (a,b) -> repr a
     psnd  :: repr (a,b) -> repr b
 
-    lcons :: repr a -> repr [a] -> repr [a]
+--    lcons :: repr a -> repr [a] -> repr [a]
 
     left :: repr a -> repr (Either a b)
     right :: repr b -> repr (Either a b)
     elimOr :: repr (a -> c) -> repr (b -> c) -> repr (Either a b) -> repr c
 
+test1 :: Symantics repr => () -> repr Int
 test1 () = add (int 1) (int 2)
 test2 () = lam (\x -> add x x)
 test3 () = lam (\x -> add (app x (int 1)) (int 2))
@@ -106,7 +108,7 @@ instance Symantics R where
     bool = pure
 
     lam = pull
-    fix f = fmap F.fix (pull f)
+    fix f = liftA F.fix (pull f)
     app = (<*>)
 
     add = liftA2 (+)
@@ -118,12 +120,11 @@ instance Symantics R where
 
     unit = pure ()
     pair = liftA2 (,)
-    pfst = fmap fst
-    psnd = fmap snd
+    pfst = liftA fst
+    psnd = liftA snd
 
-    lcons = liftA2 (:)
-    left = fmap Left
-    right = fmap Right
+    left = liftA Left
+    right = liftA Right
     elimOr = liftA3 either
 
 compR = unR
@@ -190,7 +191,7 @@ instance Symantics L where
 
     lam = pull
     app = (<*>)
-    fix f = fmap F.fix (pull f)
+    fix f = liftA F.fix (pull f)
 
     add = liftA2 (+)
     sub = liftA2 (-)
@@ -201,12 +202,11 @@ instance Symantics L where
 
     unit = pure ()
     pair = liftA2 ((,))
-    pfst = fmap fst
-    psnd = fmap snd
+    pfst = liftA fst
+    psnd = liftA snd
 
-    lcons = liftA2 (:)
-    left = fmap Left
-    right = fmap Right
+    left = liftA Left
+    right = liftA Right
     elimOr = liftA3 either
 
 compL = unL
@@ -224,7 +224,6 @@ ltestpw   = compL . testpowfix $ ()
 ltestpw7  = compL . testpowfix7 $ ()
 ltestpw72 = compL (app (testpowfix7 ()) (int 2)) -- 14
 
-{-
 -- ------------------------------------------------------------------------
 -- The compiler
 -- We compile to GADT, to be understood as a typed assembly language
@@ -298,7 +297,7 @@ instance Show (ByteCode t) where
 -- Int is the variable counter
 -- for allocation of fresh variables
 newtype C t = C (Int -> (ByteCode t, Int)) 
-unC (C t) vc0 = t vc0
+unC (C x) = x
 
 -- helper
 toC x = C(\vc -> (x, vc))
@@ -337,7 +336,6 @@ instance Symantics C where
 
     pfst = oneC Pfst
     psnd = oneC Psnd
-    lcons = twoC Lcons
     left = oneC ELeft
     right = oneC ERight
     elimOr l r m = C(\vc -> let (bl, vc1) = unC l vc
@@ -383,7 +381,6 @@ class Symantics2 rep where
     zpair :: rep a a -> rep b b -> rep (a,b) (a,b)
     zfst  :: rep (a,b) (a,b) -> rep a a
     zsnd  :: rep (a,b) (a,b) -> rep b b
-    zcons :: rep a a -> rep [a] [a] -> rep [a] [a]
     zleft :: rep a a -> rep (Either a b) (Either a b)
     zright :: rep b b -> rep (Either a b) (Either a b)
 
@@ -448,7 +445,6 @@ instance Symantics2 P where
     zpair = ztwoP pair pair
     zfst = zoneP pfst pfst
     zsnd = zoneP psnd psnd
-    zcons = ztwoP lcons lcons
     zleft = zoneP left left
     zright = zoneP right right
 
@@ -498,7 +494,6 @@ instance Symantics repr => Symantics2 (S12 repr) where
     zpair = twoS pair
     zfst = oneS pfst
     zsnd = oneS psnd
-    zcons = twoS lcons
     zleft = oneS left
     zright = oneS right
 
@@ -557,7 +552,6 @@ data HByteCode t where
     HPair :: HByteCode t1 -> HByteCode t2 -> HByteCode (t1,t2)
     HFst :: HByteCode (t1,t2) -> HByteCode t1
     HSnd :: HByteCode (t1,t2) -> HByteCode t2
-    HCons :: HByteCode t1 -> HByteCode [t1] -> HByteCode [t1]
     HLeft :: HByteCode t1 -> HByteCode (Either t1 t2)
     HRight :: HByteCode t2 -> HByteCode (Either t1 t2)
     HElimOr :: HByteCode (t1 -> t3) -> HByteCode (t2 -> t3) -> HByteCode (Either t1 t2) -> HByteCode t3
@@ -585,7 +579,6 @@ eval (HUNIT) = ()
 eval (HPair e1 e2) = (eval e1, eval e2)
 eval (HFst e1) = fst (eval e1)
 eval (HSnd e1) = snd (eval e1)
-eval (HCons e1 e2) = (eval e1) : (eval e2)
 eval (HLeft e1) = Left (eval e1)
 eval (HRight e1) = Right (eval e1)
 eval (HElimOr l r m) = either (eval l) (eval r) (eval m)
@@ -609,7 +602,6 @@ instance Symantics HByteCode where
     pair = HPair
     pfst = HFst
     psnd = HSnd
-    lcons = HCons
     left = HLeft
     right = HRight
     elimOr = HElimOr
@@ -623,4 +615,3 @@ htest2 = compH . test2 $ ()
 htest2r = eval . test2 $ ()
 htestgib1  = compH . testgib1 $ ()
 htestgib1r = eval . testgib1 $ ()
--}
