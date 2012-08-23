@@ -13,5 +13,7 @@ k0 = \_ v -> v
 runM :: StateCPS s v v -> s -> v
 runM m = \s -> (unS m) s k0
 
-fetch s k = k s s
-store v _ k = k v ()
+fetch :: StateCPS v w v
+fetch = S $ \s k -> k s s
+store :: v -> StateCPS v () ()
+store v = S $ \_ k -> k v ()
