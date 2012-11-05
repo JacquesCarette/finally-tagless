@@ -55,7 +55,9 @@ class Symantics repr where
     pfst  :: repr (a,b) -> repr a
     psnd  :: repr (a,b) -> repr b
 
---    lcons :: repr a -> repr [a] -> repr [a]
+    lnil :: repr [a]
+    lcons :: repr a -> repr [a] -> repr [a]
+    lfoldr :: repr (a -> b -> b) -> repr b -> repr [a] -> repr b
 
     left :: repr a -> repr (Either a b)
     right :: repr b -> repr (Either a b)
@@ -81,6 +83,15 @@ testpowfix () = lam (\x ->
                         if_ (leq n (int 0)) (int 1)
                             (mul x (app self (add n (int (-1))))))))
 testpowfix7 () = lam (\x -> app (app (testpowfix ()) x) (int 7))
+
+testpair () = lam(\p ->
+                  fix (\self -> lam (\n ->
+                      if_ (leq n (int 0)) (pfst p)
+                        (if_ (leq n (int 1)) (psnd p)
+                         (add (app self (add n (int (-1))))
+                              (app self (add n (int (-2)))))))))
+
+btoe () = lam(\x -> if_ x (left unit) (right unit))
 
 if' :: Bool -> a -> a -> a
 if' eb et el = if eb then et else el
@@ -122,6 +133,10 @@ instance Symantics R where
     pair = liftA2 (,)
     pfst = liftA fst
     psnd = liftA snd
+
+    lnil = pure []
+    lcons = liftA2 (:) 
+    lfoldr = liftA3 (foldr)
 
     left = liftA Left
     right = liftA Right
@@ -205,6 +220,10 @@ instance Symantics L where
     pfst = liftA fst
     psnd = liftA snd
 
+    lnil = pure []
+    lcons = liftA2 (:) 
+    lfoldr = liftA3 (foldr)
+
     left = liftA Left
     right = liftA Right
     elimOr = liftA3 either
@@ -258,7 +277,9 @@ data ByteCode t where
     Pair :: ByteCode t1 -> ByteCode t2 -> ByteCode (t1,t2)
     Pfst :: ByteCode (t1,t2) -> ByteCode t1
     Psnd :: ByteCode (t1,t2) -> ByteCode t2
+    Lempty :: ByteCode t1
     Lcons :: ByteCode t1 -> ByteCode [t1] -> ByteCode [t1]
+    FOLDR :: ByteCode (a -> b -> b) -> ByteCode b -> ByteCode [a] -> ByteCode b
     ELeft :: ByteCode t1 -> ByteCode (Either t1 t2)
     ERight :: ByteCode t2 -> ByteCode (Either t1 t2)
     ElimOr :: ByteCode (t1 -> t3) -> ByteCode (t2 -> t3) -> ByteCode (Either t1 t2) -> ByteCode t3
@@ -289,7 +310,10 @@ instance Show (ByteCode t) where
     show (Pair e1 e2) = bp $ mid ", " e1 e2
     show (Pfst e1)  = "(fst " ++ show e1 ++ ")"
     show (Psnd e1)  = "(snd " ++ show e1 ++ ")"
+    show (Lempty) = " [] "
     show (Lcons e1 e2) = bp $ mid ": " e1 e2
+    show (FOLDR f u l) = "(foldr" ++ show f ++ " " ++ show u ++ " " ++ 
+                           show l ++ ")"
     show (ELeft e1) = "(left" ++ show e1 ++ ")"
     show (ERight e1) = "(right" ++ show e1 ++ ")"
     show (ElimOr l r m) = "(either " ++ show l ++ " " ++ show r ++ " " ++ show m ++ ")"
@@ -336,6 +360,14 @@ instance Symantics C where
 
     pfst = oneC Pfst
     psnd = oneC Psnd
+
+    lnil = C(\vc -> (Lempty, vc))
+    lcons = twoC (Lcons) 
+    lfoldr f u l = C(\vc -> let (fb,vc1) = unC f vc
+                                (ub,vc2)  = unC u vc1
+                                (lb,vc3)  = unC l vc2
+                            in (FOLDR fb ub lb,vc3))
+
     left = oneC ELeft
     right = oneC ERight
     elimOr l r m = C(\vc -> let (bl, vc1) = unC l vc
@@ -552,6 +584,10 @@ data HByteCode t where
     HPair :: HByteCode t1 -> HByteCode t2 -> HByteCode (t1,t2)
     HFst :: HByteCode (t1,t2) -> HByteCode t1
     HSnd :: HByteCode (t1,t2) -> HByteCode t2
+    HNil :: HByteCode [t1]
+    HCons :: HByteCode t1 -> HByteCode [t1] -> HByteCode [t1]
+    HFoldr :: HByteCode (a -> b -> b) -> HByteCode b -> HByteCode [a] ->
+              HByteCode b
     HLeft :: HByteCode t1 -> HByteCode (Either t1 t2)
     HRight :: HByteCode t2 -> HByteCode (Either t1 t2)
     HElimOr :: HByteCode (t1 -> t3) -> HByteCode (t2 -> t3) -> HByteCode (Either t1 t2) -> HByteCode t3
@@ -579,6 +615,9 @@ eval (HUNIT) = ()
 eval (HPair e1 e2) = (eval e1, eval e2)
 eval (HFst e1) = fst (eval e1)
 eval (HSnd e1) = snd (eval e1)
+eval (HNil) = []
+eval (HCons x xs) = (eval x) : (eval xs)
+eval (HFoldr f u l) = foldr (eval f) (eval u) (eval l)
 eval (HLeft e1) = Left (eval e1)
 eval (HRight e1) = Right (eval e1)
 eval (HElimOr l r m) = either (eval l) (eval r) (eval m)
@@ -602,6 +641,11 @@ instance Symantics HByteCode where
     pair = HPair
     pfst = HFst
     psnd = HSnd
+
+    lnil = HNil
+    lcons = HCons
+    lfoldr = HFoldr
+
     left = HLeft
     right = HRight
     elimOr = HElimOr
