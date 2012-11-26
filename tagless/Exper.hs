@@ -1,9 +1,11 @@
 {-# LANGUAGE TypeFamilies, TypeOperators, Rank2Types, FlexibleInstances #-}
+{-# LANGUAGE TemplateHaskell, FlexibleContexts #-}
 {-# OPTIONS_GHC -W #-}
 
 module Exper where
 
 import qualified Data.Function as F
+import Language.Haskell.TH
 
 data IntT
 data BoolT
@@ -54,6 +56,7 @@ class Symantics repr where
     lnil :: repr (List a)
     lcons :: repr a -> repr (List a) -> repr (List a)
     lfoldr :: repr (a :-> b :-> b) -> repr b -> repr (List a) -> repr b
+    lmap :: repr (a :-> b) -> repr (List a) -> repr (List b)
 
     left :: repr a -> repr (EitherT a b)
     right :: repr b -> repr (EitherT a b)
@@ -123,7 +126,7 @@ instance App R where
   lift3 f (R a) (R b) (R c) = R $ f a b c
   pull f = R (unR . f . R)
 
-instance Symantics f where
+instance Symantics R where
     int = lift0
     bool = lift0
 
@@ -146,6 +149,7 @@ instance Symantics f where
     lnil = lift0 []
     lcons = lift2 (:) 
     lfoldr = lift3 (foldr)
+    lmap = lift2 (map)
 
     left = lift1 Left
     right = lift1 Right
@@ -176,11 +180,6 @@ itestpw72 = mkitest (\() -> app (testpowfix7 ()) (int 2))
 
 newtype L a = L (Sem IntT) deriving Show
 unL (L x) = x
-
--- some useful abbreviations
-unitL = L 1
-oneL e1 = L( (unL e1) + 1)
-twoL e1 e2 = L( (unL e1) + (unL e2) + 1)
 
 instance App L where
   lift0 _ = L 1
@@ -213,6 +212,7 @@ instance Symantics L where
     lnil = lift0 []
     lcons = lift2 (:) 
     lfoldr = lift3 (foldr)
+    lmap = lift2 (map)
 
     left = lift1 Left
     right = lift1 Right
@@ -233,153 +233,53 @@ ltestpw   = compL . testpowfix $ ()
 ltestpw7  = compL . testpowfix7 $ ()
 ltestpw72 = compL (app (testpowfix7 ()) (int 2)) -- 14
 
-{-
--- ------------------------------------------------------------------------
--- The compiler
--- We compile to GADT, to be understood as a typed assembly language
--- (typed bytecode). The GADT does _not_ use the higher-order abstract
--- syntax. We could have used template Haskell. Alas, its expressions
--- are untyped.
--- ByteCode represents MetaOCaml's `code'. Thus the compiler
--- below neatly maps to MetaOCaml (with no GADTs).
--- Like MetaOCaml `code', we never pattern-match on ByteCode!
--- The compiler never raises any exception and matches no tags:
--- generated code has no tags at all.
-
--- The LIFT bytecode operation is used only as an optimization for the
--- partial evaluator, to be able to 'lift' computations.
--- it corresponds to a CSP in MetaOCaml. 
-
-data ByteCode t where
-    Var :: Int -> ByteCode t                -- variables identified by numbers
-    Lam :: Int -> ByteCode t2 -> ByteCode (t1->t2)
-    App :: ByteCode (t1->t2) -> ByteCode t1  -> ByteCode t2
-    Fix :: Int -> ByteCode t -> ByteCode t
-    INT :: Int -> ByteCode Int
-    BOOL:: Bool -> ByteCode Bool
-    Add :: ByteCode Int -> ByteCode Int -> ByteCode Int
-    Sub :: ByteCode Int -> ByteCode Int -> ByteCode Int
-    Mul :: ByteCode Int -> ByteCode Int -> ByteCode Int
-    Leq :: ByteCode Int -> ByteCode Int -> ByteCode Bool
-    Eql :: ByteCode t1 -> ByteCode t1 -> ByteCode Bool
-    IF  :: ByteCode Bool -> ByteCode t -> ByteCode t -> ByteCode t
-    LIFT :: t -> ByteCode t                 -- Used only in PE 
-    UNIT :: ByteCode ()
-    Pair :: ByteCode t1 -> ByteCode t2 -> ByteCode (t1,t2)
-    Pfst :: ByteCode (t1,t2) -> ByteCode t1
-    Psnd :: ByteCode (t1,t2) -> ByteCode t2
-    Lempty :: ByteCode t1
-    Lcons :: ByteCode t1 -> ByteCode [t1] -> ByteCode [t1]
-    FOLDR :: ByteCode (a -> b -> b) -> ByteCode b -> ByteCode [a] -> ByteCode b
-    ELeft :: ByteCode t1 -> ByteCode (Either t1 t2)
-    ERight :: ByteCode t2 -> ByteCode (Either t1 t2)
-    ElimOr :: ByteCode (t1 -> t3) -> ByteCode (t2 -> t3) -> ByteCode (Either t1 t2) -> ByteCode t3
-
--- helpers
-bp :: String -> String
-bp x = "(" ++ x ++ ")"
-mid :: (Show a, Show b) => String -> a -> b -> String
-mid s e1 e2 = show e1 ++ s ++ show e2
-
-instance Show (ByteCode t) where
-    show (Var n) = "V" ++ show n
-    show (Lam n b) = "(\\V" ++ (mid " -> " n b) ++ ")"
-    show (App e1 e2) = bp $ mid " " e1 e2
-    show (Fix n b) = "(fix\\V" ++ (mid " " n b) ++ ")"
-    show (INT n) = show n
-    show (BOOL b) = show b
-    show (Add e1 e2) = bp $ mid " + " e1 e2 
-    show (Sub e1 e2) = bp $ mid " - " e1 e2 
-    show (Mul e1 e2) = bp $ mid " * " e1 e2 
-    show (Leq e1 e2) = bp $ mid " <= " e1 e2 
-    show (Eql e1 e2) = bp $ mid " == " e1 e2 
-    show (IF be et ee)
-        = "(if " ++ show be ++ 
-          " then " ++ show et ++ " else " ++ show ee ++ ")"
-    show (LIFT _) = "<csp>"
-    show (UNIT) = "() "
-    show (Pair e1 e2) = bp $ mid ", " e1 e2
-    show (Pfst e1)  = "(fst " ++ show e1 ++ ")"
-    show (Psnd e1)  = "(snd " ++ show e1 ++ ")"
-    show (Lempty) = " [] "
-    show (Lcons e1 e2) = bp $ mid ": " e1 e2
-    show (FOLDR f u l) = "(foldr" ++ show f ++ " " ++ show u ++ " " ++ 
-                           show l ++ ")"
-    show (ELeft e1) = "(left" ++ show e1 ++ ")"
-    show (ERight e1) = "(right" ++ show e1 ++ ")"
-    show (ElimOr l r m) = "(either " ++ show l ++ " " ++ show r ++ " " ++ show m ++ ")"
-
--- Int is the variable counter
--- for allocation of fresh variables
-newtype C t = C (Int -> (ByteCode t, Int)) 
+-- Compiler a la TH
+newtype C a = C ExpQ
 unC (C x) = x
 
--- helper
-toC x = C(\vc -> (x, vc))
-oneC f e1 = C(\vc -> let (e1b,vc1) = unC e1 vc
-                     in (f e1b ,vc1))
-twoC f e1 e2 = C(\vc -> let (e1b,vc1) = unC e1 vc
-                            (e2b,vc2) = unC e2 vc1
-                         in (f e1b e2b,vc2))
+clift0 x = C [| x |]
+clift1 :: ExpQ -> C t -> C a
+clift1 g (C x) = C $ do f <- g
+                        tx <- x
+                        return $ AppE f tx
+clift2 g (C x) (C y) = C $ do f <- g
+                              tx <- x
+                              ty <- y
+                              return $ AppE (AppE f tx) ty
+clift3 g (C a) (C b) (C c) = C $ 
+    do f <- g
+       ta <- a
+       tb <- b
+       tc <- c
+       return $ AppE (AppE (AppE f ta) tb) tc 
+    
+cpull :: (C a -> C b) -> C (a :-> b)
+cpull f = C [| \x -> $((unC . f . C) [| x |] ) |]
 
 instance Symantics C where
-    int  = toC . INT
-    bool = toC . BOOL
-
-    lam f = C(\vc -> let v = vc
-                         var = C(\vc -> (Var v, vc))
-                         (body,vc') = unC (f var) (succ vc)
-                     in (Lam v body, vc'))
-    fix f = C(\vc -> let v = vc
-                         var = C(\vc -> (Var v, vc))
-                         (body,vc') = unC (f var) (succ vc)
-                     in (Fix v body, vc'))
-    app = twoC App
-
-    add = twoC Add
-    sub = twoC Sub
-    mul = twoC Mul
-    leq = twoC Leq
-    eql = twoC Eql
-    if_ be et ee = C(\vc -> let (beb,vc1) = unC be vc
-                                (etb,vc2)  = unC et vc1
-                                (eeb,vc3)  = unC ee vc2
-                         in (IF beb etb eeb,vc3))
-
-    unit   = C(\vc -> (UNIT, vc))
-    pair = twoC Pair
-
-    pfst = oneC Pfst
-    psnd = oneC Psnd
-
-    lnil = C(\vc -> (Lempty, vc))
-    lcons = twoC (Lcons) 
-    lfoldr f u l = C(\vc -> let (fb,vc1) = unC f vc
-                                (ub,vc2)  = unC u vc1
-                                (lb,vc3)  = unC l vc2
-                            in (FOLDR fb ub lb,vc3))
-
-    left = oneC ELeft
-    right = oneC ERight
-    elimOr l r m = C(\vc -> let (bl, vc1) = unC l vc
-                                (br, vc2) = unC r vc1
-                                (bm, vc3) = unC m vc2
-                            in (ElimOr bl br bm, vc3))
-
-compC repr = fst $ unC repr 0
-
-ctest1 = compC . test1 $ ()
-ctest2 = compC . test2 $ ()
-ctest3 = compC . test3 $ ()
-
-ctestgib  = compC . testgib  $ ()
-ctestgib1 = compC . testgib1 $ ()
-ctestgib2 = compC . testgib2 $ ()
-
-ctestpw   = compC . testpowfix $ ()
-ctestpw7  = compC . testpowfix7 $ ()
-ctestpw72 = compC  (app (testpowfix7 ()) (int 2))
-
+    int = clift0
+    bool = clift0
+    lam = cpull
+    app = clift2 [| ($) |]
+    fix = clift1 [| F.fix |] . cpull
+    add = clift2 [| (+) |]
+    sub = clift2 [| (-) |]
+    mul = clift2 [| (*) |]
+    leq = clift2 [| (<=) |]
+    eql = clift2 [| (==) |]
+    if_ = clift3 [| if' |]
+    pair = clift2 [| ((,)) |]
+    pfst = clift1 [| fst |]
+    psnd = clift1 [| snd |]
+    left = clift1 [| Left |]
+    right = clift1 [| Right |]
+    elimOr = clift3 [| either |]
+    lnil = C [| [] |]
+    lcons = clift2 [| (:) |]
+    lfoldr = clift3 [| (foldr) |]
+    lmap = clift2 [| map |]
+    unit = C [| () |]
+{-
 -- ------------------------------------------------------------------------
 -- The partial evaluator: the combination of the interpreter (R) and
 -- the compiler (C).
